@@ -1,0 +1,62 @@
+#![allow(clippy::all)]
+
+pub mod error;
+pub(crate) mod defaults;
+
+mod activity;
+mod auth;
+mod backup;
+mod branding;
+mod channels;
+mod collections;
+mod common;
+mod devices;
+mod dlna;
+mod encoding;
+mod images;
+mod items;
+mod library;
+mod live_tv;
+mod packages;
+mod playback;
+mod playlists;
+mod search;
+mod sessions;
+mod streaming;
+mod subtitles;
+mod sync_play;
+mod system;
+mod tasks;
+mod trickplay;
+mod users;
+mod websocket;
+
+pub use activity::*;
+pub use auth::*;
+pub use backup::*;
+pub use branding::*;
+pub use channels::*;
+pub use collections::*;
+pub use common::*;
+pub use devices::*;
+pub use dlna::*;
+pub use encoding::*;
+pub use images::*;
+pub use items::*;
+pub use library::*;
+pub use live_tv::*;
+pub use packages::*;
+pub use playback::*;
+pub use playlists::*;
+pub use search::*;
+pub use sessions::*;
+pub use streaming::*;
+pub use subtitles::*;
+pub use sync_play::*;
+pub use system::*;
+pub use tasks::*;
+pub use trickplay::*;
+pub use users::*;
+pub use websocket::*;
+
+pub use error::ConversionError;

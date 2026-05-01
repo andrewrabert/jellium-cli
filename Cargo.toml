@@ -1,0 +1,6 @@
+[workspace]
+members = ["jellyfin-api", "jellyfin-cli"]
+resolver = "3"
+
+[workspace.package]
+license = "MIT"
