@@ -1,3 +1,5 @@
+set positional-arguments
+
 # List available recipes
 list:
     @just --list
@@ -10,7 +12,8 @@ build:
 # Run the debug release. Sets JELLYFIN_ENV_FILE to .env if it exists in the repo root
 run *args:
     #!/usr/bin/env sh
+    set -eu
     if [ -f .env ]; then
         export JELLYFIN_ENV_FILE="$(pwd)/.env"
     fi
-    cargo run -p jellyfin-cli -- {{args}}
+    cargo run -p jellyfin-cli -- "$@"
