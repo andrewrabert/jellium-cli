@@ -1,5 +1,56 @@
 use clap::Subcommand;
+use jellyfin_api::types::TaskState;
+use std::time::Duration;
 use uuid::Uuid;
+
+const MAX_INITIAL_IDLE_POLLS: u32 = 5;
+
+pub enum WaitTarget {
+    Task(String),
+    Libraries(Vec<String>),
+}
+
+fn is_task_active(state: &Option<TaskState>) -> bool {
+    matches!(state, Some(TaskState::Running) | Some(TaskState::Cancelling))
+}
+
+async fn wait_for_refresh(
+    client: &jellyfin_api::Client,
+    target: WaitTarget,
+    poll_secs: u64,
+) -> Result<(), Box<dyn std::error::Error>> {
+    let poll_interval = Duration::from_secs(poll_secs);
+    let mut saw_active = false;
+    let mut idle_polls: u32 = 0;
+    loop {
+        let any_active = match &target {
+            WaitTarget::Task(task_id) => {
+                is_task_active(&client.get_task(task_id).await?.state)
+            }
+            WaitTarget::Libraries(ids) => {
+                let folders = client.get_virtual_folders().await?;
+                ids.iter().any(|id| {
+                    folders
+                        .iter()
+                        .find(|f| f.item_id.as_deref() == Some(id.as_str()))
+                        .and_then(|f| f.refresh_status.as_deref())
+                        .is_some_and(|s| !s.eq_ignore_ascii_case("Idle"))
+                })
+            }
+        };
+
+        if any_active {
+            saw_active = true;
+            idle_polls = 0;
+        } else if saw_active || idle_polls >= MAX_INITIAL_IDLE_POLLS {
+            break;
+        } else {
+            idle_polls += 1;
+        }
+        tokio::time::sleep(poll_interval).await;
+    }
+    Ok(())
+}
 
 #[derive(Subcommand)]
 pub enum LibrariesCommand {
@@ -22,7 +73,24 @@ pub enum LibrariesCommand {
         is_hidden: Option<bool>,
     },
     /// Start a library scan
-    Refresh,
+    ///
+    /// Requires either --name (repeatable) to refresh specific libraries, or
+    /// --all to refresh every library. By default, returns immediately;
+    /// pass --wait/-w to block until the scan finishes.
+    Refresh {
+        /// Name of a library to refresh (repeatable; ignored when --all is set)
+        #[arg(long)]
+        name: Vec<String>,
+        /// Refresh all libraries
+        #[arg(long)]
+        all: bool,
+        /// Wait for the refresh to finish
+        #[arg(short = 'w', long)]
+        wait: bool,
+        /// Poll interval in seconds while waiting
+        #[arg(long, default_value_t = 5)]
+        poll: u64,
+    },
     /// Get all virtual folders
     VirtualFolders,
     /// Add a virtual folder
@@ -184,8 +252,48 @@ pub async fn execute(
             let result = client.get_media_folders(*is_hidden).await?;
             crate::output::print_json(&result)?;
         }
-        LibrariesCommand::Refresh => {
-            client.refresh_library().await?;
+        LibrariesCommand::Refresh {
+            name,
+            all,
+            wait,
+            poll,
+        } => {
+            let target = if *all {
+                let tasks = client.get_tasks(None, None).await?;
+                let task = tasks
+                    .into_iter()
+                    .find(|t| t.key.as_deref() == Some("RefreshLibrary"))
+                    .ok_or("RefreshLibrary scheduled task not found")?;
+                let id = task.id.ok_or("RefreshLibrary task has no id")?;
+                if !is_task_active(&task.state) {
+                    client.start_task(&id).await?;
+                }
+                WaitTarget::Task(id)
+            } else if name.is_empty() {
+                return Err("must specify --name (repeatable) or --all".into());
+            } else {
+                let folders = client.get_virtual_folders().await?;
+                let mut ids = Vec::with_capacity(name.len());
+                for n in name {
+                    let folder = folders
+                        .iter()
+                        .find(|f| f.name.as_deref() == Some(n.as_str()))
+                        .ok_or_else(|| format!("library not found: {n}"))?;
+                    let item_id_str = folder
+                        .item_id
+                        .as_deref()
+                        .ok_or_else(|| format!("library has no item id: {n}"))?;
+                    let item_id = Uuid::parse_str(item_id_str)?;
+                    client
+                        .refresh_item(&item_id, None, None, None, None, None)
+                        .await?;
+                    ids.push(item_id_str.to_string());
+                }
+                WaitTarget::Libraries(ids)
+            };
+            if *wait {
+                wait_for_refresh(client, target, *poll).await?;
+            }
         }
         LibrariesCommand::VirtualFolders => {
             let result = client.get_virtual_folders().await?;

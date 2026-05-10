@@ -64,28 +64,29 @@ All examples require first logging into a server (or setting the appropriate fla
 jellyfin-cli login
 ```
 
-Server info and ping:
+### Server info and ping:
 ```sh
 jellyfin-cli system info
 jellyfin-cli system ping
 ```
 
-Current user:
+### Current user:
 ```sh
 jellyfin-cli users me
 ```
 
-Refresh libraries:
+### Refresh libraries:
+Start a refresh of the library named "Music Videos" and exit when complete
 ```sh
-jellyfin-cli libraries refresh
+jellyfin-cli libraries refresh --wait --name "Music Videos"
 ```
 
-Search:
+### Search:
 ```sh
 jellyfin-cli search hints "big buck bunny"
 ```
 
-Make a raw authenticated API call (output body to stdout, headers to stderr):
+### Make a raw authenticated API call (output body to stdout, headers to stderr):
 ```sh
 jellyfin-cli api /System/Info
 jellyfin-cli api /Users/Me
