@@ -11,14 +11,14 @@ pub struct Session {
 pub fn session_path() -> PathBuf {
     dirs::data_dir()
         .expect("could not determine data directory")
-        .join("jellyfin-cli")
+        .join("jellium-cli")
         .join("session.env")
 }
 
 pub fn load_session() -> Result<Session, Box<dyn std::error::Error>> {
     let path = session_path();
     let data = std::fs::read_to_string(&path)
-        .map_err(|_| "no saved session; run `jellyfin-cli login` first")?;
+        .map_err(|_| "no saved session; run `jellium-cli login` first")?;
 
     let mut server = None;
     let mut token = None;

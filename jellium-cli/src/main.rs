@@ -10,7 +10,7 @@ pub mod output;
 mod session;
 
 #[derive(Parser)]
-#[command(name = "jellyfin-cli", version)]
+#[command(name = "jellium-cli", version)]
 struct Cli {
     /// Jellyfin server URL (env: JELLYFIN_URL)
     #[arg(long = "server", global = true)]
@@ -276,7 +276,7 @@ fn prompt(message: &str) -> std::io::Result<String> {
 
 fn auth_header(token: &str) -> HeaderValue {
     let value = format!(
-        r#"MediaBrowser Client="jellyfin-cli", Device="cli", DeviceId="jellyfin-cli", Version="0.1.0", Token="{token}""#,
+        r#"MediaBrowser Client="jellium-cli", Device="cli", DeviceId="jellium-cli", Version="0.1.0", Token="{token}""#,
     );
     HeaderValue::from_str(&value).expect("invalid header value")
 }

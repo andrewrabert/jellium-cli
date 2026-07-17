@@ -66,7 +66,7 @@ jobs:
         run: cargo build --release --target ${{ matrix.target }}
       - uses: actions/upload-artifact@v4
         with:
-          name: jellyfin-cli-${{ matrix.target }}
+          name: jellium-cli-${{ matrix.target }}
           path: |
-            target/${{ matrix.target }}/release/jellyfin-cli
-            target/${{ matrix.target }}/release/jellyfin-cli.exe
+            target/${{ matrix.target }}/release/jellium-cli
+            target/${{ matrix.target }}/release/jellium-cli.exe

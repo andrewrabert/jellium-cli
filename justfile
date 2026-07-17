@@ -16,4 +16,4 @@ run *args:
     if [ -f .env ]; then
         export JELLYFIN_ENV_FILE="$(pwd)/.env"
     fi
-    cargo run -p jellyfin-cli -- "$@"
+    cargo run -p jellium-cli -- "$@"

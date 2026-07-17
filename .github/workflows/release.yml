@@ -87,16 +87,16 @@ jobs:
         run: cargo build --release --target ${{ matrix.target }}
       - name: Package (unix)
         if: matrix.os != 'windows-latest'
-        run: tar czf jellyfin-cli-${{ matrix.target }}.tar.gz -C target/${{ matrix.target }}/release jellyfin-cli
+        run: tar czf jellium-cli-${{ matrix.target }}.tar.gz -C target/${{ matrix.target }}/release jellium-cli
       - name: Package (windows)
         if: matrix.os == 'windows-latest'
-        run: Compress-Archive -Path target/${{ matrix.target }}/release/jellyfin-cli.exe -DestinationPath jellyfin-cli-${{ matrix.target }}.zip
+        run: Compress-Archive -Path target/${{ matrix.target }}/release/jellium-cli.exe -DestinationPath jellium-cli-${{ matrix.target }}.zip
       - name: Upload artifact to release
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ github.ref_name }}
-        run: gh release upload "$TAG" jellyfin-cli-*.tar.gz jellyfin-cli-*.zip 2>/dev/null || gh release upload "$TAG" jellyfin-cli-*.zip 2>/dev/null || gh release upload "$TAG" jellyfin-cli-*.tar.gz
+        run: gh release upload "$TAG" jellium-cli-*.tar.gz jellium-cli-*.zip 2>/dev/null || gh release upload "$TAG" jellium-cli-*.zip 2>/dev/null || gh release upload "$TAG" jellium-cli-*.tar.gz
 
   publish-release:
     needs: build

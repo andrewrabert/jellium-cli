@@ -1,10 +1,10 @@
-# jellyfin-cli
+# jellium-cli
 A command-line client for [Jellyfin](https://jellyfin.org/) media servers.
 
 ## Usage
 ```
-$ jellyfin-cli --help
-Usage: jellyfin-cli [OPTIONS] <COMMAND>
+$ jellium-cli --help
+Usage: jellium-cli [OPTIONS] <COMMAND>
 
 Commands:
   api            Make a raw authenticated API request
@@ -61,35 +61,35 @@ Options:
 All examples require first logging into a server (or setting the appropriate flags or args).
 
 ```sh
-jellyfin-cli login
+jellium-cli login
 ```
 
 ### Server info and ping:
 ```sh
-jellyfin-cli system info
-jellyfin-cli system ping
+jellium-cli system info
+jellium-cli system ping
 ```
 
 ### Current user:
 ```sh
-jellyfin-cli users me
+jellium-cli users me
 ```
 
 ### Refresh libraries:
 Start a refresh of the library named "Music Videos" and exit when complete
 ```sh
-jellyfin-cli libraries refresh --wait --name "Music Videos"
+jellium-cli libraries refresh --wait --name "Music Videos"
 ```
 
 ### Search:
 ```sh
-jellyfin-cli search hints "big buck bunny"
+jellium-cli search hints "big buck bunny"
 ```
 
 ### Make a raw authenticated API call (output body to stdout, headers to stderr):
 ```sh
-jellyfin-cli api /System/Info
-jellyfin-cli api /Users/Me
+jellium-cli api /System/Info
+jellium-cli api /Users/Me
 ```
 
 ## Development

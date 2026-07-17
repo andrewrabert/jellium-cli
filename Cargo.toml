@@ -1,5 +1,5 @@
 [workspace]
-members = ["jellyfin-api", "jellyfin-cli"]
+members = ["jellyfin-api", "jellium-cli"]
 resolver = "3"
 
 [workspace.package]
