@@ -2,12 +2,13 @@ use std::io::{IsTerminal, Read as _, Write as _};
 
 use base64::Engine as _;
 use clap::{Parser, Subcommand};
-use reqwest::header::{HeaderMap, HeaderValue, AUTHORIZATION};
+use reqwest::header::{AUTHORIZATION, HeaderMap, HeaderValue};
 use uuid::Uuid;
 
 mod commands;
 pub mod output;
 mod session;
+mod web;
 
 #[derive(Parser)]
 #[command(name = "jellium-cli", version)]
@@ -237,6 +238,8 @@ enum Command {
         #[command(subcommand)]
         command: commands::users::UsersCommand,
     },
+    /// Serve Jellium Web in a browser
+    Web(web::WebArgs),
     /// Video operations (non-streaming)
     Videos {
         #[command(subcommand)]
@@ -358,7 +361,9 @@ async fn resolve_client(
         ));
     }
 
-    let sess = session::load_session()?;
+    let sess = session::SessionFile::load(&session::SessionFile::default_path())?
+        .server(0)
+        .ok_or("no saved session; run `jellium-cli login` first")?;
     Ok((
         build_client(&sess.server, &sess.token, cli.verbose),
         user_id.unwrap_or(sess.user_id),
@@ -375,6 +380,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .or_else(|| std::env::var("JELLYFIN_ENV_FILE").ok())
     {
         dotenvy::from_path(&env_file)?;
+    }
+
+    if let Command::Web(args) = cli.command {
+        return Ok(web::run(args).await?);
     }
 
     // Handle login/logout without needing an authenticated client
@@ -398,29 +407,31 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             .map(Ok)
             .unwrap_or_else(|| rpassword::prompt_password("Password: "))?;
         let (token, user_id) = authenticate(&server, &username, &password).await?;
-        let session = session::Session {
-            server,
-            token,
-            user_id,
-        };
         let path = match output {
             Some(p) => p.clone(),
-            None => session::session_path(),
+            None => session::SessionFile::default_path(),
         };
-        session::save_session_to(&path, &session)?;
-        println!("Logged in successfully. Session saved to {}.", path.display());
+        session::SessionFile::update(&path, |file| {
+            file.set_server(
+                0,
+                &session::Session {
+                    server,
+                    token,
+                    user_id,
+                },
+            )
+        })?;
+        println!(
+            "Logged in successfully. Session saved to {}.",
+            path.display()
+        );
         return Ok(());
     }
 
     if matches!(&cli.command, Command::Logout) {
-        let path = session::session_path();
-        match std::fs::remove_file(&path) {
-            Ok(()) => println!("Logged out. Session removed."),
-            Err(e) if e.kind() == std::io::ErrorKind::NotFound => {
-                println!("No session found.")
-            }
-            Err(e) => return Err(e.into()),
-        }
+        let path = session::SessionFile::default_path();
+        session::SessionFile::update(&path, |file| file.remove_server(0))?;
+        println!("Logged out. Session removed.");
         return Ok(());
     }
 
@@ -428,36 +439,32 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let (client, user_id) = resolve_client(&cli).await?;
 
     match cli.command {
-        Command::Api { path, method, input, header, json } => {
+        Command::Api {
+            path,
+            method,
+            input,
+            header,
+            json,
+        } => {
             handle_api_command(&client, &path, &method, input.as_deref(), &header, json).await?;
         }
-        Command::System { command } => {
-            commands::system::execute(&client, command).await?
-        }
-        Command::Config { command } => {
-            commands::config::execute(&client, command).await?
-        }
-        Command::Users { command } => {
-            commands::users::execute(&client, &user_id, &command).await?
-        }
+        Command::System { command } => commands::system::execute(&client, command).await?,
+        Command::Config { command } => commands::config::execute(&client, command).await?,
+        Command::Users { command } => commands::users::execute(&client, &user_id, &command).await?,
         Command::UserData { command } => {
             commands::user_data::execute(&client, &user_id, &command).await?
         }
         Command::Libraries { command } => {
             commands::libraries::execute(&client, &user_id, &command).await?
         }
-        Command::Shows { command } => {
-            commands::shows::execute(&client, &user_id, &command).await?
-        }
+        Command::Shows { command } => commands::shows::execute(&client, &user_id, &command).await?,
         Command::Movies { command } => {
             commands::movies::execute(&client, &user_id, &command).await?
         }
         Command::Artists { command } => {
             commands::artists::execute(&client, &user_id, &command).await?
         }
-        Command::Items { command } => {
-            commands::items::execute(&client, &user_id, &command).await?
-        }
+        Command::Items { command } => commands::items::execute(&client, &user_id, &command).await?,
         Command::Genres { command } => {
             commands::genres::execute(&client, &user_id, &command).await?
         }
@@ -482,21 +489,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         Command::Playback { command } => {
             commands::playback::execute(&client, &user_id, &command).await?
         }
-        Command::Devices { command } => {
-            commands::devices::execute(&client, command).await?
-        }
-        Command::Tasks { command } => {
-            commands::tasks::execute(&client, command).await?
-        }
-        Command::Packages { command } => {
-            commands::packages::execute(&client, command).await?
-        }
-        Command::Plugins { command } => {
-            commands::plugins::execute(&client, command).await?
-        }
-        Command::AuthKeys { command } => {
-            commands::auth_keys::execute(&client, command).await?
-        }
+        Command::Devices { command } => commands::devices::execute(&client, command).await?,
+        Command::Tasks { command } => commands::tasks::execute(&client, command).await?,
+        Command::Packages { command } => commands::packages::execute(&client, command).await?,
+        Command::Plugins { command } => commands::plugins::execute(&client, command).await?,
+        Command::AuthKeys { command } => commands::auth_keys::execute(&client, command).await?,
         Command::QuickConnect { command } => {
             commands::quick_connect::execute(&client, command).await?
         }
@@ -509,15 +506,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         Command::Channels { command } => {
             commands::channels::execute(&client, &user_id, &command).await?
         }
-        Command::Backup { command } => {
-            commands::backup::execute(&client, command).await?
-        }
+        Command::Backup { command } => commands::backup::execute(&client, command).await?,
         Command::Localization { command } => {
             commands::localization::execute(&client, command).await?
         }
-        Command::Branding { command } => {
-            commands::branding::execute(&client, command).await?
-        }
+        Command::Branding { command } => commands::branding::execute(&client, command).await?,
         Command::Environment { command } => {
             commands::environment::execute(&client, command).await?
         }
@@ -530,10 +523,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         Command::DisplayPrefs { command } => {
             commands::display_prefs::execute(&client, command).await?
         }
-        Command::Startup { command } => {
-            commands::startup::execute(&client, command).await?
-        }
-        Command::Login { .. } | Command::Logout => unreachable!(),
+        Command::Startup { command } => commands::startup::execute(&client, command).await?,
+        Command::Login { .. } | Command::Logout | Command::Web(_) => unreachable!(),
     }
 
     Ok(())

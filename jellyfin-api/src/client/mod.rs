@@ -56,6 +56,7 @@ impl Client {
 }
 
 /// Response from a raw API request.
+#[cfg(not(target_arch = "wasm32"))]
 pub struct RawResponse {
     pub status: u16,
     pub http_version: &'static str,
@@ -63,6 +64,7 @@ pub struct RawResponse {
     pub body: Vec<u8>,
 }
 
+#[cfg(not(target_arch = "wasm32"))]
 impl Client {
     /// Send a raw API request, returning the full response without status checking.
     pub async fn raw_request(

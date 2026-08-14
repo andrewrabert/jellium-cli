@@ -43,6 +43,7 @@ Commands:
   tasks          Scheduled task operations
   user-data      User item data (played, favorite, rating)
   users          User operations
+  web            Serve Jellium Web in a browser
   videos         Video operations (non-streaming)
   help           Print this message or the help of the given subcommand(s)
 
@@ -86,6 +87,14 @@ jellium-cli libraries refresh --wait --name "Music Videos"
 jellium-cli search hints "big buck bunny"
 ```
 
+### Jellium Web:
+Serve the browser client on loopback and open it in the default browser.
+```sh
+jellium-cli web
+jellium-cli web --port 8096 --no-open
+jellium-cli web --bind 0.0.0.0 --allow-remote --advertise media.lan
+```
+
 ### Make a raw authenticated API call (output body to stdout, headers to stderr):
 ```sh
 jellium-cli api /System/Info
@@ -97,7 +106,9 @@ jellium-cli api /Users/Me
 This project uses [just](https://github.com/casey/just) as a command runner.
 ```
 Available recipes:
-    build     # Build the debug release
-    list      # List available recipes
-    run *args # Run the debug release. Sets JELLYFIN_ENV_FILE to .env if it exists in the repo root
+    build                    # Build the debug release
+    list                     # List available recipes
+    run *args                # Run the debug release. Sets JELLYFIN_ENV_FILE to .env if it exists in the repo root
+    web *args                # Run jellium-cli web from the debug build
+    web-bundle renderer="webgpu" # Build the Jellium Web bundle
 ```

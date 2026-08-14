@@ -35,8 +35,23 @@ jobs:
             -F draft=true \
             -F prerelease=false
 
+  web:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+      - run: cargo install --locked trunk
+      - run: trunk build --release --no-default-features --features webgpu --dist dist index.html
+        working-directory: jellium-web
+      - uses: actions/upload-artifact@v4
+        with:
+          name: jellium-web-dist
+          path: jellium-web/dist
+
   build:
-    needs: create-release
+    needs: [create-release, web]
     strategy:
       matrix:
         include:
@@ -65,6 +80,12 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         with:
           key: ${{ matrix.target }}
+      - uses: actions/download-artifact@v4
+        with:
+          name: jellium-web-dist
+          path: web-dist
+      - run: echo "JELLIUM_WEB_DIST=$PWD/web-dist" >> "$GITHUB_ENV"
+        shell: bash
       - name: Install cross-compilation tools
         if: matrix.target == 'aarch64-unknown-linux-gnu' || matrix.target == 'x86_64-unknown-linux-musl'
         run: |

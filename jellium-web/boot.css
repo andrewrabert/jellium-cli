@@ -1,0 +1,26 @@
+#jellium-boot {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-family: system-ui, sans-serif;
+  background: #12131a;
+  color: #e8e9ef;
+  z-index: 1;
+}
+
+#jellium-boot[data-state='failed'] {
+  color: #ffb4a8;
+}
+
+#jellium-boot[hidden] {
+  display: none;
+}
+
+canvas {
+  position: fixed;
+  inset: 0;
+  z-index: 2;
+}

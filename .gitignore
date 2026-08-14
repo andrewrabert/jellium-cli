@@ -1,2 +1,4 @@
 /target
 .env
+/jellium-web/dist
+/jellium-web/target
