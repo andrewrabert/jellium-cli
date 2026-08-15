@@ -1,5 +1,6 @@
-
-#[derive(serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(
+    serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd,
+)]
 pub enum EmbeddedSubtitleOptions {
     AllowAll,
     AllowText,
@@ -40,18 +41,14 @@ impl TryFrom<&str> for EmbeddedSubtitleOptions {
 
 impl TryFrom<&String> for EmbeddedSubtitleOptions {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for EmbeddedSubtitleOptions {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
@@ -74,18 +71,10 @@ pub struct FontFile {
     )]
     pub date_modified: Option<chrono::DateTime<chrono::Utc>>,
     #[doc = "Gets or sets the name."]
-    #[serde(
-        rename = "Name",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Name", default, skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
     #[doc = "Gets or sets the size."]
-    #[serde(
-        rename = "Size",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Size", default, skip_serializing_if = "Option::is_none")]
     pub size: Option<i64>,
 }
 
@@ -104,18 +93,10 @@ impl Default for FontFile {
 #[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
 pub struct LyricDto {
     #[doc = "Gets or sets a collection of individual lyric lines."]
-    #[serde(
-        rename = "Lyrics",
-        default,
-        skip_serializing_if = "Vec::is_empty"
-    )]
+    #[serde(rename = "Lyrics", default, skip_serializing_if = "Vec::is_empty")]
     pub lyrics: Vec<LyricLine>,
     #[doc = "Gets or sets Metadata for the lyrics."]
-    #[serde(
-        rename = "Metadata",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Metadata", default, skip_serializing_if = "Option::is_none")]
     pub metadata: Option<LyricMetadata>,
 }
 
@@ -132,25 +113,13 @@ impl Default for LyricDto {
 #[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
 pub struct LyricLine {
     #[doc = "Gets the time-aligned cues for the song's lyrics."]
-    #[serde(
-        rename = "Cues",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Cues", default, skip_serializing_if = "Option::is_none")]
     pub cues: Option<Vec<LyricLineCue>>,
     #[doc = "Gets the start time in ticks."]
-    #[serde(
-        rename = "Start",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Start", default, skip_serializing_if = "Option::is_none")]
     pub start: Option<i64>,
     #[doc = "Gets the text of this lyric line."]
-    #[serde(
-        rename = "Text",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Text", default, skip_serializing_if = "Option::is_none")]
     pub text: Option<String>,
 }
 
@@ -168,11 +137,7 @@ impl Default for LyricLine {
 #[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
 pub struct LyricLineCue {
     #[doc = "Gets the end timestamp the lyric is synced to in ticks."]
-    #[serde(
-        rename = "End",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "End", default, skip_serializing_if = "Option::is_none")]
     pub end: Option<i64>,
     #[doc = "Gets the end character index of the cue."]
     #[serde(
@@ -182,18 +147,10 @@ pub struct LyricLineCue {
     )]
     pub end_position: Option<i32>,
     #[doc = "Gets the start character index of the cue."]
-    #[serde(
-        rename = "Position",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Position", default, skip_serializing_if = "Option::is_none")]
     pub position: Option<i32>,
     #[doc = "Gets the timestamp the lyric is synced to in ticks."]
-    #[serde(
-        rename = "Start",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Start", default, skip_serializing_if = "Option::is_none")]
     pub start: Option<i64>,
 }
 
@@ -212,74 +169,34 @@ impl Default for LyricLineCue {
 #[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
 pub struct LyricMetadata {
     #[doc = "Gets or sets the album this song is on."]
-    #[serde(
-        rename = "Album",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Album", default, skip_serializing_if = "Option::is_none")]
     pub album: Option<String>,
     #[doc = "Gets or sets the song artist."]
-    #[serde(
-        rename = "Artist",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Artist", default, skip_serializing_if = "Option::is_none")]
     pub artist: Option<String>,
     #[doc = "Gets or sets the author of the lyric data."]
-    #[serde(
-        rename = "Author",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Author", default, skip_serializing_if = "Option::is_none")]
     pub author: Option<String>,
     #[doc = "Gets or sets who the LRC file was created by."]
-    #[serde(
-        rename = "By",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "By", default, skip_serializing_if = "Option::is_none")]
     pub by: Option<String>,
     #[doc = "Gets or sets the software used to create the LRC file."]
-    #[serde(
-        rename = "Creator",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Creator", default, skip_serializing_if = "Option::is_none")]
     pub creator: Option<String>,
     #[doc = "Gets or sets a value indicating whether this lyric is synced."]
-    #[serde(
-        rename = "IsSynced",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "IsSynced", default, skip_serializing_if = "Option::is_none")]
     pub is_synced: Option<bool>,
     #[doc = "Gets or sets the length of the song in ticks."]
-    #[serde(
-        rename = "Length",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Length", default, skip_serializing_if = "Option::is_none")]
     pub length: Option<i64>,
     #[doc = "Gets or sets the lyric offset compared to audio in ticks."]
-    #[serde(
-        rename = "Offset",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Offset", default, skip_serializing_if = "Option::is_none")]
     pub offset: Option<i64>,
     #[doc = "Gets or sets the title of the song."]
-    #[serde(
-        rename = "Title",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Title", default, skip_serializing_if = "Option::is_none")]
     pub title: Option<String>,
     #[doc = "Gets or sets the version of the creator used."]
-    #[serde(
-        rename = "Version",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Version", default, skip_serializing_if = "Option::is_none")]
     pub version: Option<String>,
 }
 
@@ -304,18 +221,10 @@ impl Default for LyricMetadata {
 #[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
 pub struct RemoteLyricInfoDto {
     #[doc = "Gets or sets the id for the lyric."]
-    #[serde(
-        rename = "Id",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Id", default, skip_serializing_if = "Option::is_none")]
     pub id: Option<String>,
     #[doc = "Gets the lyrics."]
-    #[serde(
-        rename = "Lyrics",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Lyrics", default, skip_serializing_if = "Option::is_none")]
     pub lyrics: Option<LyricDto>,
     #[doc = "Gets the provider name."]
     #[serde(
@@ -345,17 +254,9 @@ pub struct RemoteSubtitleInfo {
         skip_serializing_if = "Option::is_none"
     )]
     pub ai_translated: Option<bool>,
-    #[serde(
-        rename = "Author",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Author", default, skip_serializing_if = "Option::is_none")]
     pub author: Option<String>,
-    #[serde(
-        rename = "Comment",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Comment", default, skip_serializing_if = "Option::is_none")]
     pub comment: Option<String>,
     #[serde(
         rename = "CommunityRating",
@@ -375,23 +276,11 @@ pub struct RemoteSubtitleInfo {
         skip_serializing_if = "Option::is_none"
     )]
     pub download_count: Option<i32>,
-    #[serde(
-        rename = "Forced",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Forced", default, skip_serializing_if = "Option::is_none")]
     pub forced: Option<bool>,
-    #[serde(
-        rename = "Format",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Format", default, skip_serializing_if = "Option::is_none")]
     pub format: Option<String>,
-    #[serde(
-        rename = "FrameRate",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "FrameRate", default, skip_serializing_if = "Option::is_none")]
     pub frame_rate: Option<f32>,
     #[serde(
         rename = "HearingImpaired",
@@ -399,11 +288,7 @@ pub struct RemoteSubtitleInfo {
         skip_serializing_if = "Option::is_none"
     )]
     pub hearing_impaired: Option<bool>,
-    #[serde(
-        rename = "Id",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Id", default, skip_serializing_if = "Option::is_none")]
     pub id: Option<String>,
     #[serde(
         rename = "IsHashMatch",
@@ -417,11 +302,7 @@ pub struct RemoteSubtitleInfo {
         skip_serializing_if = "Option::is_none"
     )]
     pub machine_translated: Option<bool>,
-    #[serde(
-        rename = "Name",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Name", default, skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
     #[serde(
         rename = "ProviderName",
@@ -460,7 +341,9 @@ impl Default for RemoteSubtitleInfo {
     }
 }
 
-#[derive(serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(
+    serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd,
+)]
 pub enum SubtitleDeliveryMethod {
     Encode,
     Embed,
@@ -504,18 +387,14 @@ impl TryFrom<&str> for SubtitleDeliveryMethod {
 
 impl TryFrom<&String> for SubtitleDeliveryMethod {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for SubtitleDeliveryMethod {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
@@ -614,4 +493,3 @@ pub struct UploadSubtitleDto {
     #[serde(rename = "Language")]
     pub language: String,
 }
-

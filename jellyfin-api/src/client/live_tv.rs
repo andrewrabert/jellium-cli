@@ -1,7 +1,7 @@
-use crate::types;
-use crate::error::Error;
-use crate::util::encode_path;
 use crate::Client;
+use crate::error::Error;
+use crate::types;
+use crate::util::encode_path;
 
 impl Client {
     #[doc = "Get channel mapping options\n\nSends a `GET` request to `/LiveTv/ChannelMappingOptions`\n\nArguments:\n- `provider_id`: Provider id.\n"]
@@ -83,25 +83,24 @@ impl Client {
         channel_id: &uuid::Uuid,
         user_id: Option<&uuid::Uuid>,
     ) -> Result<types::BaseItemDto, Error> {
-        self.request(reqwest::Method::GET, format!("/LiveTv/Channels/{}", encode_path(&channel_id.to_string())))
-            .query_opt("userId", user_id)
-            .send()
-            .await
+        self.request(
+            reqwest::Method::GET,
+            format!("/LiveTv/Channels/{}", encode_path(&channel_id.to_string())),
+        )
+        .query_opt("userId", user_id)
+        .send()
+        .await
     }
 
     #[doc = "Get guide info\n\nSends a `GET` request to `/LiveTv/GuideInfo`\n\n"]
-    pub async fn get_guide_info(
-        &self,
-    ) -> Result<types::GuideInfo, Error> {
+    pub async fn get_guide_info(&self) -> Result<types::GuideInfo, Error> {
         self.request(reqwest::Method::GET, "/LiveTv/GuideInfo".into())
             .send()
             .await
     }
 
     #[doc = "Gets available live tv services\n\nSends a `GET` request to `/LiveTv/Info`\n\n"]
-    pub async fn get_live_tv_info(
-        &self,
-    ) -> Result<types::LiveTvInfo, Error> {
+    pub async fn get_live_tv_info(&self) -> Result<types::LiveTvInfo, Error> {
         self.request(reqwest::Method::GET, "/LiveTv/Info".into())
             .send()
             .await
@@ -125,10 +124,7 @@ impl Client {
     }
 
     #[doc = "Delete listing provider\n\nSends a `DELETE` request to `/LiveTv/ListingProviders`\n\nArguments:\n- `id`: Listing provider id.\n"]
-    pub async fn delete_listing_provider(
-        &self,
-        id: Option<&str>,
-    ) -> Result<(), Error> {
+    pub async fn delete_listing_provider(&self, id: Option<&str>) -> Result<(), Error> {
         self.request(reqwest::Method::DELETE, "/LiveTv/ListingProviders".into())
             .query_opt("id", id)
             .send_no_content()
@@ -136,12 +132,13 @@ impl Client {
     }
 
     #[doc = "Gets default listings provider info\n\nSends a `GET` request to `/LiveTv/ListingProviders/Default`\n\n"]
-    pub async fn get_default_listing_provider(
-        &self,
-    ) -> Result<types::ListingsProviderInfo, Error> {
-        self.request(reqwest::Method::GET, "/LiveTv/ListingProviders/Default".into())
-            .send()
-            .await
+    pub async fn get_default_listing_provider(&self) -> Result<types::ListingsProviderInfo, Error> {
+        self.request(
+            reqwest::Method::GET,
+            "/LiveTv/ListingProviders/Default".into(),
+        )
+        .send()
+        .await
     }
 
     #[doc = "Gets available lineups\n\nSends a `GET` request to `/LiveTv/ListingProviders/Lineups`\n\nArguments:\n- `country`: Country.\n- `id`: Provider id.\n- `location`: Location.\n- `type_`: Provider type.\n"]
@@ -152,22 +149,26 @@ impl Client {
         location: Option<&str>,
         type_: Option<&str>,
     ) -> Result<Vec<types::NameIdPair>, Error> {
-        self.request(reqwest::Method::GET, "/LiveTv/ListingProviders/Lineups".into())
-            .query_opt("country", country)
-            .query_opt("id", id)
-            .query_opt("location", location)
-            .query_opt("type", type_)
-            .send()
-            .await
+        self.request(
+            reqwest::Method::GET,
+            "/LiveTv/ListingProviders/Lineups".into(),
+        )
+        .query_opt("country", country)
+        .query_opt("id", id)
+        .query_opt("location", location)
+        .query_opt("type", type_)
+        .send()
+        .await
     }
 
     #[doc = "Gets available countries\n\nSends a `GET` request to `/LiveTv/ListingProviders/SchedulesDirect/Countries`\n\n"]
-    pub async fn get_schedules_direct_countries(
-        &self,
-    ) -> Result<String, Error> {
-        self.request(reqwest::Method::GET, "/LiveTv/ListingProviders/SchedulesDirect/Countries".into())
-            .send()
-            .await
+    pub async fn get_schedules_direct_countries(&self) -> Result<serde_json::Value, Error> {
+        self.request(
+            reqwest::Method::GET,
+            "/LiveTv/ListingProviders/SchedulesDirect/Countries".into(),
+        )
+        .send()
+        .await
     }
 
     #[doc = "Gets a live tv recording stream\n\nSends a `GET` request to `/LiveTv/LiveRecordings/{recordingId}/stream`\n\nArguments:\n- `recording_id`: Recording id.\n"]
@@ -175,9 +176,15 @@ impl Client {
         &self,
         recording_id: &str,
     ) -> Result<reqwest::Response, Error> {
-        self.request(reqwest::Method::GET, format!("/LiveTv/LiveRecordings/{}/stream", encode_path(recording_id)))
-            .send_response()
-            .await
+        self.request(
+            reqwest::Method::GET,
+            format!(
+                "/LiveTv/LiveRecordings/{}/stream",
+                encode_path(recording_id)
+            ),
+        )
+        .send_response()
+        .await
     }
 
     #[doc = "Gets a live tv channel stream\n\nSends a `GET` request to `/LiveTv/LiveStreamFiles/{streamId}/stream.{container}`\n\nArguments:\n- `stream_id`: Stream id.\n- `container`: Container type.\n"]
@@ -186,9 +193,16 @@ impl Client {
         stream_id: &str,
         container: &types::GetLiveStreamFileContainer,
     ) -> Result<reqwest::Response, Error> {
-        self.request(reqwest::Method::GET, format!("/LiveTv/LiveStreamFiles/{}/stream.{}", encode_path(stream_id), encode_path(&container.to_string())))
-            .send_response()
-            .await
+        self.request(
+            reqwest::Method::GET,
+            format!(
+                "/LiveTv/LiveStreamFiles/{}/stream.{}",
+                encode_path(stream_id),
+                encode_path(&container.to_string())
+            ),
+        )
+        .send_response()
+        .await
     }
 
     #[doc = "Gets available live tv epgs\n\nSends a `GET` request to `/LiveTv/Programs`\n\nArguments:\n- `channel_ids`: The channels to return guide information for.\n- `enable_image_types`: Optional. The image types to include in the output.\n- `enable_images`: Optional. Include image information in output.\n- `enable_total_record_count`: Retrieve total record count.\n- `enable_user_data`: Optional. Include user data.\n- `fields`: Optional. Specify additional fields of information to return in the output.\n- `genre_ids`: The genre ids to return guide information for.\n- `genres`: The genres to return guide information for.\n- `has_aired`: Optional. Filter by programs that have completed airing, or not.\n- `image_type_limit`: Optional. The max number of images to return, per image type.\n- `is_airing`: Optional. Filter by programs that are currently airing, or not.\n- `is_kids`: Optional. Filter for kids.\n- `is_movie`: Optional. Filter for movies.\n- `is_news`: Optional. Filter for news.\n- `is_series`: Optional. Filter for series.\n- `is_sports`: Optional. Filter for sports.\n- `library_series_id`: Optional. Filter by library series id.\n- `limit`: Optional. The maximum number of records to return.\n- `max_end_date`: Optional. The maximum premiere end date.\n- `max_start_date`: Optional. The maximum premiere start date.\n- `min_end_date`: Optional. The minimum premiere end date.\n- `min_start_date`: Optional. The minimum premiere start date.\n- `series_timer_id`: Optional. Filter by series timer id.\n- `sort_by`: Optional. Specify one or more sort orders, comma delimited. Options: Name, StartDate.\n- `sort_order`: Sort Order - Ascending,Descending.\n- `start_index`: Optional. The record index to start at. All items with a lower index will be dropped from the results.\n- `user_id`: Optional. Filter by user id.\n"]
@@ -271,10 +285,13 @@ impl Client {
         program_id: &str,
         user_id: Option<&uuid::Uuid>,
     ) -> Result<types::BaseItemDto, Error> {
-        self.request(reqwest::Method::GET, format!("/LiveTv/Programs/{}", encode_path(program_id)))
-            .query_opt("userId", user_id)
-            .send()
-            .await
+        self.request(
+            reqwest::Method::GET,
+            format!("/LiveTv/Programs/{}", encode_path(program_id)),
+        )
+        .query_opt("userId", user_id)
+        .send()
+        .await
     }
 
     #[doc = "Gets recommended live tv epgs\n\nSends a `GET` request to `/LiveTv/Programs/Recommended`\n\nArguments:\n- `enable_image_types`: Optional. The image types to include in the output.\n- `enable_images`: Optional. Include image information in output.\n- `enable_total_record_count`: Retrieve total record count.\n- `enable_user_data`: Optional. include user data.\n- `fields`: Optional. Specify additional fields of information to return in the output.\n- `genre_ids`: The genres to return guide information for.\n- `has_aired`: Optional. Filter by programs that have completed airing, or not.\n- `image_type_limit`: Optional. The max number of images to return, per image type.\n- `is_airing`: Optional. Filter by programs that are currently airing, or not.\n- `is_kids`: Optional. Filter for kids.\n- `is_movie`: Optional. Filter for movies.\n- `is_news`: Optional. Filter for news.\n- `is_series`: Optional. Filter for series.\n- `is_sports`: Optional. Filter for sports.\n- `limit`: Optional. The maximum number of records to return.\n- `start_index`: Optional. The record index to start at. All items with a lower index will be dropped from the results.\n- `user_id`: Optional. filter by user id.\n"]
@@ -373,20 +390,29 @@ impl Client {
         recording_id: &uuid::Uuid,
         user_id: Option<&uuid::Uuid>,
     ) -> Result<types::BaseItemDto, Error> {
-        self.request(reqwest::Method::GET, format!("/LiveTv/Recordings/{}", encode_path(&recording_id.to_string())))
-            .query_opt("userId", user_id)
-            .send()
-            .await
+        self.request(
+            reqwest::Method::GET,
+            format!(
+                "/LiveTv/Recordings/{}",
+                encode_path(&recording_id.to_string())
+            ),
+        )
+        .query_opt("userId", user_id)
+        .send()
+        .await
     }
 
     #[doc = "Deletes a live tv recording\n\nSends a `DELETE` request to `/LiveTv/Recordings/{recordingId}`\n\nArguments:\n- `recording_id`: Recording id.\n"]
-    pub async fn delete_recording(
-        &self,
-        recording_id: &uuid::Uuid,
-    ) -> Result<(), Error> {
-        self.request(reqwest::Method::DELETE, format!("/LiveTv/Recordings/{}", encode_path(&recording_id.to_string())))
-            .send_no_content()
-            .await
+    pub async fn delete_recording(&self, recording_id: &uuid::Uuid) -> Result<(), Error> {
+        self.request(
+            reqwest::Method::DELETE,
+            format!(
+                "/LiveTv/Recordings/{}",
+                encode_path(&recording_id.to_string())
+            ),
+        )
+        .send_no_content()
+        .await
     }
 
     #[doc = "Gets recording folders\n\nSends a `GET` request to `/LiveTv/Recordings/Folders`\n\nArguments:\n- `user_id`: Optional. Filter by user and attach user data.\n"]
@@ -416,9 +442,15 @@ impl Client {
         &self,
         group_id: &uuid::Uuid,
     ) -> Result<reqwest::Response, Error> {
-        self.request(reqwest::Method::GET, format!("/LiveTv/Recordings/Groups/{}", encode_path(&group_id.to_string())))
-            .send_response()
-            .await
+        self.request(
+            reqwest::Method::GET,
+            format!(
+                "/LiveTv/Recordings/Groups/{}",
+                encode_path(&group_id.to_string())
+            ),
+        )
+        .send_response()
+        .await
     }
 
     #[doc = "Gets live tv recording series\n\nSends a `GET` request to `/LiveTv/Recordings/Series`\n\nArguments:\n- `channel_id`: Optional. Filter by channel id.\n- `enable_image_types`: Optional. The image types to include in the output.\n- `enable_images`: Optional. Include image information in output.\n- `enable_total_record_count`: Optional. Return total record count.\n- `enable_user_data`: Optional. Include user data.\n- `fields`: Optional. Specify additional fields of information to return in the output.\n- `group_id`: Optional. Filter by recording group.\n- `image_type_limit`: Optional. The max number of images to return, per image type.\n- `is_in_progress`: Optional. Filter by recordings that are in progress, or not.\n- `limit`: Optional. The maximum number of records to return.\n- `series_timer_id`: Optional. Filter by recordings belonging to a series timer.\n- `start_index`: Optional. The record index to start at. All items with a lower index will be dropped from the results.\n- `status`: Optional. Filter by recording status.\n- `user_id`: Optional. Filter by user and attach user data.\n"]
@@ -472,10 +504,7 @@ impl Client {
     }
 
     #[doc = "Creates a live tv series timer\n\nSends a `POST` request to `/LiveTv/SeriesTimers`\n\nArguments:\n- `body`: New series timer info.\n"]
-    pub async fn create_series_timer(
-        &self,
-        body: &types::SeriesTimerInfoDto,
-    ) -> Result<(), Error> {
+    pub async fn create_series_timer(&self, body: &types::SeriesTimerInfoDto) -> Result<(), Error> {
         self.request(reqwest::Method::POST, "/LiveTv/SeriesTimers".into())
             .json_body(body)
             .send_no_content()
@@ -487,9 +516,12 @@ impl Client {
         &self,
         timer_id: &str,
     ) -> Result<types::SeriesTimerInfoDto, Error> {
-        self.request(reqwest::Method::GET, format!("/LiveTv/SeriesTimers/{}", encode_path(timer_id)))
-            .send()
-            .await
+        self.request(
+            reqwest::Method::GET,
+            format!("/LiveTv/SeriesTimers/{}", encode_path(timer_id)),
+        )
+        .send()
+        .await
     }
 
     #[doc = "Updates a live tv series timer\n\nSends a `POST` request to `/LiveTv/SeriesTimers/{timerId}`\n\nArguments:\n- `timer_id`: Timer id.\n- `body`: New series timer info.\n"]
@@ -498,20 +530,23 @@ impl Client {
         timer_id: &str,
         body: &types::SeriesTimerInfoDto,
     ) -> Result<(), Error> {
-        self.request(reqwest::Method::POST, format!("/LiveTv/SeriesTimers/{}", encode_path(timer_id)))
-            .json_body(body)
-            .send_no_content()
-            .await
+        self.request(
+            reqwest::Method::POST,
+            format!("/LiveTv/SeriesTimers/{}", encode_path(timer_id)),
+        )
+        .json_body(body)
+        .send_no_content()
+        .await
     }
 
     #[doc = "Cancels a live tv series timer\n\nSends a `DELETE` request to `/LiveTv/SeriesTimers/{timerId}`\n\nArguments:\n- `timer_id`: Timer id.\n"]
-    pub async fn cancel_series_timer(
-        &self,
-        timer_id: &str,
-    ) -> Result<(), Error> {
-        self.request(reqwest::Method::DELETE, format!("/LiveTv/SeriesTimers/{}", encode_path(timer_id)))
-            .send_no_content()
-            .await
+    pub async fn cancel_series_timer(&self, timer_id: &str) -> Result<(), Error> {
+        self.request(
+            reqwest::Method::DELETE,
+            format!("/LiveTv/SeriesTimers/{}", encode_path(timer_id)),
+        )
+        .send_no_content()
+        .await
     }
 
     #[doc = "Gets the live tv timers\n\nSends a `GET` request to `/LiveTv/Timers`\n\nArguments:\n- `channel_id`: Optional. Filter by channel id.\n- `is_active`: Optional. Filter by timers that are active.\n- `is_scheduled`: Optional. Filter by timers that are scheduled.\n- `series_timer_id`: Optional. Filter by timers belonging to a series timer.\n"]
@@ -532,10 +567,7 @@ impl Client {
     }
 
     #[doc = "Creates a live tv timer\n\nSends a `POST` request to `/LiveTv/Timers`\n\nArguments:\n- `body`: New timer info.\n"]
-    pub async fn create_timer(
-        &self,
-        body: &types::TimerInfoDto,
-    ) -> Result<(), Error> {
+    pub async fn create_timer(&self, body: &types::TimerInfoDto) -> Result<(), Error> {
         self.request(reqwest::Method::POST, "/LiveTv/Timers".into())
             .json_body(body)
             .send_no_content()
@@ -543,13 +575,13 @@ impl Client {
     }
 
     #[doc = "Gets a timer\n\nSends a `GET` request to `/LiveTv/Timers/{timerId}`\n\nArguments:\n- `timer_id`: Timer id.\n"]
-    pub async fn get_timer(
-        &self,
-        timer_id: &str,
-    ) -> Result<types::TimerInfoDto, Error> {
-        self.request(reqwest::Method::GET, format!("/LiveTv/Timers/{}", encode_path(timer_id)))
-            .send()
-            .await
+    pub async fn get_timer(&self, timer_id: &str) -> Result<types::TimerInfoDto, Error> {
+        self.request(
+            reqwest::Method::GET,
+            format!("/LiveTv/Timers/{}", encode_path(timer_id)),
+        )
+        .send()
+        .await
     }
 
     #[doc = "Updates a live tv timer\n\nSends a `POST` request to `/LiveTv/Timers/{timerId}`\n\nArguments:\n- `timer_id`: Timer id.\n- `body`: New timer info.\n"]
@@ -558,20 +590,23 @@ impl Client {
         timer_id: &str,
         body: &types::TimerInfoDto,
     ) -> Result<(), Error> {
-        self.request(reqwest::Method::POST, format!("/LiveTv/Timers/{}", encode_path(timer_id)))
-            .json_body(body)
-            .send_no_content()
-            .await
+        self.request(
+            reqwest::Method::POST,
+            format!("/LiveTv/Timers/{}", encode_path(timer_id)),
+        )
+        .json_body(body)
+        .send_no_content()
+        .await
     }
 
     #[doc = "Cancels a live tv timer\n\nSends a `DELETE` request to `/LiveTv/Timers/{timerId}`\n\nArguments:\n- `timer_id`: Timer id.\n"]
-    pub async fn cancel_timer(
-        &self,
-        timer_id: &str,
-    ) -> Result<(), Error> {
-        self.request(reqwest::Method::DELETE, format!("/LiveTv/Timers/{}", encode_path(timer_id)))
-            .send_no_content()
-            .await
+    pub async fn cancel_timer(&self, timer_id: &str) -> Result<(), Error> {
+        self.request(
+            reqwest::Method::DELETE,
+            format!("/LiveTv/Timers/{}", encode_path(timer_id)),
+        )
+        .send_no_content()
+        .await
     }
 
     #[doc = "Gets the default values for a new timer\n\nSends a `GET` request to `/LiveTv/Timers/Defaults`\n\nArguments:\n- `program_id`: Optional. To attach default values based on a program.\n"]
@@ -597,10 +632,7 @@ impl Client {
     }
 
     #[doc = "Deletes a tuner host\n\nSends a `DELETE` request to `/LiveTv/TunerHosts`\n\nArguments:\n- `id`: Tuner host id.\n"]
-    pub async fn delete_tuner_host(
-        &self,
-        id: Option<&str>,
-    ) -> Result<(), Error> {
+    pub async fn delete_tuner_host(&self, id: Option<&str>) -> Result<(), Error> {
         self.request(reqwest::Method::DELETE, "/LiveTv/TunerHosts".into())
             .query_opt("id", id)
             .send_no_content()
@@ -608,22 +640,20 @@ impl Client {
     }
 
     #[doc = "Get tuner host types\n\nSends a `GET` request to `/LiveTv/TunerHosts/Types`\n\n"]
-    pub async fn get_tuner_host_types(
-        &self,
-    ) -> Result<Vec<types::NameIdPair>, Error> {
+    pub async fn get_tuner_host_types(&self) -> Result<Vec<types::NameIdPair>, Error> {
         self.request(reqwest::Method::GET, "/LiveTv/TunerHosts/Types".into())
             .send()
             .await
     }
 
     #[doc = "Resets a tv tuner\n\nSends a `POST` request to `/LiveTv/Tuners/{tunerId}/Reset`\n\nArguments:\n- `tuner_id`: Tuner id.\n"]
-    pub async fn reset_tuner(
-        &self,
-        tuner_id: &str,
-    ) -> Result<(), Error> {
-        self.request(reqwest::Method::POST, format!("/LiveTv/Tuners/{}/Reset", encode_path(tuner_id)))
-            .send_no_content()
-            .await
+    pub async fn reset_tuner(&self, tuner_id: &str) -> Result<(), Error> {
+        self.request(
+            reqwest::Method::POST,
+            format!("/LiveTv/Tuners/{}/Reset", encode_path(tuner_id)),
+        )
+        .send_no_content()
+        .await
     }
 
     #[doc = "Discover tuners\n\nSends a `GET` request to `/LiveTv/Tuners/Discover`\n\nArguments:\n- `new_devices_only`: Only discover new tuners.\n"]

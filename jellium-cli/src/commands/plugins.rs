@@ -74,7 +74,8 @@ pub async fn execute(
             crate::output::print_json(&result)?;
         }
         PluginsCommand::UpdateConfig { id } => {
-            client.update_plugin_configuration(&id).await?;
+            let body: serde_json::Value = serde_json::from_reader(std::io::stdin())?;
+            client.update_plugin_configuration(&id, &body).await?;
         }
         PluginsCommand::Manifest { id } => {
             client.get_plugin_manifest(&id).await?;

@@ -235,10 +235,7 @@ pub async fn execute(
             entry_ids,
         } => {
             client
-                .remove_item_from_playlist(
-                    &playlist_id.to_string(),
-                    entry_ids.as_ref(),
-                )
+                .remove_item_from_playlist(&playlist_id.to_string(), entry_ids.as_ref())
                 .await?;
         }
         PlaylistsCommand::MoveItem {
@@ -265,9 +262,7 @@ pub async fn execute(
             playlist_id,
             user_id: uid,
         } => {
-            client
-                .remove_user_from_playlist(playlist_id, uid)
-                .await?;
+            client.remove_user_from_playlist(playlist_id, uid).await?;
         }
         PlaylistsCommand::InstantMix {
             id,

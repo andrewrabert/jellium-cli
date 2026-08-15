@@ -1,4 +1,3 @@
-
 #[doc = "`GetAudioStreamAudioCodec`"]
 #[derive(serde::Serialize, Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
 #[serde(transparent)]
@@ -13,10 +12,9 @@ impl std::ops::Deref for GetAudioStreamAudioCodec {
 impl std::str::FromStr for GetAudioStreamAudioCodec {
     type Err = super::error::ConversionError;
     fn from_str(value: &str) -> Result<Self, super::error::ConversionError> {
-        static PATTERN: std::sync::LazyLock<regress::Regex> =
-            std::sync::LazyLock::new(|| {
-                regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
-            });
+        static PATTERN: std::sync::LazyLock<regress::Regex> = std::sync::LazyLock::new(|| {
+            regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
+        });
         if PATTERN.find(value).is_none() {
             return Err("doesn't match pattern \"^[a-zA-Z0-9\\-\\._,|]{0,40}$\"".into());
         }
@@ -33,18 +31,14 @@ impl TryFrom<&str> for GetAudioStreamAudioCodec {
 
 impl TryFrom<&String> for GetAudioStreamAudioCodec {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for GetAudioStreamAudioCodec {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
@@ -81,10 +75,9 @@ impl std::ops::Deref for GetAudioStreamByContainerAudioCodec {
 impl std::str::FromStr for GetAudioStreamByContainerAudioCodec {
     type Err = super::error::ConversionError;
     fn from_str(value: &str) -> Result<Self, super::error::ConversionError> {
-        static PATTERN: std::sync::LazyLock<regress::Regex> =
-            std::sync::LazyLock::new(|| {
-                regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
-            });
+        static PATTERN: std::sync::LazyLock<regress::Regex> = std::sync::LazyLock::new(|| {
+            regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
+        });
         if PATTERN.find(value).is_none() {
             return Err("doesn't match pattern \"^[a-zA-Z0-9\\-\\._,|]{0,40}$\"".into());
         }
@@ -101,18 +94,14 @@ impl TryFrom<&str> for GetAudioStreamByContainerAudioCodec {
 
 impl TryFrom<&String> for GetAudioStreamByContainerAudioCodec {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for GetAudioStreamByContainerAudioCodec {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
@@ -149,10 +138,9 @@ impl std::ops::Deref for GetAudioStreamByContainerContainer {
 impl std::str::FromStr for GetAudioStreamByContainerContainer {
     type Err = super::error::ConversionError;
     fn from_str(value: &str) -> Result<Self, super::error::ConversionError> {
-        static PATTERN: std::sync::LazyLock<regress::Regex> =
-            std::sync::LazyLock::new(|| {
-                regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
-            });
+        static PATTERN: std::sync::LazyLock<regress::Regex> = std::sync::LazyLock::new(|| {
+            regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
+        });
         if PATTERN.find(value).is_none() {
             return Err("doesn't match pattern \"^[a-zA-Z0-9\\-\\._,|]{0,40}$\"".into());
         }
@@ -169,18 +157,14 @@ impl TryFrom<&str> for GetAudioStreamByContainerContainer {
 
 impl TryFrom<&String> for GetAudioStreamByContainerContainer {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for GetAudioStreamByContainerContainer {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
@@ -218,9 +202,7 @@ impl std::str::FromStr for GetAudioStreamByContainerLevel {
     type Err = super::error::ConversionError;
     fn from_str(value: &str) -> Result<Self, super::error::ConversionError> {
         static PATTERN: std::sync::LazyLock<regress::Regex> =
-            std::sync::LazyLock::new(|| {
-                regress::Regex::new("-?[0-9]+(?:\\.[0-9]+)?").unwrap()
-            });
+            std::sync::LazyLock::new(|| regress::Regex::new("-?[0-9]+(?:\\.[0-9]+)?").unwrap());
         if PATTERN.find(value).is_none() {
             return Err("doesn't match pattern \"-?[0-9]+(?:\\.[0-9]+)?\"".into());
         }
@@ -237,18 +219,14 @@ impl TryFrom<&str> for GetAudioStreamByContainerLevel {
 
 impl TryFrom<&String> for GetAudioStreamByContainerLevel {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for GetAudioStreamByContainerLevel {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
@@ -285,10 +263,9 @@ impl std::ops::Deref for GetAudioStreamByContainerSegmentContainer {
 impl std::str::FromStr for GetAudioStreamByContainerSegmentContainer {
     type Err = super::error::ConversionError;
     fn from_str(value: &str) -> Result<Self, super::error::ConversionError> {
-        static PATTERN: std::sync::LazyLock<regress::Regex> =
-            std::sync::LazyLock::new(|| {
-                regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
-            });
+        static PATTERN: std::sync::LazyLock<regress::Regex> = std::sync::LazyLock::new(|| {
+            regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
+        });
         if PATTERN.find(value).is_none() {
             return Err("doesn't match pattern \"^[a-zA-Z0-9\\-\\._,|]{0,40}$\"".into());
         }
@@ -305,18 +282,14 @@ impl TryFrom<&str> for GetAudioStreamByContainerSegmentContainer {
 
 impl TryFrom<&String> for GetAudioStreamByContainerSegmentContainer {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for GetAudioStreamByContainerSegmentContainer {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
@@ -353,10 +326,9 @@ impl std::ops::Deref for GetAudioStreamByContainerSubtitleCodec {
 impl std::str::FromStr for GetAudioStreamByContainerSubtitleCodec {
     type Err = super::error::ConversionError;
     fn from_str(value: &str) -> Result<Self, super::error::ConversionError> {
-        static PATTERN: std::sync::LazyLock<regress::Regex> =
-            std::sync::LazyLock::new(|| {
-                regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
-            });
+        static PATTERN: std::sync::LazyLock<regress::Regex> = std::sync::LazyLock::new(|| {
+            regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
+        });
         if PATTERN.find(value).is_none() {
             return Err("doesn't match pattern \"^[a-zA-Z0-9\\-\\._,|]{0,40}$\"".into());
         }
@@ -373,18 +345,14 @@ impl TryFrom<&str> for GetAudioStreamByContainerSubtitleCodec {
 
 impl TryFrom<&String> for GetAudioStreamByContainerSubtitleCodec {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for GetAudioStreamByContainerSubtitleCodec {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
@@ -421,10 +389,9 @@ impl std::ops::Deref for GetAudioStreamByContainerVideoCodec {
 impl std::str::FromStr for GetAudioStreamByContainerVideoCodec {
     type Err = super::error::ConversionError;
     fn from_str(value: &str) -> Result<Self, super::error::ConversionError> {
-        static PATTERN: std::sync::LazyLock<regress::Regex> =
-            std::sync::LazyLock::new(|| {
-                regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
-            });
+        static PATTERN: std::sync::LazyLock<regress::Regex> = std::sync::LazyLock::new(|| {
+            regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
+        });
         if PATTERN.find(value).is_none() {
             return Err("doesn't match pattern \"^[a-zA-Z0-9\\-\\._,|]{0,40}$\"".into());
         }
@@ -441,18 +408,14 @@ impl TryFrom<&str> for GetAudioStreamByContainerVideoCodec {
 
 impl TryFrom<&String> for GetAudioStreamByContainerVideoCodec {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for GetAudioStreamByContainerVideoCodec {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
@@ -489,10 +452,9 @@ impl std::ops::Deref for GetAudioStreamContainer {
 impl std::str::FromStr for GetAudioStreamContainer {
     type Err = super::error::ConversionError;
     fn from_str(value: &str) -> Result<Self, super::error::ConversionError> {
-        static PATTERN: std::sync::LazyLock<regress::Regex> =
-            std::sync::LazyLock::new(|| {
-                regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
-            });
+        static PATTERN: std::sync::LazyLock<regress::Regex> = std::sync::LazyLock::new(|| {
+            regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
+        });
         if PATTERN.find(value).is_none() {
             return Err("doesn't match pattern \"^[a-zA-Z0-9\\-\\._,|]{0,40}$\"".into());
         }
@@ -509,18 +471,14 @@ impl TryFrom<&str> for GetAudioStreamContainer {
 
 impl TryFrom<&String> for GetAudioStreamContainer {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for GetAudioStreamContainer {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
@@ -558,9 +516,7 @@ impl std::str::FromStr for GetAudioStreamLevel {
     type Err = super::error::ConversionError;
     fn from_str(value: &str) -> Result<Self, super::error::ConversionError> {
         static PATTERN: std::sync::LazyLock<regress::Regex> =
-            std::sync::LazyLock::new(|| {
-                regress::Regex::new("-?[0-9]+(?:\\.[0-9]+)?").unwrap()
-            });
+            std::sync::LazyLock::new(|| regress::Regex::new("-?[0-9]+(?:\\.[0-9]+)?").unwrap());
         if PATTERN.find(value).is_none() {
             return Err("doesn't match pattern \"-?[0-9]+(?:\\.[0-9]+)?\"".into());
         }
@@ -577,18 +533,14 @@ impl TryFrom<&str> for GetAudioStreamLevel {
 
 impl TryFrom<&String> for GetAudioStreamLevel {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for GetAudioStreamLevel {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
@@ -625,10 +577,9 @@ impl std::ops::Deref for GetAudioStreamSegmentContainer {
 impl std::str::FromStr for GetAudioStreamSegmentContainer {
     type Err = super::error::ConversionError;
     fn from_str(value: &str) -> Result<Self, super::error::ConversionError> {
-        static PATTERN: std::sync::LazyLock<regress::Regex> =
-            std::sync::LazyLock::new(|| {
-                regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
-            });
+        static PATTERN: std::sync::LazyLock<regress::Regex> = std::sync::LazyLock::new(|| {
+            regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
+        });
         if PATTERN.find(value).is_none() {
             return Err("doesn't match pattern \"^[a-zA-Z0-9\\-\\._,|]{0,40}$\"".into());
         }
@@ -645,18 +596,14 @@ impl TryFrom<&str> for GetAudioStreamSegmentContainer {
 
 impl TryFrom<&String> for GetAudioStreamSegmentContainer {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for GetAudioStreamSegmentContainer {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
@@ -693,10 +640,9 @@ impl std::ops::Deref for GetAudioStreamSubtitleCodec {
 impl std::str::FromStr for GetAudioStreamSubtitleCodec {
     type Err = super::error::ConversionError;
     fn from_str(value: &str) -> Result<Self, super::error::ConversionError> {
-        static PATTERN: std::sync::LazyLock<regress::Regex> =
-            std::sync::LazyLock::new(|| {
-                regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
-            });
+        static PATTERN: std::sync::LazyLock<regress::Regex> = std::sync::LazyLock::new(|| {
+            regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
+        });
         if PATTERN.find(value).is_none() {
             return Err("doesn't match pattern \"^[a-zA-Z0-9\\-\\._,|]{0,40}$\"".into());
         }
@@ -713,18 +659,14 @@ impl TryFrom<&str> for GetAudioStreamSubtitleCodec {
 
 impl TryFrom<&String> for GetAudioStreamSubtitleCodec {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for GetAudioStreamSubtitleCodec {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
@@ -761,10 +703,9 @@ impl std::ops::Deref for GetAudioStreamVideoCodec {
 impl std::str::FromStr for GetAudioStreamVideoCodec {
     type Err = super::error::ConversionError;
     fn from_str(value: &str) -> Result<Self, super::error::ConversionError> {
-        static PATTERN: std::sync::LazyLock<regress::Regex> =
-            std::sync::LazyLock::new(|| {
-                regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
-            });
+        static PATTERN: std::sync::LazyLock<regress::Regex> = std::sync::LazyLock::new(|| {
+            regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
+        });
         if PATTERN.find(value).is_none() {
             return Err("doesn't match pattern \"^[a-zA-Z0-9\\-\\._,|]{0,40}$\"".into());
         }
@@ -781,18 +722,14 @@ impl TryFrom<&str> for GetAudioStreamVideoCodec {
 
 impl TryFrom<&String> for GetAudioStreamVideoCodec {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for GetAudioStreamVideoCodec {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
@@ -829,10 +766,9 @@ impl std::ops::Deref for GetHlsAudioSegmentAudioCodec {
 impl std::str::FromStr for GetHlsAudioSegmentAudioCodec {
     type Err = super::error::ConversionError;
     fn from_str(value: &str) -> Result<Self, super::error::ConversionError> {
-        static PATTERN: std::sync::LazyLock<regress::Regex> =
-            std::sync::LazyLock::new(|| {
-                regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
-            });
+        static PATTERN: std::sync::LazyLock<regress::Regex> = std::sync::LazyLock::new(|| {
+            regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
+        });
         if PATTERN.find(value).is_none() {
             return Err("doesn't match pattern \"^[a-zA-Z0-9\\-\\._,|]{0,40}$\"".into());
         }
@@ -849,18 +785,14 @@ impl TryFrom<&str> for GetHlsAudioSegmentAudioCodec {
 
 impl TryFrom<&String> for GetHlsAudioSegmentAudioCodec {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for GetHlsAudioSegmentAudioCodec {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
@@ -897,10 +829,9 @@ impl std::ops::Deref for GetHlsAudioSegmentContainer {
 impl std::str::FromStr for GetHlsAudioSegmentContainer {
     type Err = super::error::ConversionError;
     fn from_str(value: &str) -> Result<Self, super::error::ConversionError> {
-        static PATTERN: std::sync::LazyLock<regress::Regex> =
-            std::sync::LazyLock::new(|| {
-                regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
-            });
+        static PATTERN: std::sync::LazyLock<regress::Regex> = std::sync::LazyLock::new(|| {
+            regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
+        });
         if PATTERN.find(value).is_none() {
             return Err("doesn't match pattern \"^[a-zA-Z0-9\\-\\._,|]{0,40}$\"".into());
         }
@@ -917,18 +848,14 @@ impl TryFrom<&str> for GetHlsAudioSegmentContainer {
 
 impl TryFrom<&String> for GetHlsAudioSegmentContainer {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for GetHlsAudioSegmentContainer {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
@@ -966,9 +893,7 @@ impl std::str::FromStr for GetHlsAudioSegmentLevel {
     type Err = super::error::ConversionError;
     fn from_str(value: &str) -> Result<Self, super::error::ConversionError> {
         static PATTERN: std::sync::LazyLock<regress::Regex> =
-            std::sync::LazyLock::new(|| {
-                regress::Regex::new("-?[0-9]+(?:\\.[0-9]+)?").unwrap()
-            });
+            std::sync::LazyLock::new(|| regress::Regex::new("-?[0-9]+(?:\\.[0-9]+)?").unwrap());
         if PATTERN.find(value).is_none() {
             return Err("doesn't match pattern \"-?[0-9]+(?:\\.[0-9]+)?\"".into());
         }
@@ -985,18 +910,14 @@ impl TryFrom<&str> for GetHlsAudioSegmentLevel {
 
 impl TryFrom<&String> for GetHlsAudioSegmentLevel {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for GetHlsAudioSegmentLevel {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
@@ -1033,10 +954,9 @@ impl std::ops::Deref for GetHlsAudioSegmentSegmentContainer {
 impl std::str::FromStr for GetHlsAudioSegmentSegmentContainer {
     type Err = super::error::ConversionError;
     fn from_str(value: &str) -> Result<Self, super::error::ConversionError> {
-        static PATTERN: std::sync::LazyLock<regress::Regex> =
-            std::sync::LazyLock::new(|| {
-                regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
-            });
+        static PATTERN: std::sync::LazyLock<regress::Regex> = std::sync::LazyLock::new(|| {
+            regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
+        });
         if PATTERN.find(value).is_none() {
             return Err("doesn't match pattern \"^[a-zA-Z0-9\\-\\._,|]{0,40}$\"".into());
         }
@@ -1053,18 +973,14 @@ impl TryFrom<&str> for GetHlsAudioSegmentSegmentContainer {
 
 impl TryFrom<&String> for GetHlsAudioSegmentSegmentContainer {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for GetHlsAudioSegmentSegmentContainer {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
@@ -1101,10 +1017,9 @@ impl std::ops::Deref for GetHlsAudioSegmentSubtitleCodec {
 impl std::str::FromStr for GetHlsAudioSegmentSubtitleCodec {
     type Err = super::error::ConversionError;
     fn from_str(value: &str) -> Result<Self, super::error::ConversionError> {
-        static PATTERN: std::sync::LazyLock<regress::Regex> =
-            std::sync::LazyLock::new(|| {
-                regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
-            });
+        static PATTERN: std::sync::LazyLock<regress::Regex> = std::sync::LazyLock::new(|| {
+            regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
+        });
         if PATTERN.find(value).is_none() {
             return Err("doesn't match pattern \"^[a-zA-Z0-9\\-\\._,|]{0,40}$\"".into());
         }
@@ -1121,18 +1036,14 @@ impl TryFrom<&str> for GetHlsAudioSegmentSubtitleCodec {
 
 impl TryFrom<&String> for GetHlsAudioSegmentSubtitleCodec {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for GetHlsAudioSegmentSubtitleCodec {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
@@ -1169,10 +1080,9 @@ impl std::ops::Deref for GetHlsAudioSegmentVideoCodec {
 impl std::str::FromStr for GetHlsAudioSegmentVideoCodec {
     type Err = super::error::ConversionError;
     fn from_str(value: &str) -> Result<Self, super::error::ConversionError> {
-        static PATTERN: std::sync::LazyLock<regress::Regex> =
-            std::sync::LazyLock::new(|| {
-                regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
-            });
+        static PATTERN: std::sync::LazyLock<regress::Regex> = std::sync::LazyLock::new(|| {
+            regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
+        });
         if PATTERN.find(value).is_none() {
             return Err("doesn't match pattern \"^[a-zA-Z0-9\\-\\._,|]{0,40}$\"".into());
         }
@@ -1189,18 +1099,14 @@ impl TryFrom<&str> for GetHlsAudioSegmentVideoCodec {
 
 impl TryFrom<&String> for GetHlsAudioSegmentVideoCodec {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for GetHlsAudioSegmentVideoCodec {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
@@ -1237,10 +1143,9 @@ impl std::ops::Deref for GetHlsVideoSegmentAudioCodec {
 impl std::str::FromStr for GetHlsVideoSegmentAudioCodec {
     type Err = super::error::ConversionError;
     fn from_str(value: &str) -> Result<Self, super::error::ConversionError> {
-        static PATTERN: std::sync::LazyLock<regress::Regex> =
-            std::sync::LazyLock::new(|| {
-                regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
-            });
+        static PATTERN: std::sync::LazyLock<regress::Regex> = std::sync::LazyLock::new(|| {
+            regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
+        });
         if PATTERN.find(value).is_none() {
             return Err("doesn't match pattern \"^[a-zA-Z0-9\\-\\._,|]{0,40}$\"".into());
         }
@@ -1257,18 +1162,14 @@ impl TryFrom<&str> for GetHlsVideoSegmentAudioCodec {
 
 impl TryFrom<&String> for GetHlsVideoSegmentAudioCodec {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for GetHlsVideoSegmentAudioCodec {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
@@ -1305,10 +1206,9 @@ impl std::ops::Deref for GetHlsVideoSegmentContainer {
 impl std::str::FromStr for GetHlsVideoSegmentContainer {
     type Err = super::error::ConversionError;
     fn from_str(value: &str) -> Result<Self, super::error::ConversionError> {
-        static PATTERN: std::sync::LazyLock<regress::Regex> =
-            std::sync::LazyLock::new(|| {
-                regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
-            });
+        static PATTERN: std::sync::LazyLock<regress::Regex> = std::sync::LazyLock::new(|| {
+            regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
+        });
         if PATTERN.find(value).is_none() {
             return Err("doesn't match pattern \"^[a-zA-Z0-9\\-\\._,|]{0,40}$\"".into());
         }
@@ -1325,18 +1225,14 @@ impl TryFrom<&str> for GetHlsVideoSegmentContainer {
 
 impl TryFrom<&String> for GetHlsVideoSegmentContainer {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for GetHlsVideoSegmentContainer {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
@@ -1374,9 +1270,7 @@ impl std::str::FromStr for GetHlsVideoSegmentLevel {
     type Err = super::error::ConversionError;
     fn from_str(value: &str) -> Result<Self, super::error::ConversionError> {
         static PATTERN: std::sync::LazyLock<regress::Regex> =
-            std::sync::LazyLock::new(|| {
-                regress::Regex::new("-?[0-9]+(?:\\.[0-9]+)?").unwrap()
-            });
+            std::sync::LazyLock::new(|| regress::Regex::new("-?[0-9]+(?:\\.[0-9]+)?").unwrap());
         if PATTERN.find(value).is_none() {
             return Err("doesn't match pattern \"-?[0-9]+(?:\\.[0-9]+)?\"".into());
         }
@@ -1393,18 +1287,14 @@ impl TryFrom<&str> for GetHlsVideoSegmentLevel {
 
 impl TryFrom<&String> for GetHlsVideoSegmentLevel {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for GetHlsVideoSegmentLevel {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
@@ -1441,10 +1331,9 @@ impl std::ops::Deref for GetHlsVideoSegmentSegmentContainer {
 impl std::str::FromStr for GetHlsVideoSegmentSegmentContainer {
     type Err = super::error::ConversionError;
     fn from_str(value: &str) -> Result<Self, super::error::ConversionError> {
-        static PATTERN: std::sync::LazyLock<regress::Regex> =
-            std::sync::LazyLock::new(|| {
-                regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
-            });
+        static PATTERN: std::sync::LazyLock<regress::Regex> = std::sync::LazyLock::new(|| {
+            regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
+        });
         if PATTERN.find(value).is_none() {
             return Err("doesn't match pattern \"^[a-zA-Z0-9\\-\\._,|]{0,40}$\"".into());
         }
@@ -1461,18 +1350,14 @@ impl TryFrom<&str> for GetHlsVideoSegmentSegmentContainer {
 
 impl TryFrom<&String> for GetHlsVideoSegmentSegmentContainer {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for GetHlsVideoSegmentSegmentContainer {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
@@ -1509,10 +1394,9 @@ impl std::ops::Deref for GetHlsVideoSegmentSubtitleCodec {
 impl std::str::FromStr for GetHlsVideoSegmentSubtitleCodec {
     type Err = super::error::ConversionError;
     fn from_str(value: &str) -> Result<Self, super::error::ConversionError> {
-        static PATTERN: std::sync::LazyLock<regress::Regex> =
-            std::sync::LazyLock::new(|| {
-                regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
-            });
+        static PATTERN: std::sync::LazyLock<regress::Regex> = std::sync::LazyLock::new(|| {
+            regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
+        });
         if PATTERN.find(value).is_none() {
             return Err("doesn't match pattern \"^[a-zA-Z0-9\\-\\._,|]{0,40}$\"".into());
         }
@@ -1529,18 +1413,14 @@ impl TryFrom<&str> for GetHlsVideoSegmentSubtitleCodec {
 
 impl TryFrom<&String> for GetHlsVideoSegmentSubtitleCodec {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for GetHlsVideoSegmentSubtitleCodec {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
@@ -1577,10 +1457,9 @@ impl std::ops::Deref for GetHlsVideoSegmentVideoCodec {
 impl std::str::FromStr for GetHlsVideoSegmentVideoCodec {
     type Err = super::error::ConversionError;
     fn from_str(value: &str) -> Result<Self, super::error::ConversionError> {
-        static PATTERN: std::sync::LazyLock<regress::Regex> =
-            std::sync::LazyLock::new(|| {
-                regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
-            });
+        static PATTERN: std::sync::LazyLock<regress::Regex> = std::sync::LazyLock::new(|| {
+            regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
+        });
         if PATTERN.find(value).is_none() {
             return Err("doesn't match pattern \"^[a-zA-Z0-9\\-\\._,|]{0,40}$\"".into());
         }
@@ -1597,18 +1476,14 @@ impl TryFrom<&str> for GetHlsVideoSegmentVideoCodec {
 
 impl TryFrom<&String> for GetHlsVideoSegmentVideoCodec {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for GetHlsVideoSegmentVideoCodec {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
@@ -1645,10 +1520,9 @@ impl std::ops::Deref for GetLiveHlsStreamAudioCodec {
 impl std::str::FromStr for GetLiveHlsStreamAudioCodec {
     type Err = super::error::ConversionError;
     fn from_str(value: &str) -> Result<Self, super::error::ConversionError> {
-        static PATTERN: std::sync::LazyLock<regress::Regex> =
-            std::sync::LazyLock::new(|| {
-                regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
-            });
+        static PATTERN: std::sync::LazyLock<regress::Regex> = std::sync::LazyLock::new(|| {
+            regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
+        });
         if PATTERN.find(value).is_none() {
             return Err("doesn't match pattern \"^[a-zA-Z0-9\\-\\._,|]{0,40}$\"".into());
         }
@@ -1665,18 +1539,14 @@ impl TryFrom<&str> for GetLiveHlsStreamAudioCodec {
 
 impl TryFrom<&String> for GetLiveHlsStreamAudioCodec {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for GetLiveHlsStreamAudioCodec {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
@@ -1713,10 +1583,9 @@ impl std::ops::Deref for GetLiveHlsStreamContainer {
 impl std::str::FromStr for GetLiveHlsStreamContainer {
     type Err = super::error::ConversionError;
     fn from_str(value: &str) -> Result<Self, super::error::ConversionError> {
-        static PATTERN: std::sync::LazyLock<regress::Regex> =
-            std::sync::LazyLock::new(|| {
-                regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
-            });
+        static PATTERN: std::sync::LazyLock<regress::Regex> = std::sync::LazyLock::new(|| {
+            regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
+        });
         if PATTERN.find(value).is_none() {
             return Err("doesn't match pattern \"^[a-zA-Z0-9\\-\\._,|]{0,40}$\"".into());
         }
@@ -1733,18 +1602,14 @@ impl TryFrom<&str> for GetLiveHlsStreamContainer {
 
 impl TryFrom<&String> for GetLiveHlsStreamContainer {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for GetLiveHlsStreamContainer {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
@@ -1782,9 +1647,7 @@ impl std::str::FromStr for GetLiveHlsStreamLevel {
     type Err = super::error::ConversionError;
     fn from_str(value: &str) -> Result<Self, super::error::ConversionError> {
         static PATTERN: std::sync::LazyLock<regress::Regex> =
-            std::sync::LazyLock::new(|| {
-                regress::Regex::new("-?[0-9]+(?:\\.[0-9]+)?").unwrap()
-            });
+            std::sync::LazyLock::new(|| regress::Regex::new("-?[0-9]+(?:\\.[0-9]+)?").unwrap());
         if PATTERN.find(value).is_none() {
             return Err("doesn't match pattern \"-?[0-9]+(?:\\.[0-9]+)?\"".into());
         }
@@ -1801,18 +1664,14 @@ impl TryFrom<&str> for GetLiveHlsStreamLevel {
 
 impl TryFrom<&String> for GetLiveHlsStreamLevel {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for GetLiveHlsStreamLevel {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
@@ -1849,10 +1708,9 @@ impl std::ops::Deref for GetLiveHlsStreamSegmentContainer {
 impl std::str::FromStr for GetLiveHlsStreamSegmentContainer {
     type Err = super::error::ConversionError;
     fn from_str(value: &str) -> Result<Self, super::error::ConversionError> {
-        static PATTERN: std::sync::LazyLock<regress::Regex> =
-            std::sync::LazyLock::new(|| {
-                regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
-            });
+        static PATTERN: std::sync::LazyLock<regress::Regex> = std::sync::LazyLock::new(|| {
+            regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
+        });
         if PATTERN.find(value).is_none() {
             return Err("doesn't match pattern \"^[a-zA-Z0-9\\-\\._,|]{0,40}$\"".into());
         }
@@ -1869,18 +1727,14 @@ impl TryFrom<&str> for GetLiveHlsStreamSegmentContainer {
 
 impl TryFrom<&String> for GetLiveHlsStreamSegmentContainer {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for GetLiveHlsStreamSegmentContainer {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
@@ -1917,10 +1771,9 @@ impl std::ops::Deref for GetLiveHlsStreamSubtitleCodec {
 impl std::str::FromStr for GetLiveHlsStreamSubtitleCodec {
     type Err = super::error::ConversionError;
     fn from_str(value: &str) -> Result<Self, super::error::ConversionError> {
-        static PATTERN: std::sync::LazyLock<regress::Regex> =
-            std::sync::LazyLock::new(|| {
-                regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
-            });
+        static PATTERN: std::sync::LazyLock<regress::Regex> = std::sync::LazyLock::new(|| {
+            regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
+        });
         if PATTERN.find(value).is_none() {
             return Err("doesn't match pattern \"^[a-zA-Z0-9\\-\\._,|]{0,40}$\"".into());
         }
@@ -1937,18 +1790,14 @@ impl TryFrom<&str> for GetLiveHlsStreamSubtitleCodec {
 
 impl TryFrom<&String> for GetLiveHlsStreamSubtitleCodec {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for GetLiveHlsStreamSubtitleCodec {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
@@ -1985,10 +1834,9 @@ impl std::ops::Deref for GetLiveHlsStreamVideoCodec {
 impl std::str::FromStr for GetLiveHlsStreamVideoCodec {
     type Err = super::error::ConversionError;
     fn from_str(value: &str) -> Result<Self, super::error::ConversionError> {
-        static PATTERN: std::sync::LazyLock<regress::Regex> =
-            std::sync::LazyLock::new(|| {
-                regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
-            });
+        static PATTERN: std::sync::LazyLock<regress::Regex> = std::sync::LazyLock::new(|| {
+            regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
+        });
         if PATTERN.find(value).is_none() {
             return Err("doesn't match pattern \"^[a-zA-Z0-9\\-\\._,|]{0,40}$\"".into());
         }
@@ -2005,18 +1853,14 @@ impl TryFrom<&str> for GetLiveHlsStreamVideoCodec {
 
 impl TryFrom<&String> for GetLiveHlsStreamVideoCodec {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for GetLiveHlsStreamVideoCodec {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
@@ -2053,10 +1897,9 @@ impl std::ops::Deref for GetLiveStreamFileContainer {
 impl std::str::FromStr for GetLiveStreamFileContainer {
     type Err = super::error::ConversionError;
     fn from_str(value: &str) -> Result<Self, super::error::ConversionError> {
-        static PATTERN: std::sync::LazyLock<regress::Regex> =
-            std::sync::LazyLock::new(|| {
-                regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
-            });
+        static PATTERN: std::sync::LazyLock<regress::Regex> = std::sync::LazyLock::new(|| {
+            regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
+        });
         if PATTERN.find(value).is_none() {
             return Err("doesn't match pattern \"^[a-zA-Z0-9\\-\\._,|]{0,40}$\"".into());
         }
@@ -2073,18 +1916,14 @@ impl TryFrom<&str> for GetLiveStreamFileContainer {
 
 impl TryFrom<&String> for GetLiveStreamFileContainer {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for GetLiveStreamFileContainer {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
@@ -2121,10 +1960,9 @@ impl std::ops::Deref for GetMasterHlsAudioPlaylistAudioCodec {
 impl std::str::FromStr for GetMasterHlsAudioPlaylistAudioCodec {
     type Err = super::error::ConversionError;
     fn from_str(value: &str) -> Result<Self, super::error::ConversionError> {
-        static PATTERN: std::sync::LazyLock<regress::Regex> =
-            std::sync::LazyLock::new(|| {
-                regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
-            });
+        static PATTERN: std::sync::LazyLock<regress::Regex> = std::sync::LazyLock::new(|| {
+            regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
+        });
         if PATTERN.find(value).is_none() {
             return Err("doesn't match pattern \"^[a-zA-Z0-9\\-\\._,|]{0,40}$\"".into());
         }
@@ -2141,18 +1979,14 @@ impl TryFrom<&str> for GetMasterHlsAudioPlaylistAudioCodec {
 
 impl TryFrom<&String> for GetMasterHlsAudioPlaylistAudioCodec {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for GetMasterHlsAudioPlaylistAudioCodec {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
@@ -2190,9 +2024,7 @@ impl std::str::FromStr for GetMasterHlsAudioPlaylistLevel {
     type Err = super::error::ConversionError;
     fn from_str(value: &str) -> Result<Self, super::error::ConversionError> {
         static PATTERN: std::sync::LazyLock<regress::Regex> =
-            std::sync::LazyLock::new(|| {
-                regress::Regex::new("-?[0-9]+(?:\\.[0-9]+)?").unwrap()
-            });
+            std::sync::LazyLock::new(|| regress::Regex::new("-?[0-9]+(?:\\.[0-9]+)?").unwrap());
         if PATTERN.find(value).is_none() {
             return Err("doesn't match pattern \"-?[0-9]+(?:\\.[0-9]+)?\"".into());
         }
@@ -2209,18 +2041,14 @@ impl TryFrom<&str> for GetMasterHlsAudioPlaylistLevel {
 
 impl TryFrom<&String> for GetMasterHlsAudioPlaylistLevel {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for GetMasterHlsAudioPlaylistLevel {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
@@ -2257,10 +2085,9 @@ impl std::ops::Deref for GetMasterHlsAudioPlaylistSegmentContainer {
 impl std::str::FromStr for GetMasterHlsAudioPlaylistSegmentContainer {
     type Err = super::error::ConversionError;
     fn from_str(value: &str) -> Result<Self, super::error::ConversionError> {
-        static PATTERN: std::sync::LazyLock<regress::Regex> =
-            std::sync::LazyLock::new(|| {
-                regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
-            });
+        static PATTERN: std::sync::LazyLock<regress::Regex> = std::sync::LazyLock::new(|| {
+            regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
+        });
         if PATTERN.find(value).is_none() {
             return Err("doesn't match pattern \"^[a-zA-Z0-9\\-\\._,|]{0,40}$\"".into());
         }
@@ -2277,18 +2104,14 @@ impl TryFrom<&str> for GetMasterHlsAudioPlaylistSegmentContainer {
 
 impl TryFrom<&String> for GetMasterHlsAudioPlaylistSegmentContainer {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for GetMasterHlsAudioPlaylistSegmentContainer {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
@@ -2325,10 +2148,9 @@ impl std::ops::Deref for GetMasterHlsAudioPlaylistSubtitleCodec {
 impl std::str::FromStr for GetMasterHlsAudioPlaylistSubtitleCodec {
     type Err = super::error::ConversionError;
     fn from_str(value: &str) -> Result<Self, super::error::ConversionError> {
-        static PATTERN: std::sync::LazyLock<regress::Regex> =
-            std::sync::LazyLock::new(|| {
-                regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
-            });
+        static PATTERN: std::sync::LazyLock<regress::Regex> = std::sync::LazyLock::new(|| {
+            regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
+        });
         if PATTERN.find(value).is_none() {
             return Err("doesn't match pattern \"^[a-zA-Z0-9\\-\\._,|]{0,40}$\"".into());
         }
@@ -2345,18 +2167,14 @@ impl TryFrom<&str> for GetMasterHlsAudioPlaylistSubtitleCodec {
 
 impl TryFrom<&String> for GetMasterHlsAudioPlaylistSubtitleCodec {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for GetMasterHlsAudioPlaylistSubtitleCodec {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
@@ -2393,10 +2211,9 @@ impl std::ops::Deref for GetMasterHlsAudioPlaylistVideoCodec {
 impl std::str::FromStr for GetMasterHlsAudioPlaylistVideoCodec {
     type Err = super::error::ConversionError;
     fn from_str(value: &str) -> Result<Self, super::error::ConversionError> {
-        static PATTERN: std::sync::LazyLock<regress::Regex> =
-            std::sync::LazyLock::new(|| {
-                regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
-            });
+        static PATTERN: std::sync::LazyLock<regress::Regex> = std::sync::LazyLock::new(|| {
+            regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
+        });
         if PATTERN.find(value).is_none() {
             return Err("doesn't match pattern \"^[a-zA-Z0-9\\-\\._,|]{0,40}$\"".into());
         }
@@ -2413,18 +2230,14 @@ impl TryFrom<&str> for GetMasterHlsAudioPlaylistVideoCodec {
 
 impl TryFrom<&String> for GetMasterHlsAudioPlaylistVideoCodec {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for GetMasterHlsAudioPlaylistVideoCodec {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
@@ -2461,10 +2274,9 @@ impl std::ops::Deref for GetMasterHlsVideoPlaylistAudioCodec {
 impl std::str::FromStr for GetMasterHlsVideoPlaylistAudioCodec {
     type Err = super::error::ConversionError;
     fn from_str(value: &str) -> Result<Self, super::error::ConversionError> {
-        static PATTERN: std::sync::LazyLock<regress::Regex> =
-            std::sync::LazyLock::new(|| {
-                regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
-            });
+        static PATTERN: std::sync::LazyLock<regress::Regex> = std::sync::LazyLock::new(|| {
+            regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
+        });
         if PATTERN.find(value).is_none() {
             return Err("doesn't match pattern \"^[a-zA-Z0-9\\-\\._,|]{0,40}$\"".into());
         }
@@ -2481,18 +2293,14 @@ impl TryFrom<&str> for GetMasterHlsVideoPlaylistAudioCodec {
 
 impl TryFrom<&String> for GetMasterHlsVideoPlaylistAudioCodec {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for GetMasterHlsVideoPlaylistAudioCodec {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
@@ -2530,9 +2338,7 @@ impl std::str::FromStr for GetMasterHlsVideoPlaylistLevel {
     type Err = super::error::ConversionError;
     fn from_str(value: &str) -> Result<Self, super::error::ConversionError> {
         static PATTERN: std::sync::LazyLock<regress::Regex> =
-            std::sync::LazyLock::new(|| {
-                regress::Regex::new("-?[0-9]+(?:\\.[0-9]+)?").unwrap()
-            });
+            std::sync::LazyLock::new(|| regress::Regex::new("-?[0-9]+(?:\\.[0-9]+)?").unwrap());
         if PATTERN.find(value).is_none() {
             return Err("doesn't match pattern \"-?[0-9]+(?:\\.[0-9]+)?\"".into());
         }
@@ -2549,18 +2355,14 @@ impl TryFrom<&str> for GetMasterHlsVideoPlaylistLevel {
 
 impl TryFrom<&String> for GetMasterHlsVideoPlaylistLevel {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for GetMasterHlsVideoPlaylistLevel {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
@@ -2597,10 +2399,9 @@ impl std::ops::Deref for GetMasterHlsVideoPlaylistSegmentContainer {
 impl std::str::FromStr for GetMasterHlsVideoPlaylistSegmentContainer {
     type Err = super::error::ConversionError;
     fn from_str(value: &str) -> Result<Self, super::error::ConversionError> {
-        static PATTERN: std::sync::LazyLock<regress::Regex> =
-            std::sync::LazyLock::new(|| {
-                regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
-            });
+        static PATTERN: std::sync::LazyLock<regress::Regex> = std::sync::LazyLock::new(|| {
+            regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
+        });
         if PATTERN.find(value).is_none() {
             return Err("doesn't match pattern \"^[a-zA-Z0-9\\-\\._,|]{0,40}$\"".into());
         }
@@ -2617,18 +2418,14 @@ impl TryFrom<&str> for GetMasterHlsVideoPlaylistSegmentContainer {
 
 impl TryFrom<&String> for GetMasterHlsVideoPlaylistSegmentContainer {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for GetMasterHlsVideoPlaylistSegmentContainer {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
@@ -2665,10 +2462,9 @@ impl std::ops::Deref for GetMasterHlsVideoPlaylistSubtitleCodec {
 impl std::str::FromStr for GetMasterHlsVideoPlaylistSubtitleCodec {
     type Err = super::error::ConversionError;
     fn from_str(value: &str) -> Result<Self, super::error::ConversionError> {
-        static PATTERN: std::sync::LazyLock<regress::Regex> =
-            std::sync::LazyLock::new(|| {
-                regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
-            });
+        static PATTERN: std::sync::LazyLock<regress::Regex> = std::sync::LazyLock::new(|| {
+            regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
+        });
         if PATTERN.find(value).is_none() {
             return Err("doesn't match pattern \"^[a-zA-Z0-9\\-\\._,|]{0,40}$\"".into());
         }
@@ -2685,18 +2481,14 @@ impl TryFrom<&str> for GetMasterHlsVideoPlaylistSubtitleCodec {
 
 impl TryFrom<&String> for GetMasterHlsVideoPlaylistSubtitleCodec {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for GetMasterHlsVideoPlaylistSubtitleCodec {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
@@ -2733,10 +2525,9 @@ impl std::ops::Deref for GetMasterHlsVideoPlaylistVideoCodec {
 impl std::str::FromStr for GetMasterHlsVideoPlaylistVideoCodec {
     type Err = super::error::ConversionError;
     fn from_str(value: &str) -> Result<Self, super::error::ConversionError> {
-        static PATTERN: std::sync::LazyLock<regress::Regex> =
-            std::sync::LazyLock::new(|| {
-                regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
-            });
+        static PATTERN: std::sync::LazyLock<regress::Regex> = std::sync::LazyLock::new(|| {
+            regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
+        });
         if PATTERN.find(value).is_none() {
             return Err("doesn't match pattern \"^[a-zA-Z0-9\\-\\._,|]{0,40}$\"".into());
         }
@@ -2753,18 +2544,14 @@ impl TryFrom<&str> for GetMasterHlsVideoPlaylistVideoCodec {
 
 impl TryFrom<&String> for GetMasterHlsVideoPlaylistVideoCodec {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for GetMasterHlsVideoPlaylistVideoCodec {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
@@ -2801,10 +2588,9 @@ impl std::ops::Deref for GetUniversalAudioStreamAudioCodec {
 impl std::str::FromStr for GetUniversalAudioStreamAudioCodec {
     type Err = super::error::ConversionError;
     fn from_str(value: &str) -> Result<Self, super::error::ConversionError> {
-        static PATTERN: std::sync::LazyLock<regress::Regex> =
-            std::sync::LazyLock::new(|| {
-                regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
-            });
+        static PATTERN: std::sync::LazyLock<regress::Regex> = std::sync::LazyLock::new(|| {
+            regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
+        });
         if PATTERN.find(value).is_none() {
             return Err("doesn't match pattern \"^[a-zA-Z0-9\\-\\._,|]{0,40}$\"".into());
         }
@@ -2821,18 +2607,14 @@ impl TryFrom<&str> for GetUniversalAudioStreamAudioCodec {
 
 impl TryFrom<&String> for GetUniversalAudioStreamAudioCodec {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for GetUniversalAudioStreamAudioCodec {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
@@ -2869,10 +2651,9 @@ impl std::ops::Deref for GetUniversalAudioStreamTranscodingContainer {
 impl std::str::FromStr for GetUniversalAudioStreamTranscodingContainer {
     type Err = super::error::ConversionError;
     fn from_str(value: &str) -> Result<Self, super::error::ConversionError> {
-        static PATTERN: std::sync::LazyLock<regress::Regex> =
-            std::sync::LazyLock::new(|| {
-                regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
-            });
+        static PATTERN: std::sync::LazyLock<regress::Regex> = std::sync::LazyLock::new(|| {
+            regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
+        });
         if PATTERN.find(value).is_none() {
             return Err("doesn't match pattern \"^[a-zA-Z0-9\\-\\._,|]{0,40}$\"".into());
         }
@@ -2887,24 +2668,16 @@ impl TryFrom<&str> for GetUniversalAudioStreamTranscodingContainer {
     }
 }
 
-impl TryFrom<&String>
-    for GetUniversalAudioStreamTranscodingContainer
-{
+impl TryFrom<&String> for GetUniversalAudioStreamTranscodingContainer {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
-impl TryFrom<String>
-    for GetUniversalAudioStreamTranscodingContainer
-{
+impl TryFrom<String> for GetUniversalAudioStreamTranscodingContainer {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
@@ -2941,10 +2714,9 @@ impl std::ops::Deref for GetVariantHlsAudioPlaylistAudioCodec {
 impl std::str::FromStr for GetVariantHlsAudioPlaylistAudioCodec {
     type Err = super::error::ConversionError;
     fn from_str(value: &str) -> Result<Self, super::error::ConversionError> {
-        static PATTERN: std::sync::LazyLock<regress::Regex> =
-            std::sync::LazyLock::new(|| {
-                regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
-            });
+        static PATTERN: std::sync::LazyLock<regress::Regex> = std::sync::LazyLock::new(|| {
+            regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
+        });
         if PATTERN.find(value).is_none() {
             return Err("doesn't match pattern \"^[a-zA-Z0-9\\-\\._,|]{0,40}$\"".into());
         }
@@ -2961,18 +2733,14 @@ impl TryFrom<&str> for GetVariantHlsAudioPlaylistAudioCodec {
 
 impl TryFrom<&String> for GetVariantHlsAudioPlaylistAudioCodec {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for GetVariantHlsAudioPlaylistAudioCodec {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
@@ -3010,9 +2778,7 @@ impl std::str::FromStr for GetVariantHlsAudioPlaylistLevel {
     type Err = super::error::ConversionError;
     fn from_str(value: &str) -> Result<Self, super::error::ConversionError> {
         static PATTERN: std::sync::LazyLock<regress::Regex> =
-            std::sync::LazyLock::new(|| {
-                regress::Regex::new("-?[0-9]+(?:\\.[0-9]+)?").unwrap()
-            });
+            std::sync::LazyLock::new(|| regress::Regex::new("-?[0-9]+(?:\\.[0-9]+)?").unwrap());
         if PATTERN.find(value).is_none() {
             return Err("doesn't match pattern \"-?[0-9]+(?:\\.[0-9]+)?\"".into());
         }
@@ -3029,18 +2795,14 @@ impl TryFrom<&str> for GetVariantHlsAudioPlaylistLevel {
 
 impl TryFrom<&String> for GetVariantHlsAudioPlaylistLevel {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for GetVariantHlsAudioPlaylistLevel {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
@@ -3077,10 +2839,9 @@ impl std::ops::Deref for GetVariantHlsAudioPlaylistSegmentContainer {
 impl std::str::FromStr for GetVariantHlsAudioPlaylistSegmentContainer {
     type Err = super::error::ConversionError;
     fn from_str(value: &str) -> Result<Self, super::error::ConversionError> {
-        static PATTERN: std::sync::LazyLock<regress::Regex> =
-            std::sync::LazyLock::new(|| {
-                regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
-            });
+        static PATTERN: std::sync::LazyLock<regress::Regex> = std::sync::LazyLock::new(|| {
+            regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
+        });
         if PATTERN.find(value).is_none() {
             return Err("doesn't match pattern \"^[a-zA-Z0-9\\-\\._,|]{0,40}$\"".into());
         }
@@ -3095,22 +2856,16 @@ impl TryFrom<&str> for GetVariantHlsAudioPlaylistSegmentContainer {
     }
 }
 
-impl TryFrom<&String>
-    for GetVariantHlsAudioPlaylistSegmentContainer
-{
+impl TryFrom<&String> for GetVariantHlsAudioPlaylistSegmentContainer {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for GetVariantHlsAudioPlaylistSegmentContainer {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
@@ -3147,10 +2902,9 @@ impl std::ops::Deref for GetVariantHlsAudioPlaylistSubtitleCodec {
 impl std::str::FromStr for GetVariantHlsAudioPlaylistSubtitleCodec {
     type Err = super::error::ConversionError;
     fn from_str(value: &str) -> Result<Self, super::error::ConversionError> {
-        static PATTERN: std::sync::LazyLock<regress::Regex> =
-            std::sync::LazyLock::new(|| {
-                regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
-            });
+        static PATTERN: std::sync::LazyLock<regress::Regex> = std::sync::LazyLock::new(|| {
+            regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
+        });
         if PATTERN.find(value).is_none() {
             return Err("doesn't match pattern \"^[a-zA-Z0-9\\-\\._,|]{0,40}$\"".into());
         }
@@ -3167,18 +2921,14 @@ impl TryFrom<&str> for GetVariantHlsAudioPlaylistSubtitleCodec {
 
 impl TryFrom<&String> for GetVariantHlsAudioPlaylistSubtitleCodec {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for GetVariantHlsAudioPlaylistSubtitleCodec {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
@@ -3215,10 +2965,9 @@ impl std::ops::Deref for GetVariantHlsAudioPlaylistVideoCodec {
 impl std::str::FromStr for GetVariantHlsAudioPlaylistVideoCodec {
     type Err = super::error::ConversionError;
     fn from_str(value: &str) -> Result<Self, super::error::ConversionError> {
-        static PATTERN: std::sync::LazyLock<regress::Regex> =
-            std::sync::LazyLock::new(|| {
-                regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
-            });
+        static PATTERN: std::sync::LazyLock<regress::Regex> = std::sync::LazyLock::new(|| {
+            regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
+        });
         if PATTERN.find(value).is_none() {
             return Err("doesn't match pattern \"^[a-zA-Z0-9\\-\\._,|]{0,40}$\"".into());
         }
@@ -3235,18 +2984,14 @@ impl TryFrom<&str> for GetVariantHlsAudioPlaylistVideoCodec {
 
 impl TryFrom<&String> for GetVariantHlsAudioPlaylistVideoCodec {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for GetVariantHlsAudioPlaylistVideoCodec {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
@@ -3283,10 +3028,9 @@ impl std::ops::Deref for GetVariantHlsVideoPlaylistAudioCodec {
 impl std::str::FromStr for GetVariantHlsVideoPlaylistAudioCodec {
     type Err = super::error::ConversionError;
     fn from_str(value: &str) -> Result<Self, super::error::ConversionError> {
-        static PATTERN: std::sync::LazyLock<regress::Regex> =
-            std::sync::LazyLock::new(|| {
-                regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
-            });
+        static PATTERN: std::sync::LazyLock<regress::Regex> = std::sync::LazyLock::new(|| {
+            regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
+        });
         if PATTERN.find(value).is_none() {
             return Err("doesn't match pattern \"^[a-zA-Z0-9\\-\\._,|]{0,40}$\"".into());
         }
@@ -3303,18 +3047,14 @@ impl TryFrom<&str> for GetVariantHlsVideoPlaylistAudioCodec {
 
 impl TryFrom<&String> for GetVariantHlsVideoPlaylistAudioCodec {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for GetVariantHlsVideoPlaylistAudioCodec {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
@@ -3352,9 +3092,7 @@ impl std::str::FromStr for GetVariantHlsVideoPlaylistLevel {
     type Err = super::error::ConversionError;
     fn from_str(value: &str) -> Result<Self, super::error::ConversionError> {
         static PATTERN: std::sync::LazyLock<regress::Regex> =
-            std::sync::LazyLock::new(|| {
-                regress::Regex::new("-?[0-9]+(?:\\.[0-9]+)?").unwrap()
-            });
+            std::sync::LazyLock::new(|| regress::Regex::new("-?[0-9]+(?:\\.[0-9]+)?").unwrap());
         if PATTERN.find(value).is_none() {
             return Err("doesn't match pattern \"-?[0-9]+(?:\\.[0-9]+)?\"".into());
         }
@@ -3371,18 +3109,14 @@ impl TryFrom<&str> for GetVariantHlsVideoPlaylistLevel {
 
 impl TryFrom<&String> for GetVariantHlsVideoPlaylistLevel {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for GetVariantHlsVideoPlaylistLevel {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
@@ -3419,10 +3153,9 @@ impl std::ops::Deref for GetVariantHlsVideoPlaylistSegmentContainer {
 impl std::str::FromStr for GetVariantHlsVideoPlaylistSegmentContainer {
     type Err = super::error::ConversionError;
     fn from_str(value: &str) -> Result<Self, super::error::ConversionError> {
-        static PATTERN: std::sync::LazyLock<regress::Regex> =
-            std::sync::LazyLock::new(|| {
-                regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
-            });
+        static PATTERN: std::sync::LazyLock<regress::Regex> = std::sync::LazyLock::new(|| {
+            regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
+        });
         if PATTERN.find(value).is_none() {
             return Err("doesn't match pattern \"^[a-zA-Z0-9\\-\\._,|]{0,40}$\"".into());
         }
@@ -3437,22 +3170,16 @@ impl TryFrom<&str> for GetVariantHlsVideoPlaylistSegmentContainer {
     }
 }
 
-impl TryFrom<&String>
-    for GetVariantHlsVideoPlaylistSegmentContainer
-{
+impl TryFrom<&String> for GetVariantHlsVideoPlaylistSegmentContainer {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for GetVariantHlsVideoPlaylistSegmentContainer {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
@@ -3489,10 +3216,9 @@ impl std::ops::Deref for GetVariantHlsVideoPlaylistSubtitleCodec {
 impl std::str::FromStr for GetVariantHlsVideoPlaylistSubtitleCodec {
     type Err = super::error::ConversionError;
     fn from_str(value: &str) -> Result<Self, super::error::ConversionError> {
-        static PATTERN: std::sync::LazyLock<regress::Regex> =
-            std::sync::LazyLock::new(|| {
-                regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
-            });
+        static PATTERN: std::sync::LazyLock<regress::Regex> = std::sync::LazyLock::new(|| {
+            regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
+        });
         if PATTERN.find(value).is_none() {
             return Err("doesn't match pattern \"^[a-zA-Z0-9\\-\\._,|]{0,40}$\"".into());
         }
@@ -3509,18 +3235,14 @@ impl TryFrom<&str> for GetVariantHlsVideoPlaylistSubtitleCodec {
 
 impl TryFrom<&String> for GetVariantHlsVideoPlaylistSubtitleCodec {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for GetVariantHlsVideoPlaylistSubtitleCodec {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
@@ -3557,10 +3279,9 @@ impl std::ops::Deref for GetVariantHlsVideoPlaylistVideoCodec {
 impl std::str::FromStr for GetVariantHlsVideoPlaylistVideoCodec {
     type Err = super::error::ConversionError;
     fn from_str(value: &str) -> Result<Self, super::error::ConversionError> {
-        static PATTERN: std::sync::LazyLock<regress::Regex> =
-            std::sync::LazyLock::new(|| {
-                regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
-            });
+        static PATTERN: std::sync::LazyLock<regress::Regex> = std::sync::LazyLock::new(|| {
+            regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
+        });
         if PATTERN.find(value).is_none() {
             return Err("doesn't match pattern \"^[a-zA-Z0-9\\-\\._,|]{0,40}$\"".into());
         }
@@ -3577,18 +3298,14 @@ impl TryFrom<&str> for GetVariantHlsVideoPlaylistVideoCodec {
 
 impl TryFrom<&String> for GetVariantHlsVideoPlaylistVideoCodec {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for GetVariantHlsVideoPlaylistVideoCodec {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
@@ -3625,10 +3342,9 @@ impl std::ops::Deref for GetVideoStreamAudioCodec {
 impl std::str::FromStr for GetVideoStreamAudioCodec {
     type Err = super::error::ConversionError;
     fn from_str(value: &str) -> Result<Self, super::error::ConversionError> {
-        static PATTERN: std::sync::LazyLock<regress::Regex> =
-            std::sync::LazyLock::new(|| {
-                regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
-            });
+        static PATTERN: std::sync::LazyLock<regress::Regex> = std::sync::LazyLock::new(|| {
+            regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
+        });
         if PATTERN.find(value).is_none() {
             return Err("doesn't match pattern \"^[a-zA-Z0-9\\-\\._,|]{0,40}$\"".into());
         }
@@ -3645,18 +3361,14 @@ impl TryFrom<&str> for GetVideoStreamAudioCodec {
 
 impl TryFrom<&String> for GetVideoStreamAudioCodec {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for GetVideoStreamAudioCodec {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
@@ -3693,10 +3405,9 @@ impl std::ops::Deref for GetVideoStreamByContainerAudioCodec {
 impl std::str::FromStr for GetVideoStreamByContainerAudioCodec {
     type Err = super::error::ConversionError;
     fn from_str(value: &str) -> Result<Self, super::error::ConversionError> {
-        static PATTERN: std::sync::LazyLock<regress::Regex> =
-            std::sync::LazyLock::new(|| {
-                regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
-            });
+        static PATTERN: std::sync::LazyLock<regress::Regex> = std::sync::LazyLock::new(|| {
+            regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
+        });
         if PATTERN.find(value).is_none() {
             return Err("doesn't match pattern \"^[a-zA-Z0-9\\-\\._,|]{0,40}$\"".into());
         }
@@ -3713,18 +3424,14 @@ impl TryFrom<&str> for GetVideoStreamByContainerAudioCodec {
 
 impl TryFrom<&String> for GetVideoStreamByContainerAudioCodec {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for GetVideoStreamByContainerAudioCodec {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
@@ -3761,10 +3468,9 @@ impl std::ops::Deref for GetVideoStreamByContainerContainer {
 impl std::str::FromStr for GetVideoStreamByContainerContainer {
     type Err = super::error::ConversionError;
     fn from_str(value: &str) -> Result<Self, super::error::ConversionError> {
-        static PATTERN: std::sync::LazyLock<regress::Regex> =
-            std::sync::LazyLock::new(|| {
-                regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
-            });
+        static PATTERN: std::sync::LazyLock<regress::Regex> = std::sync::LazyLock::new(|| {
+            regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
+        });
         if PATTERN.find(value).is_none() {
             return Err("doesn't match pattern \"^[a-zA-Z0-9\\-\\._,|]{0,40}$\"".into());
         }
@@ -3781,18 +3487,14 @@ impl TryFrom<&str> for GetVideoStreamByContainerContainer {
 
 impl TryFrom<&String> for GetVideoStreamByContainerContainer {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for GetVideoStreamByContainerContainer {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
@@ -3830,9 +3532,7 @@ impl std::str::FromStr for GetVideoStreamByContainerLevel {
     type Err = super::error::ConversionError;
     fn from_str(value: &str) -> Result<Self, super::error::ConversionError> {
         static PATTERN: std::sync::LazyLock<regress::Regex> =
-            std::sync::LazyLock::new(|| {
-                regress::Regex::new("-?[0-9]+(?:\\.[0-9]+)?").unwrap()
-            });
+            std::sync::LazyLock::new(|| regress::Regex::new("-?[0-9]+(?:\\.[0-9]+)?").unwrap());
         if PATTERN.find(value).is_none() {
             return Err("doesn't match pattern \"-?[0-9]+(?:\\.[0-9]+)?\"".into());
         }
@@ -3849,18 +3549,14 @@ impl TryFrom<&str> for GetVideoStreamByContainerLevel {
 
 impl TryFrom<&String> for GetVideoStreamByContainerLevel {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for GetVideoStreamByContainerLevel {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
@@ -3897,10 +3593,9 @@ impl std::ops::Deref for GetVideoStreamByContainerSegmentContainer {
 impl std::str::FromStr for GetVideoStreamByContainerSegmentContainer {
     type Err = super::error::ConversionError;
     fn from_str(value: &str) -> Result<Self, super::error::ConversionError> {
-        static PATTERN: std::sync::LazyLock<regress::Regex> =
-            std::sync::LazyLock::new(|| {
-                regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
-            });
+        static PATTERN: std::sync::LazyLock<regress::Regex> = std::sync::LazyLock::new(|| {
+            regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
+        });
         if PATTERN.find(value).is_none() {
             return Err("doesn't match pattern \"^[a-zA-Z0-9\\-\\._,|]{0,40}$\"".into());
         }
@@ -3917,18 +3612,14 @@ impl TryFrom<&str> for GetVideoStreamByContainerSegmentContainer {
 
 impl TryFrom<&String> for GetVideoStreamByContainerSegmentContainer {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for GetVideoStreamByContainerSegmentContainer {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
@@ -3965,10 +3656,9 @@ impl std::ops::Deref for GetVideoStreamByContainerSubtitleCodec {
 impl std::str::FromStr for GetVideoStreamByContainerSubtitleCodec {
     type Err = super::error::ConversionError;
     fn from_str(value: &str) -> Result<Self, super::error::ConversionError> {
-        static PATTERN: std::sync::LazyLock<regress::Regex> =
-            std::sync::LazyLock::new(|| {
-                regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
-            });
+        static PATTERN: std::sync::LazyLock<regress::Regex> = std::sync::LazyLock::new(|| {
+            regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
+        });
         if PATTERN.find(value).is_none() {
             return Err("doesn't match pattern \"^[a-zA-Z0-9\\-\\._,|]{0,40}$\"".into());
         }
@@ -3985,18 +3675,14 @@ impl TryFrom<&str> for GetVideoStreamByContainerSubtitleCodec {
 
 impl TryFrom<&String> for GetVideoStreamByContainerSubtitleCodec {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for GetVideoStreamByContainerSubtitleCodec {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
@@ -4033,10 +3719,9 @@ impl std::ops::Deref for GetVideoStreamByContainerVideoCodec {
 impl std::str::FromStr for GetVideoStreamByContainerVideoCodec {
     type Err = super::error::ConversionError;
     fn from_str(value: &str) -> Result<Self, super::error::ConversionError> {
-        static PATTERN: std::sync::LazyLock<regress::Regex> =
-            std::sync::LazyLock::new(|| {
-                regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
-            });
+        static PATTERN: std::sync::LazyLock<regress::Regex> = std::sync::LazyLock::new(|| {
+            regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
+        });
         if PATTERN.find(value).is_none() {
             return Err("doesn't match pattern \"^[a-zA-Z0-9\\-\\._,|]{0,40}$\"".into());
         }
@@ -4053,18 +3738,14 @@ impl TryFrom<&str> for GetVideoStreamByContainerVideoCodec {
 
 impl TryFrom<&String> for GetVideoStreamByContainerVideoCodec {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for GetVideoStreamByContainerVideoCodec {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
@@ -4101,10 +3782,9 @@ impl std::ops::Deref for GetVideoStreamContainer {
 impl std::str::FromStr for GetVideoStreamContainer {
     type Err = super::error::ConversionError;
     fn from_str(value: &str) -> Result<Self, super::error::ConversionError> {
-        static PATTERN: std::sync::LazyLock<regress::Regex> =
-            std::sync::LazyLock::new(|| {
-                regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
-            });
+        static PATTERN: std::sync::LazyLock<regress::Regex> = std::sync::LazyLock::new(|| {
+            regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
+        });
         if PATTERN.find(value).is_none() {
             return Err("doesn't match pattern \"^[a-zA-Z0-9\\-\\._,|]{0,40}$\"".into());
         }
@@ -4121,18 +3801,14 @@ impl TryFrom<&str> for GetVideoStreamContainer {
 
 impl TryFrom<&String> for GetVideoStreamContainer {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for GetVideoStreamContainer {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
@@ -4170,9 +3846,7 @@ impl std::str::FromStr for GetVideoStreamLevel {
     type Err = super::error::ConversionError;
     fn from_str(value: &str) -> Result<Self, super::error::ConversionError> {
         static PATTERN: std::sync::LazyLock<regress::Regex> =
-            std::sync::LazyLock::new(|| {
-                regress::Regex::new("-?[0-9]+(?:\\.[0-9]+)?").unwrap()
-            });
+            std::sync::LazyLock::new(|| regress::Regex::new("-?[0-9]+(?:\\.[0-9]+)?").unwrap());
         if PATTERN.find(value).is_none() {
             return Err("doesn't match pattern \"-?[0-9]+(?:\\.[0-9]+)?\"".into());
         }
@@ -4189,18 +3863,14 @@ impl TryFrom<&str> for GetVideoStreamLevel {
 
 impl TryFrom<&String> for GetVideoStreamLevel {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for GetVideoStreamLevel {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
@@ -4237,10 +3907,9 @@ impl std::ops::Deref for GetVideoStreamSegmentContainer {
 impl std::str::FromStr for GetVideoStreamSegmentContainer {
     type Err = super::error::ConversionError;
     fn from_str(value: &str) -> Result<Self, super::error::ConversionError> {
-        static PATTERN: std::sync::LazyLock<regress::Regex> =
-            std::sync::LazyLock::new(|| {
-                regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
-            });
+        static PATTERN: std::sync::LazyLock<regress::Regex> = std::sync::LazyLock::new(|| {
+            regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
+        });
         if PATTERN.find(value).is_none() {
             return Err("doesn't match pattern \"^[a-zA-Z0-9\\-\\._,|]{0,40}$\"".into());
         }
@@ -4257,18 +3926,14 @@ impl TryFrom<&str> for GetVideoStreamSegmentContainer {
 
 impl TryFrom<&String> for GetVideoStreamSegmentContainer {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for GetVideoStreamSegmentContainer {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
@@ -4305,10 +3970,9 @@ impl std::ops::Deref for GetVideoStreamSubtitleCodec {
 impl std::str::FromStr for GetVideoStreamSubtitleCodec {
     type Err = super::error::ConversionError;
     fn from_str(value: &str) -> Result<Self, super::error::ConversionError> {
-        static PATTERN: std::sync::LazyLock<regress::Regex> =
-            std::sync::LazyLock::new(|| {
-                regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
-            });
+        static PATTERN: std::sync::LazyLock<regress::Regex> = std::sync::LazyLock::new(|| {
+            regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
+        });
         if PATTERN.find(value).is_none() {
             return Err("doesn't match pattern \"^[a-zA-Z0-9\\-\\._,|]{0,40}$\"".into());
         }
@@ -4325,18 +3989,14 @@ impl TryFrom<&str> for GetVideoStreamSubtitleCodec {
 
 impl TryFrom<&String> for GetVideoStreamSubtitleCodec {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for GetVideoStreamSubtitleCodec {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
@@ -4373,10 +4033,9 @@ impl std::ops::Deref for GetVideoStreamVideoCodec {
 impl std::str::FromStr for GetVideoStreamVideoCodec {
     type Err = super::error::ConversionError;
     fn from_str(value: &str) -> Result<Self, super::error::ConversionError> {
-        static PATTERN: std::sync::LazyLock<regress::Regex> =
-            std::sync::LazyLock::new(|| {
-                regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
-            });
+        static PATTERN: std::sync::LazyLock<regress::Regex> = std::sync::LazyLock::new(|| {
+            regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
+        });
         if PATTERN.find(value).is_none() {
             return Err("doesn't match pattern \"^[a-zA-Z0-9\\-\\._,|]{0,40}$\"".into());
         }
@@ -4393,18 +4052,14 @@ impl TryFrom<&str> for GetVideoStreamVideoCodec {
 
 impl TryFrom<&String> for GetVideoStreamVideoCodec {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for GetVideoStreamVideoCodec {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
@@ -4441,10 +4096,9 @@ impl std::ops::Deref for HeadAudioStreamAudioCodec {
 impl std::str::FromStr for HeadAudioStreamAudioCodec {
     type Err = super::error::ConversionError;
     fn from_str(value: &str) -> Result<Self, super::error::ConversionError> {
-        static PATTERN: std::sync::LazyLock<regress::Regex> =
-            std::sync::LazyLock::new(|| {
-                regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
-            });
+        static PATTERN: std::sync::LazyLock<regress::Regex> = std::sync::LazyLock::new(|| {
+            regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
+        });
         if PATTERN.find(value).is_none() {
             return Err("doesn't match pattern \"^[a-zA-Z0-9\\-\\._,|]{0,40}$\"".into());
         }
@@ -4461,18 +4115,14 @@ impl TryFrom<&str> for HeadAudioStreamAudioCodec {
 
 impl TryFrom<&String> for HeadAudioStreamAudioCodec {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for HeadAudioStreamAudioCodec {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
@@ -4509,10 +4159,9 @@ impl std::ops::Deref for HeadAudioStreamByContainerAudioCodec {
 impl std::str::FromStr for HeadAudioStreamByContainerAudioCodec {
     type Err = super::error::ConversionError;
     fn from_str(value: &str) -> Result<Self, super::error::ConversionError> {
-        static PATTERN: std::sync::LazyLock<regress::Regex> =
-            std::sync::LazyLock::new(|| {
-                regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
-            });
+        static PATTERN: std::sync::LazyLock<regress::Regex> = std::sync::LazyLock::new(|| {
+            regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
+        });
         if PATTERN.find(value).is_none() {
             return Err("doesn't match pattern \"^[a-zA-Z0-9\\-\\._,|]{0,40}$\"".into());
         }
@@ -4529,18 +4178,14 @@ impl TryFrom<&str> for HeadAudioStreamByContainerAudioCodec {
 
 impl TryFrom<&String> for HeadAudioStreamByContainerAudioCodec {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for HeadAudioStreamByContainerAudioCodec {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
@@ -4577,10 +4222,9 @@ impl std::ops::Deref for HeadAudioStreamByContainerContainer {
 impl std::str::FromStr for HeadAudioStreamByContainerContainer {
     type Err = super::error::ConversionError;
     fn from_str(value: &str) -> Result<Self, super::error::ConversionError> {
-        static PATTERN: std::sync::LazyLock<regress::Regex> =
-            std::sync::LazyLock::new(|| {
-                regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
-            });
+        static PATTERN: std::sync::LazyLock<regress::Regex> = std::sync::LazyLock::new(|| {
+            regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
+        });
         if PATTERN.find(value).is_none() {
             return Err("doesn't match pattern \"^[a-zA-Z0-9\\-\\._,|]{0,40}$\"".into());
         }
@@ -4597,18 +4241,14 @@ impl TryFrom<&str> for HeadAudioStreamByContainerContainer {
 
 impl TryFrom<&String> for HeadAudioStreamByContainerContainer {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for HeadAudioStreamByContainerContainer {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
@@ -4646,9 +4286,7 @@ impl std::str::FromStr for HeadAudioStreamByContainerLevel {
     type Err = super::error::ConversionError;
     fn from_str(value: &str) -> Result<Self, super::error::ConversionError> {
         static PATTERN: std::sync::LazyLock<regress::Regex> =
-            std::sync::LazyLock::new(|| {
-                regress::Regex::new("-?[0-9]+(?:\\.[0-9]+)?").unwrap()
-            });
+            std::sync::LazyLock::new(|| regress::Regex::new("-?[0-9]+(?:\\.[0-9]+)?").unwrap());
         if PATTERN.find(value).is_none() {
             return Err("doesn't match pattern \"-?[0-9]+(?:\\.[0-9]+)?\"".into());
         }
@@ -4665,18 +4303,14 @@ impl TryFrom<&str> for HeadAudioStreamByContainerLevel {
 
 impl TryFrom<&String> for HeadAudioStreamByContainerLevel {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for HeadAudioStreamByContainerLevel {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
@@ -4713,10 +4347,9 @@ impl std::ops::Deref for HeadAudioStreamByContainerSegmentContainer {
 impl std::str::FromStr for HeadAudioStreamByContainerSegmentContainer {
     type Err = super::error::ConversionError;
     fn from_str(value: &str) -> Result<Self, super::error::ConversionError> {
-        static PATTERN: std::sync::LazyLock<regress::Regex> =
-            std::sync::LazyLock::new(|| {
-                regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
-            });
+        static PATTERN: std::sync::LazyLock<regress::Regex> = std::sync::LazyLock::new(|| {
+            regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
+        });
         if PATTERN.find(value).is_none() {
             return Err("doesn't match pattern \"^[a-zA-Z0-9\\-\\._,|]{0,40}$\"".into());
         }
@@ -4731,22 +4364,16 @@ impl TryFrom<&str> for HeadAudioStreamByContainerSegmentContainer {
     }
 }
 
-impl TryFrom<&String>
-    for HeadAudioStreamByContainerSegmentContainer
-{
+impl TryFrom<&String> for HeadAudioStreamByContainerSegmentContainer {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for HeadAudioStreamByContainerSegmentContainer {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
@@ -4783,10 +4410,9 @@ impl std::ops::Deref for HeadAudioStreamByContainerSubtitleCodec {
 impl std::str::FromStr for HeadAudioStreamByContainerSubtitleCodec {
     type Err = super::error::ConversionError;
     fn from_str(value: &str) -> Result<Self, super::error::ConversionError> {
-        static PATTERN: std::sync::LazyLock<regress::Regex> =
-            std::sync::LazyLock::new(|| {
-                regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
-            });
+        static PATTERN: std::sync::LazyLock<regress::Regex> = std::sync::LazyLock::new(|| {
+            regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
+        });
         if PATTERN.find(value).is_none() {
             return Err("doesn't match pattern \"^[a-zA-Z0-9\\-\\._,|]{0,40}$\"".into());
         }
@@ -4803,18 +4429,14 @@ impl TryFrom<&str> for HeadAudioStreamByContainerSubtitleCodec {
 
 impl TryFrom<&String> for HeadAudioStreamByContainerSubtitleCodec {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for HeadAudioStreamByContainerSubtitleCodec {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
@@ -4851,10 +4473,9 @@ impl std::ops::Deref for HeadAudioStreamByContainerVideoCodec {
 impl std::str::FromStr for HeadAudioStreamByContainerVideoCodec {
     type Err = super::error::ConversionError;
     fn from_str(value: &str) -> Result<Self, super::error::ConversionError> {
-        static PATTERN: std::sync::LazyLock<regress::Regex> =
-            std::sync::LazyLock::new(|| {
-                regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
-            });
+        static PATTERN: std::sync::LazyLock<regress::Regex> = std::sync::LazyLock::new(|| {
+            regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
+        });
         if PATTERN.find(value).is_none() {
             return Err("doesn't match pattern \"^[a-zA-Z0-9\\-\\._,|]{0,40}$\"".into());
         }
@@ -4871,18 +4492,14 @@ impl TryFrom<&str> for HeadAudioStreamByContainerVideoCodec {
 
 impl TryFrom<&String> for HeadAudioStreamByContainerVideoCodec {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for HeadAudioStreamByContainerVideoCodec {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
@@ -4919,10 +4536,9 @@ impl std::ops::Deref for HeadAudioStreamContainer {
 impl std::str::FromStr for HeadAudioStreamContainer {
     type Err = super::error::ConversionError;
     fn from_str(value: &str) -> Result<Self, super::error::ConversionError> {
-        static PATTERN: std::sync::LazyLock<regress::Regex> =
-            std::sync::LazyLock::new(|| {
-                regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
-            });
+        static PATTERN: std::sync::LazyLock<regress::Regex> = std::sync::LazyLock::new(|| {
+            regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
+        });
         if PATTERN.find(value).is_none() {
             return Err("doesn't match pattern \"^[a-zA-Z0-9\\-\\._,|]{0,40}$\"".into());
         }
@@ -4939,18 +4555,14 @@ impl TryFrom<&str> for HeadAudioStreamContainer {
 
 impl TryFrom<&String> for HeadAudioStreamContainer {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for HeadAudioStreamContainer {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
@@ -4988,9 +4600,7 @@ impl std::str::FromStr for HeadAudioStreamLevel {
     type Err = super::error::ConversionError;
     fn from_str(value: &str) -> Result<Self, super::error::ConversionError> {
         static PATTERN: std::sync::LazyLock<regress::Regex> =
-            std::sync::LazyLock::new(|| {
-                regress::Regex::new("-?[0-9]+(?:\\.[0-9]+)?").unwrap()
-            });
+            std::sync::LazyLock::new(|| regress::Regex::new("-?[0-9]+(?:\\.[0-9]+)?").unwrap());
         if PATTERN.find(value).is_none() {
             return Err("doesn't match pattern \"-?[0-9]+(?:\\.[0-9]+)?\"".into());
         }
@@ -5007,18 +4617,14 @@ impl TryFrom<&str> for HeadAudioStreamLevel {
 
 impl TryFrom<&String> for HeadAudioStreamLevel {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for HeadAudioStreamLevel {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
@@ -5055,10 +4661,9 @@ impl std::ops::Deref for HeadAudioStreamSegmentContainer {
 impl std::str::FromStr for HeadAudioStreamSegmentContainer {
     type Err = super::error::ConversionError;
     fn from_str(value: &str) -> Result<Self, super::error::ConversionError> {
-        static PATTERN: std::sync::LazyLock<regress::Regex> =
-            std::sync::LazyLock::new(|| {
-                regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
-            });
+        static PATTERN: std::sync::LazyLock<regress::Regex> = std::sync::LazyLock::new(|| {
+            regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
+        });
         if PATTERN.find(value).is_none() {
             return Err("doesn't match pattern \"^[a-zA-Z0-9\\-\\._,|]{0,40}$\"".into());
         }
@@ -5075,18 +4680,14 @@ impl TryFrom<&str> for HeadAudioStreamSegmentContainer {
 
 impl TryFrom<&String> for HeadAudioStreamSegmentContainer {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for HeadAudioStreamSegmentContainer {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
@@ -5123,10 +4724,9 @@ impl std::ops::Deref for HeadAudioStreamSubtitleCodec {
 impl std::str::FromStr for HeadAudioStreamSubtitleCodec {
     type Err = super::error::ConversionError;
     fn from_str(value: &str) -> Result<Self, super::error::ConversionError> {
-        static PATTERN: std::sync::LazyLock<regress::Regex> =
-            std::sync::LazyLock::new(|| {
-                regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
-            });
+        static PATTERN: std::sync::LazyLock<regress::Regex> = std::sync::LazyLock::new(|| {
+            regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
+        });
         if PATTERN.find(value).is_none() {
             return Err("doesn't match pattern \"^[a-zA-Z0-9\\-\\._,|]{0,40}$\"".into());
         }
@@ -5143,18 +4743,14 @@ impl TryFrom<&str> for HeadAudioStreamSubtitleCodec {
 
 impl TryFrom<&String> for HeadAudioStreamSubtitleCodec {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for HeadAudioStreamSubtitleCodec {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
@@ -5191,10 +4787,9 @@ impl std::ops::Deref for HeadAudioStreamVideoCodec {
 impl std::str::FromStr for HeadAudioStreamVideoCodec {
     type Err = super::error::ConversionError;
     fn from_str(value: &str) -> Result<Self, super::error::ConversionError> {
-        static PATTERN: std::sync::LazyLock<regress::Regex> =
-            std::sync::LazyLock::new(|| {
-                regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
-            });
+        static PATTERN: std::sync::LazyLock<regress::Regex> = std::sync::LazyLock::new(|| {
+            regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
+        });
         if PATTERN.find(value).is_none() {
             return Err("doesn't match pattern \"^[a-zA-Z0-9\\-\\._,|]{0,40}$\"".into());
         }
@@ -5211,18 +4806,14 @@ impl TryFrom<&str> for HeadAudioStreamVideoCodec {
 
 impl TryFrom<&String> for HeadAudioStreamVideoCodec {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for HeadAudioStreamVideoCodec {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
@@ -5259,10 +4850,9 @@ impl std::ops::Deref for HeadMasterHlsAudioPlaylistAudioCodec {
 impl std::str::FromStr for HeadMasterHlsAudioPlaylistAudioCodec {
     type Err = super::error::ConversionError;
     fn from_str(value: &str) -> Result<Self, super::error::ConversionError> {
-        static PATTERN: std::sync::LazyLock<regress::Regex> =
-            std::sync::LazyLock::new(|| {
-                regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
-            });
+        static PATTERN: std::sync::LazyLock<regress::Regex> = std::sync::LazyLock::new(|| {
+            regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
+        });
         if PATTERN.find(value).is_none() {
             return Err("doesn't match pattern \"^[a-zA-Z0-9\\-\\._,|]{0,40}$\"".into());
         }
@@ -5279,18 +4869,14 @@ impl TryFrom<&str> for HeadMasterHlsAudioPlaylistAudioCodec {
 
 impl TryFrom<&String> for HeadMasterHlsAudioPlaylistAudioCodec {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for HeadMasterHlsAudioPlaylistAudioCodec {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
@@ -5328,9 +4914,7 @@ impl std::str::FromStr for HeadMasterHlsAudioPlaylistLevel {
     type Err = super::error::ConversionError;
     fn from_str(value: &str) -> Result<Self, super::error::ConversionError> {
         static PATTERN: std::sync::LazyLock<regress::Regex> =
-            std::sync::LazyLock::new(|| {
-                regress::Regex::new("-?[0-9]+(?:\\.[0-9]+)?").unwrap()
-            });
+            std::sync::LazyLock::new(|| regress::Regex::new("-?[0-9]+(?:\\.[0-9]+)?").unwrap());
         if PATTERN.find(value).is_none() {
             return Err("doesn't match pattern \"-?[0-9]+(?:\\.[0-9]+)?\"".into());
         }
@@ -5347,18 +4931,14 @@ impl TryFrom<&str> for HeadMasterHlsAudioPlaylistLevel {
 
 impl TryFrom<&String> for HeadMasterHlsAudioPlaylistLevel {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for HeadMasterHlsAudioPlaylistLevel {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
@@ -5395,10 +4975,9 @@ impl std::ops::Deref for HeadMasterHlsAudioPlaylistSegmentContainer {
 impl std::str::FromStr for HeadMasterHlsAudioPlaylistSegmentContainer {
     type Err = super::error::ConversionError;
     fn from_str(value: &str) -> Result<Self, super::error::ConversionError> {
-        static PATTERN: std::sync::LazyLock<regress::Regex> =
-            std::sync::LazyLock::new(|| {
-                regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
-            });
+        static PATTERN: std::sync::LazyLock<regress::Regex> = std::sync::LazyLock::new(|| {
+            regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
+        });
         if PATTERN.find(value).is_none() {
             return Err("doesn't match pattern \"^[a-zA-Z0-9\\-\\._,|]{0,40}$\"".into());
         }
@@ -5413,22 +4992,16 @@ impl TryFrom<&str> for HeadMasterHlsAudioPlaylistSegmentContainer {
     }
 }
 
-impl TryFrom<&String>
-    for HeadMasterHlsAudioPlaylistSegmentContainer
-{
+impl TryFrom<&String> for HeadMasterHlsAudioPlaylistSegmentContainer {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for HeadMasterHlsAudioPlaylistSegmentContainer {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
@@ -5465,10 +5038,9 @@ impl std::ops::Deref for HeadMasterHlsAudioPlaylistSubtitleCodec {
 impl std::str::FromStr for HeadMasterHlsAudioPlaylistSubtitleCodec {
     type Err = super::error::ConversionError;
     fn from_str(value: &str) -> Result<Self, super::error::ConversionError> {
-        static PATTERN: std::sync::LazyLock<regress::Regex> =
-            std::sync::LazyLock::new(|| {
-                regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
-            });
+        static PATTERN: std::sync::LazyLock<regress::Regex> = std::sync::LazyLock::new(|| {
+            regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
+        });
         if PATTERN.find(value).is_none() {
             return Err("doesn't match pattern \"^[a-zA-Z0-9\\-\\._,|]{0,40}$\"".into());
         }
@@ -5485,18 +5057,14 @@ impl TryFrom<&str> for HeadMasterHlsAudioPlaylistSubtitleCodec {
 
 impl TryFrom<&String> for HeadMasterHlsAudioPlaylistSubtitleCodec {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for HeadMasterHlsAudioPlaylistSubtitleCodec {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
@@ -5533,10 +5101,9 @@ impl std::ops::Deref for HeadMasterHlsAudioPlaylistVideoCodec {
 impl std::str::FromStr for HeadMasterHlsAudioPlaylistVideoCodec {
     type Err = super::error::ConversionError;
     fn from_str(value: &str) -> Result<Self, super::error::ConversionError> {
-        static PATTERN: std::sync::LazyLock<regress::Regex> =
-            std::sync::LazyLock::new(|| {
-                regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
-            });
+        static PATTERN: std::sync::LazyLock<regress::Regex> = std::sync::LazyLock::new(|| {
+            regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
+        });
         if PATTERN.find(value).is_none() {
             return Err("doesn't match pattern \"^[a-zA-Z0-9\\-\\._,|]{0,40}$\"".into());
         }
@@ -5553,18 +5120,14 @@ impl TryFrom<&str> for HeadMasterHlsAudioPlaylistVideoCodec {
 
 impl TryFrom<&String> for HeadMasterHlsAudioPlaylistVideoCodec {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for HeadMasterHlsAudioPlaylistVideoCodec {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
@@ -5601,10 +5164,9 @@ impl std::ops::Deref for HeadMasterHlsVideoPlaylistAudioCodec {
 impl std::str::FromStr for HeadMasterHlsVideoPlaylistAudioCodec {
     type Err = super::error::ConversionError;
     fn from_str(value: &str) -> Result<Self, super::error::ConversionError> {
-        static PATTERN: std::sync::LazyLock<regress::Regex> =
-            std::sync::LazyLock::new(|| {
-                regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
-            });
+        static PATTERN: std::sync::LazyLock<regress::Regex> = std::sync::LazyLock::new(|| {
+            regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
+        });
         if PATTERN.find(value).is_none() {
             return Err("doesn't match pattern \"^[a-zA-Z0-9\\-\\._,|]{0,40}$\"".into());
         }
@@ -5621,18 +5183,14 @@ impl TryFrom<&str> for HeadMasterHlsVideoPlaylistAudioCodec {
 
 impl TryFrom<&String> for HeadMasterHlsVideoPlaylistAudioCodec {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for HeadMasterHlsVideoPlaylistAudioCodec {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
@@ -5670,9 +5228,7 @@ impl std::str::FromStr for HeadMasterHlsVideoPlaylistLevel {
     type Err = super::error::ConversionError;
     fn from_str(value: &str) -> Result<Self, super::error::ConversionError> {
         static PATTERN: std::sync::LazyLock<regress::Regex> =
-            std::sync::LazyLock::new(|| {
-                regress::Regex::new("-?[0-9]+(?:\\.[0-9]+)?").unwrap()
-            });
+            std::sync::LazyLock::new(|| regress::Regex::new("-?[0-9]+(?:\\.[0-9]+)?").unwrap());
         if PATTERN.find(value).is_none() {
             return Err("doesn't match pattern \"-?[0-9]+(?:\\.[0-9]+)?\"".into());
         }
@@ -5689,18 +5245,14 @@ impl TryFrom<&str> for HeadMasterHlsVideoPlaylistLevel {
 
 impl TryFrom<&String> for HeadMasterHlsVideoPlaylistLevel {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for HeadMasterHlsVideoPlaylistLevel {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
@@ -5737,10 +5289,9 @@ impl std::ops::Deref for HeadMasterHlsVideoPlaylistSegmentContainer {
 impl std::str::FromStr for HeadMasterHlsVideoPlaylistSegmentContainer {
     type Err = super::error::ConversionError;
     fn from_str(value: &str) -> Result<Self, super::error::ConversionError> {
-        static PATTERN: std::sync::LazyLock<regress::Regex> =
-            std::sync::LazyLock::new(|| {
-                regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
-            });
+        static PATTERN: std::sync::LazyLock<regress::Regex> = std::sync::LazyLock::new(|| {
+            regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
+        });
         if PATTERN.find(value).is_none() {
             return Err("doesn't match pattern \"^[a-zA-Z0-9\\-\\._,|]{0,40}$\"".into());
         }
@@ -5755,22 +5306,16 @@ impl TryFrom<&str> for HeadMasterHlsVideoPlaylistSegmentContainer {
     }
 }
 
-impl TryFrom<&String>
-    for HeadMasterHlsVideoPlaylistSegmentContainer
-{
+impl TryFrom<&String> for HeadMasterHlsVideoPlaylistSegmentContainer {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for HeadMasterHlsVideoPlaylistSegmentContainer {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
@@ -5807,10 +5352,9 @@ impl std::ops::Deref for HeadMasterHlsVideoPlaylistSubtitleCodec {
 impl std::str::FromStr for HeadMasterHlsVideoPlaylistSubtitleCodec {
     type Err = super::error::ConversionError;
     fn from_str(value: &str) -> Result<Self, super::error::ConversionError> {
-        static PATTERN: std::sync::LazyLock<regress::Regex> =
-            std::sync::LazyLock::new(|| {
-                regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
-            });
+        static PATTERN: std::sync::LazyLock<regress::Regex> = std::sync::LazyLock::new(|| {
+            regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
+        });
         if PATTERN.find(value).is_none() {
             return Err("doesn't match pattern \"^[a-zA-Z0-9\\-\\._,|]{0,40}$\"".into());
         }
@@ -5827,18 +5371,14 @@ impl TryFrom<&str> for HeadMasterHlsVideoPlaylistSubtitleCodec {
 
 impl TryFrom<&String> for HeadMasterHlsVideoPlaylistSubtitleCodec {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for HeadMasterHlsVideoPlaylistSubtitleCodec {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
@@ -5875,10 +5415,9 @@ impl std::ops::Deref for HeadMasterHlsVideoPlaylistVideoCodec {
 impl std::str::FromStr for HeadMasterHlsVideoPlaylistVideoCodec {
     type Err = super::error::ConversionError;
     fn from_str(value: &str) -> Result<Self, super::error::ConversionError> {
-        static PATTERN: std::sync::LazyLock<regress::Regex> =
-            std::sync::LazyLock::new(|| {
-                regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
-            });
+        static PATTERN: std::sync::LazyLock<regress::Regex> = std::sync::LazyLock::new(|| {
+            regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
+        });
         if PATTERN.find(value).is_none() {
             return Err("doesn't match pattern \"^[a-zA-Z0-9\\-\\._,|]{0,40}$\"".into());
         }
@@ -5895,18 +5434,14 @@ impl TryFrom<&str> for HeadMasterHlsVideoPlaylistVideoCodec {
 
 impl TryFrom<&String> for HeadMasterHlsVideoPlaylistVideoCodec {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for HeadMasterHlsVideoPlaylistVideoCodec {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
@@ -5943,10 +5478,9 @@ impl std::ops::Deref for HeadUniversalAudioStreamAudioCodec {
 impl std::str::FromStr for HeadUniversalAudioStreamAudioCodec {
     type Err = super::error::ConversionError;
     fn from_str(value: &str) -> Result<Self, super::error::ConversionError> {
-        static PATTERN: std::sync::LazyLock<regress::Regex> =
-            std::sync::LazyLock::new(|| {
-                regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
-            });
+        static PATTERN: std::sync::LazyLock<regress::Regex> = std::sync::LazyLock::new(|| {
+            regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
+        });
         if PATTERN.find(value).is_none() {
             return Err("doesn't match pattern \"^[a-zA-Z0-9\\-\\._,|]{0,40}$\"".into());
         }
@@ -5963,18 +5497,14 @@ impl TryFrom<&str> for HeadUniversalAudioStreamAudioCodec {
 
 impl TryFrom<&String> for HeadUniversalAudioStreamAudioCodec {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for HeadUniversalAudioStreamAudioCodec {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
@@ -6011,10 +5541,9 @@ impl std::ops::Deref for HeadUniversalAudioStreamTranscodingContainer {
 impl std::str::FromStr for HeadUniversalAudioStreamTranscodingContainer {
     type Err = super::error::ConversionError;
     fn from_str(value: &str) -> Result<Self, super::error::ConversionError> {
-        static PATTERN: std::sync::LazyLock<regress::Regex> =
-            std::sync::LazyLock::new(|| {
-                regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
-            });
+        static PATTERN: std::sync::LazyLock<regress::Regex> = std::sync::LazyLock::new(|| {
+            regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
+        });
         if PATTERN.find(value).is_none() {
             return Err("doesn't match pattern \"^[a-zA-Z0-9\\-\\._,|]{0,40}$\"".into());
         }
@@ -6029,24 +5558,16 @@ impl TryFrom<&str> for HeadUniversalAudioStreamTranscodingContainer {
     }
 }
 
-impl TryFrom<&String>
-    for HeadUniversalAudioStreamTranscodingContainer
-{
+impl TryFrom<&String> for HeadUniversalAudioStreamTranscodingContainer {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
-impl TryFrom<String>
-    for HeadUniversalAudioStreamTranscodingContainer
-{
+impl TryFrom<String> for HeadUniversalAudioStreamTranscodingContainer {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
@@ -6083,10 +5604,9 @@ impl std::ops::Deref for HeadVideoStreamAudioCodec {
 impl std::str::FromStr for HeadVideoStreamAudioCodec {
     type Err = super::error::ConversionError;
     fn from_str(value: &str) -> Result<Self, super::error::ConversionError> {
-        static PATTERN: std::sync::LazyLock<regress::Regex> =
-            std::sync::LazyLock::new(|| {
-                regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
-            });
+        static PATTERN: std::sync::LazyLock<regress::Regex> = std::sync::LazyLock::new(|| {
+            regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
+        });
         if PATTERN.find(value).is_none() {
             return Err("doesn't match pattern \"^[a-zA-Z0-9\\-\\._,|]{0,40}$\"".into());
         }
@@ -6103,18 +5623,14 @@ impl TryFrom<&str> for HeadVideoStreamAudioCodec {
 
 impl TryFrom<&String> for HeadVideoStreamAudioCodec {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for HeadVideoStreamAudioCodec {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
@@ -6151,10 +5667,9 @@ impl std::ops::Deref for HeadVideoStreamByContainerAudioCodec {
 impl std::str::FromStr for HeadVideoStreamByContainerAudioCodec {
     type Err = super::error::ConversionError;
     fn from_str(value: &str) -> Result<Self, super::error::ConversionError> {
-        static PATTERN: std::sync::LazyLock<regress::Regex> =
-            std::sync::LazyLock::new(|| {
-                regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
-            });
+        static PATTERN: std::sync::LazyLock<regress::Regex> = std::sync::LazyLock::new(|| {
+            regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
+        });
         if PATTERN.find(value).is_none() {
             return Err("doesn't match pattern \"^[a-zA-Z0-9\\-\\._,|]{0,40}$\"".into());
         }
@@ -6171,18 +5686,14 @@ impl TryFrom<&str> for HeadVideoStreamByContainerAudioCodec {
 
 impl TryFrom<&String> for HeadVideoStreamByContainerAudioCodec {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for HeadVideoStreamByContainerAudioCodec {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
@@ -6219,10 +5730,9 @@ impl std::ops::Deref for HeadVideoStreamByContainerContainer {
 impl std::str::FromStr for HeadVideoStreamByContainerContainer {
     type Err = super::error::ConversionError;
     fn from_str(value: &str) -> Result<Self, super::error::ConversionError> {
-        static PATTERN: std::sync::LazyLock<regress::Regex> =
-            std::sync::LazyLock::new(|| {
-                regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
-            });
+        static PATTERN: std::sync::LazyLock<regress::Regex> = std::sync::LazyLock::new(|| {
+            regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
+        });
         if PATTERN.find(value).is_none() {
             return Err("doesn't match pattern \"^[a-zA-Z0-9\\-\\._,|]{0,40}$\"".into());
         }
@@ -6239,18 +5749,14 @@ impl TryFrom<&str> for HeadVideoStreamByContainerContainer {
 
 impl TryFrom<&String> for HeadVideoStreamByContainerContainer {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for HeadVideoStreamByContainerContainer {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
@@ -6288,9 +5794,7 @@ impl std::str::FromStr for HeadVideoStreamByContainerLevel {
     type Err = super::error::ConversionError;
     fn from_str(value: &str) -> Result<Self, super::error::ConversionError> {
         static PATTERN: std::sync::LazyLock<regress::Regex> =
-            std::sync::LazyLock::new(|| {
-                regress::Regex::new("-?[0-9]+(?:\\.[0-9]+)?").unwrap()
-            });
+            std::sync::LazyLock::new(|| regress::Regex::new("-?[0-9]+(?:\\.[0-9]+)?").unwrap());
         if PATTERN.find(value).is_none() {
             return Err("doesn't match pattern \"-?[0-9]+(?:\\.[0-9]+)?\"".into());
         }
@@ -6307,18 +5811,14 @@ impl TryFrom<&str> for HeadVideoStreamByContainerLevel {
 
 impl TryFrom<&String> for HeadVideoStreamByContainerLevel {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for HeadVideoStreamByContainerLevel {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
@@ -6355,10 +5855,9 @@ impl std::ops::Deref for HeadVideoStreamByContainerSegmentContainer {
 impl std::str::FromStr for HeadVideoStreamByContainerSegmentContainer {
     type Err = super::error::ConversionError;
     fn from_str(value: &str) -> Result<Self, super::error::ConversionError> {
-        static PATTERN: std::sync::LazyLock<regress::Regex> =
-            std::sync::LazyLock::new(|| {
-                regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
-            });
+        static PATTERN: std::sync::LazyLock<regress::Regex> = std::sync::LazyLock::new(|| {
+            regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
+        });
         if PATTERN.find(value).is_none() {
             return Err("doesn't match pattern \"^[a-zA-Z0-9\\-\\._,|]{0,40}$\"".into());
         }
@@ -6373,22 +5872,16 @@ impl TryFrom<&str> for HeadVideoStreamByContainerSegmentContainer {
     }
 }
 
-impl TryFrom<&String>
-    for HeadVideoStreamByContainerSegmentContainer
-{
+impl TryFrom<&String> for HeadVideoStreamByContainerSegmentContainer {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for HeadVideoStreamByContainerSegmentContainer {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
@@ -6425,10 +5918,9 @@ impl std::ops::Deref for HeadVideoStreamByContainerSubtitleCodec {
 impl std::str::FromStr for HeadVideoStreamByContainerSubtitleCodec {
     type Err = super::error::ConversionError;
     fn from_str(value: &str) -> Result<Self, super::error::ConversionError> {
-        static PATTERN: std::sync::LazyLock<regress::Regex> =
-            std::sync::LazyLock::new(|| {
-                regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
-            });
+        static PATTERN: std::sync::LazyLock<regress::Regex> = std::sync::LazyLock::new(|| {
+            regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
+        });
         if PATTERN.find(value).is_none() {
             return Err("doesn't match pattern \"^[a-zA-Z0-9\\-\\._,|]{0,40}$\"".into());
         }
@@ -6445,18 +5937,14 @@ impl TryFrom<&str> for HeadVideoStreamByContainerSubtitleCodec {
 
 impl TryFrom<&String> for HeadVideoStreamByContainerSubtitleCodec {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for HeadVideoStreamByContainerSubtitleCodec {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
@@ -6493,10 +5981,9 @@ impl std::ops::Deref for HeadVideoStreamByContainerVideoCodec {
 impl std::str::FromStr for HeadVideoStreamByContainerVideoCodec {
     type Err = super::error::ConversionError;
     fn from_str(value: &str) -> Result<Self, super::error::ConversionError> {
-        static PATTERN: std::sync::LazyLock<regress::Regex> =
-            std::sync::LazyLock::new(|| {
-                regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
-            });
+        static PATTERN: std::sync::LazyLock<regress::Regex> = std::sync::LazyLock::new(|| {
+            regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
+        });
         if PATTERN.find(value).is_none() {
             return Err("doesn't match pattern \"^[a-zA-Z0-9\\-\\._,|]{0,40}$\"".into());
         }
@@ -6513,18 +6000,14 @@ impl TryFrom<&str> for HeadVideoStreamByContainerVideoCodec {
 
 impl TryFrom<&String> for HeadVideoStreamByContainerVideoCodec {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for HeadVideoStreamByContainerVideoCodec {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
@@ -6561,10 +6044,9 @@ impl std::ops::Deref for HeadVideoStreamContainer {
 impl std::str::FromStr for HeadVideoStreamContainer {
     type Err = super::error::ConversionError;
     fn from_str(value: &str) -> Result<Self, super::error::ConversionError> {
-        static PATTERN: std::sync::LazyLock<regress::Regex> =
-            std::sync::LazyLock::new(|| {
-                regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
-            });
+        static PATTERN: std::sync::LazyLock<regress::Regex> = std::sync::LazyLock::new(|| {
+            regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
+        });
         if PATTERN.find(value).is_none() {
             return Err("doesn't match pattern \"^[a-zA-Z0-9\\-\\._,|]{0,40}$\"".into());
         }
@@ -6581,18 +6063,14 @@ impl TryFrom<&str> for HeadVideoStreamContainer {
 
 impl TryFrom<&String> for HeadVideoStreamContainer {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for HeadVideoStreamContainer {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
@@ -6630,9 +6108,7 @@ impl std::str::FromStr for HeadVideoStreamLevel {
     type Err = super::error::ConversionError;
     fn from_str(value: &str) -> Result<Self, super::error::ConversionError> {
         static PATTERN: std::sync::LazyLock<regress::Regex> =
-            std::sync::LazyLock::new(|| {
-                regress::Regex::new("-?[0-9]+(?:\\.[0-9]+)?").unwrap()
-            });
+            std::sync::LazyLock::new(|| regress::Regex::new("-?[0-9]+(?:\\.[0-9]+)?").unwrap());
         if PATTERN.find(value).is_none() {
             return Err("doesn't match pattern \"-?[0-9]+(?:\\.[0-9]+)?\"".into());
         }
@@ -6649,18 +6125,14 @@ impl TryFrom<&str> for HeadVideoStreamLevel {
 
 impl TryFrom<&String> for HeadVideoStreamLevel {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for HeadVideoStreamLevel {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
@@ -6697,10 +6169,9 @@ impl std::ops::Deref for HeadVideoStreamSegmentContainer {
 impl std::str::FromStr for HeadVideoStreamSegmentContainer {
     type Err = super::error::ConversionError;
     fn from_str(value: &str) -> Result<Self, super::error::ConversionError> {
-        static PATTERN: std::sync::LazyLock<regress::Regex> =
-            std::sync::LazyLock::new(|| {
-                regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
-            });
+        static PATTERN: std::sync::LazyLock<regress::Regex> = std::sync::LazyLock::new(|| {
+            regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
+        });
         if PATTERN.find(value).is_none() {
             return Err("doesn't match pattern \"^[a-zA-Z0-9\\-\\._,|]{0,40}$\"".into());
         }
@@ -6717,18 +6188,14 @@ impl TryFrom<&str> for HeadVideoStreamSegmentContainer {
 
 impl TryFrom<&String> for HeadVideoStreamSegmentContainer {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for HeadVideoStreamSegmentContainer {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
@@ -6765,10 +6232,9 @@ impl std::ops::Deref for HeadVideoStreamSubtitleCodec {
 impl std::str::FromStr for HeadVideoStreamSubtitleCodec {
     type Err = super::error::ConversionError;
     fn from_str(value: &str) -> Result<Self, super::error::ConversionError> {
-        static PATTERN: std::sync::LazyLock<regress::Regex> =
-            std::sync::LazyLock::new(|| {
-                regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
-            });
+        static PATTERN: std::sync::LazyLock<regress::Regex> = std::sync::LazyLock::new(|| {
+            regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
+        });
         if PATTERN.find(value).is_none() {
             return Err("doesn't match pattern \"^[a-zA-Z0-9\\-\\._,|]{0,40}$\"".into());
         }
@@ -6785,18 +6251,14 @@ impl TryFrom<&str> for HeadVideoStreamSubtitleCodec {
 
 impl TryFrom<&String> for HeadVideoStreamSubtitleCodec {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for HeadVideoStreamSubtitleCodec {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
@@ -6833,10 +6295,9 @@ impl std::ops::Deref for HeadVideoStreamVideoCodec {
 impl std::str::FromStr for HeadVideoStreamVideoCodec {
     type Err = super::error::ConversionError;
     fn from_str(value: &str) -> Result<Self, super::error::ConversionError> {
-        static PATTERN: std::sync::LazyLock<regress::Regex> =
-            std::sync::LazyLock::new(|| {
-                regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
-            });
+        static PATTERN: std::sync::LazyLock<regress::Regex> = std::sync::LazyLock::new(|| {
+            regress::Regex::new("^[a-zA-Z0-9\\-\\._,|]{0,40}$").unwrap()
+        });
         if PATTERN.find(value).is_none() {
             return Err("doesn't match pattern \"^[a-zA-Z0-9\\-\\._,|]{0,40}$\"".into());
         }
@@ -6853,18 +6314,14 @@ impl TryFrom<&str> for HeadVideoStreamVideoCodec {
 
 impl TryFrom<&String> for HeadVideoStreamVideoCodec {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for HeadVideoStreamVideoCodec {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
@@ -6886,4 +6343,3 @@ impl std::fmt::Display for HeadVideoStreamVideoCodec {
         self.0.fmt(f)
     }
 }
-

@@ -5,6 +5,7 @@ use uuid::Uuid;
 const URL_KEY: &str = "JELLYFIN_URL";
 const TOKEN_KEY: &str = "JELLYFIN_TOKEN";
 const USER_ID_KEY: &str = "JELLYFIN_USER_ID";
+const NAME_KEY: &str = "JELLYFIN_SERVER_NAME";
 const DEVICE_ID_KEY: &str = "JELLIUM_WEB_DEVICE_ID";
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -12,6 +13,73 @@ pub struct Session {
     pub server: String,
     pub token: String,
     pub user_id: Uuid,
+}
+
+/// The credential a saved server holds, absent for one that holds none.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Credential {
+    pub token: String,
+    pub user_id: Uuid,
+}
+
+/// One saved server as the session file holds it.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Saved {
+    pub server: String,
+    /// The name the server reported at its last successful probe, empty until
+    /// one succeeds.
+    pub name: String,
+    pub credential: Option<Credential>,
+}
+
+impl Saved {
+    /// The session this record authenticates with, and `None` when it holds no
+    /// credential.
+    pub fn session(&self) -> Option<Session> {
+        let credential = self.credential.as_ref()?;
+        Some(Session {
+            server: self.server.clone(),
+            token: credential.token.clone(),
+            user_id: credential.user_id,
+        })
+    }
+}
+
+/// A server url in the form records are compared by: the scheme and host
+/// lowercased, a default port dropped, and every trailing slash removed.
+/// Text that is not an http url compares as itself, trimmed.
+pub fn normalized(server: &str) -> String {
+    let trimmed = server.trim();
+    let Some((scheme, rest)) = trimmed.split_once("://") else {
+        return trimmed.to_string();
+    };
+    let scheme = scheme.to_ascii_lowercase();
+    let default_port = match scheme.as_str() {
+        "http" => 80,
+        "https" => 443,
+        _ => return trimmed.to_string(),
+    };
+    let (authority, path) = match rest.find('/') {
+        Some(cut) => (&rest[..cut], &rest[cut..]),
+        None => (rest, ""),
+    };
+    if authority.is_empty() {
+        return trimmed.to_string();
+    }
+    let (host, port) = match authority.rsplit_once(':') {
+        Some((host, port)) if port.chars().all(|c| c.is_ascii_digit()) && !port.is_empty() => {
+            (host, port.parse::<u16>().ok())
+        }
+        _ => (authority, None),
+    };
+    let mut out = format!("{scheme}://{}", host.to_ascii_lowercase());
+    if let Some(port) = port
+        && port != default_port
+    {
+        out.push_str(&format!(":{port}"));
+    }
+    out.push_str(path.trim_end_matches('/'));
+    out
 }
 
 #[derive(Debug, thiserror::Error)]
@@ -279,31 +347,181 @@ impl SessionFile {
     }
 
     pub fn server(&self, record: usize) -> Option<Session> {
-        Some(Session {
-            server: self.get(&record_key(URL_KEY, record))?.to_string(),
-            token: self.get(&record_key(TOKEN_KEY, record))?.to_string(),
-            user_id: self.get(&record_key(USER_ID_KEY, record))?.parse().ok()?,
+        self.saved(record)?.session()
+    }
+
+    /// Record `record`, and `None` past the last one; a record exists when its
+    /// url key does, whether or not it holds a credential.
+    pub fn saved(&self, record: usize) -> Option<Saved> {
+        let server = self.get(&record_key(URL_KEY, record))?.to_string();
+        let credential = match (
+            self.get(&record_key(TOKEN_KEY, record)),
+            self.get(&record_key(USER_ID_KEY, record))
+                .and_then(|id| id.parse().ok()),
+        ) {
+            (Some(token), Some(user_id)) => Some(Credential {
+                token: token.to_string(),
+                user_id,
+            }),
+            _ => None,
+        };
+        Some(Saved {
+            server,
+            name: self
+                .get(&record_key(NAME_KEY, record))
+                .unwrap_or_default()
+                .to_string(),
+            credential,
         })
     }
 
-    #[allow(dead_code, reason = "the session file holds records for every client")]
-    pub fn servers(&self) -> Vec<Session> {
-        (0..).map_while(|record| self.server(record)).collect()
+    /// Every record, in file order, which is most-recently-selected order.
+    pub fn records(&self) -> Vec<Saved> {
+        (0..).map_while(|record| self.saved(record)).collect()
     }
 
-    pub fn set_server(&mut self, record: usize, session: &Session) {
-        self.set(&record_key(URL_KEY, record), session.server.clone());
-        self.set(&record_key(TOKEN_KEY, record), session.token.clone());
-        self.set(
-            &record_key(USER_ID_KEY, record),
-            session.user_id.to_string(),
+    /// The record `server` is saved at, compared by [`normalized`].
+    pub fn find(&self, server: &str) -> Option<usize> {
+        let wanted = normalized(server);
+        self.records()
+            .iter()
+            .position(|saved| normalized(&saved.server) == wanted)
+    }
+
+    /// The active server's session — record 0's — and `None` when record 0
+    /// holds no credential, whatever later records hold.
+    pub fn active(&self) -> Option<Session> {
+        self.server(0)
+    }
+
+    /// Writes `records` over the keys this module knows, clearing every key of
+    /// every record past the last one.
+    fn rewrite(&mut self, records: &[Saved]) {
+        for (record, saved) in records.iter().enumerate() {
+            self.set(&record_key(URL_KEY, record), saved.server.clone());
+            match &saved.credential {
+                Some(credential) => {
+                    self.set(&record_key(TOKEN_KEY, record), credential.token.clone());
+                    self.set(
+                        &record_key(USER_ID_KEY, record),
+                        credential.user_id.to_string(),
+                    );
+                }
+                None => {
+                    self.remove(&record_key(TOKEN_KEY, record));
+                    self.remove(&record_key(USER_ID_KEY, record));
+                }
+            }
+            if saved.name.is_empty() {
+                self.remove(&record_key(NAME_KEY, record));
+            } else {
+                self.set(&record_key(NAME_KEY, record), saved.name.clone());
+            }
+        }
+        for record in records.len().. {
+            if self.get(&record_key(URL_KEY, record)).is_none() {
+                break;
+            }
+            self.remove(&record_key(URL_KEY, record));
+            self.remove(&record_key(TOKEN_KEY, record));
+            self.remove(&record_key(USER_ID_KEY, record));
+            self.remove(&record_key(NAME_KEY, record));
+        }
+    }
+
+    /// Moves `record` to the front, which is what selecting, adding and
+    /// signing in do; only the keys this module knows are rewritten, so a
+    /// foreign key keeps its text and its place.
+    pub fn activate(&mut self, record: usize) {
+        let mut records = self.records();
+        if record == 0 || record >= records.len() {
+            return;
+        }
+        let moved = records.remove(record);
+        records.insert(0, moved);
+        self.rewrite(&records);
+    }
+
+    /// Saves `server` at the front with no credential, and moves the record
+    /// already holding it to the front rather than writing a second.
+    pub fn add_server(&mut self, server: &str) {
+        if let Some(record) = self.find(server) {
+            self.activate(record);
+            return;
+        }
+        let mut records = self.records();
+        records.insert(
+            0,
+            Saved {
+                server: server.to_string(),
+                name: String::new(),
+                credential: None,
+            },
         );
+        self.rewrite(&records);
     }
 
+    /// Writes `session`'s credential at the record its server is saved at,
+    /// adding a record when none holds it, and moves that record to the front.
+    pub fn set_server(&mut self, session: &Session) {
+        let credential = Some(Credential {
+            token: session.token.clone(),
+            user_id: session.user_id,
+        });
+        let mut records = self.records();
+        match self.find(&session.server) {
+            Some(record) => {
+                let mut moved = records.remove(record);
+                moved.server = session.server.clone();
+                moved.credential = credential;
+                records.insert(0, moved);
+            }
+            None => records.insert(
+                0,
+                Saved {
+                    server: session.server.clone(),
+                    name: String::new(),
+                    credential,
+                },
+            ),
+        }
+        self.rewrite(&records);
+    }
+
+    /// Clears `record`'s credential and leaves the server saved.
+    pub fn clear_credential(&mut self, record: usize) {
+        let mut records = self.records();
+        let Some(saved) = records.get_mut(record) else {
+            return;
+        };
+        saved.credential = None;
+        self.rewrite(&records);
+    }
+
+    /// Deletes `record` and moves every later record down one, so no reader
+    /// finds a gap.
     pub fn remove_server(&mut self, record: usize) {
-        self.remove(&record_key(URL_KEY, record));
-        self.remove(&record_key(TOKEN_KEY, record));
-        self.remove(&record_key(USER_ID_KEY, record));
+        let mut records = self.records();
+        if record >= records.len() {
+            return;
+        }
+        records.remove(record);
+        self.rewrite(&records);
+    }
+
+    /// Writes the name `record`'s server reported, and only when it differs
+    /// from the one stored; answers true when it wrote.
+    pub fn set_name(&mut self, record: usize, name: &str) -> bool {
+        let mut records = self.records();
+        let Some(saved) = records.get_mut(record) else {
+            return false;
+        };
+        if saved.name == name {
+            return false;
+        }
+        saved.name = name.to_string();
+        self.rewrite(&records);
+        true
     }
 
     pub fn device_id(&mut self) -> Uuid {
@@ -329,20 +547,177 @@ mod tests {
         path.join("session.env")
     }
 
+    fn saved(server: &str, name: &str, token: Option<&str>) -> Saved {
+        Saved {
+            server: server.to_string(),
+            name: name.to_string(),
+            credential: token.map(|token| Credential {
+                token: token.to_string(),
+                user_id: Uuid::nil(),
+            }),
+        }
+    }
+
+    #[test]
+    fn a_multi_record_file_round_trips_with_foreign_and_unknown_per_record_keys_intact() {
+        let path = scratch("multi-record");
+        std::fs::write(
+            &path,
+            "FOREIGN=kept\nJELLYFIN_URL=https://one.test\nJELLYFIN_TOKEN=one\n\
+             JELLYFIN_USER_ID=00000000-0000-0000-0000-000000000000\n\
+             JELLYFIN_SERVER_NAME=One\nJELLYFIN_URL_1=https://two.test\n\
+             JELLYFIN_EXTRA_1=also-kept\n",
+        )
+        .expect("seed");
+
+        SessionFile::update(&path, |file| file.activate(1)).expect("activate");
+
+        let loaded = SessionFile::load(&path).expect("load");
+        assert_eq!(
+            loaded.records(),
+            vec![
+                saved("https://two.test", "", None),
+                saved("https://one.test", "One", Some("one")),
+            ]
+        );
+        assert_eq!(loaded.get("FOREIGN"), Some("kept"));
+        assert_eq!(loaded.get("JELLYFIN_EXTRA_1"), Some("also-kept"));
+    }
+
+    #[test]
+    fn a_record_holding_no_credential_hides_no_later_record() {
+        let path = scratch("credentialless");
+        SessionFile::update(&path, |file| {
+            file.add_server("https://two.test");
+            file.set_server(&Session {
+                server: "https://one.test".to_string(),
+                token: "one".to_string(),
+                user_id: Uuid::nil(),
+            });
+            file.activate(1);
+        })
+        .expect("write");
+
+        let loaded = SessionFile::load(&path).expect("load");
+        assert_eq!(loaded.records().len(), 2);
+        assert_eq!(loaded.active(), None);
+        assert_eq!(
+            loaded
+                .saved(1)
+                .and_then(|saved| saved.session())
+                .map(|s| s.server),
+            Some("https://one.test".to_string())
+        );
+    }
+
+    #[test]
+    fn removing_a_record_moves_every_later_record_down_one() {
+        let path = scratch("compaction");
+        SessionFile::update(&path, |file| {
+            file.add_server("https://three.test");
+            file.add_server("https://two.test");
+            file.add_server("https://one.test");
+            file.remove_server(1);
+        })
+        .expect("write");
+
+        let loaded = SessionFile::load(&path).expect("load");
+        assert_eq!(
+            loaded
+                .records()
+                .into_iter()
+                .map(|saved| saved.server)
+                .collect::<Vec<_>>(),
+            vec![
+                "https://one.test".to_string(),
+                "https://three.test".to_string()
+            ]
+        );
+    }
+
+    #[test]
+    fn selecting_a_record_makes_it_the_one_an_unmodified_reader_finds() {
+        let path = scratch("selection");
+        SessionFile::update(&path, |file| {
+            file.set_server(&Session {
+                server: "https://one.test".to_string(),
+                token: "one".to_string(),
+                user_id: Uuid::nil(),
+            });
+            file.set_server(&Session {
+                server: "https://two.test".to_string(),
+                token: "two".to_string(),
+                user_id: Uuid::nil(),
+            });
+            file.activate(1);
+        })
+        .expect("write");
+
+        let loaded = SessionFile::load(&path).expect("load");
+        assert_eq!(loaded.active().expect("active").server, "https://one.test");
+        assert_eq!(loaded.server(0).expect("record").token, "one");
+    }
+
+    #[test]
+    fn a_url_normalizing_to_a_saved_one_is_found_rather_than_added_twice() {
+        let path = scratch("normalizing");
+        SessionFile::update(&path, |file| {
+            file.add_server("https://Example.test:443/");
+            file.add_server("https://example.test");
+        })
+        .expect("write");
+
+        let loaded = SessionFile::load(&path).expect("load");
+        assert_eq!(loaded.records().len(), 1);
+        assert_eq!(loaded.find("HTTPS://EXAMPLE.TEST///"), Some(0));
+    }
+
+    #[test]
+    fn a_name_is_written_only_when_it_differs_from_the_one_stored() {
+        let path = scratch("naming");
+        SessionFile::update(&path, |file| file.add_server("https://one.test")).expect("seed");
+
+        assert!(SessionFile::update(&path, |file| file.set_name(0, "One")).expect("first"));
+        assert!(!SessionFile::update(&path, |file| file.set_name(0, "One")).expect("second"));
+        assert!(SessionFile::update(&path, |file| file.set_name(0, "Renamed")).expect("third"));
+
+        let loaded = SessionFile::load(&path).expect("load");
+        assert_eq!(loaded.saved(0).expect("record").name, "Renamed");
+    }
+
+    #[test]
+    fn clearing_a_credential_leaves_the_server_saved() {
+        let path = scratch("clearing");
+        SessionFile::update(&path, |file| {
+            file.set_server(&Session {
+                server: "https://one.test".to_string(),
+                token: "one".to_string(),
+                user_id: Uuid::nil(),
+            });
+            file.set_name(0, "One");
+            file.clear_credential(0);
+        })
+        .expect("write");
+
+        let loaded = SessionFile::load(&path).expect("load");
+        assert_eq!(loaded.active(), None);
+        assert_eq!(
+            loaded.records(),
+            vec![saved("https://one.test", "One", None)]
+        );
+    }
+
     #[test]
     fn a_quoted_foreign_key_survives_a_load_and_a_save() {
         let path = scratch("foreign-key");
         std::fs::write(&path, "FOREIGN=\"a value # with marks\"\n").expect("seed");
 
         SessionFile::update(&path, |file| {
-            file.set_server(
-                0,
-                &Session {
-                    server: "https://example.test".to_string(),
-                    token: "token".to_string(),
-                    user_id: Uuid::nil(),
-                },
-            )
+            file.set_server(&Session {
+                server: "https://example.test".to_string(),
+                token: "token".to_string(),
+                user_id: Uuid::nil(),
+            })
         })
         .expect("login write");
         SessionFile::update(&path, |file| file.remove_server(0)).expect("logout write");
@@ -357,14 +732,11 @@ mod tests {
         let awkward = "a \"quoted\" \\ value # here";
 
         SessionFile::update(&path, |file| {
-            file.set_server(
-                0,
-                &Session {
-                    server: awkward.to_string(),
-                    token: "token".to_string(),
-                    user_id: Uuid::nil(),
-                },
-            )
+            file.set_server(&Session {
+                server: awkward.to_string(),
+                token: "token".to_string(),
+                user_id: Uuid::nil(),
+            })
         })
         .expect("write");
 
@@ -423,14 +795,11 @@ mod tests {
 
         let device = SessionFile::update(&path, |file| file.device_id()).expect("device write");
         SessionFile::update(&path, |file| {
-            file.set_server(
-                0,
-                &Session {
-                    server: "https://example.test".to_string(),
-                    token: "token".to_string(),
-                    user_id: Uuid::nil(),
-                },
-            )
+            file.set_server(&Session {
+                server: "https://example.test".to_string(),
+                token: "token".to_string(),
+                user_id: Uuid::nil(),
+            })
         })
         .expect("login write");
 

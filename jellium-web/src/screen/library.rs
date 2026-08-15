@@ -2,128 +2,323 @@ use std::collections::HashSet;
 use std::rc::Rc;
 
 use iced::Element;
-use iced::widget::{column, pick_list, row, text};
-use jellyfin_api::types::{BaseItemDto, ItemSortBy, SortOrder};
+use iced::widget::{button, column, row, text};
+use jellium_model::facets::{Facet, Facets};
+use jellium_model::paged::Paged;
+use jellium_model::sort::Sort;
+use jellium_model::window;
+use jellyfin_api::types::{BaseItemDto, BaseItemKind, CollectionType};
 use uuid::Uuid;
 
-use crate::api::{Api, Page};
+use crate::api::Api;
 use crate::app::Message;
-use crate::error::Trouble;
+use crate::error::Answer;
 use crate::images::{self, Cache};
+use crate::route::{Listing, Route};
+use crate::screen::browse::{self, Browse};
 use crate::text::{self as strings, Text};
 use crate::theme;
-use crate::widget;
 
-pub const PAGE_SIZE: i32 = 100;
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
-pub enum Sort {
-    #[default]
-    Name,
-    NameDescending,
-    DateAdded,
-    ReleaseDate,
-    CommunityRating,
-    Random,
+/// A library tab named without what its list carries, which is what the strip
+/// draws and what a collection type offers.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Kind {
+    Items,
+    Suggestions,
+    Favorites,
+    Upcoming,
+    Episodes,
+    Songs,
+    AlbumArtists,
+    Artists,
+    Genres,
+    Studios,
+    Networks,
 }
 
-impl Sort {
-    pub const ALL: [Sort; 6] = [
-        Sort::Name,
-        Sort::NameDescending,
-        Sort::DateAdded,
-        Sort::ReleaseDate,
-        Sort::CommunityRating,
-        Sort::Random,
-    ];
-
-    pub fn query(self) -> (ItemSortBy, SortOrder) {
+impl Kind {
+    /// The facet this tab enumerates, and `None` for a tab drawn as something
+    /// other than a hub.
+    pub fn facet(self, music: bool) -> Option<Facet> {
         match self {
-            Sort::Name => (ItemSortBy::SortName, SortOrder::Ascending),
-            Sort::NameDescending => (ItemSortBy::SortName, SortOrder::Descending),
-            Sort::DateAdded => (ItemSortBy::DateCreated, SortOrder::Descending),
-            Sort::ReleaseDate => (ItemSortBy::PremiereDate, SortOrder::Descending),
-            Sort::CommunityRating => (ItemSortBy::CommunityRating, SortOrder::Descending),
-            Sort::Random => (ItemSortBy::Random, SortOrder::Ascending),
+            Kind::Genres if music => Some(Facet::MusicGenre),
+            Kind::Genres => Some(Facet::Genre),
+            Kind::Studios => Some(Facet::Studio),
+            Kind::Networks => Some(Facet::Network),
+            Kind::Artists => Some(Facet::Artist),
+            Kind::AlbumArtists => Some(Facet::AlbumArtist),
+            _ => None,
+        }
+    }
+
+    /// The tabs a library of `collection_type` carries, the item grid first; a
+    /// book, music-video, home-video, photo or mixed library carries the item
+    /// grid alone, and no library carries a Collections or a Playlists tab.
+    pub fn of(collection_type: Option<CollectionType>) -> Vec<Kind> {
+        match collection_type {
+            Some(CollectionType::Movies) => vec![
+                Kind::Items,
+                Kind::Suggestions,
+                Kind::Favorites,
+                Kind::Genres,
+                Kind::Studios,
+            ],
+            Some(CollectionType::Tvshows) => vec![
+                Kind::Items,
+                Kind::Suggestions,
+                Kind::Favorites,
+                Kind::Upcoming,
+                Kind::Episodes,
+                Kind::Genres,
+                Kind::Networks,
+            ],
+            Some(CollectionType::Music) => vec![
+                Kind::Items,
+                Kind::Suggestions,
+                Kind::Favorites,
+                Kind::AlbumArtists,
+                Kind::Artists,
+                Kind::Songs,
+                Kind::Genres,
+            ],
+            _ => vec![Kind::Items],
         }
     }
 
     pub fn label(self) -> Text {
         match self {
-            Sort::Name => Text::SortName,
-            Sort::NameDescending => Text::SortNameDescending,
-            Sort::DateAdded => Text::SortDateAdded,
-            Sort::ReleaseDate => Text::SortReleaseDate,
-            Sort::CommunityRating => Text::SortCommunityRating,
-            Sort::Random => Text::SortRandom,
+            Kind::Items => Text::LibraryTabItems,
+            Kind::Suggestions => Text::LibraryTabSuggestions,
+            Kind::Favorites => Text::LibraryTabFavorites,
+            Kind::Upcoming => Text::LibraryTabUpcoming,
+            Kind::Episodes => Text::LibraryTabEpisodes,
+            Kind::Songs => Text::LibraryTabSongs,
+            Kind::AlbumArtists => Text::LibraryTabAlbumArtists,
+            Kind::Artists => Text::LibraryTabArtists,
+            Kind::Genres => Text::LibraryTabGenres,
+            Kind::Studios => Text::LibraryTabStudios,
+            Kind::Networks => Text::LibraryTabNetworks,
+        }
+    }
+
+    /// The tab this kind opens at, with its preset facets and `sort`.
+    pub fn tab(self, sort: Sort) -> Tab {
+        let listing = |facets: Facets| Box::new(Listing { sort, facets });
+        match self {
+            Kind::Items => Tab::Items(listing(Facets::default())),
+            Kind::Suggestions => Tab::Suggestions,
+            Kind::Favorites => Tab::Favorites(listing(Facets::favorites())),
+            Kind::Upcoming => Tab::Upcoming,
+            Kind::Episodes => Tab::Episodes(listing(Facets::of_kind(BaseItemKind::Episode))),
+            Kind::Songs => Tab::Songs(listing(Facets::of_kind(BaseItemKind::Audio))),
+            Kind::AlbumArtists => Tab::AlbumArtists,
+            Kind::Artists => Tab::Artists,
+            Kind::Genres => Tab::Genres,
+            Kind::Studios => Tab::Studios,
+            Kind::Networks => Tab::Networks,
         }
     }
 }
 
-impl std::fmt::Display for Sort {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.write_str(strings::lookup(self.label()))
+/// The tab shown and what it carries.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum Tab {
+    Items(Box<Listing>),
+    Suggestions,
+    Favorites(Box<Listing>),
+    Upcoming,
+    Episodes(Box<Listing>),
+    Songs(Box<Listing>),
+    AlbumArtists,
+    Artists,
+    Genres,
+    Studios,
+    Networks,
+}
+
+impl Tab {
+    pub fn kind(&self) -> Kind {
+        match self {
+            Tab::Items(_) => Kind::Items,
+            Tab::Suggestions => Kind::Suggestions,
+            Tab::Favorites(_) => Kind::Favorites,
+            Tab::Upcoming => Kind::Upcoming,
+            Tab::Episodes(_) => Kind::Episodes,
+            Tab::Songs(_) => Kind::Songs,
+            Tab::AlbumArtists => Kind::AlbumArtists,
+            Tab::Artists => Kind::Artists,
+            Tab::Genres => Kind::Genres,
+            Tab::Studios => Kind::Studios,
+            Tab::Networks => Kind::Networks,
+        }
+    }
+
+    /// What this tab's grid is showing, and `None` for a tab drawn as
+    /// something other than a browse surface.
+    pub fn listing(&self) -> Option<&Listing> {
+        match self {
+            Tab::Items(listing)
+            | Tab::Favorites(listing)
+            | Tab::Episodes(listing)
+            | Tab::Songs(listing) => Some(listing),
+            _ => None,
+        }
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum Step {
-    Previous,
-    Next,
+/// What the shown tab holds.
+#[derive(Debug, Clone)]
+pub enum Body {
+    Browse(Box<Browse>),
+    Suggestions(Box<crate::screen::suggestions::State>),
+    Rows(Box<Browse>),
+    Hub(Box<crate::screen::hub::State>),
 }
 
 #[derive(Debug, Clone)]
 pub struct State {
     pub library: BaseItemDto,
-    pub sort: Sort,
-    pub start: i32,
-    pub page: Page,
+    pub tabs: Vec<Kind>,
+    pub tab: Tab,
+    pub body: Body,
 }
 
-pub async fn load(api: Rc<Api>, library: Uuid, sort: Sort, start: i32) -> Result<State, Trouble> {
-    Ok(State {
-        library: api.item(library).await?,
-        sort,
-        start,
-        page: api.page(library, sort, start, PAGE_SIZE).await?,
+pub async fn load(api: Rc<Api>, library: Uuid, tab: Tab, viewport: iced::Size) -> Answer<State> {
+    Answer::of(async {
+        let held = api.item(library).await.bubbled()?;
+        let tabs = Kind::of(held.collection_type);
+        let heading = held.name.clone().unwrap_or_default();
+        let music = held.collection_type == Some(CollectionType::Music);
+        let kind = tab.kind();
+
+        let body = if let Some(facet) = kind.facet(music) {
+            Body::Hub(Box::new(
+                crate::screen::hub::load(api.clone(), facet, library, Sort::default(), viewport)
+                    .await
+                    .bubbled()?,
+            ))
+        } else if kind == Kind::Suggestions {
+            Body::Suggestions(Box::new(
+                crate::screen::suggestions::load(
+                    api.clone(),
+                    library,
+                    held.collection_type == Some(CollectionType::Movies),
+                )
+                .await
+                .bubbled()?,
+            ))
+        } else if kind == Kind::Upcoming {
+            let mut rows = Browse::new(window::Id::Browse, heading, Listing::default(), viewport);
+            let items = api.upcoming(library, UPCOMING).await.bubbled()?;
+            rows.items = Paged::new(items.len());
+            rows.filled(0..items.len(), items);
+            Body::Rows(Box::new(rows))
+        } else {
+            let listing = tab.listing().cloned().unwrap_or_default();
+            let mut browse = Browse::new(window::Id::Browse, heading, listing.clone(), viewport);
+            let answered = api
+                .browse(
+                    Some(library),
+                    None,
+                    &listing,
+                    0,
+                    Paged::<BaseItemDto>::PAGE as i32,
+                )
+                .await
+                .bubbled()?;
+            browse.items = Paged::new(answered.total.max(0) as usize);
+            browse.filled(0..answered.items.len(), answered.items);
+            browse.choices = choices(&api, Some(library), &held).await;
+            Body::Browse(Box::new(browse))
+        };
+
+        Ok(State {
+            library: held,
+            tabs,
+            tab,
+            body,
+        })
     })
+    .await
 }
 
-pub fn view<'a>(state: &'a State, images: &'a Cache) -> Element<'a, Message> {
-    let last = (state.start + state.page.items.len() as i32).max(state.start);
-    let position = strings::format(
-        Text::PagePosition,
-        &[
-            &(state.start + 1).to_string(),
-            &last.to_string(),
-            &state.page.total.to_string(),
-        ],
-    );
+/// The most episodes an Upcoming tab lists.
+pub const UPCOMING: i32 = 64;
 
-    let controls = row![
-        text(strings::lookup(Text::LibrarySort)),
-        pick_list(Sort::ALL, Some(state.sort), Message::SortSelected),
-        text(position),
-        widget::step_button(Text::PagePrevious, Step::Previous, state.start > 0),
-        widget::step_button(
-            Text::PageNext,
-            Step::Next,
-            last < state.page.total,
-        ),
-    ]
-    .spacing(theme::CARD_SPACING)
-    .align_y(iced::Alignment::Center);
+/// The filter choices the server offers for `parent`; a listing the server
+/// refuses leaves the surface offering what it did answer.
+pub async fn choices(api: &Api, parent: Option<Uuid>, library: &BaseItemDto) -> browse::Choices {
+    let offered = api
+        .filters(parent)
+        .await
+        .or_default(Text::FailureFiltersUnread);
+    let studios = api
+        .studios(parent)
+        .await
+        .or_default(Text::FailureStudiosUnread);
+    let genres = api
+        .genres(parent)
+        .await
+        .or_default(Text::FailureGenresUnread);
+    browse::Choices {
+        genres: genres
+            .into_iter()
+            .filter_map(|genre| {
+                Some(browse::Named {
+                    id: genre.id?,
+                    name: genre.name?,
+                })
+            })
+            .collect(),
+        official_ratings: offered.official_ratings.unwrap_or_default(),
+        years: offered.years.unwrap_or_default(),
+        tags: offered.tags.unwrap_or_default(),
+        studios: studios
+            .into_iter()
+            .filter_map(|studio| {
+                Some(browse::Named {
+                    id: studio.id?,
+                    name: studio.name?,
+                })
+            })
+            .collect(),
+        series: library.collection_type == Some(CollectionType::Tvshows),
+    }
+}
 
-    column![
-        text(state.library.name.clone().unwrap_or_default()).size(28),
-        controls,
-        widget::grid(&state.page.items, images),
-    ]
-    .spacing(theme::CARD_SPACING)
-    .padding(theme::CARD_SPACING)
-    .into()
+pub fn view<'a>(state: &'a State, images: &'a Cache, read_only: bool) -> Element<'a, Message> {
+    let Some(id) = state.library.id else {
+        return column![].into();
+    };
+    let shown = state.tab.kind();
+    let strip = row(state.tabs.iter().map(|kind| {
+        let mut control = button(text(strings::lookup(kind.label())));
+        if *kind != shown {
+            control = control.on_press(Message::Navigated(Route::Library {
+                id,
+                tab: Box::new(kind.tab(Sort::default())),
+            }));
+        }
+        control.into()
+    }))
+    .spacing(theme::CARD_SPACING);
+
+    let body = match &state.body {
+        Body::Browse(browse) | Body::Rows(browse) => browse::view(browse, images, read_only),
+        Body::Suggestions(held) => crate::screen::suggestions::view(held, images, read_only),
+        Body::Hub(held) => crate::screen::hub::view(held, images),
+    };
+
+    column![strip, body]
+        .spacing(theme::CARD_SPACING)
+        .padding(theme::CARD_SPACING)
+        .into()
 }
 
 pub fn images(state: &State) -> HashSet<images::Key> {
-    widget::card_images(&state.page.items)
+    match &state.body {
+        Body::Browse(browse) | Body::Rows(browse) => browse::images(browse),
+        Body::Suggestions(held) => crate::screen::suggestions::images(held),
+        Body::Hub(held) => crate::screen::hub::images(held),
+    }
 }

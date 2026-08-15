@@ -159,25 +159,19 @@ pub async fn execute(
         SearchCommand::RemoteMusicAlbum => {
             let body: jellyfin_api::types::AlbumInfoRemoteSearchQuery =
                 serde_json::from_reader(std::io::stdin())?;
-            let result = client
-                .get_music_album_remote_search_results(&body)
-                .await?;
+            let result = client.get_music_album_remote_search_results(&body).await?;
             crate::output::print_json(&result)?;
         }
         SearchCommand::RemoteMusicArtist => {
             let body: jellyfin_api::types::ArtistInfoRemoteSearchQuery =
                 serde_json::from_reader(std::io::stdin())?;
-            let result = client
-                .get_music_artist_remote_search_results(&body)
-                .await?;
+            let result = client.get_music_artist_remote_search_results(&body).await?;
             crate::output::print_json(&result)?;
         }
         SearchCommand::RemoteMusicVideo => {
             let body: jellyfin_api::types::MusicVideoInfoRemoteSearchQuery =
                 serde_json::from_reader(std::io::stdin())?;
-            let result = client
-                .get_music_video_remote_search_results(&body)
-                .await?;
+            let result = client.get_music_video_remote_search_results(&body).await?;
             crate::output::print_json(&result)?;
         }
         SearchCommand::RemotePerson => {

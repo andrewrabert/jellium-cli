@@ -32,6 +32,17 @@ impl Device {
         }
     }
 
+    /// The device identifier Jellyfin keys this client's session by.
+    pub fn id(&self) -> Uuid {
+        self.id
+    }
+
+    /// The client name this installation presents, which is the client the
+    /// preference bag is read and written under.
+    pub fn client(&self) -> &'static str {
+        self.client
+    }
+
     // the Authorization header carrying `token`, or None when `token` holds a
     // byte no header value admits (a control byte); the caller fails the
     // request rather than panicking on a token it did not choose

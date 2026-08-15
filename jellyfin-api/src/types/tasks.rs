@@ -1,6 +1,8 @@
 use super::*;
 
-#[derive(serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(
+    serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd,
+)]
 pub enum TaskCompletionStatus {
     Completed,
     Failed,
@@ -41,18 +43,14 @@ impl TryFrom<&str> for TaskCompletionStatus {
 
 impl TryFrom<&String> for TaskCompletionStatus {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for TaskCompletionStatus {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
@@ -61,11 +59,7 @@ impl TryFrom<String> for TaskCompletionStatus {
 #[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
 pub struct TaskInfo {
     #[doc = "Gets or sets the category."]
-    #[serde(
-        rename = "Category",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Category", default, skip_serializing_if = "Option::is_none")]
     pub category: Option<String>,
     #[doc = "Gets or sets the progress."]
     #[serde(
@@ -82,25 +76,13 @@ pub struct TaskInfo {
     )]
     pub description: Option<String>,
     #[doc = "Gets or sets the id."]
-    #[serde(
-        rename = "Id",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Id", default, skip_serializing_if = "Option::is_none")]
     pub id: Option<String>,
     #[doc = "Gets or sets a value indicating whether this instance is hidden."]
-    #[serde(
-        rename = "IsHidden",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "IsHidden", default, skip_serializing_if = "Option::is_none")]
     pub is_hidden: Option<bool>,
     #[doc = "Gets or sets the key."]
-    #[serde(
-        rename = "Key",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Key", default, skip_serializing_if = "Option::is_none")]
     pub key: Option<String>,
     #[doc = "Gets or sets the last execution result."]
     #[serde(
@@ -110,24 +92,12 @@ pub struct TaskInfo {
     )]
     pub last_execution_result: Option<TaskResult>,
     #[doc = "Gets or sets the name."]
-    #[serde(
-        rename = "Name",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Name", default, skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
-    #[serde(
-        rename = "State",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "State", default, skip_serializing_if = "Option::is_none")]
     pub state: Option<TaskState>,
     #[doc = "Gets or sets the triggers."]
-    #[serde(
-        rename = "Triggers",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Triggers", default, skip_serializing_if = "Option::is_none")]
     pub triggers: Option<Vec<TaskTriggerInfo>>,
 }
 
@@ -166,18 +136,10 @@ pub struct TaskResult {
     )]
     pub error_message: Option<String>,
     #[doc = "Gets or sets the id."]
-    #[serde(
-        rename = "Id",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Id", default, skip_serializing_if = "Option::is_none")]
     pub id: Option<String>,
     #[doc = "Gets or sets the key."]
-    #[serde(
-        rename = "Key",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Key", default, skip_serializing_if = "Option::is_none")]
     pub key: Option<String>,
     #[doc = "Gets or sets the long error message."]
     #[serde(
@@ -187,11 +149,7 @@ pub struct TaskResult {
     )]
     pub long_error_message: Option<String>,
     #[doc = "Gets or sets the name."]
-    #[serde(
-        rename = "Name",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Name", default, skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
     #[doc = "Gets or sets the start time UTC."]
     #[serde(
@@ -200,11 +158,7 @@ pub struct TaskResult {
         skip_serializing_if = "Option::is_none"
     )]
     pub start_time_utc: Option<chrono::DateTime<chrono::Utc>>,
-    #[serde(
-        rename = "Status",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Status", default, skip_serializing_if = "Option::is_none")]
     pub status: Option<TaskCompletionStatus>,
 }
 
@@ -223,7 +177,9 @@ impl Default for TaskResult {
     }
 }
 
-#[derive(serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(
+    serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd,
+)]
 pub enum TaskState {
     Idle,
     Cancelling,
@@ -261,18 +217,14 @@ impl TryFrom<&str> for TaskState {
 
 impl TryFrom<&String> for TaskState {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for TaskState {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
@@ -281,11 +233,7 @@ impl TryFrom<String> for TaskState {
 #[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
 pub struct TaskTriggerInfo {
     #[doc = "Gets or sets the day of week."]
-    #[serde(
-        rename = "DayOfWeek",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "DayOfWeek", default, skip_serializing_if = "Option::is_none")]
     pub day_of_week: Option<DayOfWeek>,
     #[doc = "Gets or sets the interval."]
     #[serde(
@@ -308,11 +256,7 @@ pub struct TaskTriggerInfo {
         skip_serializing_if = "Option::is_none"
     )]
     pub time_of_day_ticks: Option<i64>,
-    #[serde(
-        rename = "Type",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Type", default, skip_serializing_if = "Option::is_none")]
     pub type_: Option<TaskTriggerInfoType>,
 }
 
@@ -328,7 +272,9 @@ impl Default for TaskTriggerInfo {
     }
 }
 
-#[derive(serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(
+    serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd,
+)]
 pub enum TaskTriggerInfoType {
     DailyTrigger,
     WeeklyTrigger,
@@ -369,19 +315,14 @@ impl TryFrom<&str> for TaskTriggerInfoType {
 
 impl TryFrom<&String> for TaskTriggerInfoType {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for TaskTriggerInfoType {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
-

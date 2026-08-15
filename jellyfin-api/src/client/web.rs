@@ -1,6 +1,6 @@
-use crate::types;
-use crate::error::Error;
 use crate::Client;
+use crate::error::Error;
+use crate::types;
 
 impl Client {
     #[doc = "Gets a dashboard configuration page\n\nSends a `GET` request to `/web/ConfigurationPage`\n\nArguments:\n- `name`: The name of the page.\n"]

@@ -1,7 +1,7 @@
-use crate::types;
-use crate::error::Error;
-use crate::util::encode_path;
 use crate::Client;
+use crate::error::Error;
+use crate::types;
+use crate::util::encode_path;
 
 impl Client {
     #[doc = "Reports playback has started within a session\n\nSends a `POST` request to `/Sessions/Playing`\n\nArguments:\n- `body`: The playback start info.\n"]
@@ -16,10 +16,7 @@ impl Client {
     }
 
     #[doc = "Pings a playback session\n\nSends a `POST` request to `/Sessions/Playing/Ping`\n\nArguments:\n- `play_session_id`: Playback session id.\n"]
-    pub async fn ping_playback_session(
-        &self,
-        play_session_id: &str,
-    ) -> Result<(), Error> {
+    pub async fn ping_playback_session(&self, play_session_id: &str) -> Result<(), Error> {
         self.request(reqwest::Method::POST, "/Sessions/Playing/Ping".into())
             .query("playSessionId", play_session_id)
             .send_no_content()
@@ -69,10 +66,13 @@ impl Client {
         session_id: &str,
         body: &types::GeneralCommand,
     ) -> Result<(), Error> {
-        self.request(reqwest::Method::POST, format!("/Sessions/{}/Command", encode_path(session_id)))
-            .json_body(body)
-            .send_no_content()
-            .await
+        self.request(
+            reqwest::Method::POST,
+            format!("/Sessions/{}/Command", encode_path(session_id)),
+        )
+        .json_body(body)
+        .send_no_content()
+        .await
     }
 
     #[doc = "Issues a general command to a client\n\nSends a `POST` request to `/Sessions/{sessionId}/Command/{command}`\n\nArguments:\n- `session_id`: The session id.\n- `command`: The command to send.\n"]
@@ -81,9 +81,16 @@ impl Client {
         session_id: &str,
         command: types::GeneralCommandType,
     ) -> Result<(), Error> {
-        self.request(reqwest::Method::POST, format!("/Sessions/{}/Command/{}", encode_path(session_id), encode_path(&command.to_string())))
-            .send_no_content()
-            .await
+        self.request(
+            reqwest::Method::POST,
+            format!(
+                "/Sessions/{}/Command/{}",
+                encode_path(session_id),
+                encode_path(&command.to_string())
+            ),
+        )
+        .send_no_content()
+        .await
     }
 
     #[doc = "Issues a command to a client to display a message to the user\n\nSends a `POST` request to `/Sessions/{sessionId}/Message`\n\nArguments:\n- `session_id`: The session id.\n- `body`: The MediaBrowser.Model.Session.MessageCommand object containing Header, Message Text, and TimeoutMs.\n"]
@@ -92,10 +99,13 @@ impl Client {
         session_id: &str,
         body: &types::MessageCommand,
     ) -> Result<(), Error> {
-        self.request(reqwest::Method::POST, format!("/Sessions/{}/Message", encode_path(session_id)))
-            .json_body(body)
-            .send_no_content()
-            .await
+        self.request(
+            reqwest::Method::POST,
+            format!("/Sessions/{}/Message", encode_path(session_id)),
+        )
+        .json_body(body)
+        .send_no_content()
+        .await
     }
 
     #[doc = "Instructs a session to play an item\n\nSends a `POST` request to `/Sessions/{sessionId}/Playing`\n\nArguments:\n- `session_id`: The session id.\n- `audio_stream_index`: Optional. The index of the audio stream to play.\n- `item_ids`: The ids of the items to play, comma delimited.\n- `media_source_id`: Optional. The media source id.\n- `play_command`: The type of play command to issue (PlayNow, PlayNext, PlayLast). Clients who have not yet implemented play next and play last may play now.\n- `start_index`: Optional. The start index.\n- `start_position_ticks`: The starting position of the first item.\n- `subtitle_stream_index`: Optional. The index of the subtitle stream to play.\n"]
@@ -110,16 +120,19 @@ impl Client {
         start_position_ticks: Option<i64>,
         subtitle_stream_index: Option<i32>,
     ) -> Result<(), Error> {
-        self.request(reqwest::Method::POST, format!("/Sessions/{}/Playing", encode_path(session_id)))
-            .query_opt("audioStreamIndex", audio_stream_index)
-            .query_list("itemIds", item_ids)
-            .query_opt("mediaSourceId", media_source_id)
-            .query("playCommand", play_command)
-            .query_opt("startIndex", start_index)
-            .query_opt("startPositionTicks", start_position_ticks)
-            .query_opt("subtitleStreamIndex", subtitle_stream_index)
-            .send_no_content()
-            .await
+        self.request(
+            reqwest::Method::POST,
+            format!("/Sessions/{}/Playing", encode_path(session_id)),
+        )
+        .query_opt("audioStreamIndex", audio_stream_index)
+        .query_list("itemIds", item_ids)
+        .query_opt("mediaSourceId", media_source_id)
+        .query("playCommand", play_command)
+        .query_opt("startIndex", start_index)
+        .query_opt("startPositionTicks", start_position_ticks)
+        .query_opt("subtitleStreamIndex", subtitle_stream_index)
+        .send_no_content()
+        .await
     }
 
     #[doc = "Issues a playstate command to a client\n\nSends a `POST` request to `/Sessions/{sessionId}/Playing/{command}`\n\nArguments:\n- `session_id`: The session id.\n- `command`: The MediaBrowser.Model.Session.PlaystateCommand.\n- `controlling_user_id`: The optional controlling user id.\n- `seek_position_ticks`: The optional position ticks.\n"]
@@ -130,11 +143,18 @@ impl Client {
         controlling_user_id: Option<&str>,
         seek_position_ticks: Option<i64>,
     ) -> Result<(), Error> {
-        self.request(reqwest::Method::POST, format!("/Sessions/{}/Playing/{}", encode_path(session_id), encode_path(&command.to_string())))
-            .query_opt("controllingUserId", controlling_user_id)
-            .query_opt("seekPositionTicks", seek_position_ticks)
-            .send_no_content()
-            .await
+        self.request(
+            reqwest::Method::POST,
+            format!(
+                "/Sessions/{}/Playing/{}",
+                encode_path(session_id),
+                encode_path(&command.to_string())
+            ),
+        )
+        .query_opt("controllingUserId", controlling_user_id)
+        .query_opt("seekPositionTicks", seek_position_ticks)
+        .send_no_content()
+        .await
     }
 
     #[doc = "Issues a system command to a client\n\nSends a `POST` request to `/Sessions/{sessionId}/System/{command}`\n\nArguments:\n- `session_id`: The session id.\n- `command`: The command to send.\n"]
@@ -143,9 +163,16 @@ impl Client {
         session_id: &str,
         command: types::GeneralCommandType,
     ) -> Result<(), Error> {
-        self.request(reqwest::Method::POST, format!("/Sessions/{}/System/{}", encode_path(session_id), encode_path(&command.to_string())))
-            .send_no_content()
-            .await
+        self.request(
+            reqwest::Method::POST,
+            format!(
+                "/Sessions/{}/System/{}",
+                encode_path(session_id),
+                encode_path(&command.to_string())
+            ),
+        )
+        .send_no_content()
+        .await
     }
 
     #[doc = "Adds an additional user to a session\n\nSends a `POST` request to `/Sessions/{sessionId}/User/{userId}`\n\nArguments:\n- `session_id`: The session id.\n- `user_id`: The user id.\n"]
@@ -154,9 +181,16 @@ impl Client {
         session_id: &str,
         user_id: &uuid::Uuid,
     ) -> Result<(), Error> {
-        self.request(reqwest::Method::POST, format!("/Sessions/{}/User/{}", encode_path(session_id), encode_path(&user_id.to_string())))
-            .send_no_content()
-            .await
+        self.request(
+            reqwest::Method::POST,
+            format!(
+                "/Sessions/{}/User/{}",
+                encode_path(session_id),
+                encode_path(&user_id.to_string())
+            ),
+        )
+        .send_no_content()
+        .await
     }
 
     #[doc = "Removes an additional user from a session\n\nSends a `DELETE` request to `/Sessions/{sessionId}/User/{userId}`\n\nArguments:\n- `session_id`: The session id.\n- `user_id`: The user id.\n"]
@@ -165,9 +199,16 @@ impl Client {
         session_id: &str,
         user_id: &uuid::Uuid,
     ) -> Result<(), Error> {
-        self.request(reqwest::Method::DELETE, format!("/Sessions/{}/User/{}", encode_path(session_id), encode_path(&user_id.to_string())))
-            .send_no_content()
-            .await
+        self.request(
+            reqwest::Method::DELETE,
+            format!(
+                "/Sessions/{}/User/{}",
+                encode_path(session_id),
+                encode_path(&user_id.to_string())
+            ),
+        )
+        .send_no_content()
+        .await
     }
 
     #[doc = "Instructs a session to browse to an item or view\n\nSends a `POST` request to `/Sessions/{sessionId}/Viewing`\n\nArguments:\n- `session_id`: The session Id.\n- `item_id`: The Id of the item.\n- `item_name`: The name of the item.\n- `item_type`: The type of item to browse to.\n"]
@@ -178,12 +219,15 @@ impl Client {
         item_name: &str,
         item_type: types::BaseItemKind,
     ) -> Result<(), Error> {
-        self.request(reqwest::Method::POST, format!("/Sessions/{}/Viewing", encode_path(session_id)))
-            .query("itemId", item_id)
-            .query("itemName", item_name)
-            .query("itemType", item_type)
-            .send_no_content()
-            .await
+        self.request(
+            reqwest::Method::POST,
+            format!("/Sessions/{}/Viewing", encode_path(session_id)),
+        )
+        .query("itemId", item_id)
+        .query("itemName", item_name)
+        .query("itemType", item_type)
+        .send_no_content()
+        .await
     }
 
     #[doc = "Updates capabilities for a device\n\nSends a `POST` request to `/Sessions/Capabilities`\n\nArguments:\n- `id`: The session id.\n- `playable_media_types`: A list of playable media types, comma delimited. Audio, Video, Book, Photo.\n- `supported_commands`: A list of supported remote control commands, comma delimited.\n- `supports_media_control`: Determines whether media can be played remotely..\n- `supports_persistent_identifier`: Determines whether the device supports a unique identifier.\n"]
@@ -200,7 +244,10 @@ impl Client {
             .query_list_opt("playableMediaTypes", playable_media_types)
             .query_list_opt("supportedCommands", supported_commands)
             .query_opt("supportsMediaControl", supports_media_control)
-            .query_opt("supportsPersistentIdentifier", supports_persistent_identifier)
+            .query_opt(
+                "supportsPersistentIdentifier",
+                supports_persistent_identifier,
+            )
             .send_no_content()
             .await
     }

@@ -1,7 +1,7 @@
 #![allow(clippy::all)]
 
-pub mod error;
 pub(crate) mod defaults;
+pub mod error;
 
 mod activity;
 mod auth;

@@ -1,12 +1,120 @@
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
+pub mod sync;
+
+/// What the Jellyfin server's policy lets this user do with groups.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum SyncAccess {
+    None,
+    Join,
+    CreateAndJoin,
+}
+
+/// What Live TV this session offers, and why it offers none.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum LiveTvAccess {
+    /// The Jellyfin server reports no Live TV service.
+    NoService,
+    /// The user's policy denies Live TV.
+    Denied,
+    Allowed,
+}
+
+impl LiveTvAccess {
+    /// True for `Allowed`, which is what every Live TV surface is drawn on and
+    /// what the declared command list follows.
+    pub fn allowed(self) -> bool {
+        matches!(self, LiveTvAccess::Allowed)
+    }
+}
+
+/// One saved server as the list and the status document carry it.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SavedServer {
+    pub server: String,
+    /// The name the server reported at its last successful probe, empty until
+    /// one succeeds.
+    pub name: String,
+    pub credentialed: bool,
+    /// True for the first record, which is the active server.
+    pub active: bool,
+}
+
+/// One user `GET /Users/Public` named, as the picker draws it.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PublicUser {
+    pub id: Uuid,
+    pub name: String,
+    /// True when the Jellyfin server holds a primary image for this user.
+    pub has_image: bool,
+}
+
+/// One server's login screen, populated by the probe that opened it.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct LoginScreen {
+    /// The opaque handle every login-stage request presents; it names no host.
+    pub target: String,
+    pub server: String,
+    pub name: String,
+    pub server_version: String,
+    pub snapshot_version: String,
+    /// Empty when the server reports no public user, which is what takes the
+    /// picker off the screen.
+    pub users: Vec<PublicUser>,
+    /// True when the Jellyfin server reports Quick Connect enabled, which is
+    /// what puts the Quick Connect option on the screen.
+    pub quick_connect: bool,
+    /// True when the saved credential this server held was rejected, which is
+    /// what the screen states.
+    pub rejected: bool,
+    pub read_only: bool,
+}
+
+impl LoginScreen {
+    pub fn off_snapshot(&self) -> bool {
+        self.server_version != self.snapshot_version
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(tag = "state", rename_all = "camelCase")]
 pub enum SessionStatus {
-    Anonymous,
+    #[serde(rename_all = "camelCase")]
+    Anonymous {
+        /// In file order, the active server first.
+        servers: Vec<SavedServer>,
+        read_only: bool,
+    },
+    /// One server's login screen, held as the login target while it shows.
+    Login(LoginScreen),
     Authenticated(Session),
+    /// The Jellyfin server has not completed its setup wizard.
+    Setup(Startup),
     Failed(Failure),
+}
+
+/// A Jellyfin server in startup mode, as the wizard's chrome names it.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Startup {
+    pub server: String,
+    pub server_version: String,
+    pub snapshot_version: String,
+    /// True when the wizard was entered by resuming a saved session, which is
+    /// what the chrome names on screen.
+    pub resumed: bool,
+}
+
+impl Startup {
+    pub fn off_snapshot(&self) -> bool {
+        self.server_version != self.snapshot_version
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -17,6 +125,30 @@ pub struct Session {
     pub user_name: String,
     pub server_version: String,
     pub snapshot_version: String,
+    /// What this user's policy lets them do with groups.
+    pub sync_play: SyncAccess,
+    /// What Live TV this session offers.
+    pub live_tv: LiveTvAccess,
+    /// True when the signed-in user's policy carries `IsAdministrator`, which
+    /// is what puts the dashboard in the chrome and Refresh Metadata on item
+    /// detail.
+    pub administrator: bool,
+    /// True when the signed-in user's policy carries
+    /// `EnableUserPreferenceAccess`, which is what puts every settings screen
+    /// but profile and password in the settings column.
+    pub preference_access: bool,
+    /// True when the Jellyfin server reports Quick Connect enabled, which is
+    /// what puts the Quick Connect screen in the settings column.
+    pub quick_connect: bool,
+    /// True when this instance was started `--read-only`, which is what takes
+    /// every write action out of the chrome.
+    pub read_only: bool,
+    /// The device id this installation reports to the Jellyfin server, which is
+    /// what names its own device in the device list.
+    pub device: String,
+    /// The client name this installation presents, which is the client the
+    /// preference bag is read and written under.
+    pub client: String,
 }
 
 impl Session {
@@ -25,12 +157,113 @@ impl Session {
     }
 }
 
+/// The credentials one server's login screen submits; the server is the held
+/// login target and is never named here.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Credentials {
-    pub server: String,
     pub username: String,
     pub password: String,
+}
+
+/// The server text typed into add-server, before any scheme is tried.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AddServer {
+    pub url: String,
+}
+
+/// A saved server named by the url stored for it; a url no record holds is
+/// refused.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ChooseServer {
+    pub server: String,
+}
+
+/// What removing a saved server did.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(tag = "removed", rename_all = "camelCase")]
+pub enum Removed {
+    /// The record is gone; its token was revoked, or it held none.
+    Deleted,
+    /// The record is gone and the Jellyfin server would not revoke its token.
+    DeletedUnrevoked,
+    /// No saved server holds that url.
+    Unknown,
+}
+
+/// The user-facing code of one Quick Connect request; the secret stays on the
+/// local server.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct QuickConnectCode {
+    pub code: String,
+}
+
+/// Where a Quick Connect sign-in stands, as each poll answers.
+/// The tag is `connect` rather than `quickConnect`, which `Session` already
+/// carries as a field and which would be emitted twice by `Signed`.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(tag = "connect", rename_all = "camelCase")]
+pub enum QuickConnectState {
+    /// No device has authorized the request yet.
+    Pending,
+    /// The request was authorized, the secret exchanged and the session
+    /// installed.
+    Signed(Session),
+    /// The Jellyfin server no longer holds the request.
+    Expired,
+    /// The Jellyfin server turned Quick Connect off while the request stood.
+    Disabled,
+}
+
+/// The username a password reset is asked for.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ResetRequest {
+    pub username: String,
+}
+
+/// Which of Jellyfin's three answers a password reset got.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(tag = "reset", rename_all = "camelCase")]
+pub enum ResetAnswer {
+    /// A pin was written to a file on the Jellyfin server.
+    #[serde(rename_all = "camelCase")]
+    PinWritten {
+        /// The server's own path, shown as quoted server output.
+        pin_file: String,
+        /// Milliseconds since the unix epoch on the local server's clock,
+        /// absent when the server named no expiry.
+        expires: Option<i64>,
+    },
+    ContactAdministrator,
+    InNetworkRequired,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ResetPin {
+    pub pin: String,
+}
+
+/// What redeeming a pin answered.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(tag = "pin", rename_all = "camelCase")]
+pub enum PinOutcome {
+    /// The accounts whose password is now unset.
+    Cleared { users: Vec<String> },
+    /// The Jellyfin server refused the pin.
+    Refused,
+}
+
+/// The login target a login-stage request presents, so a tab displaced by
+/// another tab is refused rather than answered about a server it left.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Targeted {
+    pub target: String,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -48,11 +281,26 @@ pub enum Failure {
         server_version: String,
         minimum_version: String,
     },
+    /// `Startup/Complete` succeeded and the sign-in that follows it did not.
+    SetupSignInFailed,
+}
+
+/// The stage a relayed route's entry admits it in, as a refusal names it.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum Admits {
+    /// The entry is admissible only while a session is held.
+    Signed,
+    /// The entry is admissible only while the setup upstream is held.
+    Setup,
+    /// The entry would be admissible only while a login target is held, which
+    /// no entry is.
+    Login,
 }
 
 /// A refusal the local server made itself, distinct from anything the Jellyfin
 /// server said.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(tag = "refusal", rename_all = "camelCase")]
 pub enum Refusal {
     /// The session cookie was absent or did not match.
@@ -64,12 +312,1336 @@ pub enum Refusal {
     /// The method and path are not one of the Jellyfin routes the local
     /// server relays.
     NotRelayed,
+    /// A manifest body named a url the relay's route table refuses.
+    ManifestNotRewritable,
+    /// A manifest body was larger than the relay buffers.
+    ManifestTooLarge,
+    /// A request carried a foreign-image handle this run did not mint.
+    ForeignNotObserved,
+    /// A request body on a body-carrying route was larger than
+    /// `route::BODY_LIMIT`.
+    #[serde(rename_all = "camelCase")]
+    BodyTooLarge {
+        /// The length the request declared, absent when it declared none.
+        bytes: Option<u64>,
+        cap: usize,
+    },
+    /// The route's entry declares a write and the instance is read-only.
+    ReadOnly,
+    /// A configuration page name the local server has not seen in a
+    /// configuration-page listing during this run.
+    PageNotListed,
+    /// A configuration page referenced a subresource the rewriter cannot
+    /// resolve to a configuration page the local server has observed.
+    PageNotRewritable,
+    /// A configuration page document was larger than `page::PAGE_LIMIT`.
+    PageTooLarge,
+    /// The route's entry declares a stage this instance is not in.
+    #[serde(rename_all = "camelCase")]
+    NotInStage { admits: Admits },
+    /// A setup request arrived after this run posted `Startup/Complete`.
+    SetupFinished,
+    /// The Jellyfin server is in startup mode and this instance is read-only,
+    /// so no wizard is offered.
+    SetupReadOnly,
+    /// A login-stage request presenting a login target the local server does
+    /// not hold, because another tab opened a different server's login screen
+    /// or the stage was left.
+    LoginMoved,
+}
+
+/// The whole `StartupConfigurationDto`, read and written by the language step
+/// and the metadata step; a field the server reports absent reads as empty.
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SetupConfiguration {
+    pub server_name: String,
+    pub ui_culture: String,
+    pub preferred_metadata_language: String,
+    pub metadata_country_code: String,
+}
+
+/// The first administrator: the name the Jellyfin server reports, and the
+/// password this run posted.
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SetupUser {
+    pub name: String,
+    pub password: String,
+}
+
+/// Both remote-access fields, sent on every save.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SetupRemoteAccess {
+    pub enable_remote_access: bool,
+    pub enable_automatic_port_mapping: bool,
+}
+
+/// One live subscription a screen holds open while it is shown.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum Feed {
+    /// The device picker's and the remote panel's session listing.
+    Targets,
+    /// Dashboard home's session listing.
+    Sessions,
+    Groups,
+    Tasks,
+    Activity,
+    Refresh,
+    Packages,
+}
+
+impl Feed {
+    pub const ALL: [Feed; 7] = [
+        Feed::Targets,
+        Feed::Sessions,
+        Feed::Groups,
+        Feed::Tasks,
+        Feed::Activity,
+        Feed::Refresh,
+        Feed::Packages,
+    ];
+
+    /// True for the two feeds one upstream `Sessions` subscription serves.
+    pub fn sessions(self) -> bool {
+        matches!(self, Feed::Targets | Feed::Sessions)
+    }
+}
+
+/// Where a scheduled task stands.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum TaskRunState {
+    Idle,
+    Cancelling,
+    Running,
+}
+
+/// One scheduled task, as the task list, task detail and dashboard home take
+/// it.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct TaskState {
+    pub id: String,
+    pub name: String,
+    pub category: String,
+    pub description: String,
+    pub state: TaskRunState,
+    /// 0.0..=100.0 while the task runs, absent otherwise.
+    pub progress: Option<f64>,
+}
+
+/// One activity log entry.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ActivityEntry {
+    pub id: i64,
+    pub name: String,
+    pub overview: String,
+    pub kind: String,
+    pub severity: String,
+    /// The user the entry names, absent when it names none.
+    pub user: Option<Uuid>,
+    pub user_name: String,
+    /// Milliseconds since the unix epoch on the local server's clock.
+    pub at: i64,
+}
+
+/// How far a refresh of one item has got.
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Refreshed {
+    pub item: Uuid,
+    /// 0.0..=100.0.
+    pub progress: f64,
+}
+
+/// One package install, as the five package messages carry it.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Packaged {
+    pub name: String,
+    pub version: String,
+    /// The plugin the package installs, absent when the message names none.
+    pub plugin: Option<Uuid>,
+}
+
+/// One Jellyfin session as dashboard home shows it.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ServerSession {
+    pub session: String,
+    pub device_name: String,
+    pub client_name: String,
+    pub user_name: String,
+    /// What the session is playing, absent when it plays nothing.
+    pub playing: Option<String>,
+    /// True for this installation's own session.
+    pub own: bool,
+}
+
+/// One media container the running browser was asked about.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub enum Container {
+    Mp4,
+    WebM,
+    Mpegts,
+    Mp3,
+    Aac,
+    Flac,
+    Ogg,
+    Wav,
+}
+
+/// One video codec the running browser was asked about.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub enum VideoCodec {
+    H264,
+    Hevc,
+    Vp8,
+    Vp9,
+    Av1,
+}
+
+/// One audio codec the running browser was asked about.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub enum AudioCodec {
+    Aac,
+    Mp3,
+    Opus,
+    Vorbis,
+    Flac,
+    Ac3,
+    Eac3,
+    Alac,
+    Pcm,
+}
+
+/// What a passing probe records.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Grant {
+    Container(Container),
+    Video(VideoCodec),
+    Audio(AudioCodec),
+}
+
+/// One mime type the browser is asked about, and what a pass records.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct Probe {
+    pub mime: &'static str,
+    pub grants: Grant,
+}
+
+/// What one decoding path in the running browser accepts.
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Decoding {
+    pub containers: Vec<Container>,
+    pub video_codecs: Vec<VideoCodec>,
+    pub audio_codecs: Vec<AudioCodec>,
+}
+
+/// What the running browser reported it can decode.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Capabilities {
+    /// Media Source Extensions are present, so adaptive streaming is possible.
+    pub media_source: bool,
+    /// What the media element decodes, which is what a direct play is played
+    /// through.
+    pub direct: Decoding,
+    /// What Media Source Extensions accept, which is what an HLS transcode
+    /// targets; empty when `media_source` is false.
+    pub adaptive: Decoding,
+}
+
+static PROBES: &[Probe] = &[
+    Probe {
+        mime: "video/mp4; codecs=\"avc1.640029, mp4a.40.2\"",
+        grants: Grant::Container(Container::Mp4),
+    },
+    Probe {
+        mime: "video/webm; codecs=\"vp8, vorbis\"",
+        grants: Grant::Container(Container::WebM),
+    },
+    Probe {
+        mime: "video/mp2t; codecs=\"avc1.640029, mp4a.40.2\"",
+        grants: Grant::Container(Container::Mpegts),
+    },
+    Probe {
+        mime: "audio/mpeg",
+        grants: Grant::Container(Container::Mp3),
+    },
+    Probe {
+        mime: "audio/aac",
+        grants: Grant::Container(Container::Aac),
+    },
+    Probe {
+        mime: "audio/flac",
+        grants: Grant::Container(Container::Flac),
+    },
+    Probe {
+        mime: "audio/ogg; codecs=\"vorbis\"",
+        grants: Grant::Container(Container::Ogg),
+    },
+    Probe {
+        mime: "audio/wav; codecs=\"1\"",
+        grants: Grant::Container(Container::Wav),
+    },
+    Probe {
+        mime: "video/mp4; codecs=\"avc1.640029\"",
+        grants: Grant::Video(VideoCodec::H264),
+    },
+    Probe {
+        mime: "video/mp4; codecs=\"hvc1.1.6.L93.B0\"",
+        grants: Grant::Video(VideoCodec::Hevc),
+    },
+    Probe {
+        mime: "video/webm; codecs=\"vp8\"",
+        grants: Grant::Video(VideoCodec::Vp8),
+    },
+    Probe {
+        mime: "video/webm; codecs=\"vp9\"",
+        grants: Grant::Video(VideoCodec::Vp9),
+    },
+    Probe {
+        mime: "video/mp4; codecs=\"av01.0.05M.08\"",
+        grants: Grant::Video(VideoCodec::Av1),
+    },
+    Probe {
+        mime: "audio/mp4; codecs=\"mp4a.40.2\"",
+        grants: Grant::Audio(AudioCodec::Aac),
+    },
+    Probe {
+        mime: "audio/mpeg",
+        grants: Grant::Audio(AudioCodec::Mp3),
+    },
+    Probe {
+        mime: "audio/ogg; codecs=\"opus\"",
+        grants: Grant::Audio(AudioCodec::Opus),
+    },
+    Probe {
+        mime: "audio/ogg; codecs=\"vorbis\"",
+        grants: Grant::Audio(AudioCodec::Vorbis),
+    },
+    Probe {
+        mime: "audio/flac",
+        grants: Grant::Audio(AudioCodec::Flac),
+    },
+    Probe {
+        mime: "audio/mp4; codecs=\"ac-3\"",
+        grants: Grant::Audio(AudioCodec::Ac3),
+    },
+    Probe {
+        mime: "audio/mp4; codecs=\"ec-3\"",
+        grants: Grant::Audio(AudioCodec::Eac3),
+    },
+    Probe {
+        mime: "audio/mp4; codecs=\"alac\"",
+        grants: Grant::Audio(AudioCodec::Alac),
+    },
+    Probe {
+        mime: "audio/wav; codecs=\"1\"",
+        grants: Grant::Audio(AudioCodec::Pcm),
+    },
+];
+
+impl Capabilities {
+    /// Every mime type the browser is asked about, in one table both sides
+    /// read.
+    pub fn probes() -> &'static [Probe] {
+        PROBES
+    }
+}
+
+/// The ceiling the user chose for a stream.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(tag = "quality", rename_all = "camelCase")]
+pub enum Quality {
+    /// The local server's measurement of its own link to Jellyfin.
+    Auto,
+    #[serde(rename_all = "camelCase")]
+    Limit { bits_per_second: i32 },
+}
+
+impl Quality {
+    /// Auto and the fixed ladder the quality menu offers, in the order it
+    /// offers them.
+    pub const LADDER: [Quality; 13] = [
+        Quality::Auto,
+        Quality::Limit {
+            bits_per_second: 120_000_000,
+        },
+        Quality::Limit {
+            bits_per_second: 60_000_000,
+        },
+        Quality::Limit {
+            bits_per_second: 40_000_000,
+        },
+        Quality::Limit {
+            bits_per_second: 20_000_000,
+        },
+        Quality::Limit {
+            bits_per_second: 15_000_000,
+        },
+        Quality::Limit {
+            bits_per_second: 10_000_000,
+        },
+        Quality::Limit {
+            bits_per_second: 8_000_000,
+        },
+        Quality::Limit {
+            bits_per_second: 6_000_000,
+        },
+        Quality::Limit {
+            bits_per_second: 4_000_000,
+        },
+        Quality::Limit {
+            bits_per_second: 3_000_000,
+        },
+        Quality::Limit {
+            bits_per_second: 2_000_000,
+        },
+        Quality::Limit {
+            bits_per_second: 1_000_000,
+        },
+    ];
+}
+
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum Repeat {
+    #[default]
+    Off,
+    One,
+    All,
+}
+
+impl Repeat {
+    /// The mode a repeat control moves to: off, then one, then all.
+    pub fn cycled(self) -> Repeat {
+        match self {
+            Repeat::Off => Repeat::One,
+            Repeat::One => Repeat::All,
+            Repeat::All => Repeat::Off,
+        }
+    }
+}
+
+/// What the browser asks the local server to negotiate.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PlayRequest {
+    pub item: Uuid,
+    /// The version the player selected; the first source when absent.
+    pub media_source: Option<String>,
+    pub audio_stream: Option<i32>,
+    /// Absent turns subtitles off.
+    pub subtitle_stream: Option<i32>,
+    pub start_ticks: i64,
+    pub quality: Quality,
+    pub capabilities: Capabilities,
+    /// False on the one retry after the media element refused a direct play.
+    pub allow_direct_play: bool,
+}
+
+/// How the negotiated source reaches the media element.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(tag = "delivery", rename_all = "camelCase")]
+pub enum Delivery {
+    /// A same-origin path the media element loads directly.
+    Progressive { path: String },
+    /// A same-origin master manifest path hls.js loads.
+    Hls { path: String },
+}
+
+/// What the Jellyfin server settled on.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(tag = "method", rename_all = "camelCase")]
+pub enum Method {
+    DirectPlay,
+    DirectStream,
+    #[serde(rename_all = "camelCase")]
+    Transcode {
+        /// True when the subtitle selection is what forced the transcode.
+        subtitle_burn_in: bool,
+    },
+}
+
+/// One version of an item.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SourceChoice {
+    pub id: String,
+    pub name: String,
+}
+
+/// One audio stream of the negotiated source.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AudioChoice {
+    pub index: i32,
+    pub label: String,
+    /// True for the stream the user's server-side language configuration
+    /// selects.
+    pub default: bool,
+}
+
+/// One subtitle stream of the negotiated source.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SubtitleChoice {
+    pub index: i32,
+    pub label: String,
+    pub language: Option<String>,
+    /// True for the stream the user's server-side subtitle mode selects.
+    pub default: bool,
+    /// A same-origin WebVTT path for a text stream, absent for a bitmap
+    /// stream the Jellyfin server burns in.
+    pub track: Option<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Chapter {
+    pub name: String,
+    pub start_ticks: i64,
+}
+
+/// Everything the browser needs to play one item, carrying no token and no
+/// url outside the local server.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Plan {
+    pub play_session: String,
+    pub item: Uuid,
+    pub media_source: String,
+    pub method: Method,
+    pub delivery: Delivery,
+    pub start_ticks: i64,
+    pub run_time_ticks: Option<i64>,
+    pub sources: Vec<SourceChoice>,
+    pub audio_streams: Vec<AudioChoice>,
+    pub subtitle_streams: Vec<SubtitleChoice>,
+    pub audio_stream: Option<i32>,
+    pub subtitle_stream: Option<i32>,
+    pub chapters: Vec<Chapter>,
+    /// The ceiling that went to the Jellyfin server, measured or chosen.
+    pub max_bitrate: Option<i32>,
+    /// True when the negotiated source is a live stream, which is what draws
+    /// the live display and forecloses seeking.
+    pub live: bool,
+}
+
+/// What the browser reports while playing.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Progress {
+    pub play_session: String,
+    pub position_ticks: i64,
+    pub paused: bool,
+    pub muted: bool,
+    pub volume: i32,
+    pub audio_stream: Option<i32>,
+    pub subtitle_stream: Option<i32>,
+    pub repeat: Repeat,
+}
+
+/// What the browser reports when playback ends.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Stopped {
+    pub play_session: String,
+    pub position_ticks: i64,
+}
+
+/// Whether the reporting tab still holds the one playback session.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(tag = "standing", rename_all = "camelCase")]
+pub enum Standing {
+    Current,
+    /// A later start took the one playback session from this one.
+    Superseded,
+    /// This session ended because its reports stopped arriving, and no other
+    /// tab holds one.
+    Lapsed,
+    /// This session was live and paused too long, so its tuner was released.
+    Released,
+}
+
+/// A playback request the local server or the Jellyfin server would not
+/// honour, distinct from a transport failure.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(tag = "refused", rename_all = "camelCase")]
+pub enum PlaybackRefused {
+    /// The item declares no media source.
+    NoMediaSource,
+    /// No source this browser can play, even transcoded.
+    NoPlayableSource,
+    /// The Jellyfin server would not start a transcode.
+    TranscodeRefused { code: String },
+    /// Another tab took the one playback session.
+    Superseded,
+    /// The Jellyfin server negotiated a stream at a url the relay's route
+    /// table does not admit.
+    NotRelayable,
+    /// The session ended because its reports stopped arriving.
+    Lapsed,
+    /// The Jellyfin server would not open a live stream: no tuner carrying the
+    /// channel is free.
+    NoTuner,
+    /// The live stream this session held is gone upstream, found when the one
+    /// resume after a dropped live stream re-negotiated.
+    TunerGone,
+    /// The Jellyfin server negotiated a live source at a path the relay's
+    /// route table does not admit; `shape` names the path with every id
+    /// segment replaced and no query.
+    LiveNotRelayable { shape: String },
+    /// This session was live and paused past `Playback::PAUSED_LIVE`, so its
+    /// tuner was released.
+    TunerReleased,
+}
+
+/// One item's user data, as a live refresh carries it.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Marked {
+    pub item: Uuid,
+    pub played: bool,
+    pub favorite: bool,
+    pub play_count: i32,
+    pub position_ticks: i64,
+}
+
+/// What a remote target is playing, as its session listing reports it.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct NowPlaying {
+    pub item: Uuid,
+    pub title: String,
+    pub subtitle: String,
+    pub position_ticks: i64,
+    pub run_time_ticks: i64,
+    pub paused: bool,
+    pub muted: bool,
+    pub volume: i32,
+    pub repeat: Repeat,
+    pub shuffled: bool,
+}
+
+/// One Jellyfin session this client may drive.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Target {
+    pub session: String,
+    pub device_name: String,
+    pub client_name: String,
+    pub now_playing: Option<NowPlaying>,
+}
+
+/// What a play command does to the queue.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum PlayMode {
+    Now,
+    Next,
+    Last,
+    InstantMix,
+    Shuffle,
+}
+
+impl PlayMode {
+    /// True when the mode plays its items in a shuffled order.
+    pub fn shuffles(self) -> bool {
+        matches!(self, PlayMode::Shuffle)
+    }
+
+    /// True when the items name the seed of an instant mix rather than the
+    /// queue itself.
+    pub fn mixes(self) -> bool {
+        matches!(self, PlayMode::InstantMix)
+    }
+}
+
+/// A message another client asked this one to show.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Notice {
+    pub header: String,
+    pub text: String,
+}
+
+/// One control command another client sent this one, named by the effect it
+/// has here rather than by the Jellyfin verb that carried it.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(tag = "control", rename_all = "camelCase")]
+pub enum Control {
+    #[serde(rename_all = "camelCase")]
+    Play {
+        items: Vec<Uuid>,
+        mode: PlayMode,
+        start_index: i32,
+        start_ticks: i64,
+        media_source: Option<String>,
+        audio_stream: Option<i32>,
+        subtitle_stream: Option<i32>,
+    },
+    Stop,
+    PlayPause,
+    Pause,
+    Unpause,
+    NextTrack,
+    PreviousTrack,
+    #[serde(rename_all = "camelCase")]
+    Seek {
+        position_ticks: i64,
+    },
+    Rewind,
+    FastForward,
+    VolumeUp,
+    VolumeDown,
+    SetVolume {
+        level: i32,
+    },
+    Mute,
+    Unmute,
+    ToggleMute,
+    SetAudioStream {
+        index: i32,
+    },
+    /// Absent turns subtitles off.
+    SetSubtitleStream {
+        index: Option<i32>,
+    },
+    SetMediaSource {
+        id: String,
+    },
+    /// Absent is the Auto ceiling.
+    #[serde(rename_all = "camelCase")]
+    SetMaxBitrate {
+        bits_per_second: Option<i32>,
+    },
+    SetRepeat {
+        repeat: Repeat,
+    },
+    SetShuffle {
+        shuffled: bool,
+    },
+    /// Moves to the next channel during live playback.
+    ChannelUp,
+    /// Moves to the previous channel during live playback.
+    ChannelDown,
+    /// Opens the guide.
+    Guide,
+    ToggleFullscreen,
+    /// Shows the on-screen display when it is hidden, and hides it otherwise.
+    ToggleDisplay,
+    GoHome,
+    GoToSearch,
+    /// Opens the item's detail screen.
+    Show {
+        item: Uuid,
+    },
+    Notify(Notice),
+}
+
+/// Where a group stands.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum GroupState {
+    Idle,
+    Waiting,
+    Paused,
+    Playing,
+}
+
+/// One SyncPlay group, as a listing or as the one this installation is in.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Group {
+    pub id: Uuid,
+    pub name: String,
+    pub participants: Vec<String>,
+    pub state: GroupState,
+}
+
+/// One entry of the group's queue, addressed by its playlist item id.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Queued {
+    pub playlist_item: Uuid,
+    pub item: Uuid,
+}
+
+/// The queue the Jellyfin server owns on the group's behalf.
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct GroupQueue {
+    pub items: Vec<Queued>,
+    pub playing_index: i32,
+    pub position_ticks: i64,
+    pub playing: bool,
+    pub repeat: Repeat,
+    pub shuffled: bool,
+}
+
+/// What a scheduled group command asks every member to do.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum GroupCommand {
+    Unpause,
+    Pause,
+    Stop,
+    Seek,
+}
+
+/// One group command, its instant already converted off the Jellyfin server's
+/// clock.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Scheduled {
+    pub command: GroupCommand,
+    pub playlist_item: Option<Uuid>,
+    pub position_ticks: i64,
+    /// Milliseconds since the unix epoch on the local server's clock.
+    pub at: i64,
+}
+
+/// One control a tab issues against the group it is in; the group is never
+/// named, because the local server holds the membership.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(tag = "verb", rename_all = "camelCase")]
+pub enum GroupVerb {
+    /// Replaces the group's queue, which is where every Play, Play All and
+    /// instant mix goes while membership lasts.
+    #[serde(rename_all = "camelCase")]
+    SetQueue {
+        items: Vec<Uuid>,
+        start_index: i32,
+        start_ticks: i64,
+    },
+    Unpause,
+    Pause,
+    Stop,
+    #[serde(rename_all = "camelCase")]
+    Seek {
+        position_ticks: i64,
+    },
+    #[serde(rename_all = "camelCase")]
+    NextItem {
+        playlist_item: Uuid,
+    },
+    #[serde(rename_all = "camelCase")]
+    PreviousItem {
+        playlist_item: Uuid,
+    },
+    #[serde(rename_all = "camelCase")]
+    SetPlaylistItem {
+        playlist_item: Uuid,
+    },
+    #[serde(rename_all = "camelCase")]
+    RemoveFromPlaylist {
+        playlist_items: Vec<Uuid>,
+    },
+    SetRepeat {
+        repeat: Repeat,
+    },
+    SetShuffle {
+        shuffled: bool,
+    },
+    /// The element stalled, an item change began, or a seek began.
+    #[serde(rename_all = "camelCase")]
+    Buffering {
+        playing: bool,
+        playlist_item: Uuid,
+        position_ticks: i64,
+    },
+    /// The element can play through at the commanded position.
+    #[serde(rename_all = "camelCase")]
+    Ready {
+        playing: bool,
+        playlist_item: Uuid,
+        position_ticks: i64,
+    },
+}
+
+/// Why this tab stopped holding the transport and the queue.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum Displaced {
+    /// A later playback start took the playback session.
+    Playback,
+    /// Another tab entered the group, which carries the playback session with
+    /// it.
+    Group,
+}
+
+/// Why membership ended without the user leaving the group.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum GroupEnded {
+    /// This installation left the group.
+    Left,
+    /// The Jellyfin server took this session out of the group.
+    Removed,
+    /// This installation took remote mode.
+    Remote,
+    /// The Jellyfin server says this session is not in the group.
+    NotInGroup,
+    /// The Jellyfin server says the group does not exist.
+    NoSuchGroup,
+    /// The Jellyfin server denied this user the group's library.
+    LibraryDenied,
+}
+
+/// Why remote mode ended without the user leaving it.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum RemoteEnded {
+    /// Another tab took remote mode.
+    Taken,
+    /// The target left the session listing, or stopped being controllable.
+    TargetGone,
+    /// A control command naming this client arrived.
+    Controlled,
+    /// This installation entered a group.
+    Grouped,
+}
+
+/// A report the local server would not act on.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(tag = "refusal", rename_all = "camelCase")]
+pub enum LiveRefusal {
+    /// A session id the local server has not seen in a listing for this user
+    /// during this run.
+    UnknownTarget,
+    /// A drive from a tab holding no remote mode.
+    NotDriving,
+    /// The Jellyfin server would not carry out the command.
+    TargetRefused,
+    /// A group verb from a tab holding no membership.
+    NotGrouped,
+    /// The Jellyfin server would not carry out the group verb.
+    GroupRefused,
+    /// A verb the instance forecloses because it was started `--read-only`.
+    ReadOnly,
+}
+
+/// Which of the four timer changes one event carries.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum TimerChange {
+    Created,
+    Cancelled,
+    SeriesCreated,
+    SeriesCancelled,
+}
+
+/// One timer or series timer created or cancelled anywhere, as the guide's
+/// record markers, the Schedule tab and the Series tab take it.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct TimerChanged {
+    pub change: TimerChange,
+    /// The timer's or series timer's id.
+    pub timer: String,
+    /// The program the timer covers; absent when the Jellyfin server named
+    /// none.
+    pub program: Option<Uuid>,
+}
+
+/// Everything the local server sends a browser tab, and nothing else.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(tag = "event", rename_all = "camelCase")]
+pub enum Event {
+    Marked {
+        items: Vec<Marked>,
+    },
+    /// The timer changes one coalescing window carried, sent to every tab.
+    Timers {
+        changes: Vec<TimerChanged>,
+    },
+    Control(Control),
+    Targets {
+        targets: Vec<Target>,
+    },
+    /// The joinable groups, sent to every tab with a picker or the SyncPlay
+    /// screen open.
+    Groups {
+        groups: Vec<Group>,
+    },
+    /// The group this installation is in, sent to every tab when membership
+    /// begins and whenever the group's name, participants, state or holder
+    /// change; `member` is true for the tab holding the transport and the
+    /// queue and false for every other tab.
+    #[serde(rename_all = "camelCase")]
+    Joined {
+        group: Group,
+        member: bool,
+    },
+    /// The ids one coalescing window carried, sent to every connected tab
+    /// together at most once a second.
+    #[serde(rename_all = "camelCase")]
+    LibraryChanged {
+        added: Vec<Uuid>,
+        removed: Vec<Uuid>,
+        updated: Vec<Uuid>,
+    },
+    /// The group's queue, sent to every tab.
+    GroupQueue(GroupQueue),
+    /// A group command, sent to the tab holding membership.
+    Scheduled(Scheduled),
+    GroupEnded {
+        cause: GroupEnded,
+    },
+    /// The local server's side of one clock exchange.
+    Clock(sync::Exchange),
+    /// This tab stopped holding the transport and the queue.
+    Displaced {
+        cause: Displaced,
+    },
+    RemoteEnded {
+        cause: RemoteEnded,
+    },
+    ServerStopping {
+        restarting: bool,
+    },
+    /// The signed-in user was deleted on the Jellyfin server.
+    UserDeleted,
+    Refused {
+        refusal: LiveRefusal,
+    },
+    /// Every scheduled task, sent to every tab holding `Feed::Tasks`.
+    Tasks {
+        tasks: Vec<TaskState>,
+    },
+    /// The activity entries one coalescing window carried, newest first, sent
+    /// to every tab holding `Feed::Activity`.
+    Activity {
+        entries: Vec<ActivityEntry>,
+    },
+    /// The refresh progress one coalescing window carried, sent to every tab
+    /// holding `Feed::Refresh`.
+    Refreshing {
+        items: Vec<Refreshed>,
+    },
+    PackageInstalling {
+        package: Packaged,
+    },
+    PackageInstalled {
+        package: Packaged,
+    },
+    PackageFailed {
+        package: Packaged,
+    },
+    PackageCancelled {
+        package: Packaged,
+    },
+    PackageUninstalled {
+        package: Packaged,
+    },
+    /// The Jellyfin server says a restart is required.
+    RestartRequired,
+    /// The signed-in user's policy changed; both bits are what it carries now.
+    #[serde(rename_all = "camelCase")]
+    UserUpdated {
+        administrator: bool,
+        preference_access: bool,
+    },
+    /// Every session on the server, sent to every tab holding
+    /// `Feed::Sessions`.
+    Sessions {
+        sessions: Vec<ServerSession>,
+    },
+}
+
+/// Everything a browser tab sends the local server, and nothing else.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(tag = "report", rename_all = "camelCase")]
+pub enum Report {
+    /// This tab holds `play_session`.
+    #[serde(rename_all = "camelCase")]
+    Playing {
+        play_session: String,
+    },
+    /// A screen consuming `feed` opened in this tab, and closed.
+    Watch {
+        feed: Feed,
+    },
+    Drop {
+        feed: Feed,
+    },
+    TakeRemote {
+        target: String,
+    },
+    LeaveRemote,
+    Drive(Drive),
+    /// Creates a group named `name` and joins it.
+    CreateGroup {
+        name: String,
+    },
+    JoinGroup {
+        group: Uuid,
+    },
+    /// Binds this tab as the one holding the group, which is how a reopened
+    /// socket reclaims membership and how a Play in a second tab takes it.
+    TakeGroup,
+    LeaveGroup,
+    Group(GroupVerb),
+    /// One clock exchange, carrying the browser's own round trip to the local
+    /// server so the ping reported to the group can be composed.
+    #[serde(rename_all = "camelCase")]
+    Clock {
+        sent: i64,
+        round_trip: i64,
+    },
+}
+
+impl Report {
+    pub fn read_only(&self) -> bool {
+        match self {
+            Report::Playing { .. }
+            | Report::Watch { .. }
+            | Report::Drop { .. }
+            | Report::Clock { .. } => true,
+            Report::TakeRemote { .. }
+            | Report::LeaveRemote
+            | Report::Drive(_)
+            | Report::CreateGroup { .. }
+            | Report::JoinGroup { .. }
+            | Report::TakeGroup
+            | Report::LeaveGroup
+            | Report::Group(_) => false,
+        }
+    }
+}
+
+/// One control against the target the reporting tab is bound to; the target
+/// is never named, because the local server holds it.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(tag = "drive", rename_all = "camelCase")]
+pub enum Drive {
+    #[serde(rename_all = "camelCase")]
+    Play {
+        items: Vec<Uuid>,
+        start_index: i32,
+        start_ticks: i64,
+        mode: PlayMode,
+    },
+    PlayPause,
+    Stop,
+    #[serde(rename_all = "camelCase")]
+    Seek {
+        position_ticks: i64,
+    },
+    SkipBack,
+    SkipForward,
+    NextTrack,
+    PreviousTrack,
+    SetVolume {
+        level: i32,
+    },
+    ToggleMute,
+    SetRepeat {
+        repeat: Repeat,
+    },
+    SetShuffle {
+        shuffled: bool,
+    },
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub struct DeviceIdentity;
 
+/// The prefix a foreign image the local server minted a handle for is fetched
+/// under.
+pub const FOREIGN_PREFIX: &str = "/foreign";
+
 pub const RELAY_PREFIX: &str = "/jellyfin";
 pub const SESSION_PATH: &str = "/session";
+pub const PLAYBACK_PATH: &str = "/playback";
+pub const PLAYBACK_PROGRESS_PATH: &str = "/playback/progress";
+pub const PLAYBACK_STOPPED_PATH: &str = "/playback/stopped";
+pub const LIVE_PATH: &str = "/live";
+pub const GROUP_LEAVE_PATH: &str = "/group/leave";
+/// Releases the setup upstream, which is what Back on the first step does.
+pub const SETUP_PATH: &str = "/setup";
+pub const SETUP_CONFIGURATION_PATH: &str = "/setup/configuration";
+pub const SETUP_USER_PATH: &str = "/setup/user";
+pub const SETUP_REMOTE_ACCESS_PATH: &str = "/setup/remote-access";
+/// Posts `Startup/Complete` and signs in the administrator it created.
+pub const SETUP_COMPLETE_PATH: &str = "/setup/complete";
+/// Lists the saved servers, adds one, and removes one.
+pub const SERVERS_PATH: &str = "/servers";
+/// Selects a saved server, which is what makes it the active one.
+pub const SERVER_SELECT_PATH: &str = "/servers/select";
+/// Releases the held upstream, keeps its credential, and answers the list.
+pub const SWITCH_PATH: &str = "/switch";
+/// Releases the login target, which is what Back off a login screen does.
+pub const LOGIN_PATH: &str = "/login";
+/// `{LOGIN_IMAGE_PREFIX}/{user}/image`, answered only for a user id in the
+/// public list last fetched for the held login target.
+pub const LOGIN_IMAGE_PREFIX: &str = "/login/user";
+/// Initiates, polls and abandons one Quick Connect sign-in.
+pub const QUICK_CONNECT_PATH: &str = "/login/quickconnect";
+pub const RESET_PATH: &str = "/login/reset";
+pub const RESET_PIN_PATH: &str = "/login/reset/pin";
+/// The query name every login-stage request carries `Targeted` under.
+pub const TARGET_QUERY: &str = "target";
 pub const SECRET_QUERY: &str = "s";
 pub const COOKIE_NAME: &str = "jellium_web";
+
+/// Mints and releases a configuration page's grant.
+pub const PLUGIN_PATH: &str = "/plugin";
+
+/// Serves a rewritten configuration page under a live grant.
+pub const PAGE_PREFIX: &str = "/page";
+
+/// What the browser asks the local server to open a configuration page as.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PageRequest {
+    pub name: String,
+}
+
+/// The frame one configuration page is opened in.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Framed {
+    /// The same-origin path the frame loads.
+    pub path: String,
+    /// The grant that path carries; closing the page releases it.
+    pub grant: String,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{
+        Drive, Feed, GroupVerb, LiveTvAccess, PlayMode, QuickConnectState, Repeat, Report, Session,
+        SyncAccess,
+    };
+
+    fn session() -> Session {
+        Session {
+            server: "https://example.test".to_string(),
+            user_id: uuid::Uuid::nil(),
+            user_name: "first".to_string(),
+            server_version: "10.11.0".to_string(),
+            snapshot_version: "10.11.0".to_string(),
+            sync_play: SyncAccess::CreateAndJoin,
+            live_tv: LiveTvAccess::Allowed,
+            administrator: true,
+            preference_access: true,
+            quick_connect: true,
+            read_only: false,
+            device: "device".to_string(),
+            client: "Jellium Web".to_string(),
+        }
+    }
+
+    #[test]
+    fn a_signed_quick_connect_state_round_trips_with_its_session() {
+        let signed = QuickConnectState::Signed(session());
+        let text = serde_json::to_string(&signed).expect("the state serializes");
+        assert_eq!(
+            serde_json::from_str::<QuickConnectState>(&text).expect("the state deserializes"),
+            signed
+        );
+
+        let document: serde_json::Map<String, serde_json::Value> =
+            serde_json::from_str(&text).expect("an object");
+        assert_eq!(
+            document.get("connect").and_then(|tag| tag.as_str()),
+            Some("signed")
+        );
+        assert_eq!(
+            document.get("quickConnect").and_then(|held| held.as_bool()),
+            Some(true)
+        );
+    }
+
+    /// An internally tagged variant whose payload carries the tag's own name
+    /// emits that name twice, which no reader can decode.
+    #[test]
+    fn no_internally_tagged_variant_names_a_field_its_payload_carries() {
+        for state in [
+            QuickConnectState::Pending,
+            QuickConnectState::Signed(session()),
+            QuickConnectState::Expired,
+            QuickConnectState::Disabled,
+        ] {
+            let text = serde_json::to_string(&state).expect("the state serializes");
+            assert_eq!(
+                text.matches("\"connect\":").count(),
+                1,
+                "the tag is emitted once: {text}"
+            );
+            assert_eq!(
+                serde_json::from_str::<QuickConnectState>(&text).expect("the state deserializes"),
+                state
+            );
+        }
+    }
+
+    #[test]
+    fn read_only_admits_playback_and_subscription_and_forecloses_the_rest() {
+        for report in [
+            Report::Playing {
+                play_session: String::new(),
+            },
+            Report::Watch {
+                feed: Feed::Sessions,
+            },
+            Report::Drop {
+                feed: Feed::Sessions,
+            },
+            Report::Clock {
+                sent: 0,
+                round_trip: 0,
+            },
+        ] {
+            assert!(report.read_only(), "{report:?}");
+        }
+        for report in [
+            Report::TakeRemote {
+                target: String::new(),
+            },
+            Report::LeaveRemote,
+            Report::Drive(Drive::PlayPause),
+            Report::CreateGroup {
+                name: String::new(),
+            },
+            Report::JoinGroup {
+                group: uuid::Uuid::nil(),
+            },
+            Report::TakeGroup,
+            Report::LeaveGroup,
+            Report::Group(GroupVerb::Pause),
+        ] {
+            assert!(!report.read_only(), "{report:?}");
+        }
+    }
+
+    #[test]
+    fn the_repeat_cycle_is_off_then_one_then_all() {
+        assert_eq!(Repeat::Off.cycled(), Repeat::One);
+        assert_eq!(Repeat::One.cycled(), Repeat::All);
+        assert_eq!(Repeat::All.cycled(), Repeat::Off);
+    }
+
+    #[test]
+    fn every_play_mode_says_whether_it_shuffles_and_mixes() {
+        for (mode, shuffles, mixes) in [
+            (PlayMode::Now, false, false),
+            (PlayMode::Next, false, false),
+            (PlayMode::Last, false, false),
+            (PlayMode::InstantMix, false, true),
+            (PlayMode::Shuffle, true, false),
+        ] {
+            assert_eq!(mode.shuffles(), shuffles);
+            assert_eq!(mode.mixes(), mixes);
+        }
+    }
+}

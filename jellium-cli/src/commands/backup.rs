@@ -61,9 +61,7 @@ pub async fn execute(
             crate::output::print_json(&result)?;
         }
         BackupCommand::Restore { archive_file_name } => {
-            let body = jellyfin_api::types::BackupRestoreRequestDto {
-                archive_file_name,
-            };
+            let body = jellyfin_api::types::BackupRestoreRequestDto { archive_file_name };
             client.start_restore_backup(&body).await?;
         }
     }

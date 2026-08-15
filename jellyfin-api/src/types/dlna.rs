@@ -11,25 +11,13 @@ pub struct CodecProfile {
     )]
     pub apply_conditions: Vec<ProfileCondition>,
     #[doc = "Gets or sets the codec(s) that this profile applies to."]
-    #[serde(
-        rename = "Codec",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Codec", default, skip_serializing_if = "Option::is_none")]
     pub codec: Option<String>,
     #[doc = "Gets or sets the list of MediaBrowser.Model.Dlna.ProfileCondition which this profile must meet."]
-    #[serde(
-        rename = "Conditions",
-        default,
-        skip_serializing_if = "Vec::is_empty"
-    )]
+    #[serde(rename = "Conditions", default, skip_serializing_if = "Vec::is_empty")]
     pub conditions: Vec<ProfileCondition>,
     #[doc = "Gets or sets the container(s) which this profile will be applied to."]
-    #[serde(
-        rename = "Container",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Container", default, skip_serializing_if = "Option::is_none")]
     pub container: Option<String>,
     #[doc = "Gets or sets the sub-container(s) which this profile will be applied to."]
     #[serde(
@@ -38,11 +26,7 @@ pub struct CodecProfile {
         skip_serializing_if = "Option::is_none"
     )]
     pub sub_container: Option<String>,
-    #[serde(
-        rename = "Type",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Type", default, skip_serializing_if = "Option::is_none")]
     pub type_: Option<CodecType>,
 }
 
@@ -63,18 +47,10 @@ impl Default for CodecProfile {
 #[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
 pub struct ContainerProfile {
     #[doc = "Gets or sets the list of MediaBrowser.Model.Dlna.ProfileCondition which this container will be applied to."]
-    #[serde(
-        rename = "Conditions",
-        default,
-        skip_serializing_if = "Vec::is_empty"
-    )]
+    #[serde(rename = "Conditions", default, skip_serializing_if = "Vec::is_empty")]
     pub conditions: Vec<ProfileCondition>,
     #[doc = "Gets or sets the container(s) which this container must meet."]
-    #[serde(
-        rename = "Container",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Container", default, skip_serializing_if = "Option::is_none")]
     pub container: Option<String>,
     #[doc = "Gets or sets the sub container(s) which this container must meet."]
     #[serde(
@@ -83,11 +59,7 @@ pub struct ContainerProfile {
         skip_serializing_if = "Option::is_none"
     )]
     pub sub_container: Option<String>,
-    #[serde(
-        rename = "Type",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Type", default, skip_serializing_if = "Option::is_none")]
     pub type_: Option<DlnaProfileType>,
 }
 
@@ -127,11 +99,7 @@ pub struct DeviceProfile {
     )]
     pub direct_play_profiles: Vec<DirectPlayProfile>,
     #[doc = "Gets or sets the unique internal identifier."]
-    #[serde(
-        rename = "Id",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Id", default, skip_serializing_if = "Option::is_none")]
     pub id: Option<uuid::Uuid>,
     #[doc = "Gets or sets the maximum allowed bitrate for statically streamed content (= direct played files)."]
     #[serde(
@@ -162,11 +130,7 @@ pub struct DeviceProfile {
     )]
     pub music_streaming_transcoding_bitrate: Option<i32>,
     #[doc = "Gets or sets the name of this device profile. User profiles must have a unique name."]
-    #[serde(
-        rename = "Name",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Name", default, skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
     #[doc = "Gets or sets the subtitle profiles."]
     #[serde(
@@ -213,17 +177,9 @@ pub struct DirectPlayProfile {
     )]
     pub audio_codec: Option<String>,
     #[doc = "Gets or sets the container."]
-    #[serde(
-        rename = "Container",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Container", default, skip_serializing_if = "Option::is_none")]
     pub container: Option<String>,
-    #[serde(
-        rename = "Type",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Type", default, skip_serializing_if = "Option::is_none")]
     pub type_: Option<DlnaProfileType>,
     #[doc = "Gets or sets the video codec."]
     #[serde(
@@ -245,7 +201,9 @@ impl Default for DirectPlayProfile {
     }
 }
 
-#[derive(serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(
+    serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd,
+)]
 pub enum DlnaProfileType {
     Audio,
     Video,
@@ -289,18 +247,14 @@ impl TryFrom<&str> for DlnaProfileType {
 
 impl TryFrom<&String> for DlnaProfileType {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for DlnaProfileType {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
@@ -308,11 +262,7 @@ impl TryFrom<String> for DlnaProfileType {
 #[doc = "`ProfileCondition`"]
 #[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
 pub struct ProfileCondition {
-    #[serde(
-        rename = "Condition",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Condition", default, skip_serializing_if = "Option::is_none")]
     pub condition: Option<ProfileConditionType>,
     #[serde(
         rename = "IsRequired",
@@ -320,17 +270,9 @@ pub struct ProfileCondition {
         skip_serializing_if = "Option::is_none"
     )]
     pub is_required: Option<bool>,
-    #[serde(
-        rename = "Property",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Property", default, skip_serializing_if = "Option::is_none")]
     pub property: Option<ProfileConditionValue>,
-    #[serde(
-        rename = "Value",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Value", default, skip_serializing_if = "Option::is_none")]
     pub value: Option<String>,
 }
 
@@ -345,7 +287,9 @@ impl Default for ProfileCondition {
     }
 }
 
-#[derive(serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(
+    serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd,
+)]
 pub enum ProfileConditionType {
     Equals,
     NotEquals,
@@ -389,23 +333,21 @@ impl TryFrom<&str> for ProfileConditionType {
 
 impl TryFrom<&String> for ProfileConditionType {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for ProfileConditionType {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
-#[derive(serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(
+    serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd,
+)]
 pub enum ProfileConditionValue {
     AudioChannels,
     AudioBitrate,
@@ -509,18 +451,14 @@ impl TryFrom<&str> for ProfileConditionValue {
 
 impl TryFrom<&String> for ProfileConditionValue {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for ProfileConditionValue {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
@@ -529,38 +467,18 @@ impl TryFrom<String> for ProfileConditionValue {
 #[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
 pub struct SubtitleProfile {
     #[doc = "Gets or sets the container."]
-    #[serde(
-        rename = "Container",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Container", default, skip_serializing_if = "Option::is_none")]
     pub container: Option<String>,
     #[doc = "Gets or sets the DIDL mode."]
-    #[serde(
-        rename = "DidlMode",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "DidlMode", default, skip_serializing_if = "Option::is_none")]
     pub didl_mode: Option<String>,
     #[doc = "Gets or sets the format."]
-    #[serde(
-        rename = "Format",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Format", default, skip_serializing_if = "Option::is_none")]
     pub format: Option<String>,
     #[doc = "Gets or sets the language."]
-    #[serde(
-        rename = "Language",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Language", default, skip_serializing_if = "Option::is_none")]
     pub language: Option<String>,
-    #[serde(
-        rename = "Method",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Method", default, skip_serializing_if = "Option::is_none")]
     pub method: Option<SubtitleDeliveryMethod>,
 }
 
@@ -590,24 +508,12 @@ pub struct TranscodingProfile {
     #[serde(rename = "BreakOnNonKeyFrames", default)]
     pub break_on_non_key_frames: bool,
     #[doc = "Gets or sets the profile conditions."]
-    #[serde(
-        rename = "Conditions",
-        default,
-        skip_serializing_if = "Vec::is_empty"
-    )]
+    #[serde(rename = "Conditions", default, skip_serializing_if = "Vec::is_empty")]
     pub conditions: Vec<ProfileCondition>,
     #[doc = "Gets or sets the container."]
-    #[serde(
-        rename = "Container",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Container", default, skip_serializing_if = "Option::is_none")]
     pub container: Option<String>,
-    #[serde(
-        rename = "Context",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Context", default, skip_serializing_if = "Option::is_none")]
     pub context: Option<EncodingContext>,
     #[doc = "Gets or sets a value indicating whether timestamps should be copied."]
     #[serde(rename = "CopyTimestamps", default)]
@@ -637,11 +543,7 @@ pub struct TranscodingProfile {
     #[doc = "Gets or sets the minimum amount of segments."]
     #[serde(rename = "MinSegments", default)]
     pub min_segments: i32,
-    #[serde(
-        rename = "Protocol",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Protocol", default, skip_serializing_if = "Option::is_none")]
     pub protocol: Option<MediaStreamProtocol>,
     #[doc = "Gets or sets the segment length."]
     #[serde(rename = "SegmentLength", default)]
@@ -652,11 +554,7 @@ pub struct TranscodingProfile {
         skip_serializing_if = "Option::is_none"
     )]
     pub transcode_seek_info: Option<TranscodeSeekInfo>,
-    #[serde(
-        rename = "Type",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Type", default, skip_serializing_if = "Option::is_none")]
     pub type_: Option<DlnaProfileType>,
     #[doc = "Gets or sets the video codec."]
     #[serde(
@@ -690,4 +588,3 @@ impl Default for TranscodingProfile {
         }
     }
 }
-

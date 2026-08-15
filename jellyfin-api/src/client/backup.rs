@@ -1,12 +1,10 @@
-use crate::types;
-use crate::error::Error;
 use crate::Client;
+use crate::error::Error;
+use crate::types;
 
 impl Client {
     #[doc = "Gets a list of all currently present backups in the backup directory\n\nSends a `GET` request to `/Backup`\n\n"]
-    pub async fn list_backups(
-        &self,
-    ) -> Result<Vec<types::BackupManifestDto>, Error> {
+    pub async fn list_backups(&self) -> Result<Vec<types::BackupManifestDto>, Error> {
         self.request(reqwest::Method::GET, "/Backup".into())
             .send()
             .await
@@ -24,10 +22,7 @@ impl Client {
     }
 
     #[doc = "Gets the descriptor from an existing archive is present\n\nSends a `GET` request to `/Backup/Manifest`\n\nArguments:\n- `path`: The data to start a restore process.\n"]
-    pub async fn get_backup(
-        &self,
-        path: &str,
-    ) -> Result<types::BackupManifestDto, Error> {
+    pub async fn get_backup(&self, path: &str) -> Result<types::BackupManifestDto, Error> {
         self.request(reqwest::Method::GET, "/Backup/Manifest".into())
             .query("path", path)
             .send()

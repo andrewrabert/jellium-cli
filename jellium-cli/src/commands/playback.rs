@@ -1,7 +1,7 @@
 use clap::Subcommand;
 use jellyfin_api::types::{
-    PlayMethod, PlaybackInfoDto, PlaybackStartInfo, PlaybackProgressInfo, PlaybackStopInfo,
-    OpenLiveStreamDto, RepeatMode, PlaybackOrder,
+    OpenLiveStreamDto, PlayMethod, PlaybackInfoDto, PlaybackOrder, PlaybackProgressInfo,
+    PlaybackStartInfo, PlaybackStopInfo, RepeatMode,
 };
 use uuid::Uuid;
 
@@ -423,9 +423,7 @@ pub async fn execute(
             client.close_live_stream(live_stream_id).await?;
         }
         PlaybackCommand::PlaybackInfo { item_id, user_id } => {
-            let result = client
-                .get_playback_info(item_id, user_id.as_ref())
-                .await?;
+            let result = client.get_playback_info(item_id, user_id.as_ref()).await?;
             crate::output::print_json(&result)?;
         }
         PlaybackCommand::PostPlaybackInfo {

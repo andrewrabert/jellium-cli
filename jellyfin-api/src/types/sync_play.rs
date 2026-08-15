@@ -4,11 +4,7 @@ use super::*;
 #[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
 pub struct BufferRequestDto {
     #[doc = "Gets or sets a value indicating whether the client playback is unpaused."]
-    #[serde(
-        rename = "IsPlaying",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "IsPlaying", default, skip_serializing_if = "Option::is_none")]
     pub is_playing: Option<bool>,
     #[doc = "Gets or sets the playlist item identifier of the playing item."]
     #[serde(
@@ -25,11 +21,7 @@ pub struct BufferRequestDto {
     )]
     pub position_ticks: Option<i64>,
     #[doc = "Gets or sets when the request has been made by the client."]
-    #[serde(
-        rename = "When",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "When", default, skip_serializing_if = "Option::is_none")]
     pub when: Option<chrono::DateTime<chrono::Utc>>,
 }
 
@@ -48,18 +40,10 @@ impl Default for BufferRequestDto {
 #[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
 pub struct GroupInfoDto {
     #[doc = "Gets the group identifier."]
-    #[serde(
-        rename = "GroupId",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "GroupId", default, skip_serializing_if = "Option::is_none")]
     pub group_id: Option<uuid::Uuid>,
     #[doc = "Gets the group name."]
-    #[serde(
-        rename = "GroupName",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "GroupName", default, skip_serializing_if = "Option::is_none")]
     pub group_name: Option<String>,
     #[doc = "Gets the date when this DTO has been created."]
     #[serde(
@@ -75,11 +59,7 @@ pub struct GroupInfoDto {
         skip_serializing_if = "Vec::is_empty"
     )]
     pub participants: Vec<String>,
-    #[serde(
-        rename = "State",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "State", default, skip_serializing_if = "Option::is_none")]
     pub state: Option<GroupStateType>,
 }
 
@@ -95,7 +75,9 @@ impl Default for GroupInfoDto {
     }
 }
 
-#[derive(serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(
+    serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd,
+)]
 pub enum GroupQueueMode {
     Queue,
     QueueNext,
@@ -130,23 +112,21 @@ impl TryFrom<&str> for GroupQueueMode {
 
 impl TryFrom<&String> for GroupQueueMode {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for GroupQueueMode {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
-#[derive(serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(
+    serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd,
+)]
 pub enum GroupShuffleMode {
     Sorted,
     Shuffle,
@@ -181,23 +161,21 @@ impl TryFrom<&str> for GroupShuffleMode {
 
 impl TryFrom<&String> for GroupShuffleMode {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for GroupShuffleMode {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
-#[derive(serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(
+    serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd,
+)]
 pub enum GroupStateType {
     Idle,
     Waiting,
@@ -238,18 +216,14 @@ impl TryFrom<&str> for GroupStateType {
 
 impl TryFrom<&String> for GroupStateType {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for GroupStateType {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
@@ -257,17 +231,9 @@ impl TryFrom<String> for GroupStateType {
 #[doc = "Class GroupStateUpdate."]
 #[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
 pub struct GroupStateUpdate {
-    #[serde(
-        rename = "Reason",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Reason", default, skip_serializing_if = "Option::is_none")]
     pub reason: Option<PlaybackRequestType>,
-    #[serde(
-        rename = "State",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "State", default, skip_serializing_if = "Option::is_none")]
     pub state: Option<GroupStateType>,
 }
 
@@ -349,7 +315,9 @@ impl From<SyncPlayUserLeftUpdate> for GroupUpdate {
     }
 }
 
-#[derive(serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(
+    serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd,
+)]
 pub enum GroupUpdateType {
     UserJoined,
     UserLeft,
@@ -405,18 +373,14 @@ impl TryFrom<&str> for GroupUpdateType {
 
 impl TryFrom<&String> for GroupUpdateType {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for GroupUpdateType {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
@@ -445,11 +409,7 @@ impl Default for IgnoreWaitRequestDto {
 #[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
 pub struct JoinGroupRequestDto {
     #[doc = "Gets or sets the group identifier."]
-    #[serde(
-        rename = "GroupId",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "GroupId", default, skip_serializing_if = "Option::is_none")]
     pub group_id: Option<uuid::Uuid>,
 }
 
@@ -465,11 +425,7 @@ impl Default for JoinGroupRequestDto {
 #[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
 pub struct MovePlaylistItemRequestDto {
     #[doc = "Gets or sets the new position."]
-    #[serde(
-        rename = "NewIndex",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "NewIndex", default, skip_serializing_if = "Option::is_none")]
     pub new_index: Option<i32>,
     #[doc = "Gets or sets the playlist identifier of the item."]
     #[serde(
@@ -493,11 +449,7 @@ impl Default for MovePlaylistItemRequestDto {
 #[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
 pub struct NewGroupRequestDto {
     #[doc = "Gets or sets the group name."]
-    #[serde(
-        rename = "GroupName",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "GroupName", default, skip_serializing_if = "Option::is_none")]
     pub group_name: Option<String>,
 }
 
@@ -533,11 +485,7 @@ impl Default for NextItemRequestDto {
 #[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
 pub struct PingRequestDto {
     #[doc = "Gets or sets the ping time."]
-    #[serde(
-        rename = "Ping",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Ping", default, skip_serializing_if = "Option::is_none")]
     pub ping: Option<i64>,
 }
 
@@ -573,17 +521,9 @@ impl Default for PreviousItemRequestDto {
 #[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
 pub struct QueueRequestDto {
     #[doc = "Gets or sets the items to enqueue."]
-    #[serde(
-        rename = "ItemIds",
-        default,
-        skip_serializing_if = "Vec::is_empty"
-    )]
+    #[serde(rename = "ItemIds", default, skip_serializing_if = "Vec::is_empty")]
     pub item_ids: Vec<uuid::Uuid>,
-    #[serde(
-        rename = "Mode",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Mode", default, skip_serializing_if = "Option::is_none")]
     pub mode: Option<GroupQueueMode>,
 }
 
@@ -600,11 +540,7 @@ impl Default for QueueRequestDto {
 #[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
 pub struct ReadyRequestDto {
     #[doc = "Gets or sets a value indicating whether the client playback is unpaused."]
-    #[serde(
-        rename = "IsPlaying",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "IsPlaying", default, skip_serializing_if = "Option::is_none")]
     pub is_playing: Option<bool>,
     #[doc = "Gets or sets the playlist item identifier of the playing item."]
     #[serde(
@@ -621,11 +557,7 @@ pub struct ReadyRequestDto {
     )]
     pub position_ticks: Option<i64>,
     #[doc = "Gets or sets when the request has been made by the client."]
-    #[serde(
-        rename = "When",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "When", default, skip_serializing_if = "Option::is_none")]
     pub when: Option<chrono::DateTime<chrono::Utc>>,
 }
 
@@ -719,11 +651,7 @@ impl Default for SetPlaylistItemRequestDto {
 #[doc = "Class SetShuffleModeRequestDto."]
 #[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
 pub struct SetShuffleModeRequestDto {
-    #[serde(
-        rename = "Mode",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Mode", default, skip_serializing_if = "Option::is_none")]
     pub mode: Option<GroupShuffleMode>,
 }
 
@@ -739,24 +667,12 @@ impl Default for SetShuffleModeRequestDto {
 #[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
 pub struct SyncPlayGroupDoesNotExistUpdate {
     #[doc = "Gets the update data."]
-    #[serde(
-        rename = "Data",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Data", default, skip_serializing_if = "Option::is_none")]
     pub data: Option<String>,
     #[doc = "Gets the group identifier."]
-    #[serde(
-        rename = "GroupId",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "GroupId", default, skip_serializing_if = "Option::is_none")]
     pub group_id: Option<uuid::Uuid>,
-    #[serde(
-        rename = "Type",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Type", default, skip_serializing_if = "Option::is_none")]
     pub type_: Option<GroupUpdateType>,
 }
 
@@ -774,24 +690,12 @@ impl Default for SyncPlayGroupDoesNotExistUpdate {
 #[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
 pub struct SyncPlayGroupJoinedUpdate {
     #[doc = "Gets the update data."]
-    #[serde(
-        rename = "Data",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Data", default, skip_serializing_if = "Option::is_none")]
     pub data: Option<GroupInfoDto>,
     #[doc = "Gets the group identifier."]
-    #[serde(
-        rename = "GroupId",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "GroupId", default, skip_serializing_if = "Option::is_none")]
     pub group_id: Option<uuid::Uuid>,
-    #[serde(
-        rename = "Type",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Type", default, skip_serializing_if = "Option::is_none")]
     pub type_: Option<GroupUpdateType>,
 }
 
@@ -809,24 +713,12 @@ impl Default for SyncPlayGroupJoinedUpdate {
 #[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
 pub struct SyncPlayGroupLeftUpdate {
     #[doc = "Gets the update data."]
-    #[serde(
-        rename = "Data",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Data", default, skip_serializing_if = "Option::is_none")]
     pub data: Option<String>,
     #[doc = "Gets the group identifier."]
-    #[serde(
-        rename = "GroupId",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "GroupId", default, skip_serializing_if = "Option::is_none")]
     pub group_id: Option<uuid::Uuid>,
-    #[serde(
-        rename = "Type",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Type", default, skip_serializing_if = "Option::is_none")]
     pub type_: Option<GroupUpdateType>,
 }
 
@@ -844,18 +736,10 @@ impl Default for SyncPlayGroupLeftUpdate {
 #[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
 pub struct SyncPlayGroupUpdateMessage {
     #[doc = "Group update data"]
-    #[serde(
-        rename = "Data",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Data", default, skip_serializing_if = "Option::is_none")]
     pub data: Option<GroupUpdate>,
     #[doc = "Gets or sets the message id."]
-    #[serde(
-        rename = "MessageId",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "MessageId", default, skip_serializing_if = "Option::is_none")]
     pub message_id: Option<uuid::Uuid>,
     #[serde(
         rename = "MessageType",
@@ -879,24 +763,12 @@ impl Default for SyncPlayGroupUpdateMessage {
 #[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
 pub struct SyncPlayLibraryAccessDeniedUpdate {
     #[doc = "Gets the update data."]
-    #[serde(
-        rename = "Data",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Data", default, skip_serializing_if = "Option::is_none")]
     pub data: Option<String>,
     #[doc = "Gets the group identifier."]
-    #[serde(
-        rename = "GroupId",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "GroupId", default, skip_serializing_if = "Option::is_none")]
     pub group_id: Option<uuid::Uuid>,
-    #[serde(
-        rename = "Type",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Type", default, skip_serializing_if = "Option::is_none")]
     pub type_: Option<GroupUpdateType>,
 }
 
@@ -914,24 +786,12 @@ impl Default for SyncPlayLibraryAccessDeniedUpdate {
 #[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
 pub struct SyncPlayNotInGroupUpdate {
     #[doc = "Gets the update data."]
-    #[serde(
-        rename = "Data",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Data", default, skip_serializing_if = "Option::is_none")]
     pub data: Option<String>,
     #[doc = "Gets the group identifier."]
-    #[serde(
-        rename = "GroupId",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "GroupId", default, skip_serializing_if = "Option::is_none")]
     pub group_id: Option<uuid::Uuid>,
-    #[serde(
-        rename = "Type",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Type", default, skip_serializing_if = "Option::is_none")]
     pub type_: Option<GroupUpdateType>,
 }
 
@@ -945,7 +805,9 @@ impl Default for SyncPlayNotInGroupUpdate {
     }
 }
 
-#[derive(serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(
+    serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd,
+)]
 pub enum SyncPlayUserAccessType {
     CreateAndJoinGroups,
     JoinGroups,
@@ -983,18 +845,14 @@ impl TryFrom<&str> for SyncPlayUserAccessType {
 
 impl TryFrom<&String> for SyncPlayUserAccessType {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for SyncPlayUserAccessType {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
@@ -1003,24 +861,12 @@ impl TryFrom<String> for SyncPlayUserAccessType {
 #[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
 pub struct SyncPlayUserJoinedUpdate {
     #[doc = "Gets the update data."]
-    #[serde(
-        rename = "Data",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Data", default, skip_serializing_if = "Option::is_none")]
     pub data: Option<String>,
     #[doc = "Gets the group identifier."]
-    #[serde(
-        rename = "GroupId",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "GroupId", default, skip_serializing_if = "Option::is_none")]
     pub group_id: Option<uuid::Uuid>,
-    #[serde(
-        rename = "Type",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Type", default, skip_serializing_if = "Option::is_none")]
     pub type_: Option<GroupUpdateType>,
 }
 
@@ -1038,24 +884,12 @@ impl Default for SyncPlayUserJoinedUpdate {
 #[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
 pub struct SyncPlayUserLeftUpdate {
     #[doc = "Gets the update data."]
-    #[serde(
-        rename = "Data",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Data", default, skip_serializing_if = "Option::is_none")]
     pub data: Option<String>,
     #[doc = "Gets the group identifier."]
-    #[serde(
-        rename = "GroupId",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "GroupId", default, skip_serializing_if = "Option::is_none")]
     pub group_id: Option<uuid::Uuid>,
-    #[serde(
-        rename = "Type",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Type", default, skip_serializing_if = "Option::is_none")]
     pub type_: Option<GroupUpdateType>,
 }
 
@@ -1068,4 +902,3 @@ impl Default for SyncPlayUserLeftUpdate {
         }
     }
 }
-

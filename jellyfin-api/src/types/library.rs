@@ -20,7 +20,9 @@ impl Default for AddVirtualFolderDto {
     }
 }
 
-#[derive(serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(
+    serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd,
+)]
 pub enum CollectionType {
     #[serde(rename = "unknown")]
     Unknown,
@@ -101,23 +103,21 @@ impl TryFrom<&str> for CollectionType {
 
 impl TryFrom<&String> for CollectionType {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for CollectionType {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
-#[derive(serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(
+    serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd,
+)]
 pub enum CollectionTypeOptions {
     #[serde(rename = "movies")]
     Movies,
@@ -178,18 +178,14 @@ impl TryFrom<&str> for CollectionTypeOptions {
 
 impl TryFrom<&String> for CollectionTypeOptions {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for CollectionTypeOptions {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
@@ -203,17 +199,9 @@ pub struct ConfigImageTypes {
         skip_serializing_if = "Option::is_none"
     )]
     pub backdrop_sizes: Option<Vec<String>>,
-    #[serde(
-        rename = "BaseUrl",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "BaseUrl", default, skip_serializing_if = "Option::is_none")]
     pub base_url: Option<String>,
-    #[serde(
-        rename = "LogoSizes",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "LogoSizes", default, skip_serializing_if = "Option::is_none")]
     pub logo_sizes: Option<Vec<String>>,
     #[serde(
         rename = "PosterSizes",
@@ -259,25 +247,13 @@ impl Default for ConfigImageTypes {
 #[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
 pub struct FolderStorageDto {
     #[doc = "Gets the Device Identifier."]
-    #[serde(
-        rename = "DeviceId",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "DeviceId", default, skip_serializing_if = "Option::is_none")]
     pub device_id: Option<String>,
     #[doc = "Gets the free space of the underlying storage device of the Jellyfin.Api.Models.SystemInfoDtos.FolderStorageDto.Path."]
-    #[serde(
-        rename = "FreeSpace",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "FreeSpace", default, skip_serializing_if = "Option::is_none")]
     pub free_space: Option<i64>,
     #[doc = "Gets the path of the folder in question."]
-    #[serde(
-        rename = "Path",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Path", default, skip_serializing_if = "Option::is_none")]
     pub path: Option<String>,
     #[doc = "Gets the kind of storage device of the Jellyfin.Api.Models.SystemInfoDtos.FolderStorageDto.Path."]
     #[serde(
@@ -287,11 +263,7 @@ pub struct FolderStorageDto {
     )]
     pub storage_type: Option<String>,
     #[doc = "Gets the used space of the underlying storage device of the Jellyfin.Api.Models.SystemInfoDtos.FolderStorageDto.Path."]
-    #[serde(
-        rename = "UsedSpace",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "UsedSpace", default, skip_serializing_if = "Option::is_none")]
     pub used_space: Option<i64>,
 }
 
@@ -311,18 +283,10 @@ impl Default for FolderStorageDto {
 #[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
 pub struct LibraryChangedMessage {
     #[doc = "Class LibraryUpdateInfo."]
-    #[serde(
-        rename = "Data",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Data", default, skip_serializing_if = "Option::is_none")]
     pub data: Option<LibraryUpdateInfo>,
     #[doc = "Gets or sets the message id."]
-    #[serde(
-        rename = "MessageId",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "MessageId", default, skip_serializing_if = "Option::is_none")]
     pub message_id: Option<uuid::Uuid>,
     #[serde(
         rename = "MessageType",
@@ -353,11 +317,7 @@ pub struct LibraryOptionInfoDto {
     )]
     pub default_enabled: Option<bool>,
     #[doc = "Gets or sets name."]
-    #[serde(
-        rename = "Name",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Name", default, skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
 }
 
@@ -487,11 +447,7 @@ pub struct LibraryOptions {
         skip_serializing_if = "Option::is_none"
     )]
     pub enable_trickplay_image_extraction: Option<bool>,
-    #[serde(
-        rename = "Enabled",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Enabled", default, skip_serializing_if = "Option::is_none")]
     pub enabled: Option<bool>,
     #[serde(
         rename = "ExtractChapterImagesDuringLibraryScan",
@@ -510,8 +466,7 @@ pub struct LibraryOptions {
         default,
         skip_serializing_if = "Option::is_none"
     )]
-    pub local_metadata_reader_order:
-        Option<Vec<String>>,
+    pub local_metadata_reader_order: Option<Vec<String>>,
     #[serde(
         rename = "LyricFetcherOrder",
         default,
@@ -537,11 +492,7 @@ pub struct LibraryOptions {
         skip_serializing_if = "Option::is_none"
     )]
     pub metadata_savers: Option<Vec<String>>,
-    #[serde(
-        rename = "PathInfos",
-        default,
-        skip_serializing_if = "Vec::is_empty"
-    )]
+    #[serde(rename = "PathInfos", default, skip_serializing_if = "Vec::is_empty")]
     pub path_infos: Vec<MediaPathInfo>,
     #[serde(rename = "PreferNonstandardArtistsTag", default)]
     pub prefer_nonstandard_artists_tag: bool,
@@ -597,19 +548,14 @@ pub struct LibraryOptions {
         default,
         skip_serializing_if = "Option::is_none"
     )]
-    pub subtitle_download_languages:
-        Option<Vec<String>>,
+    pub subtitle_download_languages: Option<Vec<String>>,
     #[serde(
         rename = "SubtitleFetcherOrder",
         default,
         skip_serializing_if = "Vec::is_empty"
     )]
     pub subtitle_fetcher_order: Vec<String>,
-    #[serde(
-        rename = "TypeOptions",
-        default,
-        skip_serializing_if = "Vec::is_empty"
-    )]
+    #[serde(rename = "TypeOptions", default, skip_serializing_if = "Vec::is_empty")]
     pub type_options: Vec<TypeOptions>,
     #[serde(rename = "UseCustomTagDelimiters", default)]
     pub use_custom_tag_delimiters: bool,
@@ -703,11 +649,7 @@ pub struct LibraryOptionsResultDto {
     )]
     pub subtitle_fetchers: Vec<LibraryOptionInfoDto>,
     #[doc = "Gets or sets the type options."]
-    #[serde(
-        rename = "TypeOptions",
-        default,
-        skip_serializing_if = "Vec::is_empty"
-    )]
+    #[serde(rename = "TypeOptions", default, skip_serializing_if = "Vec::is_empty")]
     pub type_options: Vec<LibraryTypeOptionsDto>,
 }
 
@@ -728,25 +670,13 @@ impl Default for LibraryOptionsResultDto {
 #[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
 pub struct LibraryStorageDto {
     #[doc = "Gets or sets the storage informations about the folders used in a library."]
-    #[serde(
-        rename = "Folders",
-        default,
-        skip_serializing_if = "Vec::is_empty"
-    )]
+    #[serde(rename = "Folders", default, skip_serializing_if = "Vec::is_empty")]
     pub folders: Vec<FolderStorageDto>,
     #[doc = "Gets or sets the Library Id."]
-    #[serde(
-        rename = "Id",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Id", default, skip_serializing_if = "Option::is_none")]
     pub id: Option<uuid::Uuid>,
     #[doc = "Gets or sets the name of the library."]
-    #[serde(
-        rename = "Name",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Name", default, skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
 }
 
@@ -792,11 +722,7 @@ pub struct LibraryTypeOptionsDto {
     )]
     pub supported_image_types: Vec<ImageType>,
     #[doc = "Gets or sets the type."]
-    #[serde(
-        rename = "Type",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Type", default, skip_serializing_if = "Option::is_none")]
     pub type_: Option<String>,
 }
 
@@ -835,18 +761,10 @@ pub struct LibraryUpdateInfo {
         skip_serializing_if = "Vec::is_empty"
     )]
     pub folders_removed_from: Vec<String>,
-    #[serde(
-        rename = "IsEmpty",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "IsEmpty", default, skip_serializing_if = "Option::is_none")]
     pub is_empty: Option<bool>,
     #[doc = "Gets or sets the items added."]
-    #[serde(
-        rename = "ItemsAdded",
-        default,
-        skip_serializing_if = "Vec::is_empty"
-    )]
+    #[serde(rename = "ItemsAdded", default, skip_serializing_if = "Vec::is_empty")]
     pub items_added: Vec<String>,
     #[doc = "Gets or sets the items removed."]
     #[serde(
@@ -885,29 +803,17 @@ pub struct MediaPathDto {
     #[serde(rename = "Name")]
     pub name: String,
     #[doc = "Gets or sets the path to add."]
-    #[serde(
-        rename = "Path",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Path", default, skip_serializing_if = "Option::is_none")]
     pub path: Option<String>,
     #[doc = "Gets or sets the path info."]
-    #[serde(
-        rename = "PathInfo",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "PathInfo", default, skip_serializing_if = "Option::is_none")]
     pub path_info: Option<MediaPathInfo>,
 }
 
 #[doc = "`MediaPathInfo`"]
 #[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
 pub struct MediaPathInfo {
-    #[serde(
-        rename = "Path",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Path", default, skip_serializing_if = "Option::is_none")]
     pub path: Option<String>,
 }
 
@@ -923,11 +829,7 @@ impl Default for MediaPathInfo {
 #[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
 pub struct MediaUpdateInfoDto {
     #[doc = "Gets or sets the list of updates."]
-    #[serde(
-        rename = "Updates",
-        default,
-        skip_serializing_if = "Vec::is_empty"
-    )]
+    #[serde(rename = "Updates", default, skip_serializing_if = "Vec::is_empty")]
     pub updates: Vec<MediaUpdateInfoPathDto>,
 }
 
@@ -943,11 +845,7 @@ impl Default for MediaUpdateInfoDto {
 #[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
 pub struct MediaUpdateInfoPathDto {
     #[doc = "Gets or sets media path."]
-    #[serde(
-        rename = "Path",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Path", default, skip_serializing_if = "Option::is_none")]
     pub path: Option<String>,
     #[doc = "Gets or sets media update type.\r\nCreated, Modified, Deleted."]
     #[serde(
@@ -1000,11 +898,7 @@ pub struct TypeOptions {
         skip_serializing_if = "Option::is_none"
     )]
     pub metadata_fetchers: Option<Vec<String>>,
-    #[serde(
-        rename = "Type",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Type", default, skip_serializing_if = "Option::is_none")]
     pub type_: Option<String>,
 }
 
@@ -1025,11 +919,7 @@ impl Default for TypeOptions {
 #[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
 pub struct UpdateLibraryOptionsDto {
     #[doc = "Gets or sets the library item id."]
-    #[serde(
-        rename = "Id",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Id", default, skip_serializing_if = "Option::is_none")]
     pub id: Option<uuid::Uuid>,
     #[doc = "Gets or sets library options."]
     #[serde(
@@ -1071,11 +961,7 @@ pub struct VirtualFolderInfo {
     )]
     pub collection_type: Option<CollectionTypeOptions>,
     #[doc = "Gets or sets the item identifier."]
-    #[serde(
-        rename = "ItemId",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "ItemId", default, skip_serializing_if = "Option::is_none")]
     pub item_id: Option<String>,
     #[serde(
         rename = "LibraryOptions",
@@ -1084,18 +970,10 @@ pub struct VirtualFolderInfo {
     )]
     pub library_options: Option<LibraryOptions>,
     #[doc = "Gets or sets the locations."]
-    #[serde(
-        rename = "Locations",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Locations", default, skip_serializing_if = "Option::is_none")]
     pub locations: Option<Vec<String>>,
     #[doc = "Gets or sets the name."]
-    #[serde(
-        rename = "Name",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Name", default, skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
     #[doc = "Gets or sets the primary image item identifier."]
     #[serde(
@@ -1132,4 +1010,3 @@ impl Default for VirtualFolderInfo {
         }
     }
 }
-

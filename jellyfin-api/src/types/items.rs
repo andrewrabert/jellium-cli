@@ -40,18 +40,10 @@ impl Default for AllThemeMediaResult {
 #[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
 pub struct BaseItemDto {
     #[doc = "Gets or sets the air days."]
-    #[serde(
-        rename = "AirDays",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "AirDays", default, skip_serializing_if = "Option::is_none")]
     pub air_days: Option<Vec<DayOfWeek>>,
     #[doc = "Gets or sets the air time."]
-    #[serde(
-        rename = "AirTime",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "AirTime", default, skip_serializing_if = "Option::is_none")]
     pub air_time: Option<String>,
     #[serde(
         rename = "AirsAfterSeasonNumber",
@@ -72,11 +64,7 @@ pub struct BaseItemDto {
     )]
     pub airs_before_season_number: Option<i32>,
     #[doc = "Gets or sets the album."]
-    #[serde(
-        rename = "Album",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Album", default, skip_serializing_if = "Option::is_none")]
     pub album: Option<String>,
     #[doc = "Gets or sets the album artist."]
     #[serde(
@@ -100,11 +88,7 @@ pub struct BaseItemDto {
     )]
     pub album_count: Option<i32>,
     #[doc = "Gets or sets the album id."]
-    #[serde(
-        rename = "AlbumId",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "AlbumId", default, skip_serializing_if = "Option::is_none")]
     pub album_id: Option<uuid::Uuid>,
     #[doc = "Gets or sets the album image tag."]
     #[serde(
@@ -113,17 +97,9 @@ pub struct BaseItemDto {
         skip_serializing_if = "Option::is_none"
     )]
     pub album_primary_image_tag: Option<String>,
-    #[serde(
-        rename = "Altitude",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Altitude", default, skip_serializing_if = "Option::is_none")]
     pub altitude: Option<f64>,
-    #[serde(
-        rename = "Aperture",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Aperture", default, skip_serializing_if = "Option::is_none")]
     pub aperture: Option<f64>,
     #[serde(
         rename = "ArtistCount",
@@ -139,11 +115,7 @@ pub struct BaseItemDto {
     )]
     pub artist_items: Option<Vec<NameGuidPair>>,
     #[doc = "Gets or sets the artists."]
-    #[serde(
-        rename = "Artists",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Artists", default, skip_serializing_if = "Option::is_none")]
     pub artists: Option<Vec<String>>,
     #[doc = "Gets or sets the aspect ratio."]
     #[serde(
@@ -153,11 +125,7 @@ pub struct BaseItemDto {
     )]
     pub aspect_ratio: Option<String>,
     #[doc = "Gets or sets the audio."]
-    #[serde(
-        rename = "Audio",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Audio", default, skip_serializing_if = "Option::is_none")]
     pub audio: Option<ProgramAudio>,
     #[doc = "Gets or sets the backdrop image tags."]
     #[serde(
@@ -178,11 +146,7 @@ pub struct BaseItemDto {
         skip_serializing_if = "Option::is_none"
     )]
     pub camera_model: Option<String>,
-    #[serde(
-        rename = "CanDelete",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "CanDelete", default, skip_serializing_if = "Option::is_none")]
     pub can_delete: Option<bool>,
     #[serde(
         rename = "CanDownload",
@@ -191,11 +155,7 @@ pub struct BaseItemDto {
     )]
     pub can_download: Option<bool>,
     #[doc = "Gets or sets the channel identifier."]
-    #[serde(
-        rename = "ChannelId",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "ChannelId", default, skip_serializing_if = "Option::is_none")]
     pub channel_id: Option<uuid::Uuid>,
     #[serde(
         rename = "ChannelName",
@@ -224,11 +184,7 @@ pub struct BaseItemDto {
     )]
     pub channel_type: Option<ChannelType>,
     #[doc = "Gets or sets the chapters."]
-    #[serde(
-        rename = "Chapters",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Chapters", default, skip_serializing_if = "Option::is_none")]
     pub chapters: Option<Vec<ChapterInfo>>,
     #[doc = "Gets or sets the child count."]
     #[serde(
@@ -258,11 +214,7 @@ pub struct BaseItemDto {
         skip_serializing_if = "Option::is_none"
     )]
     pub completion_percentage: Option<f64>,
-    #[serde(
-        rename = "Container",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Container", default, skip_serializing_if = "Option::is_none")]
     pub container: Option<String>,
     #[doc = "Gets or sets the critic rating."]
     #[serde(
@@ -322,11 +274,7 @@ pub struct BaseItemDto {
     )]
     pub enable_media_source_display: Option<bool>,
     #[doc = "Gets or sets the end date."]
-    #[serde(
-        rename = "EndDate",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "EndDate", default, skip_serializing_if = "Option::is_none")]
     pub end_date: Option<chrono::DateTime<chrono::Utc>>,
     #[doc = "Gets or sets the episode count."]
     #[serde(
@@ -343,11 +291,7 @@ pub struct BaseItemDto {
     )]
     pub episode_title: Option<String>,
     #[doc = "Gets or sets the etag."]
-    #[serde(
-        rename = "Etag",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Etag", default, skip_serializing_if = "Option::is_none")]
     pub etag: Option<String>,
     #[serde(
         rename = "ExposureTime",
@@ -362,11 +306,7 @@ pub struct BaseItemDto {
         skip_serializing_if = "Option::is_none"
     )]
     pub external_urls: Option<Vec<ExternalUrl>>,
-    #[serde(
-        rename = "ExtraType",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "ExtraType", default, skip_serializing_if = "Option::is_none")]
     pub extra_type: Option<ExtraType>,
     #[serde(
         rename = "FocalLength",
@@ -387,17 +327,9 @@ pub struct BaseItemDto {
     )]
     pub genre_items: Option<Vec<NameGuidPair>>,
     #[doc = "Gets or sets the genres."]
-    #[serde(
-        rename = "Genres",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Genres", default, skip_serializing_if = "Option::is_none")]
     pub genres: Option<Vec<String>>,
-    #[serde(
-        rename = "HasLyrics",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "HasLyrics", default, skip_serializing_if = "Option::is_none")]
     pub has_lyrics: Option<bool>,
     #[serde(
         rename = "HasSubtitles",
@@ -405,18 +337,10 @@ pub struct BaseItemDto {
         skip_serializing_if = "Option::is_none"
     )]
     pub has_subtitles: Option<bool>,
-    #[serde(
-        rename = "Height",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Height", default, skip_serializing_if = "Option::is_none")]
     pub height: Option<i32>,
     #[doc = "Gets or sets the id."]
-    #[serde(
-        rename = "Id",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Id", default, skip_serializing_if = "Option::is_none")]
     pub id: Option<uuid::Uuid>,
     #[doc = "Gets or sets the blurhashes for the image tags.\r\nMaps image type to dictionary mapping image tag to blurhash value."]
     #[serde(
@@ -432,14 +356,8 @@ pub struct BaseItemDto {
     )]
     pub image_orientation: Option<ImageOrientation>,
     #[doc = "Gets or sets the image tags."]
-    #[serde(
-        rename = "ImageTags",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub image_tags: Option<
-        std::collections::HashMap<String, String>,
-    >,
+    #[serde(rename = "ImageTags", default, skip_serializing_if = "Option::is_none")]
+    pub image_tags: Option<std::collections::HashMap<String, String>>,
     #[doc = "Gets or sets the index number."]
     #[serde(
         rename = "IndexNumber",
@@ -455,46 +373,22 @@ pub struct BaseItemDto {
     )]
     pub index_number_end: Option<i32>,
     #[doc = "Gets or sets a value indicating whether this instance is folder."]
-    #[serde(
-        rename = "IsFolder",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "IsFolder", default, skip_serializing_if = "Option::is_none")]
     pub is_folder: Option<bool>,
     #[doc = "Gets or sets a value indicating whether this instance is HD."]
-    #[serde(
-        rename = "IsHD",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "IsHD", default, skip_serializing_if = "Option::is_none")]
     pub is_hd: Option<bool>,
     #[doc = "Gets or sets a value indicating whether this instance is kids."]
-    #[serde(
-        rename = "IsKids",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "IsKids", default, skip_serializing_if = "Option::is_none")]
     pub is_kids: Option<bool>,
     #[doc = "Gets or sets a value indicating whether this instance is live."]
-    #[serde(
-        rename = "IsLive",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "IsLive", default, skip_serializing_if = "Option::is_none")]
     pub is_live: Option<bool>,
     #[doc = "Gets or sets a value indicating whether this instance is movie."]
-    #[serde(
-        rename = "IsMovie",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "IsMovie", default, skip_serializing_if = "Option::is_none")]
     pub is_movie: Option<bool>,
     #[doc = "Gets or sets a value indicating whether this instance is news."]
-    #[serde(
-        rename = "IsNews",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "IsNews", default, skip_serializing_if = "Option::is_none")]
     pub is_news: Option<bool>,
     #[doc = "Gets or sets a value indicating whether this instance is place holder."]
     #[serde(
@@ -511,25 +405,13 @@ pub struct BaseItemDto {
     )]
     pub is_premiere: Option<bool>,
     #[doc = "Gets or sets a value indicating whether this instance is repeat."]
-    #[serde(
-        rename = "IsRepeat",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "IsRepeat", default, skip_serializing_if = "Option::is_none")]
     pub is_repeat: Option<bool>,
     #[doc = "Gets or sets a value indicating whether this instance is series."]
-    #[serde(
-        rename = "IsSeries",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "IsSeries", default, skip_serializing_if = "Option::is_none")]
     pub is_series: Option<bool>,
     #[doc = "Gets or sets a value indicating whether this instance is sports."]
-    #[serde(
-        rename = "IsSports",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "IsSports", default, skip_serializing_if = "Option::is_none")]
     pub is_sports: Option<bool>,
     #[serde(
         rename = "IsoSpeedRating",
@@ -538,17 +420,9 @@ pub struct BaseItemDto {
     )]
     pub iso_speed_rating: Option<i32>,
     #[doc = "Gets or sets the type of the iso."]
-    #[serde(
-        rename = "IsoType",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "IsoType", default, skip_serializing_if = "Option::is_none")]
     pub iso_type: Option<IsoType>,
-    #[serde(
-        rename = "Latitude",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Latitude", default, skip_serializing_if = "Option::is_none")]
     pub latitude: Option<f64>,
     #[doc = "Gets or sets the local trailer count."]
     #[serde(
@@ -565,11 +439,7 @@ pub struct BaseItemDto {
     )]
     pub location_type: Option<LocationType>,
     #[doc = "Gets or sets a value indicating whether [enable internet providers]."]
-    #[serde(
-        rename = "LockData",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "LockData", default, skip_serializing_if = "Option::is_none")]
     pub lock_data: Option<bool>,
     #[doc = "Gets or sets the locked fields."]
     #[serde(
@@ -578,11 +448,7 @@ pub struct BaseItemDto {
         skip_serializing_if = "Option::is_none"
     )]
     pub locked_fields: Option<Vec<MetadataField>>,
-    #[serde(
-        rename = "Longitude",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Longitude", default, skip_serializing_if = "Option::is_none")]
     pub longitude: Option<f64>,
     #[serde(
         rename = "MediaSourceCount",
@@ -604,11 +470,7 @@ pub struct BaseItemDto {
         skip_serializing_if = "Option::is_none"
     )]
     pub media_streams: Option<Vec<MediaStream>>,
-    #[serde(
-        rename = "MediaType",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "MediaType", default, skip_serializing_if = "Option::is_none")]
     pub media_type: Option<MediaType>,
     #[doc = "Gets or sets the movie count."]
     #[serde(
@@ -625,11 +487,7 @@ pub struct BaseItemDto {
     )]
     pub music_video_count: Option<i32>,
     #[doc = "Gets or sets the name."]
-    #[serde(
-        rename = "Name",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Name", default, skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
     #[doc = "Gets or sets the gain required for audio normalization."]
     #[serde(
@@ -639,11 +497,7 @@ pub struct BaseItemDto {
     )]
     pub normalization_gain: Option<f32>,
     #[doc = "Gets or sets the number."]
-    #[serde(
-        rename = "Number",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Number", default, skip_serializing_if = "Option::is_none")]
     pub number: Option<String>,
     #[doc = "Gets or sets the official rating."]
     #[serde(
@@ -659,11 +513,7 @@ pub struct BaseItemDto {
     )]
     pub original_title: Option<String>,
     #[doc = "Gets or sets the overview."]
-    #[serde(
-        rename = "Overview",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Overview", default, skip_serializing_if = "Option::is_none")]
     pub overview: Option<String>,
     #[doc = "Gets or sets the parent art image tag."]
     #[serde(
@@ -685,8 +535,7 @@ pub struct BaseItemDto {
         default,
         skip_serializing_if = "Option::is_none"
     )]
-    pub parent_backdrop_image_tags:
-        Option<Vec<String>>,
+    pub parent_backdrop_image_tags: Option<Vec<String>>,
     #[doc = "Gets or sets whether the item has any backdrops, this will hold the Id of the Parent that has one."]
     #[serde(
         rename = "ParentBackdropItemId",
@@ -695,11 +544,7 @@ pub struct BaseItemDto {
     )]
     pub parent_backdrop_item_id: Option<uuid::Uuid>,
     #[doc = "Gets or sets the parent id."]
-    #[serde(
-        rename = "ParentId",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "ParentId", default, skip_serializing_if = "Option::is_none")]
     pub parent_id: Option<uuid::Uuid>,
     #[doc = "Gets or sets the parent index number."]
     #[serde(
@@ -751,25 +596,13 @@ pub struct BaseItemDto {
     )]
     pub parent_thumb_item_id: Option<uuid::Uuid>,
     #[doc = "Gets or sets the part count."]
-    #[serde(
-        rename = "PartCount",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "PartCount", default, skip_serializing_if = "Option::is_none")]
     pub part_count: Option<i32>,
     #[doc = "Gets or sets the path."]
-    #[serde(
-        rename = "Path",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Path", default, skip_serializing_if = "Option::is_none")]
     pub path: Option<String>,
     #[doc = "Gets or sets the people."]
-    #[serde(
-        rename = "People",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "People", default, skip_serializing_if = "Option::is_none")]
     pub people: Option<Vec<BaseItemPerson>>,
     #[doc = "Gets or sets the play access."]
     #[serde(
@@ -831,11 +664,7 @@ pub struct BaseItemDto {
     )]
     pub program_count: Option<i32>,
     #[doc = "Gets or sets the program identifier."]
-    #[serde(
-        rename = "ProgramId",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "ProgramId", default, skip_serializing_if = "Option::is_none")]
     pub program_id: Option<String>,
     #[doc = "Gets or sets the provider ids."]
     #[serde(
@@ -843,12 +672,7 @@ pub struct BaseItemDto {
         default,
         skip_serializing_if = "Option::is_none"
     )]
-    pub provider_ids: Option<
-        std::collections::HashMap<
-            String,
-            Option<String>,
-        >,
-    >,
+    pub provider_ids: Option<std::collections::HashMap<String, Option<String>>>,
     #[doc = "Gets or sets the recursive item count."]
     #[serde(
         rename = "RecursiveItemCount",
@@ -878,11 +702,7 @@ pub struct BaseItemDto {
     )]
     pub screenshot_image_tags: Option<Vec<String>>,
     #[doc = "Gets or sets the season identifier."]
-    #[serde(
-        rename = "SeasonId",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "SeasonId", default, skip_serializing_if = "Option::is_none")]
     pub season_id: Option<uuid::Uuid>,
     #[doc = "Gets or sets the name of the season."]
     #[serde(
@@ -899,11 +719,7 @@ pub struct BaseItemDto {
     )]
     pub series_count: Option<i32>,
     #[doc = "Gets or sets the series id."]
-    #[serde(
-        rename = "SeriesId",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "SeriesId", default, skip_serializing_if = "Option::is_none")]
     pub series_id: Option<uuid::Uuid>,
     #[doc = "Gets or sets the name of the series."]
     #[serde(
@@ -941,11 +757,7 @@ pub struct BaseItemDto {
     )]
     pub series_timer_id: Option<String>,
     #[doc = "Gets or sets the server identifier."]
-    #[serde(
-        rename = "ServerId",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "ServerId", default, skip_serializing_if = "Option::is_none")]
     pub server_id: Option<String>,
     #[serde(
         rename = "ShutterSpeed",
@@ -953,25 +765,13 @@ pub struct BaseItemDto {
         skip_serializing_if = "Option::is_none"
     )]
     pub shutter_speed: Option<f64>,
-    #[serde(
-        rename = "Software",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Software", default, skip_serializing_if = "Option::is_none")]
     pub software: Option<String>,
     #[doc = "Gets or sets the song count."]
-    #[serde(
-        rename = "SongCount",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "SongCount", default, skip_serializing_if = "Option::is_none")]
     pub song_count: Option<i32>,
     #[doc = "Gets or sets the name of the sort."]
-    #[serde(
-        rename = "SortName",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "SortName", default, skip_serializing_if = "Option::is_none")]
     pub sort_name: Option<String>,
     #[doc = "Gets or sets the type of the source."]
     #[serde(
@@ -988,46 +788,22 @@ pub struct BaseItemDto {
     )]
     pub special_feature_count: Option<i32>,
     #[doc = "Gets or sets the start date of the recording, in UTC."]
-    #[serde(
-        rename = "StartDate",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "StartDate", default, skip_serializing_if = "Option::is_none")]
     pub start_date: Option<chrono::DateTime<chrono::Utc>>,
     #[doc = "Gets or sets the status."]
-    #[serde(
-        rename = "Status",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Status", default, skip_serializing_if = "Option::is_none")]
     pub status: Option<String>,
     #[doc = "Gets or sets the studios."]
-    #[serde(
-        rename = "Studios",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Studios", default, skip_serializing_if = "Option::is_none")]
     pub studios: Option<Vec<NameGuidPair>>,
     #[doc = "Gets or sets the taglines."]
-    #[serde(
-        rename = "Taglines",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Taglines", default, skip_serializing_if = "Option::is_none")]
     pub taglines: Option<Vec<String>>,
     #[doc = "Gets or sets the tags."]
-    #[serde(
-        rename = "Tags",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Tags", default, skip_serializing_if = "Option::is_none")]
     pub tags: Option<Vec<String>>,
     #[doc = "Gets or sets the timer identifier."]
-    #[serde(
-        rename = "TimerId",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "TimerId", default, skip_serializing_if = "Option::is_none")]
     pub timer_id: Option<String>,
     #[doc = "Gets or sets the trailer count."]
     #[serde(
@@ -1037,29 +813,14 @@ pub struct BaseItemDto {
     )]
     pub trailer_count: Option<i32>,
     #[doc = "Gets or sets the trickplay manifest."]
-    #[serde(
-        rename = "Trickplay",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Trickplay", default, skip_serializing_if = "Option::is_none")]
     pub trickplay: Option<
-        std::collections::HashMap<
-            String,
-            std::collections::HashMap<String, TrickplayInfoDto>,
-        >,
+        std::collections::HashMap<String, std::collections::HashMap<String, TrickplayInfoDto>>,
     >,
-    #[serde(
-        rename = "Type",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Type", default, skip_serializing_if = "Option::is_none")]
     pub type_: Option<BaseItemKind>,
     #[doc = "Gets or sets the user data for this item based on the user it's being requested for."]
-    #[serde(
-        rename = "UserData",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "UserData", default, skip_serializing_if = "Option::is_none")]
     pub user_data: Option<UserItemDataDto>,
     #[doc = "Gets or sets the video3 D format."]
     #[serde(
@@ -1069,17 +830,9 @@ pub struct BaseItemDto {
     )]
     pub video3_d_format: Option<Video3DFormat>,
     #[doc = "Gets or sets the type of the video."]
-    #[serde(
-        rename = "VideoType",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "VideoType", default, skip_serializing_if = "Option::is_none")]
     pub video_type: Option<VideoType>,
-    #[serde(
-        rename = "Width",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Width", default, skip_serializing_if = "Option::is_none")]
     pub width: Option<i32>,
 }
 
@@ -1350,11 +1103,7 @@ impl Default for BaseItemDtoImageBlurHashes {
 #[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
 pub struct BaseItemDtoQueryResult {
     #[doc = "Gets or sets the items."]
-    #[serde(
-        rename = "Items",
-        default,
-        skip_serializing_if = "Vec::is_empty"
-    )]
+    #[serde(rename = "Items", default, skip_serializing_if = "Vec::is_empty")]
     pub items: Vec<BaseItemDto>,
     #[doc = "Gets or sets the index of the first record in Items."]
     #[serde(
@@ -1382,7 +1131,9 @@ impl Default for BaseItemDtoQueryResult {
     }
 }
 
-#[derive(serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(
+    serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd,
+)]
 pub enum BaseItemKind {
     AggregateFolder,
     Audio,
@@ -1522,18 +1273,14 @@ impl TryFrom<&str> for BaseItemKind {
 
 impl TryFrom<&String> for BaseItemKind {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for BaseItemKind {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
@@ -1542,11 +1289,7 @@ impl TryFrom<String> for BaseItemKind {
 #[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
 pub struct BaseItemPerson {
     #[doc = "Gets or sets the identifier."]
-    #[serde(
-        rename = "Id",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Id", default, skip_serializing_if = "Option::is_none")]
     pub id: Option<uuid::Uuid>,
     #[doc = "Gets or sets the primary image blurhash."]
     #[serde(
@@ -1556,11 +1299,7 @@ pub struct BaseItemPerson {
     )]
     pub image_blur_hashes: Option<BaseItemPersonImageBlurHashes>,
     #[doc = "Gets or sets the name."]
-    #[serde(
-        rename = "Name",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Name", default, skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
     #[doc = "Gets or sets the primary image tag."]
     #[serde(
@@ -1570,17 +1309,9 @@ pub struct BaseItemPerson {
     )]
     pub primary_image_tag: Option<String>,
     #[doc = "Gets or sets the role."]
-    #[serde(
-        rename = "Role",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Role", default, skip_serializing_if = "Option::is_none")]
     pub role: Option<String>,
-    #[serde(
-        rename = "Type",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Type", default, skip_serializing_if = "Option::is_none")]
     pub type_: Option<PersonKind>,
 }
 
@@ -1710,24 +1441,12 @@ pub struct ChapterInfo {
     )]
     pub image_date_modified: Option<chrono::DateTime<chrono::Utc>>,
     #[doc = "Gets or sets the image path."]
-    #[serde(
-        rename = "ImagePath",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "ImagePath", default, skip_serializing_if = "Option::is_none")]
     pub image_path: Option<String>,
-    #[serde(
-        rename = "ImageTag",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "ImageTag", default, skip_serializing_if = "Option::is_none")]
     pub image_tag: Option<String>,
     #[doc = "Gets or sets the name."]
-    #[serde(
-        rename = "Name",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Name", default, skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
     #[doc = "Gets or sets the start position ticks."]
     #[serde(
@@ -1754,25 +1473,13 @@ impl Default for ChapterInfo {
 #[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
 pub struct ExternalIdInfo {
     #[doc = "Gets or sets the unique key for this id. This key should be unique across all providers."]
-    #[serde(
-        rename = "Key",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Key", default, skip_serializing_if = "Option::is_none")]
     pub key: Option<String>,
     #[doc = "Gets or sets the display name of the external id provider (IE: IMDB, MusicBrainz, etc)."]
-    #[serde(
-        rename = "Name",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Name", default, skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
     #[doc = "Gets or sets the specific media type for this id. This is used to distinguish between the different\r\nexternal id types for providers with multiple ids.\r\nA null value indicates there is no specific media type associated with the external id, or this is the\r\ndefault id for the external provider so there is no need to specify a type."]
-    #[serde(
-        rename = "Type",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Type", default, skip_serializing_if = "Option::is_none")]
     pub type_: Option<ExternalIdMediaType>,
 }
 
@@ -1786,7 +1493,9 @@ impl Default for ExternalIdInfo {
     }
 }
 
-#[derive(serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(
+    serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd,
+)]
 pub enum ExternalIdMediaType {
     Album,
     AlbumArtist,
@@ -1857,18 +1566,14 @@ impl TryFrom<&str> for ExternalIdMediaType {
 
 impl TryFrom<&String> for ExternalIdMediaType {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for ExternalIdMediaType {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
@@ -1877,18 +1582,10 @@ impl TryFrom<String> for ExternalIdMediaType {
 #[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
 pub struct ExternalUrl {
     #[doc = "Gets or sets the name."]
-    #[serde(
-        rename = "Name",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Name", default, skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
     #[doc = "Gets or sets the type of the item."]
-    #[serde(
-        rename = "Url",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Url", default, skip_serializing_if = "Option::is_none")]
     pub url: Option<String>,
 }
 
@@ -1919,11 +1616,7 @@ pub struct ItemCounts {
     )]
     pub artist_count: Option<i32>,
     #[doc = "Gets or sets the book count."]
-    #[serde(
-        rename = "BookCount",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "BookCount", default, skip_serializing_if = "Option::is_none")]
     pub book_count: Option<i32>,
     #[doc = "Gets or sets the box set count."]
     #[serde(
@@ -1940,11 +1633,7 @@ pub struct ItemCounts {
     )]
     pub episode_count: Option<i32>,
     #[doc = "Gets or sets the item count."]
-    #[serde(
-        rename = "ItemCount",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "ItemCount", default, skip_serializing_if = "Option::is_none")]
     pub item_count: Option<i32>,
     #[doc = "Gets or sets the movie count."]
     #[serde(
@@ -1975,11 +1664,7 @@ pub struct ItemCounts {
     )]
     pub series_count: Option<i32>,
     #[doc = "Gets or sets the song count."]
-    #[serde(
-        rename = "SongCount",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "SongCount", default, skip_serializing_if = "Option::is_none")]
     pub song_count: Option<i32>,
     #[doc = "Gets or sets the trailer count."]
     #[serde(
@@ -2013,25 +1698,13 @@ impl Default for ItemCounts {
 #[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
 pub struct MediaAttachment {
     #[doc = "Gets or sets the codec."]
-    #[serde(
-        rename = "Codec",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Codec", default, skip_serializing_if = "Option::is_none")]
     pub codec: Option<String>,
     #[doc = "Gets or sets the codec tag."]
-    #[serde(
-        rename = "CodecTag",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "CodecTag", default, skip_serializing_if = "Option::is_none")]
     pub codec_tag: Option<String>,
     #[doc = "Gets or sets the comment."]
-    #[serde(
-        rename = "Comment",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Comment", default, skip_serializing_if = "Option::is_none")]
     pub comment: Option<String>,
     #[doc = "Gets or sets the delivery URL."]
     #[serde(
@@ -2041,25 +1714,13 @@ pub struct MediaAttachment {
     )]
     pub delivery_url: Option<String>,
     #[doc = "Gets or sets the filename."]
-    #[serde(
-        rename = "FileName",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "FileName", default, skip_serializing_if = "Option::is_none")]
     pub file_name: Option<String>,
     #[doc = "Gets or sets the index."]
-    #[serde(
-        rename = "Index",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Index", default, skip_serializing_if = "Option::is_none")]
     pub index: Option<i32>,
     #[doc = "Gets or sets the MIME type."]
-    #[serde(
-        rename = "MimeType",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "MimeType", default, skip_serializing_if = "Option::is_none")]
     pub mime_type: Option<String>,
 }
 
@@ -2081,25 +1742,13 @@ impl Default for MediaAttachment {
 #[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
 pub struct MediaSegmentDto {
     #[doc = "Gets or sets the end of the segment."]
-    #[serde(
-        rename = "EndTicks",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "EndTicks", default, skip_serializing_if = "Option::is_none")]
     pub end_ticks: Option<i64>,
     #[doc = "Gets or sets the id of the media segment."]
-    #[serde(
-        rename = "Id",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Id", default, skip_serializing_if = "Option::is_none")]
     pub id: Option<uuid::Uuid>,
     #[doc = "Gets or sets the id of the associated item."]
-    #[serde(
-        rename = "ItemId",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "ItemId", default, skip_serializing_if = "Option::is_none")]
     pub item_id: Option<uuid::Uuid>,
     #[doc = "Gets or sets the start of the segment."]
     #[serde(
@@ -2108,11 +1757,7 @@ pub struct MediaSegmentDto {
         skip_serializing_if = "Option::is_none"
     )]
     pub start_ticks: Option<i64>,
-    #[serde(
-        rename = "Type",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Type", default, skip_serializing_if = "Option::is_none")]
     pub type_: Option<MediaSegmentType>,
 }
 
@@ -2132,11 +1777,7 @@ impl Default for MediaSegmentDto {
 #[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
 pub struct MediaSegmentDtoQueryResult {
     #[doc = "Gets or sets the items."]
-    #[serde(
-        rename = "Items",
-        default,
-        skip_serializing_if = "Vec::is_empty"
-    )]
+    #[serde(rename = "Items", default, skip_serializing_if = "Vec::is_empty")]
     pub items: Vec<MediaSegmentDto>,
     #[doc = "Gets or sets the index of the first record in Items."]
     #[serde(
@@ -2164,7 +1805,9 @@ impl Default for MediaSegmentDtoQueryResult {
     }
 }
 
-#[derive(serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(
+    serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd,
+)]
 pub enum MediaSegmentType {
     Unknown,
     Commercial,
@@ -2211,18 +1854,14 @@ impl TryFrom<&str> for MediaSegmentType {
 
 impl TryFrom<&String> for MediaSegmentType {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for MediaSegmentType {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
@@ -2236,23 +1875,11 @@ pub struct MediaSourceInfo {
         skip_serializing_if = "Option::is_none"
     )]
     pub analyze_duration_ms: Option<i32>,
-    #[serde(
-        rename = "Bitrate",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Bitrate", default, skip_serializing_if = "Option::is_none")]
     pub bitrate: Option<i32>,
-    #[serde(
-        rename = "BufferMs",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "BufferMs", default, skip_serializing_if = "Option::is_none")]
     pub buffer_ms: Option<i32>,
-    #[serde(
-        rename = "Container",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Container", default, skip_serializing_if = "Option::is_none")]
     pub container: Option<String>,
     #[serde(
         rename = "DefaultAudioStreamIndex",
@@ -2266,11 +1893,7 @@ pub struct MediaSourceInfo {
         skip_serializing_if = "Option::is_none"
     )]
     pub default_subtitle_stream_index: Option<i32>,
-    #[serde(
-        rename = "ETag",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "ETag", default, skip_serializing_if = "Option::is_none")]
     pub e_tag: Option<String>,
     #[serde(
         rename = "EncoderPath",
@@ -2290,11 +1913,7 @@ pub struct MediaSourceInfo {
         skip_serializing_if = "Option::is_none"
     )]
     pub fallback_max_streaming_bitrate: Option<i32>,
-    #[serde(
-        rename = "Formats",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Formats", default, skip_serializing_if = "Option::is_none")]
     pub formats: Option<Vec<String>>,
     #[serde(
         rename = "GenPtsInput",
@@ -2308,17 +1927,9 @@ pub struct MediaSourceInfo {
         skip_serializing_if = "Option::is_none"
     )]
     pub has_segments: Option<bool>,
-    #[serde(
-        rename = "Id",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Id", default, skip_serializing_if = "Option::is_none")]
     pub id: Option<String>,
-    #[serde(
-        rename = "IgnoreDts",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "IgnoreDts", default, skip_serializing_if = "Option::is_none")]
     pub ignore_dts: Option<bool>,
     #[serde(
         rename = "IgnoreIndex",
@@ -2333,17 +1944,9 @@ pub struct MediaSourceInfo {
     )]
     pub is_infinite_stream: Option<bool>,
     #[doc = "Gets or sets a value indicating whether the media is remote.\r\nDifferentiate internet url vs local network."]
-    #[serde(
-        rename = "IsRemote",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "IsRemote", default, skip_serializing_if = "Option::is_none")]
     pub is_remote: Option<bool>,
-    #[serde(
-        rename = "IsoType",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "IsoType", default, skip_serializing_if = "Option::is_none")]
     pub iso_type: Option<IsoType>,
     #[serde(
         rename = "LiveStreamId",
@@ -2363,29 +1966,13 @@ pub struct MediaSourceInfo {
         skip_serializing_if = "Option::is_none"
     )]
     pub media_streams: Option<Vec<MediaStream>>,
-    #[serde(
-        rename = "Name",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Name", default, skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
-    #[serde(
-        rename = "OpenToken",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "OpenToken", default, skip_serializing_if = "Option::is_none")]
     pub open_token: Option<String>,
-    #[serde(
-        rename = "Path",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Path", default, skip_serializing_if = "Option::is_none")]
     pub path: Option<String>,
-    #[serde(
-        rename = "Protocol",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Protocol", default, skip_serializing_if = "Option::is_none")]
     pub protocol: Option<MediaProtocol>,
     #[serde(
         rename = "ReadAtNativeFramerate",
@@ -2398,12 +1985,7 @@ pub struct MediaSourceInfo {
         default,
         skip_serializing_if = "Option::is_none"
     )]
-    pub required_http_headers: Option<
-        std::collections::HashMap<
-            String,
-            Option<String>,
-        >,
-    >,
+    pub required_http_headers: Option<std::collections::HashMap<String, Option<String>>>,
     #[serde(
         rename = "RequiresClosing",
         default,
@@ -2428,11 +2010,7 @@ pub struct MediaSourceInfo {
         skip_serializing_if = "Option::is_none"
     )]
     pub run_time_ticks: Option<i64>,
-    #[serde(
-        rename = "Size",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Size", default, skip_serializing_if = "Option::is_none")]
     pub size: Option<i64>,
     #[serde(
         rename = "SupportsDirectPlay",
@@ -2458,11 +2036,7 @@ pub struct MediaSourceInfo {
         skip_serializing_if = "Option::is_none"
     )]
     pub supports_transcoding: Option<bool>,
-    #[serde(
-        rename = "Timestamp",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Timestamp", default, skip_serializing_if = "Option::is_none")]
     pub timestamp: Option<TransportStreamTimestamp>,
     #[serde(
         rename = "TranscodingContainer",
@@ -2482,11 +2056,7 @@ pub struct MediaSourceInfo {
         skip_serializing_if = "Option::is_none"
     )]
     pub transcoding_url: Option<String>,
-    #[serde(
-        rename = "Type",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Type", default, skip_serializing_if = "Option::is_none")]
     pub type_: Option<MediaSourceType>,
     #[serde(rename = "UseMostCompatibleTranscodingProfile", default)]
     pub use_most_compatible_transcoding_profile: bool,
@@ -2496,11 +2066,7 @@ pub struct MediaSourceInfo {
         skip_serializing_if = "Option::is_none"
     )]
     pub video3_d_format: Option<Video3DFormat>,
-    #[serde(
-        rename = "VideoType",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "VideoType", default, skip_serializing_if = "Option::is_none")]
     pub video_type: Option<VideoType>,
 }
 
@@ -2556,7 +2122,9 @@ impl Default for MediaSourceInfo {
     }
 }
 
-#[derive(serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(
+    serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd,
+)]
 pub enum MediaSourceType {
     Default,
     Grouping,
@@ -2594,18 +2162,14 @@ impl TryFrom<&str> for MediaSourceType {
 
 impl TryFrom<&String> for MediaSourceType {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for MediaSourceType {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
@@ -2634,18 +2198,10 @@ pub struct MediaStream {
     )]
     pub average_frame_rate: Option<f32>,
     #[doc = "Gets or sets the bit depth."]
-    #[serde(
-        rename = "BitDepth",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "BitDepth", default, skip_serializing_if = "Option::is_none")]
     pub bit_depth: Option<i32>,
     #[doc = "Gets or sets the bit rate."]
-    #[serde(
-        rename = "BitRate",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "BitRate", default, skip_serializing_if = "Option::is_none")]
     pub bit_rate: Option<i32>,
     #[doc = "Gets or sets the Dolby Vision bl present flag."]
     #[serde(
@@ -2662,25 +2218,13 @@ pub struct MediaStream {
     )]
     pub channel_layout: Option<String>,
     #[doc = "Gets or sets the channels."]
-    #[serde(
-        rename = "Channels",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Channels", default, skip_serializing_if = "Option::is_none")]
     pub channels: Option<i32>,
     #[doc = "Gets or sets the codec."]
-    #[serde(
-        rename = "Codec",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Codec", default, skip_serializing_if = "Option::is_none")]
     pub codec: Option<String>,
     #[doc = "Gets or sets the codec tag."]
-    #[serde(
-        rename = "CodecTag",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "CodecTag", default, skip_serializing_if = "Option::is_none")]
     pub codec_tag: Option<String>,
     #[doc = "Gets or sets the codec time base."]
     #[serde(
@@ -2718,11 +2262,7 @@ pub struct MediaStream {
     )]
     pub color_transfer: Option<String>,
     #[doc = "Gets or sets the comment."]
-    #[serde(
-        rename = "Comment",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Comment", default, skip_serializing_if = "Option::is_none")]
     pub comment: Option<String>,
     #[doc = "Gets or sets the method."]
     #[serde(
@@ -2752,18 +2292,10 @@ pub struct MediaStream {
     )]
     pub dv_bl_signal_compatibility_id: Option<i32>,
     #[doc = "Gets or sets the Dolby Vision level."]
-    #[serde(
-        rename = "DvLevel",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "DvLevel", default, skip_serializing_if = "Option::is_none")]
     pub dv_level: Option<i32>,
     #[doc = "Gets or sets the Dolby Vision profile."]
-    #[serde(
-        rename = "DvProfile",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "DvProfile", default, skip_serializing_if = "Option::is_none")]
     pub dv_profile: Option<i32>,
     #[doc = "Gets or sets the Dolby Vision version major."]
     #[serde(
@@ -2793,18 +2325,10 @@ pub struct MediaStream {
     )]
     pub hdr10_plus_present_flag: Option<bool>,
     #[doc = "Gets or sets the height."]
-    #[serde(
-        rename = "Height",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Height", default, skip_serializing_if = "Option::is_none")]
     pub height: Option<i32>,
     #[doc = "Gets or sets the index."]
-    #[serde(
-        rename = "Index",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Index", default, skip_serializing_if = "Option::is_none")]
     pub index: Option<i32>,
     #[doc = "Gets or sets whether this instance is anamorphic."]
     #[serde(
@@ -2813,18 +2337,10 @@ pub struct MediaStream {
         skip_serializing_if = "Option::is_none"
     )]
     pub is_anamorphic: Option<bool>,
-    #[serde(
-        rename = "IsAVC",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "IsAVC", default, skip_serializing_if = "Option::is_none")]
     pub is_avc: Option<bool>,
     #[doc = "Gets or sets a value indicating whether this instance is default."]
-    #[serde(
-        rename = "IsDefault",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "IsDefault", default, skip_serializing_if = "Option::is_none")]
     pub is_default: Option<bool>,
     #[doc = "Gets or sets a value indicating whether this instance is external."]
     #[serde(
@@ -2841,11 +2357,7 @@ pub struct MediaStream {
     )]
     pub is_external_url: Option<bool>,
     #[doc = "Gets or sets a value indicating whether this instance is forced."]
-    #[serde(
-        rename = "IsForced",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "IsForced", default, skip_serializing_if = "Option::is_none")]
     pub is_forced: Option<bool>,
     #[doc = "Gets or sets a value indicating whether this instance is for the hearing impaired."]
     #[serde(
@@ -2868,18 +2380,10 @@ pub struct MediaStream {
     )]
     pub is_text_subtitle_stream: Option<bool>,
     #[doc = "Gets or sets the language."]
-    #[serde(
-        rename = "Language",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Language", default, skip_serializing_if = "Option::is_none")]
     pub language: Option<String>,
     #[doc = "Gets or sets the level."]
-    #[serde(
-        rename = "Level",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Level", default, skip_serializing_if = "Option::is_none")]
     pub level: Option<f64>,
     #[serde(
         rename = "LocalizedDefault",
@@ -2925,11 +2429,7 @@ pub struct MediaStream {
     )]
     pub packet_length: Option<i32>,
     #[doc = "Gets or sets the filename."]
-    #[serde(
-        rename = "Path",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Path", default, skip_serializing_if = "Option::is_none")]
     pub path: Option<String>,
     #[doc = "Gets or sets the pixel format."]
     #[serde(
@@ -2939,11 +2439,7 @@ pub struct MediaStream {
     )]
     pub pixel_format: Option<String>,
     #[doc = "Gets or sets the profile."]
-    #[serde(
-        rename = "Profile",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Profile", default, skip_serializing_if = "Option::is_none")]
     pub profile: Option<String>,
     #[doc = "Gets or sets the real frame rate."]
     #[serde(
@@ -2953,11 +2449,7 @@ pub struct MediaStream {
     )]
     pub real_frame_rate: Option<f32>,
     #[doc = "Gets or sets the reference frames."]
-    #[serde(
-        rename = "RefFrames",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "RefFrames", default, skip_serializing_if = "Option::is_none")]
     pub ref_frames: Option<i32>,
     #[doc = "Gets the framerate used as reference.\r\nPrefer AverageFrameRate, if that is null or an unrealistic value\r\nthen fallback to RealFrameRate."]
     #[serde(
@@ -2967,11 +2459,7 @@ pub struct MediaStream {
     )]
     pub reference_frame_rate: Option<f32>,
     #[doc = "Gets or sets the Rotation in degrees."]
-    #[serde(
-        rename = "Rotation",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Rotation", default, skip_serializing_if = "Option::is_none")]
     pub rotation: Option<i32>,
     #[doc = "Gets or sets the Dolby Vision rpu present flag."]
     #[serde(
@@ -2988,11 +2476,7 @@ pub struct MediaStream {
     )]
     pub sample_rate: Option<i32>,
     #[doc = "Gets or sets the score."]
-    #[serde(
-        rename = "Score",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Score", default, skip_serializing_if = "Option::is_none")]
     pub score: Option<i32>,
     #[doc = "Gets or sets a value indicating whether [supports external stream]."]
     #[serde(
@@ -3002,24 +2486,12 @@ pub struct MediaStream {
     )]
     pub supports_external_stream: Option<bool>,
     #[doc = "Gets or sets the time base."]
-    #[serde(
-        rename = "TimeBase",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "TimeBase", default, skip_serializing_if = "Option::is_none")]
     pub time_base: Option<String>,
     #[doc = "Gets or sets the title."]
-    #[serde(
-        rename = "Title",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Title", default, skip_serializing_if = "Option::is_none")]
     pub title: Option<String>,
-    #[serde(
-        rename = "Type",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Type", default, skip_serializing_if = "Option::is_none")]
     pub type_: Option<MediaStreamType>,
     #[doc = "Gets the video dovi title."]
     #[serde(
@@ -3041,11 +2513,7 @@ pub struct MediaStream {
     )]
     pub video_range_type: Option<VideoRangeType>,
     #[doc = "Gets or sets the width."]
-    #[serde(
-        rename = "Width",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Width", default, skip_serializing_if = "Option::is_none")]
     pub width: Option<i32>,
 }
 
@@ -3120,7 +2588,9 @@ impl Default for MediaStream {
     }
 }
 
-#[derive(serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(
+    serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd,
+)]
 pub enum MediaStreamProtocol {
     #[serde(rename = "http")]
     Http,
@@ -3157,23 +2627,21 @@ impl TryFrom<&str> for MediaStreamProtocol {
 
 impl TryFrom<&String> for MediaStreamProtocol {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for MediaStreamProtocol {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
-#[derive(serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(
+    serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd,
+)]
 pub enum MediaStreamType {
     Audio,
     Video,
@@ -3220,18 +2688,14 @@ impl TryFrom<&str> for MediaStreamType {
 
 impl TryFrom<&String> for MediaStreamType {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for MediaStreamType {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
@@ -3239,17 +2703,9 @@ impl TryFrom<String> for MediaStreamType {
 #[doc = "`MediaUrl`"]
 #[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
 pub struct MediaUrl {
-    #[serde(
-        rename = "Name",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Name", default, skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
-    #[serde(
-        rename = "Url",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Url", default, skip_serializing_if = "Option::is_none")]
     pub url: Option<String>,
 }
 
@@ -3280,18 +2736,10 @@ pub struct MetadataEditorInfo {
     )]
     pub content_type_options: Vec<NameValuePair>,
     #[doc = "Gets or sets the countries."]
-    #[serde(
-        rename = "Countries",
-        default,
-        skip_serializing_if = "Vec::is_empty"
-    )]
+    #[serde(rename = "Countries", default, skip_serializing_if = "Vec::is_empty")]
     pub countries: Vec<CountryInfo>,
     #[doc = "Gets or sets the cultures."]
-    #[serde(
-        rename = "Cultures",
-        default,
-        skip_serializing_if = "Vec::is_empty"
-    )]
+    #[serde(rename = "Cultures", default, skip_serializing_if = "Vec::is_empty")]
     pub cultures: Vec<CultureDto>,
     #[doc = "Gets or sets the external id infos."]
     #[serde(
@@ -3325,17 +2773,9 @@ impl Default for MetadataEditorInfo {
 #[doc = "`NameGuidPair`"]
 #[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
 pub struct NameGuidPair {
-    #[serde(
-        rename = "Id",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Id", default, skip_serializing_if = "Option::is_none")]
     pub id: Option<uuid::Uuid>,
-    #[serde(
-        rename = "Name",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Name", default, skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
 }
 
@@ -3352,18 +2792,10 @@ impl Default for NameGuidPair {
 #[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
 pub struct NameValuePair {
     #[doc = "Gets or sets the name."]
-    #[serde(
-        rename = "Name",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Name", default, skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
     #[doc = "Gets or sets the value."]
-    #[serde(
-        rename = "Value",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Value", default, skip_serializing_if = "Option::is_none")]
     pub value: Option<String>,
 }
 
@@ -3380,18 +2812,10 @@ impl Default for NameValuePair {
 #[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
 pub struct ThemeMediaResult {
     #[doc = "Gets or sets the items."]
-    #[serde(
-        rename = "Items",
-        default,
-        skip_serializing_if = "Vec::is_empty"
-    )]
+    #[serde(rename = "Items", default, skip_serializing_if = "Vec::is_empty")]
     pub items: Vec<BaseItemDto>,
     #[doc = "Gets or sets the owner id."]
-    #[serde(
-        rename = "OwnerId",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "OwnerId", default, skip_serializing_if = "Option::is_none")]
     pub owner_id: Option<uuid::Uuid>,
     #[doc = "Gets or sets the index of the first record in Items."]
     #[serde(
@@ -3431,18 +2855,10 @@ pub struct UpdateUserItemDataDto {
     )]
     pub is_favorite: Option<bool>,
     #[doc = "Gets or sets the item identifier."]
-    #[serde(
-        rename = "ItemId",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "ItemId", default, skip_serializing_if = "Option::is_none")]
     pub item_id: Option<String>,
     #[doc = "Gets or sets the key."]
-    #[serde(
-        rename = "Key",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Key", default, skip_serializing_if = "Option::is_none")]
     pub key: Option<String>,
     #[doc = "Gets or sets the last played date."]
     #[serde(
@@ -3452,18 +2868,10 @@ pub struct UpdateUserItemDataDto {
     )]
     pub last_played_date: Option<chrono::DateTime<chrono::Utc>>,
     #[doc = "Gets or sets a value indicating whether this MediaBrowser.Model.Dto.UpdateUserItemDataDto is likes."]
-    #[serde(
-        rename = "Likes",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Likes", default, skip_serializing_if = "Option::is_none")]
     pub likes: Option<bool>,
     #[doc = "Gets or sets the play count."]
-    #[serde(
-        rename = "PlayCount",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "PlayCount", default, skip_serializing_if = "Option::is_none")]
     pub play_count: Option<i32>,
     #[doc = "Gets or sets the playback position ticks."]
     #[serde(
@@ -3473,11 +2881,7 @@ pub struct UpdateUserItemDataDto {
     )]
     pub playback_position_ticks: Option<i64>,
     #[doc = "Gets or sets a value indicating whether this MediaBrowser.Model.Dto.UserItemDataDto is played."]
-    #[serde(
-        rename = "Played",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Played", default, skip_serializing_if = "Option::is_none")]
     pub played: Option<bool>,
     #[doc = "Gets or sets the played percentage."]
     #[serde(
@@ -3487,11 +2891,7 @@ pub struct UpdateUserItemDataDto {
     )]
     pub played_percentage: Option<f64>,
     #[doc = "Gets or sets the rating."]
-    #[serde(
-        rename = "Rating",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Rating", default, skip_serializing_if = "Option::is_none")]
     pub rating: Option<f64>,
     #[doc = "Gets or sets the unplayed item count."]
     #[serde(
@@ -3531,18 +2931,10 @@ pub struct UserItemDataDto {
     )]
     pub is_favorite: Option<bool>,
     #[doc = "Gets or sets the item identifier."]
-    #[serde(
-        rename = "ItemId",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "ItemId", default, skip_serializing_if = "Option::is_none")]
     pub item_id: Option<uuid::Uuid>,
     #[doc = "Gets or sets the key."]
-    #[serde(
-        rename = "Key",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Key", default, skip_serializing_if = "Option::is_none")]
     pub key: Option<String>,
     #[doc = "Gets or sets the last played date."]
     #[serde(
@@ -3552,18 +2944,10 @@ pub struct UserItemDataDto {
     )]
     pub last_played_date: Option<chrono::DateTime<chrono::Utc>>,
     #[doc = "Gets or sets a value indicating whether this MediaBrowser.Model.Dto.UserItemDataDto is likes."]
-    #[serde(
-        rename = "Likes",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Likes", default, skip_serializing_if = "Option::is_none")]
     pub likes: Option<bool>,
     #[doc = "Gets or sets the play count."]
-    #[serde(
-        rename = "PlayCount",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "PlayCount", default, skip_serializing_if = "Option::is_none")]
     pub play_count: Option<i32>,
     #[doc = "Gets or sets the playback position ticks."]
     #[serde(
@@ -3573,11 +2957,7 @@ pub struct UserItemDataDto {
     )]
     pub playback_position_ticks: Option<i64>,
     #[doc = "Gets or sets a value indicating whether this MediaBrowser.Model.Dto.UserItemDataDto is played."]
-    #[serde(
-        rename = "Played",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Played", default, skip_serializing_if = "Option::is_none")]
     pub played: Option<bool>,
     #[doc = "Gets or sets the played percentage."]
     #[serde(
@@ -3587,11 +2967,7 @@ pub struct UserItemDataDto {
     )]
     pub played_percentage: Option<f64>,
     #[doc = "Gets or sets the rating."]
-    #[serde(
-        rename = "Rating",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Rating", default, skip_serializing_if = "Option::is_none")]
     pub rating: Option<f64>,
     #[doc = "Gets or sets the unplayed item count."]
     #[serde(
@@ -3619,4 +2995,3 @@ impl Default for UserItemDataDto {
         }
     }
 }
-

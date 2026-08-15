@@ -1026,9 +1026,7 @@ pub async fn execute(
             client.delete_items(ids.as_ref()).await?;
         }
         ItemsCommand::Counts { is_favorite } => {
-            let result = client
-                .get_item_counts(*is_favorite, Some(user_id))
-                .await?;
+            let result = client.get_item_counts(*is_favorite, Some(user_id)).await?;
             crate::output::print_json(&result)?;
         }
         ItemsCommand::Similar {
@@ -1153,9 +1151,7 @@ pub async fn execute(
             crate::output::print_json(&result)?;
         }
         ItemsCommand::SpecialFeatures { item_id } => {
-            let result = client
-                .get_special_features(item_id, Some(user_id))
-                .await?;
+            let result = client.get_special_features(item_id, Some(user_id)).await?;
             crate::output::print_json(&result)?;
         }
         ItemsCommand::RootFolder => {

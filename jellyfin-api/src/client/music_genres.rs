@@ -1,7 +1,7 @@
-use crate::types;
-use crate::error::Error;
-use crate::util::encode_path;
 use crate::Client;
+use crate::error::Error;
+use crate::types;
+use crate::util::encode_path;
 
 impl Client {
     #[doc = "Get music genre image by name\n\nSends a `GET` request to `/MusicGenres/{name}/Images/{imageType}`\n\nArguments:\n- `name`: Music genre name.\n- `image_type`: Image type.\n- `background_color`: Optional. Apply a background color for transparent images.\n- `blur`: Optional. Blur image.\n- `fill_height`: Height of box to fill.\n- `fill_width`: Width of box to fill.\n- `foreground_layer`: Optional. Apply a foreground layer on top of the image.\n- `format`: Determines the output format of the image - original,gif,jpg,png.\n- `height`: The fixed image height to return.\n- `image_index`: Image index.\n- `max_height`: The maximum image height to return.\n- `max_width`: The maximum image width to return.\n- `percent_played`: Optional. Percent to render for the percent played overlay.\n- `quality`: Optional. Quality setting, from 0-100. Defaults to 90 and should suffice in most cases.\n- `tag`: Optional. Supply the cache tag from the item object to receive strong caching headers.\n- `unplayed_count`: Optional. Unplayed count overlay to render.\n- `width`: The fixed image width to return.\n"]
@@ -25,24 +25,31 @@ impl Client {
         unplayed_count: Option<i32>,
         width: Option<i32>,
     ) -> Result<reqwest::Response, Error> {
-        self.request(reqwest::Method::GET, format!("/MusicGenres/{}/Images/{}", encode_path(name), encode_path(&image_type.to_string())))
-            .query_opt("backgroundColor", background_color)
-            .query_opt("blur", blur)
-            .query_opt("fillHeight", fill_height)
-            .query_opt("fillWidth", fill_width)
-            .query_opt("foregroundLayer", foreground_layer)
-            .query_opt("format", format)
-            .query_opt("height", height)
-            .query_opt("imageIndex", image_index)
-            .query_opt("maxHeight", max_height)
-            .query_opt("maxWidth", max_width)
-            .query_opt("percentPlayed", percent_played)
-            .query_opt("quality", quality)
-            .query_opt("tag", tag)
-            .query_opt("unplayedCount", unplayed_count)
-            .query_opt("width", width)
-            .send_response()
-            .await
+        self.request(
+            reqwest::Method::GET,
+            format!(
+                "/MusicGenres/{}/Images/{}",
+                encode_path(name),
+                encode_path(&image_type.to_string())
+            ),
+        )
+        .query_opt("backgroundColor", background_color)
+        .query_opt("blur", blur)
+        .query_opt("fillHeight", fill_height)
+        .query_opt("fillWidth", fill_width)
+        .query_opt("foregroundLayer", foreground_layer)
+        .query_opt("format", format)
+        .query_opt("height", height)
+        .query_opt("imageIndex", image_index)
+        .query_opt("maxHeight", max_height)
+        .query_opt("maxWidth", max_width)
+        .query_opt("percentPlayed", percent_played)
+        .query_opt("quality", quality)
+        .query_opt("tag", tag)
+        .query_opt("unplayedCount", unplayed_count)
+        .query_opt("width", width)
+        .send_response()
+        .await
     }
 
     #[doc = "Get music genre image by name\n\nSends a `HEAD` request to `/MusicGenres/{name}/Images/{imageType}`\n\nArguments:\n- `name`: Music genre name.\n- `image_type`: Image type.\n- `background_color`: Optional. Apply a background color for transparent images.\n- `blur`: Optional. Blur image.\n- `fill_height`: Height of box to fill.\n- `fill_width`: Width of box to fill.\n- `foreground_layer`: Optional. Apply a foreground layer on top of the image.\n- `format`: Determines the output format of the image - original,gif,jpg,png.\n- `height`: The fixed image height to return.\n- `image_index`: Image index.\n- `max_height`: The maximum image height to return.\n- `max_width`: The maximum image width to return.\n- `percent_played`: Optional. Percent to render for the percent played overlay.\n- `quality`: Optional. Quality setting, from 0-100. Defaults to 90 and should suffice in most cases.\n- `tag`: Optional. Supply the cache tag from the item object to receive strong caching headers.\n- `unplayed_count`: Optional. Unplayed count overlay to render.\n- `width`: The fixed image width to return.\n"]
@@ -66,24 +73,31 @@ impl Client {
         unplayed_count: Option<i32>,
         width: Option<i32>,
     ) -> Result<reqwest::Response, Error> {
-        self.request(reqwest::Method::HEAD, format!("/MusicGenres/{}/Images/{}", encode_path(name), encode_path(&image_type.to_string())))
-            .query_opt("backgroundColor", background_color)
-            .query_opt("blur", blur)
-            .query_opt("fillHeight", fill_height)
-            .query_opt("fillWidth", fill_width)
-            .query_opt("foregroundLayer", foreground_layer)
-            .query_opt("format", format)
-            .query_opt("height", height)
-            .query_opt("imageIndex", image_index)
-            .query_opt("maxHeight", max_height)
-            .query_opt("maxWidth", max_width)
-            .query_opt("percentPlayed", percent_played)
-            .query_opt("quality", quality)
-            .query_opt("tag", tag)
-            .query_opt("unplayedCount", unplayed_count)
-            .query_opt("width", width)
-            .send_response()
-            .await
+        self.request(
+            reqwest::Method::HEAD,
+            format!(
+                "/MusicGenres/{}/Images/{}",
+                encode_path(name),
+                encode_path(&image_type.to_string())
+            ),
+        )
+        .query_opt("backgroundColor", background_color)
+        .query_opt("blur", blur)
+        .query_opt("fillHeight", fill_height)
+        .query_opt("fillWidth", fill_width)
+        .query_opt("foregroundLayer", foreground_layer)
+        .query_opt("format", format)
+        .query_opt("height", height)
+        .query_opt("imageIndex", image_index)
+        .query_opt("maxHeight", max_height)
+        .query_opt("maxWidth", max_width)
+        .query_opt("percentPlayed", percent_played)
+        .query_opt("quality", quality)
+        .query_opt("tag", tag)
+        .query_opt("unplayedCount", unplayed_count)
+        .query_opt("width", width)
+        .send_response()
+        .await
     }
 
     #[doc = "Get music genre image by name\n\nSends a `GET` request to `/MusicGenres/{name}/Images/{imageType}/{imageIndex}`\n\nArguments:\n- `name`: Music genre name.\n- `image_type`: Image type.\n- `image_index`: Image index.\n- `background_color`: Optional. Apply a background color for transparent images.\n- `blur`: Optional. Blur image.\n- `fill_height`: Height of box to fill.\n- `fill_width`: Width of box to fill.\n- `foreground_layer`: Optional. Apply a foreground layer on top of the image.\n- `format`: Determines the output format of the image - original,gif,jpg,png.\n- `height`: The fixed image height to return.\n- `max_height`: The maximum image height to return.\n- `max_width`: The maximum image width to return.\n- `percent_played`: Optional. Percent to render for the percent played overlay.\n- `quality`: Optional. Quality setting, from 0-100. Defaults to 90 and should suffice in most cases.\n- `tag`: Optional. Supply the cache tag from the item object to receive strong caching headers.\n- `unplayed_count`: Optional. Unplayed count overlay to render.\n- `width`: The fixed image width to return.\n"]
@@ -107,23 +121,31 @@ impl Client {
         unplayed_count: Option<i32>,
         width: Option<i32>,
     ) -> Result<reqwest::Response, Error> {
-        self.request(reqwest::Method::GET, format!("/MusicGenres/{}/Images/{}/{}", encode_path(name), encode_path(&image_type.to_string()), encode_path(&image_index.to_string())))
-            .query_opt("backgroundColor", background_color)
-            .query_opt("blur", blur)
-            .query_opt("fillHeight", fill_height)
-            .query_opt("fillWidth", fill_width)
-            .query_opt("foregroundLayer", foreground_layer)
-            .query_opt("format", format)
-            .query_opt("height", height)
-            .query_opt("maxHeight", max_height)
-            .query_opt("maxWidth", max_width)
-            .query_opt("percentPlayed", percent_played)
-            .query_opt("quality", quality)
-            .query_opt("tag", tag)
-            .query_opt("unplayedCount", unplayed_count)
-            .query_opt("width", width)
-            .send_response()
-            .await
+        self.request(
+            reqwest::Method::GET,
+            format!(
+                "/MusicGenres/{}/Images/{}/{}",
+                encode_path(name),
+                encode_path(&image_type.to_string()),
+                encode_path(&image_index.to_string())
+            ),
+        )
+        .query_opt("backgroundColor", background_color)
+        .query_opt("blur", blur)
+        .query_opt("fillHeight", fill_height)
+        .query_opt("fillWidth", fill_width)
+        .query_opt("foregroundLayer", foreground_layer)
+        .query_opt("format", format)
+        .query_opt("height", height)
+        .query_opt("maxHeight", max_height)
+        .query_opt("maxWidth", max_width)
+        .query_opt("percentPlayed", percent_played)
+        .query_opt("quality", quality)
+        .query_opt("tag", tag)
+        .query_opt("unplayedCount", unplayed_count)
+        .query_opt("width", width)
+        .send_response()
+        .await
     }
 
     #[doc = "Get music genre image by name\n\nSends a `HEAD` request to `/MusicGenres/{name}/Images/{imageType}/{imageIndex}`\n\nArguments:\n- `name`: Music genre name.\n- `image_type`: Image type.\n- `image_index`: Image index.\n- `background_color`: Optional. Apply a background color for transparent images.\n- `blur`: Optional. Blur image.\n- `fill_height`: Height of box to fill.\n- `fill_width`: Width of box to fill.\n- `foreground_layer`: Optional. Apply a foreground layer on top of the image.\n- `format`: Determines the output format of the image - original,gif,jpg,png.\n- `height`: The fixed image height to return.\n- `max_height`: The maximum image height to return.\n- `max_width`: The maximum image width to return.\n- `percent_played`: Optional. Percent to render for the percent played overlay.\n- `quality`: Optional. Quality setting, from 0-100. Defaults to 90 and should suffice in most cases.\n- `tag`: Optional. Supply the cache tag from the item object to receive strong caching headers.\n- `unplayed_count`: Optional. Unplayed count overlay to render.\n- `width`: The fixed image width to return.\n"]
@@ -147,23 +169,31 @@ impl Client {
         unplayed_count: Option<i32>,
         width: Option<i32>,
     ) -> Result<reqwest::Response, Error> {
-        self.request(reqwest::Method::HEAD, format!("/MusicGenres/{}/Images/{}/{}", encode_path(name), encode_path(&image_type.to_string()), encode_path(&image_index.to_string())))
-            .query_opt("backgroundColor", background_color)
-            .query_opt("blur", blur)
-            .query_opt("fillHeight", fill_height)
-            .query_opt("fillWidth", fill_width)
-            .query_opt("foregroundLayer", foreground_layer)
-            .query_opt("format", format)
-            .query_opt("height", height)
-            .query_opt("maxHeight", max_height)
-            .query_opt("maxWidth", max_width)
-            .query_opt("percentPlayed", percent_played)
-            .query_opt("quality", quality)
-            .query_opt("tag", tag)
-            .query_opt("unplayedCount", unplayed_count)
-            .query_opt("width", width)
-            .send_response()
-            .await
+        self.request(
+            reqwest::Method::HEAD,
+            format!(
+                "/MusicGenres/{}/Images/{}/{}",
+                encode_path(name),
+                encode_path(&image_type.to_string()),
+                encode_path(&image_index.to_string())
+            ),
+        )
+        .query_opt("backgroundColor", background_color)
+        .query_opt("blur", blur)
+        .query_opt("fillHeight", fill_height)
+        .query_opt("fillWidth", fill_width)
+        .query_opt("foregroundLayer", foreground_layer)
+        .query_opt("format", format)
+        .query_opt("height", height)
+        .query_opt("maxHeight", max_height)
+        .query_opt("maxWidth", max_width)
+        .query_opt("percentPlayed", percent_played)
+        .query_opt("quality", quality)
+        .query_opt("tag", tag)
+        .query_opt("unplayedCount", unplayed_count)
+        .query_opt("width", width)
+        .send_response()
+        .await
     }
 
     #[doc = "Creates an instant playlist based on a given genre\n\nSends a `GET` request to `/MusicGenres/{name}/InstantMix`\n\nArguments:\n- `name`: The genre name.\n- `enable_image_types`: Optional. The image types to include in the output.\n- `enable_images`: Optional. Include image information in output.\n- `enable_user_data`: Optional. Include user data.\n- `fields`: Optional. Specify additional fields of information to return in the output.\n- `image_type_limit`: Optional. The max number of images to return, per image type.\n- `limit`: Optional. The maximum number of records to return.\n- `user_id`: Optional. Filter by user id, and attach user data.\n"]
@@ -178,16 +208,19 @@ impl Client {
         limit: Option<i32>,
         user_id: Option<&uuid::Uuid>,
     ) -> Result<types::BaseItemDtoQueryResult, Error> {
-        self.request(reqwest::Method::GET, format!("/MusicGenres/{}/InstantMix", encode_path(name)))
-            .query_list_opt("enableImageTypes", enable_image_types)
-            .query_opt("enableImages", enable_images)
-            .query_opt("enableUserData", enable_user_data)
-            .query_list_opt("fields", fields)
-            .query_opt("imageTypeLimit", image_type_limit)
-            .query_opt("limit", limit)
-            .query_opt("userId", user_id)
-            .send()
-            .await
+        self.request(
+            reqwest::Method::GET,
+            format!("/MusicGenres/{}/InstantMix", encode_path(name)),
+        )
+        .query_list_opt("enableImageTypes", enable_image_types)
+        .query_opt("enableImages", enable_images)
+        .query_opt("enableUserData", enable_user_data)
+        .query_list_opt("fields", fields)
+        .query_opt("imageTypeLimit", image_type_limit)
+        .query_opt("limit", limit)
+        .query_opt("userId", user_id)
+        .send()
+        .await
     }
 
     #[doc = "Creates an instant playlist based on a given genre\n\nSends a `GET` request to `/MusicGenres/InstantMix`\n\nArguments:\n- `enable_image_types`: Optional. The image types to include in the output.\n- `enable_images`: Optional. Include image information in output.\n- `enable_user_data`: Optional. Include user data.\n- `fields`: Optional. Specify additional fields of information to return in the output.\n- `id`: The item id.\n- `image_type_limit`: Optional. The max number of images to return, per image type.\n- `limit`: Optional. The maximum number of records to return.\n- `user_id`: Optional. Filter by user id, and attach user data.\n"]
@@ -266,9 +299,12 @@ impl Client {
         genre_name: &str,
         user_id: Option<&uuid::Uuid>,
     ) -> Result<types::BaseItemDto, Error> {
-        self.request(reqwest::Method::GET, format!("/MusicGenres/{}", encode_path(genre_name)))
-            .query_opt("userId", user_id)
-            .send()
-            .await
+        self.request(
+            reqwest::Method::GET,
+            format!("/MusicGenres/{}", encode_path(genre_name)),
+        )
+        .query_opt("userId", user_id)
+        .send()
+        .await
     }
 }

@@ -1,0 +1,13 @@
+[package]
+name = "jellium-model"
+version = "0.1.0"
+edition = "2024"
+license.workspace = true
+
+[dependencies]
+jellyfin-api = { path = "../jellyfin-api" }
+jellium-protocol = { path = "../jellium-protocol" }
+chrono = { version = "0.4", default-features = false, features = ["std"] }
+uuid = { version = "1", features = ["serde"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"

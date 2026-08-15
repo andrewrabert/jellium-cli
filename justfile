@@ -8,11 +8,21 @@ list:
 build:
     cargo build
     cargo clippy --all-targets -- -D warnings
+    cd jellium-web && cargo clippy --all-targets -- -D warnings
+
+# Check formatting in both workspaces
+fmt:
+    cargo fmt --all --check
+    cd jellium-web && cargo fmt --all --check
+
+# Run both workspaces' tests
+test: fmt
+    cargo test --workspace
+    cd jellium-web && cargo test
 
 # Build the Jellium Web bundle
-web-bundle renderer="webgpu":
-    cd jellium-web && trunk build --release --no-default-features --features {{renderer}} \
-        --dist dist index.html
+web-bundle:
+    cd jellium-web && trunk build --release --dist dist index.html
 
 # Run jellium-cli web from the debug build
 web *args:

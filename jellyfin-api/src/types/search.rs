@@ -16,10 +16,7 @@ pub struct AlbumInfo {
         default,
         skip_serializing_if = ":: std :: collections :: HashMap::is_empty"
     )]
-    pub artist_provider_ids: std::collections::HashMap<
-        String,
-        Option<String>,
-    >,
+    pub artist_provider_ids: std::collections::HashMap<String, Option<String>>,
     #[serde(
         rename = "IndexNumber",
         default,
@@ -47,11 +44,7 @@ pub struct AlbumInfo {
     )]
     pub metadata_language: Option<String>,
     #[doc = "Gets or sets the name."]
-    #[serde(
-        rename = "Name",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Name", default, skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
     #[doc = "Gets or sets the original title."]
     #[serde(
@@ -67,11 +60,7 @@ pub struct AlbumInfo {
     )]
     pub parent_index_number: Option<i32>,
     #[doc = "Gets or sets the path."]
-    #[serde(
-        rename = "Path",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Path", default, skip_serializing_if = "Option::is_none")]
     pub path: Option<String>,
     #[serde(
         rename = "PremiereDate",
@@ -85,24 +74,11 @@ pub struct AlbumInfo {
         default,
         skip_serializing_if = "Option::is_none"
     )]
-    pub provider_ids: Option<
-        std::collections::HashMap<
-            String,
-            Option<String>,
-        >,
-    >,
-    #[serde(
-        rename = "SongInfos",
-        default,
-        skip_serializing_if = "Vec::is_empty"
-    )]
+    pub provider_ids: Option<std::collections::HashMap<String, Option<String>>>,
+    #[serde(rename = "SongInfos", default, skip_serializing_if = "Vec::is_empty")]
     pub song_infos: Vec<SongInfo>,
     #[doc = "Gets or sets the year."]
-    #[serde(
-        rename = "Year",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Year", default, skip_serializing_if = "Option::is_none")]
     pub year: Option<i32>,
 }
 
@@ -137,11 +113,7 @@ pub struct AlbumInfoRemoteSearchQuery {
         skip_serializing_if = "Option::is_none"
     )]
     pub include_disabled_providers: Option<bool>,
-    #[serde(
-        rename = "ItemId",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "ItemId", default, skip_serializing_if = "Option::is_none")]
     pub item_id: Option<uuid::Uuid>,
     #[serde(
         rename = "SearchInfo",
@@ -199,11 +171,7 @@ pub struct ArtistInfo {
     )]
     pub metadata_language: Option<String>,
     #[doc = "Gets or sets the name."]
-    #[serde(
-        rename = "Name",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Name", default, skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
     #[doc = "Gets or sets the original title."]
     #[serde(
@@ -219,11 +187,7 @@ pub struct ArtistInfo {
     )]
     pub parent_index_number: Option<i32>,
     #[doc = "Gets or sets the path."]
-    #[serde(
-        rename = "Path",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Path", default, skip_serializing_if = "Option::is_none")]
     pub path: Option<String>,
     #[serde(
         rename = "PremiereDate",
@@ -237,24 +201,11 @@ pub struct ArtistInfo {
         default,
         skip_serializing_if = "Option::is_none"
     )]
-    pub provider_ids: Option<
-        std::collections::HashMap<
-            String,
-            Option<String>,
-        >,
-    >,
-    #[serde(
-        rename = "SongInfos",
-        default,
-        skip_serializing_if = "Vec::is_empty"
-    )]
+    pub provider_ids: Option<std::collections::HashMap<String, Option<String>>>,
+    #[serde(rename = "SongInfos", default, skip_serializing_if = "Vec::is_empty")]
     pub song_infos: Vec<SongInfo>,
     #[doc = "Gets or sets the year."]
-    #[serde(
-        rename = "Year",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Year", default, skip_serializing_if = "Option::is_none")]
     pub year: Option<i32>,
 }
 
@@ -287,11 +238,7 @@ pub struct ArtistInfoRemoteSearchQuery {
         skip_serializing_if = "Option::is_none"
     )]
     pub include_disabled_providers: Option<bool>,
-    #[serde(
-        rename = "ItemId",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "ItemId", default, skip_serializing_if = "Option::is_none")]
     pub item_id: Option<uuid::Uuid>,
     #[serde(
         rename = "SearchInfo",
@@ -349,11 +296,7 @@ pub struct BookInfo {
     )]
     pub metadata_language: Option<String>,
     #[doc = "Gets or sets the name."]
-    #[serde(
-        rename = "Name",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Name", default, skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
     #[doc = "Gets or sets the original title."]
     #[serde(
@@ -369,11 +312,7 @@ pub struct BookInfo {
     )]
     pub parent_index_number: Option<i32>,
     #[doc = "Gets or sets the path."]
-    #[serde(
-        rename = "Path",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Path", default, skip_serializing_if = "Option::is_none")]
     pub path: Option<String>,
     #[serde(
         rename = "PremiereDate",
@@ -387,12 +326,7 @@ pub struct BookInfo {
         default,
         skip_serializing_if = "Option::is_none"
     )]
-    pub provider_ids: Option<
-        std::collections::HashMap<
-            String,
-            Option<String>,
-        >,
-    >,
+    pub provider_ids: Option<std::collections::HashMap<String, Option<String>>>,
     #[serde(
         rename = "SeriesName",
         default,
@@ -400,11 +334,7 @@ pub struct BookInfo {
     )]
     pub series_name: Option<String>,
     #[doc = "Gets or sets the year."]
-    #[serde(
-        rename = "Year",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Year", default, skip_serializing_if = "Option::is_none")]
     pub year: Option<i32>,
 }
 
@@ -437,11 +367,7 @@ pub struct BookInfoRemoteSearchQuery {
         skip_serializing_if = "Option::is_none"
     )]
     pub include_disabled_providers: Option<bool>,
-    #[serde(
-        rename = "ItemId",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "ItemId", default, skip_serializing_if = "Option::is_none")]
     pub item_id: Option<uuid::Uuid>,
     #[serde(
         rename = "SearchInfo",
@@ -499,11 +425,7 @@ pub struct BoxSetInfo {
     )]
     pub metadata_language: Option<String>,
     #[doc = "Gets or sets the name."]
-    #[serde(
-        rename = "Name",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Name", default, skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
     #[doc = "Gets or sets the original title."]
     #[serde(
@@ -519,11 +441,7 @@ pub struct BoxSetInfo {
     )]
     pub parent_index_number: Option<i32>,
     #[doc = "Gets or sets the path."]
-    #[serde(
-        rename = "Path",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Path", default, skip_serializing_if = "Option::is_none")]
     pub path: Option<String>,
     #[serde(
         rename = "PremiereDate",
@@ -537,18 +455,9 @@ pub struct BoxSetInfo {
         default,
         skip_serializing_if = "Option::is_none"
     )]
-    pub provider_ids: Option<
-        std::collections::HashMap<
-            String,
-            Option<String>,
-        >,
-    >,
+    pub provider_ids: Option<std::collections::HashMap<String, Option<String>>>,
     #[doc = "Gets or sets the year."]
-    #[serde(
-        rename = "Year",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Year", default, skip_serializing_if = "Option::is_none")]
     pub year: Option<i32>,
 }
 
@@ -580,11 +489,7 @@ pub struct BoxSetInfoRemoteSearchQuery {
         skip_serializing_if = "Option::is_none"
     )]
     pub include_disabled_providers: Option<bool>,
-    #[serde(
-        rename = "ItemId",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "ItemId", default, skip_serializing_if = "Option::is_none")]
     pub item_id: Option<uuid::Uuid>,
     #[serde(
         rename = "SearchInfo",
@@ -642,11 +547,7 @@ pub struct MovieInfo {
     )]
     pub metadata_language: Option<String>,
     #[doc = "Gets or sets the name."]
-    #[serde(
-        rename = "Name",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Name", default, skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
     #[doc = "Gets or sets the original title."]
     #[serde(
@@ -662,11 +563,7 @@ pub struct MovieInfo {
     )]
     pub parent_index_number: Option<i32>,
     #[doc = "Gets or sets the path."]
-    #[serde(
-        rename = "Path",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Path", default, skip_serializing_if = "Option::is_none")]
     pub path: Option<String>,
     #[serde(
         rename = "PremiereDate",
@@ -680,18 +577,9 @@ pub struct MovieInfo {
         default,
         skip_serializing_if = "Option::is_none"
     )]
-    pub provider_ids: Option<
-        std::collections::HashMap<
-            String,
-            Option<String>,
-        >,
-    >,
+    pub provider_ids: Option<std::collections::HashMap<String, Option<String>>>,
     #[doc = "Gets or sets the year."]
-    #[serde(
-        rename = "Year",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Year", default, skip_serializing_if = "Option::is_none")]
     pub year: Option<i32>,
 }
 
@@ -723,11 +611,7 @@ pub struct MovieInfoRemoteSearchQuery {
         skip_serializing_if = "Option::is_none"
     )]
     pub include_disabled_providers: Option<bool>,
-    #[serde(
-        rename = "ItemId",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "ItemId", default, skip_serializing_if = "Option::is_none")]
     pub item_id: Option<uuid::Uuid>,
     #[serde(
         rename = "SearchInfo",
@@ -758,11 +642,7 @@ impl Default for MovieInfoRemoteSearchQuery {
 #[doc = "`MusicVideoInfo`"]
 #[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
 pub struct MusicVideoInfo {
-    #[serde(
-        rename = "Artists",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Artists", default, skip_serializing_if = "Option::is_none")]
     pub artists: Option<Vec<String>>,
     #[serde(
         rename = "IndexNumber",
@@ -791,11 +671,7 @@ pub struct MusicVideoInfo {
     )]
     pub metadata_language: Option<String>,
     #[doc = "Gets or sets the name."]
-    #[serde(
-        rename = "Name",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Name", default, skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
     #[doc = "Gets or sets the original title."]
     #[serde(
@@ -811,11 +687,7 @@ pub struct MusicVideoInfo {
     )]
     pub parent_index_number: Option<i32>,
     #[doc = "Gets or sets the path."]
-    #[serde(
-        rename = "Path",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Path", default, skip_serializing_if = "Option::is_none")]
     pub path: Option<String>,
     #[serde(
         rename = "PremiereDate",
@@ -829,18 +701,9 @@ pub struct MusicVideoInfo {
         default,
         skip_serializing_if = "Option::is_none"
     )]
-    pub provider_ids: Option<
-        std::collections::HashMap<
-            String,
-            Option<String>,
-        >,
-    >,
+    pub provider_ids: Option<std::collections::HashMap<String, Option<String>>>,
     #[doc = "Gets or sets the year."]
-    #[serde(
-        rename = "Year",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Year", default, skip_serializing_if = "Option::is_none")]
     pub year: Option<i32>,
 }
 
@@ -873,11 +736,7 @@ pub struct MusicVideoInfoRemoteSearchQuery {
         skip_serializing_if = "Option::is_none"
     )]
     pub include_disabled_providers: Option<bool>,
-    #[serde(
-        rename = "ItemId",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "ItemId", default, skip_serializing_if = "Option::is_none")]
     pub item_id: Option<uuid::Uuid>,
     #[serde(
         rename = "SearchInfo",
@@ -935,11 +794,7 @@ pub struct PersonLookupInfo {
     )]
     pub metadata_language: Option<String>,
     #[doc = "Gets or sets the name."]
-    #[serde(
-        rename = "Name",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Name", default, skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
     #[doc = "Gets or sets the original title."]
     #[serde(
@@ -955,11 +810,7 @@ pub struct PersonLookupInfo {
     )]
     pub parent_index_number: Option<i32>,
     #[doc = "Gets or sets the path."]
-    #[serde(
-        rename = "Path",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Path", default, skip_serializing_if = "Option::is_none")]
     pub path: Option<String>,
     #[serde(
         rename = "PremiereDate",
@@ -973,18 +824,9 @@ pub struct PersonLookupInfo {
         default,
         skip_serializing_if = "Option::is_none"
     )]
-    pub provider_ids: Option<
-        std::collections::HashMap<
-            String,
-            Option<String>,
-        >,
-    >,
+    pub provider_ids: Option<std::collections::HashMap<String, Option<String>>>,
     #[doc = "Gets or sets the year."]
-    #[serde(
-        rename = "Year",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Year", default, skip_serializing_if = "Option::is_none")]
     pub year: Option<i32>,
 }
 
@@ -1016,11 +858,7 @@ pub struct PersonLookupInfoRemoteSearchQuery {
         skip_serializing_if = "Option::is_none"
     )]
     pub include_disabled_providers: Option<bool>,
-    #[serde(
-        rename = "ItemId",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "ItemId", default, skip_serializing_if = "Option::is_none")]
     pub item_id: Option<uuid::Uuid>,
     #[serde(
         rename = "SearchInfo",
@@ -1057,17 +895,9 @@ pub struct RemoteSearchResult {
         skip_serializing_if = "Option::is_none"
     )]
     pub album_artist: Option<Box<RemoteSearchResult>>,
-    #[serde(
-        rename = "Artists",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Artists", default, skip_serializing_if = "Option::is_none")]
     pub artists: Option<Vec<RemoteSearchResult>>,
-    #[serde(
-        rename = "ImageUrl",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "ImageUrl", default, skip_serializing_if = "Option::is_none")]
     pub image_url: Option<String>,
     #[serde(
         rename = "IndexNumber",
@@ -1082,17 +912,9 @@ pub struct RemoteSearchResult {
     )]
     pub index_number_end: Option<i32>,
     #[doc = "Gets or sets the name."]
-    #[serde(
-        rename = "Name",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Name", default, skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
-    #[serde(
-        rename = "Overview",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Overview", default, skip_serializing_if = "Option::is_none")]
     pub overview: Option<String>,
     #[serde(
         rename = "ParentIndexNumber",
@@ -1119,12 +941,7 @@ pub struct RemoteSearchResult {
         default,
         skip_serializing_if = "Option::is_none"
     )]
-    pub provider_ids: Option<
-        std::collections::HashMap<
-            String,
-            Option<String>,
-        >,
-    >,
+    pub provider_ids: Option<std::collections::HashMap<String, Option<String>>>,
     #[serde(
         rename = "SearchProviderName",
         default,
@@ -1156,11 +973,7 @@ impl Default for RemoteSearchResult {
 #[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
 pub struct SearchHint {
     #[doc = "Gets or sets the album."]
-    #[serde(
-        rename = "Album",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Album", default, skip_serializing_if = "Option::is_none")]
     pub album: Option<String>,
     #[doc = "Gets or sets the album artist."]
     #[serde(
@@ -1170,18 +983,10 @@ pub struct SearchHint {
     )]
     pub album_artist: Option<String>,
     #[doc = "Gets or sets the album id."]
-    #[serde(
-        rename = "AlbumId",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "AlbumId", default, skip_serializing_if = "Option::is_none")]
     pub album_id: Option<uuid::Uuid>,
     #[doc = "Gets or sets the artists."]
-    #[serde(
-        rename = "Artists",
-        default,
-        skip_serializing_if = "Vec::is_empty"
-    )]
+    #[serde(rename = "Artists", default, skip_serializing_if = "Vec::is_empty")]
     pub artists: Vec<String>,
     #[doc = "Gets or sets the backdrop image item identifier."]
     #[serde(
@@ -1198,11 +1003,7 @@ pub struct SearchHint {
     )]
     pub backdrop_image_tag: Option<String>,
     #[doc = "Gets or sets the channel identifier."]
-    #[serde(
-        rename = "ChannelId",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "ChannelId", default, skip_serializing_if = "Option::is_none")]
     pub channel_id: Option<uuid::Uuid>,
     #[doc = "Gets or sets the name of the channel."]
     #[serde(
@@ -1212,11 +1013,7 @@ pub struct SearchHint {
     )]
     pub channel_name: Option<String>,
     #[doc = "Gets or sets the end date."]
-    #[serde(
-        rename = "EndDate",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "EndDate", default, skip_serializing_if = "Option::is_none")]
     pub end_date: Option<chrono::DateTime<chrono::Utc>>,
     #[doc = "Gets or sets the episode count."]
     #[serde(
@@ -1226,11 +1023,7 @@ pub struct SearchHint {
     )]
     pub episode_count: Option<i32>,
     #[doc = "Gets or sets the item id."]
-    #[serde(
-        rename = "Id",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Id", default, skip_serializing_if = "Option::is_none")]
     pub id: Option<uuid::Uuid>,
     #[doc = "Gets or sets the index number."]
     #[serde(
@@ -1240,18 +1033,10 @@ pub struct SearchHint {
     )]
     pub index_number: Option<i32>,
     #[doc = "Gets or sets a value indicating whether this instance is folder."]
-    #[serde(
-        rename = "IsFolder",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "IsFolder", default, skip_serializing_if = "Option::is_none")]
     pub is_folder: Option<bool>,
     #[doc = "Gets or sets the item id."]
-    #[serde(
-        rename = "ItemId",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "ItemId", default, skip_serializing_if = "Option::is_none")]
     pub item_id: Option<uuid::Uuid>,
     #[doc = "Gets or sets the matched term."]
     #[serde(
@@ -1260,18 +1045,10 @@ pub struct SearchHint {
         skip_serializing_if = "Option::is_none"
     )]
     pub matched_term: Option<String>,
-    #[serde(
-        rename = "MediaType",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "MediaType", default, skip_serializing_if = "Option::is_none")]
     pub media_type: Option<MediaType>,
     #[doc = "Gets or sets the name."]
-    #[serde(
-        rename = "Name",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Name", default, skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
     #[doc = "Gets or sets the parent index number."]
     #[serde(
@@ -1309,32 +1086,16 @@ pub struct SearchHint {
     )]
     pub run_time_ticks: Option<i64>,
     #[doc = "Gets or sets the series."]
-    #[serde(
-        rename = "Series",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Series", default, skip_serializing_if = "Option::is_none")]
     pub series: Option<String>,
     #[doc = "Gets or sets the song count."]
-    #[serde(
-        rename = "SongCount",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "SongCount", default, skip_serializing_if = "Option::is_none")]
     pub song_count: Option<i32>,
     #[doc = "Gets or sets the start date."]
-    #[serde(
-        rename = "StartDate",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "StartDate", default, skip_serializing_if = "Option::is_none")]
     pub start_date: Option<chrono::DateTime<chrono::Utc>>,
     #[doc = "Gets or sets the status."]
-    #[serde(
-        rename = "Status",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Status", default, skip_serializing_if = "Option::is_none")]
     pub status: Option<String>,
     #[doc = "Gets or sets the thumb image item identifier."]
     #[serde(
@@ -1350,11 +1111,7 @@ pub struct SearchHint {
         skip_serializing_if = "Option::is_none"
     )]
     pub thumb_image_tag: Option<String>,
-    #[serde(
-        rename = "Type",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Type", default, skip_serializing_if = "Option::is_none")]
     pub type_: Option<BaseItemKind>,
 }
 
@@ -1398,11 +1155,7 @@ impl Default for SearchHint {
 #[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
 pub struct SearchHintResult {
     #[doc = "Gets the search hints."]
-    #[serde(
-        rename = "SearchHints",
-        default,
-        skip_serializing_if = "Vec::is_empty"
-    )]
+    #[serde(rename = "SearchHints", default, skip_serializing_if = "Vec::is_empty")]
     pub search_hints: Vec<SearchHint>,
     #[doc = "Gets the total record count."]
     #[serde(
@@ -1452,11 +1205,7 @@ pub struct SeriesInfo {
     )]
     pub metadata_language: Option<String>,
     #[doc = "Gets or sets the name."]
-    #[serde(
-        rename = "Name",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Name", default, skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
     #[doc = "Gets or sets the original title."]
     #[serde(
@@ -1472,11 +1221,7 @@ pub struct SeriesInfo {
     )]
     pub parent_index_number: Option<i32>,
     #[doc = "Gets or sets the path."]
-    #[serde(
-        rename = "Path",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Path", default, skip_serializing_if = "Option::is_none")]
     pub path: Option<String>,
     #[serde(
         rename = "PremiereDate",
@@ -1490,18 +1235,9 @@ pub struct SeriesInfo {
         default,
         skip_serializing_if = "Option::is_none"
     )]
-    pub provider_ids: Option<
-        std::collections::HashMap<
-            String,
-            Option<String>,
-        >,
-    >,
+    pub provider_ids: Option<std::collections::HashMap<String, Option<String>>>,
     #[doc = "Gets or sets the year."]
-    #[serde(
-        rename = "Year",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Year", default, skip_serializing_if = "Option::is_none")]
     pub year: Option<i32>,
 }
 
@@ -1533,11 +1269,7 @@ pub struct SeriesInfoRemoteSearchQuery {
         skip_serializing_if = "Option::is_none"
     )]
     pub include_disabled_providers: Option<bool>,
-    #[serde(
-        rename = "ItemId",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "ItemId", default, skip_serializing_if = "Option::is_none")]
     pub item_id: Option<uuid::Uuid>,
     #[serde(
         rename = "SearchInfo",
@@ -1568,11 +1300,7 @@ impl Default for SeriesInfoRemoteSearchQuery {
 #[doc = "`SongInfo`"]
 #[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
 pub struct SongInfo {
-    #[serde(
-        rename = "Album",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Album", default, skip_serializing_if = "Option::is_none")]
     pub album: Option<String>,
     #[serde(
         rename = "AlbumArtists",
@@ -1580,11 +1308,7 @@ pub struct SongInfo {
         skip_serializing_if = "Option::is_none"
     )]
     pub album_artists: Option<Vec<String>>,
-    #[serde(
-        rename = "Artists",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Artists", default, skip_serializing_if = "Option::is_none")]
     pub artists: Option<Vec<String>>,
     #[serde(
         rename = "IndexNumber",
@@ -1613,11 +1337,7 @@ pub struct SongInfo {
     )]
     pub metadata_language: Option<String>,
     #[doc = "Gets or sets the name."]
-    #[serde(
-        rename = "Name",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Name", default, skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
     #[doc = "Gets or sets the original title."]
     #[serde(
@@ -1633,11 +1353,7 @@ pub struct SongInfo {
     )]
     pub parent_index_number: Option<i32>,
     #[doc = "Gets or sets the path."]
-    #[serde(
-        rename = "Path",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Path", default, skip_serializing_if = "Option::is_none")]
     pub path: Option<String>,
     #[serde(
         rename = "PremiereDate",
@@ -1651,18 +1367,9 @@ pub struct SongInfo {
         default,
         skip_serializing_if = "Option::is_none"
     )]
-    pub provider_ids: Option<
-        std::collections::HashMap<
-            String,
-            Option<String>,
-        >,
-    >,
+    pub provider_ids: Option<std::collections::HashMap<String, Option<String>>>,
     #[doc = "Gets or sets the year."]
-    #[serde(
-        rename = "Year",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Year", default, skip_serializing_if = "Option::is_none")]
     pub year: Option<i32>,
 }
 
@@ -1717,11 +1424,7 @@ pub struct TrailerInfo {
     )]
     pub metadata_language: Option<String>,
     #[doc = "Gets or sets the name."]
-    #[serde(
-        rename = "Name",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Name", default, skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
     #[doc = "Gets or sets the original title."]
     #[serde(
@@ -1737,11 +1440,7 @@ pub struct TrailerInfo {
     )]
     pub parent_index_number: Option<i32>,
     #[doc = "Gets or sets the path."]
-    #[serde(
-        rename = "Path",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Path", default, skip_serializing_if = "Option::is_none")]
     pub path: Option<String>,
     #[serde(
         rename = "PremiereDate",
@@ -1755,18 +1454,9 @@ pub struct TrailerInfo {
         default,
         skip_serializing_if = "Option::is_none"
     )]
-    pub provider_ids: Option<
-        std::collections::HashMap<
-            String,
-            Option<String>,
-        >,
-    >,
+    pub provider_ids: Option<std::collections::HashMap<String, Option<String>>>,
     #[doc = "Gets or sets the year."]
-    #[serde(
-        rename = "Year",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Year", default, skip_serializing_if = "Option::is_none")]
     pub year: Option<i32>,
 }
 
@@ -1798,11 +1488,7 @@ pub struct TrailerInfoRemoteSearchQuery {
         skip_serializing_if = "Option::is_none"
     )]
     pub include_disabled_providers: Option<bool>,
-    #[serde(
-        rename = "ItemId",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "ItemId", default, skip_serializing_if = "Option::is_none")]
     pub item_id: Option<uuid::Uuid>,
     #[serde(
         rename = "SearchInfo",
@@ -1829,4 +1515,3 @@ impl Default for TrailerInfoRemoteSearchQuery {
         }
     }
 }
-

@@ -1,6 +1,6 @@
-use crate::types;
-use crate::error::Error;
 use crate::Client;
+use crate::error::Error;
+use crate::types;
 
 impl Client {
     #[doc = "Gets the library options info\n\nSends a `GET` request to `/Libraries/AvailableOptions`\n\nArguments:\n- `is_new_library`: Whether this is a new library.\n- `library_content_type`: Library content type.\n"]
@@ -17,10 +17,7 @@ impl Client {
     }
 
     #[doc = "Reports that new movies have been added by an external source\n\nSends a `POST` request to `/Library/Media/Updated`\n\nArguments:\n- `body`: The update paths.\n"]
-    pub async fn post_updated_media(
-        &self,
-        body: &types::MediaUpdateInfoDto,
-    ) -> Result<(), Error> {
+    pub async fn post_updated_media(&self, body: &types::MediaUpdateInfoDto) -> Result<(), Error> {
         self.request(reqwest::Method::POST, "/Library/Media/Updated".into())
             .json_body(body)
             .send_no_content()
@@ -65,9 +62,7 @@ impl Client {
     }
 
     #[doc = "Gets a list of physical paths from virtual folders\n\nSends a `GET` request to `/Library/PhysicalPaths`\n\n"]
-    pub async fn get_physical_paths(
-        &self,
-    ) -> Result<Vec<String>, Error> {
+    pub async fn get_physical_paths(&self) -> Result<Vec<String>, Error> {
         self.request(reqwest::Method::GET, "/Library/PhysicalPaths".into())
             .send()
             .await
@@ -81,10 +76,7 @@ impl Client {
     }
 
     #[doc = "Reports that new episodes of a series have been added by an external source\n\nSends a `POST` request to `/Library/Series/Added`\n\nArguments:\n- `tvdb_id`: The tvdbId.\n"]
-    pub async fn post_added_series(
-        &self,
-        tvdb_id: Option<&str>,
-    ) -> Result<(), Error> {
+    pub async fn post_added_series(&self, tvdb_id: Option<&str>) -> Result<(), Error> {
         self.request(reqwest::Method::POST, "/Library/Series/Added".into())
             .query_opt("tvdbId", tvdb_id)
             .send_no_content()
@@ -92,10 +84,7 @@ impl Client {
     }
 
     #[doc = "Reports that new episodes of a series have been added by an external source\n\nSends a `POST` request to `/Library/Series/Updated`\n\nArguments:\n- `tvdb_id`: The tvdbId.\n"]
-    pub async fn post_updated_series(
-        &self,
-        tvdb_id: Option<&str>,
-    ) -> Result<(), Error> {
+    pub async fn post_updated_series(&self, tvdb_id: Option<&str>) -> Result<(), Error> {
         self.request(reqwest::Method::POST, "/Library/Series/Updated".into())
             .query_opt("tvdbId", tvdb_id)
             .send_no_content()
@@ -103,9 +92,7 @@ impl Client {
     }
 
     #[doc = "Gets all virtual folders\n\nSends a `GET` request to `/Library/VirtualFolders`\n\n"]
-    pub async fn get_virtual_folders(
-        &self,
-    ) -> Result<Vec<types::VirtualFolderInfo>, Error> {
+    pub async fn get_virtual_folders(&self) -> Result<Vec<types::VirtualFolderInfo>, Error> {
         self.request(reqwest::Method::GET, "/Library/VirtualFolders".into())
             .send()
             .await
@@ -148,10 +135,13 @@ impl Client {
         &self,
         body: &types::UpdateLibraryOptionsDto,
     ) -> Result<(), Error> {
-        self.request(reqwest::Method::POST, "/Library/VirtualFolders/LibraryOptions".into())
-            .json_body(body)
-            .send_no_content()
-            .await
+        self.request(
+            reqwest::Method::POST,
+            "/Library/VirtualFolders/LibraryOptions".into(),
+        )
+        .json_body(body)
+        .send_no_content()
+        .await
     }
 
     #[doc = "Renames a virtual folder\n\nSends a `POST` request to `/Library/VirtualFolders/Name`\n\nArguments:\n- `name`: The name of the virtual folder.\n- `new_name`: The new name.\n- `refresh_library`: Whether to refresh the library.\n"]
@@ -175,11 +165,14 @@ impl Client {
         refresh_library: Option<bool>,
         body: &types::MediaPathDto,
     ) -> Result<(), Error> {
-        self.request(reqwest::Method::POST, "/Library/VirtualFolders/Paths".into())
-            .query_opt("refreshLibrary", refresh_library)
-            .json_body(body)
-            .send_no_content()
-            .await
+        self.request(
+            reqwest::Method::POST,
+            "/Library/VirtualFolders/Paths".into(),
+        )
+        .query_opt("refreshLibrary", refresh_library)
+        .json_body(body)
+        .send_no_content()
+        .await
     }
 
     #[doc = "Remove a media path\n\nSends a `DELETE` request to `/Library/VirtualFolders/Paths`\n\nArguments:\n- `name`: The name of the library.\n- `path`: The path to remove.\n- `refresh_library`: Whether to refresh the library.\n"]
@@ -189,12 +182,15 @@ impl Client {
         path: Option<&str>,
         refresh_library: Option<bool>,
     ) -> Result<(), Error> {
-        self.request(reqwest::Method::DELETE, "/Library/VirtualFolders/Paths".into())
-            .query_opt("name", name)
-            .query_opt("path", path)
-            .query_opt("refreshLibrary", refresh_library)
-            .send_no_content()
-            .await
+        self.request(
+            reqwest::Method::DELETE,
+            "/Library/VirtualFolders/Paths".into(),
+        )
+        .query_opt("name", name)
+        .query_opt("path", path)
+        .query_opt("refreshLibrary", refresh_library)
+        .send_no_content()
+        .await
     }
 
     #[doc = "Updates a media path\n\nSends a `POST` request to `/Library/VirtualFolders/Paths/Update`\n\nArguments:\n- `body`: The name of the library and path infos.\n"]
@@ -202,9 +198,12 @@ impl Client {
         &self,
         body: &types::UpdateMediaPathRequestDto,
     ) -> Result<(), Error> {
-        self.request(reqwest::Method::POST, "/Library/VirtualFolders/Paths/Update".into())
-            .json_body(body)
-            .send_no_content()
-            .await
+        self.request(
+            reqwest::Method::POST,
+            "/Library/VirtualFolders/Paths/Update".into(),
+        )
+        .json_body(body)
+        .send_no_content()
+        .await
     }
 }

@@ -259,9 +259,7 @@ pub async fn execute(
         }
         ArtistsCommand::Get { name, user_id: uid } => {
             let effective_uid = uid.as_ref().unwrap_or(user_id);
-            let result = client
-                .get_artist_by_name(name, Some(effective_uid))
-                .await?;
+            let result = client.get_artist_by_name(name, Some(effective_uid)).await?;
             crate::output::print_json(&result)?;
         }
         ArtistsCommand::AlbumArtists {

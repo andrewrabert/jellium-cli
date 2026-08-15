@@ -1,0 +1,9 @@
+{
+  "goog:chromeOptions": {
+    "args": [
+      "--headless=new",
+      "--no-sandbox",
+      "--enable-unsafe-swiftshader"
+    ]
+  }
+}

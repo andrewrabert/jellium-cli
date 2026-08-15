@@ -4,18 +4,10 @@ use super::*;
 #[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
 pub struct ForceKeepAliveMessage {
     #[doc = "Gets or sets the data."]
-    #[serde(
-        rename = "Data",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Data", default, skip_serializing_if = "Option::is_none")]
     pub data: Option<i32>,
     #[doc = "Gets or sets the message id."]
-    #[serde(
-        rename = "MessageId",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "MessageId", default, skip_serializing_if = "Option::is_none")]
     pub message_id: Option<uuid::Uuid>,
     #[serde(
         rename = "MessageType",
@@ -113,11 +105,7 @@ impl From<SessionsStopMessage> for InboundWebSocketMessage {
 #[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
 pub struct OutboundKeepAliveMessage {
     #[doc = "Gets or sets the message id."]
-    #[serde(
-        rename = "MessageId",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "MessageId", default, skip_serializing_if = "Option::is_none")]
     pub message_id: Option<uuid::Uuid>,
     #[serde(
         rename = "MessageType",
@@ -357,4 +345,3 @@ impl From<OutboundWebSocketMessage> for WebSocketMessage {
         Self::OutboundWebSocketMessage(value)
     }
 }
-

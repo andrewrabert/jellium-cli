@@ -1,6 +1,8 @@
 use super::*;
 
-#[derive(serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(
+    serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd,
+)]
 pub enum AudioSpatialFormat {
     None,
     DolbyAtmos,
@@ -39,18 +41,14 @@ impl TryFrom<&str> for AudioSpatialFormat {
 
 impl TryFrom<&String> for AudioSpatialFormat {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for AudioSpatialFormat {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
@@ -59,11 +57,7 @@ impl TryFrom<String> for AudioSpatialFormat {
 #[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
 pub struct ClientLogDocumentResponseDto {
     #[doc = "Gets the resulting filename."]
-    #[serde(
-        rename = "FileName",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "FileName", default, skip_serializing_if = "Option::is_none")]
     pub file_name: Option<String>,
 }
 
@@ -75,7 +69,9 @@ impl Default for ClientLogDocumentResponseDto {
     }
 }
 
-#[derive(serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(
+    serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd,
+)]
 pub enum CodecType {
     Video,
     VideoAudio,
@@ -113,18 +109,14 @@ impl TryFrom<&str> for CodecType {
 
 impl TryFrom<&String> for CodecType {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for CodecType {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
@@ -140,11 +132,7 @@ pub struct CountryInfo {
     )]
     pub display_name: Option<String>,
     #[doc = "Gets or sets the name."]
-    #[serde(
-        rename = "Name",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Name", default, skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
     #[doc = "Gets or sets the name of the three letter ISO region."]
     #[serde(
@@ -184,11 +172,7 @@ pub struct CultureDto {
     )]
     pub display_name: Option<String>,
     #[doc = "Gets the name."]
-    #[serde(
-        rename = "Name",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Name", default, skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
     #[doc = "Gets the name of the three letter ISO language."]
     #[serde(
@@ -228,18 +212,10 @@ impl Default for CultureDto {
 #[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
 pub struct CustomDatabaseOption {
     #[doc = "Gets or sets the key of the value."]
-    #[serde(
-        rename = "Key",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Key", default, skip_serializing_if = "Option::is_none")]
     pub key: Option<String>,
     #[doc = "Gets or sets the value."]
-    #[serde(
-        rename = "Value",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Value", default, skip_serializing_if = "Option::is_none")]
     pub value: Option<String>,
 }
 
@@ -263,11 +239,7 @@ pub struct CustomDatabaseOptions {
     )]
     pub connection_string: Option<String>,
     #[doc = "Gets or sets the list of extra options for the custom provider."]
-    #[serde(
-        rename = "Options",
-        default,
-        skip_serializing_if = "Vec::is_empty"
-    )]
+    #[serde(rename = "Options", default, skip_serializing_if = "Vec::is_empty")]
     pub options: Vec<CustomDatabaseOption>,
     #[doc = "Gets or sets the plugin assembly to search for providers."]
     #[serde(
@@ -296,7 +268,9 @@ impl Default for CustomDatabaseOptions {
     }
 }
 
-#[derive(serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(
+    serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd,
+)]
 pub enum DatabaseLockingBehaviorTypes {
     NoLock,
     Pessimistic,
@@ -334,23 +308,21 @@ impl TryFrom<&str> for DatabaseLockingBehaviorTypes {
 
 impl TryFrom<&String> for DatabaseLockingBehaviorTypes {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for DatabaseLockingBehaviorTypes {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
-#[derive(serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(
+    serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd,
+)]
 pub enum DayOfWeek {
     Sunday,
     Monday,
@@ -400,23 +372,21 @@ impl TryFrom<&str> for DayOfWeek {
 
 impl TryFrom<&String> for DayOfWeek {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for DayOfWeek {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
-#[derive(serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(
+    serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd,
+)]
 pub enum DayPattern {
     Daily,
     Weekdays,
@@ -454,18 +424,14 @@ impl TryFrom<&str> for DayPattern {
 
 impl TryFrom<&String> for DayPattern {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for DayPattern {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
@@ -474,11 +440,7 @@ impl TryFrom<String> for DayPattern {
 #[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
 pub struct DefaultDirectoryBrowserInfoDto {
     #[doc = "Gets or sets the path."]
-    #[serde(
-        rename = "Path",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Path", default, skip_serializing_if = "Option::is_none")]
     pub path: Option<String>,
 }
 
@@ -494,11 +456,7 @@ impl Default for DefaultDirectoryBrowserInfoDto {
 #[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
 pub struct DisplayPreferencesDto {
     #[doc = "Gets or sets the client."]
-    #[serde(
-        rename = "Client",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Client", default, skip_serializing_if = "Option::is_none")]
     pub client: Option<String>,
     #[doc = "Gets or sets the custom prefs."]
     #[serde(
@@ -506,23 +464,12 @@ pub struct DisplayPreferencesDto {
         default,
         skip_serializing_if = ":: std :: collections :: HashMap::is_empty"
     )]
-    pub custom_prefs: std::collections::HashMap<
-        String,
-        Option<String>,
-    >,
+    pub custom_prefs: std::collections::HashMap<String, Option<String>>,
     #[doc = "Gets or sets the user id."]
-    #[serde(
-        rename = "Id",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Id", default, skip_serializing_if = "Option::is_none")]
     pub id: Option<String>,
     #[doc = "Gets or sets the index by."]
-    #[serde(
-        rename = "IndexBy",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "IndexBy", default, skip_serializing_if = "Option::is_none")]
     pub index_by: Option<String>,
     #[doc = "Gets or sets the height of the primary image."]
     #[serde(
@@ -573,24 +520,12 @@ pub struct DisplayPreferencesDto {
     )]
     pub show_sidebar: Option<bool>,
     #[doc = "Gets or sets the sort by."]
-    #[serde(
-        rename = "SortBy",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "SortBy", default, skip_serializing_if = "Option::is_none")]
     pub sort_by: Option<String>,
-    #[serde(
-        rename = "SortOrder",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "SortOrder", default, skip_serializing_if = "Option::is_none")]
     pub sort_order: Option<SortOrder>,
     #[doc = "Gets or sets the type of the view."]
-    #[serde(
-        rename = "ViewType",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "ViewType", default, skip_serializing_if = "Option::is_none")]
     pub view_type: Option<String>,
 }
 
@@ -615,7 +550,9 @@ impl Default for DisplayPreferencesDto {
     }
 }
 
-#[derive(serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(
+    serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd,
+)]
 pub enum DynamicDayOfWeek {
     Sunday,
     Monday,
@@ -674,23 +611,21 @@ impl TryFrom<&str> for DynamicDayOfWeek {
 
 impl TryFrom<&String> for DynamicDayOfWeek {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for DynamicDayOfWeek {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
-#[derive(serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(
+    serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd,
+)]
 pub enum ExtraType {
     Unknown,
     Clip,
@@ -755,18 +690,14 @@ impl TryFrom<&str> for ExtraType {
 
 impl TryFrom<&String> for ExtraType {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for ExtraType {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
@@ -1377,7 +1308,9 @@ impl From<HeadVideoStreamVideoCodec> for String {
     }
 }
 
-#[derive(serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(
+    serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd,
+)]
 pub enum HardwareAccelerationType {
     #[serde(rename = "none")]
     None,
@@ -1438,23 +1371,21 @@ impl TryFrom<&str> for HardwareAccelerationType {
 
 impl TryFrom<&String> for HardwareAccelerationType {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for HardwareAccelerationType {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
-#[derive(serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(
+    serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd,
+)]
 pub enum ImageType {
     Primary,
     Art,
@@ -1522,23 +1453,21 @@ impl TryFrom<&str> for ImageType {
 
 impl TryFrom<&String> for ImageType {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for ImageType {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
-#[derive(serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(
+    serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd,
+)]
 pub enum IsoType {
     Dvd,
     BluRay,
@@ -1573,23 +1502,21 @@ impl TryFrom<&str> for IsoType {
 
 impl TryFrom<&String> for IsoType {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for IsoType {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
-#[derive(serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(
+    serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd,
+)]
 pub enum ItemFields {
     AirTime,
     CanDelete,
@@ -1766,23 +1693,21 @@ impl TryFrom<&str> for ItemFields {
 
 impl TryFrom<&String> for ItemFields {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for ItemFields {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
-#[derive(serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(
+    serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd,
+)]
 pub enum ItemFilter {
     IsFolder,
     IsNotFolder,
@@ -1838,23 +1763,21 @@ impl TryFrom<&str> for ItemFilter {
 
 impl TryFrom<&String> for ItemFilter {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for ItemFilter {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
-#[derive(serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(
+    serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd,
+)]
 pub enum ItemSortBy {
     Default,
     AiredEpisodeOrder,
@@ -1973,23 +1896,21 @@ impl TryFrom<&str> for ItemSortBy {
 
 impl TryFrom<&String> for ItemSortBy {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for ItemSortBy {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
-#[derive(serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(
+    serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd,
+)]
 pub enum KeepUntil {
     UntilDeleted,
     UntilSpaceNeeded,
@@ -2030,18 +1951,14 @@ impl TryFrom<&str> for KeepUntil {
 
 impl TryFrom<&String> for KeepUntil {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for KeepUntil {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
@@ -2049,17 +1966,9 @@ impl TryFrom<String> for KeepUntil {
 #[doc = "`LocalizationOption`"]
 #[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
 pub struct LocalizationOption {
-    #[serde(
-        rename = "Name",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Name", default, skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
-    #[serde(
-        rename = "Value",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Value", default, skip_serializing_if = "Option::is_none")]
     pub value: Option<String>,
 }
 
@@ -2072,7 +1981,9 @@ impl Default for LocalizationOption {
     }
 }
 
-#[derive(serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(
+    serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd,
+)]
 pub enum LocationType {
     FileSystem,
     Remote,
@@ -2113,23 +2024,21 @@ impl TryFrom<&str> for LocationType {
 
 impl TryFrom<&String> for LocationType {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for LocationType {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
-#[derive(serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(
+    serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd,
+)]
 pub enum LogLevel {
     Trace,
     Debug,
@@ -2179,23 +2088,21 @@ impl TryFrom<&str> for LogLevel {
 
 impl TryFrom<&String> for LogLevel {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for LogLevel {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
-#[derive(serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(
+    serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd,
+)]
 pub enum MediaProtocol {
     File,
     Http,
@@ -2245,23 +2152,21 @@ impl TryFrom<&str> for MediaProtocol {
 
 impl TryFrom<&String> for MediaProtocol {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for MediaProtocol {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
-#[derive(serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(
+    serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd,
+)]
 pub enum MediaType {
     Unknown,
     Video,
@@ -2305,23 +2210,21 @@ impl TryFrom<&str> for MediaType {
 
 impl TryFrom<&String> for MediaType {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for MediaType {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
-#[derive(serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(
+    serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd,
+)]
 pub enum MetadataField {
     Cast,
     Genres,
@@ -2377,18 +2280,14 @@ impl TryFrom<&str> for MetadataField {
 
 impl TryFrom<&String> for MetadataField {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for MetadataField {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
@@ -2407,8 +2306,7 @@ pub struct MetadataOptions {
         default,
         skip_serializing_if = "Option::is_none"
     )]
-    pub disabled_metadata_fetchers:
-        Option<Vec<String>>,
+    pub disabled_metadata_fetchers: Option<Vec<String>>,
     #[serde(
         rename = "DisabledMetadataSavers",
         default,
@@ -2421,19 +2319,14 @@ pub struct MetadataOptions {
         skip_serializing_if = "Option::is_none"
     )]
     pub image_fetcher_order: Option<Vec<String>>,
-    #[serde(
-        rename = "ItemType",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "ItemType", default, skip_serializing_if = "Option::is_none")]
     pub item_type: Option<String>,
     #[serde(
         rename = "LocalMetadataReaderOrder",
         default,
         skip_serializing_if = "Option::is_none"
     )]
-    pub local_metadata_reader_order:
-        Option<Vec<String>>,
+    pub local_metadata_reader_order: Option<Vec<String>>,
     #[serde(
         rename = "MetadataFetcherOrder",
         default,
@@ -2456,7 +2349,9 @@ impl Default for MetadataOptions {
     }
 }
 
-#[derive(serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(
+    serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd,
+)]
 pub enum MetadataRefreshMode {
     None,
     ValidationOnly,
@@ -2497,18 +2392,14 @@ impl TryFrom<&str> for MetadataRefreshMode {
 
 impl TryFrom<&String> for MetadataRefreshMode {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for MetadataRefreshMode {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
@@ -2517,18 +2408,10 @@ impl TryFrom<String> for MetadataRefreshMode {
 #[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
 pub struct NameIdPair {
     #[doc = "Gets or sets the identifier."]
-    #[serde(
-        rename = "Id",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Id", default, skip_serializing_if = "Option::is_none")]
     pub id: Option<String>,
     #[doc = "Gets or sets the name."]
-    #[serde(
-        rename = "Name",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Name", default, skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
 }
 
@@ -2545,11 +2428,7 @@ impl Default for NameIdPair {
 #[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
 pub struct ParentalRating {
     #[doc = "Gets or sets the name."]
-    #[serde(
-        rename = "Name",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Name", default, skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
     #[doc = "Gets or sets the rating score."]
     #[serde(
@@ -2559,11 +2438,7 @@ pub struct ParentalRating {
     )]
     pub rating_score: Option<ParentalRatingScore>,
     #[doc = "Gets or sets the value."]
-    #[serde(
-        rename = "Value",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Value", default, skip_serializing_if = "Option::is_none")]
     pub value: Option<i32>,
 }
 
@@ -2584,11 +2459,7 @@ pub struct ParentalRatingScore {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub score: Option<i32>,
     #[doc = "Gets or sets the sub score."]
-    #[serde(
-        rename = "subScore",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "subScore", default, skip_serializing_if = "Option::is_none")]
     pub sub_score: Option<i32>,
 }
 
@@ -2601,7 +2472,9 @@ impl Default for ParentalRatingScore {
     }
 }
 
-#[derive(serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(
+    serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd,
+)]
 pub enum PersonKind {
     Unknown,
     Actor,
@@ -2705,18 +2578,14 @@ impl TryFrom<&str> for PersonKind {
 
 impl TryFrom<&String> for PersonKind {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for PersonKind {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
@@ -2732,17 +2601,15 @@ pub struct ProblemDetails {
     pub status: Option<i32>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub title: Option<String>,
-    #[serde(
-        rename = "type",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "type", default, skip_serializing_if = "Option::is_none")]
     pub type_: Option<String>,
     #[serde(flatten)]
     pub extra: ::serde_json::Map<String, ::serde_json::Value>,
 }
 
-#[derive(serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(
+    serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd,
+)]
 pub enum ProcessPriorityClass {
     Normal,
     Idle,
@@ -2789,18 +2656,14 @@ impl TryFrom<&str> for ProcessPriorityClass {
 
 impl TryFrom<&String> for ProcessPriorityClass {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for ProcessPriorityClass {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
@@ -2808,17 +2671,9 @@ impl TryFrom<String> for ProcessPriorityClass {
 #[doc = "`QueryFilters`"]
 #[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
 pub struct QueryFilters {
-    #[serde(
-        rename = "Genres",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Genres", default, skip_serializing_if = "Option::is_none")]
     pub genres: Option<Vec<NameGuidPair>>,
-    #[serde(
-        rename = "Tags",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Tags", default, skip_serializing_if = "Option::is_none")]
     pub tags: Option<Vec<String>>,
 }
 
@@ -2834,11 +2689,7 @@ impl Default for QueryFilters {
 #[doc = "`QueryFiltersLegacy`"]
 #[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
 pub struct QueryFiltersLegacy {
-    #[serde(
-        rename = "Genres",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Genres", default, skip_serializing_if = "Option::is_none")]
     pub genres: Option<Vec<String>>,
     #[serde(
         rename = "OfficialRatings",
@@ -2846,17 +2697,9 @@ pub struct QueryFiltersLegacy {
         skip_serializing_if = "Option::is_none"
     )]
     pub official_ratings: Option<Vec<String>>,
-    #[serde(
-        rename = "Tags",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Tags", default, skip_serializing_if = "Option::is_none")]
     pub tags: Option<Vec<String>>,
-    #[serde(
-        rename = "Years",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Years", default, skip_serializing_if = "Option::is_none")]
     pub years: Option<Vec<i32>>,
 }
 
@@ -2871,7 +2714,9 @@ impl Default for QueryFiltersLegacy {
     }
 }
 
-#[derive(serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(
+    serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd,
+)]
 pub enum RatingType {
     Score,
     Likes,
@@ -2906,18 +2751,14 @@ impl TryFrom<&str> for RatingType {
 
 impl TryFrom<&String> for RatingType {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for RatingType {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
@@ -2937,11 +2778,7 @@ pub struct RecommendationDto {
         skip_serializing_if = "Option::is_none"
     )]
     pub category_id: Option<uuid::Uuid>,
-    #[serde(
-        rename = "Items",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Items", default, skip_serializing_if = "Option::is_none")]
     pub items: Option<Vec<BaseItemDto>>,
     #[serde(
         rename = "RecommendationType",
@@ -2962,7 +2799,9 @@ impl Default for RecommendationDto {
     }
 }
 
-#[derive(serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(
+    serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd,
+)]
 pub enum RecommendationType {
     SimilarToRecentlyPlayed,
     SimilarToLikedItem,
@@ -3009,18 +2848,14 @@ impl TryFrom<&str> for RecommendationType {
 
 impl TryFrom<&String> for RecommendationType {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for RecommendationType {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
@@ -3029,23 +2864,10 @@ impl TryFrom<String> for RecommendationType {
 #[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
 pub struct RefreshProgressMessage {
     #[doc = "Gets or sets the data."]
-    #[serde(
-        rename = "Data",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub data: Option<
-        std::collections::HashMap<
-            String,
-            Option<String>,
-        >,
-    >,
+    #[serde(rename = "Data", default, skip_serializing_if = "Option::is_none")]
+    pub data: Option<std::collections::HashMap<String, Option<String>>>,
     #[doc = "Gets or sets the message id."]
-    #[serde(
-        rename = "MessageId",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "MessageId", default, skip_serializing_if = "Option::is_none")]
     pub message_id: Option<uuid::Uuid>,
     #[serde(
         rename = "MessageType",
@@ -3065,7 +2887,9 @@ impl Default for RefreshProgressMessage {
     }
 }
 
-#[derive(serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(
+    serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd,
+)]
 pub enum ScrollDirection {
     Horizontal,
     Vertical,
@@ -3100,23 +2924,21 @@ impl TryFrom<&str> for ScrollDirection {
 
 impl TryFrom<&String> for ScrollDirection {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for ScrollDirection {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
-#[derive(serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(
+    serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd,
+)]
 pub enum SeriesStatus {
     Continuing,
     Ended,
@@ -3154,23 +2976,21 @@ impl TryFrom<&str> for SeriesStatus {
 
 impl TryFrom<&String> for SeriesStatus {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for SeriesStatus {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
-#[derive(serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(
+    serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd,
+)]
 pub enum SortOrder {
     Ascending,
     Descending,
@@ -3205,18 +3025,14 @@ impl TryFrom<&str> for SortOrder {
 
 impl TryFrom<&String> for SortOrder {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for SortOrder {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
@@ -3225,18 +3041,10 @@ impl TryFrom<String> for SortOrder {
 #[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
 pub struct SpecialViewOptionDto {
     #[doc = "Gets or sets view option id."]
-    #[serde(
-        rename = "Id",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Id", default, skip_serializing_if = "Option::is_none")]
     pub id: Option<String>,
     #[doc = "Gets or sets view option name."]
-    #[serde(
-        rename = "Name",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Name", default, skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
 }
 
@@ -3249,7 +3057,9 @@ impl Default for SpecialViewOptionDto {
     }
 }
 
-#[derive(serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(
+    serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd,
+)]
 pub enum TransportStreamTimestamp {
     None,
     Zero,
@@ -3287,23 +3097,21 @@ impl TryFrom<&str> for TransportStreamTimestamp {
 
 impl TryFrom<&String> for TransportStreamTimestamp {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for TransportStreamTimestamp {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
-#[derive(serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(
+    serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd,
+)]
 pub enum UnratedItem {
     Movie,
     Trailer,
@@ -3359,18 +3167,14 @@ impl TryFrom<&str> for UnratedItem {
 
 impl TryFrom<&String> for UnratedItem {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for UnratedItem {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
@@ -3386,11 +3190,7 @@ pub struct UserDataChangeInfo {
     )]
     pub user_data_list: Vec<UserItemDataDto>,
     #[doc = "Gets or sets the user id."]
-    #[serde(
-        rename = "UserId",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "UserId", default, skip_serializing_if = "Option::is_none")]
     pub user_id: Option<uuid::Uuid>,
 }
 
@@ -3407,18 +3207,10 @@ impl Default for UserDataChangeInfo {
 #[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
 pub struct UserDataChangedMessage {
     #[doc = "Class UserDataChangeInfo."]
-    #[serde(
-        rename = "Data",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Data", default, skip_serializing_if = "Option::is_none")]
     pub data: Option<UserDataChangeInfo>,
     #[doc = "Gets or sets the message id."]
-    #[serde(
-        rename = "MessageId",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "MessageId", default, skip_serializing_if = "Option::is_none")]
     pub message_id: Option<uuid::Uuid>,
     #[serde(
         rename = "MessageType",
@@ -3442,18 +3234,10 @@ impl Default for UserDataChangedMessage {
 #[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
 pub struct ValidatePathDto {
     #[doc = "Gets or sets is path file."]
-    #[serde(
-        rename = "IsFile",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "IsFile", default, skip_serializing_if = "Option::is_none")]
     pub is_file: Option<bool>,
     #[doc = "Gets or sets the path."]
-    #[serde(
-        rename = "Path",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Path", default, skip_serializing_if = "Option::is_none")]
     pub path: Option<String>,
     #[doc = "Gets or sets a value indicating whether validate if path is writable."]
     #[serde(
@@ -3474,7 +3258,9 @@ impl Default for ValidatePathDto {
     }
 }
 
-#[derive(serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(
+    serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd,
+)]
 pub enum Video3DFormat {
     HalfSideBySide,
     FullSideBySide,
@@ -3519,23 +3305,21 @@ impl TryFrom<&str> for Video3DFormat {
 
 impl TryFrom<&String> for Video3DFormat {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for Video3DFormat {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
-#[derive(serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(
+    serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd,
+)]
 pub enum VideoRange {
     Unknown,
     #[serde(rename = "SDR")]
@@ -3575,23 +3359,21 @@ impl TryFrom<&str> for VideoRange {
 
 impl TryFrom<&String> for VideoRange {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for VideoRange {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
-#[derive(serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(
+    serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd,
+)]
 pub enum VideoRangeType {
     Unknown,
     #[serde(rename = "SDR")]
@@ -3671,23 +3453,21 @@ impl TryFrom<&str> for VideoRangeType {
 
 impl TryFrom<&String> for VideoRangeType {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for VideoRangeType {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
-#[derive(serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(
+    serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd,
+)]
 pub enum VideoType {
     VideoFile,
     Iso,
@@ -3728,18 +3508,14 @@ impl TryFrom<&str> for VideoType {
 
 impl TryFrom<&String> for VideoType {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for VideoType {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
@@ -3771,11 +3547,7 @@ pub struct XbmcMetadataOptions {
         skip_serializing_if = "Option::is_none"
     )]
     pub save_image_paths_in_nfo: Option<bool>,
-    #[serde(
-        rename = "UserId",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "UserId", default, skip_serializing_if = "Option::is_none")]
     pub user_id: Option<String>,
 }
 
@@ -3790,4 +3562,3 @@ impl Default for XbmcMetadataOptions {
         }
     }
 }
-

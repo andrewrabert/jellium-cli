@@ -76,10 +76,7 @@ pub async fn execute(
                 .await?;
             crate::output::print_ndjson(&result.items)?;
         }
-        StudiosCommand::Get {
-            name,
-            user_id: uid,
-        } => {
+        StudiosCommand::Get { name, user_id: uid } => {
             let effective_uid = uid.as_ref().unwrap_or(user_id);
             let result = client.get_studio(name, Some(effective_uid)).await?;
             crate::output::print_json(&result)?;

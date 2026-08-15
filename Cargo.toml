@@ -1,5 +1,5 @@
 [workspace]
-members = ["jellyfin-api", "jellium-protocol", "jellium-cli"]
+members = ["jellyfin-api", "jellium-protocol", "jellium-model", "jellium-cli"]
 exclude = ["jellium-web"]
 resolver = "3"
 

@@ -1,7 +1,5 @@
 use clap::Subcommand;
-use jellyfin_api::types::{
-    ChannelType, ItemFields, ItemSortBy, RecordingStatus, SortOrder,
-};
+use jellyfin_api::types::{ChannelType, ItemFields, ItemSortBy, RecordingStatus, SortOrder};
 use uuid::Uuid;
 
 #[derive(Subcommand)]
@@ -564,9 +562,7 @@ pub async fn execute(
             user_id: uid,
         } => {
             let effective_uid = uid.as_ref().unwrap_or(user_id);
-            let result = client
-                .get_channel(channel_id, Some(effective_uid))
-                .await?;
+            let result = client.get_channel(channel_id, Some(effective_uid)).await?;
             crate::output::print_json(&result)?;
         }
         LiveTvCommand::GuideInfo => {
@@ -633,9 +629,7 @@ pub async fn execute(
             user_id: uid,
         } => {
             let effective_uid = uid.as_ref().unwrap_or(user_id);
-            let result = client
-                .get_program(program_id, Some(effective_uid))
-                .await?;
+            let result = client.get_program(program_id, Some(effective_uid)).await?;
             crate::output::print_json(&result)?;
         }
         LiveTvCommand::RecommendedPrograms {
@@ -732,16 +726,12 @@ pub async fn execute(
         }
         LiveTvCommand::RecordingFolders { user_id: uid } => {
             let effective_uid = uid.as_ref().unwrap_or(user_id);
-            let result = client
-                .get_recording_folders(Some(effective_uid))
-                .await?;
+            let result = client.get_recording_folders(Some(effective_uid)).await?;
             crate::output::print_json(&result)?;
         }
         LiveTvCommand::RecordingGroups { user_id: uid } => {
             let effective_uid = uid.as_ref().unwrap_or(user_id);
-            let result = client
-                .get_recording_groups(Some(effective_uid))
-                .await?;
+            let result = client.get_recording_groups(Some(effective_uid)).await?;
             crate::output::print_json(&result)?;
         }
         LiveTvCommand::RecordingGroup { group_id } => {
@@ -840,9 +830,7 @@ pub async fn execute(
             client.cancel_timer(timer_id).await?;
         }
         LiveTvCommand::DefaultTimer { program_id } => {
-            let result = client
-                .get_default_timer(program_id.as_deref())
-                .await?;
+            let result = client.get_default_timer(program_id.as_deref()).await?;
             crate::output::print_json(&result)?;
         }
         LiveTvCommand::AddListingProvider {
@@ -853,12 +841,7 @@ pub async fn execute(
             let body: jellyfin_api::types::ListingsProviderInfo =
                 serde_json::from_reader(std::io::stdin())?;
             let result = client
-                .add_listing_provider(
-                    pw.as_deref(),
-                    *validate_listings,
-                    *validate_login,
-                    &body,
-                )
+                .add_listing_provider(pw.as_deref(), *validate_listings, *validate_login, &body)
                 .await?;
             crate::output::print_json(&result)?;
         }
@@ -887,7 +870,7 @@ pub async fn execute(
         }
         LiveTvCommand::SchedulesDirectCountries => {
             let result = client.get_schedules_direct_countries().await?;
-            println!("{}", result);
+            crate::output::print_json(&result)?;
         }
         LiveTvCommand::AddTunerHost => {
             let body: jellyfin_api::types::TunerHostInfo =

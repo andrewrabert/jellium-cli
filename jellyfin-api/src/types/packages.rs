@@ -41,25 +41,13 @@ pub struct IPlugin {
     )]
     pub description: Option<String>,
     #[doc = "Gets the unique id."]
-    #[serde(
-        rename = "Id",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Id", default, skip_serializing_if = "Option::is_none")]
     pub id: Option<uuid::Uuid>,
     #[doc = "Gets the name of the plugin."]
-    #[serde(
-        rename = "Name",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Name", default, skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
     #[doc = "Gets the plugin version."]
-    #[serde(
-        rename = "Version",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Version", default, skip_serializing_if = "Option::is_none")]
     pub version: Option<String>,
 }
 
@@ -81,32 +69,16 @@ impl Default for IPlugin {
 #[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
 pub struct InstallationInfo {
     #[doc = "Gets or sets the changelog for this version."]
-    #[serde(
-        rename = "Changelog",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Changelog", default, skip_serializing_if = "Option::is_none")]
     pub changelog: Option<String>,
     #[doc = "Gets or sets a checksum for the binary."]
-    #[serde(
-        rename = "Checksum",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Checksum", default, skip_serializing_if = "Option::is_none")]
     pub checksum: Option<String>,
     #[doc = "Gets or sets the Id."]
-    #[serde(
-        rename = "Guid",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Guid", default, skip_serializing_if = "Option::is_none")]
     pub guid: Option<uuid::Uuid>,
     #[doc = "Gets or sets the name."]
-    #[serde(
-        rename = "Name",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Name", default, skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
     #[doc = "Gets or sets package information for the installation."]
     #[serde(
@@ -116,18 +88,10 @@ pub struct InstallationInfo {
     )]
     pub package_info: Option<PackageInfo>,
     #[doc = "Gets or sets the source URL."]
-    #[serde(
-        rename = "SourceUrl",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "SourceUrl", default, skip_serializing_if = "Option::is_none")]
     pub source_url: Option<String>,
     #[doc = "Gets or sets the version."]
-    #[serde(
-        rename = "Version",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Version", default, skip_serializing_if = "Option::is_none")]
     pub version: Option<String>,
 }
 
@@ -158,11 +122,7 @@ pub struct PackageInfo {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub guid: Option<uuid::Uuid>,
     #[doc = "Gets or sets the image url for the package."]
-    #[serde(
-        rename = "imageUrl",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "imageUrl", default, skip_serializing_if = "Option::is_none")]
     pub image_url: Option<String>,
     #[doc = "Gets or sets the name."]
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -218,38 +178,18 @@ pub struct PluginInfo {
     )]
     pub description: Option<String>,
     #[doc = "Gets or sets a value indicating whether this plugin has a valid image."]
-    #[serde(
-        rename = "HasImage",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "HasImage", default, skip_serializing_if = "Option::is_none")]
     pub has_image: Option<bool>,
     #[doc = "Gets or sets the unique id."]
-    #[serde(
-        rename = "Id",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Id", default, skip_serializing_if = "Option::is_none")]
     pub id: Option<uuid::Uuid>,
     #[doc = "Gets or sets the name."]
-    #[serde(
-        rename = "Name",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Name", default, skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
-    #[serde(
-        rename = "Status",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Status", default, skip_serializing_if = "Option::is_none")]
     pub status: Option<PluginStatus>,
     #[doc = "Gets or sets the version."]
-    #[serde(
-        rename = "Version",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Version", default, skip_serializing_if = "Option::is_none")]
     pub version: Option<String>,
 }
 
@@ -272,18 +212,10 @@ impl Default for PluginInfo {
 #[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
 pub struct PluginInstallationCancelledMessage {
     #[doc = "Class InstallationInfo."]
-    #[serde(
-        rename = "Data",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Data", default, skip_serializing_if = "Option::is_none")]
     pub data: Option<InstallationInfo>,
     #[doc = "Gets or sets the message id."]
-    #[serde(
-        rename = "MessageId",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "MessageId", default, skip_serializing_if = "Option::is_none")]
     pub message_id: Option<uuid::Uuid>,
     #[serde(
         rename = "MessageType",
@@ -307,18 +239,10 @@ impl Default for PluginInstallationCancelledMessage {
 #[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
 pub struct PluginInstallationCompletedMessage {
     #[doc = "Class InstallationInfo."]
-    #[serde(
-        rename = "Data",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Data", default, skip_serializing_if = "Option::is_none")]
     pub data: Option<InstallationInfo>,
     #[doc = "Gets or sets the message id."]
-    #[serde(
-        rename = "MessageId",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "MessageId", default, skip_serializing_if = "Option::is_none")]
     pub message_id: Option<uuid::Uuid>,
     #[serde(
         rename = "MessageType",
@@ -342,18 +266,10 @@ impl Default for PluginInstallationCompletedMessage {
 #[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
 pub struct PluginInstallationFailedMessage {
     #[doc = "Class InstallationInfo."]
-    #[serde(
-        rename = "Data",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Data", default, skip_serializing_if = "Option::is_none")]
     pub data: Option<InstallationInfo>,
     #[doc = "Gets or sets the message id."]
-    #[serde(
-        rename = "MessageId",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "MessageId", default, skip_serializing_if = "Option::is_none")]
     pub message_id: Option<uuid::Uuid>,
     #[serde(
         rename = "MessageType",
@@ -377,18 +293,10 @@ impl Default for PluginInstallationFailedMessage {
 #[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
 pub struct PluginInstallingMessage {
     #[doc = "Class InstallationInfo."]
-    #[serde(
-        rename = "Data",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Data", default, skip_serializing_if = "Option::is_none")]
     pub data: Option<InstallationInfo>,
     #[doc = "Gets or sets the message id."]
-    #[serde(
-        rename = "MessageId",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "MessageId", default, skip_serializing_if = "Option::is_none")]
     pub message_id: Option<uuid::Uuid>,
     #[serde(
         rename = "MessageType",
@@ -408,7 +316,9 @@ impl Default for PluginInstallingMessage {
     }
 }
 
-#[derive(serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(
+    serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd,
+)]
 pub enum PluginStatus {
     Active,
     Restart,
@@ -461,18 +371,14 @@ impl TryFrom<&str> for PluginStatus {
 
 impl TryFrom<&String> for PluginStatus {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for PluginStatus {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
@@ -481,18 +387,10 @@ impl TryFrom<String> for PluginStatus {
 #[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
 pub struct PluginUninstalledMessage {
     #[doc = "This is a serializable stub class that is used by the api to provide information about installed plugins."]
-    #[serde(
-        rename = "Data",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Data", default, skip_serializing_if = "Option::is_none")]
     pub data: Option<PluginInfo>,
     #[doc = "Gets or sets the message id."]
-    #[serde(
-        rename = "MessageId",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "MessageId", default, skip_serializing_if = "Option::is_none")]
     pub message_id: Option<uuid::Uuid>,
     #[serde(
         rename = "MessageType",
@@ -516,25 +414,13 @@ impl Default for PluginUninstalledMessage {
 #[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
 pub struct RepositoryInfo {
     #[doc = "Gets or sets a value indicating whether the repository is enabled."]
-    #[serde(
-        rename = "Enabled",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Enabled", default, skip_serializing_if = "Option::is_none")]
     pub enabled: Option<bool>,
     #[doc = "Gets or sets the name."]
-    #[serde(
-        rename = "Name",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Name", default, skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
     #[doc = "Gets or sets the URL."]
-    #[serde(
-        rename = "Url",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Url", default, skip_serializing_if = "Option::is_none")]
     pub url: Option<String>,
 }
 
@@ -572,18 +458,10 @@ pub struct VersionInfo {
     )]
     pub repository_url: Option<String>,
     #[doc = "Gets or sets the source URL."]
-    #[serde(
-        rename = "sourceUrl",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "sourceUrl", default, skip_serializing_if = "Option::is_none")]
     pub source_url: Option<String>,
     #[doc = "Gets or sets the ABI that this version was built against."]
-    #[serde(
-        rename = "targetAbi",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "targetAbi", default, skip_serializing_if = "Option::is_none")]
     pub target_abi: Option<String>,
     #[doc = "Gets or sets a timestamp of when the binary was built."]
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -615,4 +493,3 @@ impl Default for VersionInfo {
         }
     }
 }
-

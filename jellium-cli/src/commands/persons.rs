@@ -76,10 +76,7 @@ pub async fn execute(
                 .await?;
             crate::output::print_json(&result)?;
         }
-        PersonsCommand::Get {
-            name,
-            user_id: uid,
-        } => {
+        PersonsCommand::Get { name, user_id: uid } => {
             let effective_uid = uid.as_ref().unwrap_or(user_id);
             let result = client.get_person(name, Some(effective_uid)).await?;
             crate::output::print_json(&result)?;

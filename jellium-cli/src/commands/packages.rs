@@ -88,11 +88,7 @@ pub async fn execute(
             let result = client.get_repositories().await?;
             crate::output::print_json(&result)?;
         }
-        PackagesCommand::ReposSet {
-            name,
-            url,
-            enabled,
-        } => {
+        PackagesCommand::ReposSet { name, url, enabled } => {
             let repo = jellyfin_api::types::RepositoryInfo {
                 name: name.clone(),
                 url: url.clone(),

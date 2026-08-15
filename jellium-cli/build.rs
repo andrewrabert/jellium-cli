@@ -33,11 +33,8 @@ fn collect(root: &Path, dir: &Path, out: &mut Vec<(String, PathBuf)>) {
 
 fn build_bundle(out_dir: &Path) -> PathBuf {
     let dist = out_dir.join("jellium-web-dist");
-    let renderer = std::env::var("JELLIUM_WEB_RENDERER").unwrap_or_else(|_| "webgpu".to_string());
     let status = std::process::Command::new("trunk")
-        .args(["build", "--release", "--no-default-features", "--features"])
-        .arg(&renderer)
-        .arg("--dist")
+        .args(["build", "--release", "--dist"])
         .arg(&dist)
         .arg("../jellium-web/index.html")
         .status()
@@ -51,9 +48,10 @@ fn build_bundle(out_dir: &Path) -> PathBuf {
 
 fn main() {
     println!("cargo::rerun-if-env-changed=JELLIUM_WEB_DIST");
-    println!("cargo::rerun-if-env-changed=JELLIUM_WEB_RENDERER");
     println!("cargo::rerun-if-changed=../jellium-web/src");
     println!("cargo::rerun-if-changed=../jellium-web/strings");
+    println!("cargo::rerun-if-changed=../jellium-web/js");
+    println!("cargo::rerun-if-changed=../jellium-web/vendor");
     println!("cargo::rerun-if-changed=../jellium-web/index.html");
     println!("cargo::rerun-if-changed=../jellium-web/boot.js");
     println!("cargo::rerun-if-changed=../jellium-web/boot.css");

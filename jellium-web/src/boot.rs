@@ -1,32 +1,242 @@
+use std::cell::{Cell, RefCell};
+
+use wasm_bindgen::JsCast;
+use wasm_bindgen::prelude::Closure;
+
+use crate::failure::{self, Cause, Failure};
 use crate::text::{self, Text};
 
+thread_local! {
+    /// The retry control's one click handler, installed the first time the
+    /// control is shown and kept for the life of the page.
+    static RETRY: RefCell<Option<Closure<dyn FnMut()>>> = const { RefCell::new(None) };
+
+    /// True while a `start` is in flight, which is what keeps a second click
+    /// from running the application twice.
+    static STARTING: Cell<bool> = const { Cell::new(false) };
+}
+
+/// The graphics API a backend runs on.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Api {
+    WebGpu,
+    WebGl2,
+}
+
+impl std::fmt::Display for Api {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(match self {
+            Api::WebGpu => "WebGPU",
+            Api::WebGl2 => "WebGL2",
+        })
+    }
+}
+
+/// The graphics backend the pre-flight found.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Backend {
+    pub api: Api,
+    /// The adapter as wgpu names it.
+    pub adapter: String,
+    /// The driver as wgpu names it.
+    pub driver: String,
+}
+
+impl std::fmt::Display for Backend {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{} on {} ({})", self.api, self.adapter, self.driver)
+    }
+}
+
 fn boot_element() -> Option<web_sys::Element> {
-    web_sys::window()?.document()?.get_element_by_id("jellium-boot")
+    web_sys::window()?
+        .document()?
+        .get_element_by_id("jellium-boot")
 }
 
 pub fn hide_static_page() {
     if let Some(element) = boot_element() {
-        let _ = element.set_attribute("hidden", "");
+        failure::called("Element.setAttribute", element.set_attribute("hidden", ""));
     }
 }
 
-pub fn report_failure(key: Text) {
-    let Some(document) = web_sys::window().and_then(|w| w.document()) else {
+/// Shows `sentence` on the boot page, with the retry control shown only when
+/// `retry` is offered.
+fn show(sentence: &str, retry: bool) {
+    let Some(document) = web_sys::window().and_then(|window| window.document()) else {
         return;
     };
     if let Some(message) = document.get_element_by_id("jellium-boot-message") {
-        message.set_text_content(Some(text::lookup(key)));
+        message.set_text_content(Some(sentence));
     }
     if let Some(element) = document.get_element_by_id("jellium-boot") {
-        let _ = element.remove_attribute("hidden");
-        let _ = element.set_attribute("data-state", "failed");
+        failure::called(
+            "Element.removeAttribute",
+            element.remove_attribute("hidden"),
+        );
+        failure::called(
+            "Element.setAttribute",
+            element.set_attribute("data-state", "failed"),
+        );
+    }
+    let Some(button) = document.get_element_by_id("jellium-boot-retry") else {
+        return;
+    };
+    if !retry {
+        failure::called("Element.setAttribute", button.set_attribute("hidden", ""));
+        return;
+    }
+    RETRY.with(|held| {
+        if held.borrow().is_some() {
+            return;
+        }
+        let again = Closure::<dyn FnMut()>::new(|| {
+            wasm_bindgen_futures::spawn_local(start());
+        });
+        failure::called(
+            "addEventListener",
+            button
+                .unchecked_ref::<web_sys::EventTarget>()
+                .add_event_listener_with_callback("click", again.as_ref().unchecked_ref()),
+        );
+        *held.borrow_mut() = Some(again);
+    });
+    failure::called("Element.removeAttribute", button.remove_attribute("hidden"));
+}
+
+/// Renders `sentence` on the boot page and shows the retry that re-runs
+/// `start` in this page.
+/// The retry's click handler is installed once and kept for the life of the
+/// page, so a second refusal adds no second handler.
+pub fn refuse(sentence: &str) {
+    show(sentence, true);
+}
+
+/// Renders `sentence` on the boot page with no retry, which is what a trapped
+/// module gets.
+pub fn stopped(sentence: &str) {
+    show(sentence, false);
+}
+
+/// The string a WebGL2 context answers for `parameter`, or `unknown`.
+fn gl_parameter(context: &wasm_bindgen::JsValue, parameter: u32) -> String {
+    let Some(get) = failure::called(
+        "Reflect.get",
+        js_sys::Reflect::get(context, &"getParameter".into()),
+    ) else {
+        return "unknown".to_owned();
+    };
+    let Some(get) = get.dyn_ref::<js_sys::Function>() else {
+        return "unknown".to_owned();
+    };
+    match failure::called("WebGL2.getParameter", get.call1(context, &parameter.into())) {
+        Some(value) => value.as_string().unwrap_or_else(|| "unknown".to_owned()),
+        None => "unknown".to_owned(),
     }
 }
 
-pub fn install_panic_hook() {
-    let previous = std::panic::take_hook();
-    std::panic::set_hook(Box::new(move |info| {
-        report_failure(Text::BootRendererFailed);
-        previous(info);
-    }));
+/// A WebGL2 context on a throwaway canvas, and `None` where the browser offers
+/// none.
+fn webgl2_context() -> Option<wasm_bindgen::JsValue> {
+    let document = web_sys::window()?.document()?;
+    let canvas = failure::called("Document.createElement", document.create_element("canvas"))?;
+    let get = failure::called(
+        "Reflect.get",
+        js_sys::Reflect::get(canvas.as_ref(), &"getContext".into()),
+    )?;
+    let context = failure::called(
+        "HTMLCanvasElement.getContext",
+        get.dyn_ref::<js_sys::Function>()?
+            .call1(canvas.as_ref(), &"webgl2".into()),
+    )?;
+    if context.is_null() || context.is_undefined() {
+        return None;
+    }
+    Some(context)
+}
+
+/// Requests a WebGPU adapter through wgpu's own browser detection and probes
+/// for a WebGL2 context, answering the backend iced will run on.
+/// A browser offering neither answers wgpu's refusal as the machine cause.
+pub async fn preflight() -> Result<Backend, String> {
+    let instance = wgpu::Instance::new(&wgpu::InstanceDescriptor {
+        backends: wgpu::Backends::BROWSER_WEBGPU,
+        ..Default::default()
+    });
+    let refusal = match instance
+        .request_adapter(&wgpu::RequestAdapterOptions::default())
+        .await
+    {
+        Ok(adapter) => {
+            let info = adapter.get_info();
+            return Ok(Backend {
+                api: Api::WebGpu,
+                adapter: info.name,
+                driver: format!("{} {}", info.driver, info.driver_info)
+                    .trim()
+                    .to_owned(),
+            });
+        }
+        Err(refused) => refused.to_string(),
+    };
+
+    const RENDERER: u32 = 0x1F01;
+    const VERSION: u32 = 0x1F02;
+    match webgl2_context() {
+        Some(context) => Ok(Backend {
+            api: Api::WebGl2,
+            adapter: gl_parameter(&context, RENDERER),
+            driver: gl_parameter(&context, VERSION),
+        }),
+        None => Err(refusal),
+    }
+}
+
+/// Pre-flights the backends, writes the one it found to the console and runs
+/// the application on it; a browser offering neither renders the refusal on
+/// the boot page and starts nothing.
+/// A `start` already in flight answers at once, so no click and no retry ever
+/// runs the application twice.
+/// An `Err` from the run itself is raised as a failure.
+pub async fn start() {
+    if STARTING.with(|held| held.replace(true)) {
+        return;
+    }
+    let backend = match preflight().await {
+        Ok(backend) => backend,
+        Err(refusal) => {
+            STARTING.with(|held| held.set(false));
+            let failure = Failure::told(Text::BootNoBackend, Cause::Graphics { detail: refusal });
+            failure::record(&failure);
+            refuse(&failure.sentence);
+            return;
+        }
+    };
+    web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&format!(
+        "Jellium Web graphics backend: {backend}"
+    )));
+
+    let run = iced::application(
+        crate::app::Jellium::boot,
+        crate::app::Jellium::update,
+        crate::app::Jellium::view,
+    )
+    .title(crate::app::Jellium::title)
+    .theme(crate::app::Jellium::theme)
+    .style(crate::app::Jellium::style)
+    .subscription(crate::app::Jellium::subscription)
+    .transparent(true)
+    .run();
+
+    STARTING.with(|held| held.set(false));
+    if let Err(error) = run {
+        let failure = Failure::saying(
+            text::format(Text::BootPanicked, &[&error.to_string()]),
+            Cause::Graphics {
+                detail: error.to_string(),
+            },
+        );
+        failure::record(&failure);
+        refuse(&failure.sentence);
+    }
 }

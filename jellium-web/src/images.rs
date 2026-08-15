@@ -3,17 +3,32 @@ use std::collections::{HashMap, HashSet};
 use uuid::Uuid;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-#[allow(dead_code, reason = "Backdrop is part of the image key surface")]
+#[allow(
+    dead_code,
+    reason = "the seven relayed image kinds are the image key surface"
+)]
 pub enum Kind {
     Primary,
     Backdrop,
+    Thumb,
+    Logo,
+    Banner,
+    Art,
+    Chapter,
+    /// A user's profile image, fetched from the user image route.
+    User,
 }
 
 impl Kind {
     pub fn as_str(self) -> &'static str {
         match self {
-            Kind::Primary => "Primary",
+            Kind::Primary | Kind::User => "Primary",
             Kind::Backdrop => "Backdrop",
+            Kind::Thumb => "Thumb",
+            Kind::Logo => "Logo",
+            Kind::Banner => "Banner",
+            Kind::Art => "Art",
+            Kind::Chapter => "Chapter",
         }
     }
 }
@@ -22,7 +37,90 @@ impl Kind {
 pub struct Key {
     pub item: Uuid,
     pub kind: Kind,
+    /// The index within the kind, and `None` for the first.
+    pub index: Option<i32>,
     pub width: u16,
+}
+
+/// The same-origin relay url an image key is fetched from: a `Kind::User` key
+/// from the user image route, and every other key from the item image route.
+pub fn url(key: Key) -> String {
+    let origin = web_sys::window()
+        .expect("a browser window")
+        .location()
+        .origin()
+        .expect("the page has an origin");
+    let prefix = jellium_protocol::RELAY_PREFIX;
+    let collection = if key.kind == Kind::User {
+        "Users"
+    } else {
+        "Items"
+    };
+    let index = match key.index {
+        Some(index) => format!("/{index}"),
+        None => String::new(),
+    };
+    format!(
+        "{origin}{prefix}/{collection}/{}/Images/{}{index}?fillWidth={}",
+        key.item,
+        key.kind.as_str(),
+        key.width,
+    )
+}
+
+/// The same-origin url a foreign image is fetched from.
+pub fn foreign_url(handle: &str) -> String {
+    let origin = web_sys::window()
+        .expect("a browser window")
+        .location()
+        .origin()
+        .expect("the page has an origin");
+    format!("{origin}{}/{handle}", jellium_protocol::FOREIGN_PREFIX)
+}
+
+/// The images the local server minted handles for, held by handle.
+#[derive(Default)]
+pub struct Foreign {
+    held: HashMap<String, iced::widget::image::Handle>,
+    in_flight: HashSet<String>,
+}
+
+impl Foreign {
+    pub fn new() -> Foreign {
+        Foreign::default()
+    }
+
+    /// The image `handle` names, and `None` while it is missing or in flight.
+    pub fn handle(&self, handle: &str) -> Option<iced::widget::image::Handle> {
+        self.held.get(handle).cloned()
+    }
+
+    /// Records a fetch as started; false when one is in flight or the image is
+    /// held.
+    pub fn begin(&mut self, handle: &str) -> bool {
+        !self.held.contains_key(handle) && self.in_flight.insert(handle.to_owned())
+    }
+
+    pub fn store(&mut self, handle: &str, bytes: Vec<u8>) {
+        if !self.in_flight.remove(handle) {
+            return;
+        }
+        self.held.insert(
+            handle.to_owned(),
+            iced::widget::image::Handle::from_bytes(bytes),
+        );
+    }
+
+    /// Clears the in-flight mark; a handle the local server does not hold is
+    /// drawn as a missing image and is not asked for again.
+    pub fn missing(&mut self, handle: &str) {
+        self.in_flight.remove(handle);
+    }
+
+    pub fn retain(&mut self, keep: &HashSet<String>) {
+        self.held.retain(|handle, _| keep.contains(handle));
+        self.in_flight.retain(|handle| keep.contains(handle));
+    }
 }
 
 #[derive(Default)]

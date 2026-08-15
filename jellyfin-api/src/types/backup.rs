@@ -1,4 +1,3 @@
-
 #[doc = "Manifest type for backups internal structure."]
 #[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
 pub struct BackupManifestDto {
@@ -17,18 +16,10 @@ pub struct BackupManifestDto {
     )]
     pub date_created: Option<chrono::DateTime<chrono::Utc>>,
     #[doc = "Gets or sets the contents of the backup archive."]
-    #[serde(
-        rename = "Options",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Options", default, skip_serializing_if = "Option::is_none")]
     pub options: Option<BackupOptionsDto>,
     #[doc = "Gets or sets the path to the backup on the system."]
-    #[serde(
-        rename = "Path",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Path", default, skip_serializing_if = "Option::is_none")]
     pub path: Option<String>,
     #[doc = "Gets or sets the jellyfin version this backup was created with."]
     #[serde(
@@ -55,32 +46,16 @@ impl Default for BackupManifestDto {
 #[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
 pub struct BackupOptionsDto {
     #[doc = "Gets or sets a value indicating whether the archive contains the Database contents."]
-    #[serde(
-        rename = "Database",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Database", default, skip_serializing_if = "Option::is_none")]
     pub database: Option<bool>,
     #[doc = "Gets or sets a value indicating whether the archive contains the Metadata contents."]
-    #[serde(
-        rename = "Metadata",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Metadata", default, skip_serializing_if = "Option::is_none")]
     pub metadata: Option<bool>,
     #[doc = "Gets or sets a value indicating whether the archive contains the Subtitle contents."]
-    #[serde(
-        rename = "Subtitles",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Subtitles", default, skip_serializing_if = "Option::is_none")]
     pub subtitles: Option<bool>,
     #[doc = "Gets or sets a value indicating whether the archive contains the Trickplay contents."]
-    #[serde(
-        rename = "Trickplay",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Trickplay", default, skip_serializing_if = "Option::is_none")]
     pub trickplay: Option<bool>,
 }
 
@@ -114,4 +89,3 @@ impl Default for BackupRestoreRequestDto {
         }
     }
 }
-

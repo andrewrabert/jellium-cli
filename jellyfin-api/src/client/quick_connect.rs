@@ -1,6 +1,6 @@
-use crate::types;
-use crate::error::Error;
 use crate::Client;
+use crate::error::Error;
+use crate::types;
 
 impl Client {
     #[doc = "Authorizes a pending quick connect request\n\nSends a `POST` request to `/QuickConnect/Authorize`\n\nArguments:\n- `code`: Quick connect code to authorize.\n- `user_id`: The user the authorize. Access to the requested user is required.\n"]
@@ -35,9 +35,7 @@ impl Client {
     }
 
     #[doc = "Initiate a new quick connect request\n\nSends a `POST` request to `/QuickConnect/Initiate`\n\n"]
-    pub async fn initiate_quick_connect(
-        &self,
-    ) -> Result<types::QuickConnectResult, Error> {
+    pub async fn initiate_quick_connect(&self) -> Result<types::QuickConnectResult, Error> {
         self.request(reqwest::Method::POST, "/QuickConnect/Initiate".into())
             .send()
             .await

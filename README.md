@@ -103,6 +103,9 @@ jellium-cli api /Users/Me
 
 ## Development
 
+Jellium Web bundles a pinned copy of [hls.js](https://github.com/video-dev/hls.js)
+under `jellium-web/vendor/`; building the binary needs trunk and no Node.
+
 This project uses [just](https://github.com/casey/just) as a command runner.
 ```
 Available recipes:

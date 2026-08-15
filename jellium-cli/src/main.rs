@@ -362,7 +362,7 @@ async fn resolve_client(
     }
 
     let sess = session::SessionFile::load(&session::SessionFile::default_path())?
-        .server(0)
+        .active()
         .ok_or("no saved session; run `jellium-cli login` first")?;
     Ok((
         build_client(&sess.server, &sess.token, cli.verbose),
@@ -412,14 +412,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             None => session::SessionFile::default_path(),
         };
         session::SessionFile::update(&path, |file| {
-            file.set_server(
-                0,
-                &session::Session {
-                    server,
-                    token,
-                    user_id,
-                },
-            )
+            file.set_server(&session::Session {
+                server,
+                token,
+                user_id,
+            })
         })?;
         println!(
             "Logged in successfully. Session saved to {}.",
@@ -430,7 +427,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     if matches!(&cli.command, Command::Logout) {
         let path = session::SessionFile::default_path();
-        session::SessionFile::update(&path, |file| file.remove_server(0))?;
+        session::SessionFile::update(&path, |file| file.clear_credential(0))?;
         println!("Logged out. Session removed.");
         return Ok(());
     }

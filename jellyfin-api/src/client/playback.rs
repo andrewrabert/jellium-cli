@@ -1,14 +1,11 @@
-use crate::types;
-use crate::error::Error;
-use crate::util::encode_path;
 use crate::Client;
+use crate::error::Error;
+use crate::types;
+use crate::util::encode_path;
 
 impl Client {
     #[doc = "Closes a media source\n\nSends a `POST` request to `/LiveStreams/Close`\n\nArguments:\n- `live_stream_id`: The livestream id.\n"]
-    pub async fn close_live_stream(
-        &self,
-        live_stream_id: &str,
-    ) -> Result<(), Error> {
+    pub async fn close_live_stream(&self, live_stream_id: &str) -> Result<(), Error> {
         self.request(reqwest::Method::POST, "/LiveStreams/Close".into())
             .query("liveStreamId", live_stream_id)
             .send_no_content()
@@ -33,7 +30,10 @@ impl Client {
         body: &types::OpenLiveStreamDto,
     ) -> Result<types::LiveStreamResponse, Error> {
         self.request(reqwest::Method::POST, "/LiveStreams/Open".into())
-            .query_opt("alwaysBurnInSubtitleWhenTranscoding", always_burn_in_subtitle_when_transcoding)
+            .query_opt(
+                "alwaysBurnInSubtitleWhenTranscoding",
+                always_burn_in_subtitle_when_transcoding,
+            )
             .query_opt("audioStreamIndex", audio_stream_index)
             .query_opt("enableDirectPlay", enable_direct_play)
             .query_opt("enableDirectStream", enable_direct_stream)
@@ -73,16 +73,19 @@ impl Client {
         play_session_id: Option<&str>,
         subtitle_stream_index: Option<i32>,
     ) -> Result<(), Error> {
-        self.request(reqwest::Method::POST, format!("/PlayingItems/{}", encode_path(&item_id.to_string())))
-            .query_opt("audioStreamIndex", audio_stream_index)
-            .query_opt("canSeek", can_seek)
-            .query_opt("liveStreamId", live_stream_id)
-            .query_opt("mediaSourceId", media_source_id)
-            .query_opt("playMethod", play_method)
-            .query_opt("playSessionId", play_session_id)
-            .query_opt("subtitleStreamIndex", subtitle_stream_index)
-            .send_no_content()
-            .await
+        self.request(
+            reqwest::Method::POST,
+            format!("/PlayingItems/{}", encode_path(&item_id.to_string())),
+        )
+        .query_opt("audioStreamIndex", audio_stream_index)
+        .query_opt("canSeek", can_seek)
+        .query_opt("liveStreamId", live_stream_id)
+        .query_opt("mediaSourceId", media_source_id)
+        .query_opt("playMethod", play_method)
+        .query_opt("playSessionId", play_session_id)
+        .query_opt("subtitleStreamIndex", subtitle_stream_index)
+        .send_no_content()
+        .await
     }
 
     #[doc = "Reports that a session has stopped playing an item\n\nSends a `DELETE` request to `/PlayingItems/{itemId}`\n\nArguments:\n- `item_id`: Item id.\n- `live_stream_id`: The live stream id.\n- `media_source_id`: The id of the MediaSource.\n- `next_media_type`: The next media type that will play.\n- `play_session_id`: The play session id.\n- `position_ticks`: Optional. The position, in ticks, where playback stopped. 1 tick = 10000 ms.\n"]
@@ -95,14 +98,17 @@ impl Client {
         play_session_id: Option<&str>,
         position_ticks: Option<i64>,
     ) -> Result<(), Error> {
-        self.request(reqwest::Method::DELETE, format!("/PlayingItems/{}", encode_path(&item_id.to_string())))
-            .query_opt("liveStreamId", live_stream_id)
-            .query_opt("mediaSourceId", media_source_id)
-            .query_opt("nextMediaType", next_media_type)
-            .query_opt("playSessionId", play_session_id)
-            .query_opt("positionTicks", position_ticks)
-            .send_no_content()
-            .await
+        self.request(
+            reqwest::Method::DELETE,
+            format!("/PlayingItems/{}", encode_path(&item_id.to_string())),
+        )
+        .query_opt("liveStreamId", live_stream_id)
+        .query_opt("mediaSourceId", media_source_id)
+        .query_opt("nextMediaType", next_media_type)
+        .query_opt("playSessionId", play_session_id)
+        .query_opt("positionTicks", position_ticks)
+        .send_no_content()
+        .await
     }
 
     #[doc = "Reports a session's playback progress\n\nSends a `POST` request to `/PlayingItems/{itemId}/Progress`\n\nArguments:\n- `item_id`: Item id.\n- `audio_stream_index`: The audio stream index.\n- `is_muted`: Indicates if the player is muted.\n- `is_paused`: Indicates if the player is paused.\n- `live_stream_id`: The live stream id.\n- `media_source_id`: The id of the MediaSource.\n- `play_method`: The play method.\n- `play_session_id`: The play session id.\n- `position_ticks`: Optional. The current position, in ticks. 1 tick = 10000 ms.\n- `repeat_mode`: The repeat mode.\n- `subtitle_stream_index`: The subtitle stream index.\n- `volume_level`: Scale of 0-100.\n"]
@@ -121,19 +127,25 @@ impl Client {
         subtitle_stream_index: Option<i32>,
         volume_level: Option<i32>,
     ) -> Result<(), Error> {
-        self.request(reqwest::Method::POST, format!("/PlayingItems/{}/Progress", encode_path(&item_id.to_string())))
-            .query_opt("audioStreamIndex", audio_stream_index)
-            .query_opt("isMuted", is_muted)
-            .query_opt("isPaused", is_paused)
-            .query_opt("liveStreamId", live_stream_id)
-            .query_opt("mediaSourceId", media_source_id)
-            .query_opt("playMethod", play_method)
-            .query_opt("playSessionId", play_session_id)
-            .query_opt("positionTicks", position_ticks)
-            .query_opt("repeatMode", repeat_mode)
-            .query_opt("subtitleStreamIndex", subtitle_stream_index)
-            .query_opt("volumeLevel", volume_level)
-            .send_no_content()
-            .await
+        self.request(
+            reqwest::Method::POST,
+            format!(
+                "/PlayingItems/{}/Progress",
+                encode_path(&item_id.to_string())
+            ),
+        )
+        .query_opt("audioStreamIndex", audio_stream_index)
+        .query_opt("isMuted", is_muted)
+        .query_opt("isPaused", is_paused)
+        .query_opt("liveStreamId", live_stream_id)
+        .query_opt("mediaSourceId", media_source_id)
+        .query_opt("playMethod", play_method)
+        .query_opt("playSessionId", play_session_id)
+        .query_opt("positionTicks", position_ticks)
+        .query_opt("repeatMode", repeat_mode)
+        .query_opt("subtitleStreamIndex", subtitle_stream_index)
+        .query_opt("volumeLevel", volume_level)
+        .send_no_content()
+        .await
     }
 }

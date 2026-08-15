@@ -25,7 +25,9 @@ pub async fn execute(
             crate::output::print_json(&result)?;
         }
         ConfigCommand::GetNamed { key } => {
-            let result = client.get_named_configuration(&key).await?;
+            let result = client
+                .get_named_configuration::<serde_json::Value>(&key)
+                .await?;
             crate::output::print_json(&result)?;
         }
         ConfigCommand::MetadataDefaults => {

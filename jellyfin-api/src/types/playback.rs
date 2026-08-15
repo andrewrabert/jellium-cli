@@ -1,6 +1,8 @@
 use super::*;
 
-#[derive(serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(
+    serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd,
+)]
 pub enum GroupRepeatMode {
     RepeatOne,
     RepeatAll,
@@ -38,18 +40,14 @@ impl TryFrom<&str> for GroupRepeatMode {
 
 impl TryFrom<&String> for GroupRepeatMode {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for GroupRepeatMode {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
@@ -119,11 +117,7 @@ pub struct OpenLiveStreamDto {
     )]
     pub enable_direct_stream: Option<bool>,
     #[doc = "Gets or sets the item id."]
-    #[serde(
-        rename = "ItemId",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "ItemId", default, skip_serializing_if = "Option::is_none")]
     pub item_id: Option<uuid::Uuid>,
     #[doc = "Gets or sets the max audio channels."]
     #[serde(
@@ -140,11 +134,7 @@ pub struct OpenLiveStreamDto {
     )]
     pub max_streaming_bitrate: Option<i32>,
     #[doc = "Gets or sets the open token."]
-    #[serde(
-        rename = "OpenToken",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "OpenToken", default, skip_serializing_if = "Option::is_none")]
     pub open_token: Option<String>,
     #[doc = "Gets or sets the play session id."]
     #[serde(
@@ -168,11 +158,7 @@ pub struct OpenLiveStreamDto {
     )]
     pub subtitle_stream_index: Option<i32>,
     #[doc = "Gets or sets the user id."]
-    #[serde(
-        rename = "UserId",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "UserId", default, skip_serializing_if = "Option::is_none")]
     pub user_id: Option<uuid::Uuid>,
 }
 
@@ -197,7 +183,9 @@ impl Default for OpenLiveStreamDto {
     }
 }
 
-#[derive(serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(
+    serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd,
+)]
 pub enum PlayAccess {
     Full,
     None,
@@ -232,18 +220,14 @@ impl TryFrom<&str> for PlayAccess {
 
 impl TryFrom<&String> for PlayAccess {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for PlayAccess {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
@@ -252,18 +236,10 @@ impl TryFrom<String> for PlayAccess {
 #[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
 pub struct PlayMessage {
     #[doc = "Class PlayRequest."]
-    #[serde(
-        rename = "Data",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Data", default, skip_serializing_if = "Option::is_none")]
     pub data: Option<PlayRequest>,
     #[doc = "Gets or sets the message id."]
-    #[serde(
-        rename = "MessageId",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "MessageId", default, skip_serializing_if = "Option::is_none")]
     pub message_id: Option<uuid::Uuid>,
     #[serde(
         rename = "MessageType",
@@ -283,7 +259,9 @@ impl Default for PlayMessage {
     }
 }
 
-#[derive(serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(
+    serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd,
+)]
 pub enum PlayMethod {
     Transcode,
     DirectStream,
@@ -321,18 +299,14 @@ impl TryFrom<&str> for PlayMethod {
 
 impl TryFrom<&String> for PlayMethod {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for PlayMethod {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
@@ -341,11 +315,7 @@ impl TryFrom<String> for PlayMethod {
 #[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
 pub struct PlayQueueUpdate {
     #[doc = "Gets a value indicating whether the current item is playing."]
-    #[serde(
-        rename = "IsPlaying",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "IsPlaying", default, skip_serializing_if = "Option::is_none")]
     pub is_playing: Option<bool>,
     #[doc = "Gets the UTC time of the last change to the playing queue."]
     #[serde(
@@ -362,17 +332,9 @@ pub struct PlayQueueUpdate {
     )]
     pub playing_item_index: Option<i32>,
     #[doc = "Gets the playlist."]
-    #[serde(
-        rename = "Playlist",
-        default,
-        skip_serializing_if = "Vec::is_empty"
-    )]
+    #[serde(rename = "Playlist", default, skip_serializing_if = "Vec::is_empty")]
     pub playlist: Vec<SyncPlayQueueItem>,
-    #[serde(
-        rename = "Reason",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Reason", default, skip_serializing_if = "Option::is_none")]
     pub reason: Option<PlayQueueUpdateReason>,
     #[serde(
         rename = "RepeatMode",
@@ -410,7 +372,9 @@ impl Default for PlayQueueUpdate {
     }
 }
 
-#[derive(serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(
+    serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd,
+)]
 pub enum PlayQueueUpdateReason {
     NewPlaylist,
     SetCurrentItem,
@@ -469,18 +433,14 @@ impl TryFrom<&str> for PlayQueueUpdateReason {
 
 impl TryFrom<&String> for PlayQueueUpdateReason {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for PlayQueueUpdateReason {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
@@ -502,11 +462,7 @@ pub struct PlayRequest {
     )]
     pub controlling_user_id: Option<uuid::Uuid>,
     #[doc = "Gets or sets the item ids."]
-    #[serde(
-        rename = "ItemIds",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "ItemIds", default, skip_serializing_if = "Option::is_none")]
     pub item_ids: Option<Vec<uuid::Uuid>>,
     #[serde(
         rename = "MediaSourceId",
@@ -592,7 +548,9 @@ impl Default for PlayRequestDto {
     }
 }
 
-#[derive(serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(
+    serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd,
+)]
 pub enum PlaybackErrorCode {
     NotAllowed,
     NoCompatibleStream,
@@ -630,18 +588,14 @@ impl TryFrom<&str> for PlaybackErrorCode {
 
 impl TryFrom<&String> for PlaybackErrorCode {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for PlaybackErrorCode {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
@@ -755,11 +709,7 @@ pub struct PlaybackInfoDto {
     )]
     pub subtitle_stream_index: Option<i32>,
     #[doc = "Gets or sets the playback userId."]
-    #[serde(
-        rename = "UserId",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "UserId", default, skip_serializing_if = "Option::is_none")]
     pub user_id: Option<uuid::Uuid>,
 }
 
@@ -790,11 +740,7 @@ impl Default for PlaybackInfoDto {
 #[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
 pub struct PlaybackInfoResponse {
     #[doc = "Gets or sets the error code."]
-    #[serde(
-        rename = "ErrorCode",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "ErrorCode", default, skip_serializing_if = "Option::is_none")]
     pub error_code: Option<PlaybackErrorCode>,
     #[doc = "Gets or sets the media sources."]
     #[serde(
@@ -822,7 +768,9 @@ impl Default for PlaybackInfoResponse {
     }
 }
 
-#[derive(serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(
+    serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd,
+)]
 pub enum PlaybackOrder {
     Default,
     Shuffle,
@@ -857,18 +805,14 @@ impl TryFrom<&str> for PlaybackOrder {
 
 impl TryFrom<&String> for PlaybackOrder {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for PlaybackOrder {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
@@ -896,39 +840,19 @@ pub struct PlaybackProgressInfo {
     )]
     pub brightness: Option<i32>,
     #[doc = "Gets or sets a value indicating whether this instance can seek."]
-    #[serde(
-        rename = "CanSeek",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "CanSeek", default, skip_serializing_if = "Option::is_none")]
     pub can_seek: Option<bool>,
     #[doc = "Gets or sets a value indicating whether this instance is muted."]
-    #[serde(
-        rename = "IsMuted",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "IsMuted", default, skip_serializing_if = "Option::is_none")]
     pub is_muted: Option<bool>,
     #[doc = "Gets or sets a value indicating whether this instance is paused."]
-    #[serde(
-        rename = "IsPaused",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "IsPaused", default, skip_serializing_if = "Option::is_none")]
     pub is_paused: Option<bool>,
     #[doc = "Gets or sets the item."]
-    #[serde(
-        rename = "Item",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Item", default, skip_serializing_if = "Option::is_none")]
     pub item: Option<BaseItemDto>,
     #[doc = "Gets or sets the item identifier."]
-    #[serde(
-        rename = "ItemId",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "ItemId", default, skip_serializing_if = "Option::is_none")]
     pub item_id: Option<uuid::Uuid>,
     #[doc = "Gets or sets the live stream identifier."]
     #[serde(
@@ -995,11 +919,7 @@ pub struct PlaybackProgressInfo {
     )]
     pub repeat_mode: Option<RepeatMode>,
     #[doc = "Gets or sets the session id."]
-    #[serde(
-        rename = "SessionId",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "SessionId", default, skip_serializing_if = "Option::is_none")]
     pub session_id: Option<String>,
     #[doc = "Gets or sets the index of the subtitle stream."]
     #[serde(
@@ -1045,7 +965,9 @@ impl Default for PlaybackProgressInfo {
     }
 }
 
-#[derive(serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(
+    serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd,
+)]
 pub enum PlaybackRequestType {
     Play,
     SetPlaylistItem,
@@ -1125,18 +1047,14 @@ impl TryFrom<&str> for PlaybackRequestType {
 
 impl TryFrom<&String> for PlaybackRequestType {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for PlaybackRequestType {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
@@ -1164,39 +1082,19 @@ pub struct PlaybackStartInfo {
     )]
     pub brightness: Option<i32>,
     #[doc = "Gets or sets a value indicating whether this instance can seek."]
-    #[serde(
-        rename = "CanSeek",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "CanSeek", default, skip_serializing_if = "Option::is_none")]
     pub can_seek: Option<bool>,
     #[doc = "Gets or sets a value indicating whether this instance is muted."]
-    #[serde(
-        rename = "IsMuted",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "IsMuted", default, skip_serializing_if = "Option::is_none")]
     pub is_muted: Option<bool>,
     #[doc = "Gets or sets a value indicating whether this instance is paused."]
-    #[serde(
-        rename = "IsPaused",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "IsPaused", default, skip_serializing_if = "Option::is_none")]
     pub is_paused: Option<bool>,
     #[doc = "Gets or sets the item."]
-    #[serde(
-        rename = "Item",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Item", default, skip_serializing_if = "Option::is_none")]
     pub item: Option<BaseItemDto>,
     #[doc = "Gets or sets the item identifier."]
-    #[serde(
-        rename = "ItemId",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "ItemId", default, skip_serializing_if = "Option::is_none")]
     pub item_id: Option<uuid::Uuid>,
     #[doc = "Gets or sets the live stream identifier."]
     #[serde(
@@ -1263,11 +1161,7 @@ pub struct PlaybackStartInfo {
     )]
     pub repeat_mode: Option<RepeatMode>,
     #[doc = "Gets or sets the session id."]
-    #[serde(
-        rename = "SessionId",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "SessionId", default, skip_serializing_if = "Option::is_none")]
     pub session_id: Option<String>,
     #[doc = "Gets or sets the index of the subtitle stream."]
     #[serde(
@@ -1317,25 +1211,13 @@ impl Default for PlaybackStartInfo {
 #[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
 pub struct PlaybackStopInfo {
     #[doc = "Gets or sets a value indicating whether this MediaBrowser.Model.Session.PlaybackStopInfo is failed."]
-    #[serde(
-        rename = "Failed",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Failed", default, skip_serializing_if = "Option::is_none")]
     pub failed: Option<bool>,
     #[doc = "Gets or sets the item."]
-    #[serde(
-        rename = "Item",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Item", default, skip_serializing_if = "Option::is_none")]
     pub item: Option<BaseItemDto>,
     #[doc = "Gets or sets the item identifier."]
-    #[serde(
-        rename = "ItemId",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "ItemId", default, skip_serializing_if = "Option::is_none")]
     pub item_id: Option<uuid::Uuid>,
     #[doc = "Gets or sets the live stream identifier."]
     #[serde(
@@ -1384,11 +1266,7 @@ pub struct PlaybackStopInfo {
     )]
     pub position_ticks: Option<i64>,
     #[doc = "Gets or sets the session id."]
-    #[serde(
-        rename = "SessionId",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "SessionId", default, skip_serializing_if = "Option::is_none")]
     pub session_id: Option<String>,
 }
 
@@ -1410,7 +1288,9 @@ impl Default for PlaybackStopInfo {
     }
 }
 
-#[derive(serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(
+    serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd,
+)]
 pub enum PlaystateCommand {
     Stop,
     Pause,
@@ -1466,18 +1346,14 @@ impl TryFrom<&str> for PlaystateCommand {
 
 impl TryFrom<&String> for PlaystateCommand {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for PlaystateCommand {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
@@ -1486,18 +1362,10 @@ impl TryFrom<String> for PlaystateCommand {
 #[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
 pub struct PlaystateMessage {
     #[doc = "Gets or sets the data."]
-    #[serde(
-        rename = "Data",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Data", default, skip_serializing_if = "Option::is_none")]
     pub data: Option<PlaystateRequest>,
     #[doc = "Gets or sets the message id."]
-    #[serde(
-        rename = "MessageId",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "MessageId", default, skip_serializing_if = "Option::is_none")]
     pub message_id: Option<uuid::Uuid>,
     #[serde(
         rename = "MessageType",
@@ -1520,11 +1388,7 @@ impl Default for PlaystateMessage {
 #[doc = "`PlaystateRequest`"]
 #[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
 pub struct PlaystateRequest {
-    #[serde(
-        rename = "Command",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Command", default, skip_serializing_if = "Option::is_none")]
     pub command: Option<PlaystateCommand>,
     #[doc = "Gets or sets the controlling user identifier."]
     #[serde(
@@ -1554,11 +1418,7 @@ impl Default for PlaystateRequest {
 #[doc = "`QueueItem`"]
 #[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
 pub struct QueueItem {
-    #[serde(
-        rename = "Id",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Id", default, skip_serializing_if = "Option::is_none")]
     pub id: Option<uuid::Uuid>,
     #[serde(
         rename = "PlaylistItemId",
@@ -1577,7 +1437,9 @@ impl Default for QueueItem {
     }
 }
 
-#[derive(serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(
+    serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd,
+)]
 pub enum RepeatMode {
     RepeatNone,
     RepeatAll,
@@ -1615,18 +1477,14 @@ impl TryFrom<&str> for RepeatMode {
 
 impl TryFrom<&String> for RepeatMode {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for RepeatMode {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
@@ -1634,25 +1492,13 @@ impl TryFrom<String> for RepeatMode {
 #[doc = "Class SendCommand."]
 #[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
 pub struct SendCommand {
-    #[serde(
-        rename = "Command",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Command", default, skip_serializing_if = "Option::is_none")]
     pub command: Option<SendCommandType>,
     #[doc = "Gets the UTC time when this command has been emitted."]
-    #[serde(
-        rename = "EmittedAt",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "EmittedAt", default, skip_serializing_if = "Option::is_none")]
     pub emitted_at: Option<chrono::DateTime<chrono::Utc>>,
     #[doc = "Gets the group identifier."]
-    #[serde(
-        rename = "GroupId",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "GroupId", default, skip_serializing_if = "Option::is_none")]
     pub group_id: Option<uuid::Uuid>,
     #[doc = "Gets the playlist identifier of the playing item."]
     #[serde(
@@ -1669,11 +1515,7 @@ pub struct SendCommand {
     )]
     pub position_ticks: Option<i64>,
     #[doc = "Gets or sets the UTC time when to execute the command."]
-    #[serde(
-        rename = "When",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "When", default, skip_serializing_if = "Option::is_none")]
     pub when: Option<chrono::DateTime<chrono::Utc>>,
 }
 
@@ -1690,7 +1532,9 @@ impl Default for SendCommand {
     }
 }
 
-#[derive(serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(
+    serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd,
+)]
 pub enum SendCommandType {
     Unpause,
     Pause,
@@ -1731,18 +1575,14 @@ impl TryFrom<&str> for SendCommandType {
 
 impl TryFrom<&String> for SendCommandType {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for SendCommandType {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
@@ -1750,11 +1590,7 @@ impl TryFrom<String> for SendCommandType {
 #[doc = "Class SetRepeatModeRequestDto."]
 #[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
 pub struct SetRepeatModeRequestDto {
-    #[serde(
-        rename = "Mode",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Mode", default, skip_serializing_if = "Option::is_none")]
     pub mode: Option<GroupRepeatMode>,
 }
 
@@ -1766,7 +1602,9 @@ impl Default for SetRepeatModeRequestDto {
     }
 }
 
-#[derive(serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(
+    serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd,
+)]
 pub enum SubtitlePlaybackMode {
     Default,
     Always,
@@ -1810,18 +1648,14 @@ impl TryFrom<&str> for SubtitlePlaybackMode {
 
 impl TryFrom<&String> for SubtitlePlaybackMode {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for SubtitlePlaybackMode {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
@@ -1830,24 +1664,12 @@ impl TryFrom<String> for SubtitlePlaybackMode {
 #[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
 pub struct SyncPlayPlayQueueUpdate {
     #[doc = "Gets the update data."]
-    #[serde(
-        rename = "Data",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Data", default, skip_serializing_if = "Option::is_none")]
     pub data: Option<PlayQueueUpdate>,
     #[doc = "Gets the group identifier."]
-    #[serde(
-        rename = "GroupId",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "GroupId", default, skip_serializing_if = "Option::is_none")]
     pub group_id: Option<uuid::Uuid>,
-    #[serde(
-        rename = "Type",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Type", default, skip_serializing_if = "Option::is_none")]
     pub type_: Option<GroupUpdateType>,
 }
 
@@ -1865,11 +1687,7 @@ impl Default for SyncPlayPlayQueueUpdate {
 #[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
 pub struct SyncPlayQueueItem {
     #[doc = "Gets the item identifier."]
-    #[serde(
-        rename = "ItemId",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "ItemId", default, skip_serializing_if = "Option::is_none")]
     pub item_id: Option<uuid::Uuid>,
     #[doc = "Gets the playlist identifier of the item."]
     #[serde(
@@ -1893,24 +1711,12 @@ impl Default for SyncPlayQueueItem {
 #[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
 pub struct SyncPlayStateUpdate {
     #[doc = "Gets the update data."]
-    #[serde(
-        rename = "Data",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Data", default, skip_serializing_if = "Option::is_none")]
     pub data: Option<GroupStateUpdate>,
     #[doc = "Gets the group identifier."]
-    #[serde(
-        rename = "GroupId",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "GroupId", default, skip_serializing_if = "Option::is_none")]
     pub group_id: Option<uuid::Uuid>,
-    #[serde(
-        rename = "Type",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Type", default, skip_serializing_if = "Option::is_none")]
     pub type_: Option<GroupUpdateType>,
 }
 
@@ -1923,4 +1729,3 @@ impl Default for SyncPlayStateUpdate {
         }
     }
 }
-

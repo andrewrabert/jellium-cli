@@ -11,11 +11,7 @@ pub struct DeviceInfoDto {
     )]
     pub access_token: Option<String>,
     #[doc = "Gets or sets the name of the application."]
-    #[serde(
-        rename = "AppName",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "AppName", default, skip_serializing_if = "Option::is_none")]
     pub app_name: Option<String>,
     #[doc = "Gets or sets the application version."]
     #[serde(
@@ -46,18 +42,10 @@ pub struct DeviceInfoDto {
     )]
     pub date_last_activity: Option<chrono::DateTime<chrono::Utc>>,
     #[doc = "Gets or sets the icon URL."]
-    #[serde(
-        rename = "IconUrl",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "IconUrl", default, skip_serializing_if = "Option::is_none")]
     pub icon_url: Option<String>,
     #[doc = "Gets or sets the identifier."]
-    #[serde(
-        rename = "Id",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Id", default, skip_serializing_if = "Option::is_none")]
     pub id: Option<String>,
     #[doc = "Gets or sets the last user identifier."]
     #[serde(
@@ -74,11 +62,7 @@ pub struct DeviceInfoDto {
     )]
     pub last_user_name: Option<String>,
     #[doc = "Gets or sets the name."]
-    #[serde(
-        rename = "Name",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Name", default, skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
 }
 
@@ -104,11 +88,7 @@ impl Default for DeviceInfoDto {
 #[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
 pub struct DeviceInfoDtoQueryResult {
     #[doc = "Gets or sets the items."]
-    #[serde(
-        rename = "Items",
-        default,
-        skip_serializing_if = "Vec::is_empty"
-    )]
+    #[serde(rename = "Items", default, skip_serializing_if = "Vec::is_empty")]
     pub items: Vec<DeviceInfoDto>,
     #[doc = "Gets or sets the index of the first record in Items."]
     #[serde(
@@ -147,18 +127,10 @@ pub struct DeviceOptionsDto {
     )]
     pub custom_name: Option<String>,
     #[doc = "Gets or sets the device id."]
-    #[serde(
-        rename = "DeviceId",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "DeviceId", default, skip_serializing_if = "Option::is_none")]
     pub device_id: Option<String>,
     #[doc = "Gets or sets the id."]
-    #[serde(
-        rename = "Id",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Id", default, skip_serializing_if = "Option::is_none")]
     pub id: Option<i32>,
 }
 
@@ -171,4 +143,3 @@ impl Default for DeviceOptionsDto {
         }
     }
 }
-

@@ -1,7 +1,7 @@
-use crate::types;
-use crate::error::Error;
-use crate::util::encode_path;
 use crate::Client;
+use crate::error::Error;
+use crate::types;
+use crate::util::encode_path;
 
 impl Client {
     #[doc = "Gets a list of users\n\nSends a `GET` request to `/Users`\n\nArguments:\n- `is_disabled`: Optional filter by IsDisabled=true or false.\n- `is_hidden`: Optional filter by IsHidden=true or false.\n"]
@@ -31,23 +31,23 @@ impl Client {
     }
 
     #[doc = "Gets a user by Id\n\nSends a `GET` request to `/Users/{userId}`\n\nArguments:\n- `user_id`: The user id.\n"]
-    pub async fn get_user_by_id(
-        &self,
-        user_id: &uuid::Uuid,
-    ) -> Result<types::UserDto, Error> {
-        self.request(reqwest::Method::GET, format!("/Users/{}", encode_path(&user_id.to_string())))
-            .send()
-            .await
+    pub async fn get_user_by_id(&self, user_id: &uuid::Uuid) -> Result<types::UserDto, Error> {
+        self.request(
+            reqwest::Method::GET,
+            format!("/Users/{}", encode_path(&user_id.to_string())),
+        )
+        .send()
+        .await
     }
 
     #[doc = "Deletes a user\n\nSends a `DELETE` request to `/Users/{userId}`\n\nArguments:\n- `user_id`: The user id.\n"]
-    pub async fn delete_user(
-        &self,
-        user_id: &uuid::Uuid,
-    ) -> Result<(), Error> {
-        self.request(reqwest::Method::DELETE, format!("/Users/{}", encode_path(&user_id.to_string())))
-            .send_no_content()
-            .await
+    pub async fn delete_user(&self, user_id: &uuid::Uuid) -> Result<(), Error> {
+        self.request(
+            reqwest::Method::DELETE,
+            format!("/Users/{}", encode_path(&user_id.to_string())),
+        )
+        .send_no_content()
+        .await
     }
 
     #[doc = "Updates a user policy\n\nSends a `POST` request to `/Users/{userId}/Policy`\n\nArguments:\n- `user_id`: The user id.\n- `body`: The new user policy.\n"]
@@ -56,10 +56,13 @@ impl Client {
         user_id: &uuid::Uuid,
         body: &types::UserPolicy,
     ) -> Result<(), Error> {
-        self.request(reqwest::Method::POST, format!("/Users/{}/Policy", encode_path(&user_id.to_string())))
-            .json_body(body)
-            .send_no_content()
-            .await
+        self.request(
+            reqwest::Method::POST,
+            format!("/Users/{}/Policy", encode_path(&user_id.to_string())),
+        )
+        .json_body(body)
+        .send_no_content()
+        .await
     }
 
     #[doc = "Authenticates a user by name\n\nSends a `POST` request to `/Users/AuthenticateByName`\n\nArguments:\n- `body`: The M:Jellyfin.Api.Controllers.UserController.AuthenticateUserByName(Jellyfin.Api.Models.UserDtos.AuthenticateUserByName) request.\n"]
@@ -78,10 +81,13 @@ impl Client {
         &self,
         body: &types::QuickConnectDto,
     ) -> Result<types::AuthenticationResult, Error> {
-        self.request(reqwest::Method::POST, "/Users/AuthenticateWithQuickConnect".into())
-            .json_body(body)
-            .send()
-            .await
+        self.request(
+            reqwest::Method::POST,
+            "/Users/AuthenticateWithQuickConnect".into(),
+        )
+        .json_body(body)
+        .send()
+        .await
     }
 
     #[doc = "Updates a user configuration\n\nSends a `POST` request to `/Users/Configuration`\n\nArguments:\n- `user_id`: The user id.\n- `body`: The new user configuration.\n"]
@@ -120,9 +126,7 @@ impl Client {
     }
 
     #[doc = "Gets the user based on auth token\n\nSends a `GET` request to `/Users/Me`\n\n"]
-    pub async fn get_current_user(
-        &self,
-    ) -> Result<types::UserDto, Error> {
+    pub async fn get_current_user(&self) -> Result<types::UserDto, Error> {
         self.request(reqwest::Method::GET, "/Users/Me".into())
             .send()
             .await
@@ -153,9 +157,7 @@ impl Client {
     }
 
     #[doc = "Gets a list of publicly visible users for display on a login screen\n\nSends a `GET` request to `/Users/Public`\n\n"]
-    pub async fn get_public_users(
-        &self,
-    ) -> Result<Vec<types::UserDto>, Error> {
+    pub async fn get_public_users(&self) -> Result<Vec<types::UserDto>, Error> {
         self.request(reqwest::Method::GET, "/Users/Public".into())
             .send()
             .await

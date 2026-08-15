@@ -244,21 +244,15 @@ pub async fn execute(
             client.sync_play_set_new_queue(&body).await?;
         }
         SyncPlayCommand::SetRepeatMode { mode } => {
-            let body = SetRepeatModeRequestDto {
-                mode: *mode,
-            };
+            let body = SetRepeatModeRequestDto { mode: *mode };
             client.sync_play_set_repeat_mode(&body).await?;
         }
         SyncPlayCommand::SetShuffleMode { mode } => {
-            let body = SetShuffleModeRequestDto {
-                mode: *mode,
-            };
+            let body = SetShuffleModeRequestDto { mode: *mode };
             client.sync_play_set_shuffle_mode(&body).await?;
         }
         SyncPlayCommand::Ping { ping } => {
-            let body = PingRequestDto {
-                ping: *ping,
-            };
+            let body = PingRequestDto { ping: *ping };
             client.sync_play_ping(&body).await?;
         }
         SyncPlayCommand::Ready {

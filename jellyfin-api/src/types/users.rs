@@ -3,37 +3,17 @@ use super::*;
 #[doc = "An entity representing a user's access schedule."]
 #[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
 pub struct AccessSchedule {
-    #[serde(
-        rename = "DayOfWeek",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "DayOfWeek", default, skip_serializing_if = "Option::is_none")]
     pub day_of_week: Option<DynamicDayOfWeek>,
-    #[serde(
-        rename = "EndHour",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "EndHour", default, skip_serializing_if = "Option::is_none")]
     pub end_hour: Option<f64>,
     #[doc = "Gets the id of this instance."]
-    #[serde(
-        rename = "Id",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Id", default, skip_serializing_if = "Option::is_none")]
     pub id: Option<i32>,
-    #[serde(
-        rename = "StartHour",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "StartHour", default, skip_serializing_if = "Option::is_none")]
     pub start_hour: Option<f64>,
     #[doc = "Gets the id of the associated user."]
-    #[serde(
-        rename = "UserId",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "UserId", default, skip_serializing_if = "Option::is_none")]
     pub user_id: Option<uuid::Uuid>,
 }
 
@@ -56,11 +36,7 @@ pub struct CreateUserByName {
     #[serde(rename = "Name")]
     pub name: String,
     #[doc = "Gets or sets the password."]
-    #[serde(
-        rename = "Password",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Password", default, skip_serializing_if = "Option::is_none")]
     pub password: Option<String>,
 }
 
@@ -68,18 +44,10 @@ pub struct CreateUserByName {
 #[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
 pub struct PinRedeemResult {
     #[doc = "Gets or sets a value indicating whether this MediaBrowser.Model.Users.PinRedeemResult is success."]
-    #[serde(
-        rename = "Success",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Success", default, skip_serializing_if = "Option::is_none")]
     pub success: Option<bool>,
     #[doc = "Gets or sets the users reset."]
-    #[serde(
-        rename = "UsersReset",
-        default,
-        skip_serializing_if = "Vec::is_empty"
-    )]
+    #[serde(rename = "UsersReset", default, skip_serializing_if = "Vec::is_empty")]
     pub users_reset: Vec<String>,
 }
 
@@ -103,18 +71,10 @@ pub struct UpdateUserPassword {
     )]
     pub current_password: Option<String>,
     #[doc = "Gets or sets the current plain text password."]
-    #[serde(
-        rename = "CurrentPw",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "CurrentPw", default, skip_serializing_if = "Option::is_none")]
     pub current_pw: Option<String>,
     #[doc = "Gets or sets the new plain text password."]
-    #[serde(
-        rename = "NewPw",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "NewPw", default, skip_serializing_if = "Option::is_none")]
     pub new_pw: Option<String>,
     #[doc = "Gets or sets a value indicating whether to reset the password."]
     #[serde(
@@ -140,18 +100,10 @@ impl Default for UpdateUserPassword {
 #[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
 pub struct UserDeletedMessage {
     #[doc = "Gets or sets the data."]
-    #[serde(
-        rename = "Data",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Data", default, skip_serializing_if = "Option::is_none")]
     pub data: Option<uuid::Uuid>,
     #[doc = "Gets or sets the message id."]
-    #[serde(
-        rename = "MessageId",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "MessageId", default, skip_serializing_if = "Option::is_none")]
     pub message_id: Option<uuid::Uuid>,
     #[serde(
         rename = "MessageType",
@@ -210,11 +162,7 @@ pub struct UserDto {
     )]
     pub has_password: Option<bool>,
     #[doc = "Gets or sets the id."]
-    #[serde(
-        rename = "Id",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Id", default, skip_serializing_if = "Option::is_none")]
     pub id: Option<uuid::Uuid>,
     #[doc = "Gets or sets the last activity date."]
     #[serde(
@@ -231,18 +179,10 @@ pub struct UserDto {
     )]
     pub last_login_date: Option<chrono::DateTime<chrono::Utc>>,
     #[doc = "Gets or sets the name."]
-    #[serde(
-        rename = "Name",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Name", default, skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
     #[doc = "Gets or sets the policy."]
-    #[serde(
-        rename = "Policy",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Policy", default, skip_serializing_if = "Option::is_none")]
     pub policy: Option<UserPolicy>,
     #[doc = "Gets or sets the primary image aspect ratio."]
     #[serde(
@@ -259,11 +199,7 @@ pub struct UserDto {
     )]
     pub primary_image_tag: Option<String>,
     #[doc = "Gets or sets the server identifier."]
-    #[serde(
-        rename = "ServerId",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "ServerId", default, skip_serializing_if = "Option::is_none")]
     pub server_id: Option<String>,
     #[doc = "Gets or sets the name of the server.\r\nThis is not used by the server and is for client-side usage only."]
     #[serde(
@@ -374,8 +310,7 @@ pub struct UserPolicy {
         default,
         skip_serializing_if = "Option::is_none"
     )]
-    pub enable_content_deletion_from_folders:
-        Option<Vec<String>>,
+    pub enable_content_deletion_from_folders: Option<Vec<String>>,
     #[serde(
         rename = "EnableContentDownloading",
         default,
@@ -506,11 +441,7 @@ pub struct UserPolicy {
     )]
     pub is_disabled: Option<bool>,
     #[doc = "Gets or sets a value indicating whether this instance is hidden."]
-    #[serde(
-        rename = "IsHidden",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "IsHidden", default, skip_serializing_if = "Option::is_none")]
     pub is_hidden: Option<bool>,
     #[serde(
         rename = "LoginAttemptsBeforeLockout",
@@ -557,18 +488,10 @@ pub struct UserPolicy {
 #[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
 pub struct UserUpdatedMessage {
     #[doc = "Class UserDto."]
-    #[serde(
-        rename = "Data",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Data", default, skip_serializing_if = "Option::is_none")]
     pub data: Option<UserDto>,
     #[doc = "Gets or sets the message id."]
-    #[serde(
-        rename = "MessageId",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "MessageId", default, skip_serializing_if = "Option::is_none")]
     pub message_id: Option<uuid::Uuid>,
     #[serde(
         rename = "MessageType",
@@ -587,4 +510,3 @@ impl Default for UserUpdatedMessage {
         }
     }
 }
-

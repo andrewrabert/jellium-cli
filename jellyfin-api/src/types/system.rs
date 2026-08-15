@@ -4,18 +4,10 @@ use super::*;
 #[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
 pub struct CastReceiverApplication {
     #[doc = "Gets or sets the cast receiver application id."]
-    #[serde(
-        rename = "Id",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Id", default, skip_serializing_if = "Option::is_none")]
     pub id: Option<String>,
     #[doc = "Gets or sets the cast receiver application name."]
-    #[serde(
-        rename = "Name",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Name", default, skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
 }
 
@@ -46,11 +38,7 @@ pub struct ConfigurationPageInfo {
     )]
     pub enable_in_main_menu: Option<bool>,
     #[doc = "Gets or sets the menu icon."]
-    #[serde(
-        rename = "MenuIcon",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "MenuIcon", default, skip_serializing_if = "Option::is_none")]
     pub menu_icon: Option<String>,
     #[doc = "Gets or sets the menu section."]
     #[serde(
@@ -60,18 +48,10 @@ pub struct ConfigurationPageInfo {
     )]
     pub menu_section: Option<String>,
     #[doc = "Gets or sets the name."]
-    #[serde(
-        rename = "Name",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Name", default, skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
     #[doc = "Gets or sets the plugin id."]
-    #[serde(
-        rename = "PluginId",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "PluginId", default, skip_serializing_if = "Option::is_none")]
     pub plugin_id: Option<uuid::Uuid>,
 }
 
@@ -132,11 +112,7 @@ pub struct EndPointInfo {
         skip_serializing_if = "Option::is_none"
     )]
     pub is_in_network: Option<bool>,
-    #[serde(
-        rename = "IsLocal",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "IsLocal", default, skip_serializing_if = "Option::is_none")]
     pub is_local: Option<bool>,
 }
 
@@ -153,24 +129,12 @@ impl Default for EndPointInfo {
 #[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
 pub struct FileSystemEntryInfo {
     #[doc = "Gets the name."]
-    #[serde(
-        rename = "Name",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Name", default, skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
     #[doc = "Gets the path."]
-    #[serde(
-        rename = "Path",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Path", default, skip_serializing_if = "Option::is_none")]
     pub path: Option<String>,
-    #[serde(
-        rename = "Type",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Type", default, skip_serializing_if = "Option::is_none")]
     pub type_: Option<FileSystemEntryType>,
 }
 
@@ -184,7 +148,9 @@ impl Default for FileSystemEntryInfo {
     }
 }
 
-#[derive(serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(
+    serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd,
+)]
 pub enum FileSystemEntryType {
     File,
     Directory,
@@ -225,18 +191,14 @@ impl TryFrom<&str> for FileSystemEntryType {
 
 impl TryFrom<&String> for FileSystemEntryType {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for FileSystemEntryType {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
@@ -259,18 +221,10 @@ pub struct LogFile {
     )]
     pub date_modified: Option<chrono::DateTime<chrono::Utc>>,
     #[doc = "Gets or sets the name."]
-    #[serde(
-        rename = "Name",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Name", default, skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
     #[doc = "Gets or sets the size."]
-    #[serde(
-        rename = "Size",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Size", default, skip_serializing_if = "Option::is_none")]
     pub size: Option<i64>,
 }
 
@@ -315,11 +269,7 @@ pub struct NetworkConfiguration {
     )]
     pub auto_discovery: Option<bool>,
     #[doc = "Gets or sets a value used to specify the URL prefix that your Jellyfin instance can be accessed at."]
-    #[serde(
-        rename = "BaseUrl",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "BaseUrl", default, skip_serializing_if = "Option::is_none")]
     pub base_url: Option<String>,
     #[doc = "Gets or sets the password required to access the X.509 certificate data in the file specified by MediaBrowser.Common.Net.NetworkConfiguration.CertificatePath."]
     #[serde(
@@ -504,18 +454,10 @@ impl Default for NetworkConfiguration {
 #[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
 pub struct PathSubstitution {
     #[doc = "Gets or sets the value to substitute."]
-    #[serde(
-        rename = "From",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "From", default, skip_serializing_if = "Option::is_none")]
     pub from: Option<String>,
     #[doc = "Gets or sets the value to substitution with."]
-    #[serde(
-        rename = "To",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "To", default, skip_serializing_if = "Option::is_none")]
     pub to: Option<String>,
 }
 
@@ -532,11 +474,7 @@ impl Default for PathSubstitution {
 #[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
 pub struct PublicSystemInfo {
     #[doc = "Gets or sets the id."]
-    #[serde(
-        rename = "Id",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Id", default, skip_serializing_if = "Option::is_none")]
     pub id: Option<String>,
     #[doc = "Gets or sets the local address."]
     #[serde(
@@ -574,11 +512,7 @@ pub struct PublicSystemInfo {
     )]
     pub startup_wizard_completed: Option<bool>,
     #[doc = "Gets or sets the server version."]
-    #[serde(
-        rename = "Version",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Version", default, skip_serializing_if = "Option::is_none")]
     pub version: Option<String>,
 }
 
@@ -600,11 +534,7 @@ impl Default for PublicSystemInfo {
 #[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
 pub struct RestartRequiredMessage {
     #[doc = "Gets or sets the message id."]
-    #[serde(
-        rename = "MessageId",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "MessageId", default, skip_serializing_if = "Option::is_none")]
     pub message_id: Option<uuid::Uuid>,
     #[serde(
         rename = "MessageType",
@@ -627,18 +557,10 @@ impl Default for RestartRequiredMessage {
 #[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
 pub struct ScheduledTaskEndedMessage {
     #[doc = "Class TaskExecutionInfo."]
-    #[serde(
-        rename = "Data",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Data", default, skip_serializing_if = "Option::is_none")]
     pub data: Option<TaskResult>,
     #[doc = "Gets or sets the message id."]
-    #[serde(
-        rename = "MessageId",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "MessageId", default, skip_serializing_if = "Option::is_none")]
     pub message_id: Option<uuid::Uuid>,
     #[serde(
         rename = "MessageType",
@@ -662,18 +584,10 @@ impl Default for ScheduledTaskEndedMessage {
 #[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
 pub struct ScheduledTasksInfoMessage {
     #[doc = "Gets or sets the data."]
-    #[serde(
-        rename = "Data",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Data", default, skip_serializing_if = "Option::is_none")]
     pub data: Option<Vec<TaskInfo>>,
     #[doc = "Gets or sets the message id."]
-    #[serde(
-        rename = "MessageId",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "MessageId", default, skip_serializing_if = "Option::is_none")]
     pub message_id: Option<uuid::Uuid>,
     #[serde(
         rename = "MessageType",
@@ -697,11 +611,7 @@ impl Default for ScheduledTasksInfoMessage {
 #[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
 pub struct ScheduledTasksInfoStartMessage {
     #[doc = "Gets or sets the data."]
-    #[serde(
-        rename = "Data",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Data", default, skip_serializing_if = "Option::is_none")]
     pub data: Option<String>,
     #[serde(
         rename = "MessageType",
@@ -757,18 +667,10 @@ pub struct ServerConfiguration {
     )]
     pub allow_client_log_upload: Option<bool>,
     #[doc = "Gets or sets the cache path."]
-    #[serde(
-        rename = "CachePath",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "CachePath", default, skip_serializing_if = "Option::is_none")]
     pub cache_path: Option<String>,
     #[doc = "Gets or sets the maximum amount of items to cache."]
-    #[serde(
-        rename = "CacheSize",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "CacheSize", default, skip_serializing_if = "Option::is_none")]
     pub cache_size: Option<i32>,
     #[doc = "Gets or sets the list of cast receiver applications."]
     #[serde(
@@ -783,11 +685,7 @@ pub struct ServerConfiguration {
         skip_serializing_if = "Option::is_none"
     )]
     pub chapter_image_resolution: Option<ImageResolution>,
-    #[serde(
-        rename = "CodecsUsed",
-        default,
-        skip_serializing_if = "Vec::is_empty"
-    )]
+    #[serde(rename = "CodecsUsed", default, skip_serializing_if = "Vec::is_empty")]
     pub codecs_used: Vec<String>,
     #[serde(
         rename = "ContentTypes",
@@ -796,11 +694,7 @@ pub struct ServerConfiguration {
     )]
     pub content_types: Vec<NameValuePair>,
     #[doc = "Gets or sets the cors hosts."]
-    #[serde(
-        rename = "CorsHosts",
-        default,
-        skip_serializing_if = "Vec::is_empty"
-    )]
+    #[serde(rename = "CorsHosts", default, skip_serializing_if = "Vec::is_empty")]
     pub cors_hosts: Vec<String>,
     #[serde(
         rename = "DisableLiveTvChannelUserDataName",
@@ -1108,11 +1002,7 @@ pub struct ServerConfiguration {
         skip_serializing_if = "Option::is_none"
     )]
     pub trickplay_options: Option<TrickplayOptions>,
-    #[serde(
-        rename = "UICulture",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "UICulture", default, skip_serializing_if = "Option::is_none")]
     pub ui_culture: Option<String>,
 }
 
@@ -1183,11 +1073,7 @@ impl Default for ServerConfiguration {
 #[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
 pub struct ServerDiscoveryInfo {
     #[doc = "Gets the address."]
-    #[serde(
-        rename = "Address",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Address", default, skip_serializing_if = "Option::is_none")]
     pub address: Option<String>,
     #[doc = "Gets the endpoint address."]
     #[serde(
@@ -1197,18 +1083,10 @@ pub struct ServerDiscoveryInfo {
     )]
     pub endpoint_address: Option<String>,
     #[doc = "Gets the server identifier."]
-    #[serde(
-        rename = "Id",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Id", default, skip_serializing_if = "Option::is_none")]
     pub id: Option<String>,
     #[doc = "Gets the name."]
-    #[serde(
-        rename = "Name",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Name", default, skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
 }
 
@@ -1227,11 +1105,7 @@ impl Default for ServerDiscoveryInfo {
 #[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
 pub struct ServerRestartingMessage {
     #[doc = "Gets or sets the message id."]
-    #[serde(
-        rename = "MessageId",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "MessageId", default, skip_serializing_if = "Option::is_none")]
     pub message_id: Option<uuid::Uuid>,
     #[serde(
         rename = "MessageType",
@@ -1254,11 +1128,7 @@ impl Default for ServerRestartingMessage {
 #[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
 pub struct ServerShuttingDownMessage {
     #[doc = "Gets or sets the message id."]
-    #[serde(
-        rename = "MessageId",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "MessageId", default, skip_serializing_if = "Option::is_none")]
     pub message_id: Option<uuid::Uuid>,
     #[serde(
         rename = "MessageType",
@@ -1302,11 +1172,7 @@ pub struct StartupConfigurationDto {
     )]
     pub server_name: Option<String>,
     #[doc = "Gets or sets UI language culture."]
-    #[serde(
-        rename = "UICulture",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "UICulture", default, skip_serializing_if = "Option::is_none")]
     pub ui_culture: Option<String>,
 }
 
@@ -1336,18 +1202,10 @@ pub struct StartupRemoteAccessDto {
 #[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
 pub struct StartupUserDto {
     #[doc = "Gets or sets the username."]
-    #[serde(
-        rename = "Name",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Name", default, skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
     #[doc = "Gets or sets the user's password."]
-    #[serde(
-        rename = "Password",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Password", default, skip_serializing_if = "Option::is_none")]
     pub password: Option<String>,
 }
 
@@ -1364,16 +1222,15 @@ impl Default for StartupUserDto {
 #[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
 pub struct SystemInfo {
     #[doc = "Gets or sets the cache path."]
-    #[serde(
-        rename = "CachePath",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "CachePath", default, skip_serializing_if = "Option::is_none")]
     pub cache_path: Option<String>,
     #[serde(rename = "CanLaunchWebBrowser", default)]
     pub can_launch_web_browser: bool,
     #[doc = "Gets or sets a value indicating whether this instance can self restart."]
-    #[serde(rename = "CanSelfRestart", default = "crate::types::defaults::default_bool::<true>")]
+    #[serde(
+        rename = "CanSelfRestart",
+        default = "crate::types::defaults::default_bool::<true>"
+    )]
     pub can_self_restart: bool,
     #[doc = "Gets or sets the list of cast receiver applications."]
     #[serde(
@@ -1381,8 +1238,7 @@ pub struct SystemInfo {
         default,
         skip_serializing_if = "Option::is_none"
     )]
-    pub cast_receiver_applications:
-        Option<Vec<CastReceiverApplication>>,
+    pub cast_receiver_applications: Option<Vec<CastReceiverApplication>>,
     #[doc = "Gets or sets the completed installations."]
     #[serde(
         rename = "CompletedInstallations",
@@ -1406,11 +1262,7 @@ pub struct SystemInfo {
     #[serde(rename = "HasUpdateAvailable", default)]
     pub has_update_available: bool,
     #[doc = "Gets or sets the id."]
-    #[serde(
-        rename = "Id",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Id", default, skip_serializing_if = "Option::is_none")]
     pub id: Option<String>,
     #[doc = "Gets or sets the internal metadata path."]
     #[serde(
@@ -1440,11 +1292,7 @@ pub struct SystemInfo {
     )]
     pub local_address: Option<String>,
     #[doc = "Gets or sets the log path."]
-    #[serde(
-        rename = "LogPath",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "LogPath", default, skip_serializing_if = "Option::is_none")]
     pub log_path: Option<String>,
     #[doc = "Gets or sets the operating system."]
     #[serde(
@@ -1515,18 +1363,10 @@ pub struct SystemInfo {
     )]
     pub transcoding_temp_path: Option<String>,
     #[doc = "Gets or sets the server version."]
-    #[serde(
-        rename = "Version",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Version", default, skip_serializing_if = "Option::is_none")]
     pub version: Option<String>,
     #[doc = "Gets or sets the web UI resources path."]
-    #[serde(
-        rename = "WebPath",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "WebPath", default, skip_serializing_if = "Option::is_none")]
     pub web_path: Option<String>,
     #[doc = "Gets or sets the web socket port number."]
     #[serde(
@@ -1596,18 +1436,10 @@ pub struct SystemStorageDto {
     )]
     pub internal_metadata_folder: Option<FolderStorageDto>,
     #[doc = "Gets or sets the storage informations of all libraries."]
-    #[serde(
-        rename = "Libraries",
-        default,
-        skip_serializing_if = "Vec::is_empty"
-    )]
+    #[serde(rename = "Libraries", default, skip_serializing_if = "Vec::is_empty")]
     pub libraries: Vec<LibraryStorageDto>,
     #[doc = "Gets or sets the Storage information of the folder where logfiles are saved to."]
-    #[serde(
-        rename = "LogFolder",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "LogFolder", default, skip_serializing_if = "Option::is_none")]
     pub log_folder: Option<FolderStorageDto>,
     #[doc = "Gets or sets the Storage information of the program data folder."]
     #[serde(
@@ -1624,11 +1456,7 @@ pub struct SystemStorageDto {
     )]
     pub transcoding_temp_folder: Option<FolderStorageDto>,
     #[doc = "Gets or sets the Storage information of the web UI resources folder."]
-    #[serde(
-        rename = "WebFolder",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "WebFolder", default, skip_serializing_if = "Option::is_none")]
     pub web_folder: Option<FolderStorageDto>,
 }
 
@@ -1774,4 +1602,3 @@ impl Default for UserConfiguration {
         }
     }
 }
-
