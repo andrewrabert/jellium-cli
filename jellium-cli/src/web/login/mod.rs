@@ -19,7 +19,7 @@ use jellium_protocol::{
 use uuid::Uuid;
 
 use super::AppState;
-use super::identity::Device;
+use super::identity::Identity;
 use super::link::{Link, status_of, unreachable};
 use super::upstream::{self, Upstream};
 use super::version;
@@ -64,13 +64,13 @@ impl Login {
     /// server held was just cleared.
     /// `None` when `server` is not an http url.
     pub fn of(
-        device: &Device,
+        identity: &Identity,
         server: &str,
         probed: &version::Probed,
         name: &str,
         rejected: bool,
     ) -> Option<Login> {
-        let link = Link::identified(device, server)?;
+        let link = Link::identified(identity, server)?;
         Some(Login {
             server: link.server().to_string(),
             link,
@@ -218,7 +218,7 @@ impl Login {
     /// request is exchanged for a token in the same call, and the secret is
     /// dropped whether the exchange succeeds or not.
     /// `SignIn::Disabled` takes Quick Connect off this target for good.
-    pub async fn connect(&self, device: &Device) -> Result<Connected, Failure> {
+    pub async fn connect(&self, identity: &Identity) -> Result<Connected, Failure> {
         let held = self
             .secret
             .read()
@@ -253,7 +253,7 @@ impl Login {
             jellium_model::quickconnect::SignIn::Authorized => {
                 self.abandon();
                 let upstream =
-                    Upstream::quick_connect(device, &self.server, &secret, self.probed()).await?;
+                    Upstream::quick_connect(identity, &self.server, &secret, self.probed()).await?;
                 Ok(Connected::Authorized(Box::new(upstream)))
             }
         }
@@ -310,10 +310,10 @@ impl Login {
     /// Signs in with the typed name and password against this target's server.
     pub async fn sign_in(
         &self,
-        device: &Device,
+        identity: &Identity,
         credentials: &Credentials,
     ) -> Result<Upstream, Failure> {
-        Upstream::login(device, &self.server, credentials, self.probed()).await
+        Upstream::login(identity, &self.server, credentials, self.probed()).await
     }
 }
 
@@ -334,6 +334,9 @@ pub(super) fn failed(failure: Failure) -> Response {
 /// and answers `SessionStatus::Login`.
 /// The name a passing probe reports is written to that server's record.
 pub async fn entered(state: &Arc<AppState>, server: &str, rejected: bool) -> Response {
+    let Some(identity) = state.identity.held().await else {
+        return refusal(Refusal::NoSession);
+    };
     let probed = match version::probe(server).await {
         Ok(probed) => probed,
         Err(failure) => return failed(failure),
@@ -358,7 +361,7 @@ pub async fn entered(state: &Arc<AppState>, server: &str, rejected: bool) -> Res
         probed.name.clone()
     };
 
-    let Some(login) = Login::of(&state.device, server, &probed, &name, rejected) else {
+    let Some(login) = Login::of(&identity, server, &probed, &name, rejected) else {
         return failed(unreachable(server, "the server text is not an http url"));
     };
     let screen = match login.screen(state.read_only).await {
@@ -405,7 +408,10 @@ pub async fn sign_in(
         Ok(login) => login,
         Err(response) => return response,
     };
-    match login.sign_in(&state.device, &credentials).await {
+    let Some(identity) = state.identity.held().await else {
+        return refusal(Refusal::NoSession);
+    };
+    match login.sign_in(&identity, &credentials).await {
         Ok(upstream) => {
             let installed = state.session.install(upstream).await;
             state.live.rebound(&state).await;
@@ -459,8 +465,8 @@ pub(super) mod harness {
         let state = Arc::new(state);
         let router = Router::new()
             .route(
-                jellium_protocol::SESSION_PATH,
-                get(super::super::control::status).delete(super::super::control::logout),
+                jellium_protocol::IDENTITY_PATH,
+                post(super::super::control::announce).delete(super::super::control::logout),
             )
             .route(
                 jellium_protocol::SERVERS_PATH,

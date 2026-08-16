@@ -37,6 +37,7 @@ percent-encoding = "2"
 
 [dev-dependencies]
 image = { version = "0.25", default-features = false, features = ["png"] }
+sha2 = "0.10"
 tempfile = "3"
 tower = { version = "0.5", features = ["util"] }
 tokio = { version = "1", features = ["full", "test-util"] }

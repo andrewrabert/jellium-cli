@@ -13,7 +13,7 @@ mod login;
 mod manifest;
 mod origin;
 mod page;
-mod playback;
+pub mod playback;
 mod relay;
 mod route;
 mod server;
@@ -24,6 +24,7 @@ mod smoke;
 mod synthetic;
 mod upstream;
 mod version;
+mod wire;
 
 #[derive(Debug, clap::Args)]
 pub struct WebArgs {
@@ -92,7 +93,8 @@ pub struct AppState {
     /// The one origin this server answers for, the host taken from
     /// `--advertise` when given and from `--bind` otherwise.
     pub origin: origin::Origin,
-    pub device: std::sync::Arc<identity::Device>,
+    /// The identity the browser announced, and nothing until one does.
+    pub identity: identity::Announced,
     /// The held Jellyfin session and the session file it shares with the
     /// command line.
     pub session: holder::Holder,
@@ -109,7 +111,6 @@ impl AppState {
     // an app state holding nothing, its session file at `path`, minted purely
     // for router tests that drive the real relay route
     pub(crate) fn stub(path: std::path::PathBuf) -> AppState {
-        let device = Arc::new(identity::Device::new(uuid::Uuid::nil()));
         AppState {
             completed: std::sync::atomic::AtomicBool::new(false),
             read_only: false,
@@ -118,9 +119,12 @@ impl AppState {
             secret: guard::Secret::mint().0,
             cookie: guard::Cookie::mint(),
             origin: origin::Host::of(std::net::Ipv4Addr::LOCALHOST.into()).origin(0),
-            device: device.clone(),
-            session: holder::Holder::new(path, device),
-            playback: playback::Playback::new(),
+            identity: identity::Announced::announcing(jellium_protocol::Identity {
+                device: "Firefox".to_owned(),
+                device_id: uuid::Uuid::nil().to_string(),
+            }),
+            session: holder::Holder::new(path.clone()),
+            playback: playback::Playback::new(path),
             live: live::Hub::new(),
             foreign: foreign::Anonymous::new(),
         }
@@ -153,9 +157,6 @@ pub async fn run(args: WebArgs) -> Result<(), WebError> {
     let host = advertised(&args)?;
 
     let session_path = crate::session::SessionFile::default_path();
-    let device_id =
-        crate::session::SessionFile::update_async(session_path.clone(), |file| file.device_id())
-            .await?;
 
     let address = SocketAddr::new(args.bind, args.port.unwrap_or(0));
     let listener = tokio::net::TcpListener::bind(address)
@@ -166,7 +167,6 @@ pub async fn run(args: WebArgs) -> Result<(), WebError> {
         .map_err(|source| WebError::Bind { address, source })?;
 
     let (secret, entry_secret) = guard::Secret::mint();
-    let device = Arc::new(identity::Device::new(device_id));
     let state = Arc::new(AppState {
         completed: std::sync::atomic::AtomicBool::new(false),
         read_only: args.read_only,
@@ -175,9 +175,9 @@ pub async fn run(args: WebArgs) -> Result<(), WebError> {
         secret,
         cookie: guard::Cookie::mint(),
         origin: host.origin(bound.port()),
-        device: device.clone(),
-        session: holder::Holder::new(session_path, device),
-        playback: playback::Playback::new(),
+        identity: identity::Announced::new(),
+        session: holder::Holder::new(session_path.clone()),
+        playback: playback::Playback::new(session_path),
         live: live::Hub::new(),
         foreign: foreign::Anonymous::new(),
     });

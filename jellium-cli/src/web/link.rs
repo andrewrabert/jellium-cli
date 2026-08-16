@@ -10,8 +10,10 @@ use axum::response::Response;
 use jellium_protocol::{Failure, Refusal};
 use reqwest::header::AUTHORIZATION;
 
-use super::identity::Device;
+use super::foreign::redirection;
+use super::identity::Identity;
 use super::manifest;
+use super::playback::pointed::Pointed;
 use super::route;
 
 const COPIED_RESPONSE_HEADERS: &[HeaderName] = &[
@@ -91,23 +93,23 @@ pub struct Link {
 }
 
 impl Link {
-    /// A link whose every request carries `device`'s authorization for `token`.
+    /// A link whose every request carries `identity`'s authorization for `token`.
     /// `None` when `server` is not an http url or the token cannot be sent in a
     /// header.
-    pub fn signed(device: &Device, server: &str, token: &str) -> Option<Link> {
+    pub fn signed(identity: &Identity, server: &str, token: &str) -> Option<Link> {
         let mut headers = reqwest::header::HeaderMap::new();
-        headers.insert(AUTHORIZATION, device.authorization(token)?);
+        headers.insert(AUTHORIZATION, identity.authorization(token)?);
         Link::of(server, headers)
     }
 
-    /// A link presenting `device`'s identity with an empty token, which is what
+    /// A link presenting `identity` with an empty token, which is what
     /// `/Users/AuthenticateByName` is asked over: Jellyfin keys the session it
     /// mints, its device-list entry and its transcode cleanup by the device
     /// this header names.
     /// `None` when `server` is not an http url or the identity cannot be sent
     /// in a header.
-    pub fn identified(device: &Device, server: &str) -> Option<Link> {
-        Link::signed(device, server, "")
+    pub fn identified(identity: &Identity, server: &str) -> Option<Link> {
+        Link::signed(identity, server, "")
     }
 
     /// A link carrying no `Authorization` header at all, which is what every
@@ -128,7 +130,7 @@ impl Link {
         Some(Link {
             server,
             base,
-            streaming: built(builder()),
+            streaming: built(builder().redirect(reqwest::redirect::Policy::none())),
             control: built(builder().timeout(CONTROL_TIMEOUT)),
         })
     }
@@ -153,6 +155,13 @@ impl Link {
         jellyfin_api::Client::new(&self.server, self.streaming.clone())
     }
 
+    /// The HTTP client every streamed request is issued over, carrying
+    /// `CONNECT_TIMEOUT`, no total deadline, and no redirect policy of its
+    /// own, so the relay decides each hop.
+    pub fn transport(&self) -> &reqwest::Client {
+        &self.streaming
+    }
+
     /// A 401 or 403 reads as `rejection`; anything else reads as
     /// `Failure::ServerUnreachable`.
     pub fn failed(&self, error: jellyfin_api::error::Error, rejection: Failure) -> Failure {
@@ -171,6 +180,9 @@ impl Link {
     /// other body is streamed in the encoding it arrives in.
     /// A manifest content type on a `Payload::Streamed` route is refused, and
     /// so is a manifest body that arrives content-encoded.
+    /// A url the manifest names outside the Jellyfin server is minted into
+    /// `pointed`, the register the plan this forward serves carries, and so is
+    /// the `Location` a redirect answers, which the client follows no hop of.
     pub async fn forward(
         &self,
         target: &route::Target,
@@ -178,6 +190,7 @@ impl Link {
         headers: &HeaderMap,
         body: axum::body::Bytes,
         seen: &route::Seen,
+        pointed: &Pointed,
     ) -> Result<Response, Failure> {
         let query = match resolved_query(target, query, seen) {
             Ok(query) => query,
@@ -223,6 +236,10 @@ impl Link {
             return Err(Failure::TokenRejected);
         }
 
+        if let Some(location) = redirection(&response) {
+            return Ok(self.hop(response.status(), &url, &location, pointed));
+        }
+
         if manifest::is_manifest(response.headers().get(header::CONTENT_TYPE)) {
             if !rewritable {
                 return Ok(refused(
@@ -230,7 +247,7 @@ impl Link {
                     Refusal::ManifestNotRewritable,
                 ));
             }
-            return self.rewritten(response, &url, seen).await;
+            return self.rewritten(response, &url, seen, pointed).await;
         }
 
         match target.payload() {
@@ -251,6 +268,34 @@ impl Link {
         builder
             .body(Body::from_stream(response.bytes_stream()))
             .map_err(|e| self.unreachable(e))
+    }
+
+    /// The hop `location` names, admitted the way any foreign origin is: the
+    /// absolute url is minted into `pointed` and the browser is answered the
+    /// same-origin path that handle is served at, which the relay fetches over
+    /// a client holding no credential.
+    /// A `Location` that is not an http url, and one no url can be resolved
+    /// from, is refused rather than followed.
+    fn hop(
+        &self,
+        status: reqwest::StatusCode,
+        from: &reqwest::Url,
+        location: &str,
+        pointed: &Pointed,
+    ) -> Response {
+        let Ok(hop) = from.join(location) else {
+            return refused(StatusCode::BAD_GATEWAY, Refusal::ForeignNotObserved);
+        };
+        if !matches!(hop.scheme(), "http" | "https") {
+            return refused(StatusCode::FORBIDDEN, Refusal::ForeignNotObserved);
+        }
+        let handle = pointed.mint(hop.as_str());
+        let status = StatusCode::from_u16(status.as_u16()).unwrap_or(StatusCode::FOUND);
+        Response::builder()
+            .status(status)
+            .header(header::LOCATION, super::playback::pointed::path(&handle))
+            .body(Body::empty())
+            .unwrap_or_else(|_| refused(StatusCode::BAD_GATEWAY, Refusal::ForeignNotObserved))
     }
 
     /// Reads the answer whole up to `route::OBSERVED_LIMIT`, mints a handle for
@@ -361,6 +406,7 @@ impl Link {
         mut response: reqwest::Response,
         source: &reqwest::Url,
         seen: &route::Seen,
+        pointed: &Pointed,
     ) -> Result<Response, Failure> {
         if response
             .headers()
@@ -391,7 +437,7 @@ impl Link {
             ));
         };
 
-        match manifest::rewrite(&text, source, &self.base, seen) {
+        match manifest::rewrite(&text, source, &self.base, seen, pointed) {
             Ok(rewritten) => {
                 let mut builder = Response::builder().status(status);
                 if let Some(content_type) = content_type {

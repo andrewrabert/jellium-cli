@@ -732,3 +732,36 @@ in order. A section passes only when every line in it holds.
    absent rather than disabled, while hubs, filtered lists, filters, sort, the
    letter jump, trickplay, chapter images, Latest rows, the Programs tab and
    channel detail all work unchanged.
+
+## Playback parity
+
+- `cargo test` in `jellium-web` runs the port and the pinned reference under
+  one Node process against one installed environment, and fails on the first
+  byte by which a device profile, a browser detection, an hls.js eligibility or
+  a secondary-audio answer differs.
+- `cargo test -p jellium-cli web::playback::negotiate::differential` runs the
+  port and the pinned reference against the same `PlaybackInfo` cases and fails
+  on the first byte by which a body differs. It lives beside the serializer it
+  measures, since `jellium-cli` has no library target for a test under `tests/`
+  to link against.
+- `cargo test -p jellium-cli web::playback::requests` counts what each step of
+  the playback chain puts on the wire against the stub upstream.
+- `just pinned <jellyfin-web-checkout>` rewrites `jellium-web/reference` from
+  the checkout and fails on any difference, and fails on any provenance row
+  whose lines no longer digest to the recorded hash. Its `git ls-files` guard
+  refuses an untracked slice, so this command answers only once
+  `jellium-web/reference/jellyfin-web.mjs` and `environment.mjs` are committed;
+  before that commit it reports the tree broken when the tree is not.
+- A 4K HDR HEVC title on Firefox plays: the network panel shows one
+  `POST /Items/{id}/PlaybackInfo` and no unprofiled `GET`.
+- Starting a title with twenty-eight subtitle streams issues at most one
+  `Stream.vtt` request, and it is the selected track's.
+- Switching to a second external subtitle track issues no `PlaybackInfo`.
+- Switching from a burned-in track issues two `PlaybackInfo` requests, the
+  first carrying `SubtitleStreamIndex: -1`.
+- Changing quality issues `DELETE Videos/ActiveEncodings` twice and no
+  `Sessions/Playing/Stopped`.
+- Every playback request carries an `Authorization` header naming
+  `Jellyfin Web`, `10.11.11`, the announced device and the announced device id.
+- Playing an item with cinema mode on requests `Intros` and plays its items
+  before the item.

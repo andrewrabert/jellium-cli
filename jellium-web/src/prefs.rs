@@ -5,7 +5,31 @@ use crate::failure::Call;
 use crate::failure::{self, Cause, Failure};
 use crate::text::Text;
 
-const STORAGE_KEY: &str = "jellium_web_prefs";
+/// The `localStorage` entries this browser holds.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Entry {
+    Device,
+    /// The id this browser minted for itself, kept apart from `Device` so
+    /// `Device` carries no `String`.
+    DeviceId,
+    Shared,
+    /// Keyed by the signed-in user, the way `appSettings` keys a `userSettings`
+    /// entry whose `enableOnServer` is false.
+    Account(uuid::Uuid),
+}
+
+impl Entry {
+    fn key(self) -> std::borrow::Cow<'static, str> {
+        match self {
+            Entry::Device => std::borrow::Cow::Borrowed("jellium_web_prefs"),
+            Entry::DeviceId => std::borrow::Cow::Borrowed("jellium_web_device_id"),
+            Entry::Shared => std::borrow::Cow::Borrowed("jellium_web_app_settings"),
+            Entry::Account(user) => {
+                std::borrow::Cow::Owned(format!("jellium_web_user_settings-{user}"))
+            }
+        }
+    }
+}
 
 /// The preferences this browser holds, and nothing else.
 #[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
@@ -28,21 +52,23 @@ fn storage() -> Option<web_sys::Storage> {
     failure::called(Call::LocalStorage, web_sys::window()?.local_storage())?
 }
 
-fn entry() -> Option<serde_json::Value> {
-    let raw = failure::called(Call::LocalStorageGetItem, storage()?.get_item(STORAGE_KEY))??;
+/// What `entry` holds, and `None` when it is missing or will not read.
+pub fn stored<T: serde::de::DeserializeOwned>(entry: Entry) -> Option<T> {
+    let raw = failure::called(Call::LocalStorageGetItem, storage()?.get_item(&entry.key()))??;
     failure::decoded(Text::FailureStored, &raw)
 }
 
-fn write(held: &serde_json::Value) {
+/// Writes `value` into `entry`, leaving every other entry standing.
+pub fn store<T: serde::Serialize>(entry: Entry, value: &T) {
     let Some(storage) = storage() else {
         return;
     };
-    let Some(raw) = failure::rendered(Text::FailureStored, held) else {
+    let Some(raw) = failure::rendered(Text::FailureStored, value) else {
         return;
     };
     failure::called(
         Call::LocalStorageSetItem,
-        storage.set_item(STORAGE_KEY, &raw),
+        storage.set_item(&entry.key(), &raw),
     );
 }
 
@@ -50,10 +76,7 @@ impl Device {
     /// Reads `localStorage`; a missing or malformed entry reads as full volume
     /// and unmuted.
     pub fn load() -> Device {
-        let Some(held) = entry() else {
-            return Device::default();
-        };
-        failure::parsed(Text::FailureStored, held).unwrap_or_default()
+        stored(Entry::Device).unwrap_or_default()
     }
 
     /// Writes volume and mute into the entry, leaving every other key it holds
@@ -70,12 +93,12 @@ impl Device {
             ));
             return;
         };
-        let mut held = match entry() {
+        let mut held = match stored(Entry::Device) {
             Some(serde_json::Value::Object(held)) => held,
             _ => serde_json::Map::new(),
         };
         held.extend(mine);
-        write(&serde_json::Value::Object(held));
+        store(Entry::Device, &serde_json::Value::Object(held));
     }
 
     /// Applies what becomes of the ceiling an earlier version parked in the
@@ -86,19 +109,21 @@ impl Device {
         if parked == jellium_model::prefs::Parked::Kept {
             return;
         }
-        let Some(serde_json::Value::Object(mut held)) = entry() else {
+        let Some(serde_json::Value::Object(mut held)) = stored(Entry::Device) else {
             return;
         };
         if held.remove("quality").is_none() {
             return;
         }
-        write(&serde_json::Value::Object(held));
+        store(Entry::Device, &serde_json::Value::Object(held));
     }
 
     /// The bitrate ceiling an earlier version parked in `localStorage`, and
     /// `None` once the entry holds the device preferences alone.
     pub fn parked() -> Option<Quality> {
-        let parked = entry()?.get("quality")?.clone();
+        let parked = stored::<serde_json::Value>(Entry::Device)?
+            .get("quality")?
+            .clone();
         failure::parsed(Text::FailureStored, parked)
     }
 }

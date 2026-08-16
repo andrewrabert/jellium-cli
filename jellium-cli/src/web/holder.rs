@@ -50,9 +50,6 @@ pub enum Removed {
 /// line, held together so the two never disagree.
 pub struct Holder {
     path: PathBuf,
-    /// The identity a revoke of a record no session is held for is issued
-    /// under.
-    device: Arc<super::identity::Device>,
     current: tokio::sync::RwLock<Option<Held>>,
     /// Every change to the pair is taken under this, so a sign-in and a revoke
     /// never interleave.
@@ -87,10 +84,9 @@ pub enum Resumed {
 }
 
 impl Holder {
-    pub fn new(path: PathBuf, device: Arc<super::identity::Device>) -> Holder {
+    pub fn new(path: PathBuf) -> Holder {
         Holder {
             path,
-            device,
             current: tokio::sync::RwLock::new(None),
             transition: tokio::sync::Mutex::new(()),
         }
@@ -218,7 +214,9 @@ impl Holder {
     /// compacts the ones behind it; a revoke the Jellyfin server refuses still
     /// deletes and answers `Removed::DeletedUnrevoked`.
     /// Removing the server held now releases it first.
-    pub async fn remove(&self, server: &str) -> Removed {
+    /// The revoke is issued under `identity`, which is what the browser
+    /// announced.
+    pub async fn remove(&self, identity: &super::identity::Identity, server: &str) -> Removed {
         let _transition = self.transition.lock().await;
         let wanted = crate::session::normalized(server);
         let held = self.current.read().await.clone();
@@ -251,7 +249,7 @@ impl Holder {
         if let Some(session) = record.session() {
             revoked = match &held {
                 Some(Held::Signed(upstream)) if releases => upstream.logout().await.is_ok(),
-                _ => super::upstream::revoked(&self.device, &session).await,
+                _ => super::upstream::revoked(identity, &session).await,
             };
         }
         if releases {
@@ -392,11 +390,15 @@ mod tests {
     use super::*;
     use crate::web::upstream::{Upstream, answering};
 
+    fn device() -> crate::web::identity::Identity {
+        crate::web::identity::Identity::of(jellium_protocol::Identity {
+            device: "Firefox".to_owned(),
+            device_id: uuid::Uuid::nil().to_string(),
+        })
+    }
+
     fn holder(path: PathBuf) -> Holder {
-        Holder::new(
-            path,
-            Arc::new(crate::web::identity::Device::new(uuid::Uuid::nil())),
-        )
+        Holder::new(path)
     }
 
     fn scratch(name: &str) -> PathBuf {
@@ -537,7 +539,7 @@ mod tests {
         let server = answering(500).await;
         let holder = holder(scratch("remove-unrevoked"));
         holder.install(Upstream::stub(&server.base)).await;
-        let removed = holder.remove(&server.base).await;
+        let removed = holder.remove(&device(), &server.base).await;
         assert!(matches!(removed, Removed::DeletedUnrevoked));
         assert!(holder.records().await.is_empty());
         assert!(holder.held().await.is_none());
@@ -548,7 +550,10 @@ mod tests {
         let server = answering(200).await;
         let holder = holder(scratch("enter-login"));
         holder.install(Upstream::stub(&server.base)).await;
-        let device = crate::web::identity::Device::new(uuid::Uuid::nil());
+        let device = crate::web::identity::Identity::of(jellium_protocol::Identity {
+            device: "Firefox".to_owned(),
+            device_id: uuid::Uuid::nil().to_string(),
+        });
         let login = crate::web::login::Login::of(
             &device,
             &server.base,

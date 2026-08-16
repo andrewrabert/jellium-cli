@@ -5,15 +5,18 @@ use std::time::Duration;
 use iced::Subscription;
 use iced::keyboard;
 use iced::{Task, event, mouse, touch};
+use jellium_protocol::profile::{DeviceProfile, MediaKind};
+use jellium_protocol::report;
 use jellium_protocol::{
-    Control, Plan, PlayMode, PlayRequest, PlaybackRefused, Progress, Quality, Repeat, Standing,
-    Stopped,
+    Control, HostGrants, Plan, PlayMode, PlayRequest, PlaybackRefused, Progress, Quality, Repeat,
+    Standing, Stopped, StreamIndex, SubtitleDelivery, Subtitles,
 };
 use jellyfin_api::types::{BaseItemDto, BaseItemKind};
+
+use crate::browser::Browser;
 use uuid::Uuid;
 
 pub mod binding;
-pub mod capability;
 pub mod control;
 pub mod element;
 pub mod group;
@@ -25,7 +28,9 @@ mod seconds;
 pub mod trickplay;
 
 pub use control::Planned;
-pub use element::{Asked, Element, Event, Fault, Generation, Kind, Metadata, Raised, TextTrack};
+pub use element::{
+    Asked, Element, Event, Fault, Generation, Kind, Metadata, Raised, Shown, TextTrack,
+};
 pub use queue::Queue;
 
 pub mod live;
@@ -34,7 +39,10 @@ use crate::api::Api;
 use crate::app::{Message, Signed};
 use crate::error::{Answer, Trouble};
 use crate::images::{self, Kind as ImageKind};
+use crate::profile::probe::{Engine, Media};
+use crate::profile::{self, Options};
 use crate::route::Route;
+use crate::settings::{Account, Shared};
 use crate::text::Text;
 use crate::theme;
 
@@ -53,6 +61,33 @@ fn beacon(stopped: &Stopped) -> Asked<'_> {
         path: control::endpoint(jellium_protocol::PLAYBACK_STOPPED_PATH),
         stopped,
     }
+}
+
+/// The volume the Jellyfin server is told, which is a percentage.
+fn volume_level(device: crate::prefs::Device) -> i32 {
+    (device.volume * 100.0).round() as i32
+}
+
+/// The pace a media element plays at, taken where the element answers none at
+/// all.
+const UNCHANGED_RATE: f64 = 1.0;
+
+/// The pace the element plays at, read off the element that is mounted: the one
+/// a start has just mounted, or the one this stream is playing in.
+fn rate(signed: &Signed) -> f64 {
+    signed
+        .pending
+        .as_ref()
+        .map(|pending| &pending.element)
+        .or_else(|| signed.playing.as_ref().map(|playing| &playing.element))
+        .and_then(Element::position)
+        .map_or(UNCHANGED_RATE, |playhead| playhead.rate)
+}
+
+/// The clock jellyfin-web stamps a playback start with: milliseconds since the
+/// epoch in ten-thousandths.
+fn started_at() -> i64 {
+    (js_sys::Date::now() as i64) * 10_000
 }
 
 pub fn span(ticks: i64) -> Duration {
@@ -79,8 +114,8 @@ pub enum Intent {
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct Selection {
     pub media_source: Option<String>,
-    pub audio_stream: Option<i32>,
-    pub subtitle_stream: Option<i32>,
+    pub audio_stream: Option<StreamIndex>,
+    pub subtitles: Subtitles,
 }
 
 /// A queue resolved from an intent or a control command, ready to play.
@@ -135,8 +170,8 @@ pub enum Action {
     SkipForward,
     SetVolume(f32),
     ToggleMute,
-    SelectAudio(i32),
-    SelectSubtitle(Option<i32>),
+    SelectAudio(StreamIndex),
+    SelectSubtitle(Subtitles),
     SelectQuality(Quality),
     SelectVersion(String),
     SelectChapter(i64),
@@ -197,8 +232,6 @@ pub struct Playing {
     /// Time since the last input, which hides the display and the cursor at
     /// `theme::IDLE_HIDE`.
     pub idle: Duration,
-    /// True once this item has retried with direct play disabled.
-    pub retried: bool,
     /// True once this item has been resumed after an interruption: a dropped
     /// stream or a lapsed session.
     pub resumed: bool,
@@ -212,6 +245,16 @@ pub struct Playing {
     pub trickplay: crate::player::trickplay::Trickplay,
     /// The scrub preview shown now.
     pub preview: Option<crate::player::trickplay::Preview>,
+    /// Every buffered range of the element, as it last reported them.
+    pub buffered_ranges: Vec<report::Buffered>,
+    /// The pace the element is playing at, as it last reported it.
+    pub rate: f64,
+    /// True while the local server is swapping the source under this element,
+    /// which is when the old stream's end is not this playback's end.
+    // reference: change-stream-to-url — playbackmanager.js:1766-1782
+    pub changing: bool,
+    /// When this stream started, stamped the way jellyfin-web stamps it.
+    pub started_at: i64,
 }
 
 impl Playing {
@@ -245,8 +288,11 @@ impl Playing {
             .subtitle_streams
             .iter()
             .filter_map(|stream| {
+                let SubtitleDelivery::External { path } = &stream.delivery else {
+                    return None;
+                };
                 Some(TextTrack {
-                    path: stream.track.clone()?,
+                    path: path.clone(),
                     label: stream.label.clone(),
                     language: stream.language.clone(),
                 })
@@ -254,32 +300,80 @@ impl Playing {
             .collect()
     }
 
-    fn selected_track(&self) -> Option<usize> {
-        let wanted = self.plan.subtitle_stream?;
+    /// Where `wanted` sits among the text tracks the element was offered, and
+    /// nothing where the element was offered no track for it.
+    fn track_at(&self, wanted: StreamIndex) -> Option<usize> {
         self.plan
             .subtitle_streams
             .iter()
-            .filter(|stream| stream.track.is_some())
+            .filter(|stream| matches!(stream.delivery, SubtitleDelivery::External { .. }))
             .position(|stream| stream.index == wanted)
     }
 
-    fn stopped(&self) -> Stopped {
-        Stopped {
-            play_session: self.plan.play_session.clone(),
-            position_ticks: to_ticks(self.position),
+    /// How the element shows `stream`: at its position among the offered
+    /// external tracks, or by the stream index the container carries it under.
+    /// A stream the element can show neither way answers nothing.
+    fn shows(&self, stream: &jellium_protocol::SubtitleChoice) -> Option<Shown> {
+        match stream.delivery {
+            SubtitleDelivery::External { .. } => {
+                self.track_at(stream.index).map(|at| Shown::Offered { at })
+            }
+            SubtitleDelivery::Embed => Some(Shown::Embedded {
+                index: stream.index,
+            }),
+            SubtitleDelivery::Encode | SubtitleDelivery::Hls | SubtitleDelivery::Drop => None,
         }
     }
 
-    fn progress(&self, device: crate::prefs::Device) -> Progress {
-        Progress {
+    fn selected_track(&self) -> Option<Shown> {
+        self.shows(self.stream_at(self.plan.subtitle_stream?)?)
+    }
+
+    /// The subtitle stream the element is playing under, which is what the
+    /// switch decision reads the outgoing delivery from.
+    fn current_subtitle(&self) -> Option<&jellium_protocol::SubtitleChoice> {
+        self.stream_at(self.plan.subtitle_stream?)
+    }
+
+    fn stream_at(&self, wanted: StreamIndex) -> Option<&jellium_protocol::SubtitleChoice> {
+        self.plan
+            .subtitle_streams
+            .iter()
+            .find(|stream| stream.index == wanted)
+    }
+
+    /// Everything the Jellyfin server is told about this stream, which is what
+    /// the local server reports on its behalf.
+    fn state(&self, device: crate::prefs::Device) -> report::Playing {
+        report::Playing {
             play_session: self.plan.play_session.clone(),
-            position_ticks: to_ticks(self.position),
-            paused: self.paused,
+            volume_level: volume_level(device),
             muted: device.muted,
-            volume: (device.volume * 100.0).round() as i32,
-            audio_stream: self.plan.audio_stream,
-            subtitle_stream: self.plan.subtitle_stream,
+            paused: self.paused,
             repeat: self.queue.repeat(),
+            shuffle: self.queue.shuffle(),
+            position_ticks: to_ticks(self.position),
+            playback_start_time_ticks: self.started_at,
+            playback_rate: self.rate,
+            subtitle_stream: self.plan.subtitle_stream,
+            secondary_subtitle_stream: None,
+            audio_stream: self.plan.audio_stream,
+            buffered: self.buffered_ranges.clone(),
+            playlist_item_id: self.queue.playlist_item_id(),
+            queue: self.queue.reported(),
+        }
+    }
+
+    fn stopped(&self, device: crate::prefs::Device) -> Stopped {
+        Stopped {
+            playing: self.state(device),
+        }
+    }
+
+    fn progress(&self, device: crate::prefs::Device, event: report::Reported) -> Progress {
+        Progress {
+            playing: self.state(device),
+            event,
         }
     }
 
@@ -432,16 +526,99 @@ pub async fn commanded(api: Rc<Api>, asked: Commanded) -> Answer<Start> {
     .await
 }
 
-fn request(signed: &Signed, item: Uuid, start_ticks: i64, selection: &Selection) -> PlayRequest {
+/// The device profile this browser builds for `item`, rebuilt on every request
+/// the way `getDeviceProfile` rebuilds it.
+fn profile_for(signed: &Signed, shared: &Shared, item: &BaseItemDto) -> DeviceProfile {
+    let Some(media) = Media::created() else {
+        return DeviceProfile::default();
+    };
+    let engine = Engine::read();
+    let kind = match item.media_type {
+        Some(jellyfin_api::types::MediaType::Audio) => MediaKind::Audio,
+        _ => MediaKind::Video,
+    };
+    let options = Options::of(&signed.browser, &engine, &media, item.run_time_ticks, kind);
+    profile::build(
+        &signed.browser,
+        &engine,
+        &media,
+        shared,
+        &Account::read(signed.session.user_id, &signed.browser),
+        &options,
+    )
+}
+
+fn request(
+    signed: &Signed,
+    item: &BaseItemDto,
+    start_ticks: i64,
+    selection: &Selection,
+) -> PlayRequest {
+    let shared = Shared::load();
     PlayRequest {
-        item,
+        item: item.id.unwrap_or_default(),
         media_source: selection.media_source.clone(),
         audio_stream: selection.audio_stream,
-        subtitle_stream: selection.subtitle_stream,
+        subtitles: selection.subtitles,
         start_ticks,
         quality: signed.held.quality,
-        capabilities: signed.capabilities.clone(),
-        allow_direct_play: true,
+        profile: profile_for(signed, &shared, item),
+        always_burn_in_subtitle_when_transcoding: shared.always_burn_in_subtitle_when_transcoding,
+        allow_direct_play: None,
+        allow_direct_stream: None,
+        allow_video_stream_copy: None,
+        allow_audio_stream_copy: None,
+        grants: grants(&signed.browser),
+        cinema_mode: Account::read(signed.session.user_id, &signed.browser).enable_cinema_mode,
+        // no play this player issues asks for anything but the full screen,
+        // which is what an unset `fullscreen` option normalizes to
+        fullscreen: true,
+        start_index: None,
+        reporting: reporting(signed),
+    }
+}
+
+/// The selection the playing stream holds, which a re-negotiation merges into:
+/// the media source, the audio stream and the subtitle choice are re-asserted
+/// rather than negotiated afresh.
+fn selection(playing: &Playing) -> Selection {
+    Selection {
+        media_source: Some(playing.plan.media_source.clone()),
+        audio_stream: playing.plan.audio_stream,
+        subtitles: Subtitles::selected(playing.plan.subtitle_stream),
+    }
+}
+
+/// What the browser knows about its own reporting before this stream exists,
+/// which the local server's start report carries; jellyfin-web's reporter is
+/// the player and reads the same values off itself.
+fn reporting(signed: &Signed) -> report::Reporting {
+    let queue = signed
+        .pending
+        .as_ref()
+        .map(|pending| &pending.queue)
+        .or_else(|| signed.playing.as_ref().map(|playing| &playing.queue));
+    report::Reporting {
+        volume_level: volume_level(signed.device),
+        muted: signed.device.muted,
+        repeat: queue.map(Queue::repeat).unwrap_or_default(),
+        shuffle: queue.map(Queue::shuffle).unwrap_or_default(),
+        playback_rate: rate(signed),
+        playlist_item_id: queue.map(Queue::playlist_item_id).unwrap_or_default(),
+        queue: queue.map(Queue::reported).unwrap_or_default(),
+    }
+}
+
+/// The appHost grants only the browser can answer, which the relay reads off
+/// the request because nothing on it can answer them.
+// reference: remote-video-grant — apphost.js:265-267
+fn grants(browser: &Browser) -> HostGrants {
+    HostGrants {
+        remote_video: !(browser.opera_tv
+            || browser.tizen
+            || browser.orsay.unwrap_or(false)
+            || browser.web0s
+            || browser.edge_uwp.unwrap_or(false)),
     }
 }
 
@@ -467,7 +644,7 @@ pub fn begin(signed: &mut Signed, start: Start) -> Task<Message> {
     let leaving = leave(signed);
 
     let queue = Queue::new(start.items, start.position, start.mode.shuffles());
-    let Some(item) = queue.current().and_then(|item| item.id) else {
+    let Some(item) = queue.current().cloned() else {
         return leaving;
     };
     let Some(element) = Element::mount(start.kind) else {
@@ -487,11 +664,18 @@ pub fn begin(signed: &mut Signed, start: Start) -> Task<Message> {
         live: start.live,
     });
 
-    let request = request(signed, item, start.start_ticks, &start.selection);
+    let mut request = request(signed, &item, start.start_ticks, &start.selection);
+    request.start_index = (start.position != 0).then_some(start.position);
     Task::batch([
         leaving,
-        Task::perform(control::start(request), Message::Planned),
+        Task::perform(control::enter(request), Message::Planned),
     ])
+}
+
+/// What a volume or mute change reports, which the Jellyfin server is told at
+/// most once every three seconds.
+fn volumed(playing: &Playing, device: crate::prefs::Device) -> Progress {
+    playing.progress(device, report::Reported::VolumeChange)
 }
 
 /// The ask that matches the mute state `device` holds.
@@ -522,15 +706,44 @@ fn replan(signed: &mut Signed, request: PlayRequest) -> Task<Message> {
     Task::perform(control::start(request), Message::Planned)
 }
 
+/// Asks the local server to swap the source under the playback already
+/// running, which reports no stop and holds the queue where it is until the
+/// plan arrives.
+/// A change asked for while one is in flight asks for nothing.
+// reference: change-stream-to-url — playbackmanager.js:1766-1782
+fn change(signed: &mut Signed, request: PlayRequest) -> Task<Message> {
+    let Some(playing) = signed.playing.as_mut() else {
+        return Task::none();
+    };
+    if playing.changing {
+        return Task::none();
+    }
+    playing.changing = true;
+    Task::perform(control::change(request), Message::Planned)
+}
+
 /// Installs a plan: loads the element, applies the held volume, mute and
 /// subtitle selection, publishes the media session metadata and reports
 /// playback start.
 pub fn installed(signed: &mut Signed, plan: Plan) -> Task<Message> {
+    // a change keeps its playback installed while it is in flight, so the
+    // element and queue the plan loads into are that playback's own
+    let mounted = match signed.pending.take() {
+        Some(pending) => Some(pending),
+        None => signed
+            .playing
+            .take_if(|playing| playing.changing)
+            .map(|playing| Pending {
+                element: playing.element,
+                queue: playing.queue,
+                live: playing.live,
+            }),
+    };
     let Some(Pending {
         element,
         queue,
         live,
-    }) = signed.pending.take()
+    }) = mounted
     else {
         return Task::none();
     };
@@ -538,7 +751,7 @@ pub fn installed(signed: &mut Signed, plan: Plan) -> Task<Message> {
         return Task::none();
     };
 
-    let generation = element.load(&plan.delivery, span(plan.start_ticks));
+    let generation = element.load(&signed.browser, &plan);
 
     let playing = Playing {
         live: live.map(|mut live| {
@@ -555,12 +768,17 @@ pub fn installed(signed: &mut Signed, plan: Plan) -> Task<Message> {
         fullscreen: false,
         menu: None,
         idle: Duration::ZERO,
-        retried: plan.method != jellium_protocol::Method::DirectPlay,
         resumed: false,
         trouble: None,
         ended: false,
         trickplay: trickplay::Trickplay::default(),
         preview: None,
+        buffered_ranges: Vec::new(),
+        rate: element
+            .position()
+            .map_or(UNCHANGED_RATE, |playhead| playhead.rate),
+        changing: false,
+        started_at: started_at(),
         plan,
         element,
         queue,
@@ -580,9 +798,11 @@ pub fn installed(signed: &mut Signed, plan: Plan) -> Task<Message> {
     playing.element.ask(&Asked::Metadata {
         metadata: &playing.metadata(),
     });
-    playing.element.ask(&beacon(&playing.stopped()));
+    playing
+        .element
+        .ask(&beacon(&playing.stopped(signed.device)));
 
-    let progress = playing.progress(signed.device);
+    let progress = playing.progress(signed.device, report::Reported::TimeUpdate);
     signed.playing = Some(playing);
     Task::perform(control::progress(progress), Message::Reported)
 }
@@ -612,6 +832,8 @@ pub fn started(signed: &mut Signed, start: Start) -> Task<Message> {
 #[must_use = "a play request's outcome leaves a pending request that must be installed or dropped"]
 pub enum Outcome {
     Plan(Box<Plan>),
+    /// The change was not made and the stream that was playing still is.
+    Unchanged,
     /// No plan; whatever named that was raised inside `planned`, so nothing is
     /// carried out of it.
     Unplanned,
@@ -623,12 +845,23 @@ pub enum Outcome {
 pub fn planned(answered: crate::error::Answer<control::Planned>) -> Outcome {
     match answered.or_none(crate::text::Text::FailurePlaybackUnplanned) {
         Some(control::Planned::Plan(plan)) => Outcome::Plan(plan),
+        Some(control::Planned::Unchanged) => Outcome::Unchanged,
         Some(control::Planned::Refused(refused)) => {
             crate::failure::raise(crate::error::refused(&refused));
             Outcome::Unplanned
         }
         None => Outcome::Unplanned,
     }
+}
+
+/// Applies a change the local server did not make: the stream that was playing
+/// goes on playing under the plan it already holds, and the next change is let
+/// through.
+pub fn unchanged(signed: &mut Signed) -> Task<Message> {
+    if let Some(playing) = signed.playing.as_mut() {
+        playing.changing = false;
+    }
+    Task::none()
 }
 
 /// Applies a play request that yielded no plan, already reported: the pending
@@ -652,10 +885,10 @@ fn play_current(signed: &mut Signed, start_ticks: i64) -> Task<Message> {
     let Some(playing) = signed.playing.as_ref() else {
         return Task::none();
     };
-    let Some(item) = playing.queue.current().and_then(|item| item.id) else {
+    let Some(item) = playing.queue.current().cloned() else {
         return leave(signed);
     };
-    let request = request(signed, item, start_ticks, &Selection::default());
+    let request = request(signed, &item, start_ticks, &Selection::default());
     replan(signed, request)
 }
 
@@ -687,6 +920,11 @@ pub fn event(signed: &mut Signed, raised: Raised) -> Task<Message> {
     let Some(playing) = signed.playing.as_mut() else {
         return Task::none();
     };
+    // the stream a change swaps out ends and faults as it goes; neither is this
+    // playback ending, so neither reports a stop nor starts anything
+    if playing.changing && matches!(raised.event, Event::Ended | Event::Failed { .. }) {
+        return Task::none();
+    }
     match raised.event {
         Event::Ready { duration } => {
             if !duration.is_zero() {
@@ -698,17 +936,21 @@ pub fn event(signed: &mut Signed, raised: Raised) -> Task<Message> {
             position,
             buffered,
             paused,
+            ranges,
+            rate,
         } => {
             playing.position = position;
             playing.buffered = buffered;
             playing.paused = paused;
-            let stopped = playing.stopped();
+            playing.buffered_ranges = ranges;
+            playing.rate = rate;
+            let stopped = playing.stopped(signed.device);
             playing.element.ask(&beacon(&stopped));
             Task::none()
         }
         Event::ReportDue { position } => {
             playing.position = position;
-            let progress = playing.progress(signed.device);
+            let progress = playing.progress(signed.device, report::Reported::TimeUpdate);
             Task::perform(control::progress(progress), Message::Reported)
         }
         Event::Stalled | Event::Playable { .. } => Task::none(),
@@ -722,7 +964,7 @@ pub fn event(signed: &mut Signed, raised: Raised) -> Task<Message> {
                 playing.ended = true;
                 playing.paused = true;
                 playing.element.ask(&Asked::Pause);
-                let stopped = playing.stopped();
+                let stopped = playing.stopped(signed.device);
                 return Task::perform(
                     async move { control::stopped(stopped).await.map(|()| Standing::Current) },
                     Message::Reported,
@@ -736,7 +978,7 @@ pub fn event(signed: &mut Signed, raised: Raised) -> Task<Message> {
                         .current()
                         .map(resume_ticks)
                         .unwrap_or_default();
-                    let stopped = playing.stopped();
+                    let stopped = playing.stopped(signed.device);
                     let reported = Task::perform(
                         async move { control::stopped(stopped).await.map(|()| Standing::Current) },
                         Message::Reported,
@@ -759,21 +1001,137 @@ pub fn event(signed: &mut Signed, raised: Raised) -> Task<Message> {
     }
 }
 
+/// The re-negotiation a failed stream falls back to, and nothing where this
+/// stream has no rung left: the reference reads the rung it is on off the url
+/// it is playing, and stops once that url forbids both stream copies.
+/// A remote source is remuxed on its first fallback and transcoded after that.
+/// A source the Jellyfin server would not transcode falls back to nothing.
+// reference: on-playback-error — playbackmanager.js:3396-3432
+// reference: enable-playback-retry-with-transcoding — playbackmanager.js:3384-3387
+fn retried(signed: &Signed, playing: &Playing, fault: Fault) -> Option<PlayRequest> {
+    if !matches!(fault, Fault::Decode | Fault::Unsupported) {
+        return None;
+    }
+    if !playing.plan.supports_transcoding {
+        return None;
+    }
+    let playing_url = playing.plan.playable.path.to_lowercase();
+    let fallbacking = playing_url.contains("transcodereasons");
+    let prevents_video_copy = playing_url.contains("allowvideostreamcopy=false");
+    let prevents_audio_copy = playing_url.contains("allowaudiostreamcopy=false");
+    if prevents_video_copy && prevents_audio_copy {
+        return None;
+    }
+    let item = playing.queue.current().cloned()?;
+    let remote = playing.item.location_type == Some(jellyfin_api::types::LocationType::Remote);
+    let copying = remote && !fallbacking;
+    let mut request = request(
+        signed,
+        &item,
+        to_ticks(playing.position),
+        &selection(playing),
+    );
+    request.allow_direct_play = Some(false);
+    request.allow_direct_stream = Some(copying);
+    request.allow_video_stream_copy = Some(copying);
+    request.allow_audio_stream_copy = (prevents_audio_copy || prevents_video_copy).then_some(false);
+    Some(request)
+}
+
+/// What one subtitle switch does.
+pub struct Switch {
+    /// The track the element shows, and None where the element shows none.
+    pub track: Option<Shown>,
+    /// The re-negotiation to issue beside the selection, and None where the
+    /// switch needs none.
+    pub renegotiate: Option<PlayRequest>,
+}
+
+/// The switch `wanted` asks for, decided the way `setSubtitleStreamIndex`
+/// decides it: the outgoing stream's delivery gates the re-negotiation and the
+/// incoming stream's delivery gates the selection.
+/// The reference does both halves together: an external track, or an embedded
+/// one while the stream is not transcoding, is selected on the element, and
+/// where the outgoing stream's delivery is neither external nor embedded it
+/// *also* re-negotiates with no subtitle at all to drop the burned-in or
+/// renditioned track. The element is told the selection on every path, which is
+/// why `track` is answered on every path.
+// reference: set-subtitle-stream-index — playbackmanager.js:1509-1566
+fn switched(signed: &Signed, playing: &Playing, wanted: Subtitles) -> Switch {
+    let current = playing.current_subtitle();
+    let incoming = match wanted {
+        Subtitles::Stream { index } => playing.stream_at(index),
+        Subtitles::Default | Subtitles::Off => None,
+    };
+    let transcoding = matches!(
+        playing.plan.playable.method,
+        jellium_protocol::Method::Transcode { .. }
+    );
+    let clientside = |stream: &jellium_protocol::SubtitleChoice| {
+        matches!(stream.delivery, SubtitleDelivery::External { .. })
+            || (stream.delivery == SubtitleDelivery::Embed && !transcoding)
+    };
+    let burned = |stream: &jellium_protocol::SubtitleChoice| {
+        !matches!(
+            stream.delivery,
+            SubtitleDelivery::External { .. } | SubtitleDelivery::Embed
+        )
+    };
+
+    let (track, asked) = match (current, incoming) {
+        (None, None) => (None, None),
+        (Some(current), None) => (
+            None,
+            (current.delivery == SubtitleDelivery::Encode
+                || (current.delivery == SubtitleDelivery::Embed && transcoding))
+                .then_some(Subtitles::Off),
+        ),
+        (None, Some(incoming)) => {
+            if clientside(incoming) {
+                (playing.shows(incoming), None)
+            } else {
+                (None, Some(wanted))
+            }
+        }
+        (Some(current), Some(incoming)) => {
+            if clientside(incoming) {
+                (
+                    playing.shows(incoming),
+                    burned(current).then_some(Subtitles::Off),
+                )
+            } else {
+                (None, Some(wanted))
+            }
+        }
+    };
+
+    Switch {
+        track,
+        renegotiate: asked.and_then(|subtitles| {
+            let item = playing.queue.current().cloned()?;
+            let mut request = request(
+                signed,
+                &item,
+                to_ticks(playing.position),
+                &selection(playing),
+            );
+            request.subtitles = subtitles;
+            Some(request)
+        }),
+    }
+}
+
 fn failed(signed: &mut Signed, fault: Fault) -> Task<Message> {
+    let Some(playing) = signed.playing.as_ref() else {
+        return Task::none();
+    };
+    if let Some(request) = retried(signed, playing, fault) {
+        return change(signed, request);
+    }
     let Some(playing) = signed.playing.as_mut() else {
         return Task::none();
     };
     match fault {
-        Fault::Decode | Fault::Unsupported if !playing.retried => {
-            playing.retried = true;
-            let Some(item) = playing.queue.current().and_then(|item| item.id) else {
-                return leave(signed);
-            };
-            let position = to_ticks(playing.position);
-            let mut request = request(signed, item, position, &Selection::default());
-            request.allow_direct_play = false;
-            replan(signed, request)
-        }
         Fault::Network if playing.live.is_some() => {
             let resumed = playing.live.as_ref().is_some_and(|live| live.resumed);
             if resumed {
@@ -797,6 +1155,14 @@ fn failed(signed: &mut Signed, fault: Fault) -> Task<Message> {
         }
         Fault::Decode | Fault::Unsupported => {
             playing.trouble = Some(Text::FailureDecode);
+            Task::none()
+        }
+        Fault::Server => {
+            playing.trouble = Some(Text::FailurePlaybackServer);
+            Task::none()
+        }
+        Fault::FatalHls => {
+            playing.trouble = Some(Text::FailurePlaybackHlsFatal);
             Task::none()
         }
     }
@@ -855,13 +1221,20 @@ pub fn act(signed: &mut Signed, action: Action) -> Task<Message> {
                 playing.element.ask(&Asked::Pause);
             }
             playing.paused = !playing.paused;
-            let progress = playing.progress(signed.device);
+            let progress = playing.progress(
+                signed.device,
+                if playing.paused {
+                    report::Reported::Pause
+                } else {
+                    report::Reported::Unpause
+                },
+            );
             Task::perform(control::progress(progress), Message::Reported)
         }
         Action::Seek(position) => {
             playing.element.ask(&Asked::Seek { position });
             playing.position = position;
-            let progress = playing.progress(signed.device);
+            let progress = playing.progress(signed.device, report::Reported::TimeUpdate);
             Task::perform(control::progress(progress), Message::Reported)
         }
         Action::Scrub(position) => {
@@ -888,41 +1261,44 @@ pub fn act(signed: &mut Signed, action: Action) -> Task<Message> {
             playing.element.ask(&Asked::Volume {
                 volume: signed.device.volume,
             });
-            Task::none()
+            let progress = volumed(playing, signed.device);
+            Task::perform(control::progress(progress), Message::Reported)
         }
         Action::ToggleMute => {
             signed.device.muted = !signed.device.muted;
             signed.device.store();
             playing.element.ask(&muting(signed.device));
-            Task::none()
+            let progress = volumed(playing, signed.device);
+            Task::perform(control::progress(progress), Message::Reported)
         }
         Action::SelectAudio(index) => {
             playing.menu = None;
             let position = to_ticks(playing.position);
             let source = playing.plan.media_source.clone();
-            let subtitle = playing.plan.subtitle_stream;
-            let Some(item) = playing.queue.current().and_then(|item| item.id) else {
+            let subtitles = Subtitles::selected(playing.plan.subtitle_stream);
+            let Some(item) = playing.queue.current().cloned() else {
                 return Task::none();
             };
-            let mut request = request(signed, item, position, &Selection::default());
+            let mut request = request(signed, &item, position, &Selection::default());
             request.media_source = Some(source);
             request.audio_stream = Some(index);
-            request.subtitle_stream = subtitle;
-            replan(signed, request)
+            request.subtitles = subtitles;
+            change(signed, request)
         }
-        Action::SelectSubtitle(index) => {
+        Action::SelectSubtitle(subtitles) => {
             playing.menu = None;
-            let position = to_ticks(playing.position);
-            let source = playing.plan.media_source.clone();
-            let audio = playing.plan.audio_stream;
-            let Some(item) = playing.queue.current().and_then(|item| item.id) else {
+            let Some(playing) = signed.playing.as_ref() else {
                 return Task::none();
             };
-            let mut request = request(signed, item, position, &Selection::default());
-            request.media_source = Some(source);
-            request.audio_stream = audio;
-            request.subtitle_stream = index;
-            replan(signed, request)
+            let switch = switched(signed, playing, subtitles);
+            playing.element.ask(&Asked::TextTracks {
+                tracks: &playing.text_tracks(),
+                selected: switch.track,
+            });
+            match switch.renegotiate {
+                Some(request) => change(signed, request),
+                None => Task::none(),
+            }
         }
         Action::SelectQuality(quality) => {
             playing.menu = None;
@@ -930,14 +1306,18 @@ pub fn act(signed: &mut Signed, action: Action) -> Task<Message> {
             // on the playback screen writes the ceiling to the server
             signed.held.quality = quality;
             let position = to_ticks(playing.position);
-            play_current(signed, position)
+            let Some(item) = playing.queue.current().cloned() else {
+                return Task::none();
+            };
+            let request = request(signed, &item, position, &Selection::default());
+            change(signed, request)
         }
         Action::SelectVersion(id) => {
             playing.menu = None;
-            let Some(item) = playing.queue.current().and_then(|item| item.id) else {
+            let Some(item) = playing.queue.current().cloned() else {
                 return Task::none();
             };
-            let mut request = request(signed, item, 0, &Selection::default());
+            let mut request = request(signed, &item, 0, &Selection::default());
             request.media_source = Some(id);
             replan(signed, request)
         }
@@ -985,7 +1365,7 @@ pub fn act(signed: &mut Signed, action: Action) -> Task<Message> {
         }
         Action::SetRepeat(repeat) => {
             playing.queue.set_repeat(repeat);
-            let progress = playing.progress(signed.device);
+            let progress = playing.progress(signed.device, report::Reported::RepeatModeChange);
             Task::perform(control::progress(progress), Message::Reported)
         }
         Action::RemoveQueued(position) => {
@@ -1065,7 +1445,7 @@ pub fn controlled(signed: &mut Signed, control: Control) -> Task<Message> {
         start_ticks,
         media_source,
         audio_stream,
-        subtitle_stream,
+        subtitles,
     } = control
     {
         let leaving = remote::leave(signed);
@@ -1078,7 +1458,7 @@ pub fn controlled(signed: &mut Signed, control: Control) -> Task<Message> {
             selection: Selection {
                 media_source,
                 audio_stream,
-                subtitle_stream,
+                subtitles,
             },
         };
         return Task::batch([
@@ -1134,7 +1514,7 @@ fn honoured(signed: &Signed, control: Control) -> Option<Action> {
         Control::Unmute => signed.device.muted.then_some(Action::ToggleMute),
         Control::ToggleMute => Some(Action::ToggleMute),
         Control::SetAudioStream { index } => Some(Action::SelectAudio(index)),
-        Control::SetSubtitleStream { index } => Some(Action::SelectSubtitle(index)),
+        Control::SetSubtitleStream { subtitles } => Some(Action::SelectSubtitle(subtitles)),
         Control::SetMediaSource { id } => Some(Action::SelectVersion(id)),
         Control::SetMaxBitrate { bits_per_second } => {
             Some(Action::SelectQuality(match bits_per_second {
@@ -1164,7 +1544,7 @@ pub fn leave(signed: &mut Signed) -> Task<Message> {
     let Some(playing) = signed.playing.take() else {
         return Task::none();
     };
-    let stopped = playing.stopped();
+    let stopped = playing.stopped(signed.device);
     if playing.fullscreen {
         playing.element.ask(&Asked::Windowed);
     }

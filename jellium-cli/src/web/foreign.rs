@@ -6,10 +6,11 @@ use std::sync::Arc;
 
 use axum::extract::{Path, State};
 use axum::http::{StatusCode, header};
-use axum::response::Response;
+use axum::response::{IntoResponse, Response};
 
 use super::AppState;
 use super::link::CONNECT_TIMEOUT;
+use super::playback::pointed::Pointed;
 
 /// The client every foreign image is fetched over: built with no default
 /// headers, so no Jellyfin access token, no device identity and no client name
@@ -20,33 +21,69 @@ pub struct Anonymous {
 
 impl Anonymous {
     /// Carries `link::CONNECT_TIMEOUT` and no total deadline, matching the
-    /// link's streaming client, and no default header of any kind.
+    /// link's streaming client, no default header of any kind, and no redirect
+    /// policy: the relay decides itself whether a `Location` may be followed.
     pub fn new() -> Anonymous {
         Anonymous {
             client: reqwest::Client::builder()
                 .connect_timeout(CONNECT_TIMEOUT)
+                .redirect(reqwest::redirect::Policy::none())
                 .build()
                 .expect("a client with no default headers"),
         }
+    }
+
+    /// The url at `url`, following one `Location` the host answers.
+    /// The hop is admitted the way the first url was, by minting it into the
+    /// plan's register before it is fetched, and it carries no credential.
+    pub async fn followed(&self, url: &str, pointed: &Pointed) -> Result<Response, ()> {
+        let response = self.client.get(url).send().await.map_err(|_| ())?;
+        let Some(location) = redirection(&response) else {
+            return streamed(response);
+        };
+        let hop = reqwest::Url::parse(url)
+            .and_then(|from| from.join(&location))
+            .map_err(|_| ())?;
+        if !matches!(hop.scheme(), "http" | "https") {
+            return Err(());
+        }
+        pointed.mint(hop.as_str());
+        streamed(self.client.get(hop).send().await.map_err(|_| ())?)
     }
 
     /// The image at `url`, streamed back same-origin.
     /// A request that never reached the host, and a status that is not a
     /// success, both answer `Err(())`.
     pub async fn fetch(&self, url: &str) -> Result<Response, ()> {
-        let response = self.client.get(url).send().await.map_err(|_| ())?;
-        if !response.status().is_success() {
-            return Err(());
-        }
-        let content_type = response.headers().get(header::CONTENT_TYPE).cloned();
-        let mut builder = Response::builder().status(StatusCode::OK);
-        if let Some(content_type) = content_type {
-            builder = builder.header(header::CONTENT_TYPE, content_type);
-        }
-        builder
-            .body(axum::body::Body::from_stream(response.bytes_stream()))
-            .map_err(|_| ())
+        streamed(self.client.get(url).send().await.map_err(|_| ())?)
     }
+}
+
+/// The `Location` a redirect answered, and nothing for any other status.
+pub fn redirection(response: &reqwest::Response) -> Option<String> {
+    response
+        .status()
+        .is_redirection()
+        .then(|| response.headers().get(header::LOCATION))
+        .flatten()
+        .and_then(|location| location.to_str().ok())
+        .map(str::to_owned)
+}
+
+/// `response` streamed back same-origin, carrying its content type and nothing
+/// else. A status that is not a success answers `Err(())`.
+fn streamed(response: reqwest::Response) -> Result<Response, ()> {
+    if !response.status().is_success() {
+        return Err(());
+    }
+    let content_type = response.headers().get(header::CONTENT_TYPE).cloned();
+    let mut builder = Response::builder().status(StatusCode::OK);
+    if let Some(content_type) = content_type {
+        builder = builder.header(header::CONTENT_TYPE, content_type);
+    }
+    builder
+        .body(axum::body::Body::from_stream(response.bytes_stream()))
+        .map_err(|_| ())
 }
 
 impl Default for Anonymous {
@@ -69,6 +106,25 @@ pub async fn image(state: State<Arc<AppState>>, Path(handle): Path<String>) -> R
         return missing();
     }
     match state.foreign.fetch(&url).await {
+        Ok(answer) => answer,
+        Err(()) => missing(),
+    }
+}
+
+/// Serves the url `handle` names, which the current plan, or a response to
+/// that plan's own request, pointed the relay at.
+/// A handle the current plan does not hold — one the browser invented, and one
+/// a replaced plan minted — answers `403` with `ForeignNotObserved`.
+pub async fn pointed(state: State<Arc<AppState>>, Path(handle): Path<String>) -> Response {
+    let pointed = state.playback.pointed().await;
+    let Some(url) = pointed.resolve(&handle) else {
+        return (
+            StatusCode::FORBIDDEN,
+            axum::Json(jellium_protocol::Refusal::ForeignNotObserved),
+        )
+            .into_response();
+    };
+    match state.foreign.followed(&url, pointed.as_ref()).await {
         Ok(answer) => answer,
         Err(()) => missing(),
     }

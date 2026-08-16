@@ -4,7 +4,7 @@ use std::time::Duration;
 use iced::widget::Space;
 use iced::widget::{button, column, container, image, row, scrollable, slider, text};
 use iced::{Element, Fill, Length};
-use jellium_protocol::{Method, Quality, Repeat};
+use jellium_protocol::{Method, Quality, Repeat, Subtitles};
 
 use crate::app::Message;
 use crate::images::{self, Cache, Kind as ImageKind};
@@ -64,11 +64,11 @@ fn title(playing: &Playing) -> String {
 }
 
 fn method(playing: &Playing) -> &'static str {
-    match playing.plan.method {
+    match playing.plan.playable.method {
         Method::DirectPlay | Method::DirectStream => strings::lookup(Text::PlayerDirect),
         Method::Transcode {
             subtitle_burn_in: true,
-        } => strings::lookup(Text::PlayerTranscodingForSubtitles),
+        } => strings::lookup(Text::PlayerTranscodingBurningInSubtitles),
         Method::Transcode {
             subtitle_burn_in: false,
         } => strings::lookup(Text::PlayerTranscoding),
@@ -80,7 +80,10 @@ fn quality_label(quality: Quality) -> String {
         Quality::Auto => strings::lookup(Text::PlayerQualityAuto).to_string(),
         Quality::Limit { bits_per_second } => strings::format(
             Text::PlayerQualityLimit,
-            &[&format!("{:.0}", f64::from(bits_per_second) / 1_000_000.0)],
+            &[&format!(
+                "{:.0}",
+                bits_per_second.bits_per_second() as f64 / 1_000_000.0
+            )],
         ),
     }
 }
@@ -141,14 +144,18 @@ fn menu<'a>(playing: &'a Playing, images: &'a Cache) -> Option<Element<'a, Messa
             .collect(),
         Menu::Subtitle => std::iter::once(
             button(text(strings::lookup(Text::PlayerSubtitlesOff)))
-                .on_press(Message::PlayerAction(Action::SelectSubtitle(None)))
+                .on_press(Message::PlayerAction(Action::SelectSubtitle(
+                    Subtitles::Off,
+                )))
                 .into(),
         )
         .chain(playing.plan.subtitle_streams.iter().map(|stream| {
             button(text(stream.label.clone()))
-                .on_press(Message::PlayerAction(Action::SelectSubtitle(Some(
-                    stream.index,
-                ))))
+                .on_press(Message::PlayerAction(Action::SelectSubtitle(
+                    Subtitles::Stream {
+                        index: stream.index,
+                    },
+                )))
                 .into()
         }))
         .collect(),

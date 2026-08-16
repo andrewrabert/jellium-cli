@@ -102,6 +102,7 @@ pub async fn relay(state: State<Arc<AppState>>, request: Request) -> Response {
             &parts.headers,
             carried,
             &state.seen,
+            state.playback.pointed().await.as_ref(),
         )
         .await;
 

@@ -92,6 +92,10 @@ pub async fn select(
         return refusal(Refusal::NotRelayed);
     };
 
+    let Some(identity) = state.identity.held().await else {
+        return refusal(Refusal::NoSession);
+    };
+
     let probed = match version::probe(&record.server).await {
         Ok(probed) => probed,
         Err(failure) => return failed(failure),
@@ -105,7 +109,7 @@ pub async fn select(
         return super::entered(&state, &record.server, false).await;
     };
 
-    match Upstream::resume(&state.device, &session, &probed).await {
+    match Upstream::resume(&identity, &session, &probed).await {
         Ok(upstream) => {
             super::super::control::ended(&state).await;
             let installed = state.session.install(upstream).await;
@@ -176,8 +180,11 @@ pub async fn remove(
     if state.read_only && record.credential.is_some() {
         return refusal(Refusal::ReadOnly);
     }
+    let Some(identity) = state.identity.held().await else {
+        return refusal(Refusal::NoSession);
+    };
     super::super::control::ended(&state).await;
-    let removed = match state.session.remove(&chosen.server).await {
+    let removed = match state.session.remove(&identity, &chosen.server).await {
         holder::Removed::Deleted => Removed::Deleted,
         holder::Removed::DeletedUnrevoked => Removed::DeletedUnrevoked,
         holder::Removed::Unknown => Removed::Unknown,
@@ -202,7 +209,17 @@ mod tests {
     }
 
     async fn status_of(router: &axum::Router) -> SessionStatus {
-        let (status, body) = sent(router, "GET", jellium_protocol::SESSION_PATH, Vec::new()).await;
+        let (status, body) = sent(
+            router,
+            "POST",
+            jellium_protocol::IDENTITY_PATH,
+            serde_json::to_vec(&jellium_protocol::Identity {
+                device: "Firefox".to_owned(),
+                device_id: uuid::Uuid::nil().to_string(),
+            })
+            .expect("the identity serializes"),
+        )
+        .await;
         assert_eq!(status, StatusCode::OK, "{}", String::from_utf8_lossy(&body));
         decoded(&body)
     }

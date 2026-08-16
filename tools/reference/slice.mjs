@@ -1,0 +1,296 @@
+#!/usr/bin/env node
+
+// Rewrites jellium-web/reference/jellyfin-web.mjs out of a checkout of the
+// revision reference/PINNED names. The spans below are copied as text; the
+// only edit made to any of them is the one each `rewrites` entry names, and
+// every such edit is anchored, so a checkout that no longer holds the anchor is
+// refused rather than sliced into something else.
+//
+//     node tools/reference/slice.mjs <jellyfin-web-checkout>
+
+import { execFileSync } from 'node:child_process';
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { dirname, join, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const root = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
+const sliced = join(root, 'jellium-web', 'reference', 'jellyfin-web.mjs');
+
+const BROWSER = 'src/scripts/browser.js';
+const PROFILE = 'src/scripts/browserDeviceProfile.js';
+const APPHOST = 'src/components/apphost.js';
+const MEDIA_HELPER = 'src/components/htmlMediaHelper.js';
+const PLAYBACK_MANAGER = 'src/components/playback/playbackmanager.js';
+
+// One span of one source file, taken from its `first` line through its `last`,
+// both counted from one. `opens` and `closes` are the text those two lines
+// carry, and a checkout whose lines read otherwise is refused. `rewrites` are
+// the `[from, to]` pairs applied to the span, each of which must match.
+const SPANS = {
+    browser: {
+        path: BROWSER,
+        first: 1,
+        last: 346,
+        opens: 'function isTv(userAgent) {',
+        closes: 'export default detectBrowser();',
+        rewrites: [
+            ['export const detectBrowser =', 'const detectBrowser ='],
+            ['export default detectBrowser();', 'const browserDefault = detectBrowser();']
+        ]
+    },
+    profile: {
+        path: PROFILE,
+        first: 5,
+        last: 1606,
+        opens: 'function canPlayH264(videoTestElement) {',
+        closes: '}',
+        rewrites: [
+            ['export function canPlaySecondaryAudio(', 'function canPlaySecondaryAudio('],
+            ['export default function (options) {', 'function profileBuilder(options) {']
+        ]
+    },
+    apphostProfile: {
+        path: APPHOST,
+        first: 28,
+        last: 122,
+        opens: 'function getBaseProfileOptions(item) {',
+        closes: '}',
+        rewrites: []
+    },
+    apphostScreen: {
+        path: APPHOST,
+        first: 411,
+        last: 431,
+        opens: '    screen: () => {',
+        closes: '    }',
+        rewrites: []
+    },
+    nativeHls: {
+        path: MEDIA_HELPER,
+        first: 24,
+        last: 29,
+        opens: 'function canPlayNativeHls() {',
+        closes: '}',
+        rewrites: []
+    },
+    hlsJs: {
+        path: MEDIA_HELPER,
+        first: 41,
+        last: 75,
+        opens: 'export function enableHlsJsPlayer(runTimeTicks, mediaType) {',
+        closes: '}',
+        rewrites: [
+            ['export function enableHlsJsPlayer(', 'function enableHlsJsPlayer(']
+        ]
+    },
+    playbackInfo: {
+        path: PLAYBACK_MANAGER,
+        first: 415,
+        last: 503,
+        opens: 'async function getPlaybackInfo(player, apiClient, item, deviceProfile, mediaSourceId, liveStreamId, options) {',
+        closes: '}',
+        rewrites: []
+    }
+};
+
+function pinned() {
+    const line = readFileSync(join(root, 'reference', 'PINNED'), 'utf8').trim();
+    const [tag, commit] = line.split('\t');
+    if (!tag || !/^[0-9a-f]{40}$/.test(commit ?? '')) {
+        throw new Error(`reference/PINNED is not '<tag>\\t<40-hex-commit>': ${line}`);
+    }
+    return { tag, commit };
+}
+
+function checkedOut(checkout, commit) {
+    const head = execFileSync('git', ['-C', checkout, 'rev-parse', 'HEAD'], { encoding: 'utf8' }).trim();
+    if (head !== commit) {
+        throw new Error(`${checkout} is at ${head}, and reference/PINNED names ${commit}`);
+    }
+}
+
+function taken(checkout, name) {
+    const span = SPANS[name];
+    const lines = readFileSync(join(checkout, span.path), 'utf8').split('\n');
+    const held = lines.slice(span.first - 1, span.last);
+    if (held.length !== span.last - span.first + 1) {
+        throw new Error(`${span.path} is shorter than line ${span.last}`);
+    }
+    if (held[0] !== span.opens) {
+        throw new Error(`${span.path}:${span.first} reads ${JSON.stringify(held[0])}, and the slice anchors it at ${JSON.stringify(span.opens)}`);
+    }
+    if (held[held.length - 1] !== span.closes) {
+        throw new Error(`${span.path}:${span.last} reads ${JSON.stringify(held[held.length - 1])}, and the slice anchors it at ${JSON.stringify(span.closes)}`);
+    }
+    let text = held.join('\n');
+    for (const [from, to] of span.rewrites) {
+        if (!text.includes(from)) {
+            throw new Error(`${span.path}:${span.first}-${span.last} no longer holds ${JSON.stringify(from)}`);
+        }
+        text = text.replace(from, to);
+    }
+    return text;
+}
+
+function cite(name) {
+    const span = SPANS[name];
+    return `${span.path}:${span.first}-${span.last}`;
+}
+
+function module(checkout, { tag, commit }) {
+    return `// Generated by tools/reference/slice.mjs. Do not edit.
+//
+// jellyfin-web ${tag}, commit ${commit}, sliced into one module. Each factory
+// below holds one source file's spans verbatim; the parameters it takes are
+// the bindings that file's import statements bound. Evaluating this module
+// reads no document, window or navigator: every such read sits inside a factory
+// a named export calls.
+
+// ${cite('browser')}
+function browserModule() {
+${taken(checkout, 'browser')}
+
+    return { detectBrowser, browserDefault };
+}
+
+// ${cite('profile')}
+function browserDeviceProfileModule(browser, appSettings, userSettings) {
+${taken(checkout, 'profile')}
+
+    return { canPlaySecondaryAudio, profileBuilder };
+}
+
+// ${cite('nativeHls')} and ${cite('hlsJs')}
+function htmlMediaHelperModule(browser) {
+${taken(checkout, 'nativeHls')}
+
+${taken(checkout, 'hlsJs')}
+
+    return { enableHlsJsPlayer };
+}
+
+// ${cite('apphostProfile')} and ${cite('apphostScreen')}
+function apphostModule(browser, appSettings, htmlMediaHelper, profileBuilder) {
+    const appHost = {
+${taken(checkout, 'apphostScreen')}
+    };
+
+${taken(checkout, 'apphostProfile')}
+
+    return { getBaseProfileOptions, getDeviceProfile, appHost };
+}
+
+// ${cite('playbackInfo')}
+function playbackManagerModule(appSettings, itemHelper, getAudioStreamUrlFromDeviceProfile, toApi, getMediaInfoApi) {
+${taken(checkout, 'playbackInfo')}
+
+    return { getPlaybackInfo };
+}
+
+// The settings objects browserDeviceProfile.js, apphost.js and
+// playbackmanager.js read, answered from one plain object of the port's own
+// values rather than from a browser's storage.
+function appSettingsOf(shared) {
+    return {
+        enableDts: () => shared.enableDts,
+        enableTrueHd: () => shared.enableTrueHd,
+        enableHi10p: () => shared.enableHi10p,
+        disableVbrAudio: () => shared.disableVbrAudio,
+        alwaysRemuxFlac: () => shared.alwaysRemuxFlac,
+        alwaysRemuxMp3: () => shared.alwaysRemuxMp3,
+        alwaysBurnInSubtitleWhenTranscoding: () => shared.alwaysBurnInSubtitleWhenTranscoding,
+        maxVideoWidth: () => shared.maxVideoWidth,
+        limitSupportedVideoResolution: () => shared.limitSupportedVideoResolution,
+        preferredTranscodeVideoCodec: () => shared.preferredTranscodeVideoCodec,
+        preferredTranscodeVideoAudioCodec: () => shared.preferredTranscodeVideoAudioCodec,
+        get: (key) => shared[key],
+        set: (key, value) => {
+            shared[key] = value;
+        }
+    };
+}
+
+function userSettingsOf(account) {
+    return {
+        preferFmp4HlsContainer: () => account.preferFmp4HlsContainer,
+        limitSegmentLength: () => account.limitSegmentLength,
+        allowedAudioChannels: () => account.allowedAudioChannels,
+        enableCinemaMode: () => account.enableCinemaMode
+    };
+}
+
+// browser.js:245-346, reading the live navigator, window and document for
+// everything but the user agent
+export function detectBrowser(userAgent) {
+    return browserModule().detectBrowser(userAgent);
+}
+
+// apphost.js:28-48
+export function getBaseProfileOptions(browser, item) {
+    const helper = htmlMediaHelperModule(browser);
+    return apphostModule(browser, appSettingsOf({}), helper, null).getBaseProfileOptions(item);
+}
+
+// apphost.js:50-122 and :411-431, which builds through
+// browserDeviceProfile.js's default export
+export function getDeviceProfile(browser, appSettings, userSettings, item) {
+    const settings = appSettingsOf(appSettings);
+    const { profileBuilder } = browserDeviceProfileModule(browser, settings, userSettingsOf(userSettings));
+    const helper = htmlMediaHelperModule(browser);
+    return apphostModule(browser, settings, helper, profileBuilder).getDeviceProfile(item);
+}
+
+// browserDeviceProfile.js:476-486
+export function canPlaySecondaryAudio(browser, videoTestElement) {
+    const { canPlaySecondaryAudio: answer } = browserDeviceProfileModule(browser, appSettingsOf({}), userSettingsOf({}));
+    return answer(videoTestElement);
+}
+
+// htmlMediaHelper.js:41-75
+export function enableHlsJsPlayer(browser, runTimeTicks, mediaType) {
+    return htmlMediaHelperModule(browser).enableHlsJsPlayer(runTimeTicks, mediaType);
+}
+
+// playbackmanager.js:415-503, answering the body it would post, and null where
+// it posts nothing. Everything getPlaybackInfo does before it posts is
+// synchronous, so the body it built is in hand as soon as the call returns its
+// promise.
+export function playbackInfoBody(request) {
+    let posted = null;
+    const { getPlaybackInfo } = playbackManagerModule(
+        appSettingsOf({ alwaysBurnInSubtitleWhenTranscoding: request.alwaysBurnInSubtitleWhenTranscoding }),
+        { isLocalItem: () => false },
+        () => '',
+        (apiClient) => apiClient,
+        () => ({
+            getPostedPlaybackInfo: ({ playbackInfoDto }) => {
+                posted = playbackInfoDto;
+                return { data: {} };
+            }
+        })
+    );
+
+    getPlaybackInfo(
+        {},
+        { getCurrentUserId: () => request.userId },
+        request.item,
+        request.deviceProfile,
+        request.mediaSourceId,
+        request.liveStreamId,
+        request.options
+    ).catch(() => undefined);
+
+    return posted;
+}
+`;
+}
+
+const checkout = process.argv[2];
+if (!checkout) {
+    throw new Error('usage: node tools/reference/slice.mjs <jellyfin-web-checkout>');
+}
+
+const revision = pinned();
+checkedOut(checkout, revision.commit);
+mkdirSync(dirname(sliced), { recursive: true });
+writeFileSync(sliced, module(checkout, revision));

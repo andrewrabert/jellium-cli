@@ -111,11 +111,14 @@ impl Hub {
         let Some(upstream) = state.session.signed().await else {
             return;
         };
-        let targets = remote::read(sessions, upstream.user_id(), &state.device);
+        let Some(identity) = state.identity.held().await else {
+            return;
+        };
+        let targets = remote::read(sessions, upstream.user_id(), &identity);
         drop(upstream);
         self.pushed(targets).await;
         if self.tabs.watched(Feed::Sessions).await {
-            let sessions = crate::web::upstream::server_sessions(sessions, &state.device);
+            let sessions = crate::web::upstream::server_sessions(sessions, &identity);
             self.fed(Feed::Sessions, Event::Sessions { sessions }).await;
         }
     }
@@ -483,7 +486,10 @@ async fn first_targets(state: &Arc<AppState>, tab: TabId) {
     let Some(upstream) = state.session.signed().await else {
         return;
     };
-    let Ok(targets) = remote::targets(&upstream, &state.device).await else {
+    let Some(identity) = state.identity.held().await else {
+        return;
+    };
+    let Ok(targets) = remote::targets(&upstream, &identity).await else {
         return;
     };
     state.live.remote.listed(&targets).await;
@@ -503,7 +509,10 @@ async fn first(state: &Arc<AppState>, tab: TabId, feed: Feed) {
             let Some(upstream) = state.session.signed().await else {
                 return;
             };
-            if let Ok(sessions) = upstream.sessions(&state.device).await {
+            let Some(identity) = state.identity.held().await else {
+                return;
+            };
+            if let Ok(sessions) = upstream.sessions(&identity).await {
                 state
                     .live
                     .tabs
@@ -877,7 +886,7 @@ mod tests {
                     start_ticks: 0,
                     media_source: None,
                     audio_stream: None,
-                    subtitle_stream: None,
+                    subtitles: jellium_protocol::Subtitles::Default,
                 },
             )
             .await;

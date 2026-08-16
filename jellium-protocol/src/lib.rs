@@ -1,6 +1,8 @@
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
+pub mod profile;
+pub mod report;
 pub mod sync;
 
 /// What the Jellyfin server's policy lets this user do with groups.
@@ -482,180 +484,6 @@ pub struct ServerSession {
     pub own: bool,
 }
 
-/// One media container the running browser was asked about.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
-pub enum Container {
-    Mp4,
-    WebM,
-    Mpegts,
-    Mp3,
-    Aac,
-    Flac,
-    Ogg,
-    Wav,
-}
-
-/// One video codec the running browser was asked about.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
-pub enum VideoCodec {
-    H264,
-    Hevc,
-    Vp8,
-    Vp9,
-    Av1,
-}
-
-/// One audio codec the running browser was asked about.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
-pub enum AudioCodec {
-    Aac,
-    Mp3,
-    Opus,
-    Vorbis,
-    Flac,
-    Ac3,
-    Eac3,
-    Alac,
-    Pcm,
-}
-
-/// What a passing probe records.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum Grant {
-    Container(Container),
-    Video(VideoCodec),
-    Audio(AudioCodec),
-}
-
-/// One mime type the browser is asked about, and what a pass records.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct Probe {
-    pub mime: &'static str,
-    pub grants: Grant,
-}
-
-/// What one decoding path in the running browser accepts.
-#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct Decoding {
-    pub containers: Vec<Container>,
-    pub video_codecs: Vec<VideoCodec>,
-    pub audio_codecs: Vec<AudioCodec>,
-}
-
-/// What the running browser reported it can decode.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct Capabilities {
-    /// Media Source Extensions are present, so adaptive streaming is possible.
-    pub media_source: bool,
-    /// What the media element decodes, which is what a direct play is played
-    /// through.
-    pub direct: Decoding,
-    /// What Media Source Extensions accept, which is what an HLS transcode
-    /// targets; empty when `media_source` is false.
-    pub adaptive: Decoding,
-}
-
-static PROBES: &[Probe] = &[
-    Probe {
-        mime: "video/mp4; codecs=\"avc1.640029, mp4a.40.2\"",
-        grants: Grant::Container(Container::Mp4),
-    },
-    Probe {
-        mime: "video/webm; codecs=\"vp8, vorbis\"",
-        grants: Grant::Container(Container::WebM),
-    },
-    Probe {
-        mime: "video/mp2t; codecs=\"avc1.640029, mp4a.40.2\"",
-        grants: Grant::Container(Container::Mpegts),
-    },
-    Probe {
-        mime: "audio/mpeg",
-        grants: Grant::Container(Container::Mp3),
-    },
-    Probe {
-        mime: "audio/aac",
-        grants: Grant::Container(Container::Aac),
-    },
-    Probe {
-        mime: "audio/flac",
-        grants: Grant::Container(Container::Flac),
-    },
-    Probe {
-        mime: "audio/ogg; codecs=\"vorbis\"",
-        grants: Grant::Container(Container::Ogg),
-    },
-    Probe {
-        mime: "audio/wav; codecs=\"1\"",
-        grants: Grant::Container(Container::Wav),
-    },
-    Probe {
-        mime: "video/mp4; codecs=\"avc1.640029\"",
-        grants: Grant::Video(VideoCodec::H264),
-    },
-    Probe {
-        mime: "video/mp4; codecs=\"hvc1.1.6.L93.B0\"",
-        grants: Grant::Video(VideoCodec::Hevc),
-    },
-    Probe {
-        mime: "video/webm; codecs=\"vp8\"",
-        grants: Grant::Video(VideoCodec::Vp8),
-    },
-    Probe {
-        mime: "video/webm; codecs=\"vp9\"",
-        grants: Grant::Video(VideoCodec::Vp9),
-    },
-    Probe {
-        mime: "video/mp4; codecs=\"av01.0.05M.08\"",
-        grants: Grant::Video(VideoCodec::Av1),
-    },
-    Probe {
-        mime: "audio/mp4; codecs=\"mp4a.40.2\"",
-        grants: Grant::Audio(AudioCodec::Aac),
-    },
-    Probe {
-        mime: "audio/mpeg",
-        grants: Grant::Audio(AudioCodec::Mp3),
-    },
-    Probe {
-        mime: "audio/ogg; codecs=\"opus\"",
-        grants: Grant::Audio(AudioCodec::Opus),
-    },
-    Probe {
-        mime: "audio/ogg; codecs=\"vorbis\"",
-        grants: Grant::Audio(AudioCodec::Vorbis),
-    },
-    Probe {
-        mime: "audio/flac",
-        grants: Grant::Audio(AudioCodec::Flac),
-    },
-    Probe {
-        mime: "audio/mp4; codecs=\"ac-3\"",
-        grants: Grant::Audio(AudioCodec::Ac3),
-    },
-    Probe {
-        mime: "audio/mp4; codecs=\"ec-3\"",
-        grants: Grant::Audio(AudioCodec::Eac3),
-    },
-    Probe {
-        mime: "audio/mp4; codecs=\"alac\"",
-        grants: Grant::Audio(AudioCodec::Alac),
-    },
-    Probe {
-        mime: "audio/wav; codecs=\"1\"",
-        grants: Grant::Audio(AudioCodec::Pcm),
-    },
-];
-
-impl Capabilities {
-    /// Every mime type the browser is asked about, in one table both sides
-    /// read.
-    pub fn probes() -> &'static [Probe] {
-        PROBES
-    }
-}
-
 /// The ceiling the user chose for a stream.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(tag = "quality", rename_all = "camelCase")]
@@ -663,7 +491,7 @@ pub enum Quality {
     /// The local server's measurement of its own link to Jellyfin.
     Auto,
     #[serde(rename_all = "camelCase")]
-    Limit { bits_per_second: i32 },
+    Limit { bits_per_second: Bitrate },
 }
 
 impl Quality {
@@ -672,40 +500,40 @@ impl Quality {
     pub const LADDER: [Quality; 13] = [
         Quality::Auto,
         Quality::Limit {
-            bits_per_second: 120_000_000,
+            bits_per_second: Bitrate::of(120_000_000),
         },
         Quality::Limit {
-            bits_per_second: 60_000_000,
+            bits_per_second: Bitrate::of(60_000_000),
         },
         Quality::Limit {
-            bits_per_second: 40_000_000,
+            bits_per_second: Bitrate::of(40_000_000),
         },
         Quality::Limit {
-            bits_per_second: 20_000_000,
+            bits_per_second: Bitrate::of(20_000_000),
         },
         Quality::Limit {
-            bits_per_second: 15_000_000,
+            bits_per_second: Bitrate::of(15_000_000),
         },
         Quality::Limit {
-            bits_per_second: 10_000_000,
+            bits_per_second: Bitrate::of(10_000_000),
         },
         Quality::Limit {
-            bits_per_second: 8_000_000,
+            bits_per_second: Bitrate::of(8_000_000),
         },
         Quality::Limit {
-            bits_per_second: 6_000_000,
+            bits_per_second: Bitrate::of(6_000_000),
         },
         Quality::Limit {
-            bits_per_second: 4_000_000,
+            bits_per_second: Bitrate::of(4_000_000),
         },
         Quality::Limit {
-            bits_per_second: 3_000_000,
+            bits_per_second: Bitrate::of(3_000_000),
         },
         Quality::Limit {
-            bits_per_second: 2_000_000,
+            bits_per_second: Bitrate::of(2_000_000),
         },
         Quality::Limit {
-            bits_per_second: 1_000_000,
+            bits_per_second: Bitrate::of(1_000_000),
         },
     ];
 }
@@ -730,42 +558,191 @@ impl Repeat {
     }
 }
 
+/// One media stream of a source, addressed the way the Jellyfin server numbers
+/// them.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize)]
+#[serde(transparent)]
+pub struct StreamIndex(i32);
+
+impl StreamIndex {
+    /// The stream `number` names; a negative number names none.
+    pub fn named(number: i32) -> Option<StreamIndex> {
+        (number >= 0).then_some(StreamIndex(number))
+    }
+
+    /// The number the Jellyfin server addresses this stream by.
+    pub fn number(self) -> i32 {
+        self.0
+    }
+}
+
+impl<'de> serde::Deserialize<'de> for StreamIndex {
+    /// A number naming no stream is refused, so no sentinel enters from a body.
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<StreamIndex, D::Error> {
+        let number = i32::deserialize(deserializer)?;
+        StreamIndex::named(number)
+            .ok_or_else(|| serde::de::Error::custom(format!("{number} names no stream")))
+    }
+}
+
+/// A rate in bits per second.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize)]
+#[serde(transparent)]
+pub struct Bitrate(i64);
+
+impl Bitrate {
+    /// The rate `bits_per_second` names.
+    pub const fn of(bits_per_second: i64) -> Bitrate {
+        Bitrate(bits_per_second)
+    }
+
+    /// The number the Jellyfin server addresses this rate by.
+    pub fn bits_per_second(self) -> i64 {
+        self.0
+    }
+}
+
+impl<'de> serde::Deserialize<'de> for Bitrate {
+    /// A number naming no rate is refused, so no sentinel enters from a body.
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Bitrate, D::Error> {
+        let number = i64::deserialize(deserializer)?;
+        if number > 0 {
+            Ok(Bitrate(number))
+        } else {
+            Err(serde::de::Error::custom(format!("{number} names no rate")))
+        }
+    }
+}
+
+/// Which subtitle a play request asks for.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum Subtitles {
+    /// The stream the negotiated source names as its own default.
+    #[default]
+    Default,
+    /// No subtitle at all.
+    Off,
+    /// The stream at this index.
+    Stream { index: StreamIndex },
+}
+
+impl Subtitles {
+    /// The choice the Jellyfin server's subtitle stream index names: an absent
+    /// number is `Default` and a negative one is `Off`.
+    pub fn named(number: Option<i32>) -> Subtitles {
+        match number {
+            None => Subtitles::Default,
+            Some(number) => match StreamIndex::named(number) {
+                Some(index) => Subtitles::Stream { index },
+                None => Subtitles::Off,
+            },
+        }
+    }
+
+    /// The choice a resolved selection stands for; `None` is `Off`.
+    pub fn selected(chosen: Option<StreamIndex>) -> Subtitles {
+        match chosen {
+            Some(index) => Subtitles::Stream { index },
+            None => Subtitles::Off,
+        }
+    }
+
+    /// The number the Jellyfin server addresses this choice by; `Default`
+    /// answers `None` and `Off` answers `-1`.
+    pub fn number(self) -> Option<i32> {
+        match self {
+            Subtitles::Default => None,
+            Subtitles::Off => Some(-1),
+            Subtitles::Stream { index } => Some(index.number()),
+        }
+    }
+
+    /// The stream this choice names, resolved against the source's own default.
+    pub fn stream(self, default: Option<StreamIndex>) -> Option<StreamIndex> {
+        match self {
+            Subtitles::Default => default,
+            Subtitles::Off => None,
+            Subtitles::Stream { index } => Some(index),
+        }
+    }
+}
+
 /// What the browser asks the local server to negotiate.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct PlayRequest {
     pub item: Uuid,
     /// The version the player selected; the first source when absent.
     pub media_source: Option<String>,
-    pub audio_stream: Option<i32>,
-    /// Absent turns subtitles off.
-    pub subtitle_stream: Option<i32>,
+    pub audio_stream: Option<StreamIndex>,
+    /// Which subtitle to start with.
+    pub subtitles: Subtitles,
     pub start_ticks: i64,
     pub quality: Quality,
-    pub capabilities: Capabilities,
-    /// False on the one retry after the media element refused a direct play.
-    pub allow_direct_play: bool,
+    /// The device profile the browser built for this item.
+    pub profile: profile::DeviceProfile,
+    /// The browser's `appSettings` preference, which lives in the browser and
+    /// which the local server holds no copy of.
+    // reference: always-burn-in-setting — playbackmanager.js:497
+    pub always_burn_in_subtitle_when_transcoding: bool,
+    /// Absent where jellyfin-web sends no such field; `Some(false)` on the one
+    /// retry after the media element refused a direct play.
+    pub allow_direct_play: Option<bool>,
+    pub allow_direct_stream: Option<bool>,
+    pub allow_video_stream_copy: Option<bool>,
+    pub allow_audio_stream_copy: Option<bool>,
+    /// The appHost grants only the browser can answer.
+    pub grants: HostGrants,
+    /// The browser's `userSettings` entry, which the local server holds no copy
+    /// of.
+    pub cinema_mode: bool,
+    /// Whether this play asked for the full screen.
+    pub fullscreen: bool,
+    /// The queue position the play started at, which `getIntros` is skipped
+    /// for; absent where the play started at the head.
+    pub start_index: Option<usize>,
+    /// What the browser knows about its own reporting before this stream
+    /// exists, which is what the local server's start report carries.
+    pub reporting: report::Reporting,
 }
 
-/// How the negotiated source reaches the media element.
+/// The appHost grants the relay reads, which are browser facts and cross with
+/// the request because nothing on the relay can answer them.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct HostGrants {
+    // reference: remote-video-grant — apphost.js:265-267
+    pub remote_video: bool,
+}
+
+/// The stream the browser plays, derived from the negotiated source.
+/// `path` is same-origin; every other field is what the browser needs to pick a
+/// player and to decide `crossOrigin`.
+// reference: create-stream-info — playbackmanager.js:2827-2881
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(tag = "delivery", rename_all = "camelCase")]
-pub enum Delivery {
-    /// A same-origin path the media element loads directly.
-    Progressive { path: String },
-    /// A same-origin master manifest path hls.js loads.
-    Hls { path: String },
+#[serde(rename_all = "camelCase")]
+pub struct Playable {
+    pub path: String,
+    pub method: Method,
+    /// The streaming protocol the Jellyfin server reported for this stream.
+    pub sub_protocol: Option<profile::Protocol>,
+    pub container: Option<String>,
+    pub run_time_ticks: Option<i64>,
+    pub remote: bool,
+    pub codecs: Vec<String>,
 }
 
 /// What the Jellyfin server settled on.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(tag = "method", rename_all = "camelCase")]
+#[serde(rename_all = "camelCase")]
 pub enum Method {
     DirectPlay,
     DirectStream,
     #[serde(rename_all = "camelCase")]
     Transcode {
-        /// True when the subtitle selection is what forced the transcode.
+        /// True when the request asked that a burned-in subtitle be encoded
+        /// into this transcode.
         subtitle_burn_in: bool,
     },
 }
@@ -782,25 +759,38 @@ pub struct SourceChoice {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct AudioChoice {
-    pub index: i32,
+    pub index: StreamIndex,
     pub label: String,
-    /// True for the stream the user's server-side language configuration
-    /// selects.
-    pub default: bool,
 }
 
 /// One subtitle stream of the negotiated source.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SubtitleChoice {
-    pub index: i32,
+    pub index: StreamIndex,
     pub label: String,
     pub language: Option<String>,
-    /// True for the stream the user's server-side subtitle mode selects.
-    pub default: bool,
-    /// A same-origin WebVTT path for a text stream, absent for a bitmap
-    /// stream the Jellyfin server burns in.
-    pub track: Option<String>,
+    pub codec: Option<String>,
+    pub delivery: SubtitleDelivery,
+}
+
+/// How the Jellyfin server said this subtitle stream reaches the browser.
+// reference: get-delivery-method — playbackmanager.js:1500-1507
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(tag = "delivery", rename_all = "camelCase")]
+pub enum SubtitleDelivery {
+    /// Fetched separately, from the same-origin path the server's
+    /// `DeliveryUrl` maps to.
+    External { path: String },
+    /// Carried inside the stream the browser is already loading.
+    Embed,
+    /// Burned into the picture by the Jellyfin server.
+    Encode,
+    /// Carried as a rendition of the HLS manifest.
+    Hls,
+    /// Dropped by the Jellyfin server, which reaches the browser as a choice
+    /// carrying nothing to fetch.
+    Drop,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -818,43 +808,53 @@ pub struct Plan {
     pub play_session: String,
     pub item: Uuid,
     pub media_source: String,
-    pub method: Method,
-    pub delivery: Delivery,
+    pub playable: Playable,
     pub start_ticks: i64,
     pub run_time_ticks: Option<i64>,
     pub sources: Vec<SourceChoice>,
     pub audio_streams: Vec<AudioChoice>,
     pub subtitle_streams: Vec<SubtitleChoice>,
-    pub audio_stream: Option<i32>,
-    pub subtitle_stream: Option<i32>,
+    pub audio_stream: Option<StreamIndex>,
+    /// The subtitle stream the plan starts with.
+    pub subtitle_stream: Option<StreamIndex>,
     pub chapters: Vec<Chapter>,
     /// The ceiling that went to the Jellyfin server, measured or chosen.
-    pub max_bitrate: Option<i32>,
+    pub max_bitrate: Bitrate,
     /// True when the negotiated source is a live stream, which is what draws
     /// the live display and forecloses seeking.
     pub live: bool,
+    /// Whether the Jellyfin server would transcode this source, which is the
+    /// first conjunct of the transcoding retry.
+    // reference: enable-playback-retry-with-transcoding — playbackmanager.js:3384-3387
+    pub supports_transcoding: bool,
+    /// The intros the Jellyfin server named for this item, and an empty list
+    /// wherever no intros were asked for.
+    pub intros: Vec<Uuid>,
+}
+
+/// What a play request answered.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(tag = "planned", rename_all = "camelCase")]
+pub enum Planned {
+    Started(Box<Plan>),
+    /// The change was not made and the stream that was playing still is.
+    Unchanged,
 }
 
 /// What the browser reports while playing.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Progress {
-    pub play_session: String,
-    pub position_ticks: i64,
-    pub paused: bool,
-    pub muted: bool,
-    pub volume: i32,
-    pub audio_stream: Option<i32>,
-    pub subtitle_stream: Option<i32>,
-    pub repeat: Repeat,
+    pub playing: report::Playing,
+    /// The progress event jellyfin-web would have reported under.
+    pub event: report::Reported,
 }
 
 /// What the browser reports when playback ends.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Stopped {
-    pub play_session: String,
-    pub position_ticks: i64,
+    pub playing: report::Playing,
 }
 
 /// Whether the reporting tab still holds the one playback session.
@@ -985,8 +985,8 @@ pub enum Control {
         start_index: i32,
         start_ticks: i64,
         media_source: Option<String>,
-        audio_stream: Option<i32>,
-        subtitle_stream: Option<i32>,
+        audio_stream: Option<StreamIndex>,
+        subtitles: Subtitles,
     },
     Stop,
     PlayPause,
@@ -1009,11 +1009,10 @@ pub enum Control {
     Unmute,
     ToggleMute,
     SetAudioStream {
-        index: i32,
+        index: StreamIndex,
     },
-    /// Absent turns subtitles off.
     SetSubtitleStream {
-        index: Option<i32>,
+        subtitles: Subtitles,
     },
     SetMediaSource {
         id: String,
@@ -1021,7 +1020,7 @@ pub enum Control {
     /// Absent is the Auto ceiling.
     #[serde(rename_all = "camelCase")]
     SetMaxBitrate {
-        bits_per_second: Option<i32>,
+        bits_per_second: Option<Bitrate>,
     },
     SetRepeat {
         repeat: Repeat,
@@ -1456,13 +1455,43 @@ pub enum Drive {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub struct DeviceIdentity;
 
+/// The client name this browser presents to Jellyfin.
+// reference: app-name — apphost.js:10
+pub const CLIENT: &str = "Jellyfin Web";
+
+/// The version this browser presents to Jellyfin.
+// reference: app-version — package.json:3
+pub const VERSION: &str = "10.11.11";
+
+/// What the browser announces about itself, which is what every upstream
+/// request is then issued under.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Identity {
+    /// The name `getDeviceName` answers for this browser.
+    // reference: get-device-name — apphost.js:151-172
+    pub device: String,
+    /// The id this browser minted once and has kept since.
+    // reference: generate-device-id — apphost.js:124-134
+    pub device_id: String,
+}
+
 /// The prefix a foreign image the local server minted a handle for is fetched
 /// under.
 pub const FOREIGN_PREFIX: &str = "/foreign";
 
+/// The prefix a url the current playback plan has been pointed at is fetched
+/// under; a handle here dies with the plan that minted it.
+pub const POINTED_PREFIX: &str = "/pointed";
+
 pub const RELAY_PREFIX: &str = "/jellyfin";
-pub const SESSION_PATH: &str = "/session";
+pub const IDENTITY_PATH: &str = "/session";
 pub const PLAYBACK_PATH: &str = "/playback";
+/// The door a user-initiated play uses, and the only one that requests intros.
+pub const PLAYBACK_ENTER_PATH: &str = "/playback/enter";
+/// Swaps the source under the session already playing, which a track, quality
+/// or version change asks for.
+pub const PLAYBACK_CHANGE_PATH: &str = "/playback/change";
 pub const PLAYBACK_PROGRESS_PATH: &str = "/playback/progress";
 pub const PLAYBACK_STOPPED_PATH: &str = "/playback/stopped";
 pub const LIVE_PATH: &str = "/live";
@@ -1520,8 +1549,9 @@ pub struct Framed {
 #[cfg(test)]
 mod tests {
     use super::{
-        Drive, Feed, GroupVerb, LiveTvAccess, PlayMode, QuickConnectState, Repeat, Report, Session,
-        SyncAccess,
+        Drive, Feed, GroupVerb, HostGrants, LiveTvAccess, Method, PlayMode, PlayRequest, Playable,
+        Quality, QuickConnectState, Repeat, Report, Session, StreamIndex, Subtitles, SyncAccess,
+        profile,
     };
 
     fn session() -> Session {
@@ -1623,6 +1653,92 @@ mod tests {
         ] {
             assert!(!report.read_only(), "{report:?}");
         }
+    }
+
+    fn play_request() -> PlayRequest {
+        PlayRequest {
+            item: uuid::Uuid::nil(),
+            media_source: None,
+            audio_stream: StreamIndex::named(1),
+            subtitles: Subtitles::Default,
+            start_ticks: 0,
+            quality: Quality::Auto,
+            profile: profile::DeviceProfile::default(),
+            always_burn_in_subtitle_when_transcoding: false,
+            allow_direct_play: None,
+            allow_direct_stream: None,
+            allow_video_stream_copy: None,
+            allow_audio_stream_copy: None,
+            grants: HostGrants { remote_video: true },
+            cinema_mode: true,
+            fullscreen: true,
+            start_index: None,
+            reporting: crate::report::Reporting {
+                volume_level: 100,
+                muted: false,
+                repeat: Repeat::Off,
+                shuffle: crate::report::Shuffle::Sorted,
+                playback_rate: 1.0,
+                playlist_item_id: "playlistItem1".to_string(),
+                queue: Vec::new(),
+            },
+        }
+    }
+
+    /// A body naming a stream by a negative number decodes as nothing, so no
+    /// sentinel reaches a plan.
+    #[test]
+    fn a_posted_stream_index_below_zero_is_refused() {
+        let text = serde_json::to_string(&play_request()).expect("the request serializes");
+        let mut document: serde_json::Value = serde_json::from_str(&text).expect("an object");
+
+        document["audioStream"] = serde_json::json!(-1);
+        assert!(serde_json::from_str::<PlayRequest>(&document.to_string()).is_err());
+
+        document["audioStream"] = serde_json::Value::Null;
+        document["subtitles"] = serde_json::json!({ "stream": { "index": -1 } });
+        assert!(serde_json::from_str::<PlayRequest>(&document.to_string()).is_err());
+    }
+
+    #[test]
+    fn a_subtitle_choice_names_no_key_after_its_own_type() {
+        assert_eq!(
+            serde_json::to_string(&Subtitles::Off).expect("the choice serializes"),
+            "\"off\""
+        );
+        assert_eq!(
+            serde_json::to_string(&Subtitles::Stream {
+                index: StreamIndex::named(3).expect("a stream"),
+            })
+            .expect("the choice serializes"),
+            "{\"stream\":{\"index\":3}}"
+        );
+    }
+
+    #[test]
+    fn a_playable_carries_its_protocol_and_a_method_names_no_key_after_its_own_type() {
+        assert_eq!(
+            serde_json::to_string(&Playable {
+                path: "/jellyfin/Videos/x/master.m3u8".to_string(),
+                method: Method::DirectStream,
+                sub_protocol: Some(profile::Protocol::Hls),
+                container: Some("mkv".to_string()),
+                run_time_ticks: Some(100),
+                remote: false,
+                codecs: vec!["h264".to_string()],
+            })
+            .expect("the playable serializes"),
+            "{\"path\":\"/jellyfin/Videos/x/master.m3u8\",\"method\":\"directStream\",\
+             \"subProtocol\":\"hls\",\"container\":\"mkv\",\"runTimeTicks\":100,\
+             \"remote\":false,\"codecs\":[\"h264\"]}"
+        );
+        assert_eq!(
+            serde_json::to_string(&Method::Transcode {
+                subtitle_burn_in: true,
+            })
+            .expect("the method serializes"),
+            "{\"transcode\":{\"subtitleBurnIn\":true}}"
+        );
     }
 
     #[test]

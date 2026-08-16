@@ -2,7 +2,7 @@
 //! model, held in one display-preferences record, read honour-or-default and
 //! written back whole.
 
-use jellium_protocol::{Quality, sync};
+use jellium_protocol::{Bitrate, Quality, sync};
 use jellyfin_api::types::DisplayPreferencesDto;
 use serde::Serialize;
 
@@ -215,7 +215,7 @@ fn method_parse(raw: &str) -> Option<sync::SyncMethod> {
 pub fn quality_key(quality: Quality) -> String {
     match quality {
         Quality::Auto => "auto".to_owned(),
-        Quality::Limit { bits_per_second } => bits_per_second.to_string(),
+        Quality::Limit { bits_per_second } => bits_per_second.bits_per_second().to_string(),
     }
 }
 
@@ -224,10 +224,12 @@ pub fn quality_parse(raw: &str) -> Option<Quality> {
     if raw == "auto" {
         return Some(Quality::Auto);
     }
-    raw.parse::<i32>()
+    raw.parse::<i64>()
         .ok()
         .filter(|bits| *bits > 0)
-        .map(|bits_per_second| Quality::Limit { bits_per_second })
+        .map(|bits| Quality::Limit {
+            bits_per_second: Bitrate::of(bits),
+        })
 }
 
 /// Every user preference this client owns that `UserConfiguration` does not
@@ -660,7 +662,7 @@ mod tests {
     #[test]
     fn the_migration_runs_once_and_never_under_read_only() {
         let quality = Quality::Limit {
-            bits_per_second: 4_000_000,
+            bits_per_second: Bitrate::of(4_000_000),
         };
         let missing = Bag::missing();
         assert_eq!(
@@ -696,7 +698,7 @@ mod tests {
     #[test]
     fn a_bitrate_ceiling_reaches_the_record_on_a_save_rather_than_on_an_edit() {
         let quality = Quality::Limit {
-            bits_per_second: 4_000_000,
+            bits_per_second: Bitrate::of(4_000_000),
         };
         let mut bag = Bag::missing();
         bag.edit(Held {
@@ -727,7 +729,7 @@ mod tests {
         let mut bag = Bag::missing();
         bag.edit(Held {
             quality: Quality::Limit {
-                bits_per_second: 4_000_000,
+                bits_per_second: Bitrate::of(4_000_000),
             },
             ..Held::default()
         });
@@ -737,7 +739,7 @@ mod tests {
     #[test]
     fn a_carried_quality_drops_the_parked_ceiling_and_moves_no_edit() {
         let quality = Quality::Limit {
-            bits_per_second: 4_000_000,
+            bits_per_second: Bitrate::of(4_000_000),
         };
         let mut bag = Bag::of(record(&[("skipBack", "60")]));
         bag.edit(Held {

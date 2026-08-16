@@ -108,7 +108,6 @@ export function mount(wanted, sink) {
     element.autoplay = false;
     element.playsInline = true;
     element.preload = 'auto';
-    element.crossOrigin = 'same-origin';
     document.body.appendChild(element);
     player.bind(element, sink);
   }

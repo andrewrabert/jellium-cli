@@ -1,62 +1,88 @@
-use axum::http::HeaderValue;
-use uuid::Uuid;
+use std::sync::Arc;
 
-pub struct Device {
-    client: &'static str,
-    /// Non-empty printable ascii.
-    name: String,
-    id: Uuid,
-    version: &'static str,
+use axum::http::HeaderValue;
+
+/// What the browser announced about itself, which every upstream request the
+/// run issues is identified by.
+pub struct Identity {
+    announced: jellium_protocol::Identity,
 }
 
-/// `raw` when it is non-empty and every character is printable ascii,
-/// "browser" otherwise.
-fn device_name(raw: &str) -> String {
-    if !raw.is_empty() && raw.chars().all(|c| c.is_ascii_graphic() || c == ' ') {
-        raw.to_string()
-    } else {
-        "browser".to_string()
+impl Identity {
+    pub fn of(announced: jellium_protocol::Identity) -> Identity {
+        Identity { announced }
+    }
+
+    /// The identifier the static-stream and audio-universal query strings
+    /// carry, and the one this installation's own session is recognized by.
+    pub fn device_id(&self) -> &str {
+        &self.announced.device_id
+    }
+
+    /// The `Authorization` header carrying `token`, in the order
+    /// `setRequestHeaders` pushes its values; `None` when a field holds a byte
+    /// no header value admits.
+    // reference: set-request-headers — apiClient.js:166-195
+    pub fn authorization(&self, token: &str) -> Option<HeaderValue> {
+        let escape = |value: &str| value.replace('\\', r"\\").replace('"', "\\\"");
+        let mut values = vec![format!(r#"Client="{}""#, escape(jellium_protocol::CLIENT))];
+        if !self.announced.device.is_empty() {
+            values.push(format!(r#"Device="{}""#, escape(&self.announced.device)));
+        }
+        if !self.announced.device_id.is_empty() {
+            values.push(format!(
+                r#"DeviceId="{}""#,
+                escape(&self.announced.device_id)
+            ));
+        }
+        values.push(format!(
+            r#"Version="{}""#,
+            escape(jellium_protocol::VERSION)
+        ));
+        if !token.is_empty() {
+            values.push(format!(r#"Token="{}""#, escape(token)));
+        }
+        HeaderValue::from_str(&format!("MediaBrowser {}", values.join(", "))).ok()
     }
 }
 
-impl Device {
-    pub fn new(id: Uuid) -> Device {
-        let raw = hostname::get()
-            .map(|name| name.to_string_lossy().into_owned())
-            .unwrap_or_default();
-        Device {
-            client: "Jellium Web",
-            name: device_name(&raw),
-            id,
-            version: env!("CARGO_PKG_VERSION"),
+/// The identity the run holds, and nothing until a browser announces one.
+pub struct Announced {
+    held: tokio::sync::RwLock<Option<Arc<Identity>>>,
+}
+
+impl Announced {
+    pub fn new() -> Announced {
+        Announced {
+            held: tokio::sync::RwLock::new(None),
         }
     }
 
-    /// The device identifier Jellyfin keys this client's session by.
-    pub fn id(&self) -> Uuid {
-        self.id
+    /// The identity held now, and `None` while no browser has announced one.
+    pub async fn held(&self) -> Option<Arc<Identity>> {
+        self.held.read().await.clone()
     }
 
-    /// The client name this installation presents, which is the client the
-    /// preference bag is read and written under.
-    pub fn client(&self) -> &'static str {
-        self.client
+    /// Installs `announced`, answering true when it displaced a different one,
+    /// which is what obliges the held upstream's link to be rebuilt.
+    pub async fn install(&self, announced: jellium_protocol::Identity) -> bool {
+        let mut held = self.held.write().await;
+        let displaced = held
+            .as_ref()
+            .is_some_and(|standing| standing.announced != announced);
+        *held = Some(Arc::new(Identity::of(announced)));
+        displaced
     }
+}
 
-    // the Authorization header carrying `token`, or None when `token` holds a
-    // byte no header value admits (a control byte); the caller fails the
-    // request rather than panicking on a token it did not choose
-    pub fn authorization(&self, token: &str) -> Option<HeaderValue> {
-        let escape = |value: &str| value.replace('\\', r"\\").replace('"', "\\\"");
-        let value = format!(
-            r#"MediaBrowser Client="{}", Device="{}", DeviceId="{}", Version="{}", Token="{}""#,
-            escape(self.client),
-            escape(&self.name),
-            self.id,
-            escape(self.version),
-            escape(token),
-        );
-        HeaderValue::from_str(&value).ok()
+#[cfg(test)]
+impl Announced {
+    // an identity already announced, which is the state a router test drives
+    // the relay in
+    pub(crate) fn announcing(announced: jellium_protocol::Identity) -> Announced {
+        Announced {
+            held: tokio::sync::RwLock::new(Some(Arc::new(Identity::of(announced)))),
+        }
     }
 }
 
@@ -64,41 +90,73 @@ impl Device {
 mod tests {
     use super::*;
 
-    #[test]
-    fn an_ascii_hostname_is_the_device_name() {
-        assert_eq!(device_name("my-host"), "my-host");
+    fn identity(device: &str, device_id: &str) -> Identity {
+        Identity::of(jellium_protocol::Identity {
+            device: device.to_owned(),
+            device_id: device_id.to_owned(),
+        })
     }
 
+    /// The five values `setRequestHeaders` pushes, in its order.
     #[test]
-    fn a_non_ascii_hostname_falls_back() {
-        assert_eq!(device_name("café"), "browser");
+    fn the_header_carries_the_reference_value_order() {
+        let identity = identity("Firefox", "abc1");
+        let header = identity.authorization("token").expect("a header");
+        assert_eq!(
+            header.to_str().expect("ascii"),
+            r#"MediaBrowser Client="Jellyfin Web", Device="Firefox", DeviceId="abc1", Version="10.11.11", Token="token""#
+        );
     }
 
+    /// An empty token pushes no `Token`, which is what a login-stage request
+    /// presents.
     #[test]
-    fn a_device_named_from_a_non_ascii_hostname_builds_its_header() {
-        let device = Device {
-            client: "Jellium Web",
-            name: device_name("café"),
-            id: Uuid::nil(),
-            version: "0",
-        };
-        assert!(device.authorization("token").is_some());
+    fn an_empty_token_carries_no_token_value() {
+        let identity = identity("Firefox", "abc1");
+        let header = identity.authorization("").expect("a header");
+        assert_eq!(
+            header.to_str().expect("ascii"),
+            r#"MediaBrowser Client="Jellyfin Web", Device="Firefox", DeviceId="abc1", Version="10.11.11""#
+        );
     }
 
     #[test]
     fn a_control_character_token_has_no_header() {
-        let device = Device {
-            client: "Jellium Web",
-            name: device_name("my-host"),
-            id: Uuid::nil(),
-            version: "0",
-        };
-        assert!(device.authorization("a\nb").is_none());
-        assert!(device.authorization("token").is_some());
+        let identity = identity("Firefox", "abc1");
+        assert!(identity.authorization("a\nb").is_none());
     }
 
-    #[test]
-    fn an_empty_hostname_falls_back() {
-        assert_eq!(device_name(""), "browser");
+    #[tokio::test]
+    async fn a_second_identity_naming_something_else_displaces_the_first() {
+        let announced = Announced::new();
+        assert!(announced.held().await.is_none());
+        assert!(
+            !announced
+                .install(jellium_protocol::Identity {
+                    device: "Firefox".to_owned(),
+                    device_id: "abc1".to_owned(),
+                })
+                .await
+        );
+        assert!(
+            !announced
+                .install(jellium_protocol::Identity {
+                    device: "Firefox".to_owned(),
+                    device_id: "abc1".to_owned(),
+                })
+                .await
+        );
+        assert!(
+            announced
+                .install(jellium_protocol::Identity {
+                    device: "Chrome".to_owned(),
+                    device_id: "def1".to_owned(),
+                })
+                .await
+        );
+        assert_eq!(
+            announced.held().await.expect("an identity").device_id(),
+            "def1"
+        );
     }
 }

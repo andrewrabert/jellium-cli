@@ -5,8 +5,8 @@ use std::time::Duration;
 use iced::widget::{center, column, text};
 use iced::{Element, Subscription, Task, Theme};
 use jellium_protocol::{
-    Capabilities, Event, Feed, Group, Marked, Notice, PlaybackRefused, Quality, Report, Session,
-    SessionStatus, Standing, Target,
+    Event, Feed, Group, Marked, Notice, PlaybackRefused, Quality, Report, Session, SessionStatus,
+    Standing, Target,
 };
 use jellyfin_api::types::UserItemDataDto;
 use uuid::Uuid;
@@ -83,8 +83,8 @@ pub struct Signed {
     /// What the configuration and the bag ask of the home screen, taken
     /// whenever either changes.
     pub arrangement: crate::screen::home::Arrangement,
-    /// Probed once when the session opens and sent with every play request.
-    pub capabilities: Capabilities,
+    /// What this browser detects itself as, taken once where the session opens.
+    pub browser: crate::browser::Browser,
     /// The event socket and how many attempts have failed.
     pub live: live::Link,
     /// The sessions the local server offered, refreshed while a picker or
@@ -680,6 +680,17 @@ fn watching(signed: &Signed, route: &Route) -> Task<Message> {
     Task::none()
 }
 
+/// Announces this browser's identity to the local server and hands the session
+/// status it answers to `message`; every read of the session status is this
+/// announcement, so the local server holds an identity before it issues an
+/// upstream request.
+fn announcing(message: fn(Answer<jellium_protocol::SessionStatus>) -> Message) -> Task<Message> {
+    let identity = crate::identity::held(&crate::browser::Browser::detect(
+        &crate::browser::Runtime::probe(),
+    ));
+    Task::perform(async move { control::announce(&identity).await }, message)
+}
+
 impl Jellium {
     pub fn boot() -> (Jellium, Task<Message>) {
         (
@@ -695,7 +706,7 @@ impl Jellium {
                 iced::window::latest()
                     .and_then(iced::window::size)
                     .map(Message::Resized),
-                Task::perform(control::status(), Message::SessionChecked),
+                announcing(Message::SessionChecked),
             ]),
         )
     }
@@ -739,6 +750,7 @@ impl Jellium {
             }
             SessionStatus::Authenticated(session) => {
                 let api = Rc::new(Api::new(session.user_id));
+                let detected = crate::browser::Browser::detect(&crate::browser::Runtime::probe());
                 self.stage = Stage::Signed(Box::new(Signed {
                     session,
                     api,
@@ -756,7 +768,7 @@ impl Jellium {
                         &jellium_model::form::Form::of(serde_json::Value::Null),
                         jellium_model::prefs::Held::default(),
                     ),
-                    capabilities: crate::player::capability::probe(),
+                    browser: detected,
                     live: live::Link::default(),
                     targets: Vec::new(),
                     remote: None,
@@ -1156,7 +1168,7 @@ impl Jellium {
             Message::Quieted => Task::none(),
             Message::SessionRechecked => {
                 self.stage = Stage::Booting { stalled: false };
-                Task::perform(control::status(), Message::SessionChecked)
+                announcing(Message::SessionChecked)
             }
             Message::SignInAgain => {
                 let (state, task) = login::enter(Vec::new(), false);
@@ -1317,7 +1329,7 @@ impl Jellium {
                 };
                 live::disconnect();
                 self.images.retain(&HashSet::new());
-                Task::perform(control::status(), Message::LoginAnswered)
+                announcing(Message::LoginAnswered)
             }
             Message::SetupAction(action) => match &mut self.stage {
                 Stage::Setup(state) => crate::screen::setup::act(state, action),
@@ -1390,7 +1402,7 @@ impl Jellium {
                 let Some(()) = answered.or_none(Text::FailureSetupStep) else {
                     return Task::none();
                 };
-                Task::perform(control::status(), Message::LoginAnswered)
+                announcing(Message::LoginAnswered)
             }
             Message::Navigated(route) => self.navigate(route),
             Message::WentBack => {
@@ -1744,6 +1756,7 @@ impl Jellium {
                         let settle = self.fetch_images();
                         Task::batch([task, reading, settle])
                     }
+                    player::Outcome::Unchanged => player::unchanged(signed),
                     player::Outcome::Unplanned => player::unplanned(signed),
                 }
             }

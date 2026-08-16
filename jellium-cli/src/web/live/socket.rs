@@ -253,7 +253,10 @@ async fn run(
     let Some(upstream) = state.session.signed().await else {
         return Ended::Dropped { connected: false };
     };
-    let url = upstream.socket_url(&state.device);
+    let Some(identity) = state.identity.held().await else {
+        return Ended::Dropped { connected: false };
+    };
+    let url = upstream.socket_url(&identity);
     let user = upstream.user_id();
     let live_tv = upstream.state.live_tv.allowed();
 

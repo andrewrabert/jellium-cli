@@ -25,9 +25,21 @@ pub fn signed(state: &AppState, held: &Session) -> Session {
 /// A saved credential the Jellyfin server rejects is cleared from its record,
 /// the record is kept, and that server's login screen is answered with
 /// `rejected` set.
-/// A login target held when the status is asked for is released, so a reload
+/// A login target held when the identity is announced is released, so a reload
 /// resumes on the list.
-pub async fn status(State(state): State<Arc<AppState>>) -> Response {
+/// Installing an identity that displaces a different one rebuilds the held
+/// session's link, so every later request carries what this browser announced.
+pub async fn announce(
+    State(state): State<Arc<AppState>>,
+    Json(announced): Json<jellium_protocol::Identity>,
+) -> Response {
+    if state.identity.install(announced).await {
+        state.session.switch().await;
+    }
+    let Some(identity) = state.identity.held().await else {
+        return (StatusCode::CONFLICT, Json(Refusal::NoSession)).into_response();
+    };
+
     match state.session.held().await {
         Some(Held::Signed(upstream)) => {
             return Json(SessionStatus::Authenticated(signed(
@@ -55,7 +67,7 @@ pub async fn status(State(state): State<Arc<AppState>>) -> Response {
         return setup::entered(&state, &saved.server, &probed, true).await;
     }
 
-    let upstream = match Upstream::resume(&state.device, &saved, &probed).await {
+    let upstream = match Upstream::resume(&identity, &saved, &probed).await {
         Ok(upstream) => upstream,
         Err(Failure::TokenRejected) => {
             let server = saved.server.clone();
@@ -89,7 +101,9 @@ pub async fn status(State(state): State<Arc<AppState>>) -> Response {
 /// Ends everything the held session owned: the playback session, any SyncPlay
 /// group, remote mode and the event socket.
 pub async fn ended(state: &Arc<AppState>) {
-    state.playback.shutdown(&state.session, &state.device).await;
+    if let Some(identity) = state.identity.held().await {
+        state.playback.shutdown(&state.session, &identity).await;
+    }
     state.live.shutdown(state).await;
 }
 

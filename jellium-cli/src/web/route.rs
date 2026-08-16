@@ -255,6 +255,10 @@ static STREAM_CONTAINERS: &[&str] = &[
 /// The containers an HLS segment is served in.
 static SEGMENT_CONTAINERS: &[&str] = &["ts", "mp4", "m4s", "aac", "mp3"];
 
+/// The name the Jellyfin server gives an HLS stream's fMP4 initialization
+/// segment.
+const INITIALIZATION: &str = "-1";
+
 /// The item kinds an instant mix is built from.
 static MIX_PARENTS: &[&str] = &["Items", "Albums", "Artists"];
 
@@ -885,6 +889,19 @@ static RELAYED: &[Route] = &[
         &[
             Segment::Literal("Videos"),
             Segment::Id,
+            Segment::Literal("hls1"),
+            Segment::Token { max: 64 },
+            Segment::Suffixed {
+                stem: INITIALIZATION,
+                extensions: SEGMENT_CONTAINERS,
+            },
+        ],
+    ),
+    Route::read(
+        Verb::Get,
+        &[
+            Segment::Literal("Videos"),
+            Segment::Id,
             Segment::Token { max: 64 },
             Segment::Literal("Subtitles"),
             Segment::Number { max: 4 },
@@ -970,6 +987,19 @@ static RELAYED: &[Route] = &[
             Segment::Token { max: 64 },
             Segment::Segmented {
                 max: 10,
+                extensions: SEGMENT_CONTAINERS,
+            },
+        ],
+    ),
+    Route::read(
+        Verb::Get,
+        &[
+            Segment::Literal("Audio"),
+            Segment::Id,
+            Segment::Literal("hls1"),
+            Segment::Token { max: 64 },
+            Segment::Suffixed {
+                stem: INITIALIZATION,
                 extensions: SEGMENT_CONTAINERS,
             },
         ],
@@ -1958,6 +1988,29 @@ mod tests {
             assert!(
                 Target::admit(&Method::GET, &path, &Seen::new()).is_some(),
                 "GET {path} was not relayed"
+            );
+        }
+    }
+
+    #[test]
+    fn the_initialization_segment_is_relayed_under_hls1_and_nowhere_else() {
+        for path in [
+            format!("Videos/{ID}/hls1/main/-1.mp4"),
+            format!("Audio/{ID}/hls1/main/-1.mp4"),
+        ] {
+            assert!(
+                Target::admit(&Method::GET, &path, &Seen::new()).is_some(),
+                "GET {path} was not relayed"
+            );
+        }
+        for path in [
+            format!("Videos/{ID}/Trickplay/320/-1.jpg"),
+            format!("Videos/{ID}/hls1/main/-2.mp4"),
+            format!("Videos/{ID}/hls1/main/-1.exe"),
+        ] {
+            assert!(
+                Target::admit(&Method::GET, &path, &Seen::new()).is_none(),
+                "GET {path} was relayed"
             );
         }
     }

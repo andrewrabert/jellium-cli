@@ -6,25 +6,51 @@ use axum::extract::State;
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use jellium_protocol::{
-    Failure, Method, Plan, PlayRequest, Progress, Quality, Repeat, Standing, Stopped,
+    Bitrate, Failure, Method, Plan, PlayRequest, Progress, Repeat, Standing, Stopped,
+    profile::MediaKind,
 };
-use jellyfin_api::types::{
-    PlayMethod, PlaybackProgressInfo, PlaybackStartInfo, PlaybackStopInfo, RepeatMode,
-};
+use jellyfin_api::types::{PlayMethod, RepeatMode};
 use uuid::Uuid;
 
-mod bandwidth;
+pub mod bandwidth;
+mod derive;
+mod encodings;
+mod intros;
 mod negotiate;
 mod plan;
-mod profile;
+pub mod pointed;
+mod reachable;
+mod report;
+#[cfg(test)]
+mod requests;
+mod subtitles;
 
 use bandwidth::Bandwidth;
 use negotiate::{Negotiated, Refused};
+use pointed::Pointed;
+use report::Throttle;
 
 use super::AppState;
 use super::holder::Holder;
-use super::identity::Device;
+use super::identity::Identity;
 use super::upstream::{self, Upstream};
+use super::wire::{self, Query};
+
+/// The body `POST LiveStreams/MediaInfo` carries.
+#[derive(serde::Serialize)]
+#[serde(rename_all = "PascalCase")]
+struct MediaInfo<'a> {
+    live_stream_id: &'a str,
+}
+
+/// Whether the door a negotiation came through requests intros. The reference
+/// reaches `getIntros` from its one `play()` entry point and from nowhere else,
+/// so the entry door asks and no other door does.
+#[derive(Clone, Copy)]
+enum Introducing {
+    Requested,
+    Skipped,
+}
 
 /// What a start installed.
 pub struct Started {
@@ -42,6 +68,8 @@ pub struct Playback {
     displaced: tokio::sync::RwLock<std::collections::VecDeque<String>>,
     transition: tokio::sync::Mutex<()>,
     bandwidth: Bandwidth,
+    /// The rate limit progress reports are held to before they go upstream.
+    reports: Throttle,
 }
 
 /// How many displaced sessions are remembered.
@@ -60,6 +88,20 @@ pub struct Active {
     /// When the browser last reported this session paused, and nothing while
     /// it plays.
     pub paused_since: Option<Instant>,
+    /// The foreign origins this plan has been pointed at, which no later plan
+    /// inherits.
+    pub pointed: Arc<Pointed>,
+    /// The ceiling that went to the Jellyfin server for this session.
+    pub max_bitrate: Bitrate,
+    /// When this session last re-read its live stream's media info, and nothing
+    /// while it never has.
+    pub last_media_info: Option<Instant>,
+    /// The negotiated source's run time, which is what `CanSeek` is computed
+    /// from.
+    pub run_time_ticks: Option<i64>,
+    /// The last state the browser reported, which starts as what the play
+    /// request carried and is replaced by every progress report.
+    pub reported: jellium_protocol::report::Playing,
 }
 
 impl Active {
@@ -86,6 +128,15 @@ fn played(method: Method) -> PlayMethod {
     }
 }
 
+/// The media kind the bitrate ladder keys its measurement by, which is the
+/// item's own `MediaType`; everything that is not audio is negotiated as video.
+fn kind(item: &jellyfin_api::types::BaseItemDto) -> MediaKind {
+    match item.media_type {
+        Some(jellyfin_api::types::MediaType::Audio) => MediaKind::Audio,
+        _ => MediaKind::Video,
+    }
+}
+
 fn repeated(repeat: Repeat) -> RepeatMode {
     match repeat {
         Repeat::Off => RepeatMode::RepeatNone,
@@ -94,17 +145,57 @@ fn repeated(repeat: Repeat) -> RepeatMode {
     }
 }
 
+/// The clock jellyfin-web stamps a playback start with, which is milliseconds
+/// since the epoch in ten-thousandths.
+fn started_at() -> i64 {
+    let since = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap_or_default();
+    since.as_millis() as i64 * 10_000
+}
+
 impl Active {
-    fn of(plan: &Plan, negotiated: &Negotiated) -> Active {
+    /// `last_media_info` is what the session this one continues had read, which
+    /// a stream change carries across and a fresh start carries nothing of.
+    fn of(
+        plan: &Plan,
+        negotiated: &Negotiated,
+        request: &PlayRequest,
+        ceiling: Bitrate,
+        pointed: Arc<Pointed>,
+        last_media_info: Option<Instant>,
+    ) -> Active {
+        let reporting = &request.reporting;
         Active {
             play_session: plan.play_session.clone(),
             item: plan.item,
             media_source: plan.media_source.clone(),
             live_stream: negotiated.live_stream.clone(),
-            method: plan.method,
+            method: plan.playable.method,
             position_ticks: plan.start_ticks,
             touched: Instant::now(),
             paused_since: None,
+            pointed,
+            max_bitrate: ceiling,
+            last_media_info,
+            run_time_ticks: plan.run_time_ticks,
+            reported: jellium_protocol::report::Playing {
+                play_session: plan.play_session.clone(),
+                volume_level: reporting.volume_level,
+                muted: reporting.muted,
+                paused: false,
+                repeat: reporting.repeat,
+                shuffle: reporting.shuffle,
+                position_ticks: plan.start_ticks,
+                playback_start_time_ticks: started_at(),
+                playback_rate: reporting.playback_rate,
+                subtitle_stream: plan.subtitle_stream,
+                secondary_subtitle_stream: None,
+                audio_stream: plan.audio_stream,
+                buffered: Vec::new(),
+                playlist_item_id: reporting.playlist_item_id.clone(),
+                queue: reporting.queue.clone(),
+            },
         }
     }
 }
@@ -112,28 +203,24 @@ impl Active {
 /// Stops the encode and closes the live stream `active` left behind, then
 /// reports the stop. Every step is attempted even when an earlier one failed,
 /// so nothing is left running because something else was already gone.
-async fn end(upstream: &Upstream, device: &Device, active: &Active) {
-    let control = upstream.control();
-    let stopped = control
-        .report_playback_stopped(&PlaybackStopInfo {
-            item_id: Some(active.item),
-            media_source_id: Some(active.media_source.clone()),
-            play_session_id: Some(active.play_session.clone()),
-            live_stream_id: active.live_stream.clone(),
-            position_ticks: Some(active.position_ticks),
-            ..PlaybackStopInfo::default()
-        })
-        .await;
-    let encoding = control
-        .stop_encoding_process(&device.id().to_string(), &active.play_session)
-        .await;
+async fn end(upstream: &Upstream, identity: &Identity, reports: &Throttle, active: &Active) {
+    reports.cancel().await;
+    let stopped = report::stopped(upstream, &report::Body::of(active)).await;
+    let encoding = encodings::stop(upstream, identity, &active.play_session).await;
     let live = match &active.live_stream {
-        Some(live_stream) => control.close_live_stream(live_stream).await,
+        Some(live_stream) => {
+            wire::poked(
+                upstream,
+                "LiveStreams/Close",
+                &Query::new().set("liveStreamId", live_stream),
+            )
+            .await
+        }
         None => Ok(()),
     };
     for outcome in [stopped, encoding, live] {
         if let Err(e) = outcome {
-            eprintln!("jellium-cli web: ending playback: {e}");
+            eprintln!("jellium-cli web: ending playback: {e:?}");
         }
     }
 }
@@ -150,12 +237,19 @@ impl Playback {
     /// A live session paused this long is stopped and its tuner released.
     pub const PAUSED_LIVE: Duration = Duration::from_secs(300);
 
-    pub fn new() -> Playback {
+    /// How long a live session's media info is good for before a progress
+    /// report re-reads it.
+    // reference: get-live-stream-media-info — playbackmanager.js:3687-3698
+    pub const MEDIA_INFO: Duration = Duration::from_secs(600);
+
+    /// `session` is the session file the measured bitrate is persisted into.
+    pub fn new(session: std::path::PathBuf) -> Playback {
         Playback {
             current: tokio::sync::RwLock::new(None),
             displaced: tokio::sync::RwLock::new(std::collections::VecDeque::new()),
             transition: tokio::sync::Mutex::new(()),
-            bandwidth: Bandwidth::new(),
+            bandwidth: Bandwidth::new(session),
+            reports: Throttle::new(),
         }
     }
 
@@ -169,6 +263,9 @@ impl Playback {
         let installed = active.play_session.clone();
         let _transition = self.transition.lock().await;
         let displaced = self.current.write().await.replace(active);
+        if let Some(displaced) = displaced.as_ref() {
+            displaced.pointed.clear();
+        }
         let mut records = self.displaced.write().await;
         records.retain(|session| *session != installed);
         if let Some(displaced) = displaced.as_ref() {
@@ -180,10 +277,12 @@ impl Playback {
         displaced
     }
 
-    async fn ceiling(&self, upstream: &Upstream, quality: Quality) -> Option<i32> {
-        match quality {
-            Quality::Auto => self.bandwidth.ceiling(upstream).await,
-            Quality::Limit { bits_per_second } => Some(bits_per_second),
+    /// The register the held plan carries, and an empty one while no plan
+    /// holds, which is what a relayed body is rewritten against.
+    pub async fn pointed(&self) -> Arc<Pointed> {
+        match self.current.read().await.as_ref() {
+            Some(active) => Arc::clone(&active.pointed),
+            None => Arc::new(Pointed::new()),
         }
     }
 
@@ -195,71 +294,196 @@ impl Playback {
         (held.live() && held.item == item).then(|| held.media_source.clone())
     }
 
+    /// The door a user-initiated play comes through, which is the one entry
+    /// point the reference asks `getIntros` from.
+    pub async fn enter(
+        &self,
+        upstream: &Upstream,
+        identity: &Identity,
+        request: &PlayRequest,
+        seen: &crate::web::route::Seen,
+    ) -> Result<Started, Refused> {
+        self.begun(upstream, identity, request, seen, Introducing::Requested)
+            .await
+    }
+
+    /// The door a queue advance, an ended item and a version change come
+    /// through, none of which the reference asks `getIntros` from.
+    pub async fn start(
+        &self,
+        upstream: &Upstream,
+        identity: &Identity,
+        request: &PlayRequest,
+        seen: &crate::web::route::Seen,
+    ) -> Result<Started, Refused> {
+        self.begun(upstream, identity, request, seen, Introducing::Skipped)
+            .await
+    }
+
     /// Negotiates the request, ends the session it displaces — stopping that
     /// encode and closing that live stream — installs the new one, and reports
     /// playback start to the Jellyfin server.
     /// A request naming the item a held live session is playing re-negotiates
     /// as a resume, so a live stream the Jellyfin server no longer holds reads
     /// as `TunerGone` rather than as a fresh tune.
-    pub async fn start(
+    async fn begun(
         &self,
         upstream: &Upstream,
-        device: &Device,
+        identity: &Identity,
         request: &PlayRequest,
         seen: &crate::web::route::Seen,
+        introducing: Introducing,
     ) -> Result<Started, Refused> {
-        let ceiling = self.ceiling(upstream, request.quality).await;
-        let resuming = self.resuming(request.item).await;
-        let negotiated =
-            negotiate::negotiate(upstream, request, ceiling, resuming.as_deref()).await?;
-
-        let chapters = upstream
-            .control()
-            .get_item(&request.item, Some(&upstream.user_id()))
-            .await
-            .ok()
-            .and_then(|item| item.chapters)
-            .unwrap_or_default();
-
-        let plan = plan::build(
-            &negotiated,
-            request,
-            &chapters,
-            upstream.link().base(),
-            seen,
-        )
-        .map_err(Refused::Playback)?;
+        let (plan, active) = self
+            .negotiated(upstream, identity, request, seen, None, introducing)
+            .await?;
+        let opening = report::Body::of(&active);
 
         let mut lost = None;
-        if let Some(displaced) = self.install(Active::of(&plan, &negotiated)).await {
+        if let Some(displaced) = self.install(active).await {
             lost = Some(displaced.play_session.clone());
-            end(upstream, device, &displaced).await;
+            end(upstream, identity, &self.reports, &displaced).await;
         }
 
-        if let Err(e) = upstream
-            .control()
-            .report_playback_start(&PlaybackStartInfo {
-                item_id: Some(plan.item),
-                media_source_id: Some(plan.media_source.clone()),
-                play_session_id: Some(plan.play_session.clone()),
-                live_stream_id: negotiated.live_stream.clone(),
-                audio_stream_index: plan.audio_stream,
-                subtitle_stream_index: plan.subtitle_stream,
-                play_method: Some(played(plan.method)),
-                position_ticks: Some(plan.start_ticks),
-                can_seek: Some(true),
-                is_paused: Some(false),
-                ..PlaybackStartInfo::default()
-            })
+        self.reports.cancel().await;
+        report::started(upstream, &opening)
             .await
-        {
-            return Err(Refused::Upstream(upstream.failed(e)));
-        }
+            .map_err(Refused::Upstream)?;
 
         Ok(Started {
             plan,
             displaced: lost,
         })
+    }
+
+    /// Swaps the source under the session already playing: the encodes the held
+    /// session left running are stopped before the swap and again after it, and
+    /// no stop is reported, so the Jellyfin server sees one session throughout.
+    /// A change asked for while nothing is held swaps in a session of its own
+    /// and stops no encode, which is what the reference does with no
+    /// `streamInfo` to change from.
+    /// A first stop that fails answers `Unchanged`: the reference swaps the
+    /// source inside that stop's success handler, so the stream that was
+    /// playing goes on playing and the held plan goes on standing.
+    // reference: change-stream-to-url — playbackmanager.js:1766-1782
+    pub async fn change(
+        &self,
+        upstream: &Upstream,
+        identity: &Identity,
+        request: &PlayRequest,
+        seen: &crate::web::route::Seen,
+    ) -> Result<jellium_protocol::Planned, Refused> {
+        let (stopping, last_media_info) = self
+            .current
+            .read()
+            .await
+            .as_ref()
+            .map(|held| (held.play_session.clone(), held.last_media_info))
+            .unzip();
+        let last_media_info = last_media_info.flatten();
+
+        let (plan, active) = self
+            .negotiated(
+                upstream,
+                identity,
+                request,
+                seen,
+                last_media_info,
+                Introducing::Skipped,
+            )
+            .await?;
+
+        if let Some(play_session) = stopping.as_deref()
+            && let Err(e) = encodings::stop(upstream, identity, play_session).await
+        {
+            eprintln!("jellium-cli web: stopping the encode before the change: {e:?}");
+            return Ok(jellium_protocol::Planned::Unchanged);
+        }
+
+        // the session this change swaps out is displaced, not ended: nothing
+        // reports it stopped and nothing closes its live stream
+        self.install(active).await;
+
+        if let Some(play_session) = stopping.as_deref()
+            && let Err(e) = encodings::stop(upstream, identity, play_session).await
+        {
+            eprintln!("jellium-cli web: stopping the changed encode: {e:?}");
+        }
+
+        Ok(jellium_protocol::Planned::Started(Box::new(plan)))
+    }
+
+    /// The plan `request` settles on and the session that would hold it,
+    /// carrying `last_media_info` from the session this one continues.
+    async fn negotiated(
+        &self,
+        upstream: &Upstream,
+        identity: &Identity,
+        request: &PlayRequest,
+        seen: &crate::web::route::Seen,
+        last_media_info: Option<Instant>,
+        introducing: Introducing,
+    ) -> Result<(Plan, Active), Refused> {
+        let resuming = self.resuming(request.item).await;
+        let item = upstream
+            .control()
+            .get_item(&request.item, Some(&upstream.user_id()))
+            .await
+            .map_err(|e| Refused::Upstream(upstream.failed(e)))?;
+        let ceiling = self
+            .bandwidth
+            .ceiling(upstream, request.quality, kind(&item))
+            .await;
+        let negotiated = negotiate::negotiate(
+            upstream,
+            request,
+            &item,
+            identity,
+            ceiling,
+            resuming.as_deref(),
+        )
+        .await?;
+
+        let chapters = item.chapters.clone().unwrap_or_default();
+        let introduced = match introducing {
+            Introducing::Requested => {
+                intros::intros(
+                    upstream,
+                    &item,
+                    request.start_ticks,
+                    request.start_index,
+                    request.fullscreen,
+                    request.cinema_mode,
+                )
+                .await
+            }
+            Introducing::Skipped => Vec::new(),
+        };
+
+        let pointed = Arc::new(Pointed::new());
+        let plan = plan::build(
+            upstream,
+            &negotiated,
+            request,
+            identity,
+            plan::Described {
+                chapters: &chapters,
+                intros: introduced,
+            },
+            seen,
+            &pointed,
+        )
+        .map_err(Refused::Playback)?;
+
+        let active = Active::of(
+            &plan,
+            &negotiated,
+            request,
+            ceiling,
+            pointed,
+            last_media_info,
+        );
+        Ok((plan, active))
     }
 
     /// The playback session held now, which is the tab a control command goes
@@ -282,27 +506,28 @@ impl Playback {
     pub async fn progress(
         &self,
         upstream: &Upstream,
-        device: &Device,
+        identity: &Identity,
         progress: &Progress,
     ) -> Result<Standing, Failure> {
         let held = {
             let mut current = self.current.write().await;
             match current.as_mut() {
-                Some(active) if active.play_session == progress.play_session => {
-                    active.position_ticks = progress.position_ticks;
+                Some(active) if active.play_session == progress.playing.play_session => {
+                    active.position_ticks = progress.playing.position_ticks;
                     active.touched = Instant::now();
-                    active.paused_since = match (progress.paused, active.paused_since) {
+                    active.paused_since = match (progress.playing.paused, active.paused_since) {
                         (true, Some(since)) => Some(since),
                         (true, None) => Some(Instant::now()),
                         (false, _) => None,
                     };
+                    active.reported = progress.playing.clone();
                     active.clone()
                 }
                 _ => {
                     let records = self.displaced.read().await;
                     let superseded = records
                         .iter()
-                        .any(|session| *session == progress.play_session);
+                        .any(|session| *session == progress.playing.play_session);
                     return Ok(if superseded {
                         Standing::Superseded
                     } else {
@@ -322,33 +547,54 @@ impl Playback {
                 }
             };
             if let Some(released) = released {
-                end(upstream, device, &released).await;
+                end(upstream, identity, &self.reports, &released).await;
             }
             return Ok(Standing::Released);
         }
 
-        upstream
-            .control()
-            .report_playback_progress(&PlaybackProgressInfo {
-                item_id: Some(held.item),
-                media_source_id: Some(held.media_source.clone()),
-                play_session_id: Some(held.play_session.clone()),
-                live_stream_id: held.live_stream.clone(),
-                audio_stream_index: progress.audio_stream,
-                subtitle_stream_index: progress.subtitle_stream,
-                play_method: Some(played(held.method)),
-                position_ticks: Some(progress.position_ticks),
-                is_paused: Some(progress.paused),
-                is_muted: Some(progress.muted),
-                volume_level: Some(progress.volume),
-                repeat_mode: Some(repeated(progress.repeat)),
-                can_seek: Some(true),
-                ..PlaybackProgressInfo::default()
-            })
-            .await
-            .map_err(|e| upstream.failed(e))?;
+        let mut body = report::Body::of(&held);
+        body.event_name = Some(progress.event);
+        self.reports.progress(upstream, body).await?;
+        self.media_info(upstream, &held).await;
 
         Ok(Standing::Current)
+    }
+
+    /// Re-reads the live stream `held` is playing when the last read is older
+    /// than `MEDIA_INFO`, which is what every progress update does; a failure
+    /// is swallowed, the way the reference swallows one.
+    // reference: get-live-stream-media-info — playbackmanager.js:3687-3698
+    async fn media_info(&self, upstream: &Upstream, held: &Active) {
+        let Some(live_stream) = held.live_stream.as_deref() else {
+            return;
+        };
+        if held
+            .last_media_info
+            .is_some_and(|read| read.elapsed() < Self::MEDIA_INFO)
+        {
+            return;
+        }
+        {
+            let mut current = self.current.write().await;
+            match current.as_mut() {
+                Some(active) if active.play_session == held.play_session => {
+                    active.last_media_info = Some(Instant::now());
+                }
+                _ => return,
+            }
+        }
+        let read: Result<jellyfin_api::types::MediaSourceInfo, Failure> = wire::posted(
+            upstream,
+            "LiveStreams/MediaInfo",
+            &Query::new(),
+            &MediaInfo {
+                live_stream_id: live_stream,
+            },
+        )
+        .await;
+        if let Err(e) = read {
+            eprintln!("jellium-cli web: re-reading the live stream's media info: {e:?}");
+        }
     }
 
     /// Reports the stop to the Jellyfin server, stops the encode and closes
@@ -357,29 +603,30 @@ impl Playback {
     pub async fn stopped(
         &self,
         upstream: &Upstream,
-        device: &Device,
+        identity: &Identity,
         stopped: &Stopped,
     ) -> Result<(), Failure> {
         let _transition = self.transition.lock().await;
         let held = {
             let mut current = self.current.write().await;
             match current.as_ref() {
-                Some(active) if active.play_session == stopped.play_session => {
+                Some(active) if active.play_session == stopped.playing.play_session => {
                     let mut active = current.take().expect("the session just matched");
-                    active.position_ticks = stopped.position_ticks;
+                    active.position_ticks = stopped.playing.position_ticks;
+                    active.reported = stopped.playing.clone();
                     active
                 }
                 _ => return Ok(()),
             }
         };
-        end(upstream, device, &held).await;
+        end(upstream, identity, &self.reports, &held).await;
         Ok(())
     }
 
     /// Ends the held session when its last progress report is older than
     /// `LAPSE`, and a held live session paused longer than `PAUSED_LIVE`,
     /// closing its live stream either way.
-    pub async fn sweep(&self, holder: &Holder, device: &Device) {
+    pub async fn sweep(&self, holder: &Holder, identity: &Identity) {
         let _transition = self.transition.lock().await;
         let lapsed = {
             let mut current = self.current.write().await;
@@ -393,28 +640,103 @@ impl Playback {
         if let Some(lapsed) = lapsed
             && let Some(upstream) = holder.signed().await
         {
-            end(&upstream, device, &lapsed).await;
+            end(&upstream, identity, &self.reports, &lapsed).await;
         }
     }
 
     /// Ends the held session at its last reported position, which is how the
     /// local server leaves no encode running behind it.
-    pub async fn shutdown(&self, holder: &Holder, device: &Device) {
+    pub async fn shutdown(&self, holder: &Holder, identity: &Identity) {
         let _transition = self.transition.lock().await;
         let held = self.current.write().await.take();
         if let Some(held) = held
             && let Some(upstream) = holder.signed().await
         {
-            end(&upstream, device, &held).await;
+            end(&upstream, identity, &self.reports, &held).await;
         }
     }
+}
+
+/// The signed upstream and the announced identity, and nothing while either is
+/// missing.
+async fn ready(state: &AppState) -> Option<(Arc<Upstream>, Arc<Identity>)> {
+    Some((state.session.signed().await?, state.identity.held().await?))
+}
+
+fn no_session() -> Response {
+    (
+        StatusCode::CONFLICT,
+        Json(jellium_protocol::Refusal::NoSession),
+    )
+        .into_response()
+}
+
+/// The door a user-initiated play comes through, which is the one that asks
+/// the Jellyfin server for this item's intros.
+pub async fn enter(state: State<Arc<AppState>>, request: Json<PlayRequest>) -> Response {
+    let Some((upstream, identity)) = ready(&state).await else {
+        return no_session();
+    };
+    let started = state
+        .playback
+        .enter(&upstream, &identity, &request, &state.seen)
+        .await;
+    installed(&state, &upstream, started).await
+}
+
+/// The door a queue advance, an ended item and a version change come through,
+/// which asks for no intros.
+pub async fn start(state: State<Arc<AppState>>, request: Json<PlayRequest>) -> Response {
+    let Some((upstream, identity)) = ready(&state).await else {
+        return no_session();
+    };
+    let started = state
+        .playback
+        .start(&upstream, &identity, &request, &state.seen)
+        .await;
+    installed(&state, &upstream, started).await
 }
 
 /// 409 with the refusal, or the upstream status for a transport failure.
 /// A displaced session is told over the event socket before the plan is
 /// answered.
-pub async fn start(state: State<Arc<AppState>>, request: Json<PlayRequest>) -> Response {
+async fn installed(
+    state: &AppState,
+    upstream: &Arc<Upstream>,
+    started: Result<Started, Refused>,
+) -> Response {
+    match started {
+        Ok(started) => {
+            if let Some(displaced) = started.displaced.as_deref() {
+                state.live.displaced(displaced).await;
+            }
+            (
+                StatusCode::OK,
+                Json(jellium_protocol::Planned::Started(Box::new(started.plan))),
+            )
+                .into_response()
+        }
+        Err(Refused::Playback(refused)) => (StatusCode::CONFLICT, Json(refused)).into_response(),
+        Err(Refused::Upstream(failure)) => {
+            if failure == Failure::TokenRejected {
+                state.session.reject(upstream).await;
+            }
+            (upstream::status_for(&failure), Json(failure)).into_response()
+        }
+    }
+}
+
+/// The plan the swapped-in stream plays under; a refusal and a transport
+/// failure answer the way a start's do.
+pub async fn change(state: State<Arc<AppState>>, request: Json<PlayRequest>) -> Response {
     let Some(upstream) = state.session.signed().await else {
+        return (
+            StatusCode::CONFLICT,
+            Json(jellium_protocol::Refusal::NoSession),
+        )
+            .into_response();
+    };
+    let Some(identity) = state.identity.held().await else {
         return (
             StatusCode::CONFLICT,
             Json(jellium_protocol::Refusal::NoSession),
@@ -423,15 +745,10 @@ pub async fn start(state: State<Arc<AppState>>, request: Json<PlayRequest>) -> R
     };
     match state
         .playback
-        .start(&upstream, &state.device, &request, &state.seen)
+        .change(&upstream, &identity, &request, &state.seen)
         .await
     {
-        Ok(started) => {
-            if let Some(displaced) = started.displaced.as_deref() {
-                state.live.displaced(displaced).await;
-            }
-            (StatusCode::OK, Json(started.plan)).into_response()
-        }
+        Ok(planned) => (StatusCode::OK, Json(planned)).into_response(),
         Err(Refused::Playback(refused)) => (StatusCode::CONFLICT, Json(refused)).into_response(),
         Err(Refused::Upstream(failure)) => {
             if failure == Failure::TokenRejected {
@@ -450,9 +767,16 @@ pub async fn progress(state: State<Arc<AppState>>, progress: Json<Progress>) -> 
         )
             .into_response();
     };
+    let Some(identity) = state.identity.held().await else {
+        return (
+            StatusCode::CONFLICT,
+            Json(jellium_protocol::Refusal::NoSession),
+        )
+            .into_response();
+    };
     match state
         .playback
-        .progress(&upstream, &state.device, &progress)
+        .progress(&upstream, &identity, &progress)
         .await
     {
         Ok(standing) => (StatusCode::OK, Json(standing)).into_response(),
@@ -473,11 +797,14 @@ pub async fn stopped(state: State<Arc<AppState>>, stopped: Json<Stopped>) -> Res
         )
             .into_response();
     };
-    match state
-        .playback
-        .stopped(&upstream, &state.device, &stopped)
-        .await
-    {
+    let Some(identity) = state.identity.held().await else {
+        return (
+            StatusCode::CONFLICT,
+            Json(jellium_protocol::Refusal::NoSession),
+        )
+            .into_response();
+    };
+    match state.playback.stopped(&upstream, &identity, &stopped).await {
         Ok(()) => StatusCode::NO_CONTENT.into_response(),
         Err(failure) => {
             if failure == Failure::TokenRejected {
@@ -492,23 +819,37 @@ pub async fn stopped(state: State<Arc<AppState>>, stopped: Json<Stopped>) -> Res
 mod tests {
     use super::*;
 
+    /// What a browser reports about `session`, five ticks in.
+    fn playing(session: &str) -> jellium_protocol::report::Playing {
+        jellium_protocol::report::Playing {
+            play_session: session.to_string(),
+            volume_level: 100,
+            muted: false,
+            paused: false,
+            repeat: Repeat::Off,
+            shuffle: jellium_protocol::report::Shuffle::Sorted,
+            position_ticks: 5,
+            playback_start_time_ticks: 0,
+            playback_rate: 1.0,
+            subtitle_stream: None,
+            secondary_subtitle_stream: None,
+            audio_stream: None,
+            buffered: Vec::new(),
+            playlist_item_id: "playlistItem1".to_string(),
+            queue: Vec::new(),
+        }
+    }
+
     fn stopped_report(session: &str) -> Stopped {
         Stopped {
-            play_session: session.to_string(),
-            position_ticks: 5,
+            playing: playing(session),
         }
     }
 
     fn progress_report(session: &str) -> Progress {
         Progress {
-            play_session: session.to_string(),
-            position_ticks: 5,
-            paused: false,
-            muted: false,
-            volume: 100,
-            audio_stream: None,
-            subtitle_stream: None,
-            repeat: Repeat::Off,
+            playing: playing(session),
+            event: jellium_protocol::report::Reported::TimeUpdate,
         }
     }
 
@@ -522,15 +863,31 @@ mod tests {
             position_ticks: 0,
             touched: Instant::now(),
             paused_since: None,
+            pointed: Arc::new(Pointed::new()),
+            max_bitrate: Bitrate::of(1_500_000),
+            last_media_info: None,
+            run_time_ticks: Some(1_000),
+            reported: playing(session),
         }
+    }
+
+    /// A holder whose session file lives in a directory that goes away with the
+    /// returned guard, so no test writes the developer's own session file.
+    fn on_a_temporary_session() -> (tempfile::TempDir, Playback) {
+        let directory = tempfile::tempdir().expect("the test's session directory is creatable");
+        let session = directory.path().join("session.json");
+        (directory, Playback::new(session))
     }
 
     #[tokio::test]
     async fn a_report_from_a_displaced_session_is_superseded_and_reaches_no_server() {
         let server = upstream::answering(204).await;
         let upstream = Upstream::stub(&server.base);
-        let device = Device::new(Uuid::nil());
-        let playback = Playback::new();
+        let device = Identity::of(jellium_protocol::Identity {
+            device: "Firefox".to_owned(),
+            device_id: Uuid::nil().to_string(),
+        });
+        let (_session, playback) = on_a_temporary_session();
         *playback.current.write().await = Some(active("current"));
         playback
             .displaced
@@ -552,8 +909,11 @@ mod tests {
     async fn a_session_displaced_before_the_last_one_is_still_superseded() {
         let server = upstream::answering(204).await;
         let upstream = Upstream::stub(&server.base);
-        let device = Device::new(Uuid::nil());
-        let playback = Playback::new();
+        let device = Identity::of(jellium_protocol::Identity {
+            device: "Firefox".to_owned(),
+            device_id: Uuid::nil().to_string(),
+        });
+        let (_session, playback) = on_a_temporary_session();
         for session in ["first", "second", "third"] {
             playback.install(active(session)).await;
         }
@@ -579,8 +939,12 @@ mod tests {
     async fn two_installs_at_once_supersede_every_session_they_displace() {
         let server = upstream::answering(204).await;
         let upstream = Upstream::stub(&server.base);
-        let device = Device::new(Uuid::nil());
-        let playback = Arc::new(Playback::new());
+        let device = Identity::of(jellium_protocol::Identity {
+            device: "Firefox".to_owned(),
+            device_id: Uuid::nil().to_string(),
+        });
+        let (_session, playback) = on_a_temporary_session();
+        let playback = Arc::new(playback);
         playback.install(active("first")).await;
 
         let one = {
@@ -621,8 +985,11 @@ mod tests {
     async fn a_report_from_a_session_that_lapsed_is_lapsed_and_reaches_no_server() {
         let server = upstream::answering(204).await;
         let upstream = Upstream::stub(&server.base);
-        let device = Device::new(Uuid::nil());
-        let playback = Playback::new();
+        let device = Identity::of(jellium_protocol::Identity {
+            device: "Firefox".to_owned(),
+            device_id: Uuid::nil().to_string(),
+        });
+        let (_session, playback) = on_a_temporary_session();
 
         assert_eq!(
             playback
@@ -638,8 +1005,11 @@ mod tests {
     async fn a_stop_from_a_displaced_session_changes_nothing() {
         let server = upstream::answering(204).await;
         let upstream = Upstream::stub(&server.base);
-        let device = Device::new(Uuid::nil());
-        let playback = Playback::new();
+        let device = Identity::of(jellium_protocol::Identity {
+            device: "Firefox".to_owned(),
+            device_id: Uuid::nil().to_string(),
+        });
+        let (_session, playback) = on_a_temporary_session();
         *playback.current.write().await = Some(active("current"));
 
         playback
@@ -654,8 +1024,11 @@ mod tests {
     async fn a_stop_reports_it_stops_the_encode_and_clears_the_session() {
         let server = upstream::answering(204).await;
         let upstream = Upstream::stub(&server.base);
-        let device = Device::new(Uuid::nil());
-        let playback = Playback::new();
+        let device = Identity::of(jellium_protocol::Identity {
+            device: "Firefox".to_owned(),
+            device_id: Uuid::nil().to_string(),
+        });
+        let (_session, playback) = on_a_temporary_session();
         *playback.current.write().await = Some(active("current"));
 
         playback
@@ -671,8 +1044,11 @@ mod tests {
     async fn a_progress_report_refreshes_the_deadline_and_reaches_the_server() {
         let server = upstream::answering(204).await;
         let upstream = Upstream::stub(&server.base);
-        let device = Device::new(Uuid::nil());
-        let playback = Playback::new();
+        let device = Identity::of(jellium_protocol::Identity {
+            device: "Firefox".to_owned(),
+            device_id: Uuid::nil().to_string(),
+        });
+        let (_session, playback) = on_a_temporary_session();
         let mut stale = active("current");
         stale.touched = Instant::now() - Playback::LAPSE;
         *playback.current.write().await = Some(stale);
@@ -704,12 +1080,15 @@ mod tests {
     async fn a_live_session_paused_past_the_limit_is_released_and_its_stream_closed() {
         let server = upstream::answering(204).await;
         let upstream = Upstream::stub(&server.base);
-        let device = Device::new(Uuid::nil());
-        let playback = Playback::new();
+        let device = Identity::of(jellium_protocol::Identity {
+            device: "Firefox".to_owned(),
+            device_id: Uuid::nil().to_string(),
+        });
+        let (_session, playback) = on_a_temporary_session();
         *playback.current.write().await = Some(live_active("current", Some(Playback::PAUSED_LIVE)));
 
         let mut report = progress_report("current");
-        report.paused = true;
+        report.playing.paused = true;
         assert_eq!(
             playback
                 .progress(&upstream, &device, &report)
@@ -726,13 +1105,16 @@ mod tests {
     async fn a_live_session_paused_inside_the_limit_keeps_its_stream() {
         let server = upstream::answering(204).await;
         let upstream = Upstream::stub(&server.base);
-        let device = Device::new(Uuid::nil());
-        let playback = Playback::new();
+        let device = Identity::of(jellium_protocol::Identity {
+            device: "Firefox".to_owned(),
+            device_id: Uuid::nil().to_string(),
+        });
+        let (_session, playback) = on_a_temporary_session();
         *playback.current.write().await =
             Some(live_active("current", Some(Duration::from_secs(1))));
 
         let mut report = progress_report("current");
-        report.paused = true;
+        report.playing.paused = true;
         assert_eq!(
             playback
                 .progress(&upstream, &device, &report)
@@ -749,8 +1131,11 @@ mod tests {
     async fn a_stop_closes_the_live_stream_before_the_sweeper_could() {
         let server = upstream::answering(204).await;
         let upstream = Upstream::stub(&server.base);
-        let device = Device::new(Uuid::nil());
-        let playback = Playback::new();
+        let device = Identity::of(jellium_protocol::Identity {
+            device: "Firefox".to_owned(),
+            device_id: Uuid::nil().to_string(),
+        });
+        let (_session, playback) = on_a_temporary_session();
         *playback.current.write().await = Some(live_active("current", None));
 
         playback
@@ -764,15 +1149,17 @@ mod tests {
     #[tokio::test]
     async fn a_shutdown_closes_the_live_stream_it_finds_open() {
         let server = upstream::answering(204).await;
-        let device = Device::new(Uuid::nil());
+        let device = Identity::of(jellium_protocol::Identity {
+            device: "Firefox".to_owned(),
+            device_id: Uuid::nil().to_string(),
+        });
         let holder = Holder::new(
             std::env::temp_dir()
                 .join("jellium-cli-playback-tests")
                 .join("shutdown-live.env"),
-            std::sync::Arc::new(Device::new(Uuid::nil())),
         );
         holder.install(Upstream::stub(&server.base)).await;
-        let playback = Playback::new();
+        let (_session, playback) = on_a_temporary_session();
         *playback.current.write().await = Some(live_active("current", None));
 
         playback.shutdown(&holder, &device).await;
@@ -784,8 +1171,11 @@ mod tests {
     async fn a_displaced_live_session_has_its_stream_closed() {
         let server = upstream::answering(204).await;
         let upstream = Upstream::stub(&server.base);
-        let device = Device::new(Uuid::nil());
-        let playback = Playback::new();
+        let device = Identity::of(jellium_protocol::Identity {
+            device: "Firefox".to_owned(),
+            device_id: Uuid::nil().to_string(),
+        });
+        let (_session, playback) = on_a_temporary_session();
 
         let displaced = playback
             .install(live_active("first", None))
@@ -795,7 +1185,7 @@ mod tests {
             .expect("the first install displaced nothing")
             .await
             .expect("the second install displaced the first");
-        end(&upstream, &device, &displaced).await;
+        end(&upstream, &device, &playback.reports, &displaced).await;
 
         assert_eq!(displaced.play_session, "first");
         assert_eq!(server.asked("/LiveStreams/Close"), 1);
@@ -804,15 +1194,17 @@ mod tests {
     #[tokio::test]
     async fn a_sweep_releases_a_live_session_paused_past_the_limit() {
         let server = upstream::answering(204).await;
-        let device = Device::new(Uuid::nil());
+        let device = Identity::of(jellium_protocol::Identity {
+            device: "Firefox".to_owned(),
+            device_id: Uuid::nil().to_string(),
+        });
         let holder = Holder::new(
             std::env::temp_dir()
                 .join("jellium-cli-playback-tests")
                 .join("sweep-live.env"),
-            std::sync::Arc::new(Device::new(Uuid::nil())),
         );
         holder.install(Upstream::stub(&server.base)).await;
-        let playback = Playback::new();
+        let (_session, playback) = on_a_temporary_session();
         *playback.current.write().await = Some(live_active("current", Some(Playback::PAUSED_LIVE)));
 
         playback.sweep(&holder, &device).await;
@@ -823,15 +1215,17 @@ mod tests {
     #[tokio::test]
     async fn a_shutdown_stops_the_encode_it_finds_running() {
         let server = upstream::answering(204).await;
-        let device = Device::new(Uuid::nil());
+        let device = Identity::of(jellium_protocol::Identity {
+            device: "Firefox".to_owned(),
+            device_id: Uuid::nil().to_string(),
+        });
         let holder = Holder::new(
             std::env::temp_dir()
                 .join("jellium-cli-playback-tests")
                 .join("shutdown.env"),
-            std::sync::Arc::new(Device::new(Uuid::nil())),
         );
         holder.install(Upstream::stub(&server.base)).await;
-        let playback = Playback::new();
+        let (_session, playback) = on_a_temporary_session();
         *playback.current.write().await = Some(active("current"));
 
         playback.shutdown(&holder, &device).await;

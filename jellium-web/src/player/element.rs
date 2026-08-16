@@ -1,10 +1,14 @@
+use std::ops::Not as _;
 use std::time::Duration;
 
-use jellium_protocol::Stopped;
+use jellium_protocol::profile::MediaKind;
+use jellium_protocol::{Bitrate, Stopped};
 use serde::{Deserialize, Serialize};
 
+use crate::browser::Browser;
 use crate::failure::{self, Call, Cause, Failure};
 use crate::overlay;
+use crate::profile::probe::{Engine, Media};
 use crate::text::Text;
 
 mod glue {
@@ -15,7 +19,7 @@ mod glue {
         #[wasm_bindgen(catch)]
         pub fn load(stream: &str) -> Result<u32, JsValue>;
         #[wasm_bindgen(catch)]
-        pub fn position() -> Result<f64, JsValue>;
+        pub fn position() -> Result<Option<String>, JsValue>;
         #[wasm_bindgen(catch)]
         pub fn ask(asked: &str) -> Result<(), JsValue>;
         #[wasm_bindgen(js_name = setGroupBeacon, catch)]
@@ -42,6 +46,21 @@ pub struct TextTrack {
     pub language: Option<String>,
 }
 
+/// How the element addresses the subtitle track it shows. An external track is
+/// one the element was offered and is named by its position among them; a track
+/// carried inside the stream was offered no position and is named by the stream
+/// index the container carries it under.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+#[serde(tag = "shown", rename_all = "camelCase")]
+pub enum Shown {
+    Offered {
+        at: usize,
+    },
+    Embedded {
+        index: jellium_protocol::StreamIndex,
+    },
+}
+
 /// What the operating system's media controls display.
 #[derive(Debug, Clone, Serialize)]
 pub struct Metadata {
@@ -54,8 +73,12 @@ pub struct Metadata {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub enum Fault {
-    Decode,
+    /// hls.js reported a response code of 400 or more.
+    Server,
     Network,
+    /// hls.js could not recover.
+    FatalHls,
+    Decode,
     Unsupported,
 }
 
@@ -87,6 +110,11 @@ pub enum Event {
         #[serde(with = "super::seconds")]
         buffered: Duration,
         paused: bool,
+        /// Every buffered range of the element, which the Jellyfin server is
+        /// told about.
+        ranges: Vec<jellium_protocol::report::Buffered>,
+        /// The pace the element is playing at.
+        rate: f64,
     },
     /// Ten seconds have passed since the last report, playing or paused.
     ReportDue {
@@ -106,6 +134,15 @@ pub enum Event {
     Command {
         command: Command,
     },
+}
+
+/// Where the media element is and the pace it plays at, as the element itself
+/// answers them.
+#[derive(Debug, Clone, Copy, PartialEq, Deserialize)]
+pub struct Playhead {
+    #[serde(with = "super::seconds")]
+    pub position: Duration,
+    pub rate: f64,
 }
 
 /// One media element event and the generation of the stream that raised it.
@@ -140,7 +177,7 @@ pub enum Asked<'a> {
     /// `selected` names the track shown and its absence turns subtitles off.
     TextTracks {
         tracks: &'a [TextTrack],
-        selected: Option<usize>,
+        selected: Option<Shown>,
     },
     /// The style native text cues are drawn with.
     CueStyle {
@@ -194,10 +231,24 @@ enum Broke {
 
 /// What one load asks for.
 #[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
 struct Loading<'a> {
-    delivery: &'a jellium_protocol::Delivery,
+    playable: &'a jellium_protocol::Playable,
     #[serde(with = "super::seconds")]
     start: Duration,
+    cross_origin: Option<CrossOrigin>,
+    /// hls.js buffer length falls to six seconds above this ceiling on Chrome,
+    /// Edge Chromium and Firefox.
+    max_streaming_bitrate: Bitrate,
+    short_buffer_browser: bool,
+    hls_js: bool,
+}
+
+/// The `crossOrigin` attribute a load sets on the media element.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum CrossOrigin {
+    Anonymous,
 }
 
 /// The page-hide beacon that leaves the group, and the endpoint it posts to.
@@ -245,24 +296,46 @@ impl Element {
         self.kind
     }
 
-    /// Feeds `delivery` to the element or to hls.js, beginning at `start`, and
-    /// opens the generation every event this stream raises carries; glue that
-    /// throws raises a failure and answers none.
-    pub fn load(
-        &self,
-        delivery: &jellium_protocol::Delivery,
-        start: Duration,
-    ) -> Option<Generation> {
-        let rendered = failure::rendered(Text::FailurePlayerFrame, &Loading { delivery, start })?;
+    /// Feeds `plan`'s stream to the element or to hls.js, beginning where the
+    /// plan starts, and opens the generation every event this stream raises
+    /// carries; glue that throws raises a failure and answers none.
+    /// A stream the Jellyfin server serves itself is loaded anonymously; a
+    /// remote one sets no `crossOrigin` at all.
+    pub fn load(&self, browser: &Browser, plan: &jellium_protocol::Plan) -> Option<Generation> {
+        let playable = &plan.playable;
+        let engine = Engine::read();
+        let media = Media::created()?;
+        let rendered = failure::rendered(
+            Text::FailurePlayerFrame,
+            &Loading {
+                playable,
+                start: super::span(plan.start_ticks),
+                cross_origin: playable.remote.not().then_some(CrossOrigin::Anonymous),
+                max_streaming_bitrate: plan.max_bitrate,
+                short_buffer_browser: browser.chrome()
+                    || browser.edge_chromium
+                    || browser.firefox(),
+                hls_js: crate::profile::enable_hls_js_player_for_codecs(
+                    browser,
+                    &engine,
+                    &media,
+                    playable,
+                    match self.kind {
+                        Kind::Video => MediaKind::Video,
+                        Kind::Audio => MediaKind::Audio,
+                    },
+                ),
+            },
+        )?;
         failure::called(Call::PlayerLoad, glue::load(&rendered)).map(Generation)
     }
 
-    /// Where the element is now, read from the element rather than from the
-    /// last progress report; glue that throws raises a failure and answers
-    /// none.
-    pub fn position(&self) -> Option<Duration> {
-        let seconds = failure::called(Call::PlayerPosition, glue::position())?;
-        Some(super::seconds::span(seconds))
+    /// Where the element is and the pace it plays at, read from the element
+    /// rather than from the last progress report; glue that throws raises a
+    /// failure and answers none, and so does a glue holding no element.
+    pub fn position(&self) -> Option<Playhead> {
+        let rendered = failure::called(Call::PlayerPosition, glue::position())??;
+        failure::decoded::<Playhead>(Text::FailurePlayerFrame, &rendered)
     }
 
     /// Asks the element for `asked`; glue that throws raises a failure.

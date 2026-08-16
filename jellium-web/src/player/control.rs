@@ -6,6 +6,8 @@ use crate::error::{self, Answer};
 #[derive(Debug, Clone)]
 pub enum Planned {
     Plan(Box<Plan>),
+    /// The change was not made and the stream that was playing still is.
+    Unchanged,
     /// The local server named why it will not play this.
     Refused(PlaybackRefused),
 }
@@ -19,16 +21,38 @@ pub fn endpoint(path: &str) -> String {
     format!("{origin}{path}")
 }
 
+/// Asks the local server for a plan for a user-initiated play, which is the one
+/// door that requests this item's intros.
+pub async fn enter(request: PlayRequest) -> Answer<Planned> {
+    planned(jellium_protocol::PLAYBACK_ENTER_PATH, request).await
+}
+
+/// Asks the local server for a plan for a queue advance, an ended item or a
+/// version change, none of which requests intros.
 pub async fn start(request: PlayRequest) -> Answer<Planned> {
+    planned(jellium_protocol::PLAYBACK_PATH, request).await
+}
+
+/// Asks the local server to swap the source under the session already playing,
+/// which reports no stop and leaves that session standing.
+pub async fn change(request: PlayRequest) -> Answer<Planned> {
+    planned(jellium_protocol::PLAYBACK_CHANGE_PATH, request).await
+}
+
+/// The plan `path` answers for `request`, or the refusal it named.
+async fn planned(path: &str, request: PlayRequest) -> Answer<Planned> {
     Answer::of(async {
         let response = reqwest::Client::new()
-            .post(endpoint(jellium_protocol::PLAYBACK_PATH))
+            .post(endpoint(path))
             .json(&request)
             .send()
             .await?;
 
         if response.status().is_success() {
-            return Ok(Planned::Plan(Box::new(response.json::<Plan>().await?)));
+            return Ok(match response.json::<jellium_protocol::Planned>().await? {
+                jellium_protocol::Planned::Started(plan) => Planned::Plan(plan),
+                jellium_protocol::Planned::Unchanged => Planned::Unchanged,
+            });
         }
 
         let status = response.status();

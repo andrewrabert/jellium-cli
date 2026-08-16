@@ -6,17 +6,23 @@
 mod api;
 mod app;
 mod boot;
+mod browser;
 mod control;
 mod error;
 mod failure;
+mod identity;
 mod images;
 mod live;
 mod livetv;
 mod overlay;
 mod player;
 mod prefs;
+mod profile;
+#[cfg(test)]
+mod reference;
 mod route;
 mod screen;
+mod settings;
 mod text;
 mod theme;
 mod widget;

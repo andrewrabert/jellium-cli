@@ -37,7 +37,10 @@ pub async fn poll(
         Ok(login) => login,
         Err(response) => return response,
     };
-    match login.connect(&state.device).await {
+    let Some(identity) = state.identity.held().await else {
+        return super::refusal(jellium_protocol::Refusal::NoSession);
+    };
+    match login.connect(&identity).await {
         Ok(Connected::Pending) => Json(QuickConnectState::Pending).into_response(),
         Ok(Connected::Expired) => Json(QuickConnectState::Expired).into_response(),
         Ok(Connected::Disabled) => Json(QuickConnectState::Disabled).into_response(),
@@ -157,8 +160,12 @@ mod tests {
                 .authorization(path)
                 .unwrap_or_else(|| panic!("{path} presented an identity"));
             assert!(presented.starts_with("MediaBrowser "), "{presented}");
-            assert!(presented.contains(r#"Client="Jellium Web""#), "{presented}");
-            assert!(presented.contains(r#"Token="""#), "{presented}");
+            assert!(
+                presented.contains(r#"Client="Jellyfin Web""#),
+                "{presented}"
+            );
+            assert!(presented.contains(r#"Version="10.11.11""#), "{presented}");
+            assert!(!presented.contains("Token="), "{presented}");
         }
     }
 

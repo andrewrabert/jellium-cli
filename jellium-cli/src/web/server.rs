@@ -67,8 +67,12 @@ impl Server {
                 get(foreign::image),
             )
             .route(
-                jellium_protocol::SESSION_PATH,
-                get(control::status).delete(control::logout),
+                &format!("{}/{{handle}}", jellium_protocol::POINTED_PREFIX),
+                get(foreign::pointed),
+            )
+            .route(
+                jellium_protocol::IDENTITY_PATH,
+                post(control::announce).delete(control::logout),
             )
             .route(
                 jellium_protocol::SERVERS_PATH,
@@ -114,6 +118,11 @@ impl Server {
             .route(jellium_protocol::LIVE_PATH, get(live::events))
             .route(jellium_protocol::GROUP_LEAVE_PATH, post(live::leaving))
             .route(jellium_protocol::PLAYBACK_PATH, post(playback::start))
+            .route(jellium_protocol::PLAYBACK_ENTER_PATH, post(playback::enter))
+            .route(
+                jellium_protocol::PLAYBACK_CHANGE_PATH,
+                post(playback::change),
+            )
             .route(
                 jellium_protocol::PLAYBACK_PROGRESS_PATH,
                 post(playback::progress),
@@ -175,7 +184,9 @@ impl Server {
                 let mut ticks = tokio::time::interval(playback::Playback::SWEEP);
                 loop {
                     ticks.tick().await;
-                    state.playback.sweep(&state.session, &state.device).await;
+                    if let Some(identity) = state.identity.held().await {
+                        state.playback.sweep(&state.session, &identity).await;
+                    }
                     state.live.swept(&state).await;
                     state.pages.sweep().await;
                 }
@@ -188,10 +199,12 @@ impl Server {
         };
 
         sweeper.abort();
-        self.state
-            .playback
-            .shutdown(&self.state.session, &self.state.device)
-            .await;
+        if let Some(identity) = self.state.identity.held().await {
+            self.state
+                .playback
+                .shutdown(&self.state.session, &identity)
+                .await;
+        }
         self.state.live.shutdown(&self.state).await;
         served
     }

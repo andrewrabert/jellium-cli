@@ -2,7 +2,7 @@ use axum::http::StatusCode;
 use jellium_protocol::{Credentials, Failure, Refusal};
 use uuid::Uuid;
 
-use super::identity::Device;
+use super::identity::Identity;
 use super::link::{Link, forgotten, unreachable};
 use super::version;
 
@@ -14,6 +14,9 @@ pub struct Upstream {
     name: String,
     /// The link this session's requests are issued over.
     link: Link,
+    /// The answer `System/Endpoint` gave this session, held the way
+    /// `this._endPointInfo` is held.
+    endpoint: tokio::sync::Mutex<Option<jellyfin_api::types::EndPointInfo>>,
 }
 
 /// What the user's policy lets them do with groups; a policy the answer omits
@@ -37,9 +40,9 @@ fn sync_access(user: &jellyfin_api::types::UserDto) -> jellium_protocol::SyncAcc
 /// installation's own session is marked rather than dropped.
 pub fn server_sessions(
     sessions: &[jellyfin_api::types::SessionInfoDto],
-    device: &Device,
+    identity: &Identity,
 ) -> Vec<jellium_protocol::ServerSession> {
-    let own = device.id().to_string();
+    let own = identity.device_id().to_owned();
     sessions
         .iter()
         .filter_map(|session| {
@@ -118,8 +121,8 @@ async fn live_tv_of(
 
 /// Revokes a saved record's token without holding a session for it; true when
 /// the Jellyfin server took it, and true for a token it no longer knows.
-pub async fn revoked(device: &Device, session: &crate::session::Session) -> bool {
-    let Some(link) = Link::signed(device, &session.server, &session.token) else {
+pub async fn revoked(identity: &Identity, session: &crate::session::Session) -> bool {
+    let Some(link) = Link::signed(identity, &session.server, &session.token) else {
         return false;
     };
     match link.control().report_session_ended().await {
@@ -132,13 +135,13 @@ impl Upstream {
     /// `/Users/AuthenticateByName` is asked over `device`'s identity with an
     /// empty token; the token the answer carries builds the signed link.
     pub async fn login(
-        device: &Device,
+        identity: &Identity,
         server: &str,
         credentials: &Credentials,
         probed: &version::Probed,
     ) -> Result<Upstream, Failure> {
         let server = server.trim_end_matches('/').to_string();
-        let identified = Link::identified(device, &server).ok_or_else(|| {
+        let identified = Link::identified(identity, &server).ok_or_else(|| {
             unreachable(
                 &server,
                 "the server text is not an http url or the device identity \
@@ -165,7 +168,7 @@ impl Upstream {
             .id
             .ok_or_else(|| unreachable(&server, "no user id in the auth response"))?;
 
-        let link = Link::signed(device, &server, &token).ok_or_else(|| {
+        let link = Link::signed(identity, &server, &token).ok_or_else(|| {
             unreachable(
                 &server,
                 "the server's access token cannot be sent in a header",
@@ -185,8 +188,8 @@ impl Upstream {
                 preference_access: preference_access(&user),
                 quick_connect,
                 read_only: false,
-                device: device.id().to_string(),
-                client: device.client().to_string(),
+                device: identity.device_id().to_owned(),
+                client: jellium_protocol::CLIENT.to_owned(),
                 user_name: user.name.unwrap_or_default(),
                 server_version: probed.version.clone(),
                 snapshot_version: jellyfin_api::SNAPSHOT_VERSION.to_string(),
@@ -195,19 +198,20 @@ impl Upstream {
             token,
             user_id,
             name: probed.name.clone(),
+            endpoint: tokio::sync::Mutex::new(None),
         })
     }
 
     /// `/Users/AuthenticateWithQuickConnect` is asked over `device`'s identity
     /// with an empty token, so the token it mints is this installation's.
     pub async fn quick_connect(
-        device: &Device,
+        identity: &Identity,
         server: &str,
         secret: &str,
         probed: &version::Probed,
     ) -> Result<Upstream, Failure> {
         let server = server.trim_end_matches('/').to_string();
-        let identified = Link::identified(device, &server).ok_or_else(|| {
+        let identified = Link::identified(identity, &server).ok_or_else(|| {
             unreachable(
                 &server,
                 "the server text is not an http url or the device identity \
@@ -233,7 +237,7 @@ impl Upstream {
             .id
             .ok_or_else(|| unreachable(&server, "no user id in the auth response"))?;
 
-        let link = Link::signed(device, &server, &token).ok_or_else(|| {
+        let link = Link::signed(identity, &server, &token).ok_or_else(|| {
             unreachable(
                 &server,
                 "the server's access token cannot be sent in a header",
@@ -253,8 +257,8 @@ impl Upstream {
                 preference_access: preference_access(&user),
                 quick_connect,
                 read_only: false,
-                device: device.id().to_string(),
-                client: device.client().to_string(),
+                device: identity.device_id().to_owned(),
+                client: jellium_protocol::CLIENT.to_owned(),
                 user_name: user.name.unwrap_or_default(),
                 server_version: probed.version.clone(),
                 snapshot_version: jellyfin_api::SNAPSHOT_VERSION.to_string(),
@@ -263,6 +267,7 @@ impl Upstream {
             token,
             user_id,
             name: probed.name.clone(),
+            endpoint: tokio::sync::Mutex::new(None),
         })
     }
 
@@ -272,12 +277,12 @@ impl Upstream {
     }
 
     pub async fn resume(
-        device: &Device,
+        identity: &Identity,
         session: &crate::session::Session,
         probed: &version::Probed,
     ) -> Result<Upstream, Failure> {
         let server = session.server.trim_end_matches('/').to_string();
-        let link = Link::signed(device, &server, &session.token).ok_or(Failure::TokenRejected)?;
+        let link = Link::signed(identity, &server, &session.token).ok_or(Failure::TokenRejected)?;
         let client = link.control();
 
         let user = client
@@ -298,8 +303,8 @@ impl Upstream {
                 preference_access: preference_access(&user),
                 quick_connect,
                 read_only: false,
-                device: device.id().to_string(),
-                client: device.client().to_string(),
+                device: identity.device_id().to_owned(),
+                client: jellium_protocol::CLIENT.to_owned(),
                 user_name: user.name.unwrap_or_default(),
                 server_version: probed.version.clone(),
                 snapshot_version: jellyfin_api::SNAPSHOT_VERSION.to_string(),
@@ -308,6 +313,7 @@ impl Upstream {
             user_id,
             name: probed.name.clone(),
             link,
+            endpoint: tokio::sync::Mutex::new(None),
         })
     }
 
@@ -338,14 +344,14 @@ impl Upstream {
     /// Every session on the server, as dashboard home shows them.
     pub async fn sessions(
         &self,
-        device: &Device,
+        identity: &Identity,
     ) -> Result<Vec<jellium_protocol::ServerSession>, Failure> {
         let sessions = self
             .control()
             .get_sessions(None, None, None)
             .await
             .map_err(|e| self.failed(e))?;
-        Ok(server_sessions(&sessions, device))
+        Ok(server_sessions(&sessions, identity))
     }
 
     /// Every scheduled task, as the task list shows them.
@@ -408,6 +414,28 @@ impl Upstream {
         self.user_id
     }
 
+    /// The access token, for the one query string that carries `ApiKey`.
+    pub fn api_key(&self) -> &str {
+        &self.token
+    }
+
+    /// What this session's connection to the Jellyfin server looks like from
+    /// the server's side.
+    /// Memoized for the session the way `this._endPointInfo` is, so a
+    /// negotiation over five versions issues one `GET System/Endpoint` and not
+    /// five.
+    // reference: get-endpoint-info — apiClient.js:3864-3875
+    pub async fn endpoint(&self) -> Result<jellyfin_api::types::EndPointInfo, Failure> {
+        let mut held = self.endpoint.lock().await;
+        if let Some(saved) = held.as_ref() {
+            return Ok(saved.clone());
+        }
+        let answered: jellyfin_api::types::EndPointInfo =
+            crate::web::wire::got(self, "System/Endpoint", &crate::web::wire::Query::new()).await?;
+        *held = Some(answered.clone());
+        Ok(answered)
+    }
+
     /// A 401 or 403 reads as `Failure::TokenRejected`; anything else reads as
     /// `Failure::ServerUnreachable`.
     pub fn failed(&self, error: jellyfin_api::error::Error) -> Failure {
@@ -445,7 +473,7 @@ impl Upstream {
     /// The Jellyfin websocket url: the link's base with a `ws` or `wss` scheme,
     /// `/socket`, the access token and `device`'s identifier.
     /// It never leaves the local server.
-    pub fn socket_url(&self, device: &Device) -> String {
+    pub fn socket_url(&self, identity: &Identity) -> String {
         let mut url = self.link.base().clone();
         let scheme = if url.scheme() == "https" { "wss" } else { "ws" };
         let _ = url.set_scheme(scheme);
@@ -455,7 +483,7 @@ impl Upstream {
         url.set_path(&path);
         url.query_pairs_mut()
             .append_pair("api_key", &self.token)
-            .append_pair("deviceId", &device.id().to_string());
+            .append_pair("deviceId", identity.device_id());
         url.into()
     }
 
@@ -468,32 +496,10 @@ impl Upstream {
             .map_err(|e| self.failed(e))
     }
 
-    /// Bytes per second measured by timing `sample` bytes from the Jellyfin
-    /// server's bitrate-test endpoint.
-    pub async fn measure(&self, sample: std::num::NonZeroU32) -> Result<f64, Failure> {
-        let started = std::time::Instant::now();
-        let mut response = self
-            .link
-            .streaming()
-            .get_bitrate_test_bytes(Some(sample))
-            .await
-            .map_err(|e| self.failed(e))?;
-        let mut read = 0usize;
-        while let Some(chunk) = response
-            .chunk()
-            .await
-            .map_err(|e| unreachable(&self.state.server, e))?
-        {
-            read += chunk.len();
-        }
-        let elapsed = started.elapsed().as_secs_f64();
-        if read == 0 || elapsed <= 0.0 {
-            return Err(unreachable(
-                &self.state.server,
-                "the bitrate test returned nothing",
-            ));
-        }
-        Ok(read as f64 / elapsed)
+    /// The HTTP client with no total deadline, which the bitrate ladder times
+    /// against.
+    pub fn streaming(&self) -> &reqwest::Client {
+        self.link.transport()
     }
 }
 
@@ -521,8 +527,6 @@ pub struct Answering {
     pub base: String,
     /// Counted before each answer is written.
     pub requests: std::sync::Arc<std::sync::atomic::AtomicUsize>,
-    /// Every path asked for, in the order it was asked for.
-    pub paths: std::sync::Arc<std::sync::Mutex<Vec<String>>>,
     /// Every path asked for with its query, in the order it was asked for.
     pub queried: std::sync::Arc<std::sync::Mutex<Vec<String>>>,
     /// The headers of every request, in the order they arrived.
@@ -560,11 +564,13 @@ enum Pushed {
 
 #[cfg(test)]
 impl Answering {
+    /// How many times `path` was asked, whether a synthetic route or the
+    /// fallback answered it.
     pub fn asked(&self, path: &str) -> usize {
-        self.paths
-            .lock()
-            .expect("the recorded paths")
-            .iter()
+        self.taken
+            .tokenless()
+            .into_iter()
+            .chain(self.taken.credentialed())
             .filter(|asked| asked.as_str() == path)
             .count()
     }
@@ -630,15 +636,16 @@ impl Answering {
 }
 
 #[cfg(test)]
-// binds a loopback listener answering every request with `status` and no body
+/// Binds a loopback listener serving the stub upstream's areas, answering every
+/// path outside them with `status` and no body.
 pub async fn answering(status: u16) -> Answering {
     answering_with(status, &[], "").await
 }
 
 #[cfg(test)]
-// binds a loopback listener answering every request with `status`, the
-// response headers `headers` names, and `body`, and serving a websocket at
-// `/socket`
+/// Binds a loopback listener serving the stub upstream's areas, answering every
+/// path outside them with `status`, the response headers `headers` names, and
+/// `body`, and serving a websocket at `/socket`.
 pub async fn answering_with(
     status: u16,
     headers: &'static [(&'static str, &'static str)],
@@ -648,7 +655,6 @@ pub async fn answering_with(
     use std::sync::atomic::{AtomicUsize, Ordering};
 
     let requests = Arc::new(AtomicUsize::new(0));
-    let paths = Arc::new(std::sync::Mutex::new(Vec::new()));
     let recorded = Arc::new(std::sync::Mutex::new(Vec::new()));
     let queried = Arc::new(std::sync::Mutex::new(Vec::new()));
     let inbound = Arc::new(std::sync::Mutex::new(Vec::new()));
@@ -656,7 +662,6 @@ pub async fn answering_with(
     let open: Arc<std::sync::Mutex<Vec<tokio::sync::mpsc::UnboundedSender<Pushed>>>> =
         Arc::new(std::sync::Mutex::new(Vec::new()));
     let counter = requests.clone();
-    let recorder = paths.clone();
     let querier = queried.clone();
     let noter = recorded.clone();
     let code = StatusCode::from_u16(status).expect("a valid status");
@@ -713,22 +718,28 @@ pub async fn answering_with(
         }
     };
 
+    let super::synthetic::Synthetic {
+        router: synthetic_router,
+        live_tv,
+        dashboard,
+        startup,
+        login,
+        library,
+        taken,
+    } = super::synthetic::router();
     let clock = Arc::new(std::sync::Mutex::new((0i64, Duration::ZERO)));
     let timing = clock.clone();
-    let timed_paths = paths.clone();
+    let taken_timed = taken.clone();
     let timed_queries = queried.clone();
     let timed_requests = requests.clone();
-    let timed = move || {
+    let timed = move |headers: HeaderMap| {
         let timing = timing.clone();
-        let timed_paths = timed_paths.clone();
+        let taken_timed = taken_timed.clone();
         let timed_queries = timed_queries.clone();
         let timed_requests = timed_requests.clone();
         async move {
             timed_requests.fetch_add(1, Ordering::SeqCst);
-            timed_paths
-                .lock()
-                .expect("the recorded paths")
-                .push("/GetUtcTime".to_string());
+            taken_timed.record("/GetUtcTime", &headers);
             timed_queries
                 .lock()
                 .expect("the recorded queries")
@@ -746,8 +757,6 @@ pub async fn answering_with(
         }
     };
 
-    let (synthetic_router, live_tv, dashboard, startup, login, library, taken) =
-        super::synthetic::router();
     let recording = taken.clone();
     let app = axum::Router::new()
         .merge(synthetic_router)
@@ -755,7 +764,6 @@ pub async fn answering_with(
         .route("/GetUtcTime", axum::routing::get(timed))
         .fallback(move |request: axum::extract::Request| {
             let counter = counter.clone();
-            let recorder = recorder.clone();
             let querier = querier.clone();
             let noter = noter.clone();
             let asked = request
@@ -769,7 +777,6 @@ pub async fn answering_with(
             async move {
                 recording.record(&path, &sent);
                 counter.fetch_add(1, Ordering::SeqCst);
-                recorder.lock().expect("the recorded paths").push(path);
                 querier.lock().expect("the recorded queries").push(asked);
                 noter.lock().expect("the recorded headers").push(sent);
                 let mut answer = Response::builder().status(code);
@@ -791,7 +798,6 @@ pub async fn answering_with(
     Answering {
         base,
         requests,
-        paths,
         queried,
         headers: recorded,
         inbound,
@@ -811,7 +817,10 @@ pub async fn answering_with(
 impl Upstream {
     // an upstream naming `server` with a placeholder token and identity
     pub fn stub(server: &str) -> Upstream {
-        let device = Device::new(Uuid::nil());
+        let identity = Identity::of(jellium_protocol::Identity {
+            device: "Firefox".to_owned(),
+            device_id: Uuid::nil().to_string(),
+        });
         let server = server.trim_end_matches('/').to_string();
         Upstream {
             name: String::new(),
@@ -824,15 +833,16 @@ impl Upstream {
                 preference_access: true,
                 quick_connect: true,
                 read_only: false,
-                device: device.id().to_string(),
-                client: device.client().to_string(),
+                device: identity.device_id().to_owned(),
+                client: jellium_protocol::CLIENT.to_owned(),
                 user_name: String::new(),
                 server_version: String::new(),
                 snapshot_version: jellyfin_api::SNAPSHOT_VERSION.to_string(),
             },
             token: "token".to_string(),
             user_id: Uuid::nil(),
-            link: Link::signed(&device, &server, "token").expect("the stub server is a url"),
+            link: Link::signed(&identity, &server, "token").expect("the stub server is a url"),
+            endpoint: tokio::sync::Mutex::new(None),
         }
     }
 }
@@ -860,6 +870,7 @@ mod tests {
                 &axum::http::HeaderMap::new(),
                 axum::body::Bytes::new(),
                 seen,
+                &crate::web::playback::pointed::Pointed::new(),
             )
             .await
             .expect("the stub answers")
@@ -1159,7 +1170,10 @@ mod tests {
     #[tokio::test]
     async fn the_socket_url_carries_the_token_and_this_device() {
         let upstream = Upstream::stub("https://jellyfin.example");
-        let url = upstream.socket_url(&Device::new(Uuid::nil()));
+        let url = upstream.socket_url(&Identity::of(jellium_protocol::Identity {
+            device: "Firefox".to_owned(),
+            device_id: Uuid::nil().to_string(),
+        }));
         assert!(url.starts_with("wss://jellyfin.example/socket?"), "{url}");
         assert!(url.contains("api_key=token"));
         assert!(url.contains(&format!("deviceId={}", Uuid::nil())));
@@ -1192,7 +1206,10 @@ mod tests {
         };
         assert!(matches!(
             Upstream::resume(
-                &Device::new(Uuid::nil()),
+                &Identity::of(jellium_protocol::Identity {
+                    device: "Firefox".to_owned(),
+                    device_id: Uuid::nil().to_string(),
+                }),
                 &session,
                 &version::Probed {
                     version: jellyfin_api::SNAPSHOT_VERSION.to_string(),
@@ -1205,12 +1222,97 @@ mod tests {
         ));
     }
 
-    const ITEM: &str = "0191b2f0-1c3d-4e5f-8a9b-0c1d2e3f4a5b";
+    const UNSERVED: Uuid = Uuid::from_u128(0x9007);
 
     fn asking_gzip() -> HeaderMap {
         let mut sent = HeaderMap::new();
         sent.insert(header::ACCEPT_ENCODING, "gzip".parse().expect("a value"));
         sent
+    }
+
+    /// The variant playlist the relayed master playlist hands out.
+    async fn variant(upstream: &Upstream, seen: &route::Seen) -> String {
+        let master = read(
+            through(
+                upstream,
+                reqwest::Method::GET,
+                &crate::web::synthetic::Stream::master_playlist(),
+                seen,
+            )
+            .await,
+        )
+        .await;
+        let handed = crate::web::manifest::referenced(&master);
+        assert_eq!(handed.len(), 1, "{master}");
+        read(through(upstream, reqwest::Method::GET, handed[0], seen).await).await
+    }
+
+    #[tokio::test]
+    async fn a_variant_playlist_the_master_hands_out_is_relayed_and_rewritten() {
+        let server = answering(404).await;
+        let upstream = Upstream::stub(&server.base);
+        let seen = route::Seen::new();
+
+        let variant = variant(&upstream, &seen).await;
+        assert!(variant.contains("#EXT-X-MAP"), "{variant}");
+        assert!(!variant.contains("://"), "{variant}");
+        assert!(
+            crate::web::manifest::referenced(&variant)
+                .iter()
+                .any(|reference| reference.ends_with("hls1/main/-1.mp4")),
+            "{variant}"
+        );
+    }
+
+    #[tokio::test]
+    async fn every_reference_a_relayed_variant_playlist_carries_is_relayed_too() {
+        let server = answering(404).await;
+        let upstream = Upstream::stub(&server.base);
+        let seen = route::Seen::new();
+
+        let variant = variant(&upstream, &seen).await;
+        let references = crate::web::manifest::referenced(&variant);
+        assert_eq!(references.len(), 2, "{variant}");
+        for reference in references {
+            let answered = through(&upstream, reqwest::Method::GET, reference, &seen).await;
+            assert_eq!(answered.status(), StatusCode::OK, "{reference}");
+        }
+    }
+
+    #[tokio::test]
+    async fn a_subtitle_track_the_plan_names_is_relayed_as_webvtt() {
+        let server = answering(404).await;
+        let upstream = Upstream::stub(&server.base);
+        let seen = route::Seen::new();
+
+        let answered = through(
+            &upstream,
+            reqwest::Method::GET,
+            &crate::web::synthetic::Stream::subtitle_track(),
+            &seen,
+        )
+        .await;
+        assert_eq!(answered.status(), StatusCode::OK);
+        assert_eq!(
+            answered
+                .headers()
+                .get(header::CONTENT_TYPE)
+                .and_then(|value| value.to_str().ok()),
+            Some("text/vtt")
+        );
+        assert!(
+            read(answered)
+                .await
+                .contains(crate::web::synthetic::Stream::CUE)
+        );
+        assert!(
+            server
+                .taken
+                .credentialed()
+                .contains(&crate::web::synthetic::Stream::subtitle_track()),
+            "{:?}",
+            server.taken.credentialed()
+        );
     }
 
     #[tokio::test]
@@ -1219,7 +1321,7 @@ mod tests {
         let upstream = Upstream::stub(&server.base);
         let target = route::Target::admit(
             &axum::http::Method::GET,
-            &format!("/Videos/{ITEM}/master.m3u8"),
+            &format!("/Videos/{UNSERVED}/master.m3u8"),
             &route::Seen::new(),
         )
         .expect("an admitted route");
@@ -1231,6 +1333,7 @@ mod tests {
                 &asking_gzip(),
                 axum::body::Bytes::new(),
                 &route::Seen::new(),
+                &crate::web::playback::pointed::Pointed::new(),
             )
             .await
             .expect("a response");
@@ -1246,7 +1349,7 @@ mod tests {
         let upstream = Upstream::stub(&server.base);
         let target = route::Target::admit(
             &axum::http::Method::GET,
-            &format!("/Items/{ITEM}"),
+            &format!("/Items/{UNSERVED}"),
             &route::Seen::new(),
         )
         .expect("an admitted route");
@@ -1258,12 +1361,19 @@ mod tests {
                 &asking_gzip(),
                 axum::body::Bytes::new(),
                 &route::Seen::new(),
+                &crate::web::playback::pointed::Pointed::new(),
             )
             .await
             .expect("a response");
+        let carried = server
+            .taken
+            .headers(&format!("/Items/{UNSERVED}"))
+            .expect("the item request reached the stub");
         assert_eq!(
-            server.header(0, &header::ACCEPT_ENCODING),
-            Some("gzip".to_string())
+            carried
+                .get(header::ACCEPT_ENCODING)
+                .and_then(|value| value.to_str().ok()),
+            Some("gzip")
         );
     }
 
@@ -1278,7 +1388,7 @@ mod tests {
         let upstream = Upstream::stub(&server.base);
         let target = route::Target::admit(
             &axum::http::Method::GET,
-            &format!("/Videos/{ITEM}/hls1/main/0.ts"),
+            &format!("/Videos/{UNSERVED}/hls1/main/0.ts"),
             &route::Seen::new(),
         )
         .expect("an admitted route");
@@ -1290,6 +1400,7 @@ mod tests {
                 &HeaderMap::new(),
                 axum::body::Bytes::new(),
                 &route::Seen::new(),
+                &crate::web::playback::pointed::Pointed::new(),
             )
             .await
             .expect("a response");
@@ -1310,7 +1421,7 @@ mod tests {
         let upstream = Upstream::stub(&server.base);
         let target = route::Target::admit(
             &axum::http::Method::GET,
-            &format!("/Videos/{ITEM}/master.m3u8"),
+            &format!("/Videos/{UNSERVED}/master.m3u8"),
             &route::Seen::new(),
         )
         .expect("an admitted route");
@@ -1322,10 +1433,31 @@ mod tests {
                 &HeaderMap::new(),
                 axum::body::Bytes::new(),
                 &route::Seen::new(),
+                &crate::web::playback::pointed::Pointed::new(),
             )
             .await
             .expect("a response");
         assert_eq!(response.status(), StatusCode::FORBIDDEN);
+    }
+
+    #[tokio::test]
+    async fn a_playback_path_naming_an_unserved_item_reaches_the_configured_answer() {
+        let server = answering_with(
+            200,
+            &[("content-type", "text/plain")],
+            "the configured answer",
+        )
+        .await;
+        let upstream = Upstream::stub(&server.base);
+        let seen = route::Seen::new();
+        for path in [
+            format!("/Videos/{UNSERVED}/master.m3u8"),
+            format!("/Videos/{UNSERVED}/main.m3u8"),
+            format!("/Videos/{UNSERVED}/hls1/main/0.mp4"),
+        ] {
+            let answered = through(&upstream, reqwest::Method::GET, &path, &seen).await;
+            assert_eq!(read(answered).await, "the configured answer", "{path}");
+        }
     }
 
     /// The login screen's sign-in presents this installation's device identity
@@ -1345,7 +1477,10 @@ mod tests {
             .expect("the first administrator is posted");
 
         Upstream::login(
-            &Device::new(Uuid::nil()),
+            &Identity::of(jellium_protocol::Identity {
+                device: "Firefox".to_owned(),
+                device_id: Uuid::nil().to_string(),
+            }),
             &server.base,
             &Credentials {
                 username: "root".to_string(),
@@ -1365,12 +1500,16 @@ mod tests {
             .authorization("/Users/AuthenticateByName")
             .expect("the sign-in presented an identity");
         assert!(presented.starts_with("MediaBrowser "), "{presented}");
-        assert!(presented.contains(r#"Client="Jellium Web""#), "{presented}");
+        assert!(
+            presented.contains(r#"Client="Jellyfin Web""#),
+            "{presented}"
+        );
         assert!(
             presented.contains(&format!(r#"DeviceId="{}""#, Uuid::nil())),
             "{presented}"
         );
-        assert!(presented.contains(r#"Token="""#), "{presented}");
+        assert!(presented.contains(r#"Version="10.11.11""#), "{presented}");
+        assert!(!presented.contains("Token="), "{presented}");
     }
 
     #[tokio::test]
@@ -1415,6 +1554,7 @@ mod dashboard_tests {
                 &HeaderMap::new(),
                 axum::body::Bytes::new(),
                 &seen,
+                &crate::web::playback::pointed::Pointed::new(),
             )
             .await
             .expect("a forwarded listing");
@@ -1462,6 +1602,7 @@ mod dashboard_tests {
                 &HeaderMap::new(),
                 axum::body::Bytes::new(),
                 &seen,
+                &crate::web::playback::pointed::Pointed::new(),
             )
             .await
             .expect("a forwarded listing");
@@ -1491,6 +1632,7 @@ mod dashboard_tests {
                 &HeaderMap::new(),
                 axum::body::Bytes::new(),
                 &seen,
+                &crate::web::playback::pointed::Pointed::new(),
             )
             .await
             .expect("a forwarded log");
@@ -1582,6 +1724,7 @@ mod dashboard_tests {
                 &writing_json(),
                 axum::body::Bytes::from(written.to_string()),
                 &seen,
+                &crate::web::playback::pointed::Pointed::new(),
             )
             .await
             .expect("a forwarded write");
@@ -1637,6 +1780,7 @@ mod dashboard_tests {
                 &writing_json(),
                 axum::body::Bytes::from_static(b"{}"),
                 &seen,
+                &crate::web::playback::pointed::Pointed::new(),
             )
             .await
             .expect("a forwarded write");

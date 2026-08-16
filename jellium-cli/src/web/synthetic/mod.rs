@@ -1,17 +1,19 @@
-//! The stub upstream's four areas, mounted together, over the record of what
-//! every request carried.
+//! The stub upstream's areas, mounted together, over the record of what every
+//! request carried.
 
 mod dashboard;
 mod library;
 mod livetv;
 mod login;
 mod startup;
+mod stream;
 
 pub use dashboard::Dashboard;
 pub use library::{Entry, Library};
 pub use livetv::LiveTv;
 pub use login::Login;
 pub use startup::Startup;
+pub use stream::Stream;
 
 /// Every request the stub upstream took, and whether it carried an
 /// `Authorization` header.
@@ -49,18 +51,6 @@ impl Taken {
             .map(|(_, carried)| carried.clone())
     }
 
-    fn paths(&self, credentialed: bool) -> Vec<String> {
-        self.held
-            .lock()
-            .expect("the record of what every request carried")
-            .iter()
-            .filter(|(_, carried)| {
-                carried.contains_key(axum::http::header::AUTHORIZATION) == credentialed
-            })
-            .map(|(path, _)| path.clone())
-            .collect()
-    }
-
     /// The `Authorization` value the first request to `path` carried, and
     /// `None` when it carried none or `path` was never asked for.
     pub fn authorization(&self, path: &str) -> Option<String> {
@@ -74,29 +64,40 @@ impl Taken {
     /// The paths asked for without an `Authorization` header, in arrival
     /// order.
     pub fn tokenless(&self) -> Vec<String> {
-        self.paths(false)
+        self.held
+            .lock()
+            .expect("the record of what every request carried")
+            .iter()
+            .filter(|(_, carried)| !carried.contains_key(axum::http::header::AUTHORIZATION))
+            .map(|(path, _)| path.clone())
+            .collect()
     }
 
     /// The paths asked for with one, in arrival order.
     pub fn credentialed(&self) -> Vec<String> {
-        self.paths(true)
+        self.held
+            .lock()
+            .expect("the record of what every request carried")
+            .iter()
+            .filter(|(_, carried)| carried.contains_key(axum::http::header::AUTHORIZATION))
+            .map(|(path, _)| path.clone())
+            .collect()
     }
 }
 
-/// The synthetic Live TV service, the synthetic dashboard, the synthetic
-/// startup area, the synthetic login area, the record of what every request
-/// carried, and the router serving all four.
-/// The synthetic library area beside the other four, the record of what every
-/// request carried, and the router serving all five.
-pub fn router() -> (
-    axum::Router,
-    LiveTv,
-    Dashboard,
-    Startup,
-    Login,
-    Library,
-    Taken,
-) {
+/// The stub upstream's areas, the record of what every request carried, and
+/// the router serving them.
+pub struct Synthetic {
+    pub router: axum::Router,
+    pub live_tv: LiveTv,
+    pub dashboard: Dashboard,
+    pub startup: Startup,
+    pub login: Login,
+    pub library: Library,
+    pub taken: Taken,
+}
+
+pub fn router() -> Synthetic {
     let (live_tv_router, live_tv) = livetv::router();
     let (dashboard_router, dashboard) = dashboard::router();
     let (startup_router, startup) = startup::router();
@@ -108,11 +109,20 @@ pub fn router() -> (
         .merge(startup_router)
         .merge(login_router)
         .merge(library_router)
+        .merge(stream::router())
         .layer(axum::middleware::from_fn_with_state(
             taken.clone(),
             recording,
         ));
-    (router, live_tv, dashboard, startup, login, library, taken)
+    Synthetic {
+        router,
+        live_tv,
+        dashboard,
+        startup,
+        login,
+        library,
+        taken,
+    }
 }
 
 /// Records every request the stub's own routes took before serving it.

@@ -665,10 +665,10 @@ fn corrected(signed: &mut Signed) {
         return;
     };
     let scheduled = joined.schedule.position_ticks(now) + tuning.extra_offset_ms * 10_000;
-    let Some(position) = playing.element.position() else {
+    let Some(playhead) = playing.element.position() else {
         return;
     };
-    let here = player::to_ticks(position);
+    let here = player::to_ticks(playhead.position);
     let drift = (here - scheduled) / 10_000;
     let correction = sync::correction(drift, tuning, joined.attempts);
     joined.attempts.made(correction);

@@ -24,6 +24,18 @@ test: fmt suppressions
     cargo test --workspace
     cd jellium-web && cargo test
 
+# Rewrite jellium-web/reference from a checkout of the pinned revision
+reference checkout:
+    node tools/reference/slice.mjs "$1"
+
+# Fail when the tree has drifted from a checkout of the pinned revision
+pinned checkout: (reference checkout)
+    git ls-files --error-unmatch jellium-web/reference/jellyfin-web.mjs
+    git diff --exit-code jellium-web/reference
+    JELLYFIN_WEB_REFERENCE="$1" \
+    JELLYFIN_APICLIENT_REFERENCE="$1/node_modules/jellyfin-apiclient" \
+    cargo test -p jellium-cli --test provenance
+
 # Build the Jellium Web bundle
 web-bundle:
     cd jellium-web && trunk build --release --dist dist index.html

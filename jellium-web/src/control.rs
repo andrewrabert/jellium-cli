@@ -1,7 +1,7 @@
 use jellium_protocol::{
-    AddServer, ChooseServer, Credentials, Framed, PageRequest, PinOutcome, QuickConnectCode,
-    QuickConnectState, Removed, ResetAnswer, ResetPin, ResetRequest, SavedServer, SessionStatus,
-    SetupConfiguration, SetupRemoteAccess, SetupUser,
+    AddServer, ChooseServer, Credentials, Framed, Identity, PageRequest, PinOutcome,
+    QuickConnectCode, QuickConnectState, Removed, ResetAnswer, ResetPin, ResetRequest, SavedServer,
+    SessionStatus, SetupConfiguration, SetupRemoteAccess, SetupUser,
 };
 use uuid::Uuid;
 
@@ -17,7 +17,7 @@ fn origin() -> String {
 }
 
 fn endpoint() -> String {
-    format!("{}{}", origin(), jellium_protocol::SESSION_PATH)
+    format!("{}{}", origin(), jellium_protocol::IDENTITY_PATH)
 }
 
 /// A 2xx answers with the status document, a `Failure` body becomes
@@ -32,9 +32,16 @@ async fn read(response: reqwest::Response) -> Result<SessionStatus, Trouble> {
     }
 }
 
-pub async fn status() -> Answer<SessionStatus> {
+/// Announces what this browser is, which is what every upstream request the
+/// local server then issues is identified by, and reads back the session
+/// status.
+pub async fn announce(identity: &Identity) -> Answer<SessionStatus> {
     Answer::of(async {
-        let response = reqwest::Client::new().get(endpoint()).send().await?;
+        let response = reqwest::Client::new()
+            .post(endpoint())
+            .json(identity)
+            .send()
+            .await?;
         Ok(read(response).await?)
     })
     .await

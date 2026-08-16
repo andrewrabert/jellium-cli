@@ -47,7 +47,7 @@ fn quality_label(quality: Quality) -> String {
         Quality::Auto => strings::lookup(Text::PlayerQualityAuto).to_owned(),
         Quality::Limit { bits_per_second } => strings::format(
             Text::PlayerQualityLimit,
-            &[&(bits_per_second / 1_000_000).to_string()],
+            &[&(bits_per_second.bits_per_second() / 1_000_000).to_string()],
         ),
     }
 }

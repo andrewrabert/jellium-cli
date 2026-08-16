@@ -9,7 +9,7 @@ use uuid::Uuid;
 
 use super::tabs::TabId;
 use super::verbs;
-use crate::web::identity::Device;
+use crate::web::identity::Identity;
 use crate::web::upstream::Upstream;
 
 /// The tab holding remote mode, and what it drives.
@@ -127,11 +127,11 @@ fn now_playing(session: &SessionInfoDto) -> Option<NowPlaying> {
 }
 
 /// True for a session the current user may drive from here.
-fn controllable(session: &SessionInfoDto, user: Uuid, device: &Device) -> bool {
+fn controllable(session: &SessionInfoDto, user: Uuid, identity: &Identity) -> bool {
     if !session.supports_media_control.unwrap_or(false) {
         return false;
     }
-    if session.device_id.as_deref() == Some(device.id().to_string().as_str()) {
+    if session.device_id.as_deref() == Some(identity.device_id()) {
         return false;
     }
     let mine = session.user_id == Some(user);
@@ -145,10 +145,10 @@ fn controllable(session: &SessionInfoDto, user: Uuid, device: &Device) -> bool {
 /// The sessions a listing names, read as targets: those the current user may
 /// control, this client's own device excluded, each carrying what its player
 /// state reports and nothing it does not.
-pub fn read(sessions: &[SessionInfoDto], user: Uuid, device: &Device) -> Vec<Target> {
+pub fn read(sessions: &[SessionInfoDto], user: Uuid, identity: &Identity) -> Vec<Target> {
     sessions
         .iter()
-        .filter(|session| controllable(session, user, device))
+        .filter(|session| controllable(session, user, identity))
         .filter_map(|session| {
             Some(Target {
                 session: session.id.clone()?,
@@ -162,14 +162,14 @@ pub fn read(sessions: &[SessionInfoDto], user: Uuid, device: &Device) -> Vec<Tar
 
 /// The controllable sessions for the current user, this client's own device
 /// excluded, read from one request rather than from waiting for a push.
-pub async fn targets(upstream: &Upstream, device: &Device) -> Result<Vec<Target>, Failure> {
+pub async fn targets(upstream: &Upstream, identity: &Identity) -> Result<Vec<Target>, Failure> {
     let user = upstream.user_id();
     let sessions = upstream
         .control()
         .get_sessions(None, Some(&user), None)
         .await
         .map_err(|e| upstream.failed(e))?;
-    Ok(read(&sessions, user, device))
+    Ok(read(&sessions, user, identity))
 }
 
 fn play_command(mode: PlayMode) -> PlayCommand {
@@ -240,8 +240,11 @@ pub async fn drive(upstream: &Upstream, target: &str, drive: &Drive) -> Result<(
 mod tests {
     use super::*;
 
-    fn device() -> Device {
-        Device::new(Uuid::nil())
+    fn device() -> Identity {
+        Identity::of(jellium_protocol::Identity {
+            device: "Firefox".to_owned(),
+            device_id: Uuid::nil().to_string(),
+        })
     }
 
     fn user() -> Uuid {

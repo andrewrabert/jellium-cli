@@ -1,12 +1,14 @@
 use std::path::{Path, PathBuf};
 
+use jellium_protocol::Bitrate;
 use uuid::Uuid;
+
+use crate::web::playback::bandwidth::Keyed;
 
 const URL_KEY: &str = "JELLYFIN_URL";
 const TOKEN_KEY: &str = "JELLYFIN_TOKEN";
 const USER_ID_KEY: &str = "JELLYFIN_USER_ID";
 const NAME_KEY: &str = "JELLYFIN_SERVER_NAME";
-const DEVICE_ID_KEY: &str = "JELLIUM_WEB_DEVICE_ID";
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Session {
@@ -375,6 +377,18 @@ impl SessionFile {
         })
     }
 
+    /// The bitrate last saved for `keyed`, and `None` when none is saved or
+    /// the entry names no rate.
+    pub fn max_bitrate(&self, keyed: Keyed) -> Option<Bitrate> {
+        let bits_per_second = self.get(&keyed.entry())?.parse::<i64>().ok()?;
+        (bits_per_second > 0).then(|| Bitrate::of(bits_per_second))
+    }
+
+    /// Saves `bitrate` as the measurement `keyed` reads back.
+    pub fn set_max_bitrate(&mut self, keyed: Keyed, bitrate: Bitrate) {
+        self.set(&keyed.entry(), bitrate.bits_per_second().to_string());
+    }
+
     /// Every record, in file order, which is most-recently-selected order.
     pub fn records(&self) -> Vec<Saved> {
         (0..).map_while(|record| self.saved(record)).collect()
@@ -522,15 +536,6 @@ impl SessionFile {
         saved.name = name.to_string();
         self.rewrite(&records);
         true
-    }
-
-    pub fn device_id(&mut self) -> Uuid {
-        if let Some(id) = self.get(DEVICE_ID_KEY).and_then(|v| v.parse().ok()) {
-            return id;
-        }
-        let id = Uuid::new_v4();
-        self.set(DEVICE_ID_KEY, id.to_string());
-        id
     }
 }
 
@@ -753,7 +758,7 @@ mod tests {
         std::fs::write(&path, "FOREIGN=value\n").expect("seed");
         std::fs::set_permissions(&path, std::fs::Permissions::from_mode(0o644)).expect("chmod");
 
-        SessionFile::update(&path, |file| file.device_id()).expect("write");
+        SessionFile::update(&path, |file| file.add_server("https://example.test")).expect("write");
 
         let mode = std::fs::metadata(&path).expect("stat").permissions().mode();
         assert_eq!(mode & 0o777, 0o600);
@@ -774,7 +779,7 @@ mod tests {
         <std::fs::File as fs4::FileExt>::lock(&lock).expect("hold the lock");
 
         let waiting = tokio::spawn(SessionFile::update_async(path.clone(), |file| {
-            file.device_id()
+            file.add_server("https://example.test")
         }));
 
         for _ in 0..64 {
@@ -783,17 +788,21 @@ mod tests {
         assert!(!waiting.is_finished());
 
         <std::fs::File as fs4::FileExt>::unlock(&lock).expect("release the lock");
-        let device = waiting.await.expect("join").expect("write");
+        waiting.await.expect("join").expect("write");
 
         let loaded = SessionFile::load(&path).expect("load");
-        assert_eq!(loaded.get(DEVICE_ID_KEY), Some(device.to_string().as_str()));
+        assert_eq!(
+            loaded.saved(0).expect("record").server,
+            "https://example.test"
+        );
     }
 
     #[test]
     fn two_updates_of_one_file_keep_both_keys() {
         let path = scratch("concurrent");
 
-        let device = SessionFile::update(&path, |file| file.device_id()).expect("device write");
+        SessionFile::update(&path, |file| file.add_server("https://other.test"))
+            .expect("add write");
         SessionFile::update(&path, |file| {
             file.set_server(&Session {
                 server: "https://example.test".to_string(),
@@ -804,10 +813,13 @@ mod tests {
         .expect("login write");
 
         let loaded = SessionFile::load(&path).expect("load");
-        assert_eq!(loaded.get(DEVICE_ID_KEY), Some(device.to_string().as_str()));
         assert_eq!(
             loaded.server(0).expect("record").server,
             "https://example.test"
+        );
+        assert_eq!(
+            loaded.saved(1).expect("record").server,
+            "https://other.test"
         );
     }
 }

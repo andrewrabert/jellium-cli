@@ -12,9 +12,12 @@ use crate::text::{self, Text};
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Call {
     AddEventListener,
+    AudioContextNew,
     DocumentCreateElement,
     ElementRemoveAttribute,
     ElementSetAttribute,
+    HtmlAudioElement,
+    HtmlCanvasElement,
     HtmlCanvasElementGetContext,
     HtmlVideoElement,
     LocalStorage,
@@ -22,6 +25,9 @@ pub enum Call {
     LocalStorageSetItem,
     LocationHost,
     LocationProtocol,
+    NavigatorAppVersion,
+    NavigatorPlatform,
+    NavigatorUserAgent,
     OverlayMount,
     OverlayOpen,
     OverlayPost,
@@ -31,20 +37,28 @@ pub enum Call {
     PlayerLoad,
     PlayerPosition,
     ReflectGet,
+    ReflectHas,
+    ScreenHeight,
+    ScreenWidth,
     SetTimeout,
     WebGl2GetParameter,
     WebSocketClose,
     WebSocketNew,
     WebSocketSend,
+    WindowBtoa,
+    WindowScreen,
 }
 
 impl std::fmt::Display for Call {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.write_str(match self {
             Call::AddEventListener => "addEventListener",
+            Call::AudioContextNew => "AudioContext.new",
             Call::DocumentCreateElement => "document.createElement",
             Call::ElementRemoveAttribute => "Element.removeAttribute",
             Call::ElementSetAttribute => "Element.setAttribute",
+            Call::HtmlAudioElement => "HTMLAudioElement",
+            Call::HtmlCanvasElement => "HTMLCanvasElement",
             Call::HtmlCanvasElementGetContext => "HTMLCanvasElement.getContext",
             Call::HtmlVideoElement => "HTMLVideoElement",
             Call::LocalStorage => "localStorage",
@@ -52,6 +66,9 @@ impl std::fmt::Display for Call {
             Call::LocalStorageSetItem => "localStorage.setItem",
             Call::LocationHost => "location.host",
             Call::LocationProtocol => "location.protocol",
+            Call::NavigatorAppVersion => "navigator.appVersion",
+            Call::NavigatorPlatform => "navigator.platform",
+            Call::NavigatorUserAgent => "navigator.userAgent",
             Call::OverlayMount => "overlay.mount",
             Call::OverlayOpen => "overlay.open",
             Call::OverlayPost => "overlay.post",
@@ -61,11 +78,16 @@ impl std::fmt::Display for Call {
             Call::PlayerLoad => "player.load",
             Call::PlayerPosition => "player.position",
             Call::ReflectGet => "Reflect.get",
+            Call::ReflectHas => "Reflect.has",
+            Call::ScreenHeight => "screen.height",
+            Call::ScreenWidth => "screen.width",
             Call::SetTimeout => "setTimeout",
             Call::WebGl2GetParameter => "WebGL2.getParameter",
             Call::WebSocketClose => "WebSocket.close",
             Call::WebSocketNew => "WebSocket.new",
             Call::WebSocketSend => "WebSocket.send",
+            Call::WindowBtoa => "window.btoa",
+            Call::WindowScreen => "window.screen",
         })
     }
 }

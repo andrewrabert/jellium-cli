@@ -10,6 +10,8 @@ use axum::extract::{Path, Query, State};
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use axum::routing::{delete, get, post};
+use jellium_protocol::profile::MediaKind;
+use jellyfin_api::types::{BaseItemDto, ChapterInfo, MediaType};
 use uuid::Uuid;
 
 /// One playlist entry: the item filed and the entry id distinguishing this copy
@@ -28,6 +30,8 @@ struct Held {
     /// The origin the stub answers on, which the remote answers extend.
     base: String,
     minted: u64,
+    /// What each id `GET /Items/{id}` answers as.
+    described: std::collections::HashMap<Uuid, MediaKind>,
 }
 
 /// The stub upstream's library area.
@@ -74,6 +78,7 @@ impl Library {
                 collections,
                 base: String::new(),
                 minted: 0,
+                described: std::collections::HashMap::new(),
             })),
         }
     }
@@ -102,6 +107,20 @@ impl Library {
             .get(&collection)
             .cloned()
             .unwrap_or_default()
+    }
+
+    /// Makes `id` answer as an item of `kind`; an id nothing describes answers
+    /// as a video whose run time is one hour.
+    pub fn describes(&self, id: Uuid, kind: MediaKind) {
+        self.locked().described.insert(id, kind);
+    }
+
+    fn described(&self, id: Uuid) -> MediaKind {
+        self.locked()
+            .described
+            .get(&id)
+            .copied()
+            .unwrap_or(MediaKind::Video)
     }
 
     /// Points the remote answers at `base`, which is the stub's own origin, so
@@ -224,6 +243,31 @@ async fn remove_collection_items(
     StatusCode::NO_CONTENT
 }
 
+/// The run time an item the stub describes carries: one hour, in ticks of a
+/// hundred nanoseconds.
+const RUN_TIME_TICKS: i64 = 36_000_000_000;
+
+/// `GET /Items/{id}`, answering the item the playback chain reads its media
+/// type, run time and chapters off.
+pub async fn item(State(library): State<Library>, Path(id): Path<Uuid>) -> Response {
+    let media_type = match library.described(id) {
+        MediaKind::Audio => MediaType::Audio,
+        MediaKind::Video => MediaType::Video,
+    };
+    Json(BaseItemDto {
+        id: Some(id),
+        media_type: Some(media_type),
+        run_time_ticks: Some(RUN_TIME_TICKS),
+        chapters: Some(vec![ChapterInfo {
+            name: Some("opening".to_string()),
+            start_position_ticks: Some(0),
+            ..ChapterInfo::default()
+        }]),
+        ..BaseItemDto::default()
+    })
+    .into_response()
+}
+
 async fn listing() -> Json<serde_json::Value> {
     Json(serde_json::json!({
         "Items": [],
@@ -310,6 +354,7 @@ pub fn router() -> (axum::Router, Library) {
         .route("/Items/Filters", get(filters))
         .route("/Items/Latest", get(latest))
         .route("/Items/Suggestions", get(listing))
+        .route("/Items/{item}", get(item))
         .route("/Items/{item}/Similar", get(listing))
         .route("/Items/RemoteSearch/{kind}", post(remote_search))
         .route("/Items/{item}/RemoteImages", get(remote_images))

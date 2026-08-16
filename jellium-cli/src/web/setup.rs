@@ -299,13 +299,18 @@ pub async fn complete(State(state): State<Arc<AppState>>) -> Response {
     state.completed.store(true, Ordering::SeqCst);
 
     let signed_in = async {
+        let identity = state
+            .identity
+            .held()
+            .await
+            .ok_or(Failure::SetupSignInFailed)?;
         let posted = setup.posted().ok_or(Failure::SetupSignInFailed)?;
         let server = setup.server().to_string();
         let probed = version::probe(&server)
             .await
             .map_err(|_| Failure::SetupSignInFailed)?;
         Upstream::login(
-            &state.device,
+            &identity,
             &server,
             &Credentials {
                 username: posted.name,
@@ -389,8 +394,8 @@ mod tests {
         let state = Arc::new(state);
         let router = Router::new()
             .route(
-                jellium_protocol::SESSION_PATH,
-                get(super::super::control::status),
+                jellium_protocol::IDENTITY_PATH,
+                post(super::super::control::announce),
             )
             .route(
                 jellium_protocol::SERVERS_PATH,
@@ -619,12 +624,16 @@ mod tests {
             .authorization("/Users/AuthenticateByName")
             .expect("the sign-in presented an identity");
         assert!(presented.starts_with("MediaBrowser "), "{presented}");
-        assert!(presented.contains(r#"Client="Jellium Web""#), "{presented}");
+        assert!(
+            presented.contains(r#"Client="Jellyfin Web""#),
+            "{presented}"
+        );
         assert!(
             presented.contains(&format!(r#"DeviceId="{}""#, uuid::Uuid::nil())),
             "{presented}"
         );
-        assert!(presented.contains(r#"Token="""#), "{presented}");
+        assert!(presented.contains(r#"Version="10.11.11""#), "{presented}");
+        assert!(!presented.contains("Token="), "{presented}");
     }
 
     /// A relay entry admissible during setup reaches the Jellyfin server over
@@ -906,7 +915,17 @@ mod tests {
         );
         assert!(state.session.setup().await.is_none());
 
-        let (status, body) = sent(&router, "GET", jellium_protocol::SESSION_PATH, Vec::new()).await;
+        let (status, body) = sent(
+            &router,
+            "POST",
+            jellium_protocol::IDENTITY_PATH,
+            serde_json::to_vec(&jellium_protocol::Identity {
+                device: "Firefox".to_owned(),
+                device_id: uuid::Uuid::nil().to_string(),
+            })
+            .expect("the identity serializes"),
+        )
+        .await;
         assert_eq!(status, StatusCode::OK);
         let status: SessionStatus = serde_json::from_slice(&body).expect("the session document");
         assert!(
@@ -993,7 +1012,17 @@ mod tests {
         )
         .await;
 
-        let (status, body) = sent(&router, "GET", jellium_protocol::SESSION_PATH, Vec::new()).await;
+        let (status, body) = sent(
+            &router,
+            "POST",
+            jellium_protocol::IDENTITY_PATH,
+            serde_json::to_vec(&jellium_protocol::Identity {
+                device: "Firefox".to_owned(),
+                device_id: uuid::Uuid::nil().to_string(),
+            })
+            .expect("the identity serializes"),
+        )
+        .await;
         assert_eq!(status, StatusCode::OK);
         let held: SessionStatus = serde_json::from_slice(&body).expect("the session document");
         assert!(matches!(held, SessionStatus::Setup(_)), "{held:?}");
@@ -1039,7 +1068,17 @@ mod tests {
         .expect("seed record");
 
         let (router, state) = routed(AppState::stub(path));
-        let (status, body) = sent(&router, "GET", jellium_protocol::SESSION_PATH, Vec::new()).await;
+        let (status, body) = sent(
+            &router,
+            "POST",
+            jellium_protocol::IDENTITY_PATH,
+            serde_json::to_vec(&jellium_protocol::Identity {
+                device: "Firefox".to_owned(),
+                device_id: uuid::Uuid::nil().to_string(),
+            })
+            .expect("the identity serializes"),
+        )
+        .await;
         assert_eq!(status, StatusCode::OK);
         let held: SessionStatus = serde_json::from_slice(&body).expect("the session document");
         match held {

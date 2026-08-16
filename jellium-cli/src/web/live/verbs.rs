@@ -1,4 +1,4 @@
-use jellium_protocol::{Control, Drive, Notice, PlayMode, Repeat};
+use jellium_protocol::{Bitrate, Control, Drive, Notice, PlayMode, Repeat, StreamIndex, Subtitles};
 use jellyfin_api::types::{GeneralCommand, GeneralCommandType, PlayCommand};
 use jellyfin_api::types::{PlaystateCommand, PlaystateRequest};
 
@@ -107,19 +107,17 @@ pub fn general(command: &GeneralCommand, live_tv: bool) -> Option<Control> {
             .map(|level| Control::SetVolume { level }),
         GeneralCommandType::SetAudioStreamIndex => argument(command, "Index")
             .and_then(|index| index.parse().ok())
+            .and_then(StreamIndex::named)
             .map(|index| Control::SetAudioStream { index }),
-        GeneralCommandType::SetSubtitleStreamIndex => {
-            let index = argument(command, "Index")?.parse().ok()?;
-            Some(Control::SetSubtitleStream {
-                index: (index >= 0).then_some(index),
-            })
-        }
+        GeneralCommandType::SetSubtitleStreamIndex => Some(Control::SetSubtitleStream {
+            subtitles: Subtitles::named(Some(argument(command, "Index")?.parse().ok()?)),
+        }),
         GeneralCommandType::PlayMediaSource => argument(command, "MediaSourceId")
             .map(|id| Control::SetMediaSource { id: id.to_owned() }),
         GeneralCommandType::SetMaxStreamingBitrate => {
             let named = argument(command, "Bitrate")?;
-            let bits_per_second = match named.parse::<i32>() {
-                Ok(bits) if bits > 0 => Some(bits),
+            let bits_per_second = match named.parse::<i64>() {
+                Ok(bits) if bits > 0 => Some(Bitrate::of(bits)),
                 Ok(_) => None,
                 Err(_) => return None,
             };
@@ -161,8 +159,8 @@ pub fn play(request: &jellyfin_api::types::PlayRequest) -> Option<Control> {
         start_index: request.start_index.unwrap_or(0),
         start_ticks: request.start_position_ticks.unwrap_or(0),
         media_source: request.media_source_id.clone(),
-        audio_stream: request.audio_stream_index,
-        subtitle_stream: request.subtitle_stream_index,
+        audio_stream: request.audio_stream_index.and_then(StreamIndex::named),
+        subtitles: Subtitles::named(request.subtitle_stream_index),
     })
 }
 
@@ -436,8 +434,29 @@ mod tests {
                 start_index: 0,
                 start_ticks: 0,
                 media_source: Some("source".to_owned()),
-                audio_stream: Some(3),
-                subtitle_stream: Some(5),
+                audio_stream: StreamIndex::named(3),
+                subtitles: Subtitles::named(Some(5)),
+            })
+        );
+    }
+
+    #[test]
+    fn a_played_subtitle_index_below_zero_reads_as_subtitles_off() {
+        assert_eq!(
+            play(&jellyfin_api::types::PlayRequest {
+                item_ids: Some(Vec::new()),
+                play_command: Some(PlayCommand::PlayNow),
+                subtitle_stream_index: Some(-1),
+                ..Default::default()
+            }),
+            Some(Control::Play {
+                items: Vec::new(),
+                mode: PlayMode::Now,
+                start_index: 0,
+                start_ticks: 0,
+                media_source: None,
+                audio_stream: None,
+                subtitles: Subtitles::Off,
             })
         );
     }
@@ -452,7 +471,9 @@ mod tests {
                 ),
                 true
             ),
-            Some(Control::SetSubtitleStream { index: None })
+            Some(Control::SetSubtitleStream {
+                subtitles: Subtitles::Off,
+            })
         );
     }
 

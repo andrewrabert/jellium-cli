@@ -1,7 +1,8 @@
 // `sink` receives one frame per report:
 //   {"frame":"media","generation":<n>,"event":{"event":"ready","duration":<seconds>}}
 //   {"frame":"media","generation":<n>,"event":{"event":"progress",
-//     "position":<seconds>,"buffered":<seconds>,"paused":<bool>}}
+//     "position":<seconds>,"buffered":<seconds>,"paused":<bool>,
+//     "ranges":[{"startTicks":<n>,"endTicks":<n>}],"rate":<n>}}
 //   {"frame":"media","generation":<n>,"event":{"event":"reportDue","position":<seconds>}}
 //   {"frame":"media","generation":<n>,"event":{"event":"ended"}}
 //   {"frame":"media","generation":<n>,"event":{"event":"stalled"}}
@@ -87,6 +88,32 @@ function bufferedEnd() {
   return element.buffered.end(element.buffered.length - 1);
 }
 
+// every buffered range of the element, in ticks, the way `getBufferedRanges`
+// reports them; a range whose end is not a finite duration is left out.
+function bufferedRanges() {
+  const ranges = [];
+  if (!element) {
+    return ranges;
+  }
+  const seekable = element.buffered || [];
+  for (let index = 0; index < seekable.length; index += 1) {
+    let start = seekable.start(index);
+    const end = seekable.end(index);
+    if (!Number.isFinite(start) || start < 0) {
+      start = 0;
+    }
+    if (!Number.isFinite(end) || end < 0) {
+      continue;
+    }
+    ranges.push({ startTicks: start * 10000000, endTicks: end * 10000000 });
+  }
+  return ranges;
+}
+
+function playbackRate() {
+  return element ? element.playbackRate : 1;
+}
+
 function reportIfDue() {
   const now = Date.now();
   if (now - lastReport < REPORT_INTERVAL_MS) {
@@ -108,6 +135,27 @@ function fault() {
     return 'unsupported';
   }
   return 'decode';
+}
+
+// reference: handle-hls-js-media-error — htmlMediaHelper.js:77-110
+let recoverDecodingErrorAt = null;
+let recoverSwapAudioCodecAt = null;
+
+function recoverMediaError(stamp) {
+  const now = performance.now();
+  if (recoverDecodingErrorAt === null || now - recoverDecodingErrorAt > 3000) {
+    recoverDecodingErrorAt = now;
+    hls.recoverMediaError();
+  } else if (
+    recoverSwapAudioCodecAt === null ||
+    now - recoverSwapAudioCodecAt > 3000
+  ) {
+    recoverSwapAudioCodecAt = now;
+    hls.swapAudioCodec();
+    hls.recoverMediaError();
+  } else {
+    media(stamp, { event: 'failed', fault: 'fatalHls' });
+  }
 }
 
 function command(name) {
@@ -167,7 +215,9 @@ function attach(stamp) {
         event: 'progress',
         position: element.currentTime,
         buffered: bufferedEnd(),
-        paused: element.paused
+        paused: element.paused,
+        ranges: bufferedRanges(),
+        rate: playbackRate()
       });
       reportIfDue();
     },
@@ -199,7 +249,9 @@ function attach(stamp) {
         event: 'progress',
         position: element.currentTime,
         buffered: bufferedEnd(),
-        paused: false
+        paused: false,
+        ranges: bufferedRanges(),
+        rate: playbackRate()
       }),
     { signal }
   );
@@ -210,7 +262,9 @@ function attach(stamp) {
         event: 'progress',
         position: element.currentTime,
         buffered: bufferedEnd(),
-        paused: true
+        paused: true,
+        ranges: bufferedRanges(),
+        rate: playbackRate()
       }),
     { signal }
   );
@@ -240,8 +294,9 @@ export function bind(node, callback) {
 
 export function load(stream) {
   const wanted = JSON.parse(stream);
-  const path = wanted.delivery.path;
-  const useHls = wanted.delivery.delivery === 'hls';
+  const playable = wanted.playable;
+  const useHls = playable.subProtocol === 'hls';
+  const path = playable.path;
   const start = wanted.start;
 
   detach();
@@ -251,6 +306,9 @@ export function load(stream) {
     return stamp;
   }
   attach(stamp);
+  if (wanted.crossOrigin) {
+    element.crossOrigin = wanted.crossOrigin;
+  }
 
   const begin = () => {
     if (start > 0) {
@@ -262,15 +320,60 @@ export function load(stream) {
     }
   };
 
-  if (useHls && typeof Hls !== 'undefined' && Hls.isSupported()) {
-    hls = new Hls({ startPosition: start > 0 ? start : -1 });
+  if (
+    wanted.hlsJs &&
+    useHls &&
+    typeof Hls !== 'undefined' &&
+    Hls.isSupported()
+  ) {
+    let maxBufferLength = 30;
+    if (
+      wanted.shortBufferBrowser &&
+      wanted.maxStreamingBitrate >= 25000000
+    ) {
+      maxBufferLength = 6;
+    }
+
+    hls = new Hls({
+      startPosition: wanted.start,
+      manifestLoadingTimeOut: 20000,
+      maxBufferLength: maxBufferLength,
+      maxMaxBufferLength: maxBufferLength,
+      videoPreference: { preferHDR: true },
+      xhrSetup(xhr) {
+        xhr.withCredentials = false;
+      }
+    });
     hls.on(Hls.Events.ERROR, (_, data) => {
+      if (
+        data.type === Hls.ErrorTypes.NETWORK_ERROR &&
+        data.response &&
+        data.response.code &&
+        data.response.code >= 400
+      ) {
+        hls.destroy();
+        media(stamp, { event: 'failed', fault: 'server' });
+        return;
+      }
       if (!data.fatal) {
         return;
       }
-      const kind =
-        data.type === Hls.ErrorTypes.NETWORK_ERROR ? 'network' : 'decode';
-      media(stamp, { event: 'failed', fault: kind });
+      switch (data.type) {
+        case Hls.ErrorTypes.NETWORK_ERROR:
+          if (data.response && data.response.code === 0) {
+            hls.destroy();
+            media(stamp, { event: 'failed', fault: 'network' });
+          } else {
+            hls.startLoad();
+          }
+          return;
+        case Hls.ErrorTypes.MEDIA_ERROR:
+          recoverMediaError(stamp);
+          return;
+        default:
+          hls.destroy();
+          media(stamp, { event: 'failed', fault: 'fatalHls' });
+      }
     });
     hls.on(Hls.Events.MANIFEST_PARSED, () => {
       const played = element.play();
@@ -297,7 +400,13 @@ export function load(stream) {
 }
 
 export function position() {
-  return element ? element.currentTime : 0;
+  if (!element) {
+    return null;
+  }
+  return JSON.stringify({
+    position: element.currentTime,
+    rate: element.playbackRate
+  });
 }
 
 export function ask(asked) {
@@ -391,10 +500,26 @@ function seekToLive() {
   }
 }
 
+// An offered track is the one this many entries into the tracks appended
+// below; an embedded track was appended by nobody and is found among the
+// element's own tracks by the identifier the container carries it under.
+function showsOffered(selected, index) {
+  return selected !== null && selected.shown === 'offered' && selected.at === index;
+}
+
+function showsEmbedded(selected, track) {
+  return (
+    selected !== null &&
+    selected.shown === 'embedded' &&
+    track.id === String(selected.index)
+  );
+}
+
 function setTextTracks(tracks, selected) {
   if (!element) {
     return;
   }
+  const wanted = selected ?? null;
   for (const existing of Array.from(element.querySelectorAll('track'))) {
     existing.remove();
   }
@@ -406,12 +531,16 @@ function setTextTracks(tracks, selected) {
     if (entry.language) {
       track.srclang = entry.language;
     }
-    track.default = index === selected;
+    track.default = showsOffered(wanted, index);
     element.appendChild(track);
   });
   for (let index = 0; index < element.textTracks.length; index += 1) {
-    element.textTracks[index].mode =
-      index === selected ? 'showing' : 'disabled';
+    const track = element.textTracks[index];
+    const showing =
+      index < tracks.length
+        ? showsOffered(wanted, index)
+        : showsEmbedded(wanted, track);
+    track.mode = showing ? 'showing' : 'disabled';
   }
 }
 
