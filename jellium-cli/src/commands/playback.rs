@@ -402,18 +402,21 @@ pub async fn execute(
             };
             let result = client
                 .open_live_stream(
-                    *always_burn_in_subtitle_when_transcoding,
-                    *audio_stream_index,
-                    *enable_direct_play,
-                    *enable_direct_stream,
-                    item_id.as_ref(),
-                    *max_audio_channels,
-                    *max_streaming_bitrate,
-                    open_token.as_deref(),
-                    play_session_id.as_deref(),
-                    *start_time_ticks,
-                    *subtitle_stream_index,
-                    user_id.as_ref(),
+                    &jellyfin_api::query::OpenLiveStream {
+                        always_burn_in_subtitle_when_transcoding:
+                            *always_burn_in_subtitle_when_transcoding,
+                        audio_stream_index: *audio_stream_index,
+                        enable_direct_play: *enable_direct_play,
+                        enable_direct_stream: *enable_direct_stream,
+                        item_id: item_id.as_ref(),
+                        max_audio_channels: *max_audio_channels,
+                        max_streaming_bitrate: *max_streaming_bitrate,
+                        open_token: open_token.as_deref(),
+                        play_session_id: play_session_id.as_deref(),
+                        start_time_ticks: *start_time_ticks,
+                        subtitle_stream_index: *subtitle_stream_index,
+                        user_id: user_id.as_ref(),
+                    },
                     &body,
                 )
                 .await?;
@@ -463,20 +466,22 @@ pub async fn execute(
             let result = client
                 .get_posted_playback_info(
                     item_id,
-                    *allow_audio_stream_copy,
-                    *allow_video_stream_copy,
-                    *audio_stream_index,
-                    *auto_open_live_stream,
-                    *enable_direct_play,
-                    *enable_direct_stream,
-                    *enable_transcoding,
-                    live_stream_id.as_deref(),
-                    *max_audio_channels,
-                    *max_streaming_bitrate,
-                    media_source_id.as_deref(),
-                    *start_time_ticks,
-                    *subtitle_stream_index,
-                    user_id.as_ref(),
+                    &jellyfin_api::query::GetPostedPlaybackInfo {
+                        allow_audio_stream_copy: *allow_audio_stream_copy,
+                        allow_video_stream_copy: *allow_video_stream_copy,
+                        audio_stream_index: *audio_stream_index,
+                        auto_open_live_stream: *auto_open_live_stream,
+                        enable_direct_play: *enable_direct_play,
+                        enable_direct_stream: *enable_direct_stream,
+                        enable_transcoding: *enable_transcoding,
+                        live_stream_id: live_stream_id.as_deref(),
+                        max_audio_channels: *max_audio_channels,
+                        max_streaming_bitrate: *max_streaming_bitrate,
+                        media_source_id: media_source_id.as_deref(),
+                        start_time_ticks: *start_time_ticks,
+                        subtitle_stream_index: *subtitle_stream_index,
+                        user_id: user_id.as_ref(),
+                    },
                     &body,
                 )
                 .await?;

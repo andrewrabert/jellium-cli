@@ -107,7 +107,7 @@ impl Setup {
         let held = self
             .link
             .control()
-            .get_first_user()
+            .get_startup_user()
             .await
             .map_err(|e| self.failed(e))?;
         let posted = self.posted.read().expect("the posted first user").clone();

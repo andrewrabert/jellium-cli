@@ -402,7 +402,7 @@ fn identifying(signed: &mut Signed, action: identify::Action) -> Task<Message> {
             Task::none()
         }
         identify::Action::Run => {
-            let query = state.identify.query(search);
+            let query = state.identify.query();
             Task::perform(
                 async move { api.identify(search, &query).await },
                 Message::Identified,

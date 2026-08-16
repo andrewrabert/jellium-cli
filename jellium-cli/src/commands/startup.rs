@@ -20,7 +20,7 @@ pub async fn execute(
             crate::output::print_json(&result)?;
         }
         StartupCommand::GetUser => {
-            let result = client.get_first_user().await?;
+            let result = client.get_startup_user().await?;
             crate::output::print_json(&result)?;
         }
         StartupCommand::Complete => {

@@ -1,5 +1,5 @@
 #[doc = "`ChannelFeatures`"]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct ChannelFeatures {
     #[doc = "Gets or sets the automatic refresh levels."]
     #[serde(
@@ -65,25 +65,6 @@ pub struct ChannelFeatures {
         skip_serializing_if = "Option::is_none"
     )]
     pub supports_sort_order_toggle: Option<bool>,
-}
-
-impl Default for ChannelFeatures {
-    fn default() -> Self {
-        Self {
-            auto_refresh_levels: Default::default(),
-            can_filter: Default::default(),
-            can_search: Default::default(),
-            content_types: Default::default(),
-            default_sort_fields: Default::default(),
-            id: Default::default(),
-            max_page_size: Default::default(),
-            media_types: Default::default(),
-            name: Default::default(),
-            supports_content_downloading: Default::default(),
-            supports_latest_media: Default::default(),
-            supports_sort_order_toggle: Default::default(),
-        }
-    }
 }
 
 #[derive(

@@ -202,14 +202,10 @@ pub fn view<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
         ]
         .spacing(theme::CARD_SPACING);
 
-        #[expect(
-            clippy::disallowed_methods,
-            reason = "a conversion that carries no cause beyond the value itself"
-        )]
         let named = folder
             .item_id
             .as_deref()
-            .and_then(|id| id.parse::<uuid::Uuid>().ok());
+            .and_then(|id| crate::failure::read::<uuid::Uuid>(Text::FailureLibraryId, id));
         if let Some(progress) = named.and_then(|id| state.refreshing.get(&id)) {
             held = held.push(text(strings::format(
                 Text::LibrariesScanning,

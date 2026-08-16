@@ -1,7 +1,7 @@
 use super::*;
 
 #[doc = "The cast receiver application model."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct CastReceiverApplication {
     #[doc = "Gets or sets the cast receiver application id."]
     #[serde(rename = "Id", default, skip_serializing_if = "Option::is_none")]
@@ -11,17 +11,8 @@ pub struct CastReceiverApplication {
     pub name: Option<String>,
 }
 
-impl Default for CastReceiverApplication {
-    fn default() -> Self {
-        Self {
-            id: Default::default(),
-            name: Default::default(),
-        }
-    }
-}
-
 #[doc = "The configuration page info."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct ConfigurationPageInfo {
     #[doc = "Gets or sets the display name."]
     #[serde(
@@ -55,21 +46,8 @@ pub struct ConfigurationPageInfo {
     pub plugin_id: Option<uuid::Uuid>,
 }
 
-impl Default for ConfigurationPageInfo {
-    fn default() -> Self {
-        Self {
-            display_name: Default::default(),
-            enable_in_main_menu: Default::default(),
-            menu_icon: Default::default(),
-            menu_section: Default::default(),
-            name: Default::default(),
-            plugin_id: Default::default(),
-        }
-    }
-}
-
 #[doc = "Options to configure jellyfins managed database."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct DatabaseConfigurationOptions {
     #[doc = "Gets or sets the options required to use a custom database provider."]
     #[serde(
@@ -93,18 +71,8 @@ pub struct DatabaseConfigurationOptions {
     pub locking_behavior: Option<DatabaseLockingBehaviorTypes>,
 }
 
-impl Default for DatabaseConfigurationOptions {
-    fn default() -> Self {
-        Self {
-            custom_provider_options: Default::default(),
-            database_type: Default::default(),
-            locking_behavior: Default::default(),
-        }
-    }
-}
-
 #[doc = "`EndPointInfo`"]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct EndPointInfo {
     #[serde(
         rename = "IsInNetwork",
@@ -116,17 +84,8 @@ pub struct EndPointInfo {
     pub is_local: Option<bool>,
 }
 
-impl Default for EndPointInfo {
-    fn default() -> Self {
-        Self {
-            is_in_network: Default::default(),
-            is_local: Default::default(),
-        }
-    }
-}
-
 #[doc = "Class FileSystemEntryInfo."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct FileSystemEntryInfo {
     #[doc = "Gets the name."]
     #[serde(rename = "Name", default, skip_serializing_if = "Option::is_none")]
@@ -136,16 +95,6 @@ pub struct FileSystemEntryInfo {
     pub path: Option<String>,
     #[serde(rename = "Type", default, skip_serializing_if = "Option::is_none")]
     pub type_: Option<FileSystemEntryType>,
-}
-
-impl Default for FileSystemEntryInfo {
-    fn default() -> Self {
-        Self {
-            name: Default::default(),
-            path: Default::default(),
-            type_: Default::default(),
-        }
-    }
 }
 
 #[derive(
@@ -204,7 +153,7 @@ impl TryFrom<String> for FileSystemEntryType {
 }
 
 #[doc = "`LogFile`"]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct LogFile {
     #[doc = "Gets or sets the date created."]
     #[serde(
@@ -228,19 +177,8 @@ pub struct LogFile {
     pub size: Option<i64>,
 }
 
-impl Default for LogFile {
-    fn default() -> Self {
-        Self {
-            date_created: Default::default(),
-            date_modified: Default::default(),
-            name: Default::default(),
-            size: Default::default(),
-        }
-    }
-}
-
 #[doc = "`MetadataConfiguration`"]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct MetadataConfiguration {
     #[serde(
         rename = "UseFileCreationTimeForDateAdded",
@@ -250,16 +188,8 @@ pub struct MetadataConfiguration {
     pub use_file_creation_time_for_date_added: Option<bool>,
 }
 
-impl Default for MetadataConfiguration {
-    fn default() -> Self {
-        Self {
-            use_file_creation_time_for_date_added: Default::default(),
-        }
-    }
-}
-
 #[doc = "Defines the MediaBrowser.Common.Net.NetworkConfiguration."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct NetworkConfiguration {
     #[doc = "Gets or sets a value indicating whether Autodiscovery is enabled."]
     #[serde(
@@ -420,38 +350,8 @@ pub struct NetworkConfiguration {
     pub virtual_interface_names: Vec<String>,
 }
 
-impl Default for NetworkConfiguration {
-    fn default() -> Self {
-        Self {
-            auto_discovery: Default::default(),
-            base_url: Default::default(),
-            certificate_password: Default::default(),
-            certificate_path: Default::default(),
-            enable_https: Default::default(),
-            enable_i_pv4: Default::default(),
-            enable_i_pv6: Default::default(),
-            enable_published_server_uri_by_request: Default::default(),
-            enable_remote_access: Default::default(),
-            enable_u_pn_p: Default::default(),
-            ignore_virtual_interfaces: Default::default(),
-            internal_http_port: Default::default(),
-            internal_https_port: Default::default(),
-            is_remote_ip_filter_blacklist: Default::default(),
-            known_proxies: Default::default(),
-            local_network_addresses: Default::default(),
-            local_network_subnets: Default::default(),
-            public_http_port: Default::default(),
-            public_https_port: Default::default(),
-            published_server_uri_by_subnet: Default::default(),
-            remote_ip_filter: Default::default(),
-            require_https: Default::default(),
-            virtual_interface_names: Default::default(),
-        }
-    }
-}
-
 #[doc = "Defines the MediaBrowser.Model.Configuration.PathSubstitution."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct PathSubstitution {
     #[doc = "Gets or sets the value to substitute."]
     #[serde(rename = "From", default, skip_serializing_if = "Option::is_none")]
@@ -461,17 +361,8 @@ pub struct PathSubstitution {
     pub to: Option<String>,
 }
 
-impl Default for PathSubstitution {
-    fn default() -> Self {
-        Self {
-            from: Default::default(),
-            to: Default::default(),
-        }
-    }
-}
-
 #[doc = "`PublicSystemInfo`"]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct PublicSystemInfo {
     #[doc = "Gets or sets the id."]
     #[serde(rename = "Id", default, skip_serializing_if = "Option::is_none")]
@@ -516,22 +407,8 @@ pub struct PublicSystemInfo {
     pub version: Option<String>,
 }
 
-impl Default for PublicSystemInfo {
-    fn default() -> Self {
-        Self {
-            id: Default::default(),
-            local_address: Default::default(),
-            operating_system: Default::default(),
-            product_name: Default::default(),
-            server_name: Default::default(),
-            startup_wizard_completed: Default::default(),
-            version: Default::default(),
-        }
-    }
-}
-
 #[doc = "Restart required."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct RestartRequiredMessage {
     #[doc = "Gets or sets the message id."]
     #[serde(rename = "MessageId", default, skip_serializing_if = "Option::is_none")]
@@ -544,17 +421,8 @@ pub struct RestartRequiredMessage {
     pub message_type: Option<SessionMessageType>,
 }
 
-impl Default for RestartRequiredMessage {
-    fn default() -> Self {
-        Self {
-            message_id: Default::default(),
-            message_type: Default::default(),
-        }
-    }
-}
-
 #[doc = "Scheduled task ended message."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct ScheduledTaskEndedMessage {
     #[doc = "Class TaskExecutionInfo."]
     #[serde(rename = "Data", default, skip_serializing_if = "Option::is_none")]
@@ -570,18 +438,8 @@ pub struct ScheduledTaskEndedMessage {
     pub message_type: Option<SessionMessageType>,
 }
 
-impl Default for ScheduledTaskEndedMessage {
-    fn default() -> Self {
-        Self {
-            data: Default::default(),
-            message_id: Default::default(),
-            message_type: Default::default(),
-        }
-    }
-}
-
 #[doc = "Scheduled tasks info message."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct ScheduledTasksInfoMessage {
     #[doc = "Gets or sets the data."]
     #[serde(rename = "Data", default, skip_serializing_if = "Option::is_none")]
@@ -597,18 +455,8 @@ pub struct ScheduledTasksInfoMessage {
     pub message_type: Option<SessionMessageType>,
 }
 
-impl Default for ScheduledTasksInfoMessage {
-    fn default() -> Self {
-        Self {
-            data: Default::default(),
-            message_id: Default::default(),
-            message_type: Default::default(),
-        }
-    }
-}
-
 #[doc = "Scheduled tasks info start message.\r\nData is the timing data encoded as \"$initialDelay,$interval\" in ms."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct ScheduledTasksInfoStartMessage {
     #[doc = "Gets or sets the data."]
     #[serde(rename = "Data", default, skip_serializing_if = "Option::is_none")]
@@ -621,17 +469,8 @@ pub struct ScheduledTasksInfoStartMessage {
     pub message_type: Option<SessionMessageType>,
 }
 
-impl Default for ScheduledTasksInfoStartMessage {
-    fn default() -> Self {
-        Self {
-            data: Default::default(),
-            message_type: Default::default(),
-        }
-    }
-}
-
 #[doc = "Scheduled tasks info stop message."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct ScheduledTasksInfoStopMessage {
     #[serde(
         rename = "MessageType",
@@ -641,16 +480,8 @@ pub struct ScheduledTasksInfoStopMessage {
     pub message_type: Option<SessionMessageType>,
 }
 
-impl Default for ScheduledTasksInfoStopMessage {
-    fn default() -> Self {
-        Self {
-            message_type: Default::default(),
-        }
-    }
-}
-
 #[doc = "Represents the server configuration."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct ServerConfiguration {
     #[doc = "Gets or sets the number of days we should retain activity logs."]
     #[serde(
@@ -1006,71 +837,8 @@ pub struct ServerConfiguration {
     pub ui_culture: Option<String>,
 }
 
-impl Default for ServerConfiguration {
-    fn default() -> Self {
-        Self {
-            activity_log_retention_days: Default::default(),
-            allow_client_log_upload: Default::default(),
-            cache_path: Default::default(),
-            cache_size: Default::default(),
-            cast_receiver_applications: Default::default(),
-            chapter_image_resolution: Default::default(),
-            codecs_used: Default::default(),
-            content_types: Default::default(),
-            cors_hosts: Default::default(),
-            disable_live_tv_channel_user_data_name: Default::default(),
-            display_specials_within_seasons: Default::default(),
-            dummy_chapter_duration: Default::default(),
-            enable_case_sensitive_item_ids: Default::default(),
-            enable_external_content_in_suggestions: Default::default(),
-            enable_folder_view: Default::default(),
-            enable_grouping_movies_into_collections: Default::default(),
-            enable_grouping_shows_into_collections: Default::default(),
-            enable_legacy_authorization: Default::default(),
-            enable_metrics: Default::default(),
-            enable_normalized_item_by_name_ids: Default::default(),
-            enable_slow_response_warning: Default::default(),
-            image_extraction_timeout_ms: Default::default(),
-            image_saving_convention: Default::default(),
-            inactive_session_threshold: Default::default(),
-            is_port_authorized: Default::default(),
-            is_startup_wizard_completed: Default::default(),
-            library_metadata_refresh_concurrency: Default::default(),
-            library_monitor_delay: Default::default(),
-            library_scan_fanout_concurrency: Default::default(),
-            library_update_duration: Default::default(),
-            log_file_retention_days: Default::default(),
-            max_audiobook_resume: Default::default(),
-            max_resume_pct: Default::default(),
-            metadata_country_code: Default::default(),
-            metadata_options: Default::default(),
-            metadata_path: Default::default(),
-            min_audiobook_resume: Default::default(),
-            min_resume_duration_seconds: Default::default(),
-            min_resume_pct: Default::default(),
-            parallel_image_encoding_limit: Default::default(),
-            path_substitutions: Default::default(),
-            plugin_repositories: Default::default(),
-            preferred_metadata_language: Default::default(),
-            previous_version: Default::default(),
-            previous_version_str: Default::default(),
-            quick_connect_available: Default::default(),
-            remote_client_bitrate_limit: Default::default(),
-            save_metadata_hidden: Default::default(),
-            server_name: Default::default(),
-            skip_deserialization_for_basic_types: Default::default(),
-            slow_response_threshold_ms: Default::default(),
-            sort_remove_characters: Default::default(),
-            sort_remove_words: Default::default(),
-            sort_replace_characters: Default::default(),
-            trickplay_options: Default::default(),
-            ui_culture: Default::default(),
-        }
-    }
-}
-
 #[doc = "The server discovery info model."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct ServerDiscoveryInfo {
     #[doc = "Gets the address."]
     #[serde(rename = "Address", default, skip_serializing_if = "Option::is_none")]
@@ -1090,19 +858,8 @@ pub struct ServerDiscoveryInfo {
     pub name: Option<String>,
 }
 
-impl Default for ServerDiscoveryInfo {
-    fn default() -> Self {
-        Self {
-            address: Default::default(),
-            endpoint_address: Default::default(),
-            id: Default::default(),
-            name: Default::default(),
-        }
-    }
-}
-
 #[doc = "Server restarting down message."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct ServerRestartingMessage {
     #[doc = "Gets or sets the message id."]
     #[serde(rename = "MessageId", default, skip_serializing_if = "Option::is_none")]
@@ -1115,17 +872,8 @@ pub struct ServerRestartingMessage {
     pub message_type: Option<SessionMessageType>,
 }
 
-impl Default for ServerRestartingMessage {
-    fn default() -> Self {
-        Self {
-            message_id: Default::default(),
-            message_type: Default::default(),
-        }
-    }
-}
-
 #[doc = "Server shutting down message."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct ServerShuttingDownMessage {
     #[doc = "Gets or sets the message id."]
     #[serde(rename = "MessageId", default, skip_serializing_if = "Option::is_none")]
@@ -1138,17 +886,8 @@ pub struct ServerShuttingDownMessage {
     pub message_type: Option<SessionMessageType>,
 }
 
-impl Default for ServerShuttingDownMessage {
-    fn default() -> Self {
-        Self {
-            message_id: Default::default(),
-            message_type: Default::default(),
-        }
-    }
-}
-
 #[doc = "The startup configuration DTO."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct StartupConfigurationDto {
     #[doc = "Gets or sets the metadata country code."]
     #[serde(
@@ -1176,17 +915,6 @@ pub struct StartupConfigurationDto {
     pub ui_culture: Option<String>,
 }
 
-impl Default for StartupConfigurationDto {
-    fn default() -> Self {
-        Self {
-            metadata_country_code: Default::default(),
-            preferred_metadata_language: Default::default(),
-            server_name: Default::default(),
-            ui_culture: Default::default(),
-        }
-    }
-}
-
 #[doc = "Startup remote access dto."]
 #[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
 pub struct StartupRemoteAccessDto {
@@ -1199,7 +927,7 @@ pub struct StartupRemoteAccessDto {
 }
 
 #[doc = "The startup user DTO."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct StartupUserDto {
     #[doc = "Gets or sets the username."]
     #[serde(rename = "Name", default, skip_serializing_if = "Option::is_none")]
@@ -1207,15 +935,6 @@ pub struct StartupUserDto {
     #[doc = "Gets or sets the user's password."]
     #[serde(rename = "Password", default, skip_serializing_if = "Option::is_none")]
     pub password: Option<String>,
-}
-
-impl Default for StartupUserDto {
-    fn default() -> Self {
-        Self {
-            name: Default::default(),
-            password: Default::default(),
-        }
-    }
 }
 
 #[doc = "Class SystemInfo."]
@@ -1412,7 +1131,7 @@ impl Default for SystemInfo {
 }
 
 #[doc = "Contains informations about the systems storage."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct SystemStorageDto {
     #[doc = "Gets or sets the Storage information of the cache folder."]
     #[serde(
@@ -1460,23 +1179,8 @@ pub struct SystemStorageDto {
     pub web_folder: Option<FolderStorageDto>,
 }
 
-impl Default for SystemStorageDto {
-    fn default() -> Self {
-        Self {
-            cache_folder: Default::default(),
-            image_cache_folder: Default::default(),
-            internal_metadata_folder: Default::default(),
-            libraries: Default::default(),
-            log_folder: Default::default(),
-            program_data_folder: Default::default(),
-            transcoding_temp_folder: Default::default(),
-            web_folder: Default::default(),
-        }
-    }
-}
-
 #[doc = "Class UserConfiguration."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct UserConfiguration {
     #[doc = "Gets or sets the audio language preference."]
     #[serde(
@@ -1578,27 +1282,4 @@ pub struct UserConfiguration {
         skip_serializing_if = "Option::is_none"
     )]
     pub subtitle_mode: Option<SubtitlePlaybackMode>,
-}
-
-impl Default for UserConfiguration {
-    fn default() -> Self {
-        Self {
-            audio_language_preference: Default::default(),
-            cast_receiver_id: Default::default(),
-            display_collections_view: Default::default(),
-            display_missing_episodes: Default::default(),
-            enable_local_password: Default::default(),
-            enable_next_episode_auto_play: Default::default(),
-            grouped_folders: Default::default(),
-            hide_played_in_latest: Default::default(),
-            latest_items_excludes: Default::default(),
-            my_media_excludes: Default::default(),
-            ordered_views: Default::default(),
-            play_default_audio_track: Default::default(),
-            remember_audio_selections: Default::default(),
-            remember_subtitle_selections: Default::default(),
-            subtitle_language_preference: Default::default(),
-            subtitle_mode: Default::default(),
-        }
-    }
 }

@@ -1,5 +1,6 @@
 use crate::Client;
 use crate::error::Error;
+use crate::query;
 use crate::types;
 use crate::util::encode_path;
 
@@ -29,50 +30,30 @@ impl Client {
     #[doc = "Gets available live tv channels\n\nSends a `GET` request to `/LiveTv/Channels`\n\nArguments:\n- `add_current_program`: Optional. Adds current program info to each channel.\n- `enable_favorite_sorting`: Optional. Incorporate favorite and like status into channel sorting.\n- `enable_image_types`: \"Optional. The image types to include in the output.\n- `enable_images`: Optional. Include image information in output.\n- `enable_user_data`: Optional. Include user data.\n- `fields`: Optional. Specify additional fields of information to return in the output.\n- `image_type_limit`: Optional. The max number of images to return, per image type.\n- `is_disliked`: Optional. Filter by channels that are disliked, or not.\n- `is_favorite`: Optional. Filter by channels that are favorites, or not.\n- `is_kids`: Optional. Filter for kids.\n- `is_liked`: Optional. Filter by channels that are liked, or not.\n- `is_movie`: Optional. Filter for movies.\n- `is_news`: Optional. Filter for news.\n- `is_series`: Optional. Filter for series.\n- `is_sports`: Optional. Filter for sports.\n- `limit`: Optional. The maximum number of records to return.\n- `sort_by`: Optional. Key to sort by.\n- `sort_order`: Optional. Sort order.\n- `start_index`: Optional. The record index to start at. All items with a lower index will be dropped from the results.\n- `type_`: Optional. Filter by channel type.\n- `user_id`: Optional. Filter by user and attach user data.\n"]
     pub async fn get_live_tv_channels(
         &self,
-        add_current_program: Option<bool>,
-        enable_favorite_sorting: Option<bool>,
-        enable_image_types: Option<&Vec<types::ImageType>>,
-        enable_images: Option<bool>,
-        enable_user_data: Option<bool>,
-        fields: Option<&Vec<types::ItemFields>>,
-        image_type_limit: Option<i32>,
-        is_disliked: Option<bool>,
-        is_favorite: Option<bool>,
-        is_kids: Option<bool>,
-        is_liked: Option<bool>,
-        is_movie: Option<bool>,
-        is_news: Option<bool>,
-        is_series: Option<bool>,
-        is_sports: Option<bool>,
-        limit: Option<i32>,
-        sort_by: Option<&Vec<types::ItemSortBy>>,
-        sort_order: Option<types::SortOrder>,
-        start_index: Option<i32>,
-        type_: Option<types::ChannelType>,
-        user_id: Option<&uuid::Uuid>,
+        query: &query::GetLiveTvChannels<'_>,
     ) -> Result<types::BaseItemDtoQueryResult, Error> {
         self.request(reqwest::Method::GET, "/LiveTv/Channels".into())
-            .query_opt("addCurrentProgram", add_current_program)
-            .query_opt("enableFavoriteSorting", enable_favorite_sorting)
-            .query_list_opt("enableImageTypes", enable_image_types)
-            .query_opt("enableImages", enable_images)
-            .query_opt("enableUserData", enable_user_data)
-            .query_list_opt("fields", fields)
-            .query_opt("imageTypeLimit", image_type_limit)
-            .query_opt("isDisliked", is_disliked)
-            .query_opt("isFavorite", is_favorite)
-            .query_opt("isKids", is_kids)
-            .query_opt("isLiked", is_liked)
-            .query_opt("isMovie", is_movie)
-            .query_opt("isNews", is_news)
-            .query_opt("isSeries", is_series)
-            .query_opt("isSports", is_sports)
-            .query_opt("limit", limit)
-            .query_list_opt("sortBy", sort_by)
-            .query_opt("sortOrder", sort_order)
-            .query_opt("startIndex", start_index)
-            .query_opt("type", type_)
-            .query_opt("userId", user_id)
+            .query_opt("addCurrentProgram", query.add_current_program)
+            .query_opt("enableFavoriteSorting", query.enable_favorite_sorting)
+            .query_list_opt("enableImageTypes", query.enable_image_types)
+            .query_opt("enableImages", query.enable_images)
+            .query_opt("enableUserData", query.enable_user_data)
+            .query_list_opt("fields", query.fields)
+            .query_opt("imageTypeLimit", query.image_type_limit)
+            .query_opt("isDisliked", query.is_disliked)
+            .query_opt("isFavorite", query.is_favorite)
+            .query_opt("isKids", query.is_kids)
+            .query_opt("isLiked", query.is_liked)
+            .query_opt("isMovie", query.is_movie)
+            .query_opt("isNews", query.is_news)
+            .query_opt("isSeries", query.is_series)
+            .query_opt("isSports", query.is_sports)
+            .query_opt("limit", query.limit)
+            .query_list_opt("sortBy", query.sort_by)
+            .query_opt("sortOrder", query.sort_order)
+            .query_opt("startIndex", query.start_index)
+            .query_opt("type", query.type_)
+            .query_opt("userId", query.user_id)
             .send()
             .await
     }
@@ -208,62 +189,36 @@ impl Client {
     #[doc = "Gets available live tv epgs\n\nSends a `GET` request to `/LiveTv/Programs`\n\nArguments:\n- `channel_ids`: The channels to return guide information for.\n- `enable_image_types`: Optional. The image types to include in the output.\n- `enable_images`: Optional. Include image information in output.\n- `enable_total_record_count`: Retrieve total record count.\n- `enable_user_data`: Optional. Include user data.\n- `fields`: Optional. Specify additional fields of information to return in the output.\n- `genre_ids`: The genre ids to return guide information for.\n- `genres`: The genres to return guide information for.\n- `has_aired`: Optional. Filter by programs that have completed airing, or not.\n- `image_type_limit`: Optional. The max number of images to return, per image type.\n- `is_airing`: Optional. Filter by programs that are currently airing, or not.\n- `is_kids`: Optional. Filter for kids.\n- `is_movie`: Optional. Filter for movies.\n- `is_news`: Optional. Filter for news.\n- `is_series`: Optional. Filter for series.\n- `is_sports`: Optional. Filter for sports.\n- `library_series_id`: Optional. Filter by library series id.\n- `limit`: Optional. The maximum number of records to return.\n- `max_end_date`: Optional. The maximum premiere end date.\n- `max_start_date`: Optional. The maximum premiere start date.\n- `min_end_date`: Optional. The minimum premiere end date.\n- `min_start_date`: Optional. The minimum premiere start date.\n- `series_timer_id`: Optional. Filter by series timer id.\n- `sort_by`: Optional. Specify one or more sort orders, comma delimited. Options: Name, StartDate.\n- `sort_order`: Sort Order - Ascending,Descending.\n- `start_index`: Optional. The record index to start at. All items with a lower index will be dropped from the results.\n- `user_id`: Optional. Filter by user id.\n"]
     pub async fn get_live_tv_programs(
         &self,
-        channel_ids: Option<&Vec<uuid::Uuid>>,
-        enable_image_types: Option<&Vec<types::ImageType>>,
-        enable_images: Option<bool>,
-        enable_total_record_count: Option<bool>,
-        enable_user_data: Option<bool>,
-        fields: Option<&Vec<types::ItemFields>>,
-        genre_ids: Option<&Vec<uuid::Uuid>>,
-        genres: Option<&Vec<String>>,
-        has_aired: Option<bool>,
-        image_type_limit: Option<i32>,
-        is_airing: Option<bool>,
-        is_kids: Option<bool>,
-        is_movie: Option<bool>,
-        is_news: Option<bool>,
-        is_series: Option<bool>,
-        is_sports: Option<bool>,
-        library_series_id: Option<&uuid::Uuid>,
-        limit: Option<i32>,
-        max_end_date: Option<&chrono::DateTime<chrono::Utc>>,
-        max_start_date: Option<&chrono::DateTime<chrono::Utc>>,
-        min_end_date: Option<&chrono::DateTime<chrono::Utc>>,
-        min_start_date: Option<&chrono::DateTime<chrono::Utc>>,
-        series_timer_id: Option<&str>,
-        sort_by: Option<&Vec<types::ItemSortBy>>,
-        sort_order: Option<&Vec<types::SortOrder>>,
-        start_index: Option<i32>,
-        user_id: Option<&uuid::Uuid>,
+        query: &query::GetLiveTvPrograms<'_>,
     ) -> Result<types::BaseItemDtoQueryResult, Error> {
         self.request(reqwest::Method::GET, "/LiveTv/Programs".into())
-            .query_list_opt("channelIds", channel_ids)
-            .query_list_opt("enableImageTypes", enable_image_types)
-            .query_opt("enableImages", enable_images)
-            .query_opt("enableTotalRecordCount", enable_total_record_count)
-            .query_opt("enableUserData", enable_user_data)
-            .query_list_opt("fields", fields)
-            .query_list_opt("genreIds", genre_ids)
-            .query_list_opt("genres", genres)
-            .query_opt("hasAired", has_aired)
-            .query_opt("imageTypeLimit", image_type_limit)
-            .query_opt("isAiring", is_airing)
-            .query_opt("isKids", is_kids)
-            .query_opt("isMovie", is_movie)
-            .query_opt("isNews", is_news)
-            .query_opt("isSeries", is_series)
-            .query_opt("isSports", is_sports)
-            .query_opt("librarySeriesId", library_series_id)
-            .query_opt("limit", limit)
-            .query_opt("maxEndDate", max_end_date)
-            .query_opt("maxStartDate", max_start_date)
-            .query_opt("minEndDate", min_end_date)
-            .query_opt("minStartDate", min_start_date)
-            .query_opt("seriesTimerId", series_timer_id)
-            .query_list_opt("sortBy", sort_by)
-            .query_list_opt("sortOrder", sort_order)
-            .query_opt("startIndex", start_index)
-            .query_opt("userId", user_id)
+            .query_list_opt("channelIds", query.channel_ids)
+            .query_list_opt("enableImageTypes", query.enable_image_types)
+            .query_opt("enableImages", query.enable_images)
+            .query_opt("enableTotalRecordCount", query.enable_total_record_count)
+            .query_opt("enableUserData", query.enable_user_data)
+            .query_list_opt("fields", query.fields)
+            .query_list_opt("genreIds", query.genre_ids)
+            .query_list_opt("genres", query.genres)
+            .query_opt("hasAired", query.has_aired)
+            .query_opt("imageTypeLimit", query.image_type_limit)
+            .query_opt("isAiring", query.is_airing)
+            .query_opt("isKids", query.is_kids)
+            .query_opt("isMovie", query.is_movie)
+            .query_opt("isNews", query.is_news)
+            .query_opt("isSeries", query.is_series)
+            .query_opt("isSports", query.is_sports)
+            .query_opt("librarySeriesId", query.library_series_id)
+            .query_opt("limit", query.limit)
+            .query_opt("maxEndDate", query.max_end_date)
+            .query_opt("maxStartDate", query.max_start_date)
+            .query_opt("minEndDate", query.min_end_date)
+            .query_opt("minStartDate", query.min_start_date)
+            .query_opt("seriesTimerId", query.series_timer_id)
+            .query_list_opt("sortBy", query.sort_by)
+            .query_list_opt("sortOrder", query.sort_order)
+            .query_opt("startIndex", query.start_index)
+            .query_opt("userId", query.user_id)
             .send()
             .await
     }
@@ -297,42 +252,26 @@ impl Client {
     #[doc = "Gets recommended live tv epgs\n\nSends a `GET` request to `/LiveTv/Programs/Recommended`\n\nArguments:\n- `enable_image_types`: Optional. The image types to include in the output.\n- `enable_images`: Optional. Include image information in output.\n- `enable_total_record_count`: Retrieve total record count.\n- `enable_user_data`: Optional. include user data.\n- `fields`: Optional. Specify additional fields of information to return in the output.\n- `genre_ids`: The genres to return guide information for.\n- `has_aired`: Optional. Filter by programs that have completed airing, or not.\n- `image_type_limit`: Optional. The max number of images to return, per image type.\n- `is_airing`: Optional. Filter by programs that are currently airing, or not.\n- `is_kids`: Optional. Filter for kids.\n- `is_movie`: Optional. Filter for movies.\n- `is_news`: Optional. Filter for news.\n- `is_series`: Optional. Filter for series.\n- `is_sports`: Optional. Filter for sports.\n- `limit`: Optional. The maximum number of records to return.\n- `start_index`: Optional. The record index to start at. All items with a lower index will be dropped from the results.\n- `user_id`: Optional. filter by user id.\n"]
     pub async fn get_recommended_programs(
         &self,
-        enable_image_types: Option<&Vec<types::ImageType>>,
-        enable_images: Option<bool>,
-        enable_total_record_count: Option<bool>,
-        enable_user_data: Option<bool>,
-        fields: Option<&Vec<types::ItemFields>>,
-        genre_ids: Option<&Vec<uuid::Uuid>>,
-        has_aired: Option<bool>,
-        image_type_limit: Option<i32>,
-        is_airing: Option<bool>,
-        is_kids: Option<bool>,
-        is_movie: Option<bool>,
-        is_news: Option<bool>,
-        is_series: Option<bool>,
-        is_sports: Option<bool>,
-        limit: Option<i32>,
-        start_index: Option<i32>,
-        user_id: Option<&uuid::Uuid>,
+        query: &query::GetRecommendedPrograms<'_>,
     ) -> Result<types::BaseItemDtoQueryResult, Error> {
         self.request(reqwest::Method::GET, "/LiveTv/Programs/Recommended".into())
-            .query_list_opt("enableImageTypes", enable_image_types)
-            .query_opt("enableImages", enable_images)
-            .query_opt("enableTotalRecordCount", enable_total_record_count)
-            .query_opt("enableUserData", enable_user_data)
-            .query_list_opt("fields", fields)
-            .query_list_opt("genreIds", genre_ids)
-            .query_opt("hasAired", has_aired)
-            .query_opt("imageTypeLimit", image_type_limit)
-            .query_opt("isAiring", is_airing)
-            .query_opt("isKids", is_kids)
-            .query_opt("isMovie", is_movie)
-            .query_opt("isNews", is_news)
-            .query_opt("isSeries", is_series)
-            .query_opt("isSports", is_sports)
-            .query_opt("limit", limit)
-            .query_opt("startIndex", start_index)
-            .query_opt("userId", user_id)
+            .query_list_opt("enableImageTypes", query.enable_image_types)
+            .query_opt("enableImages", query.enable_images)
+            .query_opt("enableTotalRecordCount", query.enable_total_record_count)
+            .query_opt("enableUserData", query.enable_user_data)
+            .query_list_opt("fields", query.fields)
+            .query_list_opt("genreIds", query.genre_ids)
+            .query_opt("hasAired", query.has_aired)
+            .query_opt("imageTypeLimit", query.image_type_limit)
+            .query_opt("isAiring", query.is_airing)
+            .query_opt("isKids", query.is_kids)
+            .query_opt("isMovie", query.is_movie)
+            .query_opt("isNews", query.is_news)
+            .query_opt("isSeries", query.is_series)
+            .query_opt("isSports", query.is_sports)
+            .query_opt("limit", query.limit)
+            .query_opt("startIndex", query.start_index)
+            .query_opt("userId", query.user_id)
             .send()
             .await
     }
@@ -340,46 +279,28 @@ impl Client {
     #[doc = "Gets live tv recordings\n\nSends a `GET` request to `/LiveTv/Recordings`\n\nArguments:\n- `channel_id`: Optional. Filter by channel id.\n- `enable_image_types`: Optional. The image types to include in the output.\n- `enable_images`: Optional. Include image information in output.\n- `enable_total_record_count`: Optional. Return total record count.\n- `enable_user_data`: Optional. Include user data.\n- `fields`: Optional. Specify additional fields of information to return in the output.\n- `image_type_limit`: Optional. The max number of images to return, per image type.\n- `is_in_progress`: Optional. Filter by recordings that are in progress, or not.\n- `is_kids`: Optional. Filter for kids.\n- `is_library_item`: Optional. Filter for is library item.\n- `is_movie`: Optional. Filter for movies.\n- `is_news`: Optional. Filter for news.\n- `is_series`: Optional. Filter for series.\n- `is_sports`: Optional. Filter for sports.\n- `limit`: Optional. The maximum number of records to return.\n- `series_timer_id`: Optional. Filter by recordings belonging to a series timer.\n- `start_index`: Optional. The record index to start at. All items with a lower index will be dropped from the results.\n- `status`: Optional. Filter by recording status.\n- `user_id`: Optional. Filter by user and attach user data.\n"]
     pub async fn get_recordings(
         &self,
-        channel_id: Option<&str>,
-        enable_image_types: Option<&Vec<types::ImageType>>,
-        enable_images: Option<bool>,
-        enable_total_record_count: Option<bool>,
-        enable_user_data: Option<bool>,
-        fields: Option<&Vec<types::ItemFields>>,
-        image_type_limit: Option<i32>,
-        is_in_progress: Option<bool>,
-        is_kids: Option<bool>,
-        is_library_item: Option<bool>,
-        is_movie: Option<bool>,
-        is_news: Option<bool>,
-        is_series: Option<bool>,
-        is_sports: Option<bool>,
-        limit: Option<i32>,
-        series_timer_id: Option<&str>,
-        start_index: Option<i32>,
-        status: Option<types::RecordingStatus>,
-        user_id: Option<&uuid::Uuid>,
+        query: &query::GetRecordings<'_>,
     ) -> Result<types::BaseItemDtoQueryResult, Error> {
         self.request(reqwest::Method::GET, "/LiveTv/Recordings".into())
-            .query_opt("channelId", channel_id)
-            .query_list_opt("enableImageTypes", enable_image_types)
-            .query_opt("enableImages", enable_images)
-            .query_opt("enableTotalRecordCount", enable_total_record_count)
-            .query_opt("enableUserData", enable_user_data)
-            .query_list_opt("fields", fields)
-            .query_opt("imageTypeLimit", image_type_limit)
-            .query_opt("isInProgress", is_in_progress)
-            .query_opt("isKids", is_kids)
-            .query_opt("isLibraryItem", is_library_item)
-            .query_opt("isMovie", is_movie)
-            .query_opt("isNews", is_news)
-            .query_opt("isSeries", is_series)
-            .query_opt("isSports", is_sports)
-            .query_opt("limit", limit)
-            .query_opt("seriesTimerId", series_timer_id)
-            .query_opt("startIndex", start_index)
-            .query_opt("status", status)
-            .query_opt("userId", user_id)
+            .query_opt("channelId", query.channel_id)
+            .query_list_opt("enableImageTypes", query.enable_image_types)
+            .query_opt("enableImages", query.enable_images)
+            .query_opt("enableTotalRecordCount", query.enable_total_record_count)
+            .query_opt("enableUserData", query.enable_user_data)
+            .query_list_opt("fields", query.fields)
+            .query_opt("imageTypeLimit", query.image_type_limit)
+            .query_opt("isInProgress", query.is_in_progress)
+            .query_opt("isKids", query.is_kids)
+            .query_opt("isLibraryItem", query.is_library_item)
+            .query_opt("isMovie", query.is_movie)
+            .query_opt("isNews", query.is_news)
+            .query_opt("isSeries", query.is_series)
+            .query_opt("isSports", query.is_sports)
+            .query_opt("limit", query.limit)
+            .query_opt("seriesTimerId", query.series_timer_id)
+            .query_opt("startIndex", query.start_index)
+            .query_opt("status", query.status)
+            .query_opt("userId", query.user_id)
             .send()
             .await
     }
@@ -456,36 +377,23 @@ impl Client {
     #[doc = "Gets live tv recording series\n\nSends a `GET` request to `/LiveTv/Recordings/Series`\n\nArguments:\n- `channel_id`: Optional. Filter by channel id.\n- `enable_image_types`: Optional. The image types to include in the output.\n- `enable_images`: Optional. Include image information in output.\n- `enable_total_record_count`: Optional. Return total record count.\n- `enable_user_data`: Optional. Include user data.\n- `fields`: Optional. Specify additional fields of information to return in the output.\n- `group_id`: Optional. Filter by recording group.\n- `image_type_limit`: Optional. The max number of images to return, per image type.\n- `is_in_progress`: Optional. Filter by recordings that are in progress, or not.\n- `limit`: Optional. The maximum number of records to return.\n- `series_timer_id`: Optional. Filter by recordings belonging to a series timer.\n- `start_index`: Optional. The record index to start at. All items with a lower index will be dropped from the results.\n- `status`: Optional. Filter by recording status.\n- `user_id`: Optional. Filter by user and attach user data.\n"]
     pub async fn get_recordings_series(
         &self,
-        channel_id: Option<&str>,
-        enable_image_types: Option<&Vec<types::ImageType>>,
-        enable_images: Option<bool>,
-        enable_total_record_count: Option<bool>,
-        enable_user_data: Option<bool>,
-        fields: Option<&Vec<types::ItemFields>>,
-        group_id: Option<&str>,
-        image_type_limit: Option<i32>,
-        is_in_progress: Option<bool>,
-        limit: Option<i32>,
-        series_timer_id: Option<&str>,
-        start_index: Option<i32>,
-        status: Option<types::RecordingStatus>,
-        user_id: Option<&uuid::Uuid>,
+        query: &query::GetRecordingsSeries<'_>,
     ) -> Result<types::BaseItemDtoQueryResult, Error> {
         self.request(reqwest::Method::GET, "/LiveTv/Recordings/Series".into())
-            .query_opt("channelId", channel_id)
-            .query_list_opt("enableImageTypes", enable_image_types)
-            .query_opt("enableImages", enable_images)
-            .query_opt("enableTotalRecordCount", enable_total_record_count)
-            .query_opt("enableUserData", enable_user_data)
-            .query_list_opt("fields", fields)
-            .query_opt("groupId", group_id)
-            .query_opt("imageTypeLimit", image_type_limit)
-            .query_opt("isInProgress", is_in_progress)
-            .query_opt("limit", limit)
-            .query_opt("seriesTimerId", series_timer_id)
-            .query_opt("startIndex", start_index)
-            .query_opt("status", status)
-            .query_opt("userId", user_id)
+            .query_opt("channelId", query.channel_id)
+            .query_list_opt("enableImageTypes", query.enable_image_types)
+            .query_opt("enableImages", query.enable_images)
+            .query_opt("enableTotalRecordCount", query.enable_total_record_count)
+            .query_opt("enableUserData", query.enable_user_data)
+            .query_list_opt("fields", query.fields)
+            .query_opt("groupId", query.group_id)
+            .query_opt("imageTypeLimit", query.image_type_limit)
+            .query_opt("isInProgress", query.is_in_progress)
+            .query_opt("limit", query.limit)
+            .query_opt("seriesTimerId", query.series_timer_id)
+            .query_opt("startIndex", query.start_index)
+            .query_opt("status", query.status)
+            .query_opt("userId", query.user_id)
             .send()
             .await
     }

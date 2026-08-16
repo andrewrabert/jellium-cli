@@ -1,7 +1,7 @@
 use super::*;
 
 #[doc = "`AlbumInfo`"]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct AlbumInfo {
     #[doc = "Gets or sets the album artist."]
     #[serde(
@@ -82,29 +82,8 @@ pub struct AlbumInfo {
     pub year: Option<i32>,
 }
 
-impl Default for AlbumInfo {
-    fn default() -> Self {
-        Self {
-            album_artists: Default::default(),
-            artist_provider_ids: Default::default(),
-            index_number: Default::default(),
-            is_automated: Default::default(),
-            metadata_country_code: Default::default(),
-            metadata_language: Default::default(),
-            name: Default::default(),
-            original_title: Default::default(),
-            parent_index_number: Default::default(),
-            path: Default::default(),
-            premiere_date: Default::default(),
-            provider_ids: Default::default(),
-            song_infos: Default::default(),
-            year: Default::default(),
-        }
-    }
-}
-
 #[doc = "`AlbumInfoRemoteSearchQuery`"]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct AlbumInfoRemoteSearchQuery {
     #[doc = "Gets or sets a value indicating whether disabled providers should be included."]
     #[serde(
@@ -130,19 +109,8 @@ pub struct AlbumInfoRemoteSearchQuery {
     pub search_provider_name: Option<String>,
 }
 
-impl Default for AlbumInfoRemoteSearchQuery {
-    fn default() -> Self {
-        Self {
-            include_disabled_providers: Default::default(),
-            item_id: Default::default(),
-            search_info: Default::default(),
-            search_provider_name: Default::default(),
-        }
-    }
-}
-
 #[doc = "`ArtistInfo`"]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct ArtistInfo {
     #[serde(
         rename = "IndexNumber",
@@ -209,27 +177,8 @@ pub struct ArtistInfo {
     pub year: Option<i32>,
 }
 
-impl Default for ArtistInfo {
-    fn default() -> Self {
-        Self {
-            index_number: Default::default(),
-            is_automated: Default::default(),
-            metadata_country_code: Default::default(),
-            metadata_language: Default::default(),
-            name: Default::default(),
-            original_title: Default::default(),
-            parent_index_number: Default::default(),
-            path: Default::default(),
-            premiere_date: Default::default(),
-            provider_ids: Default::default(),
-            song_infos: Default::default(),
-            year: Default::default(),
-        }
-    }
-}
-
 #[doc = "`ArtistInfoRemoteSearchQuery`"]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct ArtistInfoRemoteSearchQuery {
     #[doc = "Gets or sets a value indicating whether disabled providers should be included."]
     #[serde(
@@ -255,19 +204,8 @@ pub struct ArtistInfoRemoteSearchQuery {
     pub search_provider_name: Option<String>,
 }
 
-impl Default for ArtistInfoRemoteSearchQuery {
-    fn default() -> Self {
-        Self {
-            include_disabled_providers: Default::default(),
-            item_id: Default::default(),
-            search_info: Default::default(),
-            search_provider_name: Default::default(),
-        }
-    }
-}
-
 #[doc = "`BookInfo`"]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct BookInfo {
     #[serde(
         rename = "IndexNumber",
@@ -338,27 +276,8 @@ pub struct BookInfo {
     pub year: Option<i32>,
 }
 
-impl Default for BookInfo {
-    fn default() -> Self {
-        Self {
-            index_number: Default::default(),
-            is_automated: Default::default(),
-            metadata_country_code: Default::default(),
-            metadata_language: Default::default(),
-            name: Default::default(),
-            original_title: Default::default(),
-            parent_index_number: Default::default(),
-            path: Default::default(),
-            premiere_date: Default::default(),
-            provider_ids: Default::default(),
-            series_name: Default::default(),
-            year: Default::default(),
-        }
-    }
-}
-
 #[doc = "`BookInfoRemoteSearchQuery`"]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct BookInfoRemoteSearchQuery {
     #[doc = "Gets or sets a value indicating whether disabled providers should be included."]
     #[serde(
@@ -384,19 +303,8 @@ pub struct BookInfoRemoteSearchQuery {
     pub search_provider_name: Option<String>,
 }
 
-impl Default for BookInfoRemoteSearchQuery {
-    fn default() -> Self {
-        Self {
-            include_disabled_providers: Default::default(),
-            item_id: Default::default(),
-            search_info: Default::default(),
-            search_provider_name: Default::default(),
-        }
-    }
-}
-
 #[doc = "`BoxSetInfo`"]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct BoxSetInfo {
     #[serde(
         rename = "IndexNumber",
@@ -461,26 +369,8 @@ pub struct BoxSetInfo {
     pub year: Option<i32>,
 }
 
-impl Default for BoxSetInfo {
-    fn default() -> Self {
-        Self {
-            index_number: Default::default(),
-            is_automated: Default::default(),
-            metadata_country_code: Default::default(),
-            metadata_language: Default::default(),
-            name: Default::default(),
-            original_title: Default::default(),
-            parent_index_number: Default::default(),
-            path: Default::default(),
-            premiere_date: Default::default(),
-            provider_ids: Default::default(),
-            year: Default::default(),
-        }
-    }
-}
-
 #[doc = "`BoxSetInfoRemoteSearchQuery`"]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct BoxSetInfoRemoteSearchQuery {
     #[doc = "Gets or sets a value indicating whether disabled providers should be included."]
     #[serde(
@@ -506,19 +396,8 @@ pub struct BoxSetInfoRemoteSearchQuery {
     pub search_provider_name: Option<String>,
 }
 
-impl Default for BoxSetInfoRemoteSearchQuery {
-    fn default() -> Self {
-        Self {
-            include_disabled_providers: Default::default(),
-            item_id: Default::default(),
-            search_info: Default::default(),
-            search_provider_name: Default::default(),
-        }
-    }
-}
-
 #[doc = "`MovieInfo`"]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct MovieInfo {
     #[serde(
         rename = "IndexNumber",
@@ -583,26 +462,8 @@ pub struct MovieInfo {
     pub year: Option<i32>,
 }
 
-impl Default for MovieInfo {
-    fn default() -> Self {
-        Self {
-            index_number: Default::default(),
-            is_automated: Default::default(),
-            metadata_country_code: Default::default(),
-            metadata_language: Default::default(),
-            name: Default::default(),
-            original_title: Default::default(),
-            parent_index_number: Default::default(),
-            path: Default::default(),
-            premiere_date: Default::default(),
-            provider_ids: Default::default(),
-            year: Default::default(),
-        }
-    }
-}
-
 #[doc = "`MovieInfoRemoteSearchQuery`"]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct MovieInfoRemoteSearchQuery {
     #[doc = "Gets or sets a value indicating whether disabled providers should be included."]
     #[serde(
@@ -628,19 +489,8 @@ pub struct MovieInfoRemoteSearchQuery {
     pub search_provider_name: Option<String>,
 }
 
-impl Default for MovieInfoRemoteSearchQuery {
-    fn default() -> Self {
-        Self {
-            include_disabled_providers: Default::default(),
-            item_id: Default::default(),
-            search_info: Default::default(),
-            search_provider_name: Default::default(),
-        }
-    }
-}
-
 #[doc = "`MusicVideoInfo`"]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct MusicVideoInfo {
     #[serde(rename = "Artists", default, skip_serializing_if = "Option::is_none")]
     pub artists: Option<Vec<String>>,
@@ -707,27 +557,8 @@ pub struct MusicVideoInfo {
     pub year: Option<i32>,
 }
 
-impl Default for MusicVideoInfo {
-    fn default() -> Self {
-        Self {
-            artists: Default::default(),
-            index_number: Default::default(),
-            is_automated: Default::default(),
-            metadata_country_code: Default::default(),
-            metadata_language: Default::default(),
-            name: Default::default(),
-            original_title: Default::default(),
-            parent_index_number: Default::default(),
-            path: Default::default(),
-            premiere_date: Default::default(),
-            provider_ids: Default::default(),
-            year: Default::default(),
-        }
-    }
-}
-
 #[doc = "`MusicVideoInfoRemoteSearchQuery`"]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct MusicVideoInfoRemoteSearchQuery {
     #[doc = "Gets or sets a value indicating whether disabled providers should be included."]
     #[serde(
@@ -753,19 +584,8 @@ pub struct MusicVideoInfoRemoteSearchQuery {
     pub search_provider_name: Option<String>,
 }
 
-impl Default for MusicVideoInfoRemoteSearchQuery {
-    fn default() -> Self {
-        Self {
-            include_disabled_providers: Default::default(),
-            item_id: Default::default(),
-            search_info: Default::default(),
-            search_provider_name: Default::default(),
-        }
-    }
-}
-
 #[doc = "`PersonLookupInfo`"]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct PersonLookupInfo {
     #[serde(
         rename = "IndexNumber",
@@ -830,26 +650,8 @@ pub struct PersonLookupInfo {
     pub year: Option<i32>,
 }
 
-impl Default for PersonLookupInfo {
-    fn default() -> Self {
-        Self {
-            index_number: Default::default(),
-            is_automated: Default::default(),
-            metadata_country_code: Default::default(),
-            metadata_language: Default::default(),
-            name: Default::default(),
-            original_title: Default::default(),
-            parent_index_number: Default::default(),
-            path: Default::default(),
-            premiere_date: Default::default(),
-            provider_ids: Default::default(),
-            year: Default::default(),
-        }
-    }
-}
-
 #[doc = "`PersonLookupInfoRemoteSearchQuery`"]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct PersonLookupInfoRemoteSearchQuery {
     #[doc = "Gets or sets a value indicating whether disabled providers should be included."]
     #[serde(
@@ -875,19 +677,8 @@ pub struct PersonLookupInfoRemoteSearchQuery {
     pub search_provider_name: Option<String>,
 }
 
-impl Default for PersonLookupInfoRemoteSearchQuery {
-    fn default() -> Self {
-        Self {
-            include_disabled_providers: Default::default(),
-            item_id: Default::default(),
-            search_info: Default::default(),
-            search_provider_name: Default::default(),
-        }
-    }
-}
-
 #[doc = "`RemoteSearchResult`"]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct RemoteSearchResult {
     #[serde(
         rename = "AlbumArtist",
@@ -950,27 +741,8 @@ pub struct RemoteSearchResult {
     pub search_provider_name: Option<String>,
 }
 
-impl Default for RemoteSearchResult {
-    fn default() -> Self {
-        Self {
-            album_artist: Default::default(),
-            artists: Default::default(),
-            image_url: Default::default(),
-            index_number: Default::default(),
-            index_number_end: Default::default(),
-            name: Default::default(),
-            overview: Default::default(),
-            parent_index_number: Default::default(),
-            premiere_date: Default::default(),
-            production_year: Default::default(),
-            provider_ids: Default::default(),
-            search_provider_name: Default::default(),
-        }
-    }
-}
-
 #[doc = "Class SearchHintResult."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct SearchHint {
     #[doc = "Gets or sets the album."]
     #[serde(rename = "Album", default, skip_serializing_if = "Option::is_none")]
@@ -1115,44 +887,8 @@ pub struct SearchHint {
     pub type_: Option<BaseItemKind>,
 }
 
-impl Default for SearchHint {
-    fn default() -> Self {
-        Self {
-            album: Default::default(),
-            album_artist: Default::default(),
-            album_id: Default::default(),
-            artists: Default::default(),
-            backdrop_image_item_id: Default::default(),
-            backdrop_image_tag: Default::default(),
-            channel_id: Default::default(),
-            channel_name: Default::default(),
-            end_date: Default::default(),
-            episode_count: Default::default(),
-            id: Default::default(),
-            index_number: Default::default(),
-            is_folder: Default::default(),
-            item_id: Default::default(),
-            matched_term: Default::default(),
-            media_type: Default::default(),
-            name: Default::default(),
-            parent_index_number: Default::default(),
-            primary_image_aspect_ratio: Default::default(),
-            primary_image_tag: Default::default(),
-            production_year: Default::default(),
-            run_time_ticks: Default::default(),
-            series: Default::default(),
-            song_count: Default::default(),
-            start_date: Default::default(),
-            status: Default::default(),
-            thumb_image_item_id: Default::default(),
-            thumb_image_tag: Default::default(),
-            type_: Default::default(),
-        }
-    }
-}
-
 #[doc = "Class SearchHintResult."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct SearchHintResult {
     #[doc = "Gets the search hints."]
     #[serde(rename = "SearchHints", default, skip_serializing_if = "Vec::is_empty")]
@@ -1166,17 +902,8 @@ pub struct SearchHintResult {
     pub total_record_count: Option<i32>,
 }
 
-impl Default for SearchHintResult {
-    fn default() -> Self {
-        Self {
-            search_hints: Default::default(),
-            total_record_count: Default::default(),
-        }
-    }
-}
-
 #[doc = "`SeriesInfo`"]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct SeriesInfo {
     #[serde(
         rename = "IndexNumber",
@@ -1241,26 +968,8 @@ pub struct SeriesInfo {
     pub year: Option<i32>,
 }
 
-impl Default for SeriesInfo {
-    fn default() -> Self {
-        Self {
-            index_number: Default::default(),
-            is_automated: Default::default(),
-            metadata_country_code: Default::default(),
-            metadata_language: Default::default(),
-            name: Default::default(),
-            original_title: Default::default(),
-            parent_index_number: Default::default(),
-            path: Default::default(),
-            premiere_date: Default::default(),
-            provider_ids: Default::default(),
-            year: Default::default(),
-        }
-    }
-}
-
 #[doc = "`SeriesInfoRemoteSearchQuery`"]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct SeriesInfoRemoteSearchQuery {
     #[doc = "Gets or sets a value indicating whether disabled providers should be included."]
     #[serde(
@@ -1286,19 +995,8 @@ pub struct SeriesInfoRemoteSearchQuery {
     pub search_provider_name: Option<String>,
 }
 
-impl Default for SeriesInfoRemoteSearchQuery {
-    fn default() -> Self {
-        Self {
-            include_disabled_providers: Default::default(),
-            item_id: Default::default(),
-            search_info: Default::default(),
-            search_provider_name: Default::default(),
-        }
-    }
-}
-
 #[doc = "`SongInfo`"]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct SongInfo {
     #[serde(rename = "Album", default, skip_serializing_if = "Option::is_none")]
     pub album: Option<String>,
@@ -1373,29 +1071,8 @@ pub struct SongInfo {
     pub year: Option<i32>,
 }
 
-impl Default for SongInfo {
-    fn default() -> Self {
-        Self {
-            album: Default::default(),
-            album_artists: Default::default(),
-            artists: Default::default(),
-            index_number: Default::default(),
-            is_automated: Default::default(),
-            metadata_country_code: Default::default(),
-            metadata_language: Default::default(),
-            name: Default::default(),
-            original_title: Default::default(),
-            parent_index_number: Default::default(),
-            path: Default::default(),
-            premiere_date: Default::default(),
-            provider_ids: Default::default(),
-            year: Default::default(),
-        }
-    }
-}
-
 #[doc = "`TrailerInfo`"]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct TrailerInfo {
     #[serde(
         rename = "IndexNumber",
@@ -1460,26 +1137,8 @@ pub struct TrailerInfo {
     pub year: Option<i32>,
 }
 
-impl Default for TrailerInfo {
-    fn default() -> Self {
-        Self {
-            index_number: Default::default(),
-            is_automated: Default::default(),
-            metadata_country_code: Default::default(),
-            metadata_language: Default::default(),
-            name: Default::default(),
-            original_title: Default::default(),
-            parent_index_number: Default::default(),
-            path: Default::default(),
-            premiere_date: Default::default(),
-            provider_ids: Default::default(),
-            year: Default::default(),
-        }
-    }
-}
-
 #[doc = "`TrailerInfoRemoteSearchQuery`"]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct TrailerInfoRemoteSearchQuery {
     #[doc = "Gets or sets a value indicating whether disabled providers should be included."]
     #[serde(
@@ -1503,15 +1162,4 @@ pub struct TrailerInfoRemoteSearchQuery {
         skip_serializing_if = "Option::is_none"
     )]
     pub search_provider_name: Option<String>,
-}
-
-impl Default for TrailerInfoRemoteSearchQuery {
-    fn default() -> Self {
-        Self {
-            include_disabled_providers: Default::default(),
-            item_id: Default::default(),
-            search_info: Default::default(),
-            search_provider_name: Default::default(),
-        }
-    }
 }

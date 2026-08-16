@@ -1,5 +1,6 @@
 use crate::Client;
 use crate::error::Error;
+use crate::query;
 use crate::types;
 use crate::util::encode_path;
 
@@ -112,25 +113,21 @@ impl Client {
     pub async fn play(
         &self,
         session_id: &str,
-        audio_stream_index: Option<i32>,
         item_ids: &[uuid::Uuid],
-        media_source_id: Option<&str>,
         play_command: types::PlayCommand,
-        start_index: Option<i32>,
-        start_position_ticks: Option<i64>,
-        subtitle_stream_index: Option<i32>,
+        query: &query::Play<'_>,
     ) -> Result<(), Error> {
         self.request(
             reqwest::Method::POST,
             format!("/Sessions/{}/Playing", encode_path(session_id)),
         )
-        .query_opt("audioStreamIndex", audio_stream_index)
+        .query_opt("audioStreamIndex", query.audio_stream_index)
         .query_list("itemIds", item_ids)
-        .query_opt("mediaSourceId", media_source_id)
+        .query_opt("mediaSourceId", query.media_source_id)
         .query("playCommand", play_command)
-        .query_opt("startIndex", start_index)
-        .query_opt("startPositionTicks", start_position_ticks)
-        .query_opt("subtitleStreamIndex", subtitle_stream_index)
+        .query_opt("startIndex", query.start_index)
+        .query_opt("startPositionTicks", query.start_position_ticks)
+        .query_opt("subtitleStreamIndex", query.subtitle_stream_index)
         .send_no_content()
         .await
     }

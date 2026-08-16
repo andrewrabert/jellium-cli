@@ -56,7 +56,7 @@ impl TryFrom<String> for TaskCompletionStatus {
 }
 
 #[doc = "Class TaskInfo."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct TaskInfo {
     #[doc = "Gets or sets the category."]
     #[serde(rename = "Category", default, skip_serializing_if = "Option::is_none")]
@@ -101,25 +101,8 @@ pub struct TaskInfo {
     pub triggers: Option<Vec<TaskTriggerInfo>>,
 }
 
-impl Default for TaskInfo {
-    fn default() -> Self {
-        Self {
-            category: Default::default(),
-            current_progress_percentage: Default::default(),
-            description: Default::default(),
-            id: Default::default(),
-            is_hidden: Default::default(),
-            key: Default::default(),
-            last_execution_result: Default::default(),
-            name: Default::default(),
-            state: Default::default(),
-            triggers: Default::default(),
-        }
-    }
-}
-
 #[doc = "Class TaskExecutionInfo."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct TaskResult {
     #[doc = "Gets or sets the end time UTC."]
     #[serde(
@@ -160,21 +143,6 @@ pub struct TaskResult {
     pub start_time_utc: Option<chrono::DateTime<chrono::Utc>>,
     #[serde(rename = "Status", default, skip_serializing_if = "Option::is_none")]
     pub status: Option<TaskCompletionStatus>,
-}
-
-impl Default for TaskResult {
-    fn default() -> Self {
-        Self {
-            end_time_utc: Default::default(),
-            error_message: Default::default(),
-            id: Default::default(),
-            key: Default::default(),
-            long_error_message: Default::default(),
-            name: Default::default(),
-            start_time_utc: Default::default(),
-            status: Default::default(),
-        }
-    }
 }
 
 #[derive(
@@ -230,7 +198,7 @@ impl TryFrom<String> for TaskState {
 }
 
 #[doc = "Class TaskTriggerInfo."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct TaskTriggerInfo {
     #[doc = "Gets or sets the day of week."]
     #[serde(rename = "DayOfWeek", default, skip_serializing_if = "Option::is_none")]
@@ -258,18 +226,6 @@ pub struct TaskTriggerInfo {
     pub time_of_day_ticks: Option<i64>,
     #[serde(rename = "Type", default, skip_serializing_if = "Option::is_none")]
     pub type_: Option<TaskTriggerInfoType>,
-}
-
-impl Default for TaskTriggerInfo {
-    fn default() -> Self {
-        Self {
-            day_of_week: Default::default(),
-            interval_ticks: Default::default(),
-            max_runtime_ticks: Default::default(),
-            time_of_day_ticks: Default::default(),
-            type_: Default::default(),
-        }
-    }
 }
 
 #[derive(

@@ -33,12 +33,8 @@ pub async fn start(request: PlayRequest) -> Answer<Planned> {
 
         let status = response.status();
         let body = response.text().await?;
-        #[expect(
-            clippy::disallowed_methods,
-            reason = "a body that is not a playback refusal is how a plan answer is classified"
-        )]
-        let read = serde_json::from_str::<PlaybackRefused>(&body);
-        if let Ok(refused) = read {
+        if let Ok(Answered::Refused(refused)) = crate::failure::unraised::decoded::<Answered>(&body)
+        {
             return Ok(Planned::Refused(refused));
         }
         Err(error::classify_body(status, &body).into())
@@ -74,4 +70,12 @@ pub async fn stopped(stopped: Stopped) -> Answer<()> {
         Ok(())
     })
     .await
+}
+
+/// What `/playback/plan` answered.
+#[derive(Debug, serde::Deserialize)]
+#[serde(untagged)]
+enum Answered {
+    Refused(PlaybackRefused),
+    Other(serde::de::IgnoredAny),
 }

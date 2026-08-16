@@ -1,7 +1,7 @@
 use super::*;
 
 #[doc = "Add virtual folder dto."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct AddVirtualFolderDto {
     #[doc = "Gets or sets library options."]
     #[serde(
@@ -10,14 +10,6 @@ pub struct AddVirtualFolderDto {
         skip_serializing_if = "Option::is_none"
     )]
     pub library_options: Option<LibraryOptions>,
-}
-
-impl Default for AddVirtualFolderDto {
-    fn default() -> Self {
-        Self {
-            library_options: Default::default(),
-        }
-    }
 }
 
 #[derive(
@@ -191,7 +183,7 @@ impl TryFrom<String> for CollectionTypeOptions {
 }
 
 #[doc = "`ConfigImageTypes`"]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct ConfigImageTypes {
     #[serde(
         rename = "BackdropSizes",
@@ -229,22 +221,8 @@ pub struct ConfigImageTypes {
     pub still_sizes: Option<Vec<String>>,
 }
 
-impl Default for ConfigImageTypes {
-    fn default() -> Self {
-        Self {
-            backdrop_sizes: Default::default(),
-            base_url: Default::default(),
-            logo_sizes: Default::default(),
-            poster_sizes: Default::default(),
-            profile_sizes: Default::default(),
-            secure_base_url: Default::default(),
-            still_sizes: Default::default(),
-        }
-    }
-}
-
 #[doc = "Contains information about a specific folder."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct FolderStorageDto {
     #[doc = "Gets the Device Identifier."]
     #[serde(rename = "DeviceId", default, skip_serializing_if = "Option::is_none")]
@@ -267,20 +245,8 @@ pub struct FolderStorageDto {
     pub used_space: Option<i64>,
 }
 
-impl Default for FolderStorageDto {
-    fn default() -> Self {
-        Self {
-            device_id: Default::default(),
-            free_space: Default::default(),
-            path: Default::default(),
-            storage_type: Default::default(),
-            used_space: Default::default(),
-        }
-    }
-}
-
 #[doc = "Library changed message."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct LibraryChangedMessage {
     #[doc = "Class LibraryUpdateInfo."]
     #[serde(rename = "Data", default, skip_serializing_if = "Option::is_none")]
@@ -296,18 +262,8 @@ pub struct LibraryChangedMessage {
     pub message_type: Option<SessionMessageType>,
 }
 
-impl Default for LibraryChangedMessage {
-    fn default() -> Self {
-        Self {
-            data: Default::default(),
-            message_id: Default::default(),
-            message_type: Default::default(),
-        }
-    }
-}
-
 #[doc = "Library option info dto."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct LibraryOptionInfoDto {
     #[doc = "Gets or sets a value indicating whether default enabled."]
     #[serde(
@@ -321,17 +277,8 @@ pub struct LibraryOptionInfoDto {
     pub name: Option<String>,
 }
 
-impl Default for LibraryOptionInfoDto {
-    fn default() -> Self {
-        Self {
-            default_enabled: Default::default(),
-            name: Default::default(),
-        }
-    }
-}
-
 #[doc = "`LibraryOptions`"]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct LibraryOptions {
     #[serde(
         rename = "AllowEmbeddedSubtitles",
@@ -561,57 +508,8 @@ pub struct LibraryOptions {
     pub use_custom_tag_delimiters: bool,
 }
 
-impl Default for LibraryOptions {
-    fn default() -> Self {
-        Self {
-            allow_embedded_subtitles: Default::default(),
-            automatic_refresh_interval_days: Default::default(),
-            automatically_add_to_collection: Default::default(),
-            custom_tag_delimiters: Default::default(),
-            delimiter_whitelist: Default::default(),
-            disabled_local_metadata_readers: Default::default(),
-            disabled_lyric_fetchers: Default::default(),
-            disabled_media_segment_providers: Default::default(),
-            disabled_subtitle_fetchers: Default::default(),
-            enable_automatic_series_grouping: Default::default(),
-            enable_chapter_image_extraction: Default::default(),
-            enable_embedded_episode_infos: Default::default(),
-            enable_embedded_extras_titles: Default::default(),
-            enable_embedded_titles: Default::default(),
-            enable_internet_providers: Default::default(),
-            enable_lufs_scan: Default::default(),
-            enable_photos: Default::default(),
-            enable_realtime_monitor: Default::default(),
-            enable_trickplay_image_extraction: Default::default(),
-            enabled: Default::default(),
-            extract_chapter_images_during_library_scan: Default::default(),
-            extract_trickplay_images_during_library_scan: Default::default(),
-            local_metadata_reader_order: Default::default(),
-            lyric_fetcher_order: Default::default(),
-            media_segment_provider_order: Default::default(),
-            metadata_country_code: Default::default(),
-            metadata_savers: Default::default(),
-            path_infos: Default::default(),
-            prefer_nonstandard_artists_tag: Default::default(),
-            preferred_metadata_language: Default::default(),
-            require_perfect_subtitle_match: Default::default(),
-            save_local_metadata: Default::default(),
-            save_lyrics_with_media: Default::default(),
-            save_subtitles_with_media: Default::default(),
-            save_trickplay_with_media: Default::default(),
-            season_zero_display_name: Default::default(),
-            skip_subtitles_if_audio_track_matches: Default::default(),
-            skip_subtitles_if_embedded_subtitles_present: Default::default(),
-            subtitle_download_languages: Default::default(),
-            subtitle_fetcher_order: Default::default(),
-            type_options: Default::default(),
-            use_custom_tag_delimiters: Default::default(),
-        }
-    }
-}
-
 #[doc = "Library options result dto."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct LibraryOptionsResultDto {
     #[doc = "Gets or sets the list of lyric fetchers."]
     #[serde(
@@ -653,21 +551,8 @@ pub struct LibraryOptionsResultDto {
     pub type_options: Vec<LibraryTypeOptionsDto>,
 }
 
-impl Default for LibraryOptionsResultDto {
-    fn default() -> Self {
-        Self {
-            lyric_fetchers: Default::default(),
-            media_segment_providers: Default::default(),
-            metadata_readers: Default::default(),
-            metadata_savers: Default::default(),
-            subtitle_fetchers: Default::default(),
-            type_options: Default::default(),
-        }
-    }
-}
-
 #[doc = "Contains informations about a libraries storage informations."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct LibraryStorageDto {
     #[doc = "Gets or sets the storage informations about the folders used in a library."]
     #[serde(rename = "Folders", default, skip_serializing_if = "Vec::is_empty")]
@@ -680,18 +565,8 @@ pub struct LibraryStorageDto {
     pub name: Option<String>,
 }
 
-impl Default for LibraryStorageDto {
-    fn default() -> Self {
-        Self {
-            folders: Default::default(),
-            id: Default::default(),
-            name: Default::default(),
-        }
-    }
-}
-
 #[doc = "Library type options dto."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct LibraryTypeOptionsDto {
     #[doc = "Gets or sets the default image options."]
     #[serde(
@@ -726,20 +601,8 @@ pub struct LibraryTypeOptionsDto {
     pub type_: Option<String>,
 }
 
-impl Default for LibraryTypeOptionsDto {
-    fn default() -> Self {
-        Self {
-            default_image_options: Default::default(),
-            image_fetchers: Default::default(),
-            metadata_fetchers: Default::default(),
-            supported_image_types: Default::default(),
-            type_: Default::default(),
-        }
-    }
-}
-
 #[doc = "Class LibraryUpdateInfo."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct LibraryUpdateInfo {
     #[serde(
         rename = "CollectionFolders",
@@ -782,20 +645,6 @@ pub struct LibraryUpdateInfo {
     pub items_updated: Vec<String>,
 }
 
-impl Default for LibraryUpdateInfo {
-    fn default() -> Self {
-        Self {
-            collection_folders: Default::default(),
-            folders_added_to: Default::default(),
-            folders_removed_from: Default::default(),
-            is_empty: Default::default(),
-            items_added: Default::default(),
-            items_removed: Default::default(),
-            items_updated: Default::default(),
-        }
-    }
-}
-
 #[doc = "Media Path dto."]
 #[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
 pub struct MediaPathDto {
@@ -811,38 +660,22 @@ pub struct MediaPathDto {
 }
 
 #[doc = "`MediaPathInfo`"]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct MediaPathInfo {
     #[serde(rename = "Path", default, skip_serializing_if = "Option::is_none")]
     pub path: Option<String>,
 }
 
-impl Default for MediaPathInfo {
-    fn default() -> Self {
-        Self {
-            path: Default::default(),
-        }
-    }
-}
-
 #[doc = "Media Update Info Dto."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct MediaUpdateInfoDto {
     #[doc = "Gets or sets the list of updates."]
     #[serde(rename = "Updates", default, skip_serializing_if = "Vec::is_empty")]
     pub updates: Vec<MediaUpdateInfoPathDto>,
 }
 
-impl Default for MediaUpdateInfoDto {
-    fn default() -> Self {
-        Self {
-            updates: Default::default(),
-        }
-    }
-}
-
 #[doc = "The media update info path."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct MediaUpdateInfoPathDto {
     #[doc = "Gets or sets media path."]
     #[serde(rename = "Path", default, skip_serializing_if = "Option::is_none")]
@@ -856,17 +689,8 @@ pub struct MediaUpdateInfoPathDto {
     pub update_type: Option<String>,
 }
 
-impl Default for MediaUpdateInfoPathDto {
-    fn default() -> Self {
-        Self {
-            path: Default::default(),
-            update_type: Default::default(),
-        }
-    }
-}
-
 #[doc = "`TypeOptions`"]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct TypeOptions {
     #[serde(
         rename = "ImageFetcherOrder",
@@ -902,21 +726,8 @@ pub struct TypeOptions {
     pub type_: Option<String>,
 }
 
-impl Default for TypeOptions {
-    fn default() -> Self {
-        Self {
-            image_fetcher_order: Default::default(),
-            image_fetchers: Default::default(),
-            image_options: Default::default(),
-            metadata_fetcher_order: Default::default(),
-            metadata_fetchers: Default::default(),
-            type_: Default::default(),
-        }
-    }
-}
-
 #[doc = "Update library options dto."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct UpdateLibraryOptionsDto {
     #[doc = "Gets or sets the library item id."]
     #[serde(rename = "Id", default, skip_serializing_if = "Option::is_none")]
@@ -928,15 +739,6 @@ pub struct UpdateLibraryOptionsDto {
         skip_serializing_if = "Option::is_none"
     )]
     pub library_options: Option<LibraryOptions>,
-}
-
-impl Default for UpdateLibraryOptionsDto {
-    fn default() -> Self {
-        Self {
-            id: Default::default(),
-            library_options: Default::default(),
-        }
-    }
 }
 
 #[doc = "Update library options dto."]
@@ -951,7 +753,7 @@ pub struct UpdateMediaPathRequestDto {
 }
 
 #[doc = "Used to hold information about a user's list of configured virtual folders."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct VirtualFolderInfo {
     #[doc = "Gets or sets the type of the collection."]
     #[serde(
@@ -994,19 +796,4 @@ pub struct VirtualFolderInfo {
         skip_serializing_if = "Option::is_none"
     )]
     pub refresh_status: Option<String>,
-}
-
-impl Default for VirtualFolderInfo {
-    fn default() -> Self {
-        Self {
-            collection_type: Default::default(),
-            item_id: Default::default(),
-            library_options: Default::default(),
-            locations: Default::default(),
-            name: Default::default(),
-            primary_image_item_id: Default::default(),
-            refresh_progress: Default::default(),
-            refresh_status: Default::default(),
-        }
-    }
 }

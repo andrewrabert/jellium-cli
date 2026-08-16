@@ -21,10 +21,11 @@ pub mod osd;
 pub mod queue;
 pub mod remote;
 pub mod scrub;
+mod seconds;
 pub mod trickplay;
 
 pub use control::Planned;
-pub use element::{Element, Event, Fault, Generation, Kind, Metadata, Raised, TextTrack};
+pub use element::{Asked, Element, Event, Fault, Generation, Kind, Metadata, Raised, TextTrack};
 pub use queue::Queue;
 
 pub mod live;
@@ -44,6 +45,14 @@ pub(crate) const VOLUME_STEP: f32 = 0.05;
 
 pub fn to_ticks(position: Duration) -> i64 {
     (position.as_secs_f64() * TICKS_PER_SECOND as f64).round() as i64
+}
+
+/// The ask that arms the page-hide beacon reporting `stopped`.
+fn beacon(stopped: &Stopped) -> Asked<'_> {
+    Asked::Beacon {
+        path: control::endpoint(jellium_protocol::PLAYBACK_STOPPED_PATH),
+        stopped,
+    }
 }
 
 pub fn span(ticks: i64) -> Duration {
@@ -220,6 +229,15 @@ impl Playing {
 
     fn hidden(&self) -> bool {
         !self.paused && self.menu.is_none() && self.idle >= theme::IDLE_HIDE
+    }
+
+    /// The ask that matches whether the pointer is hidden over the canvas.
+    fn idling(&self) -> Asked<'static> {
+        if self.hidden() {
+            Asked::Idle
+        } else {
+            Asked::Awake
+        }
     }
 
     fn text_tracks(&self) -> Vec<TextTrack> {
@@ -455,9 +473,13 @@ pub fn begin(signed: &mut Signed, start: Start) -> Task<Message> {
     let Some(element) = Element::mount(start.kind) else {
         return leaving;
     };
-    element.set_volume(signed.device.volume);
-    element.set_cue_style(&signed.held.cues());
-    element.set_muted(signed.device.muted);
+    element.ask(&Asked::Volume {
+        volume: signed.device.volume,
+    });
+    element.ask(&Asked::CueStyle {
+        cues: &signed.held.cues(),
+    });
+    element.ask(&muting(signed.device));
 
     signed.pending = Some(Pending {
         element,
@@ -470,6 +492,15 @@ pub fn begin(signed: &mut Signed, start: Start) -> Task<Message> {
         leaving,
         Task::perform(control::start(request), Message::Planned),
     ])
+}
+
+/// The ask that matches the mute state `device` holds.
+fn muting(device: crate::prefs::Device) -> Asked<'static> {
+    if device.muted {
+        Asked::Muted
+    } else {
+        Asked::Unmuted
+    }
 }
 
 /// Asks for a plan for `item` reusing the element and queue already mounted.
@@ -507,12 +538,7 @@ pub fn installed(signed: &mut Signed, plan: Plan) -> Task<Message> {
         return Task::none();
     };
 
-    let (path, hls) = match &plan.delivery {
-        jellium_protocol::Delivery::Progressive { path } => (path.clone(), false),
-        jellium_protocol::Delivery::Hls { path } => (path.clone(), true),
-    };
-
-    let generation = element.load(&path, hls, span(plan.start_ticks));
+    let generation = element.load(&plan.delivery, span(plan.start_ticks));
 
     let playing = Playing {
         live: live.map(|mut live| {
@@ -540,14 +566,21 @@ pub fn installed(signed: &mut Signed, plan: Plan) -> Task<Message> {
         queue,
     };
 
-    playing.element.set_volume(signed.device.volume);
-    playing.element.set_muted(signed.device.muted);
-    playing
-        .element
-        .set_text_tracks(&playing.text_tracks(), playing.selected_track());
-    playing.element.set_cue_style(&signed.held.cues());
-    playing.element.set_metadata(&playing.metadata());
-    playing.element.set_beacon(&playing.stopped());
+    playing.element.ask(&Asked::Volume {
+        volume: signed.device.volume,
+    });
+    playing.element.ask(&muting(signed.device));
+    playing.element.ask(&Asked::TextTracks {
+        tracks: &playing.text_tracks(),
+        selected: playing.selected_track(),
+    });
+    playing.element.ask(&Asked::CueStyle {
+        cues: &signed.held.cues(),
+    });
+    playing.element.ask(&Asked::Metadata {
+        metadata: &playing.metadata(),
+    });
+    playing.element.ask(&beacon(&playing.stopped()));
 
     let progress = playing.progress(signed.device);
     signed.playing = Some(playing);
@@ -604,7 +637,11 @@ pub fn planned(answered: crate::error::Answer<control::Planned>) -> Outcome {
 pub fn unplanned(signed: &mut Signed) -> Task<Message> {
     signed.pending = None;
     signed.playing = None;
-    if signed.group.as_ref().is_some_and(|joined| joined.member) {
+    if signed
+        .group
+        .as_ref()
+        .is_some_and(|joined| joined.membership == group::Membership::Holding)
+    {
         return crate::player::group::unplayable(signed);
     }
     Task::none()
@@ -666,7 +703,7 @@ pub fn event(signed: &mut Signed, raised: Raised) -> Task<Message> {
             playing.buffered = buffered;
             playing.paused = paused;
             let stopped = playing.stopped();
-            playing.element.set_beacon(&stopped);
+            playing.element.ask(&beacon(&stopped));
             Task::none()
         }
         Event::ReportDue { position } => {
@@ -684,7 +721,7 @@ pub fn event(signed: &mut Signed, raised: Raised) -> Task<Message> {
             if episode && !following && signed.group.is_none() {
                 playing.ended = true;
                 playing.paused = true;
-                playing.element.pause();
+                playing.element.ask(&Asked::Pause);
                 let stopped = playing.stopped();
                 return Task::perform(
                     async move { control::stopped(stopped).await.map(|()| Standing::Current) },
@@ -709,13 +746,13 @@ pub fn event(signed: &mut Signed, raised: Raised) -> Task<Message> {
                 None => leave(signed),
             }
         }
-        Event::Failed(fault) => failed(signed, fault),
-        Event::Command(command) => {
+        Event::Failed { fault } => failed(signed, fault),
+        Event::Command { command } => {
             let action = match command {
                 element::Command::Play | element::Command::Pause => Action::TogglePlay,
                 element::Command::Previous => Action::Previous,
                 element::Command::Next => Action::Next,
-                element::Command::SeekTo(position) => Action::Seek(position),
+                element::Command::SeekTo { position } => Action::Seek(position),
             };
             act(signed, action)
         }
@@ -746,7 +783,7 @@ fn failed(signed: &mut Signed, fault: Fault) -> Task<Message> {
             if let Some(live) = playing.live.as_mut() {
                 live.resumed = true;
             }
-            playing.element.seek_to_live();
+            playing.element.ask(&Asked::SeekToLive);
             play_current(signed, 0)
         }
         Fault::Network if !playing.resumed => {
@@ -813,16 +850,16 @@ pub fn act(signed: &mut Signed, action: Action) -> Task<Message> {
         Action::Record => live::record(signed),
         Action::TogglePlay => {
             if playing.paused {
-                playing.element.play();
+                playing.element.ask(&Asked::Play);
             } else {
-                playing.element.pause();
+                playing.element.ask(&Asked::Pause);
             }
             playing.paused = !playing.paused;
             let progress = playing.progress(signed.device);
             Task::perform(control::progress(progress), Message::Reported)
         }
         Action::Seek(position) => {
-            playing.element.seek(position);
+            playing.element.ask(&Asked::Seek { position });
             playing.position = position;
             let progress = playing.progress(signed.device);
             Task::perform(control::progress(progress), Message::Reported)
@@ -848,13 +885,15 @@ pub fn act(signed: &mut Signed, action: Action) -> Task<Message> {
         Action::SetVolume(volume) => {
             signed.device.volume = volume.clamp(0.0, 1.0);
             signed.device.store();
-            playing.element.set_volume(signed.device.volume);
+            playing.element.ask(&Asked::Volume {
+                volume: signed.device.volume,
+            });
             Task::none()
         }
         Action::ToggleMute => {
             signed.device.muted = !signed.device.muted;
             signed.device.store();
-            playing.element.set_muted(signed.device.muted);
+            playing.element.ask(&muting(signed.device));
             Task::none()
         }
         Action::SelectAudio(index) => {
@@ -977,7 +1016,11 @@ pub fn act(signed: &mut Signed, action: Action) -> Task<Message> {
         }
         Action::ToggleFullscreen => {
             playing.fullscreen = !playing.fullscreen;
-            playing.element.set_fullscreen(playing.fullscreen);
+            playing.element.ask(if playing.fullscreen {
+                &Asked::Fullscreen
+            } else {
+                &Asked::Windowed
+            });
             Task::none()
         }
         Action::Leave => leave(signed),
@@ -987,9 +1030,7 @@ pub fn act(signed: &mut Signed, action: Action) -> Task<Message> {
             } else {
                 crate::theme::IDLE_HIDE
             };
-            playing
-                .element
-                .set_idle(playing.idle >= crate::theme::IDLE_HIDE);
+            playing.element.ask(&playing.idling());
             Task::none()
         }
     }
@@ -1125,7 +1166,7 @@ pub fn leave(signed: &mut Signed) -> Task<Message> {
     };
     let stopped = playing.stopped();
     if playing.fullscreen {
-        playing.element.set_fullscreen(false);
+        playing.element.ask(&Asked::Windowed);
     }
     drop(playing);
 
@@ -1231,7 +1272,7 @@ pub fn tick(signed: &mut Signed) -> bool {
     } else {
         playing.idle += theme::TICK;
     }
-    playing.element.set_idle(playing.hidden());
+    playing.element.ask(&playing.idling());
     settled
 }
 

@@ -459,10 +459,7 @@ pub fn chrome<'a>(
             ));
         }
     }
-    nav = nav.push(
-        button(text(strings::lookup(Text::NavSwitch)))
-            .on_press(Message::EndingRequested(crate::app::Ending::Switch)),
-    );
+    nav = nav.push(button(text(strings::lookup(Text::NavSwitch))).on_press(Message::SwitchPressed));
     if !session.read_only {
         nav = nav
             .push(button(text(strings::lookup(Text::NavLogout))).on_press(Message::LogoutPressed));

@@ -246,7 +246,7 @@ impl TryFrom<String> for EncodingContext {
 }
 
 #[doc = "Class EncodingOptions."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct EncodingOptions {
     #[doc = "Gets or sets a value indicating whether AV1 encoding is enabled."]
     #[serde(
@@ -553,60 +553,6 @@ pub struct EncodingOptions {
         skip_serializing_if = "Option::is_none"
     )]
     pub vpp_tonemapping_contrast: Option<f64>,
-}
-
-impl Default for EncodingOptions {
-    fn default() -> Self {
-        Self {
-            allow_av1_encoding: Default::default(),
-            allow_hevc_encoding: Default::default(),
-            allow_on_demand_metadata_based_keyframe_extraction_for_extensions: Default::default(),
-            deinterlace_double_rate: Default::default(),
-            deinterlace_method: Default::default(),
-            down_mix_audio_boost: Default::default(),
-            down_mix_stereo_algorithm: Default::default(),
-            enable_audio_vbr: Default::default(),
-            enable_decoding_color_depth10_hevc: Default::default(),
-            enable_decoding_color_depth10_hevc_rext: Default::default(),
-            enable_decoding_color_depth10_vp9: Default::default(),
-            enable_decoding_color_depth12_hevc_rext: Default::default(),
-            enable_enhanced_nvdec_decoder: Default::default(),
-            enable_fallback_font: Default::default(),
-            enable_hardware_encoding: Default::default(),
-            enable_intel_low_power_h264_hw_encoder: Default::default(),
-            enable_intel_low_power_hevc_hw_encoder: Default::default(),
-            enable_segment_deletion: Default::default(),
-            enable_subtitle_extraction: Default::default(),
-            enable_throttling: Default::default(),
-            enable_tonemapping: Default::default(),
-            enable_video_toolbox_tonemapping: Default::default(),
-            enable_vpp_tonemapping: Default::default(),
-            encoder_app_path: Default::default(),
-            encoder_app_path_display: Default::default(),
-            encoder_preset: Default::default(),
-            encoding_thread_count: Default::default(),
-            fallback_font_path: Default::default(),
-            h264_crf: Default::default(),
-            h265_crf: Default::default(),
-            hardware_acceleration_type: Default::default(),
-            hardware_decoding_codecs: Default::default(),
-            max_muxing_queue_size: Default::default(),
-            prefer_system_native_hw_decoder: Default::default(),
-            qsv_device: Default::default(),
-            segment_keep_seconds: Default::default(),
-            throttle_delay_seconds: Default::default(),
-            tonemapping_algorithm: Default::default(),
-            tonemapping_desat: Default::default(),
-            tonemapping_mode: Default::default(),
-            tonemapping_param: Default::default(),
-            tonemapping_peak: Default::default(),
-            tonemapping_range: Default::default(),
-            transcoding_temp_path: Default::default(),
-            vaapi_device: Default::default(),
-            vpp_tonemapping_brightness: Default::default(),
-            vpp_tonemapping_contrast: Default::default(),
-        }
-    }
 }
 
 #[derive(

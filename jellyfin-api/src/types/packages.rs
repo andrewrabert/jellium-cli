@@ -1,16 +1,10 @@
 use super::*;
 
 #[doc = "Class BasePluginConfiguration."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct BasePluginConfiguration {}
-impl Default for BasePluginConfiguration {
-    fn default() -> Self {
-        Self {}
-    }
-}
-
 #[doc = "Defines the MediaBrowser.Common.Plugins.IPlugin."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct IPlugin {
     #[doc = "Gets the path to the assembly file."]
     #[serde(
@@ -51,22 +45,8 @@ pub struct IPlugin {
     pub version: Option<String>,
 }
 
-impl Default for IPlugin {
-    fn default() -> Self {
-        Self {
-            assembly_file_path: Default::default(),
-            can_uninstall: Default::default(),
-            data_folder_path: Default::default(),
-            description: Default::default(),
-            id: Default::default(),
-            name: Default::default(),
-            version: Default::default(),
-        }
-    }
-}
-
 #[doc = "Class InstallationInfo."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct InstallationInfo {
     #[doc = "Gets or sets the changelog for this version."]
     #[serde(rename = "Changelog", default, skip_serializing_if = "Option::is_none")]
@@ -95,22 +75,8 @@ pub struct InstallationInfo {
     pub version: Option<String>,
 }
 
-impl Default for InstallationInfo {
-    fn default() -> Self {
-        Self {
-            changelog: Default::default(),
-            checksum: Default::default(),
-            guid: Default::default(),
-            name: Default::default(),
-            package_info: Default::default(),
-            source_url: Default::default(),
-            version: Default::default(),
-        }
-    }
-}
-
 #[doc = "Class PackageInfo."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct PackageInfo {
     #[doc = "Gets or sets the category."]
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -138,23 +104,8 @@ pub struct PackageInfo {
     pub versions: Vec<VersionInfo>,
 }
 
-impl Default for PackageInfo {
-    fn default() -> Self {
-        Self {
-            category: Default::default(),
-            description: Default::default(),
-            guid: Default::default(),
-            image_url: Default::default(),
-            name: Default::default(),
-            overview: Default::default(),
-            owner: Default::default(),
-            versions: Default::default(),
-        }
-    }
-}
-
 #[doc = "This is a serializable stub class that is used by the api to provide information about installed plugins."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct PluginInfo {
     #[doc = "Gets or sets a value indicating whether the plugin can be uninstalled."]
     #[serde(
@@ -193,23 +144,8 @@ pub struct PluginInfo {
     pub version: Option<String>,
 }
 
-impl Default for PluginInfo {
-    fn default() -> Self {
-        Self {
-            can_uninstall: Default::default(),
-            configuration_file_name: Default::default(),
-            description: Default::default(),
-            has_image: Default::default(),
-            id: Default::default(),
-            name: Default::default(),
-            status: Default::default(),
-            version: Default::default(),
-        }
-    }
-}
-
 #[doc = "Plugin installation cancelled message."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct PluginInstallationCancelledMessage {
     #[doc = "Class InstallationInfo."]
     #[serde(rename = "Data", default, skip_serializing_if = "Option::is_none")]
@@ -225,18 +161,8 @@ pub struct PluginInstallationCancelledMessage {
     pub message_type: Option<SessionMessageType>,
 }
 
-impl Default for PluginInstallationCancelledMessage {
-    fn default() -> Self {
-        Self {
-            data: Default::default(),
-            message_id: Default::default(),
-            message_type: Default::default(),
-        }
-    }
-}
-
 #[doc = "Plugin installation completed message."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct PluginInstallationCompletedMessage {
     #[doc = "Class InstallationInfo."]
     #[serde(rename = "Data", default, skip_serializing_if = "Option::is_none")]
@@ -252,18 +178,8 @@ pub struct PluginInstallationCompletedMessage {
     pub message_type: Option<SessionMessageType>,
 }
 
-impl Default for PluginInstallationCompletedMessage {
-    fn default() -> Self {
-        Self {
-            data: Default::default(),
-            message_id: Default::default(),
-            message_type: Default::default(),
-        }
-    }
-}
-
 #[doc = "Plugin installation failed message."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct PluginInstallationFailedMessage {
     #[doc = "Class InstallationInfo."]
     #[serde(rename = "Data", default, skip_serializing_if = "Option::is_none")]
@@ -279,18 +195,8 @@ pub struct PluginInstallationFailedMessage {
     pub message_type: Option<SessionMessageType>,
 }
 
-impl Default for PluginInstallationFailedMessage {
-    fn default() -> Self {
-        Self {
-            data: Default::default(),
-            message_id: Default::default(),
-            message_type: Default::default(),
-        }
-    }
-}
-
 #[doc = "Package installing message."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct PluginInstallingMessage {
     #[doc = "Class InstallationInfo."]
     #[serde(rename = "Data", default, skip_serializing_if = "Option::is_none")]
@@ -304,16 +210,6 @@ pub struct PluginInstallingMessage {
         skip_serializing_if = "Option::is_none"
     )]
     pub message_type: Option<SessionMessageType>,
-}
-
-impl Default for PluginInstallingMessage {
-    fn default() -> Self {
-        Self {
-            data: Default::default(),
-            message_id: Default::default(),
-            message_type: Default::default(),
-        }
-    }
 }
 
 #[derive(
@@ -384,7 +280,7 @@ impl TryFrom<String> for PluginStatus {
 }
 
 #[doc = "Plugin uninstalled message."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct PluginUninstalledMessage {
     #[doc = "This is a serializable stub class that is used by the api to provide information about installed plugins."]
     #[serde(rename = "Data", default, skip_serializing_if = "Option::is_none")]
@@ -400,18 +296,8 @@ pub struct PluginUninstalledMessage {
     pub message_type: Option<SessionMessageType>,
 }
 
-impl Default for PluginUninstalledMessage {
-    fn default() -> Self {
-        Self {
-            data: Default::default(),
-            message_id: Default::default(),
-            message_type: Default::default(),
-        }
-    }
-}
-
 #[doc = "Class RepositoryInfo."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct RepositoryInfo {
     #[doc = "Gets or sets a value indicating whether the repository is enabled."]
     #[serde(rename = "Enabled", default, skip_serializing_if = "Option::is_none")]
@@ -424,18 +310,8 @@ pub struct RepositoryInfo {
     pub url: Option<String>,
 }
 
-impl Default for RepositoryInfo {
-    fn default() -> Self {
-        Self {
-            enabled: Default::default(),
-            name: Default::default(),
-            url: Default::default(),
-        }
-    }
-}
-
 #[doc = "Defines the MediaBrowser.Model.Updates.VersionInfo class."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct VersionInfo {
     #[doc = "Gets or sets the changelog for this version."]
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -476,20 +352,4 @@ pub struct VersionInfo {
         skip_serializing_if = "Option::is_none"
     )]
     pub version_number: Option<String>,
-}
-
-impl Default for VersionInfo {
-    fn default() -> Self {
-        Self {
-            changelog: Default::default(),
-            checksum: Default::default(),
-            repository_name: Default::default(),
-            repository_url: Default::default(),
-            source_url: Default::default(),
-            target_abi: Default::default(),
-            timestamp: Default::default(),
-            version: Default::default(),
-            version_number: Default::default(),
-        }
-    }
 }

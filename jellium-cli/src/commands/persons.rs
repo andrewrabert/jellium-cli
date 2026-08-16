@@ -58,21 +58,17 @@ pub async fn execute(
         } => {
             let effective_uid = uid.as_ref().unwrap_or(user_id);
             let result = client
-                .get_persons(
-                    appears_in_item_id.as_ref(),
-                    None, // enable_image_types
-                    None, // enable_images
-                    None, // enable_user_data
-                    exclude_person_types.as_ref(),
-                    fields.as_ref(),
-                    None, // filters
-                    None, // image_type_limit
-                    *is_favorite,
-                    *limit,
-                    person_types.as_ref(),
-                    search_term.as_deref(),
-                    Some(effective_uid),
-                )
+                .get_persons(&jellyfin_api::query::GetPersons {
+                    appears_in_item_id: appears_in_item_id.as_ref(),
+                    exclude_person_types: exclude_person_types.as_ref(),
+                    fields: fields.as_ref(),
+                    is_favorite: *is_favorite,
+                    limit: *limit,
+                    person_types: person_types.as_ref(),
+                    search_term: search_term.as_deref(),
+                    user_id: Some(effective_uid),
+                    ..Default::default()
+                })
                 .await?;
             crate::output::print_json(&result)?;
         }

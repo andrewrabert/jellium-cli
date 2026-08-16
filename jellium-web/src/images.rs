@@ -3,10 +3,6 @@ use std::collections::{HashMap, HashSet};
 use uuid::Uuid;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-#[allow(
-    dead_code,
-    reason = "the seven relayed image kinds are the image key surface"
-)]
 pub enum Kind {
     Primary,
     Backdrop,

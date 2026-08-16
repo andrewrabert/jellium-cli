@@ -8,6 +8,68 @@ use wasm_bindgen::JsValue;
 use crate::error::{self, Trouble};
 use crate::text::{self, Text};
 
+/// One call across a foreign boundary.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Call {
+    AddEventListener,
+    DocumentCreateElement,
+    ElementRemoveAttribute,
+    ElementSetAttribute,
+    HtmlCanvasElementGetContext,
+    HtmlVideoElement,
+    LocalStorage,
+    LocalStorageGetItem,
+    LocalStorageSetItem,
+    LocationHost,
+    LocationProtocol,
+    OverlayMount,
+    OverlayOpen,
+    OverlayPost,
+    OverlayUnmount,
+    PlayerAsk,
+    PlayerGroupBeacon,
+    PlayerLoad,
+    PlayerPosition,
+    ReflectGet,
+    SetTimeout,
+    WebGl2GetParameter,
+    WebSocketClose,
+    WebSocketNew,
+    WebSocketSend,
+}
+
+impl std::fmt::Display for Call {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(match self {
+            Call::AddEventListener => "addEventListener",
+            Call::DocumentCreateElement => "document.createElement",
+            Call::ElementRemoveAttribute => "Element.removeAttribute",
+            Call::ElementSetAttribute => "Element.setAttribute",
+            Call::HtmlCanvasElementGetContext => "HTMLCanvasElement.getContext",
+            Call::HtmlVideoElement => "HTMLVideoElement",
+            Call::LocalStorage => "localStorage",
+            Call::LocalStorageGetItem => "localStorage.getItem",
+            Call::LocalStorageSetItem => "localStorage.setItem",
+            Call::LocationHost => "location.host",
+            Call::LocationProtocol => "location.protocol",
+            Call::OverlayMount => "overlay.mount",
+            Call::OverlayOpen => "overlay.open",
+            Call::OverlayPost => "overlay.post",
+            Call::OverlayUnmount => "overlay.unmount",
+            Call::PlayerAsk => "player.ask",
+            Call::PlayerGroupBeacon => "player.setGroupBeacon",
+            Call::PlayerLoad => "player.load",
+            Call::PlayerPosition => "player.position",
+            Call::ReflectGet => "Reflect.get",
+            Call::SetTimeout => "setTimeout",
+            Call::WebGl2GetParameter => "WebGL2.getParameter",
+            Call::WebSocketClose => "WebSocket.close",
+            Call::WebSocketNew => "WebSocket.new",
+            Call::WebSocketSend => "WebSocket.send",
+        })
+    }
+}
+
 /// The machine cause a console record carries beside the sentence.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Cause {
@@ -15,7 +77,7 @@ pub enum Cause {
     /// the body it carried.
     Http { status: Option<u16>, body: String },
     /// What the JavaScript glue threw, and the call that threw it.
-    Threw { call: &'static str, thrown: String },
+    Threw { call: Call, thrown: String },
     /// The event socket's close code and reason.
     Closed { code: u16, reason: String },
     /// A body, an event frame or a stored value that did not parse.
@@ -132,12 +194,12 @@ pub fn record(failure: &Failure) {
 
 /// The value a glue binding answered; a throw is raised as a failure naming
 /// `call` and answers `None`.
-pub fn called<T>(call: &'static str, answered: Result<T, JsValue>) -> Option<T> {
+pub fn called<T>(call: Call, answered: Result<T, JsValue>) -> Option<T> {
     match answered {
         Ok(held) => Some(held),
         Err(thrown) => {
             raise(Failure::saying(
-                text::format(Text::FailureThrew, &[call]),
+                text::format(Text::FailureThrew, &[&call.to_string()]),
                 Cause::Threw {
                     call,
                     thrown: thrown.as_string().unwrap_or_else(|| format!("{thrown:?}")),
@@ -171,12 +233,9 @@ pub fn reading_failed(trouble: &Trouble, reading: Text) -> Failure {
 /// `value` as JSON text; a value that will not render is raised as a failure
 /// carrying `sentence` and answers `None`.
 pub fn rendered<T: serde::Serialize>(sentence: Text, value: &T) -> Option<String> {
-    #[expect(
-        clippy::disallowed_methods,
-        reason = "this is the door every render or parse passes through"
-    )]
-    let answered = serde_json::to_string(value);
-    match answered {
+    let mut rendered = Vec::new();
+    let answered = value.serialize(&mut serde_json::Serializer::new(&mut rendered));
+    match answered.and_then(|()| String::from_utf8(rendered).map_err(serde::ser::Error::custom)) {
         Ok(rendered) => Some(rendered),
         Err(error) => {
             raise(Failure::told(
@@ -193,11 +252,7 @@ pub fn rendered<T: serde::Serialize>(sentence: Text, value: &T) -> Option<String
 /// `value` as a JSON value; a value that will not render is raised as a
 /// failure carrying `sentence` and answers `None`.
 pub fn encoded<T: serde::Serialize>(sentence: Text, value: &T) -> Option<serde_json::Value> {
-    #[expect(
-        clippy::disallowed_methods,
-        reason = "this is the door every render or parse passes through"
-    )]
-    let answered = serde_json::to_value(value);
+    let answered = value.serialize(serde_json::value::Serializer);
     match answered {
         Ok(encoded) => Some(encoded),
         Err(error) => {
@@ -218,11 +273,7 @@ pub fn parsed<T: serde::de::DeserializeOwned>(
     sentence: Text,
     held: serde_json::Value,
 ) -> Option<T> {
-    #[expect(
-        clippy::disallowed_methods,
-        reason = "this is the door every render or parse passes through"
-    )]
-    let answered = serde_json::from_value(held);
+    let answered = T::deserialize(held);
     match answered {
         Ok(parsed) => Some(parsed),
         Err(error) => {
@@ -237,15 +288,11 @@ pub fn parsed<T: serde::de::DeserializeOwned>(
     }
 }
 
-/// The value `text` reads as; text that will not read is raised as a failure
-/// carrying `sentence` and answers `None`.
+/// The value `text` reads as; text that will not read, and text carrying
+/// anything after the value, is raised as a failure carrying `sentence` and
+/// answers `None`.
 pub fn decoded<T: serde::de::DeserializeOwned>(sentence: Text, text: &str) -> Option<T> {
-    #[expect(
-        clippy::disallowed_methods,
-        reason = "this is the door every render or parse passes through"
-    )]
-    let answered = serde_json::from_str(text);
-    match answered {
+    match unraised::decoded(text) {
         Ok(decoded) => Some(decoded),
         Err(error) => {
             raise(Failure::told(
@@ -256,6 +303,27 @@ pub fn decoded<T: serde::de::DeserializeOwned>(sentence: Text, text: &str) -> Op
             ));
             None
         }
+    }
+}
+
+/// The doors above raising nothing: a value of another shape is not a failure
+/// here, and the caller holds the cause and names what becomes of it.
+/// This is the only way to read without raising, and it is named so it can be
+/// found.
+pub mod unraised {
+    /// The value `text` reads as with nothing left over; anything after the
+    /// value is an error.
+    /// This is the only site that constructs a deserializer.
+    pub fn decoded<T: serde::de::DeserializeOwned>(text: &str) -> Result<T, serde_json::Error> {
+        let mut deserializer = serde_json::Deserializer::from_str(text);
+        let read = T::deserialize(&mut deserializer)?;
+        deserializer.end()?;
+        Ok(read)
+    }
+
+    /// The value `text` reads as.
+    pub fn read<T: std::str::FromStr>(text: &str) -> Result<T, T::Err> {
+        text.parse()
     }
 }
 
@@ -293,15 +361,12 @@ pub fn decoded_image(sentence: Text, bytes: &[u8]) -> Option<image::DynamicImage
 
 /// `value` cast to `T`; a value of another type is raised as a failure naming
 /// `call` and answers `None`.
-pub fn cast<T: wasm_bindgen::JsCast>(
-    call: &'static str,
-    value: impl wasm_bindgen::JsCast,
-) -> Option<T> {
+pub fn cast<T: wasm_bindgen::JsCast>(call: Call, value: impl wasm_bindgen::JsCast) -> Option<T> {
     match value.dyn_into::<T>() {
         Ok(held) => Some(held),
         Err(other) => {
             raise(Failure::saying(
-                text::format(Text::FailureThrew, &[call]),
+                text::format(Text::FailureThrew, &[&call.to_string()]),
                 Cause::Threw {
                     call,
                     thrown: format!(
@@ -359,5 +424,47 @@ impl Log {
     /// Every failure raised this session, newest first, dismissed included.
     pub fn raised(&self) -> &[Failure] {
         &self.raised
+    }
+}
+
+/// `value` as the narrower type; a value the narrower type cannot hold is
+/// raised as a failure carrying `sentence` and answers `None`.
+pub fn narrowed<T, U>(sentence: Text, value: U) -> Option<T>
+where
+    T: TryFrom<U>,
+    U: Copy + std::fmt::Display,
+{
+    match T::try_from(value) {
+        Ok(narrowed) => Some(narrowed),
+        Err(_) => {
+            raise(Failure::told(
+                sentence,
+                Cause::Malformed {
+                    detail: value.to_string(),
+                },
+            ));
+            None
+        }
+    }
+}
+
+/// The value `text` reads as; text that does not read as one is raised as a
+/// failure carrying `sentence` and answers `None`.
+pub fn read<T>(sentence: Text, text: &str) -> Option<T>
+where
+    T: std::str::FromStr,
+    T::Err: std::fmt::Display,
+{
+    match unraised::read(text) {
+        Ok(read) => Some(read),
+        Err(error) => {
+            raise(Failure::told(
+                sentence,
+                Cause::Malformed {
+                    detail: format!("{text}: {error}"),
+                },
+            ));
+            None
+        }
     }
 }

@@ -138,20 +138,7 @@ pub async fn negotiate(
     let negotiated = control
         .get_posted_playback_info(
             &request.item,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
+            &jellyfin_api::query::GetPostedPlaybackInfo::default(),
             &body,
         )
         .await
@@ -183,18 +170,20 @@ pub async fn negotiate(
     if live {
         let opened = control
             .open_live_stream(
-                Some(burn_in),
-                request.audio_stream,
-                Some(request.allow_direct_play),
-                Some(true),
-                Some(&request.item),
-                None,
-                ceiling,
-                source.open_token.as_deref(),
-                Some(&play_session),
-                Some(request.start_ticks),
-                request.subtitle_stream,
-                Some(&user),
+                &jellyfin_api::query::OpenLiveStream {
+                    always_burn_in_subtitle_when_transcoding: Some(burn_in),
+                    audio_stream_index: request.audio_stream,
+                    enable_direct_play: Some(request.allow_direct_play),
+                    enable_direct_stream: Some(true),
+                    item_id: Some(&request.item),
+                    max_streaming_bitrate: ceiling,
+                    open_token: source.open_token.as_deref(),
+                    play_session_id: Some(&play_session),
+                    start_time_ticks: Some(request.start_ticks),
+                    subtitle_stream_index: request.subtitle_stream,
+                    user_id: Some(&user),
+                    ..Default::default()
+                },
                 &OpenLiveStreamDto {
                     device_profile: Some(profile::build(&request.capabilities, ceiling)),
                     item_id: Some(request.item),

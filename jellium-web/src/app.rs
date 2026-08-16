@@ -15,6 +15,7 @@ use crate::api::Api;
 use crate::boot;
 use crate::control;
 use crate::error::Answer;
+use crate::failure;
 use crate::images::{self, Cache};
 use crate::live;
 use crate::livetv::{Channel, Program};
@@ -43,7 +44,6 @@ pub struct Jellium {
     pub listing: bool,
 }
 
-#[allow(clippy::large_enum_variant)]
 pub enum Stage {
     /// The boot read of `/session`; `stalled` is set once a read answered a
     /// trouble, and the screen then carries the control that reads again.
@@ -52,21 +52,12 @@ pub enum Stage {
     },
     Login(login::State),
     Setup(crate::screen::setup::State),
-    Signed(Signed),
+    Signed(Box<Signed>),
     /// The session is gone; the only stage that replaces the screen.
     Lost(crate::failure::Failure),
 }
 
-/// A session-ending act waiting on a confirmation naming what it ends.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum Ending {
-    /// Leaves the active server for the list, keeping its credential.
-    Switch,
-}
-
 pub struct Signed {
-    /// The session-ending act waiting on its confirmation.
-    pub ending: Option<Ending>,
     pub session: Session,
     pub api: Rc<Api>,
     pub history: Vec<Route>,
@@ -165,10 +156,6 @@ pub enum View {
 }
 
 #[derive(Debug, Clone)]
-#[allow(
-    dead_code,
-    reason = "the message set is the app's declared control surface"
-)]
 pub enum Message {
     /// One failure report raised anywhere in the client.
     Failed(crate::failure::Failure),
@@ -200,10 +187,8 @@ pub enum Message {
     PinRedeemed(Answer<jellium_protocol::PinOutcome>),
     /// One public user's image, keyed by the user it was asked for.
     PublicImageLoaded(Uuid, Answer<Vec<u8>>),
-    /// Asks for the confirmation a session-ending act stands behind.
-    EndingRequested(Ending),
-    EndingConfirmed,
-    EndingCancelled,
+    /// Leaves the active server for the list, keeping its credential.
+    SwitchPressed,
     LogoutPressed,
     LoggedOut(Answer<()>),
     /// One step's values, read from the Jellyfin server on entry.
@@ -351,7 +336,6 @@ pub enum Message {
     PlayerAction(player::Action),
     Reported(Answer<Standing>),
     Ticked,
-    ImageWanted(images::Key),
     ImageLoaded(images::Key, Answer<Vec<u8>>),
     LiveSignalled(live::Signal),
     RemoteAction(remote::Action),
@@ -755,8 +739,7 @@ impl Jellium {
             }
             SessionStatus::Authenticated(session) => {
                 let api = Rc::new(Api::new(session.user_id));
-                self.stage = Stage::Signed(Signed {
-                    ending: None,
+                self.stage = Stage::Signed(Box::new(Signed {
                     session,
                     api,
                     history: vec![Route::Home],
@@ -792,7 +775,7 @@ impl Jellium {
                         theme::ROW_HEIGHT,
                         self.viewport.height,
                     ),
-                });
+                }));
                 live::connect();
                 let Stage::Signed(signed) = &self.stage else {
                     return Task::none();
@@ -999,21 +982,6 @@ impl Jellium {
             jellium_protocol::QuickConnectState::Signed(_) => {}
         }
         Task::none()
-    }
-
-    /// Carries out the session-ending act its confirmation stood behind.
-    fn ending_confirmed(&mut self) -> Task<Message> {
-        let Some(signed) = self.signed() else {
-            return Task::none();
-        };
-        let Some(ending) = signed.ending.take() else {
-            return Task::none();
-        };
-        live::disconnect();
-        self.images.retain(&HashSet::new());
-        match ending {
-            Ending::Switch => Task::perform(control::switch_server(), Message::LoginAnswered),
-        }
     }
 
     /// Puts the login stage back on screen with nothing in flight, which is
@@ -1334,19 +1302,14 @@ impl Jellium {
                 }
                 Task::none()
             }
-            Message::EndingRequested(ending) => {
-                if let Some(signed) = self.signed() {
-                    signed.ending = Some(ending);
+            Message::SwitchPressed => {
+                if self.signed().is_none() {
+                    return Task::none();
                 }
-                Task::none()
+                live::disconnect();
+                self.images.retain(&HashSet::new());
+                Task::perform(control::switch_server(), Message::LoginAnswered)
             }
-            Message::EndingCancelled => {
-                if let Some(signed) = self.signed() {
-                    signed.ending = None;
-                }
-                Task::none()
-            }
-            Message::EndingConfirmed => self.ending_confirmed(),
             Message::LogoutPressed => Task::perform(control::logout(), Message::LoggedOut),
             Message::LoggedOut(answered) => {
                 let Some(()) = answered.or_none(Text::FailureSignOut) else {
@@ -2344,12 +2307,6 @@ impl Jellium {
                 Task::none()
             }
             Message::LiveSignalled(live::Signal::Received(event)) => self.received(event),
-            Message::ImageWanted(key) => {
-                if !self.images.begin(key) {
-                    return Task::none();
-                }
-                self.fetch_image(key)
-            }
             Message::ImageLoaded(key, loaded) => {
                 let Some(bytes) = loaded.or_none(Text::FailureImageUnread) else {
                     if !self.images.fail(key) || !self.images.begin(key) {
@@ -2405,7 +2362,15 @@ impl Jellium {
                 group::listed(signed, groups);
                 Task::none()
             }
-            Event::Joined { group, member } => group::joined(signed, group, member),
+            Event::Joined { group, member } => group::joined(
+                signed,
+                group,
+                if member {
+                    group::Membership::Holding
+                } else {
+                    group::Membership::Watching
+                },
+            ),
             Event::LibraryChanged {
                 added,
                 removed,
@@ -2585,11 +2550,7 @@ impl Jellium {
         let playing = signed.playing.as_ref()?;
         let at = playing.preview.as_ref()?.at;
         let index = crate::player::trickplay::chapter_at(&playing.plan.chapters, at)?;
-        #[expect(
-            clippy::disallowed_methods,
-            reason = "a conversion that carries no cause beyond the value itself"
-        )]
-        let numbered = i32::try_from(index).ok();
+        let numbered = failure::narrowed::<i32, _>(Text::FailureChapterIndex, index);
         self.images.handle(images::Key {
             item: playing.item.id?,
             kind: images::Kind::Chapter,

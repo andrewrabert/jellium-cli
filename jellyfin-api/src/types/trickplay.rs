@@ -1,7 +1,7 @@
 use super::*;
 
 #[doc = "The trickplay api model."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct TrickplayInfoDto {
     #[doc = "Gets the peak bandwidth usage in bits per second."]
     #[serde(rename = "Bandwidth", default, skip_serializing_if = "Option::is_none")]
@@ -34,22 +34,8 @@ pub struct TrickplayInfoDto {
     pub width: Option<i32>,
 }
 
-impl Default for TrickplayInfoDto {
-    fn default() -> Self {
-        Self {
-            bandwidth: Default::default(),
-            height: Default::default(),
-            interval: Default::default(),
-            thumbnail_count: Default::default(),
-            tile_height: Default::default(),
-            tile_width: Default::default(),
-            width: Default::default(),
-        }
-    }
-}
-
 #[doc = "Class TrickplayOptions."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct TrickplayOptions {
     #[doc = "Gets or sets a value indicating whether or not to use HW acceleration."]
     #[serde(
@@ -121,25 +107,6 @@ pub struct TrickplayOptions {
         skip_serializing_if = "Vec::is_empty"
     )]
     pub width_resolutions: Vec<i32>,
-}
-
-impl Default for TrickplayOptions {
-    fn default() -> Self {
-        Self {
-            enable_hw_acceleration: Default::default(),
-            enable_hw_encoding: Default::default(),
-            enable_key_frame_only_extraction: Default::default(),
-            interval: Default::default(),
-            jpeg_quality: Default::default(),
-            process_priority: Default::default(),
-            process_threads: Default::default(),
-            qscale: Default::default(),
-            scan_behavior: Default::default(),
-            tile_height: Default::default(),
-            tile_width: Default::default(),
-            width_resolutions: Default::default(),
-        }
-    }
 }
 
 #[derive(

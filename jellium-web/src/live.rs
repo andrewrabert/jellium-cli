@@ -7,6 +7,7 @@ use iced::futures::channel::mpsc;
 use jellium_protocol::{Event, LIVE_PATH, Report};
 use wasm_bindgen::prelude::*;
 
+use crate::failure::Call;
 use crate::failure::{self, Cause, Failure};
 use crate::text::{self, Text};
 
@@ -138,8 +139,8 @@ fn socket_url() -> Option<String> {
         ));
         return None;
     };
-    let protocol = failure::called("location.protocol", window.location().protocol())?;
-    let host = failure::called("location.host", window.location().host())?;
+    let protocol = failure::called(Call::LocationProtocol, window.location().protocol())?;
+    let host = failure::called(Call::LocationHost, window.location().host())?;
     let scheme = if protocol == "https:" { "wss" } else { "ws" };
     Some(format!("{scheme}://{host}{LIVE_PATH}"))
 }
@@ -168,7 +169,7 @@ fn retry() {
     };
     let again = Closure::once_into_js(open);
     if failure::called(
-        "setTimeout",
+        Call::SetTimeout,
         window.set_timeout_with_callback_and_timeout_and_arguments_0(
             again.as_ref().unchecked_ref(),
             backoff(attempts).as_millis() as i32,
@@ -216,7 +217,7 @@ fn open() {
     let socket = match web_sys::WebSocket::new(&url) {
         Ok(socket) => socket,
         Err(thrown) => {
-            failure::called::<()>("WebSocket.new", Err(thrown));
+            failure::called::<()>(Call::WebSocketNew, Err(thrown));
             retry();
             return;
         }
@@ -287,7 +288,7 @@ pub fn send(report: &Report) {
         if let Some(held) = held.borrow().as_ref()
             && held.socket.ready_state() == web_sys::WebSocket::OPEN
         {
-            failure::called("WebSocket.send", held.socket.send_with_str(&frame));
+            failure::called(Call::WebSocketSend, held.socket.send_with_str(&frame));
         }
     });
 }
@@ -298,7 +299,7 @@ pub fn disconnect() {
     if let Some(held) = HELD.with(|held| held.borrow_mut().take()) {
         held.socket.set_onclose(None);
         held.socket.set_onerror(None);
-        failure::called("WebSocket.close", held.socket.close());
+        failure::called(Call::WebSocketClose, held.socket.close());
     }
     ATTEMPTS.with(|held| held.set(0));
     OPENED.with(|held| held.set(false));

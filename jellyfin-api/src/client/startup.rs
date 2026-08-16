@@ -29,7 +29,7 @@ impl Client {
     }
 
     #[doc = "Gets the first user\n\nSends a `GET` request to `/Startup/FirstUser`\n\n"]
-    pub async fn get_first_user_2(&self) -> Result<types::StartupUserDto, Error> {
+    pub async fn get_first_user(&self) -> Result<types::StartupUserDto, Error> {
         self.request(reqwest::Method::GET, "/Startup/FirstUser".into())
             .send()
             .await
@@ -47,7 +47,7 @@ impl Client {
     }
 
     #[doc = "Gets the first user\n\nSends a `GET` request to `/Startup/User`\n\n"]
-    pub async fn get_first_user(&self) -> Result<types::StartupUserDto, Error> {
+    pub async fn get_startup_user(&self) -> Result<types::StartupUserDto, Error> {
         self.request(reqwest::Method::GET, "/Startup/User".into())
             .send()
             .await

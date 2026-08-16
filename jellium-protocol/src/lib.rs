@@ -1080,7 +1080,8 @@ pub struct Queued {
 #[serde(rename_all = "camelCase")]
 pub struct GroupQueue {
     pub items: Vec<Queued>,
-    pub playing_index: i32,
+    /// Where the group is in `items`, and `None` when it is playing nothing.
+    pub playing_index: Option<usize>,
     pub position_ticks: i64,
     pub playing: bool,
     pub repeat: Repeat,

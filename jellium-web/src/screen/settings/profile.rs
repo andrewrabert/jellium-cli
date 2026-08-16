@@ -39,14 +39,15 @@ pub async fn load(api: Rc<Api>, id: Uuid) -> Answer<State> {
             .and_then(serde_json::Value::as_str)
             .unwrap_or_default()
             .to_owned();
-        #[expect(
-            clippy::disallowed_methods,
-            reason = "a conversion that carries no cause beyond the value itself"
-        )]
         let stamped = read
             .get("LastActivityDate")
             .and_then(serde_json::Value::as_str)
-            .and_then(|at| chrono::DateTime::parse_from_rfc3339(at).ok())
+            .and_then(|at| {
+                crate::failure::read::<chrono::DateTime<chrono::FixedOffset>>(
+                    Text::FailureActivityDate,
+                    at,
+                )
+            })
             .map(|at| at.with_timezone(&chrono::Utc));
         Ok(State {
             id,

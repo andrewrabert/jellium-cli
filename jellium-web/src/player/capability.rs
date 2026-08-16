@@ -1,3 +1,4 @@
+use crate::failure::Call;
 use jellium_protocol::{Capabilities, Decoding, Grant};
 
 /// True when Media Source Extensions are present, which is what makes
@@ -12,10 +13,10 @@ fn media_source() -> bool {
 /// The element every `canPlayType` probe is asked of.
 fn element() -> Option<web_sys::HtmlVideoElement> {
     let element = crate::failure::called(
-        "document.createElement",
+        Call::DocumentCreateElement,
         web_sys::window()?.document()?.create_element("video"),
     )?;
-    crate::failure::cast::<web_sys::HtmlVideoElement>("HTMLVideoElement", element)
+    crate::failure::cast::<web_sys::HtmlVideoElement>(Call::HtmlVideoElement, element)
 }
 
 /// The grants `accepts` passes, gathered in the order the probe table lists

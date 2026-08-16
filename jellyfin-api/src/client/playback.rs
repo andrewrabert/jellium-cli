@@ -1,5 +1,6 @@
 use crate::Client;
 use crate::error::Error;
+use crate::query;
 use crate::types;
 use crate::util::encode_path;
 
@@ -15,36 +16,25 @@ impl Client {
     #[doc = "Opens a media source\n\nSends a `POST` request to `/LiveStreams/Open`\n\nArguments:\n- `always_burn_in_subtitle_when_transcoding`: Always burn-in subtitle when transcoding.\n- `audio_stream_index`: The audio stream index.\n- `enable_direct_play`: Whether to enable direct play. Default: true.\n- `enable_direct_stream`: Whether to enable direct stream. Default: true.\n- `item_id`: The item id.\n- `max_audio_channels`: The maximum number of audio channels.\n- `max_streaming_bitrate`: The maximum streaming bitrate.\n- `open_token`: The open token.\n- `play_session_id`: The play session id.\n- `start_time_ticks`: The start time in ticks.\n- `subtitle_stream_index`: The subtitle stream index.\n- `user_id`: The user id.\n- `body`: The open live stream dto.\n"]
     pub async fn open_live_stream(
         &self,
-        always_burn_in_subtitle_when_transcoding: Option<bool>,
-        audio_stream_index: Option<i32>,
-        enable_direct_play: Option<bool>,
-        enable_direct_stream: Option<bool>,
-        item_id: Option<&uuid::Uuid>,
-        max_audio_channels: Option<i32>,
-        max_streaming_bitrate: Option<i32>,
-        open_token: Option<&str>,
-        play_session_id: Option<&str>,
-        start_time_ticks: Option<i64>,
-        subtitle_stream_index: Option<i32>,
-        user_id: Option<&uuid::Uuid>,
+        query: &query::OpenLiveStream<'_>,
         body: &types::OpenLiveStreamDto,
     ) -> Result<types::LiveStreamResponse, Error> {
         self.request(reqwest::Method::POST, "/LiveStreams/Open".into())
             .query_opt(
                 "alwaysBurnInSubtitleWhenTranscoding",
-                always_burn_in_subtitle_when_transcoding,
+                query.always_burn_in_subtitle_when_transcoding,
             )
-            .query_opt("audioStreamIndex", audio_stream_index)
-            .query_opt("enableDirectPlay", enable_direct_play)
-            .query_opt("enableDirectStream", enable_direct_stream)
-            .query_opt("itemId", item_id)
-            .query_opt("maxAudioChannels", max_audio_channels)
-            .query_opt("maxStreamingBitrate", max_streaming_bitrate)
-            .query_opt("openToken", open_token)
-            .query_opt("playSessionId", play_session_id)
-            .query_opt("startTimeTicks", start_time_ticks)
-            .query_opt("subtitleStreamIndex", subtitle_stream_index)
-            .query_opt("userId", user_id)
+            .query_opt("audioStreamIndex", query.audio_stream_index)
+            .query_opt("enableDirectPlay", query.enable_direct_play)
+            .query_opt("enableDirectStream", query.enable_direct_stream)
+            .query_opt("itemId", query.item_id)
+            .query_opt("maxAudioChannels", query.max_audio_channels)
+            .query_opt("maxStreamingBitrate", query.max_streaming_bitrate)
+            .query_opt("openToken", query.open_token)
+            .query_opt("playSessionId", query.play_session_id)
+            .query_opt("startTimeTicks", query.start_time_ticks)
+            .query_opt("subtitleStreamIndex", query.subtitle_stream_index)
+            .query_opt("userId", query.user_id)
             .json_body(body)
             .send()
             .await
@@ -65,25 +55,19 @@ impl Client {
     pub async fn on_playback_start(
         &self,
         item_id: &uuid::Uuid,
-        audio_stream_index: Option<i32>,
-        can_seek: Option<bool>,
-        live_stream_id: Option<&str>,
-        media_source_id: Option<&str>,
-        play_method: Option<types::PlayMethod>,
-        play_session_id: Option<&str>,
-        subtitle_stream_index: Option<i32>,
+        query: &query::OnPlaybackStart<'_>,
     ) -> Result<(), Error> {
         self.request(
             reqwest::Method::POST,
             format!("/PlayingItems/{}", encode_path(&item_id.to_string())),
         )
-        .query_opt("audioStreamIndex", audio_stream_index)
-        .query_opt("canSeek", can_seek)
-        .query_opt("liveStreamId", live_stream_id)
-        .query_opt("mediaSourceId", media_source_id)
-        .query_opt("playMethod", play_method)
-        .query_opt("playSessionId", play_session_id)
-        .query_opt("subtitleStreamIndex", subtitle_stream_index)
+        .query_opt("audioStreamIndex", query.audio_stream_index)
+        .query_opt("canSeek", query.can_seek)
+        .query_opt("liveStreamId", query.live_stream_id)
+        .query_opt("mediaSourceId", query.media_source_id)
+        .query_opt("playMethod", query.play_method)
+        .query_opt("playSessionId", query.play_session_id)
+        .query_opt("subtitleStreamIndex", query.subtitle_stream_index)
         .send_no_content()
         .await
     }
@@ -115,17 +99,7 @@ impl Client {
     pub async fn on_playback_progress(
         &self,
         item_id: &uuid::Uuid,
-        audio_stream_index: Option<i32>,
-        is_muted: Option<bool>,
-        is_paused: Option<bool>,
-        live_stream_id: Option<&str>,
-        media_source_id: Option<&str>,
-        play_method: Option<types::PlayMethod>,
-        play_session_id: Option<&str>,
-        position_ticks: Option<i64>,
-        repeat_mode: Option<types::RepeatMode>,
-        subtitle_stream_index: Option<i32>,
-        volume_level: Option<i32>,
+        query: &query::OnPlaybackProgress<'_>,
     ) -> Result<(), Error> {
         self.request(
             reqwest::Method::POST,
@@ -134,17 +108,17 @@ impl Client {
                 encode_path(&item_id.to_string())
             ),
         )
-        .query_opt("audioStreamIndex", audio_stream_index)
-        .query_opt("isMuted", is_muted)
-        .query_opt("isPaused", is_paused)
-        .query_opt("liveStreamId", live_stream_id)
-        .query_opt("mediaSourceId", media_source_id)
-        .query_opt("playMethod", play_method)
-        .query_opt("playSessionId", play_session_id)
-        .query_opt("positionTicks", position_ticks)
-        .query_opt("repeatMode", repeat_mode)
-        .query_opt("subtitleStreamIndex", subtitle_stream_index)
-        .query_opt("volumeLevel", volume_level)
+        .query_opt("audioStreamIndex", query.audio_stream_index)
+        .query_opt("isMuted", query.is_muted)
+        .query_opt("isPaused", query.is_paused)
+        .query_opt("liveStreamId", query.live_stream_id)
+        .query_opt("mediaSourceId", query.media_source_id)
+        .query_opt("playMethod", query.play_method)
+        .query_opt("playSessionId", query.play_session_id)
+        .query_opt("positionTicks", query.position_ticks)
+        .query_opt("repeatMode", query.repeat_mode)
+        .query_opt("subtitleStreamIndex", query.subtitle_stream_index)
+        .query_opt("volumeLevel", query.volume_level)
         .send_no_content()
         .await
     }

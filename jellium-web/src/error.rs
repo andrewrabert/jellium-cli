@@ -166,21 +166,25 @@ pub(crate) async fn classify(response: reqwest::Response) -> Trouble {
     }
 }
 
+/// What a relayed body carries.
+#[derive(Debug, Clone, serde::Deserialize)]
+#[serde(untagged)]
+enum Said {
+    Refused(Refusal),
+    Failed(Failure),
+    /// Any other JSON body, kept for the message it may hold under `detail`.
+    Other(serde_json::Value),
+}
+
 /// The same classification over a body already read.
-#[expect(
-    clippy::disallowed_methods,
-    reason = "a body that is not a refusal is how a relayed answer is classified"
-)]
 pub(crate) fn classify_body(status: reqwest::StatusCode, body: &str) -> Trouble {
-    if let Ok(refusal) = serde_json::from_str::<Refusal>(body) {
-        return Trouble::Refused(refusal);
-    }
-    if let Ok(failure) = serde_json::from_str::<Failure>(body) {
-        return Trouble::Upstream(failure);
-    }
-    Trouble::Relay {
-        status: Some(status.as_u16()),
-        detail: body.to_owned(),
+    match crate::failure::unraised::decoded::<Said>(body) {
+        Ok(Said::Refused(refusal)) => Trouble::Refused(refusal),
+        Ok(Said::Failed(failure)) => Trouble::Upstream(failure),
+        Ok(Said::Other(_)) | Err(_) => Trouble::Relay {
+            status: Some(status.as_u16()),
+            detail: body.to_owned(),
+        },
     }
 }
 
@@ -432,22 +436,17 @@ fn write_refused(wrote: &Wrote, trouble: &Trouble) -> crate::failure::Failure {
 /// The Jellyfin server's own message, and `None` when the answer carried none.
 /// A `ProblemDetails` body reads as its detail and then its title; any other
 /// body reads as its text, trimmed to `SERVER_LIMIT` bytes.
-#[expect(
-    clippy::disallowed_methods,
-    reason = "a body that is not problem details is the server's message as it stands"
-)]
 pub(crate) fn server_said(trouble: &Trouble) -> Option<String> {
     let Trouble::Relay { detail, .. } = trouble else {
         return None;
     };
-    let said = match serde_json::from_str::<serde_json::Value>(detail) {
-        Ok(body) => body
+    let said = match crate::failure::unraised::decoded::<Said>(detail) {
+        Ok(Said::Other(body)) => body
             .get("detail")
             .or_else(|| body.get("title"))
             .and_then(serde_json::Value::as_str)
-            .map(str::to_owned)
-            .unwrap_or_else(|| detail.clone()),
-        Err(_) => detail.clone(),
+            .map_or_else(|| detail.clone(), str::to_owned),
+        _ => detail.clone(),
     };
     let said = said.trim();
     if said.is_empty() {

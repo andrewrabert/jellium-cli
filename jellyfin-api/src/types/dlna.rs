@@ -1,7 +1,7 @@
 use super::*;
 
 #[doc = "Defines the MediaBrowser.Model.Dlna.CodecProfile."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct CodecProfile {
     #[doc = "Gets or sets the list of MediaBrowser.Model.Dlna.ProfileCondition to apply if this profile is met."]
     #[serde(
@@ -30,21 +30,8 @@ pub struct CodecProfile {
     pub type_: Option<CodecType>,
 }
 
-impl Default for CodecProfile {
-    fn default() -> Self {
-        Self {
-            apply_conditions: Default::default(),
-            codec: Default::default(),
-            conditions: Default::default(),
-            container: Default::default(),
-            sub_container: Default::default(),
-            type_: Default::default(),
-        }
-    }
-}
-
 #[doc = "Defines the MediaBrowser.Model.Dlna.ContainerProfile."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct ContainerProfile {
     #[doc = "Gets or sets the list of MediaBrowser.Model.Dlna.ProfileCondition which this container will be applied to."]
     #[serde(rename = "Conditions", default, skip_serializing_if = "Vec::is_empty")]
@@ -63,19 +50,8 @@ pub struct ContainerProfile {
     pub type_: Option<DlnaProfileType>,
 }
 
-impl Default for ContainerProfile {
-    fn default() -> Self {
-        Self {
-            conditions: Default::default(),
-            container: Default::default(),
-            sub_container: Default::default(),
-            type_: Default::default(),
-        }
-    }
-}
-
 #[doc = "A MediaBrowser.Model.Dlna.DeviceProfile represents a set of metadata which determines which content a certain device is able to play.\r\n<br />\r\nSpecifically, it defines the supported <see cref=\"P:MediaBrowser.Model.Dlna.DeviceProfile.ContainerProfiles\">containers</see> and\r\n<see cref=\"P:MediaBrowser.Model.Dlna.DeviceProfile.CodecProfiles\">codecs</see> (video and/or audio, including codec profiles and levels)\r\nthe device is able to direct play (without transcoding or remuxing),\r\nas well as which <see cref=\"P:MediaBrowser.Model.Dlna.DeviceProfile.TranscodingProfiles\">containers/codecs to transcode to</see> in case it isn't."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct DeviceProfile {
     #[doc = "Gets or sets the codec profiles."]
     #[serde(
@@ -148,26 +124,8 @@ pub struct DeviceProfile {
     pub transcoding_profiles: Vec<TranscodingProfile>,
 }
 
-impl Default for DeviceProfile {
-    fn default() -> Self {
-        Self {
-            codec_profiles: Default::default(),
-            container_profiles: Default::default(),
-            direct_play_profiles: Default::default(),
-            id: Default::default(),
-            max_static_bitrate: Default::default(),
-            max_static_music_bitrate: Default::default(),
-            max_streaming_bitrate: Default::default(),
-            music_streaming_transcoding_bitrate: Default::default(),
-            name: Default::default(),
-            subtitle_profiles: Default::default(),
-            transcoding_profiles: Default::default(),
-        }
-    }
-}
-
 #[doc = "Defines the MediaBrowser.Model.Dlna.DirectPlayProfile."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct DirectPlayProfile {
     #[doc = "Gets or sets the audio codec."]
     #[serde(
@@ -188,17 +146,6 @@ pub struct DirectPlayProfile {
         skip_serializing_if = "Option::is_none"
     )]
     pub video_codec: Option<String>,
-}
-
-impl Default for DirectPlayProfile {
-    fn default() -> Self {
-        Self {
-            audio_codec: Default::default(),
-            container: Default::default(),
-            type_: Default::default(),
-            video_codec: Default::default(),
-        }
-    }
 }
 
 #[derive(
@@ -260,7 +207,7 @@ impl TryFrom<String> for DlnaProfileType {
 }
 
 #[doc = "`ProfileCondition`"]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct ProfileCondition {
     #[serde(rename = "Condition", default, skip_serializing_if = "Option::is_none")]
     pub condition: Option<ProfileConditionType>,
@@ -274,17 +221,6 @@ pub struct ProfileCondition {
     pub property: Option<ProfileConditionValue>,
     #[serde(rename = "Value", default, skip_serializing_if = "Option::is_none")]
     pub value: Option<String>,
-}
-
-impl Default for ProfileCondition {
-    fn default() -> Self {
-        Self {
-            condition: Default::default(),
-            is_required: Default::default(),
-            property: Default::default(),
-            value: Default::default(),
-        }
-    }
 }
 
 #[derive(
@@ -464,7 +400,7 @@ impl TryFrom<String> for ProfileConditionValue {
 }
 
 #[doc = "A class for subtitle profile information."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct SubtitleProfile {
     #[doc = "Gets or sets the container."]
     #[serde(rename = "Container", default, skip_serializing_if = "Option::is_none")]
@@ -480,18 +416,6 @@ pub struct SubtitleProfile {
     pub language: Option<String>,
     #[serde(rename = "Method", default, skip_serializing_if = "Option::is_none")]
     pub method: Option<SubtitleDeliveryMethod>,
-}
-
-impl Default for SubtitleProfile {
-    fn default() -> Self {
-        Self {
-            container: Default::default(),
-            didl_mode: Default::default(),
-            format: Default::default(),
-            language: Default::default(),
-            method: Default::default(),
-        }
-    }
 }
 
 #[doc = "A class for transcoding profile information.\r\nNote for client developers: Conditions defined in MediaBrowser.Model.Dlna.CodecProfile has higher priority and can override values defined here."]

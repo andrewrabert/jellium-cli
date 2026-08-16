@@ -1,5 +1,6 @@
 use crate::Client;
 use crate::error::Error;
+use crate::query;
 use crate::types;
 use crate::util::encode_path;
 
@@ -45,27 +46,20 @@ impl Client {
     pub async fn get_channel_items(
         &self,
         channel_id: &uuid::Uuid,
-        fields: Option<&Vec<types::ItemFields>>,
-        filters: Option<&Vec<types::ItemFilter>>,
-        folder_id: Option<&uuid::Uuid>,
-        limit: Option<i32>,
-        sort_by: Option<&Vec<types::ItemSortBy>>,
-        sort_order: Option<&Vec<types::SortOrder>>,
-        start_index: Option<i32>,
-        user_id: Option<&uuid::Uuid>,
+        query: &query::GetChannelItems<'_>,
     ) -> Result<types::BaseItemDtoQueryResult, Error> {
         self.request(
             reqwest::Method::GET,
             format!("/Channels/{}/Items", encode_path(&channel_id.to_string())),
         )
-        .query_list_opt("fields", fields)
-        .query_list_opt("filters", filters)
-        .query_opt("folderId", folder_id)
-        .query_opt("limit", limit)
-        .query_list_opt("sortBy", sort_by)
-        .query_list_opt("sortOrder", sort_order)
-        .query_opt("startIndex", start_index)
-        .query_opt("userId", user_id)
+        .query_list_opt("fields", query.fields)
+        .query_list_opt("filters", query.filters)
+        .query_opt("folderId", query.folder_id)
+        .query_opt("limit", query.limit)
+        .query_list_opt("sortBy", query.sort_by)
+        .query_list_opt("sortOrder", query.sort_order)
+        .query_opt("startIndex", query.start_index)
+        .query_opt("userId", query.user_id)
         .send()
         .await
     }

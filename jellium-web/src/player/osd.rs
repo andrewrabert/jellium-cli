@@ -101,11 +101,7 @@ pub fn chapters<'a>(playing: &'a Playing, images: &'a Cache) -> Vec<Element<'a, 
         .iter()
         .enumerate()
         .map(|(at, chapter)| {
-            #[expect(
-                clippy::disallowed_methods,
-                reason = "a conversion that carries no cause beyond the value itself"
-            )]
-            let numbered = i32::try_from(at).ok();
+            let numbered = crate::failure::narrowed::<i32, _>(Text::FailureChapterIndex, at);
             let handle = playing.item.id.and_then(|item| {
                 images.handle(crate::images::Key {
                     item,

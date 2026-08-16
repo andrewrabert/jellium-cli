@@ -12,29 +12,13 @@ pub fn cropped(
     tile: Tile,
 ) -> Option<iced::widget::image::Handle> {
     let sheet = crate::failure::decoded_image(crate::text::Text::FailureTrickplayUnread, bytes)?;
-    #[expect(
-        clippy::disallowed_methods,
-        reason = "a width outside u32 carries no cause beyond the number itself"
-    )]
-    let width = u32::try_from(description.width).ok()?;
-    #[expect(
-        clippy::disallowed_methods,
-        reason = "a height outside u32 carries no cause beyond the number itself"
-    )]
-    let height = u32::try_from(description.height).ok()?;
+    let width = description.width;
+    let height = description.height;
     if width == 0 || height == 0 {
         return None;
     }
-    #[expect(
-        clippy::disallowed_methods,
-        reason = "a column outside u32 carries no cause beyond the number itself"
-    )]
-    let x = u32::try_from(tile.column).ok()?.checked_mul(width)?;
-    #[expect(
-        clippy::disallowed_methods,
-        reason = "a row outside u32 carries no cause beyond the number itself"
-    )]
-    let y = u32::try_from(tile.row).ok()?.checked_mul(height)?;
+    let x = tile.column.checked_mul(description.width)?;
+    let y = tile.row.checked_mul(description.height)?;
 
     use image::GenericImageView;
     let (sheet_width, sheet_height) = sheet.dimensions();

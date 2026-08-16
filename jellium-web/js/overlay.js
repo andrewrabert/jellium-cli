@@ -1,8 +1,11 @@
 // The overlay hosts more than one DOM element at a time over the iced canvas,
 // each with its own identity, stacking, pointer behaviour and message channel.
 //
-// mount(id, kind, stacking, pointer, source, sandbox, hidden, accept, sink)
-// creates the
+// mount(wanted, sink) takes one rendered description:
+//   {"id":"media","kind":"video","stacking":"below","pointer":false,
+//    "source":null,"sandbox":null,"hidden":false,"accept":null}
+// an absent source, sandbox or accept is null and sets no attribute.
+// It creates the
 // element under `data-overlay="<id>"`, `data-stack="above"|"below"` and
 // `data-pointer` when it takes pointer events, and wires its channel:
 //   a media element reports through player.js's own sink
@@ -35,17 +38,9 @@ export function node(id) {
   return held ? held.element : null;
 }
 
-export function mount(
-  id,
-  kind,
-  stacking,
-  pointer,
-  source,
-  sandbox,
-  hidden,
-  accept,
-  sink,
-) {
+export function mount(wanted, sink) {
+  const { id, kind, stacking, pointer, source, sandbox, hidden, accept } =
+    JSON.parse(wanted);
   unmount(id);
 
   const element = document.createElement(tagFor(kind));
@@ -63,7 +58,7 @@ export function mount(
     element.type = 'file';
     element.hidden = true;
     element.style.display = 'none';
-    if (accept) {
+    if (accept !== null) {
       element.accept = accept;
     }
     element.addEventListener('change', () => {
@@ -91,11 +86,13 @@ export function mount(
     });
     document.body.appendChild(element);
   } else if (kind === 'frame') {
-    if (sandbox) {
+    if (sandbox !== null) {
       element.setAttribute('sandbox', sandbox);
     }
     element.setAttribute('referrerpolicy', 'no-referrer');
-    element.src = source;
+    if (source !== null) {
+      element.src = source;
+    }
     document.body.appendChild(element);
     listener = (event) => {
       if (!element.contentWindow || event.source !== element.contentWindow) {

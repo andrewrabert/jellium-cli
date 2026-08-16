@@ -1,8 +1,7 @@
-#![allow(clippy::too_many_arguments)]
-
 mod client;
 pub mod error;
 pub mod pagination;
+pub mod query;
 mod request;
 pub mod types;
 mod util;

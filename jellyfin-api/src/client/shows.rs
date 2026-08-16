@@ -1,5 +1,6 @@
 use crate::Client;
 use crate::error::Error;
+use crate::query;
 use crate::types;
 use crate::util::encode_path;
 
@@ -29,39 +30,26 @@ impl Client {
     pub async fn get_episodes(
         &self,
         series_id: &uuid::Uuid,
-        adjacent_to: Option<&uuid::Uuid>,
-        enable_image_types: Option<&Vec<types::ImageType>>,
-        enable_images: Option<bool>,
-        enable_user_data: Option<bool>,
-        fields: Option<&Vec<types::ItemFields>>,
-        image_type_limit: Option<i32>,
-        is_missing: Option<bool>,
-        limit: Option<i32>,
-        season: Option<i32>,
-        season_id: Option<&uuid::Uuid>,
-        sort_by: Option<types::ItemSortBy>,
-        start_index: Option<i32>,
-        start_item_id: Option<&uuid::Uuid>,
-        user_id: Option<&uuid::Uuid>,
+        query: &query::GetEpisodes<'_>,
     ) -> Result<types::BaseItemDtoQueryResult, Error> {
         self.request(
             reqwest::Method::GET,
             format!("/Shows/{}/Episodes", encode_path(&series_id.to_string())),
         )
-        .query_opt("adjacentTo", adjacent_to)
-        .query_list_opt("enableImageTypes", enable_image_types)
-        .query_opt("enableImages", enable_images)
-        .query_opt("enableUserData", enable_user_data)
-        .query_list_opt("fields", fields)
-        .query_opt("imageTypeLimit", image_type_limit)
-        .query_opt("isMissing", is_missing)
-        .query_opt("limit", limit)
-        .query_opt("season", season)
-        .query_opt("seasonId", season_id)
-        .query_opt("sortBy", sort_by)
-        .query_opt("startIndex", start_index)
-        .query_opt("startItemId", start_item_id)
-        .query_opt("userId", user_id)
+        .query_opt("adjacentTo", query.adjacent_to)
+        .query_list_opt("enableImageTypes", query.enable_image_types)
+        .query_opt("enableImages", query.enable_images)
+        .query_opt("enableUserData", query.enable_user_data)
+        .query_list_opt("fields", query.fields)
+        .query_opt("imageTypeLimit", query.image_type_limit)
+        .query_opt("isMissing", query.is_missing)
+        .query_opt("limit", query.limit)
+        .query_opt("season", query.season)
+        .query_opt("seasonId", query.season_id)
+        .query_opt("sortBy", query.sort_by)
+        .query_opt("startIndex", query.start_index)
+        .query_opt("startItemId", query.start_item_id)
+        .query_opt("userId", query.user_id)
         .send()
         .await
     }
@@ -70,29 +58,21 @@ impl Client {
     pub async fn get_seasons(
         &self,
         series_id: &uuid::Uuid,
-        adjacent_to: Option<&uuid::Uuid>,
-        enable_image_types: Option<&Vec<types::ImageType>>,
-        enable_images: Option<bool>,
-        enable_user_data: Option<bool>,
-        fields: Option<&Vec<types::ItemFields>>,
-        image_type_limit: Option<i32>,
-        is_missing: Option<bool>,
-        is_special_season: Option<bool>,
-        user_id: Option<&uuid::Uuid>,
+        query: &query::GetSeasons<'_>,
     ) -> Result<types::BaseItemDtoQueryResult, Error> {
         self.request(
             reqwest::Method::GET,
             format!("/Shows/{}/Seasons", encode_path(&series_id.to_string())),
         )
-        .query_opt("adjacentTo", adjacent_to)
-        .query_list_opt("enableImageTypes", enable_image_types)
-        .query_opt("enableImages", enable_images)
-        .query_opt("enableUserData", enable_user_data)
-        .query_list_opt("fields", fields)
-        .query_opt("imageTypeLimit", image_type_limit)
-        .query_opt("isMissing", is_missing)
-        .query_opt("isSpecialSeason", is_special_season)
-        .query_opt("userId", user_id)
+        .query_opt("adjacentTo", query.adjacent_to)
+        .query_list_opt("enableImageTypes", query.enable_image_types)
+        .query_opt("enableImages", query.enable_images)
+        .query_opt("enableUserData", query.enable_user_data)
+        .query_list_opt("fields", query.fields)
+        .query_opt("imageTypeLimit", query.image_type_limit)
+        .query_opt("isMissing", query.is_missing)
+        .query_opt("isSpecialSeason", query.is_special_season)
+        .query_opt("userId", query.user_id)
         .send()
         .await
     }
@@ -100,38 +80,24 @@ impl Client {
     #[doc = "Gets a list of next up episodes\n\nSends a `GET` request to `/Shows/NextUp`\n\nArguments:\n- `disable_first_episode`: Whether to disable sending the first episode in a series as next up.\n- `enable_image_types`: Optional. The image types to include in the output.\n- `enable_images`: Optional. Include image information in output.\n- `enable_resumable`: Whether to include resumable episodes in next up results.\n- `enable_rewatching`: Whether to include watched episodes in next up results.\n- `enable_total_record_count`: Whether to enable the total records count. Defaults to true.\n- `enable_user_data`: Optional. Include user data.\n- `fields`: Optional. Specify additional fields of information to return in the output.\n- `image_type_limit`: Optional. The max number of images to return, per image type.\n- `limit`: Optional. The maximum number of records to return.\n- `next_up_date_cutoff`: Optional. Starting date of shows to show in Next Up section.\n- `parent_id`: Optional. Specify this to localize the search to a specific item or folder. Omit to use the root.\n- `series_id`: Optional. Filter by series id.\n- `start_index`: Optional. The record index to start at. All items with a lower index will be dropped from the results.\n- `user_id`: The user id of the user to get the next up episodes for.\n"]
     pub async fn get_next_up(
         &self,
-        disable_first_episode: Option<bool>,
-        enable_image_types: Option<&Vec<types::ImageType>>,
-        enable_images: Option<bool>,
-        enable_resumable: Option<bool>,
-        enable_rewatching: Option<bool>,
-        enable_total_record_count: Option<bool>,
-        enable_user_data: Option<bool>,
-        fields: Option<&Vec<types::ItemFields>>,
-        image_type_limit: Option<i32>,
-        limit: Option<i32>,
-        next_up_date_cutoff: Option<&chrono::DateTime<chrono::Utc>>,
-        parent_id: Option<&uuid::Uuid>,
-        series_id: Option<&uuid::Uuid>,
-        start_index: Option<i32>,
-        user_id: Option<&uuid::Uuid>,
+        query: &query::GetNextUp<'_>,
     ) -> Result<types::BaseItemDtoQueryResult, Error> {
         self.request(reqwest::Method::GET, "/Shows/NextUp".into())
-            .query_opt("disableFirstEpisode", disable_first_episode)
-            .query_list_opt("enableImageTypes", enable_image_types)
-            .query_opt("enableImages", enable_images)
-            .query_opt("enableResumable", enable_resumable)
-            .query_opt("enableRewatching", enable_rewatching)
-            .query_opt("enableTotalRecordCount", enable_total_record_count)
-            .query_opt("enableUserData", enable_user_data)
-            .query_list_opt("fields", fields)
-            .query_opt("imageTypeLimit", image_type_limit)
-            .query_opt("limit", limit)
-            .query_opt("nextUpDateCutoff", next_up_date_cutoff)
-            .query_opt("parentId", parent_id)
-            .query_opt("seriesId", series_id)
-            .query_opt("startIndex", start_index)
-            .query_opt("userId", user_id)
+            .query_opt("disableFirstEpisode", query.disable_first_episode)
+            .query_list_opt("enableImageTypes", query.enable_image_types)
+            .query_opt("enableImages", query.enable_images)
+            .query_opt("enableResumable", query.enable_resumable)
+            .query_opt("enableRewatching", query.enable_rewatching)
+            .query_opt("enableTotalRecordCount", query.enable_total_record_count)
+            .query_opt("enableUserData", query.enable_user_data)
+            .query_list_opt("fields", query.fields)
+            .query_opt("imageTypeLimit", query.image_type_limit)
+            .query_opt("limit", query.limit)
+            .query_opt("nextUpDateCutoff", query.next_up_date_cutoff)
+            .query_opt("parentId", query.parent_id)
+            .query_opt("seriesId", query.series_id)
+            .query_opt("startIndex", query.start_index)
+            .query_opt("userId", query.user_id)
             .send()
             .await
     }
@@ -139,26 +105,18 @@ impl Client {
     #[doc = "Gets a list of upcoming episodes\n\nSends a `GET` request to `/Shows/Upcoming`\n\nArguments:\n- `enable_image_types`: Optional. The image types to include in the output.\n- `enable_images`: Optional. Include image information in output.\n- `enable_user_data`: Optional. Include user data.\n- `fields`: Optional. Specify additional fields of information to return in the output.\n- `image_type_limit`: Optional. The max number of images to return, per image type.\n- `limit`: Optional. The maximum number of records to return.\n- `parent_id`: Optional. Specify this to localize the search to a specific item or folder. Omit to use the root.\n- `start_index`: Optional. The record index to start at. All items with a lower index will be dropped from the results.\n- `user_id`: The user id of the user to get the upcoming episodes for.\n"]
     pub async fn get_upcoming_episodes(
         &self,
-        enable_image_types: Option<&Vec<types::ImageType>>,
-        enable_images: Option<bool>,
-        enable_user_data: Option<bool>,
-        fields: Option<&Vec<types::ItemFields>>,
-        image_type_limit: Option<i32>,
-        limit: Option<i32>,
-        parent_id: Option<&uuid::Uuid>,
-        start_index: Option<i32>,
-        user_id: Option<&uuid::Uuid>,
+        query: &query::GetUpcomingEpisodes<'_>,
     ) -> Result<types::BaseItemDtoQueryResult, Error> {
         self.request(reqwest::Method::GET, "/Shows/Upcoming".into())
-            .query_list_opt("enableImageTypes", enable_image_types)
-            .query_opt("enableImages", enable_images)
-            .query_opt("enableUserData", enable_user_data)
-            .query_list_opt("fields", fields)
-            .query_opt("imageTypeLimit", image_type_limit)
-            .query_opt("limit", limit)
-            .query_opt("parentId", parent_id)
-            .query_opt("startIndex", start_index)
-            .query_opt("userId", user_id)
+            .query_list_opt("enableImageTypes", query.enable_image_types)
+            .query_opt("enableImages", query.enable_images)
+            .query_opt("enableUserData", query.enable_user_data)
+            .query_list_opt("fields", query.fields)
+            .query_opt("imageTypeLimit", query.image_type_limit)
+            .query_opt("limit", query.limit)
+            .query_opt("parentId", query.parent_id)
+            .query_opt("startIndex", query.start_index)
+            .query_opt("userId", query.user_id)
             .send()
             .await
     }

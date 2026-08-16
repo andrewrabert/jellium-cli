@@ -54,19 +54,11 @@ impl TryFrom<String> for AudioSpatialFormat {
 }
 
 #[doc = "Client log document response dto."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct ClientLogDocumentResponseDto {
     #[doc = "Gets the resulting filename."]
     #[serde(rename = "FileName", default, skip_serializing_if = "Option::is_none")]
     pub file_name: Option<String>,
-}
-
-impl Default for ClientLogDocumentResponseDto {
-    fn default() -> Self {
-        Self {
-            file_name: Default::default(),
-        }
-    }
 }
 
 #[derive(
@@ -122,7 +114,7 @@ impl TryFrom<String> for CodecType {
 }
 
 #[doc = "Class CountryInfo."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct CountryInfo {
     #[doc = "Gets or sets the display name."]
     #[serde(
@@ -150,19 +142,8 @@ pub struct CountryInfo {
     pub two_letter_iso_region_name: Option<String>,
 }
 
-impl Default for CountryInfo {
-    fn default() -> Self {
-        Self {
-            display_name: Default::default(),
-            name: Default::default(),
-            three_letter_iso_region_name: Default::default(),
-            two_letter_iso_region_name: Default::default(),
-        }
-    }
-}
-
 #[doc = "Class CultureDto."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct CultureDto {
     #[doc = "Gets the display name."]
     #[serde(
@@ -196,20 +177,8 @@ pub struct CultureDto {
     pub two_letter_iso_language_name: Option<String>,
 }
 
-impl Default for CultureDto {
-    fn default() -> Self {
-        Self {
-            display_name: Default::default(),
-            name: Default::default(),
-            three_letter_iso_language_name: Default::default(),
-            three_letter_iso_language_names: Default::default(),
-            two_letter_iso_language_name: Default::default(),
-        }
-    }
-}
-
 #[doc = "The custom value option for custom database providers."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct CustomDatabaseOption {
     #[doc = "Gets or sets the key of the value."]
     #[serde(rename = "Key", default, skip_serializing_if = "Option::is_none")]
@@ -219,17 +188,8 @@ pub struct CustomDatabaseOption {
     pub value: Option<String>,
 }
 
-impl Default for CustomDatabaseOption {
-    fn default() -> Self {
-        Self {
-            key: Default::default(),
-            value: Default::default(),
-        }
-    }
-}
-
 #[doc = "Defines the options for a custom database connector."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct CustomDatabaseOptions {
     #[doc = "Gets or sets the connection string for the custom database provider."]
     #[serde(
@@ -255,17 +215,6 @@ pub struct CustomDatabaseOptions {
         skip_serializing_if = "Option::is_none"
     )]
     pub plugin_name: Option<String>,
-}
-
-impl Default for CustomDatabaseOptions {
-    fn default() -> Self {
-        Self {
-            connection_string: Default::default(),
-            options: Default::default(),
-            plugin_assembly: Default::default(),
-            plugin_name: Default::default(),
-        }
-    }
 }
 
 #[derive(
@@ -437,23 +386,15 @@ impl TryFrom<String> for DayPattern {
 }
 
 #[doc = "Default directory browser info."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct DefaultDirectoryBrowserInfoDto {
     #[doc = "Gets or sets the path."]
     #[serde(rename = "Path", default, skip_serializing_if = "Option::is_none")]
     pub path: Option<String>,
 }
 
-impl Default for DefaultDirectoryBrowserInfoDto {
-    fn default() -> Self {
-        Self {
-            path: Default::default(),
-        }
-    }
-}
-
 #[doc = "Defines the display preferences for any item that supports them (usually Folders)."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct DisplayPreferencesDto {
     #[doc = "Gets or sets the client."]
     #[serde(rename = "Client", default, skip_serializing_if = "Option::is_none")]
@@ -527,27 +468,6 @@ pub struct DisplayPreferencesDto {
     #[doc = "Gets or sets the type of the view."]
     #[serde(rename = "ViewType", default, skip_serializing_if = "Option::is_none")]
     pub view_type: Option<String>,
-}
-
-impl Default for DisplayPreferencesDto {
-    fn default() -> Self {
-        Self {
-            client: Default::default(),
-            custom_prefs: Default::default(),
-            id: Default::default(),
-            index_by: Default::default(),
-            primary_image_height: Default::default(),
-            primary_image_width: Default::default(),
-            remember_indexing: Default::default(),
-            remember_sorting: Default::default(),
-            scroll_direction: Default::default(),
-            show_backdrop: Default::default(),
-            show_sidebar: Default::default(),
-            sort_by: Default::default(),
-            sort_order: Default::default(),
-            view_type: Default::default(),
-        }
-    }
 }
 
 #[derive(
@@ -1964,21 +1884,12 @@ impl TryFrom<String> for KeepUntil {
 }
 
 #[doc = "`LocalizationOption`"]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct LocalizationOption {
     #[serde(rename = "Name", default, skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
     #[serde(rename = "Value", default, skip_serializing_if = "Option::is_none")]
     pub value: Option<String>,
-}
-
-impl Default for LocalizationOption {
-    fn default() -> Self {
-        Self {
-            name: Default::default(),
-            value: Default::default(),
-        }
-    }
 }
 
 #[derive(
@@ -2293,7 +2204,7 @@ impl TryFrom<String> for MetadataField {
 }
 
 #[doc = "Class MetadataOptions."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct MetadataOptions {
     #[serde(
         rename = "DisabledImageFetchers",
@@ -2333,20 +2244,6 @@ pub struct MetadataOptions {
         skip_serializing_if = "Option::is_none"
     )]
     pub metadata_fetcher_order: Option<Vec<String>>,
-}
-
-impl Default for MetadataOptions {
-    fn default() -> Self {
-        Self {
-            disabled_image_fetchers: Default::default(),
-            disabled_metadata_fetchers: Default::default(),
-            disabled_metadata_savers: Default::default(),
-            image_fetcher_order: Default::default(),
-            item_type: Default::default(),
-            local_metadata_reader_order: Default::default(),
-            metadata_fetcher_order: Default::default(),
-        }
-    }
 }
 
 #[derive(
@@ -2405,7 +2302,7 @@ impl TryFrom<String> for MetadataRefreshMode {
 }
 
 #[doc = "`NameIdPair`"]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct NameIdPair {
     #[doc = "Gets or sets the identifier."]
     #[serde(rename = "Id", default, skip_serializing_if = "Option::is_none")]
@@ -2415,17 +2312,8 @@ pub struct NameIdPair {
     pub name: Option<String>,
 }
 
-impl Default for NameIdPair {
-    fn default() -> Self {
-        Self {
-            id: Default::default(),
-            name: Default::default(),
-        }
-    }
-}
-
 #[doc = "Class ParentalRating."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct ParentalRating {
     #[doc = "Gets or sets the name."]
     #[serde(rename = "Name", default, skip_serializing_if = "Option::is_none")]
@@ -2442,18 +2330,8 @@ pub struct ParentalRating {
     pub value: Option<i32>,
 }
 
-impl Default for ParentalRating {
-    fn default() -> Self {
-        Self {
-            name: Default::default(),
-            rating_score: Default::default(),
-            value: Default::default(),
-        }
-    }
-}
-
 #[doc = "A class representing an parental rating score."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct ParentalRatingScore {
     #[doc = "Gets or sets the score."]
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -2461,15 +2339,6 @@ pub struct ParentalRatingScore {
     #[doc = "Gets or sets the sub score."]
     #[serde(rename = "subScore", default, skip_serializing_if = "Option::is_none")]
     pub sub_score: Option<i32>,
-}
-
-impl Default for ParentalRatingScore {
-    fn default() -> Self {
-        Self {
-            score: Default::default(),
-            sub_score: Default::default(),
-        }
-    }
 }
 
 #[derive(
@@ -2669,7 +2538,7 @@ impl TryFrom<String> for ProcessPriorityClass {
 }
 
 #[doc = "`QueryFilters`"]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct QueryFilters {
     #[serde(rename = "Genres", default, skip_serializing_if = "Option::is_none")]
     pub genres: Option<Vec<NameGuidPair>>,
@@ -2677,17 +2546,8 @@ pub struct QueryFilters {
     pub tags: Option<Vec<String>>,
 }
 
-impl Default for QueryFilters {
-    fn default() -> Self {
-        Self {
-            genres: Default::default(),
-            tags: Default::default(),
-        }
-    }
-}
-
 #[doc = "`QueryFiltersLegacy`"]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct QueryFiltersLegacy {
     #[serde(rename = "Genres", default, skip_serializing_if = "Option::is_none")]
     pub genres: Option<Vec<String>>,
@@ -2701,17 +2561,6 @@ pub struct QueryFiltersLegacy {
     pub tags: Option<Vec<String>>,
     #[serde(rename = "Years", default, skip_serializing_if = "Option::is_none")]
     pub years: Option<Vec<i32>>,
-}
-
-impl Default for QueryFiltersLegacy {
-    fn default() -> Self {
-        Self {
-            genres: Default::default(),
-            official_ratings: Default::default(),
-            tags: Default::default(),
-            years: Default::default(),
-        }
-    }
 }
 
 #[derive(
@@ -2764,7 +2613,7 @@ impl TryFrom<String> for RatingType {
 }
 
 #[doc = "`RecommendationDto`"]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct RecommendationDto {
     #[serde(
         rename = "BaselineItemName",
@@ -2786,17 +2635,6 @@ pub struct RecommendationDto {
         skip_serializing_if = "Option::is_none"
     )]
     pub recommendation_type: Option<RecommendationType>,
-}
-
-impl Default for RecommendationDto {
-    fn default() -> Self {
-        Self {
-            baseline_item_name: Default::default(),
-            category_id: Default::default(),
-            items: Default::default(),
-            recommendation_type: Default::default(),
-        }
-    }
 }
 
 #[derive(
@@ -2861,7 +2699,7 @@ impl TryFrom<String> for RecommendationType {
 }
 
 #[doc = "Refresh progress message."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct RefreshProgressMessage {
     #[doc = "Gets or sets the data."]
     #[serde(rename = "Data", default, skip_serializing_if = "Option::is_none")]
@@ -2875,16 +2713,6 @@ pub struct RefreshProgressMessage {
         skip_serializing_if = "Option::is_none"
     )]
     pub message_type: Option<SessionMessageType>,
-}
-
-impl Default for RefreshProgressMessage {
-    fn default() -> Self {
-        Self {
-            data: Default::default(),
-            message_id: Default::default(),
-            message_type: Default::default(),
-        }
-    }
 }
 
 #[derive(
@@ -3038,7 +2866,7 @@ impl TryFrom<String> for SortOrder {
 }
 
 #[doc = "Special view option dto."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct SpecialViewOptionDto {
     #[doc = "Gets or sets view option id."]
     #[serde(rename = "Id", default, skip_serializing_if = "Option::is_none")]
@@ -3046,15 +2874,6 @@ pub struct SpecialViewOptionDto {
     #[doc = "Gets or sets view option name."]
     #[serde(rename = "Name", default, skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
-}
-
-impl Default for SpecialViewOptionDto {
-    fn default() -> Self {
-        Self {
-            id: Default::default(),
-            name: Default::default(),
-        }
-    }
 }
 
 #[derive(
@@ -3180,7 +2999,7 @@ impl TryFrom<String> for UnratedItem {
 }
 
 #[doc = "Class UserDataChangeInfo."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct UserDataChangeInfo {
     #[doc = "Gets or sets the user data list."]
     #[serde(
@@ -3194,17 +3013,8 @@ pub struct UserDataChangeInfo {
     pub user_id: Option<uuid::Uuid>,
 }
 
-impl Default for UserDataChangeInfo {
-    fn default() -> Self {
-        Self {
-            user_data_list: Default::default(),
-            user_id: Default::default(),
-        }
-    }
-}
-
 #[doc = "User data changed message."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct UserDataChangedMessage {
     #[doc = "Class UserDataChangeInfo."]
     #[serde(rename = "Data", default, skip_serializing_if = "Option::is_none")]
@@ -3220,18 +3030,8 @@ pub struct UserDataChangedMessage {
     pub message_type: Option<SessionMessageType>,
 }
 
-impl Default for UserDataChangedMessage {
-    fn default() -> Self {
-        Self {
-            data: Default::default(),
-            message_id: Default::default(),
-            message_type: Default::default(),
-        }
-    }
-}
-
 #[doc = "Validate path object."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct ValidatePathDto {
     #[doc = "Gets or sets is path file."]
     #[serde(rename = "IsFile", default, skip_serializing_if = "Option::is_none")]
@@ -3246,16 +3046,6 @@ pub struct ValidatePathDto {
         skip_serializing_if = "Option::is_none"
     )]
     pub validate_writable: Option<bool>,
-}
-
-impl Default for ValidatePathDto {
-    fn default() -> Self {
-        Self {
-            is_file: Default::default(),
-            path: Default::default(),
-            validate_writable: Default::default(),
-        }
-    }
 }
 
 #[derive(
@@ -3521,7 +3311,7 @@ impl TryFrom<String> for VideoType {
 }
 
 #[doc = "`XbmcMetadataOptions`"]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct XbmcMetadataOptions {
     #[serde(
         rename = "EnableExtraThumbsDuplication",
@@ -3549,16 +3339,4 @@ pub struct XbmcMetadataOptions {
     pub save_image_paths_in_nfo: Option<bool>,
     #[serde(rename = "UserId", default, skip_serializing_if = "Option::is_none")]
     pub user_id: Option<String>,
-}
-
-impl Default for XbmcMetadataOptions {
-    fn default() -> Self {
-        Self {
-            enable_extra_thumbs_duplication: Default::default(),
-            enable_path_substitution: Default::default(),
-            release_date_format: Default::default(),
-            save_image_paths_in_nfo: Default::default(),
-            user_id: Default::default(),
-        }
-    }
 }

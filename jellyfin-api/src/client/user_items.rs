@@ -1,5 +1,6 @@
 use crate::Client;
 use crate::error::Error;
+use crate::query;
 use crate::types;
 use crate::util::encode_path;
 
@@ -39,38 +40,24 @@ impl Client {
     #[doc = "Gets items based on a query\n\nSends a `GET` request to `/UserItems/Resume`\n\nArguments:\n- `enable_image_types`: Optional. The image types to include in the output.\n- `enable_images`: Optional. Include image information in output.\n- `enable_total_record_count`: Optional. Enable the total record count.\n- `enable_user_data`: Optional. Include user data.\n- `exclude_active_sessions`: Optional. Whether to exclude the currently active sessions.\n- `exclude_item_types`: Optional. If specified, results will be filtered based on item type. This allows multiple, comma delimited.\n- `fields`: Optional. Specify additional fields of information to return in the output. This allows multiple, comma delimited. Options: Budget, Chapters, DateCreated, Genres, HomePageUrl, IndexOptions, MediaStreams, Overview, ParentId, Path, People, ProviderIds, PrimaryImageAspectRatio, Revenue, SortName, Studios, Taglines.\n- `image_type_limit`: Optional. The max number of images to return, per image type.\n- `include_item_types`: Optional. If specified, results will be filtered based on the item type. This allows multiple, comma delimited.\n- `limit`: The item limit.\n- `media_types`: Optional. Filter by MediaType. Allows multiple, comma delimited.\n- `parent_id`: Specify this to localize the search to a specific item or folder. Omit to use the root.\n- `search_term`: The search term.\n- `start_index`: The start index.\n- `user_id`: The user id.\n"]
     pub async fn get_resume_items(
         &self,
-        enable_image_types: Option<&Vec<types::ImageType>>,
-        enable_images: Option<bool>,
-        enable_total_record_count: Option<bool>,
-        enable_user_data: Option<bool>,
-        exclude_active_sessions: Option<bool>,
-        exclude_item_types: Option<&Vec<types::BaseItemKind>>,
-        fields: Option<&Vec<types::ItemFields>>,
-        image_type_limit: Option<i32>,
-        include_item_types: Option<&Vec<types::BaseItemKind>>,
-        limit: Option<i32>,
-        media_types: Option<&Vec<types::MediaType>>,
-        parent_id: Option<&uuid::Uuid>,
-        search_term: Option<&str>,
-        start_index: Option<i32>,
-        user_id: Option<&uuid::Uuid>,
+        query: &query::GetResumeItems<'_>,
     ) -> Result<types::BaseItemDtoQueryResult, Error> {
         self.request(reqwest::Method::GET, "/UserItems/Resume".into())
-            .query_list_opt("enableImageTypes", enable_image_types)
-            .query_opt("enableImages", enable_images)
-            .query_opt("enableTotalRecordCount", enable_total_record_count)
-            .query_opt("enableUserData", enable_user_data)
-            .query_opt("excludeActiveSessions", exclude_active_sessions)
-            .query_list_opt("excludeItemTypes", exclude_item_types)
-            .query_list_opt("fields", fields)
-            .query_opt("imageTypeLimit", image_type_limit)
-            .query_list_opt("includeItemTypes", include_item_types)
-            .query_opt("limit", limit)
-            .query_list_opt("mediaTypes", media_types)
-            .query_opt("parentId", parent_id)
-            .query_opt("searchTerm", search_term)
-            .query_opt("startIndex", start_index)
-            .query_opt("userId", user_id)
+            .query_list_opt("enableImageTypes", query.enable_image_types)
+            .query_opt("enableImages", query.enable_images)
+            .query_opt("enableTotalRecordCount", query.enable_total_record_count)
+            .query_opt("enableUserData", query.enable_user_data)
+            .query_opt("excludeActiveSessions", query.exclude_active_sessions)
+            .query_list_opt("excludeItemTypes", query.exclude_item_types)
+            .query_list_opt("fields", query.fields)
+            .query_opt("imageTypeLimit", query.image_type_limit)
+            .query_list_opt("includeItemTypes", query.include_item_types)
+            .query_opt("limit", query.limit)
+            .query_list_opt("mediaTypes", query.media_types)
+            .query_opt("parentId", query.parent_id)
+            .query_opt("searchTerm", query.search_term)
+            .query_opt("startIndex", query.start_index)
+            .query_opt("userId", query.user_id)
             .send()
             .await
     }

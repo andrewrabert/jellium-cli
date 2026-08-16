@@ -1,5 +1,6 @@
 use crate::Client;
 use crate::error::Error;
+use crate::query;
 use crate::types;
 use crate::util::encode_path;
 
@@ -9,21 +10,7 @@ impl Client {
         &self,
         name: &str,
         image_type: types::ImageType,
-        background_color: Option<&str>,
-        blur: Option<i32>,
-        fill_height: Option<i32>,
-        fill_width: Option<i32>,
-        foreground_layer: Option<&str>,
-        format: Option<types::ImageFormat>,
-        height: Option<i32>,
-        image_index: Option<i32>,
-        max_height: Option<i32>,
-        max_width: Option<i32>,
-        percent_played: Option<f64>,
-        quality: Option<i32>,
-        tag: Option<&str>,
-        unplayed_count: Option<i32>,
-        width: Option<i32>,
+        query: &query::GetStudioImage<'_>,
     ) -> Result<reqwest::Response, Error> {
         self.request(
             reqwest::Method::GET,
@@ -33,21 +20,21 @@ impl Client {
                 encode_path(&image_type.to_string())
             ),
         )
-        .query_opt("backgroundColor", background_color)
-        .query_opt("blur", blur)
-        .query_opt("fillHeight", fill_height)
-        .query_opt("fillWidth", fill_width)
-        .query_opt("foregroundLayer", foreground_layer)
-        .query_opt("format", format)
-        .query_opt("height", height)
-        .query_opt("imageIndex", image_index)
-        .query_opt("maxHeight", max_height)
-        .query_opt("maxWidth", max_width)
-        .query_opt("percentPlayed", percent_played)
-        .query_opt("quality", quality)
-        .query_opt("tag", tag)
-        .query_opt("unplayedCount", unplayed_count)
-        .query_opt("width", width)
+        .query_opt("backgroundColor", query.background_color)
+        .query_opt("blur", query.blur)
+        .query_opt("fillHeight", query.fill_height)
+        .query_opt("fillWidth", query.fill_width)
+        .query_opt("foregroundLayer", query.foreground_layer)
+        .query_opt("format", query.format)
+        .query_opt("height", query.height)
+        .query_opt("imageIndex", query.image_index)
+        .query_opt("maxHeight", query.max_height)
+        .query_opt("maxWidth", query.max_width)
+        .query_opt("percentPlayed", query.percent_played)
+        .query_opt("quality", query.quality)
+        .query_opt("tag", query.tag)
+        .query_opt("unplayedCount", query.unplayed_count)
+        .query_opt("width", query.width)
         .send_response()
         .await
     }
@@ -57,21 +44,7 @@ impl Client {
         &self,
         name: &str,
         image_type: types::ImageType,
-        background_color: Option<&str>,
-        blur: Option<i32>,
-        fill_height: Option<i32>,
-        fill_width: Option<i32>,
-        foreground_layer: Option<&str>,
-        format: Option<types::ImageFormat>,
-        height: Option<i32>,
-        image_index: Option<i32>,
-        max_height: Option<i32>,
-        max_width: Option<i32>,
-        percent_played: Option<f64>,
-        quality: Option<i32>,
-        tag: Option<&str>,
-        unplayed_count: Option<i32>,
-        width: Option<i32>,
+        query: &query::HeadStudioImage<'_>,
     ) -> Result<reqwest::Response, Error> {
         self.request(
             reqwest::Method::HEAD,
@@ -81,21 +54,21 @@ impl Client {
                 encode_path(&image_type.to_string())
             ),
         )
-        .query_opt("backgroundColor", background_color)
-        .query_opt("blur", blur)
-        .query_opt("fillHeight", fill_height)
-        .query_opt("fillWidth", fill_width)
-        .query_opt("foregroundLayer", foreground_layer)
-        .query_opt("format", format)
-        .query_opt("height", height)
-        .query_opt("imageIndex", image_index)
-        .query_opt("maxHeight", max_height)
-        .query_opt("maxWidth", max_width)
-        .query_opt("percentPlayed", percent_played)
-        .query_opt("quality", quality)
-        .query_opt("tag", tag)
-        .query_opt("unplayedCount", unplayed_count)
-        .query_opt("width", width)
+        .query_opt("backgroundColor", query.background_color)
+        .query_opt("blur", query.blur)
+        .query_opt("fillHeight", query.fill_height)
+        .query_opt("fillWidth", query.fill_width)
+        .query_opt("foregroundLayer", query.foreground_layer)
+        .query_opt("format", query.format)
+        .query_opt("height", query.height)
+        .query_opt("imageIndex", query.image_index)
+        .query_opt("maxHeight", query.max_height)
+        .query_opt("maxWidth", query.max_width)
+        .query_opt("percentPlayed", query.percent_played)
+        .query_opt("quality", query.quality)
+        .query_opt("tag", query.tag)
+        .query_opt("unplayedCount", query.unplayed_count)
+        .query_opt("width", query.width)
         .send_response()
         .await
     }
@@ -106,20 +79,7 @@ impl Client {
         name: &str,
         image_type: types::ImageType,
         image_index: i32,
-        background_color: Option<&str>,
-        blur: Option<i32>,
-        fill_height: Option<i32>,
-        fill_width: Option<i32>,
-        foreground_layer: Option<&str>,
-        format: Option<types::ImageFormat>,
-        height: Option<i32>,
-        max_height: Option<i32>,
-        max_width: Option<i32>,
-        percent_played: Option<f64>,
-        quality: Option<i32>,
-        tag: Option<&str>,
-        unplayed_count: Option<i32>,
-        width: Option<i32>,
+        query: &query::GetStudioImageByIndex<'_>,
     ) -> Result<reqwest::Response, Error> {
         self.request(
             reqwest::Method::GET,
@@ -130,20 +90,20 @@ impl Client {
                 encode_path(&image_index.to_string())
             ),
         )
-        .query_opt("backgroundColor", background_color)
-        .query_opt("blur", blur)
-        .query_opt("fillHeight", fill_height)
-        .query_opt("fillWidth", fill_width)
-        .query_opt("foregroundLayer", foreground_layer)
-        .query_opt("format", format)
-        .query_opt("height", height)
-        .query_opt("maxHeight", max_height)
-        .query_opt("maxWidth", max_width)
-        .query_opt("percentPlayed", percent_played)
-        .query_opt("quality", quality)
-        .query_opt("tag", tag)
-        .query_opt("unplayedCount", unplayed_count)
-        .query_opt("width", width)
+        .query_opt("backgroundColor", query.background_color)
+        .query_opt("blur", query.blur)
+        .query_opt("fillHeight", query.fill_height)
+        .query_opt("fillWidth", query.fill_width)
+        .query_opt("foregroundLayer", query.foreground_layer)
+        .query_opt("format", query.format)
+        .query_opt("height", query.height)
+        .query_opt("maxHeight", query.max_height)
+        .query_opt("maxWidth", query.max_width)
+        .query_opt("percentPlayed", query.percent_played)
+        .query_opt("quality", query.quality)
+        .query_opt("tag", query.tag)
+        .query_opt("unplayedCount", query.unplayed_count)
+        .query_opt("width", query.width)
         .send_response()
         .await
     }
@@ -154,20 +114,7 @@ impl Client {
         name: &str,
         image_type: types::ImageType,
         image_index: i32,
-        background_color: Option<&str>,
-        blur: Option<i32>,
-        fill_height: Option<i32>,
-        fill_width: Option<i32>,
-        foreground_layer: Option<&str>,
-        format: Option<types::ImageFormat>,
-        height: Option<i32>,
-        max_height: Option<i32>,
-        max_width: Option<i32>,
-        percent_played: Option<f64>,
-        quality: Option<i32>,
-        tag: Option<&str>,
-        unplayed_count: Option<i32>,
-        width: Option<i32>,
+        query: &query::HeadStudioImageByIndex<'_>,
     ) -> Result<reqwest::Response, Error> {
         self.request(
             reqwest::Method::HEAD,
@@ -178,20 +125,20 @@ impl Client {
                 encode_path(&image_index.to_string())
             ),
         )
-        .query_opt("backgroundColor", background_color)
-        .query_opt("blur", blur)
-        .query_opt("fillHeight", fill_height)
-        .query_opt("fillWidth", fill_width)
-        .query_opt("foregroundLayer", foreground_layer)
-        .query_opt("format", format)
-        .query_opt("height", height)
-        .query_opt("maxHeight", max_height)
-        .query_opt("maxWidth", max_width)
-        .query_opt("percentPlayed", percent_played)
-        .query_opt("quality", quality)
-        .query_opt("tag", tag)
-        .query_opt("unplayedCount", unplayed_count)
-        .query_opt("width", width)
+        .query_opt("backgroundColor", query.background_color)
+        .query_opt("blur", query.blur)
+        .query_opt("fillHeight", query.fill_height)
+        .query_opt("fillWidth", query.fill_width)
+        .query_opt("foregroundLayer", query.foreground_layer)
+        .query_opt("format", query.format)
+        .query_opt("height", query.height)
+        .query_opt("maxHeight", query.max_height)
+        .query_opt("maxWidth", query.max_width)
+        .query_opt("percentPlayed", query.percent_played)
+        .query_opt("quality", query.quality)
+        .query_opt("tag", query.tag)
+        .query_opt("unplayedCount", query.unplayed_count)
+        .query_opt("width", query.width)
         .send_response()
         .await
     }
@@ -199,42 +146,26 @@ impl Client {
     #[doc = "Gets all studios from a given item, folder, or the entire library\n\nSends a `GET` request to `/Studios`\n\nArguments:\n- `enable_image_types`: Optional. The image types to include in the output.\n- `enable_images`: Optional, include image information in output.\n- `enable_total_record_count`: Total record count.\n- `enable_user_data`: Optional, include user data.\n- `exclude_item_types`: Optional. If specified, results will be filtered out based on item type. This allows multiple, comma delimited.\n- `fields`: Optional. Specify additional fields of information to return in the output.\n- `image_type_limit`: Optional, the max number of images to return, per image type.\n- `include_item_types`: Optional. If specified, results will be filtered based on item type. This allows multiple, comma delimited.\n- `is_favorite`: Optional filter by items that are marked as favorite, or not.\n- `limit`: Optional. The maximum number of records to return.\n- `name_less_than`: Optional filter by items whose name is equally or lesser than a given input string.\n- `name_starts_with`: Optional filter by items whose name is sorted equally than a given input string.\n- `name_starts_with_or_greater`: Optional filter by items whose name is sorted equally or greater than a given input string.\n- `parent_id`: Specify this to localize the search to a specific item or folder. Omit to use the root.\n- `search_term`: Optional. Search term.\n- `start_index`: Optional. The record index to start at. All items with a lower index will be dropped from the results.\n- `user_id`: User id.\n"]
     pub async fn get_studios(
         &self,
-        enable_image_types: Option<&Vec<types::ImageType>>,
-        enable_images: Option<bool>,
-        enable_total_record_count: Option<bool>,
-        enable_user_data: Option<bool>,
-        exclude_item_types: Option<&Vec<types::BaseItemKind>>,
-        fields: Option<&Vec<types::ItemFields>>,
-        image_type_limit: Option<i32>,
-        include_item_types: Option<&Vec<types::BaseItemKind>>,
-        is_favorite: Option<bool>,
-        limit: Option<i32>,
-        name_less_than: Option<&str>,
-        name_starts_with: Option<&str>,
-        name_starts_with_or_greater: Option<&str>,
-        parent_id: Option<&uuid::Uuid>,
-        search_term: Option<&str>,
-        start_index: Option<i32>,
-        user_id: Option<&uuid::Uuid>,
+        query: &query::GetStudios<'_>,
     ) -> Result<types::BaseItemDtoQueryResult, Error> {
         self.request(reqwest::Method::GET, "/Studios".into())
-            .query_list_opt("enableImageTypes", enable_image_types)
-            .query_opt("enableImages", enable_images)
-            .query_opt("enableTotalRecordCount", enable_total_record_count)
-            .query_opt("enableUserData", enable_user_data)
-            .query_list_opt("excludeItemTypes", exclude_item_types)
-            .query_list_opt("fields", fields)
-            .query_opt("imageTypeLimit", image_type_limit)
-            .query_list_opt("includeItemTypes", include_item_types)
-            .query_opt("isFavorite", is_favorite)
-            .query_opt("limit", limit)
-            .query_opt("nameLessThan", name_less_than)
-            .query_opt("nameStartsWith", name_starts_with)
-            .query_opt("nameStartsWithOrGreater", name_starts_with_or_greater)
-            .query_opt("parentId", parent_id)
-            .query_opt("searchTerm", search_term)
-            .query_opt("startIndex", start_index)
-            .query_opt("userId", user_id)
+            .query_list_opt("enableImageTypes", query.enable_image_types)
+            .query_opt("enableImages", query.enable_images)
+            .query_opt("enableTotalRecordCount", query.enable_total_record_count)
+            .query_opt("enableUserData", query.enable_user_data)
+            .query_list_opt("excludeItemTypes", query.exclude_item_types)
+            .query_list_opt("fields", query.fields)
+            .query_opt("imageTypeLimit", query.image_type_limit)
+            .query_list_opt("includeItemTypes", query.include_item_types)
+            .query_opt("isFavorite", query.is_favorite)
+            .query_opt("limit", query.limit)
+            .query_opt("nameLessThan", query.name_less_than)
+            .query_opt("nameStartsWith", query.name_starts_with)
+            .query_opt("nameStartsWithOrGreater", query.name_starts_with_or_greater)
+            .query_opt("parentId", query.parent_id)
+            .query_opt("searchTerm", query.search_term)
+            .query_opt("startIndex", query.start_index)
+            .query_opt("userId", query.user_id)
             .send()
             .await
     }

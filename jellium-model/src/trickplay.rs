@@ -16,18 +16,18 @@ pub struct Trickplay {
 /// One trickplay width as the server built it.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Description {
-    pub width: i32,
-    pub height: i32,
-    pub tile_width: i32,
-    pub tile_height: i32,
-    pub thumbnail_count: i32,
-    pub interval_ms: i32,
+    pub width: u32,
+    pub height: u32,
+    pub tile_width: u32,
+    pub tile_height: u32,
+    pub thumbnail_count: u32,
+    pub interval: Duration,
 }
 
 impl Description {
     /// How many thumbnails one tile sheet holds.
-    fn per_tile(self) -> i32 {
-        (self.tile_width * self.tile_height).max(1)
+    fn per_tile(self) -> u32 {
+        self.tile_width.saturating_mul(self.tile_height).max(1)
     }
 }
 
@@ -40,15 +40,18 @@ impl Trickplay {
                 .values()
                 .filter_map(|info| {
                     Some(Description {
-                        width: info.width?,
-                        height: info.height.unwrap_or_default(),
-                        tile_width: info.tile_width?,
-                        tile_height: info.tile_height?,
-                        thumbnail_count: info.thumbnail_count.unwrap_or_default(),
-                        interval_ms: info.interval.unwrap_or_default(),
+                        width: u32::try_from(info.width?).ok()?,
+                        height: u32::try_from(info.height.unwrap_or_default()).unwrap_or_default(),
+                        tile_width: u32::try_from(info.tile_width?).ok()?,
+                        tile_height: u32::try_from(info.tile_height?).ok()?,
+                        thumbnail_count: u32::try_from(info.thumbnail_count.unwrap_or_default())
+                            .unwrap_or_default(),
+                        interval: Duration::from_millis(
+                            u64::try_from(info.interval.unwrap_or_default()).unwrap_or_default(),
+                        ),
                     })
                 })
-                .filter(|described| described.width > 0 && described.interval_ms > 0)
+                .filter(|described| described.width > 0 && !described.interval.is_zero())
                 .collect();
             described.sort_by_key(|described| described.width);
             if !described.is_empty() {
@@ -64,7 +67,7 @@ impl Trickplay {
         let described = self.held.get(media_source)?;
         described
             .iter()
-            .find(|held| held.width >= i32::from(rendered))
+            .find(|held| held.width >= u32::from(rendered))
             .or_else(|| described.last())
             .copied()
     }
@@ -73,17 +76,17 @@ impl Trickplay {
 /// Which tile holds the frame at `position`, and where inside it.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Tile {
-    pub index: i32,
-    pub column: i32,
-    pub row: i32,
+    pub index: u32,
+    pub column: u32,
+    pub row: u32,
 }
 
 /// The tile covering `position`, and `None` past the last thumbnail.
 pub fn tile(description: Description, position: Duration) -> Option<Tile> {
-    if description.interval_ms <= 0 {
+    if description.interval.is_zero() {
         return None;
     }
-    let at = (position.as_millis() as i64 / i64::from(description.interval_ms)) as i32;
+    let at = u32::try_from(position.as_millis() / description.interval.as_millis()).ok()?;
     if description.thumbnail_count > 0 && at >= description.thumbnail_count {
         return None;
     }
@@ -118,7 +121,7 @@ mod tests {
         tile_width: 10,
         tile_height: 10,
         thumbnail_count: 250,
-        interval_ms: 1_000,
+        interval: Duration::from_millis(1_000),
     };
 
     #[test]
@@ -181,7 +184,7 @@ mod tests {
         assert_eq!(chapter_at(&[], Duration::from_secs(1)), None);
     }
 
-    fn described(widths: &[i32]) -> Trickplay {
+    fn described(widths: &[u32]) -> Trickplay {
         Trickplay {
             held: HashMap::from([(
                 "source".to_owned(),

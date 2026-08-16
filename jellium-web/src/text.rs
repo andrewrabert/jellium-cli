@@ -13,10 +13,7 @@ macro_rules! text {
         impl Text {
             /// Every variant, which is what the string table is checked
             /// against.
-            #[allow(
-                dead_code,
-                reason = "the gate reads the roll; the running client never does"
-            )]
+            #[cfg(test)]
             pub const ALL: &'static [Text] = &[$(Text::$variant,)*];
 
             /// The key this text reads under in the string table.
@@ -73,13 +70,8 @@ text! {
     FailureStageSignedOnly => "failureStageSignedOnly",
     FailureWroteSetupStep => "failureWroteSetupStep",
     AppName => "appName",
-    BootLoading => "bootLoading",
-    BootWasmFailed => "bootWasmFailed",
     BootNoBackend => "bootNoBackend",
-    BootRetry => "bootRetry",
     BootPanicked => "bootPanicked",
-    LoginTitle => "loginTitle",
-    LoginServer => "loginServer",
     LoginUsername => "loginUsername",
     LoginPassword => "loginPassword",
     LoginSubmit => "loginSubmit",
@@ -115,10 +107,6 @@ text! {
     LoginResetContactAdministrator => "loginResetContactAdministrator",
     LoginResetInNetwork => "loginResetInNetwork",
     LoginResetCleared => "loginResetCleared",
-    ConfirmSwitch => "confirmSwitch",
-    ConfirmEndsPlayback => "confirmEndsPlayback",
-    ConfirmEndsGroup => "confirmEndsGroup",
-    ConfirmEndsRemote => "confirmEndsRemote",
     FailureThrew => "failureThrew",
     FailureStored => "failureStored",
     FailureFullscreen => "failureFullscreen",
@@ -131,10 +119,6 @@ text! {
     FailureFileUnreadable => "failureFileUnreadable",
     FailureFileUndecodable => "failureFileUndecodable",
     FailurePlayerFrame => "failurePlayerFrame",
-    FailurePlayerEvent => "failurePlayerEvent",
-    FailureTextTracks => "failureTextTracks",
-    FailureCueStyle => "failureCueStyle",
-    FailureNowPlaying => "failureNowPlaying",
     FailureBridgeAnswer => "failureBridgeAnswer",
     FailureLiveTvSection => "failureLiveTvSection",
     FailureChannelsUnread => "failureChannelsUnread",
@@ -229,9 +213,6 @@ text! {
     SortReleaseDate => "sortReleaseDate",
     SortCommunityRating => "sortCommunityRating",
     SortRandom => "sortRandom",
-    PagePosition => "pagePosition",
-    PagePrevious => "pagePrevious",
-    PageNext => "pageNext",
     BrowseTotal => "browseTotal",
     FilterOpen => "filterOpen",
     FilterClose => "filterClose",
@@ -294,7 +275,6 @@ text! {
     PlayerNext => "playerNext",
     PlayerMute => "playerMute",
     PlayerUnmute => "playerUnmute",
-    PlayerVolume => "playerVolume",
     PlayerFullscreen => "playerFullscreen",
     PlayerExitFullscreen => "playerExitFullscreen",
     PlayerAudio => "playerAudio",
@@ -403,7 +383,6 @@ text! {
     PlayerStop => "playerStop",
     RemoteTitle => "remoteTitle",
     RemoteEmpty => "remoteEmpty",
-    RemoteHere => "remoteHere",
     RemoteLeave => "remoteLeave",
     RemoteNothingPlaying => "remoteNothingPlaying",
     RemoteHeading => "remoteHeading",
@@ -457,7 +436,6 @@ text! {
     GuideNow => "guideNow",
     GuideEarlier => "guideEarlier",
     GuideLater => "guideLater",
-    GuideDate => "guideDate",
     GuideEmpty => "guideEmpty",
     GuideBadgeLive => "guideBadgeLive",
     GuideBadgeNew => "guideBadgeNew",
@@ -523,7 +501,6 @@ text! {
     FailureGuideOutOfRange => "failureGuideOutOfRange",
     FailureLiveNotRelayable => "failureLiveNotRelayable",
     NavDashboard => "navDashboard",
-    DashboardTitle => "dashboardTitle",
     PluginsTitle => "pluginsTitle",
     PluginsVersion => "pluginsVersion",
     PluginsStatus => "pluginsStatus",
@@ -692,9 +669,6 @@ text! {
     UsersProfile => "usersProfile",
     UsersAccess => "usersAccess",
     UsersParental => "usersParental",
-    UsersLibraries => "usersLibraries",
-    UsersDevices => "usersDevices",
-    UsersImage => "usersImage",
     UsersImageUpload => "usersImageUpload",
     UsersImageRemove => "usersImageRemove",
     UsersOwnAccount => "usersOwnAccount",
@@ -703,23 +677,13 @@ text! {
     LibrariesCreate => "librariesCreate",
     LibrariesRename => "librariesRename",
     LibrariesRemove => "librariesRemove",
-    LibrariesContentType => "librariesContentType",
     LibrariesPaths => "librariesPaths",
     LibrariesPathAdd => "librariesPathAdd",
-    LibrariesPathEdit => "librariesPathEdit",
     LibrariesPathRemove => "librariesPathRemove",
     LibrariesBrowse => "librariesBrowse",
-    LibrariesDrives => "librariesDrives",
     LibrariesScan => "librariesScan",
     LibrariesScanning => "librariesScanning",
     LibrariesOptions => "librariesOptions",
-    LibrariesMetadataFetchers => "librariesMetadataFetchers",
-    LibrariesImageFetchers => "librariesImageFetchers",
-    LibrariesSubtitleDownloaders => "librariesSubtitleDownloaders",
-    LibrariesNfo => "librariesNfo",
-    LibrariesMonitoring => "librariesMonitoring",
-    LibrariesOrderUp => "librariesOrderUp",
-    LibrariesOrderDown => "librariesOrderDown",
     ConfirmDeleteUser => "confirmDeleteUser",
     ConfirmDeleteLibrary => "confirmDeleteLibrary",
     ConfirmDeletePath => "confirmDeletePath",
@@ -757,7 +721,6 @@ text! {
     FailureWroteLibraryPath => "failureWroteLibraryPath",
     FailureWroteLibraryOptions => "failureWroteLibraryOptions",
     TasksTitle => "tasksTitle",
-    TasksState => "tasksState",
     TasksIdle => "tasksIdle",
     TasksRunning => "tasksRunning",
     TasksCancelling => "tasksCancelling",
@@ -767,16 +730,9 @@ text! {
     TasksDuration => "tasksDuration",
     TasksTriggers => "tasksTriggers",
     TasksTriggerDaily => "tasksTriggerDaily",
-    TasksTriggerWeekly => "tasksTriggerWeekly",
     TasksTriggerInterval => "tasksTriggerInterval",
     TasksTriggerStartup => "tasksTriggerStartup",
-    TasksTriggerIdle => "tasksTriggerIdle",
-    TasksTriggerAdd => "tasksTriggerAdd",
     TasksTriggerRemove => "tasksTriggerRemove",
-    TasksTriggerTime => "tasksTriggerTime",
-    TasksTriggerDay => "tasksTriggerDay",
-    TasksTriggerEvery => "tasksTriggerEvery",
-    TasksTriggerMaxRuntime => "tasksTriggerMaxRuntime",
     LogsTitle => "logsTitle",
     LogsSize => "logsSize",
     LogsTail => "logsTail",
@@ -799,12 +755,10 @@ text! {
     RepositoriesRemove => "repositoriesRemove",
     RepositoriesUrl => "repositoriesUrl",
     DevicesTitle => "devicesTitle",
-    DevicesLastSeen => "devicesLastSeen",
     DevicesRename => "devicesRename",
     DevicesDelete => "devicesDelete",
     KeysTitle => "keysTitle",
     KeysApp => "keysApp",
-    KeysCreated => "keysCreated",
     KeysCreate => "keysCreate",
     KeysRevoke => "keysRevoke",
     ConfirmInstallPackage => "confirmInstallPackage",
@@ -828,22 +782,18 @@ text! {
     TunersDelete => "tunersDelete",
     TunersDiscover => "tunersDiscover",
     TunersReset => "tunersReset",
-    TunersType => "tunersType",
     TunersUrl => "tunersUrl",
     ProvidersTitle => "providersTitle",
     ProvidersSchedulesDirect => "providersSchedulesDirect",
     ProvidersXmltv => "providersXmltv",
     ProvidersUsername => "providersUsername",
     ProvidersPassword => "providersPassword",
-    ProvidersCountry => "providersCountry",
     ProvidersPostcode => "providersPostcode",
     ProvidersLineup => "providersLineup",
     ProvidersPath => "providersPath",
     ProvidersAdd => "providersAdd",
     ProvidersDelete => "providersDelete",
     MappingTitle => "mappingTitle",
-    MappingTuner => "mappingTuner",
-    MappingListing => "mappingListing",
     DvrTitle => "dvrTitle",
     ConfirmDeleteTuner => "confirmDeleteTuner",
     ConfirmDeleteProvider => "confirmDeleteProvider",
@@ -872,18 +822,26 @@ text! {
     FailureSeriesTimerRefused => "failureSeriesTimerRefused",
     FailureRecordingDeleteRefused => "failureRecordingDeleteRefused",
     FailureChannelInGroup => "failureChannelInGroup",
+    FailureActivityDate => "failureActivityDate",
+    FailureChapterIndex => "failureChapterIndex",
+    FailureLibraryId => "failureLibraryId",
+    FailureOverlayMount => "failureOverlayMount",
+    FailureRange => "failureRange",
+    FailureYear => "failureYear",
 }
 
 const TABLE_SOURCE: &str = include_str!("../strings/en-us.json");
 
-#[expect(
-    clippy::disallowed_methods,
-    reason = "the string table is what every failure sentence is read from"
-)]
+/// The keys the boot shell reads straight from the table, which no variant
+/// names: the shell runs before the wasm module exists.
+#[cfg(test)]
+const BOOT_KEYS: &[&str] = &["bootLoading", "bootWasmFailed", "bootRetry"];
+
 fn table() -> &'static serde_json::Map<String, serde_json::Value> {
     static TABLE: OnceLock<serde_json::Map<String, serde_json::Value>> = OnceLock::new();
     TABLE.get_or_init(|| {
-        serde_json::from_str(TABLE_SOURCE).expect("strings/en-us.json is not a JSON object")
+        crate::failure::unraised::decoded(TABLE_SOURCE)
+            .expect("strings/en-us.json is not a JSON object")
     })
 }
 
@@ -923,13 +881,17 @@ mod tests {
 
     use wasm_bindgen_test::wasm_bindgen_test;
 
-    use super::{Text, table};
+    use super::{BOOT_KEYS, Text, table};
 
     /// Every variant has a key in the table and every key in the table has a
     /// variant.
     #[wasm_bindgen_test]
     fn the_table_and_the_variants_agree() {
-        let named: HashSet<&str> = Text::ALL.iter().map(|text| text.key()).collect();
+        let named: HashSet<&str> = Text::ALL
+            .iter()
+            .map(|text| text.key())
+            .chain(BOOT_KEYS.iter().copied())
+            .collect();
         let held: HashSet<&str> = table().keys().map(String::as_str).collect();
         let mut missing: Vec<&str> = named.difference(&held).copied().collect();
         let mut stray: Vec<&str> = held.difference(&named).copied().collect();

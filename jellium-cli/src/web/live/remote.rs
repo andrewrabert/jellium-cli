@@ -211,13 +211,13 @@ pub async fn drive(upstream: &Upstream, target: &str, drive: &Drive) -> Result<(
             client
                 .play(
                     target,
-                    None,
                     items,
-                    None,
                     play_command(*mode),
-                    Some(*start_index),
-                    Some(*start_ticks),
-                    None,
+                    &jellyfin_api::query::Play {
+                        start_index: Some(*start_index),
+                        start_position_ticks: Some(*start_ticks),
+                        ..Default::default()
+                    },
                 )
                 .await
         }

@@ -233,7 +233,9 @@ pub fn queue(update: &PlayQueueUpdate) -> GroupQueue {
                 })
             })
             .collect(),
-        playing_index: update.playing_item_index.unwrap_or(-1),
+        playing_index: update
+            .playing_item_index
+            .and_then(|index| usize::try_from(index).ok()),
         position_ticks: update.start_position_ticks.unwrap_or(0),
         playing: update.is_playing.unwrap_or(false),
         repeat: repeat(update.repeat_mode),

@@ -53,7 +53,7 @@ impl TryFrom<String> for GroupRepeatMode {
 }
 
 #[doc = "`LiveStreamResponse`"]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct LiveStreamResponse {
     #[serde(
         rename = "MediaSource",
@@ -63,16 +63,8 @@ pub struct LiveStreamResponse {
     pub media_source: Option<MediaSourceInfo>,
 }
 
-impl Default for LiveStreamResponse {
-    fn default() -> Self {
-        Self {
-            media_source: Default::default(),
-        }
-    }
-}
-
 #[doc = "Open live stream dto."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct OpenLiveStreamDto {
     #[doc = "Gets or sets a value indicating whether always burn in subtitles when transcoding."]
     #[serde(
@@ -162,27 +154,6 @@ pub struct OpenLiveStreamDto {
     pub user_id: Option<uuid::Uuid>,
 }
 
-impl Default for OpenLiveStreamDto {
-    fn default() -> Self {
-        Self {
-            always_burn_in_subtitle_when_transcoding: Default::default(),
-            audio_stream_index: Default::default(),
-            device_profile: Default::default(),
-            direct_play_protocols: Default::default(),
-            enable_direct_play: Default::default(),
-            enable_direct_stream: Default::default(),
-            item_id: Default::default(),
-            max_audio_channels: Default::default(),
-            max_streaming_bitrate: Default::default(),
-            open_token: Default::default(),
-            play_session_id: Default::default(),
-            start_time_ticks: Default::default(),
-            subtitle_stream_index: Default::default(),
-            user_id: Default::default(),
-        }
-    }
-}
-
 #[derive(
     serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd,
 )]
@@ -233,7 +204,7 @@ impl TryFrom<String> for PlayAccess {
 }
 
 #[doc = "Play command websocket message."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct PlayMessage {
     #[doc = "Class PlayRequest."]
     #[serde(rename = "Data", default, skip_serializing_if = "Option::is_none")]
@@ -247,16 +218,6 @@ pub struct PlayMessage {
         skip_serializing_if = "Option::is_none"
     )]
     pub message_type: Option<SessionMessageType>,
-}
-
-impl Default for PlayMessage {
-    fn default() -> Self {
-        Self {
-            data: Default::default(),
-            message_id: Default::default(),
-            message_type: Default::default(),
-        }
-    }
 }
 
 #[derive(
@@ -312,7 +273,7 @@ impl TryFrom<String> for PlayMethod {
 }
 
 #[doc = "Class PlayQueueUpdate."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct PlayQueueUpdate {
     #[doc = "Gets a value indicating whether the current item is playing."]
     #[serde(rename = "IsPlaying", default, skip_serializing_if = "Option::is_none")]
@@ -355,21 +316,6 @@ pub struct PlayQueueUpdate {
         skip_serializing_if = "Option::is_none"
     )]
     pub start_position_ticks: Option<i64>,
-}
-
-impl Default for PlayQueueUpdate {
-    fn default() -> Self {
-        Self {
-            is_playing: Default::default(),
-            last_update: Default::default(),
-            playing_item_index: Default::default(),
-            playlist: Default::default(),
-            reason: Default::default(),
-            repeat_mode: Default::default(),
-            shuffle_mode: Default::default(),
-            start_position_ticks: Default::default(),
-        }
-    }
 }
 
 #[derive(
@@ -446,7 +392,7 @@ impl TryFrom<String> for PlayQueueUpdateReason {
 }
 
 #[doc = "Class PlayRequest."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct PlayRequest {
     #[serde(
         rename = "AudioStreamIndex",
@@ -497,23 +443,8 @@ pub struct PlayRequest {
     pub subtitle_stream_index: Option<i32>,
 }
 
-impl Default for PlayRequest {
-    fn default() -> Self {
-        Self {
-            audio_stream_index: Default::default(),
-            controlling_user_id: Default::default(),
-            item_ids: Default::default(),
-            media_source_id: Default::default(),
-            play_command: Default::default(),
-            start_index: Default::default(),
-            start_position_ticks: Default::default(),
-            subtitle_stream_index: Default::default(),
-        }
-    }
-}
-
 #[doc = "Class PlayRequestDto."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct PlayRequestDto {
     #[doc = "Gets or sets the position of the playing item in the queue."]
     #[serde(
@@ -536,16 +467,6 @@ pub struct PlayRequestDto {
         skip_serializing_if = "Option::is_none"
     )]
     pub start_position_ticks: Option<i64>,
-}
-
-impl Default for PlayRequestDto {
-    fn default() -> Self {
-        Self {
-            playing_item_position: Default::default(),
-            playing_queue: Default::default(),
-            start_position_ticks: Default::default(),
-        }
-    }
 }
 
 #[derive(
@@ -601,7 +522,7 @@ impl TryFrom<String> for PlaybackErrorCode {
 }
 
 #[doc = "Playback info dto."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct PlaybackInfoDto {
     #[doc = "Gets or sets a value indicating whether to allow audio stream copy."]
     #[serde(
@@ -713,31 +634,8 @@ pub struct PlaybackInfoDto {
     pub user_id: Option<uuid::Uuid>,
 }
 
-impl Default for PlaybackInfoDto {
-    fn default() -> Self {
-        Self {
-            allow_audio_stream_copy: Default::default(),
-            allow_video_stream_copy: Default::default(),
-            always_burn_in_subtitle_when_transcoding: Default::default(),
-            audio_stream_index: Default::default(),
-            auto_open_live_stream: Default::default(),
-            device_profile: Default::default(),
-            enable_direct_play: Default::default(),
-            enable_direct_stream: Default::default(),
-            enable_transcoding: Default::default(),
-            live_stream_id: Default::default(),
-            max_audio_channels: Default::default(),
-            max_streaming_bitrate: Default::default(),
-            media_source_id: Default::default(),
-            start_time_ticks: Default::default(),
-            subtitle_stream_index: Default::default(),
-            user_id: Default::default(),
-        }
-    }
-}
-
 #[doc = "Class PlaybackInfoResponse."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct PlaybackInfoResponse {
     #[doc = "Gets or sets the error code."]
     #[serde(rename = "ErrorCode", default, skip_serializing_if = "Option::is_none")]
@@ -756,16 +654,6 @@ pub struct PlaybackInfoResponse {
         skip_serializing_if = "Option::is_none"
     )]
     pub play_session_id: Option<String>,
-}
-
-impl Default for PlaybackInfoResponse {
-    fn default() -> Self {
-        Self {
-            error_code: Default::default(),
-            media_sources: Default::default(),
-            play_session_id: Default::default(),
-        }
-    }
 }
 
 #[derive(
@@ -818,7 +706,7 @@ impl TryFrom<String> for PlaybackOrder {
 }
 
 #[doc = "Class PlaybackProgressInfo."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct PlaybackProgressInfo {
     #[serde(
         rename = "AspectRatio",
@@ -937,34 +825,6 @@ pub struct PlaybackProgressInfo {
     pub volume_level: Option<i32>,
 }
 
-impl Default for PlaybackProgressInfo {
-    fn default() -> Self {
-        Self {
-            aspect_ratio: Default::default(),
-            audio_stream_index: Default::default(),
-            brightness: Default::default(),
-            can_seek: Default::default(),
-            is_muted: Default::default(),
-            is_paused: Default::default(),
-            item: Default::default(),
-            item_id: Default::default(),
-            live_stream_id: Default::default(),
-            media_source_id: Default::default(),
-            now_playing_queue: Default::default(),
-            play_method: Default::default(),
-            play_session_id: Default::default(),
-            playback_order: Default::default(),
-            playback_start_time_ticks: Default::default(),
-            playlist_item_id: Default::default(),
-            position_ticks: Default::default(),
-            repeat_mode: Default::default(),
-            session_id: Default::default(),
-            subtitle_stream_index: Default::default(),
-            volume_level: Default::default(),
-        }
-    }
-}
-
 #[derive(
     serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd,
 )]
@@ -1060,7 +920,7 @@ impl TryFrom<String> for PlaybackRequestType {
 }
 
 #[doc = "Class PlaybackStartInfo."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct PlaybackStartInfo {
     #[serde(
         rename = "AspectRatio",
@@ -1179,36 +1039,8 @@ pub struct PlaybackStartInfo {
     pub volume_level: Option<i32>,
 }
 
-impl Default for PlaybackStartInfo {
-    fn default() -> Self {
-        Self {
-            aspect_ratio: Default::default(),
-            audio_stream_index: Default::default(),
-            brightness: Default::default(),
-            can_seek: Default::default(),
-            is_muted: Default::default(),
-            is_paused: Default::default(),
-            item: Default::default(),
-            item_id: Default::default(),
-            live_stream_id: Default::default(),
-            media_source_id: Default::default(),
-            now_playing_queue: Default::default(),
-            play_method: Default::default(),
-            play_session_id: Default::default(),
-            playback_order: Default::default(),
-            playback_start_time_ticks: Default::default(),
-            playlist_item_id: Default::default(),
-            position_ticks: Default::default(),
-            repeat_mode: Default::default(),
-            session_id: Default::default(),
-            subtitle_stream_index: Default::default(),
-            volume_level: Default::default(),
-        }
-    }
-}
-
 #[doc = "Class PlaybackStopInfo."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct PlaybackStopInfo {
     #[doc = "Gets or sets a value indicating whether this MediaBrowser.Model.Session.PlaybackStopInfo is failed."]
     #[serde(rename = "Failed", default, skip_serializing_if = "Option::is_none")]
@@ -1268,24 +1100,6 @@ pub struct PlaybackStopInfo {
     #[doc = "Gets or sets the session id."]
     #[serde(rename = "SessionId", default, skip_serializing_if = "Option::is_none")]
     pub session_id: Option<String>,
-}
-
-impl Default for PlaybackStopInfo {
-    fn default() -> Self {
-        Self {
-            failed: Default::default(),
-            item: Default::default(),
-            item_id: Default::default(),
-            live_stream_id: Default::default(),
-            media_source_id: Default::default(),
-            next_media_type: Default::default(),
-            now_playing_queue: Default::default(),
-            play_session_id: Default::default(),
-            playlist_item_id: Default::default(),
-            position_ticks: Default::default(),
-            session_id: Default::default(),
-        }
-    }
 }
 
 #[derive(
@@ -1359,7 +1173,7 @@ impl TryFrom<String> for PlaystateCommand {
 }
 
 #[doc = "Playstate message."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct PlaystateMessage {
     #[doc = "Gets or sets the data."]
     #[serde(rename = "Data", default, skip_serializing_if = "Option::is_none")]
@@ -1375,18 +1189,8 @@ pub struct PlaystateMessage {
     pub message_type: Option<SessionMessageType>,
 }
 
-impl Default for PlaystateMessage {
-    fn default() -> Self {
-        Self {
-            data: Default::default(),
-            message_id: Default::default(),
-            message_type: Default::default(),
-        }
-    }
-}
-
 #[doc = "`PlaystateRequest`"]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct PlaystateRequest {
     #[serde(rename = "Command", default, skip_serializing_if = "Option::is_none")]
     pub command: Option<PlaystateCommand>,
@@ -1405,18 +1209,8 @@ pub struct PlaystateRequest {
     pub seek_position_ticks: Option<i64>,
 }
 
-impl Default for PlaystateRequest {
-    fn default() -> Self {
-        Self {
-            command: Default::default(),
-            controlling_user_id: Default::default(),
-            seek_position_ticks: Default::default(),
-        }
-    }
-}
-
 #[doc = "`QueueItem`"]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct QueueItem {
     #[serde(rename = "Id", default, skip_serializing_if = "Option::is_none")]
     pub id: Option<uuid::Uuid>,
@@ -1426,15 +1220,6 @@ pub struct QueueItem {
         skip_serializing_if = "Option::is_none"
     )]
     pub playlist_item_id: Option<String>,
-}
-
-impl Default for QueueItem {
-    fn default() -> Self {
-        Self {
-            id: Default::default(),
-            playlist_item_id: Default::default(),
-        }
-    }
 }
 
 #[derive(
@@ -1490,7 +1275,7 @@ impl TryFrom<String> for RepeatMode {
 }
 
 #[doc = "Class SendCommand."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct SendCommand {
     #[serde(rename = "Command", default, skip_serializing_if = "Option::is_none")]
     pub command: Option<SendCommandType>,
@@ -1517,19 +1302,6 @@ pub struct SendCommand {
     #[doc = "Gets or sets the UTC time when to execute the command."]
     #[serde(rename = "When", default, skip_serializing_if = "Option::is_none")]
     pub when: Option<chrono::DateTime<chrono::Utc>>,
-}
-
-impl Default for SendCommand {
-    fn default() -> Self {
-        Self {
-            command: Default::default(),
-            emitted_at: Default::default(),
-            group_id: Default::default(),
-            playlist_item_id: Default::default(),
-            position_ticks: Default::default(),
-            when: Default::default(),
-        }
-    }
 }
 
 #[derive(
@@ -1588,18 +1360,10 @@ impl TryFrom<String> for SendCommandType {
 }
 
 #[doc = "Class SetRepeatModeRequestDto."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct SetRepeatModeRequestDto {
     #[serde(rename = "Mode", default, skip_serializing_if = "Option::is_none")]
     pub mode: Option<GroupRepeatMode>,
-}
-
-impl Default for SetRepeatModeRequestDto {
-    fn default() -> Self {
-        Self {
-            mode: Default::default(),
-        }
-    }
 }
 
 #[derive(
@@ -1661,7 +1425,7 @@ impl TryFrom<String> for SubtitlePlaybackMode {
 }
 
 #[doc = "`SyncPlayPlayQueueUpdate`"]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct SyncPlayPlayQueueUpdate {
     #[doc = "Gets the update data."]
     #[serde(rename = "Data", default, skip_serializing_if = "Option::is_none")]
@@ -1673,18 +1437,8 @@ pub struct SyncPlayPlayQueueUpdate {
     pub type_: Option<GroupUpdateType>,
 }
 
-impl Default for SyncPlayPlayQueueUpdate {
-    fn default() -> Self {
-        Self {
-            data: Default::default(),
-            group_id: Default::default(),
-            type_: Default::default(),
-        }
-    }
-}
-
 #[doc = "Class QueueItem."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct SyncPlayQueueItem {
     #[doc = "Gets the item identifier."]
     #[serde(rename = "ItemId", default, skip_serializing_if = "Option::is_none")]
@@ -1698,17 +1452,8 @@ pub struct SyncPlayQueueItem {
     pub playlist_item_id: Option<uuid::Uuid>,
 }
 
-impl Default for SyncPlayQueueItem {
-    fn default() -> Self {
-        Self {
-            item_id: Default::default(),
-            playlist_item_id: Default::default(),
-        }
-    }
-}
-
 #[doc = "`SyncPlayStateUpdate`"]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct SyncPlayStateUpdate {
     #[doc = "Gets the update data."]
     #[serde(rename = "Data", default, skip_serializing_if = "Option::is_none")]
@@ -1718,14 +1463,4 @@ pub struct SyncPlayStateUpdate {
     pub group_id: Option<uuid::Uuid>,
     #[serde(rename = "Type", default, skip_serializing_if = "Option::is_none")]
     pub type_: Option<GroupUpdateType>,
-}
-
-impl Default for SyncPlayStateUpdate {
-    fn default() -> Self {
-        Self {
-            data: Default::default(),
-            group_id: Default::default(),
-            type_: Default::default(),
-        }
-    }
 }

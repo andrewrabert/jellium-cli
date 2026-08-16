@@ -9,30 +9,24 @@ use iced::futures::Stream;
 use iced::futures::channel::mpsc;
 use wasm_bindgen::prelude::*;
 
+use crate::failure::Call;
 use crate::failure::{self, Cause, Failure};
 use crate::text::Text;
 
-#[wasm_bindgen(module = "/js/overlay.js")]
-extern "C" {
-    #[wasm_bindgen(js_name = mount, catch)]
-    #[allow(clippy::too_many_arguments)]
-    fn js_mount(
-        id: &str,
-        kind: &str,
-        stacking: &str,
-        pointer: bool,
-        source: &str,
-        sandbox: &str,
-        hidden: bool,
-        accept: &str,
-        sink: &JsValue,
-    ) -> Result<(), JsValue>;
-    #[wasm_bindgen(js_name = open, catch)]
-    fn js_open(id: &str) -> Result<(), JsValue>;
-    #[wasm_bindgen(js_name = post, catch)]
-    fn js_post(id: &str, payload: &str) -> Result<(), JsValue>;
-    #[wasm_bindgen(js_name = unmount, catch)]
-    fn js_unmount(id: &str) -> Result<(), JsValue>;
+mod glue {
+    use wasm_bindgen::prelude::*;
+
+    #[wasm_bindgen(module = "/js/overlay.js")]
+    extern "C" {
+        #[wasm_bindgen(catch)]
+        pub fn mount(wanted: &str, sink: &JsValue) -> Result<(), JsValue>;
+        #[wasm_bindgen(catch)]
+        pub fn open(id: &str) -> Result<(), JsValue>;
+        #[wasm_bindgen(catch)]
+        pub fn post(id: &str, payload: &str) -> Result<(), JsValue>;
+        #[wasm_bindgen(catch)]
+        pub fn unmount(id: &str) -> Result<(), JsValue>;
+    }
 }
 
 /// Which overlaid element a mount, a message or an unmount names.
@@ -47,18 +41,25 @@ pub enum Id {
     File,
 }
 
-impl Id {
-    fn name(self) -> &'static str {
-        match self {
+impl std::fmt::Display for Id {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(match self {
             Id::Media => "media",
             Id::PluginPage => "pluginPage",
             Id::File => "file",
-        }
+        })
+    }
+}
+
+impl serde::Serialize for Id {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        serializer.collect_str(self)
     }
 }
 
 /// What DOM element an overlay hosts.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize)]
+#[serde(rename_all = "camelCase")]
 pub enum Kind {
     Video,
     Audio,
@@ -66,35 +67,17 @@ pub enum Kind {
     File,
 }
 
-impl Kind {
-    fn name(self) -> &'static str {
-        match self {
-            Kind::Video => "video",
-            Kind::Audio => "audio",
-            Kind::Frame => "frame",
-            Kind::File => "file",
-        }
-    }
-}
-
 /// Where an overlaid element sits against the iced canvas.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize)]
+#[serde(rename_all = "camelCase")]
 pub enum Stacking {
     Below,
     Above,
 }
 
-impl Stacking {
-    fn name(self) -> &'static str {
-        match self {
-            Stacking::Below => "below",
-            Stacking::Above => "above",
-        }
-    }
-}
-
 /// What one overlaid element is mounted as.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, serde::Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct Wanted {
     pub id: Id,
     pub kind: Kind,
@@ -205,21 +188,9 @@ impl Mounted {
     /// throws raises a failure and mounts nothing.
     pub fn new(wanted: &Wanted) -> Option<Mounted> {
         let id = wanted.id;
+        let described = failure::rendered(Text::FailureOverlayMount, wanted)?;
         let sink = Sink::new(move |payload: String| deliver(id, payload));
-        failure::called(
-            "overlay.mount",
-            js_mount(
-                id.name(),
-                wanted.kind.name(),
-                wanted.stacking.name(),
-                wanted.pointer,
-                wanted.source.as_deref().unwrap_or_default(),
-                wanted.sandbox.unwrap_or_default(),
-                wanted.hidden,
-                wanted.accept.unwrap_or_default(),
-                sink.as_ref(),
-            ),
-        )?;
+        failure::called(Call::OverlayMount, glue::mount(&described, sink.as_ref()))?;
         SINKS.with(|held| {
             let mut held = held.borrow_mut();
             held.retain(|(held, _)| *held != id);
@@ -230,12 +201,12 @@ impl Mounted {
 
     /// Sends one message down this element's channel.
     pub fn post(&self, payload: &str) {
-        failure::called("overlay.post", js_post(self.id.name(), payload));
+        failure::called(Call::OverlayPost, glue::post(&self.id.to_string(), payload));
     }
 
     /// Opens the file input's own picker, which is what a Choose control does.
     pub fn choose(&self) {
-        failure::called("overlay.open", js_open(self.id.name()));
+        failure::called(Call::OverlayOpen, glue::open(&self.id.to_string()));
     }
 }
 
@@ -247,7 +218,7 @@ impl std::fmt::Debug for Mounted {
 
 impl Drop for Mounted {
     fn drop(&mut self) {
-        failure::called("overlay.unmount", js_unmount(self.id.name()));
+        failure::called(Call::OverlayUnmount, glue::unmount(&self.id.to_string()));
         SINKS.with(|held| held.borrow_mut().retain(|(held, _)| *held != self.id));
     }
 }

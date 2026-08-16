@@ -155,12 +155,11 @@ fn number<'a>(label: Text, value: i32, edited: impl Fn(i32) -> Field + 'a) -> El
     row![
         text(strings::lookup(label)).width(theme::GUIDE_CHANNEL_WIDTH),
         iced::widget::text_input("", &value.to_string()).on_input(move |typed| {
-            #[expect(
-                clippy::disallowed_methods,
-                reason = "a conversion that carries no cause beyond the value itself"
-            )]
-            let typed = typed.parse().unwrap_or(value);
-            Message::LiveTvAction(Action::Edited(edited(typed)))
+            let read = match crate::failure::unraised::read::<i32>(typed.trim()) {
+                Ok(read) => read,
+                Err(_) => value,
+            };
+            Message::LiveTvAction(Action::Edited(edited(read)))
         }),
     ]
     .spacing(theme::CARD_SPACING)

@@ -239,13 +239,15 @@ pub async fn execute(
             client
                 .play(
                     session_id,
-                    *audio_stream_index,
                     item_ids,
-                    media_source_id.as_deref(),
                     *play_command,
-                    *start_index,
-                    *start_position_ticks,
-                    *subtitle_stream_index,
+                    &jellyfin_api::query::Play {
+                        audio_stream_index: *audio_stream_index,
+                        media_source_id: media_source_id.as_deref(),
+                        start_index: *start_index,
+                        start_position_ticks: *start_position_ticks,
+                        subtitle_stream_index: *subtitle_stream_index,
+                    },
                 )
                 .await?;
         }

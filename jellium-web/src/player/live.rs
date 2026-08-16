@@ -6,7 +6,7 @@ use jellium_protocol::PlayMode;
 use jellyfin_api::types::BaseItemDto;
 use uuid::Uuid;
 
-use super::{Kind, Selection, Start};
+use super::{Asked, Kind, Selection, Start};
 use crate::api::Api;
 use crate::app::{Message, Signed};
 use crate::error::{Answer, Operation, Trouble};
@@ -14,11 +14,7 @@ use crate::livetv::Channel;
 use crate::text::Text;
 use iced::Task;
 
-#[allow(
-    unused_imports,
-    reason = "the live context and its boundary state are the module's declared surface"
-)]
-pub use jellium_model::live::{Asked, Live};
+pub use jellium_model::live::Live;
 
 /// The start `item` plays as a channel: the channel alone, from the live edge
 /// and never resumed, carrying the channel list the display moves through and
@@ -99,8 +95,8 @@ pub fn unpause(signed: &mut Signed) -> Task<Message> {
     let Some(playing) = signed.playing.as_mut() else {
         return Task::none();
     };
-    playing.element.seek_to_live();
-    playing.element.play();
+    playing.element.ask(&Asked::SeekToLive);
+    playing.element.ask(&Asked::Play);
     playing.paused = false;
     playing.trouble = Some(Text::PlayerLiveEdge);
     if let Some(live) = playing.live.as_mut() {

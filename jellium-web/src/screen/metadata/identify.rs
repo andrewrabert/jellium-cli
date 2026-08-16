@@ -1,5 +1,7 @@
 use iced::Element;
 use iced::widget::{button, checkbox, column, row, text, text_input};
+use std::collections::HashMap;
+
 use jellyfin_api::types::{BaseItemKind, RemoteSearchResult};
 
 use crate::app::Message;
@@ -93,34 +95,26 @@ pub enum Field {
 impl State {
     /// The search body one run posts: the name and year typed, and the provider
     /// id when one was given.
-    pub fn query(&self, search: Search) -> serde_json::Value {
-        let mut ids = serde_json::Map::new();
+    pub fn query(&self) -> RemoteSearch {
+        let mut ids = HashMap::new();
         if !self.provider.trim().is_empty() && !self.provider_id.trim().is_empty() {
             ids.insert(
                 self.provider.trim().to_owned(),
-                serde_json::Value::String(self.provider_id.trim().to_owned()),
+                self.provider_id.trim().to_owned(),
             );
         }
-        #[expect(
-            clippy::disallowed_methods,
-            reason = "a year outside i32 carries no cause beyond the number itself"
-        )]
-        let year = self.year.trim().parse::<i32>().ok();
-        #[expect(
-            clippy::disallowed_methods,
-            reason = "json! builds a literal body this client wrote, which cannot fail to render"
-        )]
-        let asked = serde_json::json!({
-            "SearchInfo": {
-                "Name": self.name,
-                "Year": year,
-                "ProviderIds": ids,
+        let year = match self.year.trim() {
+            "" => None,
+            typed => crate::failure::read::<i32>(Text::FailureYear, typed),
+        };
+        RemoteSearch {
+            search_info: SearchInfo {
+                name: self.name.clone(),
+                year,
+                provider_ids: ids,
             },
-            "IncludeDisabledProviders": true,
-            "SearchProviderName": serde_json::Value::Null,
-            "ItemType": search.segment(),
-        });
-        asked
+            include_disabled_providers: true,
+        }
     }
 }
 
@@ -243,4 +237,20 @@ pub fn handles(state: &State) -> std::collections::HashSet<String> {
         .iter()
         .filter_map(|candidate| candidate.image_url.clone())
         .collect()
+}
+
+/// What `/Items/RemoteSearch/{kind}` takes.
+#[derive(serde::Serialize)]
+#[serde(rename_all = "PascalCase")]
+pub struct RemoteSearch {
+    search_info: SearchInfo,
+    include_disabled_providers: bool,
+}
+
+#[derive(serde::Serialize)]
+#[serde(rename_all = "PascalCase")]
+struct SearchInfo {
+    name: String,
+    year: Option<i32>,
+    provider_ids: HashMap<String, String>,
 }

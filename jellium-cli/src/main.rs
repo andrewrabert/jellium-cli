@@ -46,7 +46,6 @@ struct Cli {
 }
 
 #[derive(Subcommand)]
-#[allow(clippy::large_enum_variant)]
 enum Command {
     /// Make a raw authenticated API request
     Api {

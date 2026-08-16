@@ -1,5 +1,6 @@
 use crate::Client;
 use crate::error::Error;
+use crate::query;
 use crate::types;
 use crate::util::encode_path;
 
@@ -8,13 +9,7 @@ impl Client {
     pub async fn get_instant_mix_from_playlist(
         &self,
         item_id: &uuid::Uuid,
-        enable_image_types: Option<&Vec<types::ImageType>>,
-        enable_images: Option<bool>,
-        enable_user_data: Option<bool>,
-        fields: Option<&Vec<types::ItemFields>>,
-        image_type_limit: Option<i32>,
-        limit: Option<i32>,
-        user_id: Option<&uuid::Uuid>,
+        query: &query::GetInstantMixFromPlaylist<'_>,
     ) -> Result<types::BaseItemDtoQueryResult, Error> {
         self.request(
             reqwest::Method::GET,
@@ -23,13 +18,13 @@ impl Client {
                 encode_path(&item_id.to_string())
             ),
         )
-        .query_list_opt("enableImageTypes", enable_image_types)
-        .query_opt("enableImages", enable_images)
-        .query_opt("enableUserData", enable_user_data)
-        .query_list_opt("fields", fields)
-        .query_opt("imageTypeLimit", image_type_limit)
-        .query_opt("limit", limit)
-        .query_opt("userId", user_id)
+        .query_list_opt("enableImageTypes", query.enable_image_types)
+        .query_opt("enableImages", query.enable_images)
+        .query_opt("enableUserData", query.enable_user_data)
+        .query_list_opt("fields", query.fields)
+        .query_opt("imageTypeLimit", query.image_type_limit)
+        .query_opt("limit", query.limit)
+        .query_opt("userId", query.user_id)
         .send()
         .await
     }
@@ -85,27 +80,20 @@ impl Client {
     pub async fn get_playlist_items(
         &self,
         playlist_id: &uuid::Uuid,
-        enable_image_types: Option<&Vec<types::ImageType>>,
-        enable_images: Option<bool>,
-        enable_user_data: Option<bool>,
-        fields: Option<&Vec<types::ItemFields>>,
-        image_type_limit: Option<i32>,
-        limit: Option<i32>,
-        start_index: Option<i32>,
-        user_id: Option<&uuid::Uuid>,
+        query: &query::GetPlaylistItems<'_>,
     ) -> Result<types::BaseItemDtoQueryResult, Error> {
         self.request(
             reqwest::Method::GET,
             format!("/Playlists/{}/Items", encode_path(&playlist_id.to_string())),
         )
-        .query_list_opt("enableImageTypes", enable_image_types)
-        .query_opt("enableImages", enable_images)
-        .query_opt("enableUserData", enable_user_data)
-        .query_list_opt("fields", fields)
-        .query_opt("imageTypeLimit", image_type_limit)
-        .query_opt("limit", limit)
-        .query_opt("startIndex", start_index)
-        .query_opt("userId", user_id)
+        .query_list_opt("enableImageTypes", query.enable_image_types)
+        .query_opt("enableImages", query.enable_images)
+        .query_opt("enableUserData", query.enable_user_data)
+        .query_list_opt("fields", query.fields)
+        .query_opt("imageTypeLimit", query.image_type_limit)
+        .query_opt("limit", query.limit)
+        .query_opt("startIndex", query.start_index)
+        .query_opt("userId", query.user_id)
         .send()
         .await
     }

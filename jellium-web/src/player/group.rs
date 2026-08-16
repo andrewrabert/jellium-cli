@@ -12,7 +12,27 @@ use crate::app::{Message, Signed};
 use crate::error;
 use crate::error::Answer;
 use crate::live;
-use crate::player::{self, Playing};
+use crate::player::element::GroupBeacon;
+use crate::player::{self, Asked, Playing};
+
+/// Whether this tab holds the group's transport and queue.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Membership {
+    /// This tab holds the transport and the queue.
+    Holding,
+    /// Another tab holds them.
+    Watching,
+}
+
+impl Membership {
+    /// The leave beacon this membership arms.
+    fn beacon(self) -> GroupBeacon {
+        match self {
+            Membership::Holding => GroupBeacon::Armed,
+            Membership::Watching => GroupBeacon::Disarmed,
+        }
+    }
+}
 
 /// How often the browser times its own hop to the local server while
 /// converging.
@@ -77,8 +97,8 @@ pub struct Joined {
     pub queue: GroupQueue,
     /// The queued items, fetched so the playlist renders.
     pub items: Vec<BaseItemDto>,
-    /// True while this tab holds the transport and the queue.
-    pub member: bool,
+    /// Whether this tab holds the transport and the queue.
+    pub membership: Membership,
     pub hop: Hop,
     /// The command not yet executed.
     pub pending: Option<Scheduled>,
@@ -98,12 +118,12 @@ pub struct Joined {
 }
 
 impl Joined {
-    fn new(group: Group, member: bool) -> Joined {
+    fn new(group: Group, membership: Membership) -> Joined {
         Joined {
             group,
             queue: GroupQueue::default(),
             items: Vec::new(),
-            member,
+            membership,
             hop: Hop::default(),
             pending: None,
             schedule: Schedule {
@@ -121,12 +141,7 @@ impl Joined {
 
     /// The entry the group is playing.
     pub fn playing(&self) -> Option<Queued> {
-        #[expect(
-            clippy::disallowed_methods,
-            reason = "a conversion that carries no cause beyond the value itself"
-        )]
-        let index = usize::try_from(self.queue.playing_index).ok()?;
-        self.queue.items.get(index).copied()
+        self.queue.items.get(self.queue.playing_index?).copied()
     }
 
     /// The item a playlist entry names.
@@ -249,7 +264,7 @@ pub fn leave(signed: &mut Signed) -> Task<Message> {
         return Task::none();
     }
     live::send(&Report::LeaveGroup);
-    player::element::set_group_beacon(false);
+    player::element::set_group_beacon(GroupBeacon::Disarmed);
     player::leave(signed)
 }
 
@@ -259,21 +274,21 @@ pub fn listed(signed: &mut Signed, groups: Vec<Group>) {
 }
 
 /// Applies the group this installation is in; membership beginning stops local
-/// playback, and the leave beacon is armed in the member tab alone and
+/// playback, and the leave beacon is armed in the holding tab alone and
 /// disarmed in every other.
-pub fn joined(signed: &mut Signed, group: Group, member: bool) -> Task<Message> {
+pub fn joined(signed: &mut Signed, group: Group, membership: Membership) -> Task<Message> {
     match signed.group.as_mut() {
         Some(joined) if joined.group.id == group.id => {
             joined.group = group;
-            joined.member = member;
-            player::element::set_group_beacon(member);
+            joined.membership = membership;
+            player::element::set_group_beacon(membership.beacon());
             return Task::none();
         }
         _ => {}
     }
     let leaving = player::leave(signed);
-    signed.group = Some(Joined::new(group, member));
-    player::element::set_group_beacon(member);
+    signed.group = Some(Joined::new(group, membership));
+    player::element::set_group_beacon(membership.beacon());
     leaving
 }
 
@@ -281,9 +296,9 @@ pub fn joined(signed: &mut Signed, group: Group, member: bool) -> Task<Message> 
 /// being the member and disarms the leave beacon.
 pub fn displaced(signed: &mut Signed) {
     if let Some(joined) = signed.group.as_mut() {
-        joined.member = false;
+        joined.membership = Membership::Watching;
     }
-    player::element::set_group_beacon(false);
+    player::element::set_group_beacon(GroupBeacon::Disarmed);
 }
 
 /// Leaves the group naming what this browser cannot play.
@@ -344,7 +359,7 @@ pub fn queued(signed: &mut Signed, queue: GroupQueue) -> Task<Message> {
     if joined.started == Some(entry.playlist_item) {
         return fetching;
     }
-    if !joined.member {
+    if joined.membership == Membership::Watching {
         joined.started = Some(entry.playlist_item);
         return fetching;
     }
@@ -398,7 +413,7 @@ pub fn ended(signed: &mut Signed, cause: GroupEnded) {
     if signed.group.take().is_none() {
         return;
     }
-    player::element::set_group_beacon(false);
+    player::element::set_group_beacon(GroupBeacon::Disarmed);
     crate::failure::raise(error::group_ended(cause));
 }
 
@@ -414,7 +429,7 @@ pub fn rebound(
     action: &player::Action,
     held: &jellium_model::prefs::Held,
 ) -> Option<GroupVerb> {
-    if !joined.member {
+    if joined.membership == Membership::Watching {
         return None;
     }
     let entry = joined.playing();
@@ -463,8 +478,8 @@ pub fn play(signed: &mut Signed, start: player::Start) -> Task<Message> {
     let Some(joined) = signed.group.as_mut() else {
         return Task::none();
     };
-    if !joined.member {
-        joined.member = true;
+    if joined.membership == Membership::Watching {
+        joined.membership = Membership::Holding;
         live::send(&Report::TakeGroup);
     }
     let items = start.items.iter().filter_map(|item| item.id).collect();
@@ -479,7 +494,7 @@ pub fn play(signed: &mut Signed, start: player::Start) -> Task<Message> {
 /// with no group equivalent reads as `None` and takes effect locally.
 pub fn controlled(joined: &Joined, control: &jellium_protocol::Control) -> Option<GroupVerb> {
     use jellium_protocol::Control;
-    if !joined.member {
+    if joined.membership == Membership::Watching {
         return None;
     }
     let entry = joined.playing();
@@ -514,7 +529,7 @@ pub fn playable(signed: &mut Signed, position: Duration) -> Task<Message> {
     let Some(joined) = signed.group.as_mut() else {
         return Task::none();
     };
-    if !joined.member || !joined.buffering {
+    if joined.membership == Membership::Watching || !joined.buffering {
         return Task::none();
     }
     let Some(entry) = joined.playing() else {
@@ -533,7 +548,7 @@ pub fn stalled(signed: &mut Signed) -> Task<Message> {
     let Some(joined) = signed.group.as_mut() else {
         return Task::none();
     };
-    if !joined.member || joined.buffering {
+    if joined.membership == Membership::Watching || joined.buffering {
         return Task::none();
     }
     let Some(entry) = joined.playing() else {
@@ -557,8 +572,8 @@ pub fn disconnected(signed: &mut Signed) {
     joined.schedule.running = false;
     joined.pending = None;
     if let Some(playing) = signed.playing.as_mut() {
-        playing.element.set_rate(1.0);
-        playing.element.pause();
+        playing.element.ask(&Asked::Rate { rate: 1.0 });
+        playing.element.ask(&Asked::Pause);
         playing.paused = true;
     }
     crate::failure::raise(crate::error::told(crate::text::Text::SyncPlayLinkDown));
@@ -601,18 +616,22 @@ fn execute(signed: &mut Signed, command: Scheduled) -> Task<Message> {
         }
         GroupCommand::Unpause => {
             if let Some(playing) = signed.playing.as_mut() {
-                playing.element.set_rate(1.0);
-                playing.element.seek(player::span(command.position_ticks));
-                playing.element.play();
+                playing.element.ask(&Asked::Rate { rate: 1.0 });
+                playing.element.ask(&Asked::Seek {
+                    position: player::span(command.position_ticks),
+                });
+                playing.element.ask(&Asked::Play);
                 playing.paused = false;
             }
         }
         GroupCommand::Pause | GroupCommand::Seek => {
             if let Some(playing) = signed.playing.as_mut() {
-                playing.element.set_rate(1.0);
-                playing.element.seek(player::span(command.position_ticks));
+                playing.element.ask(&Asked::Rate { rate: 1.0 });
+                playing.element.ask(&Asked::Seek {
+                    position: player::span(command.position_ticks),
+                });
                 if matches!(command.command, GroupCommand::Pause) {
-                    playing.element.pause();
+                    playing.element.ask(&Asked::Pause);
                     playing.paused = true;
                 }
             }
@@ -635,7 +654,7 @@ fn corrected(signed: &mut Signed) {
         }
         joined.nudged = None;
         if let Some(playing) = signed.playing.as_ref() {
-            playing.element.set_rate(1.0);
+            playing.element.ask(&Asked::Rate { rate: 1.0 });
         }
         return;
     }
@@ -656,12 +675,14 @@ fn corrected(signed: &mut Signed) {
     match correction {
         Correction::Hold => {}
         Correction::Rate(rate) => {
-            playing.element.set_rate(rate);
+            playing.element.ask(&Asked::Rate { rate });
             joined.nudged = Some(now + sync::NUDGE);
         }
         Correction::Seek => {
-            playing.element.set_rate(1.0);
-            playing.element.seek(player::span(scheduled));
+            playing.element.ask(&Asked::Rate { rate: 1.0 });
+            playing.element.ask(&Asked::Seek {
+                position: player::span(scheduled),
+            });
         }
     }
 }

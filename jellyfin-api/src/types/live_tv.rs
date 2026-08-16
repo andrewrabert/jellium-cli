@@ -1,7 +1,7 @@
 use super::*;
 
 #[doc = "Channel mapping options dto."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct ChannelMappingOptionsDto {
     #[doc = "Gets or sets list of mappings."]
     #[serde(rename = "Mappings", default, skip_serializing_if = "Vec::is_empty")]
@@ -27,17 +27,6 @@ pub struct ChannelMappingOptionsDto {
         skip_serializing_if = "Vec::is_empty"
     )]
     pub tuner_channels: Vec<TunerChannelMapping>,
-}
-
-impl Default for ChannelMappingOptionsDto {
-    fn default() -> Self {
-        Self {
-            mappings: Default::default(),
-            provider_channels: Default::default(),
-            provider_name: Default::default(),
-            tuner_channels: Default::default(),
-        }
-    }
 }
 
 #[doc = "Get programs dto."]
@@ -212,7 +201,7 @@ impl Default for GetProgramsDto {
 }
 
 #[doc = "`GuideInfo`"]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct GuideInfo {
     #[doc = "Gets or sets the end date."]
     #[serde(rename = "EndDate", default, skip_serializing_if = "Option::is_none")]
@@ -222,17 +211,8 @@ pub struct GuideInfo {
     pub start_date: Option<chrono::DateTime<chrono::Utc>>,
 }
 
-impl Default for GuideInfo {
-    fn default() -> Self {
-        Self {
-            end_date: Default::default(),
-            start_date: Default::default(),
-        }
-    }
-}
-
 #[doc = "`ListingsProviderInfo`"]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct ListingsProviderInfo {
     #[serde(
         rename = "ChannelMappings",
@@ -312,33 +292,8 @@ pub struct ListingsProviderInfo {
     pub zip_code: Option<String>,
 }
 
-impl Default for ListingsProviderInfo {
-    fn default() -> Self {
-        Self {
-            channel_mappings: Default::default(),
-            country: Default::default(),
-            enable_all_tuners: Default::default(),
-            enabled_tuners: Default::default(),
-            id: Default::default(),
-            kids_categories: Default::default(),
-            listings_id: Default::default(),
-            movie_categories: Default::default(),
-            movie_prefix: Default::default(),
-            news_categories: Default::default(),
-            password: Default::default(),
-            path: Default::default(),
-            preferred_language: Default::default(),
-            sports_categories: Default::default(),
-            type_: Default::default(),
-            user_agent: Default::default(),
-            username: Default::default(),
-            zip_code: Default::default(),
-        }
-    }
-}
-
 #[doc = "`LiveTvInfo`"]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct LiveTvInfo {
     #[doc = "Gets or sets the enabled users."]
     #[serde(
@@ -355,18 +310,8 @@ pub struct LiveTvInfo {
     pub services: Vec<LiveTvServiceInfo>,
 }
 
-impl Default for LiveTvInfo {
-    fn default() -> Self {
-        Self {
-            enabled_users: Default::default(),
-            is_enabled: Default::default(),
-            services: Default::default(),
-        }
-    }
-}
-
 #[doc = "`LiveTvOptions`"]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct LiveTvOptions {
     #[serde(
         rename = "EnableOriginalAudioWithEncodedRecordings",
@@ -456,30 +401,8 @@ pub struct LiveTvOptions {
     pub tuner_hosts: Option<Vec<TunerHostInfo>>,
 }
 
-impl Default for LiveTvOptions {
-    fn default() -> Self {
-        Self {
-            enable_original_audio_with_encoded_recordings: Default::default(),
-            enable_recording_subfolders: Default::default(),
-            guide_days: Default::default(),
-            listing_providers: Default::default(),
-            media_locations_created: Default::default(),
-            movie_recording_path: Default::default(),
-            post_padding_seconds: Default::default(),
-            pre_padding_seconds: Default::default(),
-            recording_path: Default::default(),
-            recording_post_processor: Default::default(),
-            recording_post_processor_arguments: Default::default(),
-            save_recording_images: Default::default(),
-            save_recording_nfo: Default::default(),
-            series_recording_path: Default::default(),
-            tuner_hosts: Default::default(),
-        }
-    }
-}
-
 #[doc = "Class ServiceInfo."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct LiveTvServiceInfo {
     #[doc = "Gets or sets a value indicating whether this instance has update available."]
     #[serde(
@@ -515,21 +438,6 @@ pub struct LiveTvServiceInfo {
     #[doc = "Gets or sets the version."]
     #[serde(rename = "Version", default, skip_serializing_if = "Option::is_none")]
     pub version: Option<String>,
-}
-
-impl Default for LiveTvServiceInfo {
-    fn default() -> Self {
-        Self {
-            has_update_available: Default::default(),
-            home_page_url: Default::default(),
-            is_visible: Default::default(),
-            name: Default::default(),
-            status: Default::default(),
-            status_message: Default::default(),
-            tuners: Default::default(),
-            version: Default::default(),
-        }
-    }
 }
 
 #[derive(
@@ -707,7 +615,7 @@ impl TryFrom<String> for RecordingStatus {
 }
 
 #[doc = "Series timer cancelled message."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct SeriesTimerCancelledMessage {
     #[doc = "Gets or sets the data."]
     #[serde(rename = "Data", default, skip_serializing_if = "Option::is_none")]
@@ -723,18 +631,8 @@ pub struct SeriesTimerCancelledMessage {
     pub message_type: Option<SessionMessageType>,
 }
 
-impl Default for SeriesTimerCancelledMessage {
-    fn default() -> Self {
-        Self {
-            data: Default::default(),
-            message_id: Default::default(),
-            message_type: Default::default(),
-        }
-    }
-}
-
 #[doc = "Series timer created message."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct SeriesTimerCreatedMessage {
     #[doc = "Gets or sets the data."]
     #[serde(rename = "Data", default, skip_serializing_if = "Option::is_none")]
@@ -750,18 +648,8 @@ pub struct SeriesTimerCreatedMessage {
     pub message_type: Option<SessionMessageType>,
 }
 
-impl Default for SeriesTimerCreatedMessage {
-    fn default() -> Self {
-        Self {
-            data: Default::default(),
-            message_id: Default::default(),
-            message_type: Default::default(),
-        }
-    }
-}
-
 #[doc = "Class SeriesTimerInfoDto."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct SeriesTimerInfoDto {
     #[doc = "Gets or sets the channel id of the recording."]
     #[serde(rename = "ChannelId", default, skip_serializing_if = "Option::is_none")]
@@ -949,50 +837,8 @@ pub struct SeriesTimerInfoDto {
     pub type_: Option<String>,
 }
 
-impl Default for SeriesTimerInfoDto {
-    fn default() -> Self {
-        Self {
-            channel_id: Default::default(),
-            channel_name: Default::default(),
-            channel_primary_image_tag: Default::default(),
-            day_pattern: Default::default(),
-            days: Default::default(),
-            end_date: Default::default(),
-            external_channel_id: Default::default(),
-            external_id: Default::default(),
-            external_program_id: Default::default(),
-            id: Default::default(),
-            image_tags: Default::default(),
-            is_post_padding_required: Default::default(),
-            is_pre_padding_required: Default::default(),
-            keep_until: Default::default(),
-            keep_up_to: Default::default(),
-            name: Default::default(),
-            overview: Default::default(),
-            parent_backdrop_image_tags: Default::default(),
-            parent_backdrop_item_id: Default::default(),
-            parent_primary_image_item_id: Default::default(),
-            parent_primary_image_tag: Default::default(),
-            parent_thumb_image_tag: Default::default(),
-            parent_thumb_item_id: Default::default(),
-            post_padding_seconds: Default::default(),
-            pre_padding_seconds: Default::default(),
-            priority: Default::default(),
-            program_id: Default::default(),
-            record_any_channel: Default::default(),
-            record_any_time: Default::default(),
-            record_new_only: Default::default(),
-            server_id: Default::default(),
-            service_name: Default::default(),
-            skip_episodes_in_library: Default::default(),
-            start_date: Default::default(),
-            type_: Default::default(),
-        }
-    }
-}
-
 #[doc = "Query result container."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct SeriesTimerInfoDtoQueryResult {
     #[doc = "Gets or sets the items."]
     #[serde(rename = "Items", default, skip_serializing_if = "Vec::is_empty")]
@@ -1013,16 +859,6 @@ pub struct SeriesTimerInfoDtoQueryResult {
     pub total_record_count: Option<i32>,
 }
 
-impl Default for SeriesTimerInfoDtoQueryResult {
-    fn default() -> Self {
-        Self {
-            items: Default::default(),
-            start_index: Default::default(),
-            total_record_count: Default::default(),
-        }
-    }
-}
-
 #[doc = "Set channel mapping dto."]
 #[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
 pub struct SetChannelMappingDto {
@@ -1038,7 +874,7 @@ pub struct SetChannelMappingDto {
 }
 
 #[doc = "Timer cancelled message."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct TimerCancelledMessage {
     #[doc = "Gets or sets the data."]
     #[serde(rename = "Data", default, skip_serializing_if = "Option::is_none")]
@@ -1054,18 +890,8 @@ pub struct TimerCancelledMessage {
     pub message_type: Option<SessionMessageType>,
 }
 
-impl Default for TimerCancelledMessage {
-    fn default() -> Self {
-        Self {
-            data: Default::default(),
-            message_id: Default::default(),
-            message_type: Default::default(),
-        }
-    }
-}
-
 #[doc = "Timer created message."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct TimerCreatedMessage {
     #[doc = "Gets or sets the data."]
     #[serde(rename = "Data", default, skip_serializing_if = "Option::is_none")]
@@ -1081,18 +907,8 @@ pub struct TimerCreatedMessage {
     pub message_type: Option<SessionMessageType>,
 }
 
-impl Default for TimerCreatedMessage {
-    fn default() -> Self {
-        Self {
-            data: Default::default(),
-            message_id: Default::default(),
-            message_type: Default::default(),
-        }
-    }
-}
-
 #[doc = "`TimerEventInfo`"]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct TimerEventInfo {
     #[serde(rename = "Id", default, skip_serializing_if = "Option::is_none")]
     pub id: Option<String>,
@@ -1100,17 +916,8 @@ pub struct TimerEventInfo {
     pub program_id: Option<uuid::Uuid>,
 }
 
-impl Default for TimerEventInfo {
-    fn default() -> Self {
-        Self {
-            id: Default::default(),
-            program_id: Default::default(),
-        }
-    }
-}
-
 #[doc = "`TimerInfoDto`"]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct TimerInfoDto {
     #[doc = "Gets or sets the channel id of the recording."]
     #[serde(rename = "ChannelId", default, skip_serializing_if = "Option::is_none")]
@@ -1258,43 +1065,8 @@ pub struct TimerInfoDto {
     pub type_: Option<String>,
 }
 
-impl Default for TimerInfoDto {
-    fn default() -> Self {
-        Self {
-            channel_id: Default::default(),
-            channel_name: Default::default(),
-            channel_primary_image_tag: Default::default(),
-            end_date: Default::default(),
-            external_channel_id: Default::default(),
-            external_id: Default::default(),
-            external_program_id: Default::default(),
-            external_series_timer_id: Default::default(),
-            id: Default::default(),
-            is_post_padding_required: Default::default(),
-            is_pre_padding_required: Default::default(),
-            keep_until: Default::default(),
-            name: Default::default(),
-            overview: Default::default(),
-            parent_backdrop_image_tags: Default::default(),
-            parent_backdrop_item_id: Default::default(),
-            post_padding_seconds: Default::default(),
-            pre_padding_seconds: Default::default(),
-            priority: Default::default(),
-            program_id: Default::default(),
-            program_info: Default::default(),
-            run_time_ticks: Default::default(),
-            series_timer_id: Default::default(),
-            server_id: Default::default(),
-            service_name: Default::default(),
-            start_date: Default::default(),
-            status: Default::default(),
-            type_: Default::default(),
-        }
-    }
-}
-
 #[doc = "Query result container."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct TimerInfoDtoQueryResult {
     #[doc = "Gets or sets the items."]
     #[serde(rename = "Items", default, skip_serializing_if = "Vec::is_empty")]
@@ -1315,18 +1087,8 @@ pub struct TimerInfoDtoQueryResult {
     pub total_record_count: Option<i32>,
 }
 
-impl Default for TimerInfoDtoQueryResult {
-    fn default() -> Self {
-        Self {
-            items: Default::default(),
-            start_index: Default::default(),
-            total_record_count: Default::default(),
-        }
-    }
-}
-
 #[doc = "`TunerChannelMapping`"]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct TunerChannelMapping {
     #[serde(rename = "Id", default, skip_serializing_if = "Option::is_none")]
     pub id: Option<String>,
@@ -1346,19 +1108,8 @@ pub struct TunerChannelMapping {
     pub provider_channel_name: Option<String>,
 }
 
-impl Default for TunerChannelMapping {
-    fn default() -> Self {
-        Self {
-            id: Default::default(),
-            name: Default::default(),
-            provider_channel_id: Default::default(),
-            provider_channel_name: Default::default(),
-        }
-    }
-}
-
 #[doc = "`TunerHostInfo`"]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct TunerHostInfo {
     #[serde(
         rename = "AllowFmp4TranscodingContainer",
@@ -1430,31 +1181,8 @@ pub struct TunerHostInfo {
     pub user_agent: Option<String>,
 }
 
-impl Default for TunerHostInfo {
-    fn default() -> Self {
-        Self {
-            allow_fmp4_transcoding_container: Default::default(),
-            allow_hw_transcoding: Default::default(),
-            allow_stream_sharing: Default::default(),
-            device_id: Default::default(),
-            enable_stream_looping: Default::default(),
-            fallback_max_streaming_bitrate: Default::default(),
-            friendly_name: Default::default(),
-            id: Default::default(),
-            ignore_dts: Default::default(),
-            import_favorites_only: Default::default(),
-            read_at_native_framerate: Default::default(),
-            source: Default::default(),
-            tuner_count: Default::default(),
-            type_: Default::default(),
-            url: Default::default(),
-            user_agent: Default::default(),
-        }
-    }
-}
-
 #[doc = "Class UtcTimeResponse."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct UtcTimeResponse {
     #[doc = "Gets the UTC time when request has been received."]
     #[serde(
@@ -1470,13 +1198,4 @@ pub struct UtcTimeResponse {
         skip_serializing_if = "Option::is_none"
     )]
     pub response_transmission_time: Option<chrono::DateTime<chrono::Utc>>,
-}
-
-impl Default for UtcTimeResponse {
-    fn default() -> Self {
-        Self {
-            request_reception_time: Default::default(),
-            response_transmission_time: Default::default(),
-        }
-    }
 }

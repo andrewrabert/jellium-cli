@@ -1,7 +1,7 @@
 use super::*;
 
 #[doc = "An activity log entry."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct ActivityLogEntry {
     #[doc = "Gets or sets the date."]
     #[serde(rename = "Date", default, skip_serializing_if = "Option::is_none")]
@@ -42,25 +42,8 @@ pub struct ActivityLogEntry {
     pub user_primary_image_tag: Option<String>,
 }
 
-impl Default for ActivityLogEntry {
-    fn default() -> Self {
-        Self {
-            date: Default::default(),
-            id: Default::default(),
-            item_id: Default::default(),
-            name: Default::default(),
-            overview: Default::default(),
-            severity: Default::default(),
-            short_overview: Default::default(),
-            type_: Default::default(),
-            user_id: Default::default(),
-            user_primary_image_tag: Default::default(),
-        }
-    }
-}
-
 #[doc = "Activity log created message."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct ActivityLogEntryMessage {
     #[doc = "Gets or sets the data."]
     #[serde(rename = "Data", default, skip_serializing_if = "Option::is_none")]
@@ -76,18 +59,8 @@ pub struct ActivityLogEntryMessage {
     pub message_type: Option<SessionMessageType>,
 }
 
-impl Default for ActivityLogEntryMessage {
-    fn default() -> Self {
-        Self {
-            data: Default::default(),
-            message_id: Default::default(),
-            message_type: Default::default(),
-        }
-    }
-}
-
 #[doc = "Query result container."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct ActivityLogEntryQueryResult {
     #[doc = "Gets or sets the items."]
     #[serde(rename = "Items", default, skip_serializing_if = "Vec::is_empty")]
@@ -108,18 +81,8 @@ pub struct ActivityLogEntryQueryResult {
     pub total_record_count: Option<i32>,
 }
 
-impl Default for ActivityLogEntryQueryResult {
-    fn default() -> Self {
-        Self {
-            items: Default::default(),
-            start_index: Default::default(),
-            total_record_count: Default::default(),
-        }
-    }
-}
-
 #[doc = "Activity log entry start message.\r\nData is the timing data encoded as \"$initialDelay,$interval\" in ms."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct ActivityLogEntryStartMessage {
     #[doc = "Gets or sets the data."]
     #[serde(rename = "Data", default, skip_serializing_if = "Option::is_none")]
@@ -132,17 +95,8 @@ pub struct ActivityLogEntryStartMessage {
     pub message_type: Option<SessionMessageType>,
 }
 
-impl Default for ActivityLogEntryStartMessage {
-    fn default() -> Self {
-        Self {
-            data: Default::default(),
-            message_type: Default::default(),
-        }
-    }
-}
-
 #[doc = "Activity log entry stop message."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct ActivityLogEntryStopMessage {
     #[serde(
         rename = "MessageType",
@@ -150,12 +104,4 @@ pub struct ActivityLogEntryStopMessage {
         skip_serializing_if = "Option::is_none"
     )]
     pub message_type: Option<SessionMessageType>,
-}
-
-impl Default for ActivityLogEntryStopMessage {
-    fn default() -> Self {
-        Self {
-            message_type: Default::default(),
-        }
-    }
 }

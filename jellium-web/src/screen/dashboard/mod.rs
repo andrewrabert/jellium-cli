@@ -1419,21 +1419,18 @@ pub fn act(signed: &mut Signed, action: Action) -> Task<Message> {
                         return Task::none();
                     };
                     let provider = &held.provider;
-                    #[expect(
-                        clippy::disallowed_methods,
-                        reason = "json! builds a literal body this client wrote, which cannot fail to render"
-                    )]
                     let body = if provider.schedules_direct {
-                        serde_json::json!({
-                            "Type": "SchedulesDirect",
-                            "Username": provider.username,
-                            "Password": provider.password,
-                            "Country": provider.country,
-                            "ZipCode": provider.postcode,
-                            "ListingsId": provider.lineup,
-                        })
+                        ListingProvider::SchedulesDirect {
+                            username: provider.username.clone(),
+                            password: provider.password.clone(),
+                            country: provider.country.clone(),
+                            zip_code: provider.postcode.clone(),
+                            listings_id: provider.lineup.clone(),
+                        }
                     } else {
-                        serde_json::json!({ "Type": "xmltv", "Path": provider.path })
+                        ListingProvider::Xmltv {
+                            path: provider.path.clone(),
+                        }
                     };
                     let object = if provider.schedules_direct {
                         provider.lineup.clone()
@@ -1714,4 +1711,20 @@ pub fn chosen(signed: &mut Signed, chosen: &crate::overlay::Chosen) -> Task<Mess
         async move { api.upload_user_image(id, &mime, bytes).await },
         move |result| Message::DashboardWrote(wrote.clone(), result),
     )
+}
+
+/// What `/LiveTv/ListingProviders` takes.
+#[derive(serde::Serialize)]
+#[serde(tag = "Type")]
+enum ListingProvider {
+    #[serde(rename = "SchedulesDirect", rename_all = "PascalCase")]
+    SchedulesDirect {
+        username: String,
+        password: String,
+        country: String,
+        zip_code: String,
+        listings_id: String,
+    },
+    #[serde(rename = "xmltv", rename_all = "PascalCase")]
+    Xmltv { path: String },
 }

@@ -141,92 +141,18 @@ pub async fn execute(
         } => {
             let effective_uid = uid.as_ref().unwrap_or(user_id);
             let result = client
-                .get_trailers(
-                    None, // adjacent_to
-                    None, // album_artist_ids
-                    None, // album_ids
-                    None, // albums
-                    None, // artist_ids
-                    None, // artists
-                    None, // collapse_box_set_items
-                    None, // contributing_artist_ids
-                    None, // enable_image_types
-                    None, // enable_images
-                    None, // enable_total_record_count
-                    None, // enable_user_data
-                    None, // exclude_artist_ids
-                    None, // exclude_item_ids
-                    None, // exclude_item_types
-                    None, // exclude_location_types
-                    fields.as_ref(),
-                    None, // filters
-                    None, // genre_ids
-                    None, // genres
-                    None, // has_imdb_id
-                    None, // has_official_rating
-                    None, // has_overview
-                    None, // has_parental_rating
-                    None, // has_special_feature
-                    None, // has_subtitles
-                    None, // has_theme_song
-                    None, // has_theme_video
-                    None, // has_tmdb_id
-                    None, // has_trailer
-                    None, // has_tvdb_id
-                    None, // ids
-                    None, // image_type_limit
-                    None, // image_types
-                    None, // is3_d
-                    None, // is4_k
-                    None, // is_favorite
-                    None, // is_hd
-                    None, // is_kids
-                    None, // is_locked
-                    None, // is_missing
-                    None, // is_movie
-                    None, // is_news
-                    None, // is_place_holder
-                    None, // is_played
-                    None, // is_series
-                    None, // is_sports
-                    None, // is_unaired
-                    *limit,
-                    None, // location_types
-                    None, // max_height
-                    None, // max_official_rating
-                    None, // max_premiere_date
-                    None, // max_width
-                    None, // media_types
-                    None, // min_community_rating
-                    None, // min_critic_rating
-                    None, // min_date_last_saved
-                    None, // min_date_last_saved_for_user
-                    None, // min_height
-                    None, // min_official_rating
-                    None, // min_premiere_date
-                    None, // min_width
-                    None, // name_less_than
-                    None, // name_starts_with
-                    None, // name_starts_with_or_greater
-                    None, // official_ratings
-                    parent_id.as_ref(),
-                    None, // parent_index_number
-                    None, // person
-                    None, // person_ids
-                    None, // person_types
-                    *recursive,
-                    search_term.as_deref(),
-                    None, // series_status
-                    sort_by.as_ref(),
-                    sort_order.as_ref(),
-                    *start_index,
-                    None, // studio_ids
-                    None, // studios
-                    None, // tags
-                    Some(effective_uid),
-                    None, // video_types
-                    None, // years
-                )
+                .get_trailers(&jellyfin_api::query::GetTrailers {
+                    fields: fields.as_ref(),
+                    limit: *limit,
+                    parent_id: parent_id.as_ref(),
+                    recursive: *recursive,
+                    search_term: search_term.as_deref(),
+                    sort_by: sort_by.as_ref(),
+                    sort_order: sort_order.as_ref(),
+                    start_index: *start_index,
+                    user_id: Some(effective_uid),
+                    ..Default::default()
+                })
                 .await?;
             crate::output::print_ndjson(&result.items)?;
         }

@@ -1,5 +1,5 @@
 #[doc = "Manifest type for backups internal structure."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct BackupManifestDto {
     #[doc = "Gets or sets the backup engine version this backup was created with."]
     #[serde(
@@ -30,20 +30,8 @@ pub struct BackupManifestDto {
     pub server_version: Option<String>,
 }
 
-impl Default for BackupManifestDto {
-    fn default() -> Self {
-        Self {
-            backup_engine_version: Default::default(),
-            date_created: Default::default(),
-            options: Default::default(),
-            path: Default::default(),
-            server_version: Default::default(),
-        }
-    }
-}
-
 #[doc = "Defines the optional contents of the backup archive."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct BackupOptionsDto {
     #[doc = "Gets or sets a value indicating whether the archive contains the Database contents."]
     #[serde(rename = "Database", default, skip_serializing_if = "Option::is_none")]
@@ -59,19 +47,8 @@ pub struct BackupOptionsDto {
     pub trickplay: Option<bool>,
 }
 
-impl Default for BackupOptionsDto {
-    fn default() -> Self {
-        Self {
-            database: Default::default(),
-            metadata: Default::default(),
-            subtitles: Default::default(),
-            trickplay: Default::default(),
-        }
-    }
-}
-
 #[doc = "Defines properties used to start a restore process."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct BackupRestoreRequestDto {
     #[doc = "Gets or Sets the name of the backup archive to restore from. Must be present in MediaBrowser.Common.Configuration.IApplicationPaths.BackupPath."]
     #[serde(
@@ -80,12 +57,4 @@ pub struct BackupRestoreRequestDto {
         skip_serializing_if = "Option::is_none"
     )]
     pub archive_file_name: Option<String>,
-}
-
-impl Default for BackupRestoreRequestDto {
-    fn default() -> Self {
-        Self {
-            archive_file_name: Default::default(),
-        }
-    }
 }

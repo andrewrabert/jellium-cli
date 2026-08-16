@@ -232,98 +232,43 @@ impl Api {
 
         let result = self
             .client
-            .get_items(
-                None,                                 // adjacent_to
-                album_artist_ids.as_ref(),            // album_artist_ids
-                None,                                 // album_ids
-                None,                                 // albums
-                artist_ids.as_ref(),                  // artist_ids
-                None,                                 // artists
-                None,                                 // collapse_box_set_items
-                None,                                 // contributing_artist_ids
-                None,                                 // enable_image_types
-                Some(true),                           // enable_images
-                Some(true),                           // enable_total_record_count
-                Some(true),                           // enable_user_data
-                None,                                 // exclude_artist_ids
-                None,                                 // exclude_item_ids
-                None,                                 // exclude_item_types
-                None,                                 // exclude_location_types
-                Some(&fields),                        // fields
-                Some(&filters),                       // filters
-                genre_ids.as_ref(),                   // genre_ids
-                None,                                 // genres
-                None,                                 // has_imdb_id
-                None,                                 // has_official_rating
-                None,                                 // has_overview
-                None,                                 // has_parental_rating
-                None,                                 // has_special_feature
-                facets.has_subtitles.then_some(true), // has_subtitles
-                None,                                 // has_theme_song
-                None,                                 // has_theme_video
-                None,                                 // has_tmdb_id
-                None,                                 // has_trailer
-                None,                                 // has_tvdb_id
-                query.ids.as_ref(),                   // ids
-                None,                                 // image_type_limit
-                None,                                 // image_types
-                include_item_types.as_ref(),          // include_item_types
-                None,                                 // index_number
-                None,                                 // is3_d
-                facets.uhd.then_some(true),           // is4_k
-                None,                                 // is_favorite
-                facets.hd.then_some(true),            // is_hd
-                None,                                 // is_kids
-                None,                                 // is_locked
-                None,                                 // is_missing
-                None,                                 // is_movie
-                None,                                 // is_news
-                None,                                 // is_place_holder
-                facets.played,                        // is_played
-                None,                                 // is_series
-                None,                                 // is_sports
-                None,                                 // is_unaired
-                if query.count_only {
+            .get_items(&jellyfin_api::query::GetItems {
+                album_artist_ids: album_artist_ids.as_ref(),
+                artist_ids: artist_ids.as_ref(),
+                enable_images: Some(true),
+                enable_total_record_count: Some(true),
+                enable_user_data: Some(true),
+                fields: Some(&fields),
+                filters: Some(&filters),
+                genre_ids: genre_ids.as_ref(),
+                has_subtitles: facets.has_subtitles.then_some(true),
+                ids: query.ids.as_ref(),
+                include_item_types: include_item_types.as_ref(),
+                is_4k: facets.uhd.then_some(true),
+                is_hd: facets.hd.then_some(true),
+                is_played: facets.played,
+                limit: if query.count_only {
                     Some(0)
                 } else {
                     query.limit
-                }, // limit
-                None,                                 // location_types
-                None,                                 // max_height
-                None,                                 // max_official_rating
-                None,                                 // max_premiere_date
-                None,                                 // max_width
-                None,                                 // media_types
-                None,                                 // min_community_rating
-                None,                                 // min_critic_rating
-                None,                                 // min_date_last_saved
-                None,                                 // min_date_last_saved_for_user
-                None,                                 // min_height
-                None,                                 // min_official_rating
-                None,                                 // min_premiere_date
-                None,                                 // min_width
-                None,                                 // name_less_than
-                None,                                 // name_starts_with
-                query.name_starts_with_or_greater.as_deref(), // name_starts_with_or_greater
-                official_ratings.as_ref(),            // official_ratings
-                query.parent_id.as_ref(),             // parent_id
-                None,                                 // parent_index_number
-                None,                                 // person
-                person_ids.as_ref(),                  // person_ids
-                None,                                 // person_types
-                Some(true),                           // recursive
-                query.search_term.as_deref(),         // search_term
-                series_status.as_ref(),               // series_status
-                Some(&sort_by),                       // sort_by
-                Some(&sort_order),                    // sort_order
-                Some(query.start),                    // start_index
-                studio_ids.as_ref(),                  // studio_ids
-                None,                                 // studios
-                tags.as_ref(),                        // tags
-                Some(&self.user_id),                  // user_id
-                video_types.as_ref(),                 // video_types
-                years.as_ref(),                       // years
-            )
+                },
+                name_starts_with_or_greater: query.name_starts_with_or_greater.as_deref(),
+                official_ratings: official_ratings.as_ref(),
+                parent_id: query.parent_id.as_ref(),
+                person_ids: person_ids.as_ref(),
+                recursive: Some(true),
+                search_term: query.search_term.as_deref(),
+                series_status: series_status.as_ref(),
+                sort_by: Some(&sort_by),
+                sort_order: Some(&sort_order),
+                start_index: Some(query.start),
+                studio_ids: studio_ids.as_ref(),
+                tags: tags.as_ref(),
+                user_id: Some(&self.user_id),
+                video_types: video_types.as_ref(),
+                years: years.as_ref(),
+                ..Default::default()
+            })
             .await?;
 
         Ok(Page {
@@ -350,23 +295,14 @@ impl Api {
             let fields = fields();
             Ok(self
                 .client
-                .get_resume_items(
-                    None,
-                    Some(true),
-                    None,
-                    Some(true),
-                    None,
-                    None,
-                    Some(&fields),
-                    None,
-                    None,
-                    Some(RAIL_LIMIT),
-                    None,
-                    None,
-                    None,
-                    None,
-                    Some(&self.user_id),
-                )
+                .get_resume_items(&jellyfin_api::query::GetResumeItems {
+                    enable_images: Some(true),
+                    enable_user_data: Some(true),
+                    fields: Some(&fields),
+                    limit: Some(RAIL_LIMIT),
+                    user_id: Some(&self.user_id),
+                    ..Default::default()
+                })
                 .await?
                 .items)
         })
@@ -378,23 +314,14 @@ impl Api {
             let fields = fields();
             Ok(self
                 .client
-                .get_next_up(
-                    None,
-                    None,
-                    Some(true),
-                    None,
-                    None,
-                    None,
-                    Some(true),
-                    Some(&fields),
-                    None,
-                    Some(RAIL_LIMIT),
-                    None,
-                    None,
-                    None,
-                    None,
-                    Some(&self.user_id),
-                )
+                .get_next_up(&jellyfin_api::query::GetNextUp {
+                    enable_images: Some(true),
+                    enable_user_data: Some(true),
+                    fields: Some(&fields),
+                    limit: Some(RAIL_LIMIT),
+                    user_id: Some(&self.user_id),
+                    ..Default::default()
+                })
                 .await?
                 .items)
         })
@@ -499,168 +426,94 @@ impl Api {
             let result = match facet {
                 Facet::Genre => {
                     self.client
-                        .get_genres(
-                            None,
-                            Some(true),
-                            Some(true),
-                            None,
-                            Some(&fields),
-                            None,
-                            None,
-                            None,
-                            Some(limit),
-                            None,
-                            None,
-                            None,
-                            parent,
-                            None,
-                            Some(&sort_by),
-                            Some(&sort_order),
-                            Some(start),
-                            Some(&self.user_id),
-                        )
+                        .get_genres(&jellyfin_api::query::GetGenres {
+                            enable_images: Some(true),
+                            enable_total_record_count: Some(true),
+                            fields: Some(&fields),
+                            limit: Some(limit),
+                            parent_id: parent,
+                            sort_by: Some(&sort_by),
+                            sort_order: Some(&sort_order),
+                            start_index: Some(start),
+                            user_id: Some(&self.user_id),
+                            ..Default::default()
+                        })
                         .await?
                 }
                 Facet::MusicGenre => {
                     self.client
-                        .get_music_genres(
-                            None,
-                            Some(true),
-                            Some(true),
-                            None,
-                            Some(&fields),
-                            None,
-                            None,
-                            None,
-                            Some(limit),
-                            None,
-                            None,
-                            None,
-                            parent,
-                            None,
-                            Some(&sort_by),
-                            Some(&sort_order),
-                            Some(start),
-                            Some(&self.user_id),
-                        )
+                        .get_music_genres(&jellyfin_api::query::GetMusicGenres {
+                            enable_images: Some(true),
+                            enable_total_record_count: Some(true),
+                            fields: Some(&fields),
+                            limit: Some(limit),
+                            parent_id: parent,
+                            sort_by: Some(&sort_by),
+                            sort_order: Some(&sort_order),
+                            start_index: Some(start),
+                            user_id: Some(&self.user_id),
+                            ..Default::default()
+                        })
                         .await?
                 }
                 Facet::Studio | Facet::Network => {
                     self.client
-                        .get_studios(
-                            None,
-                            Some(true),
-                            Some(true),
-                            None,
-                            None,
-                            Some(&fields),
-                            None,
-                            None,
-                            None,
-                            Some(limit),
-                            None,
-                            None,
-                            None,
-                            parent,
-                            None,
-                            Some(start),
-                            Some(&self.user_id),
-                        )
+                        .get_studios(&jellyfin_api::query::GetStudios {
+                            enable_images: Some(true),
+                            enable_total_record_count: Some(true),
+                            fields: Some(&fields),
+                            limit: Some(limit),
+                            parent_id: parent,
+                            start_index: Some(start),
+                            user_id: Some(&self.user_id),
+                            ..Default::default()
+                        })
                         .await?
                 }
                 Facet::Person => {
                     self.client
-                        .get_persons(
-                            None,
-                            None,
-                            Some(true),
-                            Some(true),
-                            None,
-                            Some(&fields),
-                            None,
-                            None,
-                            None,
-                            Some(limit),
-                            None,
-                            None,
-                            Some(&self.user_id),
-                        )
+                        .get_persons(&jellyfin_api::query::GetPersons {
+                            enable_images: Some(true),
+                            enable_user_data: Some(true),
+                            fields: Some(&fields),
+                            limit: Some(limit),
+                            user_id: Some(&self.user_id),
+                            ..Default::default()
+                        })
                         .await?
                 }
                 Facet::Artist => {
                     self.client
-                        .get_artists(
-                            None,
-                            Some(true),
-                            Some(true),
-                            Some(true),
-                            None,
-                            Some(&fields),
-                            None,
-                            None,
-                            None,
-                            None,
-                            None,
-                            None,
-                            Some(limit),
-                            None,
-                            None,
-                            None,
-                            None,
-                            None,
-                            None,
-                            parent,
-                            None,
-                            None,
-                            None,
-                            None,
-                            Some(&sort_by),
-                            Some(&sort_order),
-                            Some(start),
-                            None,
-                            None,
-                            None,
-                            Some(&self.user_id),
-                            None,
-                        )
+                        .get_artists(&jellyfin_api::query::GetArtists {
+                            enable_images: Some(true),
+                            enable_total_record_count: Some(true),
+                            enable_user_data: Some(true),
+                            fields: Some(&fields),
+                            limit: Some(limit),
+                            parent_id: parent,
+                            sort_by: Some(&sort_by),
+                            sort_order: Some(&sort_order),
+                            start_index: Some(start),
+                            user_id: Some(&self.user_id),
+                            ..Default::default()
+                        })
                         .await?
                 }
                 Facet::AlbumArtist => {
                     self.client
-                        .get_album_artists(
-                            None,
-                            Some(true),
-                            Some(true),
-                            Some(true),
-                            None,
-                            Some(&fields),
-                            None,
-                            None,
-                            None,
-                            None,
-                            None,
-                            None,
-                            Some(limit),
-                            None,
-                            None,
-                            None,
-                            None,
-                            None,
-                            None,
-                            parent,
-                            None,
-                            None,
-                            None,
-                            None,
-                            Some(&sort_by),
-                            Some(&sort_order),
-                            Some(start),
-                            None,
-                            None,
-                            None,
-                            Some(&self.user_id),
-                            None,
-                        )
+                        .get_album_artists(&jellyfin_api::query::GetAlbumArtists {
+                            enable_images: Some(true),
+                            enable_total_record_count: Some(true),
+                            enable_user_data: Some(true),
+                            fields: Some(&fields),
+                            limit: Some(limit),
+                            parent_id: parent,
+                            sort_by: Some(&sort_by),
+                            sort_order: Some(&sort_order),
+                            start_index: Some(start),
+                            user_id: Some(&self.user_id),
+                            ..Default::default()
+                        })
                         .await?
                 }
             };
@@ -680,19 +533,16 @@ impl Api {
             let fields = fields();
             Ok(self
                 .client
-                .get_latest_media(
-                    None,
-                    Some(true),
-                    Some(true),
-                    Some(&fields),
-                    Some(false),
-                    None,
-                    None,
-                    None,
-                    Some(limit),
-                    Some(&library),
-                    Some(&self.user_id),
-                )
+                .get_latest_media(&jellyfin_api::query::GetLatestMedia {
+                    enable_images: Some(true),
+                    enable_user_data: Some(true),
+                    fields: Some(&fields),
+                    group_items: Some(false),
+                    limit: Some(limit),
+                    parent_id: Some(&library),
+                    user_id: Some(&self.user_id),
+                    ..Default::default()
+                })
                 .await?)
         })
         .await
@@ -736,17 +586,15 @@ impl Api {
             let fields = fields();
             Ok(self
                 .client
-                .get_upcoming_episodes(
-                    None,
-                    Some(true),
-                    Some(true),
-                    Some(&fields),
-                    None,
-                    Some(limit),
-                    Some(&library),
-                    None,
-                    Some(&self.user_id),
-                )
+                .get_upcoming_episodes(&jellyfin_api::query::GetUpcomingEpisodes {
+                    enable_images: Some(true),
+                    enable_user_data: Some(true),
+                    fields: Some(&fields),
+                    limit: Some(limit),
+                    parent_id: Some(&library),
+                    user_id: Some(&self.user_id),
+                    ..Default::default()
+                })
                 .await?
                 .items)
         })
@@ -770,26 +618,13 @@ impl Api {
         Answer::of(async {
             Ok(self
                 .client
-                .get_genres(
-                    None,
-                    Some(true),
-                    None,
-                    None,
-                    None,
-                    None,
-                    None,
-                    None,
-                    Some(FACET_LIMIT),
-                    None,
-                    None,
-                    None,
-                    parent.as_ref(),
-                    None,
-                    None,
-                    None,
-                    None,
-                    Some(&self.user_id),
-                )
+                .get_genres(&jellyfin_api::query::GetGenres {
+                    enable_images: Some(true),
+                    limit: Some(FACET_LIMIT),
+                    parent_id: parent.as_ref(),
+                    user_id: Some(&self.user_id),
+                    ..Default::default()
+                })
                 .await?
                 .items)
         })
@@ -801,25 +636,13 @@ impl Api {
         Answer::of(async {
             Ok(self
                 .client
-                .get_studios(
-                    None,              // enable_image_types
-                    Some(true),        // enable_images
-                    None,              // enable_total_record_count
-                    None,              // enable_user_data
-                    None,              // exclude_item_types
-                    None,              // fields
-                    None,              // image_type_limit
-                    None,              // include_item_types
-                    None,              // is_favorite
-                    Some(FACET_LIMIT), // limit
-                    None,              // name_less_than
-                    None,              // name_starts_with
-                    None,              // name_starts_with_or_greater
-                    parent.as_ref(),   // parent_id
-                    None,              // search_term
-                    None,              // start_index
-                    Some(&self.user_id),
-                )
+                .get_studios(&jellyfin_api::query::GetStudios {
+                    enable_images: Some(true),
+                    limit: Some(FACET_LIMIT),
+                    parent_id: parent.as_ref(),
+                    user_id: Some(&self.user_id),
+                    ..Default::default()
+                })
                 .await?
                 .items)
         })
@@ -861,15 +684,13 @@ impl Api {
                     .client
                     .get_seasons(
                         &id,
-                        None,
-                        None,
-                        Some(true),
-                        Some(true),
-                        Some(&fields),
-                        None,
-                        None,
-                        None,
-                        Some(&self.user_id),
+                        &jellyfin_api::query::GetSeasons {
+                            enable_images: Some(true),
+                            enable_user_data: Some(true),
+                            fields: Some(&fields),
+                            user_id: Some(&self.user_id),
+                            ..Default::default()
+                        },
                     )
                     .await?
                     .items),
@@ -881,20 +702,14 @@ impl Api {
                         .client
                         .get_episodes(
                             &series,
-                            None,
-                            None,
-                            Some(true),
-                            Some(true),
-                            Some(&fields),
-                            None,
-                            None,
-                            None,
-                            None,
-                            Some(&id),
-                            None,
-                            None,
-                            None,
-                            Some(&self.user_id),
+                            &jellyfin_api::query::GetEpisodes {
+                                enable_images: Some(true),
+                                enable_user_data: Some(true),
+                                fields: Some(&fields),
+                                season_id: Some(&id),
+                                user_id: Some(&self.user_id),
+                                ..Default::default()
+                            },
                         )
                         .await?
                         .items)
@@ -971,20 +786,14 @@ impl Api {
                         .client
                         .get_episodes(
                             &series,
-                            None,
-                            None,
-                            Some(true),
-                            Some(true),
-                            Some(&fields),
-                            None,
-                            None,
-                            None,
-                            None,
-                            item.season_id.as_ref(),
-                            None,
-                            None,
-                            None,
-                            Some(&self.user_id),
+                            &jellyfin_api::query::GetEpisodes {
+                                enable_images: Some(true),
+                                enable_user_data: Some(true),
+                                fields: Some(&fields),
+                                season_id: item.season_id.as_ref(),
+                                user_id: Some(&self.user_id),
+                                ..Default::default()
+                            },
                         )
                         .await?
                         .items)
@@ -993,20 +802,13 @@ impl Api {
                     .client
                     .get_episodes(
                         &id,
-                        None,
-                        None,
-                        Some(true),
-                        Some(true),
-                        Some(&fields),
-                        None,
-                        None,
-                        None,
-                        None,
-                        None,
-                        None,
-                        None,
-                        None,
-                        Some(&self.user_id),
+                        &jellyfin_api::query::GetEpisodes {
+                            enable_images: Some(true),
+                            enable_user_data: Some(true),
+                            fields: Some(&fields),
+                            user_id: Some(&self.user_id),
+                            ..Default::default()
+                        },
                     )
                     .await?
                     .items),
@@ -1018,20 +820,14 @@ impl Api {
                         .client
                         .get_episodes(
                             &series,
-                            None,
-                            None,
-                            Some(true),
-                            Some(true),
-                            Some(&fields),
-                            None,
-                            None,
-                            None,
-                            None,
-                            Some(&id),
-                            None,
-                            None,
-                            None,
-                            Some(&self.user_id),
+                            &jellyfin_api::query::GetEpisodes {
+                                enable_images: Some(true),
+                                enable_user_data: Some(true),
+                                fields: Some(&fields),
+                                season_id: Some(&id),
+                                user_id: Some(&self.user_id),
+                                ..Default::default()
+                            },
                         )
                         .await?
                         .items)
@@ -1072,27 +868,29 @@ impl Api {
                     self.client
                         .get_instant_mix_from_album(
                             &id,
-                            None,
-                            Some(true),
-                            Some(true),
-                            Some(&fields),
-                            None,
-                            Some(MIX_LIMIT),
-                            Some(&self.user_id),
+                            &jellyfin_api::query::GetInstantMixFromAlbum {
+                                enable_images: Some(true),
+                                enable_user_data: Some(true),
+                                fields: Some(&fields),
+                                limit: Some(MIX_LIMIT),
+                                user_id: Some(&self.user_id),
+                                ..Default::default()
+                            },
                         )
                         .await?
                 }
                 Some(BaseItemKind::MusicArtist) => {
                     self.client
-                        .get_instant_mix_from_artists(
+                        .get_instant_mix_from_artist(
                             &id,
-                            None,
-                            Some(true),
-                            Some(true),
-                            Some(&fields),
-                            None,
-                            Some(MIX_LIMIT),
-                            Some(&self.user_id),
+                            &jellyfin_api::query::GetInstantMixFromArtist {
+                                enable_images: Some(true),
+                                enable_user_data: Some(true),
+                                fields: Some(&fields),
+                                limit: Some(MIX_LIMIT),
+                                user_id: Some(&self.user_id),
+                                ..Default::default()
+                            },
                         )
                         .await?
                 }
@@ -1100,13 +898,14 @@ impl Api {
                     self.client
                         .get_instant_mix_from_item(
                             &id,
-                            None,
-                            Some(true),
-                            Some(true),
-                            Some(&fields),
-                            None,
-                            Some(MIX_LIMIT),
-                            Some(&self.user_id),
+                            &jellyfin_api::query::GetInstantMixFromItem {
+                                enable_images: Some(true),
+                                enable_user_data: Some(true),
+                                fields: Some(&fields),
+                                limit: Some(MIX_LIMIT),
+                                user_id: Some(&self.user_id),
+                                ..Default::default()
+                            },
                         )
                         .await?
                 }
@@ -1149,29 +948,16 @@ impl Api {
         Answer::of(async {
             let result = self
                 .client
-                .get_live_tv_channels(
-                    Some(true), // add_current_program
-                    Some(true), // enable_favorite_sorting
-                    None,       // enable_image_types
-                    Some(true), // enable_images
-                    Some(true), // enable_user_data
-                    None,       // fields
-                    None,       // image_type_limit
-                    None,       // is_disliked
-                    None,       // is_favorite
-                    None,       // is_kids
-                    None,       // is_liked
-                    None,       // is_movie
-                    None,       // is_news
-                    None,       // is_series
-                    None,       // is_sports
-                    limit,      // limit
-                    None,       // sort_by
-                    None,       // sort_order
-                    None,       // start_index
-                    Some(kind), // type_
-                    Some(&self.user_id),
-                )
+                .get_live_tv_channels(&jellyfin_api::query::GetLiveTvChannels {
+                    add_current_program: Some(true),
+                    enable_favorite_sorting: Some(true),
+                    enable_images: Some(true),
+                    enable_user_data: Some(true),
+                    limit,
+                    type_: Some(kind),
+                    user_id: Some(&self.user_id),
+                    ..Default::default()
+                })
                 .await?;
             Ok(result.items.iter().filter_map(Channel::read).collect())
         })
@@ -1262,27 +1048,14 @@ impl Api {
             let fields = fields();
             let result = self
                 .client
-                .get_recordings(
-                    None,          // channel_id
-                    None,          // enable_image_types
-                    Some(true),    // enable_images
-                    Some(true),    // enable_total_record_count
-                    Some(true),    // enable_user_data
-                    Some(&fields), // fields
-                    None,          // image_type_limit
-                    None,          // is_in_progress
-                    None,          // is_kids
-                    None,          // is_library_item
-                    None,          // is_movie
-                    None,          // is_news
-                    None,          // is_series
-                    None,          // is_sports
-                    None,          // limit
-                    None,          // series_timer_id
-                    None,          // start_index
-                    None,          // status
-                    Some(&self.user_id),
-                )
+                .get_recordings(&jellyfin_api::query::GetRecordings {
+                    enable_images: Some(true),
+                    enable_total_record_count: Some(true),
+                    enable_user_data: Some(true),
+                    fields: Some(&fields),
+                    user_id: Some(&self.user_id),
+                    ..Default::default()
+                })
                 .await?;
             let mut items = result.items;
             items.sort_by(|one, two| {
@@ -1434,7 +1207,11 @@ impl Api {
     }
 
     /// Writes `body` to `path` whole.
-    async fn write_whole(&self, path: &str, body: &serde_json::Value) -> Result<(), Trouble> {
+    async fn write_whole<T: serde::Serialize + ?Sized>(
+        &self,
+        path: &str,
+        body: &T,
+    ) -> Result<(), Trouble> {
         let response = self
             .http
             .post(format!("{}{path}", self.base))
@@ -1590,15 +1367,16 @@ impl Api {
                 .client
                 .create_playlist(None, None, Some(name), Some(&self.user_id), &body)
                 .await?;
-            #[expect(
-                clippy::disallowed_methods,
-                reason = "a conversion that carries no cause beyond the value itself"
-            )]
-            let made = created.id.and_then(|id| id.parse().ok());
-            made.ok_or_else(|| {
+            let named = created.id.ok_or_else(|| {
                 Bubble::from(Trouble::Relay {
                     status: None,
                     detail: "the server named no id for the playlist it created".to_owned(),
+                })
+            })?;
+            named.parse().map_err(|error: uuid::Error| {
+                Bubble::from(Trouble::Relay {
+                    status: None,
+                    detail: error.to_string(),
                 })
             })
         })
@@ -1619,14 +1397,15 @@ impl Api {
                 .client
                 .get_playlist_items(
                     &playlist,
-                    None,
-                    Some(true),
-                    Some(true),
-                    Some(&fields),
-                    None,
-                    Some(limit),
-                    Some(start),
-                    Some(&self.user_id),
+                    &jellyfin_api::query::GetPlaylistItems {
+                        enable_images: Some(true),
+                        enable_user_data: Some(true),
+                        fields: Some(&fields),
+                        limit: Some(limit),
+                        start_index: Some(start),
+                        user_id: Some(&self.user_id),
+                        ..Default::default()
+                    },
                 )
                 .await?;
             let total = result
@@ -1751,7 +1530,7 @@ impl Api {
     pub async fn identify(
         &self,
         search: crate::screen::metadata::identify::Search,
-        query: &serde_json::Value,
+        query: &impl serde::Serialize,
     ) -> Answer<Vec<jellyfin_api::types::RemoteSearchResult>> {
         Answer::of(async {
             let path = format!("/Items/RemoteSearch/{}", search.segment());
@@ -1968,21 +1747,15 @@ impl Api {
             let fields = fields();
             Ok(self
                 .client
-                .get_persons(
-                    None,
-                    None,
-                    Some(true),
-                    Some(true),
-                    None,
-                    Some(&fields),
-                    None,
-                    None,
-                    None,
-                    Some(limit),
-                    None,
-                    Some(term),
-                    Some(&self.user_id),
-                )
+                .get_persons(&jellyfin_api::query::GetPersons {
+                    enable_images: Some(true),
+                    enable_user_data: Some(true),
+                    fields: Some(&fields),
+                    limit: Some(limit),
+                    search_term: Some(term),
+                    user_id: Some(&self.user_id),
+                    ..Default::default()
+                })
                 .await?
                 .items)
         })
@@ -2004,8 +1777,8 @@ impl Api {
         &self,
         item: Uuid,
         media_source: &str,
-        width: i32,
-        index: i32,
+        width: u32,
+        index: u32,
     ) -> Answer<Vec<u8>> {
         Answer::of(async {
             let response = self
@@ -2138,15 +1911,11 @@ impl Api {
 
     pub async fn set_password(&self, id: Uuid, current: Option<&str>, new: &str) -> Answer<()> {
         Answer::of(async {
-            #[expect(
-                clippy::disallowed_methods,
-                reason = "json! builds a literal body this client wrote, which cannot fail to render"
-            )]
-            let body = serde_json::json!({
-                "CurrentPw": current.unwrap_or_default(),
-                "NewPw": new,
-                "ResetPassword": false,
-            });
+            let body = PasswordChange {
+                current_pw: current.unwrap_or_default(),
+                new_pw: new,
+                reset_password: false,
+            };
             Ok(self
                 .write_whole(&format!("/Users/{id}/Password"), &body)
                 .await?)
@@ -2282,20 +2051,18 @@ impl Api {
         options: &serde_json::Value,
     ) -> Answer<()> {
         Answer::of(async {
-            #[expect(
-                clippy::disallowed_methods,
-                reason = "json! builds a literal body this client wrote, which cannot fail to render"
-            )]
-            let body = serde_json::json!({ "LibraryOptions": options });
+            let body = LibraryOptionsBody {
+                library_options: options,
+            };
             Ok(self
                 .write_whole(
-                &format!(
-                    "/Library/VirtualFolders?name={}&collectionType={}",
-                    urlencode(name),
-                    urlencode(content_type)
-                ),
-                &body,
-            )
+                    &format!(
+                        "/Library/VirtualFolders?name={}&collectionType={}",
+                        urlencode(name),
+                        urlencode(content_type)
+                    ),
+                    &body,
+                )
                 .await?)
         })
         .await
@@ -2328,16 +2095,13 @@ impl Api {
 
     pub async fn add_path(&self, library: &str, path: &str) -> Answer<()> {
         Answer::of(async {
-            #[expect(
-                clippy::disallowed_methods,
-                reason = "json! builds a literal body this client wrote, which cannot fail to render"
-            )]
-            let body = serde_json::json!({ "Name": library, "Path": path });
-            Ok(self.write_whole(
-                "/Library/VirtualFolders/Paths",
-                &body,
-            )
-            .await?)
+            let body = MediaPath {
+                name: library,
+                path,
+            };
+            Ok(self
+                .write_whole("/Library/VirtualFolders/Paths", &body)
+                .await?)
         })
         .await
     }
@@ -2374,16 +2138,13 @@ impl Api {
 
     pub async fn save_library_options(&self, id: &str, options: &serde_json::Value) -> Answer<()> {
         Answer::of(async {
-            #[expect(
-                clippy::disallowed_methods,
-                reason = "json! builds a literal body this client wrote, which cannot fail to render"
-            )]
-            let body = serde_json::json!({ "Id": id, "LibraryOptions": options });
-            Ok(self.write_whole(
-                "/Library/VirtualFolders/LibraryOptions",
-                &body,
-            )
-            .await?)
+            let body = LibraryOptionsUpdate {
+                id,
+                library_options: options,
+            };
+            Ok(self
+                .write_whole("/Library/VirtualFolders/LibraryOptions", &body)
+                .await?)
         })
         .await
     }
@@ -2452,19 +2213,12 @@ impl Api {
         triggers: &[jellyfin_api::types::TaskTriggerInfo],
     ) -> Answer<()> {
         Answer::of(async {
-            #[expect(
-                clippy::disallowed_methods,
-                reason = "json! builds a literal body this client wrote, which cannot fail to render"
-            )]
-            let body = serde_json::to_value(triggers).map_err(|e| Trouble::Relay {
-                status: None,
-                detail: e.to_string(),
-            })?;
-            Ok(self.write_whole(
-                &format!("/ScheduledTasks/{}/Triggers", urlencode(id)),
-                &body,
-            )
-            .await?)
+            Ok(self
+                .write_whole(
+                    &format!("/ScheduledTasks/{}/Triggers", urlencode(id)),
+                    triggers,
+                )
+                .await?)
         })
         .await
     }
@@ -2495,15 +2249,16 @@ impl Api {
             if !response.status().is_success() {
                 return Err(crate::error::classify(response).await.into());
             }
-            #[expect(
-                clippy::disallowed_methods,
-                reason = "a conversion that carries no cause beyond the value itself"
-            )]
-            let size = response
-                .headers()
-                .get(reqwest::header::CONTENT_RANGE)
-                .and_then(|value| value.to_str().ok())
-                .and_then(|value| value.rsplit('/').next().and_then(|full| full.parse().ok()));
+            let size = match response.headers().get(reqwest::header::CONTENT_RANGE) {
+                Some(value) => match value.to_str() {
+                    Ok(held) => held
+                        .rsplit('/')
+                        .next()
+                        .and_then(|full| crate::failure::read::<u64>(Text::FailureRange, full)),
+                    Err(_) => None,
+                },
+                None => None,
+            };
             let text = response.text().await?;
             let size = size.unwrap_or(text.len() as u64);
             Ok(jellium_model::log::Tail::of(text, size))
@@ -2617,18 +2372,7 @@ impl Api {
         &self,
         repositories: &[jellyfin_api::types::RepositoryInfo],
     ) -> Answer<()> {
-        Answer::of(async {
-            #[expect(
-                clippy::disallowed_methods,
-                reason = "json! builds a literal body this client wrote, which cannot fail to render"
-            )]
-            let body = serde_json::to_value(repositories).map_err(|e| Trouble::Relay {
-                status: None,
-                detail: e.to_string(),
-            })?;
-            Ok(self.write_whole("/Repositories", &body).await?)
-        })
-        .await
+        Answer::of(async { Ok(self.write_whole("/Repositories", repositories).await?) }).await
     }
 
     pub async fn devices(&self) -> Answer<Vec<jellyfin_api::types::DeviceInfoDto>> {
@@ -2646,16 +2390,10 @@ impl Api {
 
     pub async fn set_device_name(&self, id: &str, name: &str) -> Answer<()> {
         Answer::of(async {
-            #[expect(
-                clippy::disallowed_methods,
-                reason = "json! builds a literal body this client wrote, which cannot fail to render"
-            )]
-            let body = serde_json::json!({ "CustomName": name });
-            Ok(self.write_whole(
-                &format!("/Devices/Options?id={}", urlencode(id)),
-                &body,
-            )
-            .await?)
+            let body = DeviceName { custom_name: name };
+            Ok(self
+                .write_whole(&format!("/Devices/Options?id={}", urlencode(id)), &body)
+                .await?)
         })
         .await
     }
@@ -2729,16 +2467,8 @@ impl Api {
 
     pub async fn add_tuner(&self, url: &str, kind: &str) -> Answer<()> {
         Answer::of(async {
-            #[expect(
-                clippy::disallowed_methods,
-                reason = "json! builds a literal body this client wrote, which cannot fail to render"
-            )]
-            let body = serde_json::json!({ "Url": url, "Type": kind });
-            Ok(self.write_whole(
-                "/LiveTv/TunerHosts",
-                &body,
-            )
-            .await?)
+            let body = TunerHost { url, r#type: kind };
+            Ok(self.write_whole("/LiveTv/TunerHosts", &body).await?)
         })
         .await
     }
@@ -2764,7 +2494,7 @@ impl Api {
         .await
     }
 
-    pub async fn add_provider(&self, provider: &serde_json::Value) -> Answer<()> {
+    pub async fn add_provider<T: serde::Serialize>(&self, provider: &T) -> Answer<()> {
         Answer::of(async {
             Ok(self
                 .write_whole("/LiveTv/ListingProviders", provider)
@@ -2820,20 +2550,12 @@ impl Api {
 
     pub async fn map_channel(&self, provider: &str, tuner: &str, channel: &str) -> Answer<()> {
         Answer::of(async {
-            #[expect(
-                clippy::disallowed_methods,
-                reason = "json! builds a literal body this client wrote, which cannot fail to render"
-            )]
-            let body = serde_json::json!({
-                "ProviderId": provider,
-                "TunerChannelId": tuner,
-                "ProviderChannelId": channel,
-            });
-            Ok(self.write_whole(
-                "/LiveTv/ChannelMappings",
-                &body,
-            )
-            .await?)
+            let body = ChannelMapping {
+                provider_id: provider,
+                tuner_channel_id: tuner,
+                provider_channel_id: channel,
+            };
+            Ok(self.write_whole("/LiveTv/ChannelMappings", &body).await?)
         })
         .await
     }
@@ -2896,4 +2618,60 @@ pub struct Entries {
 pub struct Sharing {
     pub open: bool,
     pub users: Vec<crate::screen::playlists::Shared>,
+}
+
+/// What `/Users/{id}/Password` takes.
+#[derive(serde::Serialize)]
+#[serde(rename_all = "PascalCase")]
+struct PasswordChange<'a> {
+    current_pw: &'a str,
+    new_pw: &'a str,
+    reset_password: bool,
+}
+
+/// What `/Library/VirtualFolders` takes.
+#[derive(serde::Serialize)]
+#[serde(rename_all = "PascalCase")]
+struct LibraryOptionsBody<'a> {
+    library_options: &'a serde_json::Value,
+}
+
+/// What `/Library/VirtualFolders/LibraryOptions` takes.
+#[derive(serde::Serialize)]
+#[serde(rename_all = "PascalCase")]
+struct LibraryOptionsUpdate<'a> {
+    id: &'a str,
+    library_options: &'a serde_json::Value,
+}
+
+/// What `/Library/VirtualFolders/Paths` takes.
+#[derive(serde::Serialize)]
+#[serde(rename_all = "PascalCase")]
+struct MediaPath<'a> {
+    name: &'a str,
+    path: &'a str,
+}
+
+/// What `/Devices/Options` takes.
+#[derive(serde::Serialize)]
+#[serde(rename_all = "PascalCase")]
+struct DeviceName<'a> {
+    custom_name: &'a str,
+}
+
+/// What `/LiveTv/TunerHosts` takes.
+#[derive(serde::Serialize)]
+#[serde(rename_all = "PascalCase")]
+struct TunerHost<'a> {
+    url: &'a str,
+    r#type: &'a str,
+}
+
+/// What `/LiveTv/ChannelMappings` takes.
+#[derive(serde::Serialize)]
+#[serde(rename_all = "PascalCase")]
+struct ChannelMapping<'a> {
+    provider_id: &'a str,
+    tuner_channel_id: &'a str,
+    provider_channel_id: &'a str,
 }

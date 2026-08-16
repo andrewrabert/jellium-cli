@@ -1,5 +1,3 @@
-#![allow(clippy::all)]
-
 pub(crate) mod defaults;
 pub mod error;
 

@@ -1,7 +1,7 @@
 use super::*;
 
 #[doc = "An entity representing a user's access schedule."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct AccessSchedule {
     #[serde(rename = "DayOfWeek", default, skip_serializing_if = "Option::is_none")]
     pub day_of_week: Option<DynamicDayOfWeek>,
@@ -17,18 +17,6 @@ pub struct AccessSchedule {
     pub user_id: Option<uuid::Uuid>,
 }
 
-impl Default for AccessSchedule {
-    fn default() -> Self {
-        Self {
-            day_of_week: Default::default(),
-            end_hour: Default::default(),
-            id: Default::default(),
-            start_hour: Default::default(),
-            user_id: Default::default(),
-        }
-    }
-}
-
 #[doc = "The create user by name request body."]
 #[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
 pub struct CreateUserByName {
@@ -41,7 +29,7 @@ pub struct CreateUserByName {
 }
 
 #[doc = "`PinRedeemResult`"]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct PinRedeemResult {
     #[doc = "Gets or sets a value indicating whether this MediaBrowser.Model.Users.PinRedeemResult is success."]
     #[serde(rename = "Success", default, skip_serializing_if = "Option::is_none")]
@@ -51,17 +39,8 @@ pub struct PinRedeemResult {
     pub users_reset: Vec<String>,
 }
 
-impl Default for PinRedeemResult {
-    fn default() -> Self {
-        Self {
-            success: Default::default(),
-            users_reset: Default::default(),
-        }
-    }
-}
-
 #[doc = "The update user password request body."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct UpdateUserPassword {
     #[doc = "Gets or sets the current sha1-hashed password."]
     #[serde(
@@ -85,19 +64,8 @@ pub struct UpdateUserPassword {
     pub reset_password: Option<bool>,
 }
 
-impl Default for UpdateUserPassword {
-    fn default() -> Self {
-        Self {
-            current_password: Default::default(),
-            current_pw: Default::default(),
-            new_pw: Default::default(),
-            reset_password: Default::default(),
-        }
-    }
-}
-
 #[doc = "User deleted message."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct UserDeletedMessage {
     #[doc = "Gets or sets the data."]
     #[serde(rename = "Data", default, skip_serializing_if = "Option::is_none")]
@@ -113,18 +81,8 @@ pub struct UserDeletedMessage {
     pub message_type: Option<SessionMessageType>,
 }
 
-impl Default for UserDeletedMessage {
-    fn default() -> Self {
-        Self {
-            data: Default::default(),
-            message_id: Default::default(),
-            message_type: Default::default(),
-        }
-    }
-}
-
 #[doc = "Class UserDto."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct UserDto {
     #[doc = "Gets or sets the configuration."]
     #[serde(
@@ -208,27 +166,6 @@ pub struct UserDto {
         skip_serializing_if = "Option::is_none"
     )]
     pub server_name: Option<String>,
-}
-
-impl Default for UserDto {
-    fn default() -> Self {
-        Self {
-            configuration: Default::default(),
-            enable_auto_login: Default::default(),
-            has_configured_easy_password: Default::default(),
-            has_configured_password: Default::default(),
-            has_password: Default::default(),
-            id: Default::default(),
-            last_activity_date: Default::default(),
-            last_login_date: Default::default(),
-            name: Default::default(),
-            policy: Default::default(),
-            primary_image_aspect_ratio: Default::default(),
-            primary_image_tag: Default::default(),
-            server_id: Default::default(),
-            server_name: Default::default(),
-        }
-    }
 }
 
 #[doc = "`UserPolicy`"]
@@ -485,7 +422,7 @@ pub struct UserPolicy {
 }
 
 #[doc = "User updated message."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct UserUpdatedMessage {
     #[doc = "Class UserDto."]
     #[serde(rename = "Data", default, skip_serializing_if = "Option::is_none")]
@@ -499,14 +436,4 @@ pub struct UserUpdatedMessage {
         skip_serializing_if = "Option::is_none"
     )]
     pub message_type: Option<SessionMessageType>,
-}
-
-impl Default for UserUpdatedMessage {
-    fn default() -> Self {
-        Self {
-            data: Default::default(),
-            message_id: Default::default(),
-            message_type: Default::default(),
-        }
-    }
 }

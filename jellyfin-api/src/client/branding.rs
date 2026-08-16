@@ -18,7 +18,7 @@ impl Client {
     }
 
     #[doc = "Gets branding css\n\nSends a `GET` request to `/Branding/Css.css`\n\n"]
-    pub async fn get_branding_css_2(&self) -> Result<String, Error> {
+    pub async fn get_branding_css_file(&self) -> Result<String, Error> {
         self.request(reqwest::Method::GET, "/Branding/Css.css".into())
             .send()
             .await

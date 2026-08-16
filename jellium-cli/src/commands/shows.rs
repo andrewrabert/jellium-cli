@@ -180,20 +180,19 @@ pub async fn execute(
             let result = client
                 .get_episodes(
                     series_id,
-                    adjacent_to.as_ref(),
-                    None, // enable_image_types
-                    None, // enable_images
-                    None, // enable_user_data
-                    fields.as_ref(),
-                    None, // image_type_limit
-                    *is_missing,
-                    *limit,
-                    *season,
-                    season_id.as_ref(),
-                    *sort_by,
-                    *start_index,
-                    start_item_id.as_ref(),
-                    Some(effective_uid),
+                    &jellyfin_api::query::GetEpisodes {
+                        adjacent_to: adjacent_to.as_ref(),
+                        fields: fields.as_ref(),
+                        is_missing: *is_missing,
+                        limit: *limit,
+                        season: *season,
+                        season_id: season_id.as_ref(),
+                        sort_by: *sort_by,
+                        start_index: *start_index,
+                        start_item_id: start_item_id.as_ref(),
+                        user_id: Some(effective_uid),
+                        ..Default::default()
+                    },
                 )
                 .await?;
             crate::output::print_ndjson(&result.items)?;
@@ -210,15 +209,14 @@ pub async fn execute(
             let result = client
                 .get_seasons(
                     series_id,
-                    adjacent_to.as_ref(),
-                    None, // enable_image_types
-                    None, // enable_images
-                    None, // enable_user_data
-                    fields.as_ref(),
-                    None, // image_type_limit
-                    *is_missing,
-                    *is_special_season,
-                    Some(effective_uid),
+                    &jellyfin_api::query::GetSeasons {
+                        adjacent_to: adjacent_to.as_ref(),
+                        fields: fields.as_ref(),
+                        is_missing: *is_missing,
+                        is_special_season: *is_special_season,
+                        user_id: Some(effective_uid),
+                        ..Default::default()
+                    },
                 )
                 .await?;
             crate::output::print_json(&result)?;
@@ -236,23 +234,18 @@ pub async fn execute(
         } => {
             let effective_uid = uid.as_ref().unwrap_or(user_id);
             let result = client
-                .get_next_up(
-                    *disable_first_episode,
-                    None, // enable_image_types
-                    None, // enable_images
-                    *enable_resumable,
-                    *enable_rewatching,
-                    None, // enable_total_record_count
-                    None, // enable_user_data
-                    fields.as_ref(),
-                    None, // image_type_limit
-                    *limit,
-                    None, // next_up_date_cutoff
-                    parent_id.as_ref(),
-                    series_id.as_ref(),
-                    *start_index,
-                    Some(effective_uid),
-                )
+                .get_next_up(&jellyfin_api::query::GetNextUp {
+                    disable_first_episode: *disable_first_episode,
+                    enable_resumable: *enable_resumable,
+                    enable_rewatching: *enable_rewatching,
+                    fields: fields.as_ref(),
+                    limit: *limit,
+                    parent_id: parent_id.as_ref(),
+                    series_id: series_id.as_ref(),
+                    start_index: *start_index,
+                    user_id: Some(effective_uid),
+                    ..Default::default()
+                })
                 .await?;
             crate::output::print_ndjson(&result.items)?;
         }
@@ -265,17 +258,14 @@ pub async fn execute(
         } => {
             let effective_uid = uid.as_ref().unwrap_or(user_id);
             let result = client
-                .get_upcoming_episodes(
-                    None, // enable_image_types
-                    None, // enable_images
-                    None, // enable_user_data
-                    fields.as_ref(),
-                    None, // image_type_limit
-                    *limit,
-                    parent_id.as_ref(),
-                    *start_index,
-                    Some(effective_uid),
-                )
+                .get_upcoming_episodes(&jellyfin_api::query::GetUpcomingEpisodes {
+                    fields: fields.as_ref(),
+                    limit: *limit,
+                    parent_id: parent_id.as_ref(),
+                    start_index: *start_index,
+                    user_id: Some(effective_uid),
+                    ..Default::default()
+                })
                 .await?;
             crate::output::print_ndjson(&result.items)?;
         }

@@ -1,7 +1,7 @@
 use super::*;
 
 #[doc = "`AllThemeMediaResult`"]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct AllThemeMediaResult {
     #[doc = "Class ThemeMediaResult."]
     #[serde(
@@ -26,18 +26,8 @@ pub struct AllThemeMediaResult {
     pub theme_videos_result: Option<ThemeMediaResult>,
 }
 
-impl Default for AllThemeMediaResult {
-    fn default() -> Self {
-        Self {
-            soundtrack_songs_result: Default::default(),
-            theme_songs_result: Default::default(),
-            theme_videos_result: Default::default(),
-        }
-    }
-}
-
 #[doc = "This is strictly used as a data transfer object from the api layer.\r\nThis holds information about a BaseItem in a format that is convenient for the client."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct BaseItemDto {
     #[doc = "Gets or sets the air days."]
     #[serde(rename = "AirDays", default, skip_serializing_if = "Option::is_none")]
@@ -836,168 +826,8 @@ pub struct BaseItemDto {
     pub width: Option<i32>,
 }
 
-impl Default for BaseItemDto {
-    fn default() -> Self {
-        Self {
-            air_days: Default::default(),
-            air_time: Default::default(),
-            airs_after_season_number: Default::default(),
-            airs_before_episode_number: Default::default(),
-            airs_before_season_number: Default::default(),
-            album: Default::default(),
-            album_artist: Default::default(),
-            album_artists: Default::default(),
-            album_count: Default::default(),
-            album_id: Default::default(),
-            album_primary_image_tag: Default::default(),
-            altitude: Default::default(),
-            aperture: Default::default(),
-            artist_count: Default::default(),
-            artist_items: Default::default(),
-            artists: Default::default(),
-            aspect_ratio: Default::default(),
-            audio: Default::default(),
-            backdrop_image_tags: Default::default(),
-            camera_make: Default::default(),
-            camera_model: Default::default(),
-            can_delete: Default::default(),
-            can_download: Default::default(),
-            channel_id: Default::default(),
-            channel_name: Default::default(),
-            channel_number: Default::default(),
-            channel_primary_image_tag: Default::default(),
-            channel_type: Default::default(),
-            chapters: Default::default(),
-            child_count: Default::default(),
-            collection_type: Default::default(),
-            community_rating: Default::default(),
-            completion_percentage: Default::default(),
-            container: Default::default(),
-            critic_rating: Default::default(),
-            cumulative_run_time_ticks: Default::default(),
-            current_program: Default::default(),
-            custom_rating: Default::default(),
-            date_created: Default::default(),
-            date_last_media_added: Default::default(),
-            display_order: Default::default(),
-            display_preferences_id: Default::default(),
-            enable_media_source_display: Default::default(),
-            end_date: Default::default(),
-            episode_count: Default::default(),
-            episode_title: Default::default(),
-            etag: Default::default(),
-            exposure_time: Default::default(),
-            external_urls: Default::default(),
-            extra_type: Default::default(),
-            focal_length: Default::default(),
-            forced_sort_name: Default::default(),
-            genre_items: Default::default(),
-            genres: Default::default(),
-            has_lyrics: Default::default(),
-            has_subtitles: Default::default(),
-            height: Default::default(),
-            id: Default::default(),
-            image_blur_hashes: Default::default(),
-            image_orientation: Default::default(),
-            image_tags: Default::default(),
-            index_number: Default::default(),
-            index_number_end: Default::default(),
-            is_folder: Default::default(),
-            is_hd: Default::default(),
-            is_kids: Default::default(),
-            is_live: Default::default(),
-            is_movie: Default::default(),
-            is_news: Default::default(),
-            is_place_holder: Default::default(),
-            is_premiere: Default::default(),
-            is_repeat: Default::default(),
-            is_series: Default::default(),
-            is_sports: Default::default(),
-            iso_speed_rating: Default::default(),
-            iso_type: Default::default(),
-            latitude: Default::default(),
-            local_trailer_count: Default::default(),
-            location_type: Default::default(),
-            lock_data: Default::default(),
-            locked_fields: Default::default(),
-            longitude: Default::default(),
-            media_source_count: Default::default(),
-            media_sources: Default::default(),
-            media_streams: Default::default(),
-            media_type: Default::default(),
-            movie_count: Default::default(),
-            music_video_count: Default::default(),
-            name: Default::default(),
-            normalization_gain: Default::default(),
-            number: Default::default(),
-            official_rating: Default::default(),
-            original_title: Default::default(),
-            overview: Default::default(),
-            parent_art_image_tag: Default::default(),
-            parent_art_item_id: Default::default(),
-            parent_backdrop_image_tags: Default::default(),
-            parent_backdrop_item_id: Default::default(),
-            parent_id: Default::default(),
-            parent_index_number: Default::default(),
-            parent_logo_image_tag: Default::default(),
-            parent_logo_item_id: Default::default(),
-            parent_primary_image_item_id: Default::default(),
-            parent_primary_image_tag: Default::default(),
-            parent_thumb_image_tag: Default::default(),
-            parent_thumb_item_id: Default::default(),
-            part_count: Default::default(),
-            path: Default::default(),
-            people: Default::default(),
-            play_access: Default::default(),
-            playlist_item_id: Default::default(),
-            preferred_metadata_country_code: Default::default(),
-            preferred_metadata_language: Default::default(),
-            premiere_date: Default::default(),
-            primary_image_aspect_ratio: Default::default(),
-            production_locations: Default::default(),
-            production_year: Default::default(),
-            program_count: Default::default(),
-            program_id: Default::default(),
-            provider_ids: Default::default(),
-            recursive_item_count: Default::default(),
-            remote_trailers: Default::default(),
-            run_time_ticks: Default::default(),
-            screenshot_image_tags: Default::default(),
-            season_id: Default::default(),
-            season_name: Default::default(),
-            series_count: Default::default(),
-            series_id: Default::default(),
-            series_name: Default::default(),
-            series_primary_image_tag: Default::default(),
-            series_studio: Default::default(),
-            series_thumb_image_tag: Default::default(),
-            series_timer_id: Default::default(),
-            server_id: Default::default(),
-            shutter_speed: Default::default(),
-            software: Default::default(),
-            song_count: Default::default(),
-            sort_name: Default::default(),
-            source_type: Default::default(),
-            special_feature_count: Default::default(),
-            start_date: Default::default(),
-            status: Default::default(),
-            studios: Default::default(),
-            taglines: Default::default(),
-            tags: Default::default(),
-            timer_id: Default::default(),
-            trailer_count: Default::default(),
-            trickplay: Default::default(),
-            type_: Default::default(),
-            user_data: Default::default(),
-            video3_d_format: Default::default(),
-            video_type: Default::default(),
-            width: Default::default(),
-        }
-    }
-}
-
 #[doc = "Gets or sets the blurhashes for the image tags.\r\nMaps image type to dictionary mapping image tag to blurhash value."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct BaseItemDtoImageBlurHashes {
     #[serde(
         rename = "Art",
@@ -1079,28 +909,8 @@ pub struct BaseItemDtoImageBlurHashes {
     pub thumb: std::collections::HashMap<String, String>,
 }
 
-impl Default for BaseItemDtoImageBlurHashes {
-    fn default() -> Self {
-        Self {
-            art: Default::default(),
-            backdrop: Default::default(),
-            banner: Default::default(),
-            box_: Default::default(),
-            box_rear: Default::default(),
-            chapter: Default::default(),
-            disc: Default::default(),
-            logo: Default::default(),
-            menu: Default::default(),
-            primary: Default::default(),
-            profile: Default::default(),
-            screenshot: Default::default(),
-            thumb: Default::default(),
-        }
-    }
-}
-
 #[doc = "Query result container."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct BaseItemDtoQueryResult {
     #[doc = "Gets or sets the items."]
     #[serde(rename = "Items", default, skip_serializing_if = "Vec::is_empty")]
@@ -1119,16 +929,6 @@ pub struct BaseItemDtoQueryResult {
         skip_serializing_if = "Option::is_none"
     )]
     pub total_record_count: Option<i32>,
-}
-
-impl Default for BaseItemDtoQueryResult {
-    fn default() -> Self {
-        Self {
-            items: Default::default(),
-            start_index: Default::default(),
-            total_record_count: Default::default(),
-        }
-    }
 }
 
 #[derive(
@@ -1286,7 +1086,7 @@ impl TryFrom<String> for BaseItemKind {
 }
 
 #[doc = "This is used by the api to get information about a Person within a BaseItem."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct BaseItemPerson {
     #[doc = "Gets or sets the identifier."]
     #[serde(rename = "Id", default, skip_serializing_if = "Option::is_none")]
@@ -1315,21 +1115,8 @@ pub struct BaseItemPerson {
     pub type_: Option<PersonKind>,
 }
 
-impl Default for BaseItemPerson {
-    fn default() -> Self {
-        Self {
-            id: Default::default(),
-            image_blur_hashes: Default::default(),
-            name: Default::default(),
-            primary_image_tag: Default::default(),
-            role: Default::default(),
-            type_: Default::default(),
-        }
-    }
-}
-
 #[doc = "Gets or sets the primary image blurhash."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct BaseItemPersonImageBlurHashes {
     #[serde(
         rename = "Art",
@@ -1411,28 +1198,8 @@ pub struct BaseItemPersonImageBlurHashes {
     pub thumb: std::collections::HashMap<String, String>,
 }
 
-impl Default for BaseItemPersonImageBlurHashes {
-    fn default() -> Self {
-        Self {
-            art: Default::default(),
-            backdrop: Default::default(),
-            banner: Default::default(),
-            box_: Default::default(),
-            box_rear: Default::default(),
-            chapter: Default::default(),
-            disc: Default::default(),
-            logo: Default::default(),
-            menu: Default::default(),
-            primary: Default::default(),
-            profile: Default::default(),
-            screenshot: Default::default(),
-            thumb: Default::default(),
-        }
-    }
-}
-
 #[doc = "Class ChapterInfo."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct ChapterInfo {
     #[serde(
         rename = "ImageDateModified",
@@ -1457,20 +1224,8 @@ pub struct ChapterInfo {
     pub start_position_ticks: Option<i64>,
 }
 
-impl Default for ChapterInfo {
-    fn default() -> Self {
-        Self {
-            image_date_modified: Default::default(),
-            image_path: Default::default(),
-            image_tag: Default::default(),
-            name: Default::default(),
-            start_position_ticks: Default::default(),
-        }
-    }
-}
-
 #[doc = "Represents the external id information for serialization to the client."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct ExternalIdInfo {
     #[doc = "Gets or sets the unique key for this id. This key should be unique across all providers."]
     #[serde(rename = "Key", default, skip_serializing_if = "Option::is_none")]
@@ -1481,16 +1236,6 @@ pub struct ExternalIdInfo {
     #[doc = "Gets or sets the specific media type for this id. This is used to distinguish between the different\r\nexternal id types for providers with multiple ids.\r\nA null value indicates there is no specific media type associated with the external id, or this is the\r\ndefault id for the external provider so there is no need to specify a type."]
     #[serde(rename = "Type", default, skip_serializing_if = "Option::is_none")]
     pub type_: Option<ExternalIdMediaType>,
-}
-
-impl Default for ExternalIdInfo {
-    fn default() -> Self {
-        Self {
-            key: Default::default(),
-            name: Default::default(),
-            type_: Default::default(),
-        }
-    }
 }
 
 #[derive(
@@ -1579,7 +1324,7 @@ impl TryFrom<String> for ExternalIdMediaType {
 }
 
 #[doc = "`ExternalUrl`"]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct ExternalUrl {
     #[doc = "Gets or sets the name."]
     #[serde(rename = "Name", default, skip_serializing_if = "Option::is_none")]
@@ -1589,17 +1334,8 @@ pub struct ExternalUrl {
     pub url: Option<String>,
 }
 
-impl Default for ExternalUrl {
-    fn default() -> Self {
-        Self {
-            name: Default::default(),
-            url: Default::default(),
-        }
-    }
-}
-
 #[doc = "Class LibrarySummary."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct ItemCounts {
     #[doc = "Gets or sets the album count."]
     #[serde(
@@ -1675,27 +1411,8 @@ pub struct ItemCounts {
     pub trailer_count: Option<i32>,
 }
 
-impl Default for ItemCounts {
-    fn default() -> Self {
-        Self {
-            album_count: Default::default(),
-            artist_count: Default::default(),
-            book_count: Default::default(),
-            box_set_count: Default::default(),
-            episode_count: Default::default(),
-            item_count: Default::default(),
-            movie_count: Default::default(),
-            music_video_count: Default::default(),
-            program_count: Default::default(),
-            series_count: Default::default(),
-            song_count: Default::default(),
-            trailer_count: Default::default(),
-        }
-    }
-}
-
 #[doc = "Class MediaAttachment."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct MediaAttachment {
     #[doc = "Gets or sets the codec."]
     #[serde(rename = "Codec", default, skip_serializing_if = "Option::is_none")]
@@ -1724,22 +1441,8 @@ pub struct MediaAttachment {
     pub mime_type: Option<String>,
 }
 
-impl Default for MediaAttachment {
-    fn default() -> Self {
-        Self {
-            codec: Default::default(),
-            codec_tag: Default::default(),
-            comment: Default::default(),
-            delivery_url: Default::default(),
-            file_name: Default::default(),
-            index: Default::default(),
-            mime_type: Default::default(),
-        }
-    }
-}
-
 #[doc = "Api model for MediaSegment's."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct MediaSegmentDto {
     #[doc = "Gets or sets the end of the segment."]
     #[serde(rename = "EndTicks", default, skip_serializing_if = "Option::is_none")]
@@ -1761,20 +1464,8 @@ pub struct MediaSegmentDto {
     pub type_: Option<MediaSegmentType>,
 }
 
-impl Default for MediaSegmentDto {
-    fn default() -> Self {
-        Self {
-            end_ticks: Default::default(),
-            id: Default::default(),
-            item_id: Default::default(),
-            start_ticks: Default::default(),
-            type_: Default::default(),
-        }
-    }
-}
-
 #[doc = "Query result container."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct MediaSegmentDtoQueryResult {
     #[doc = "Gets or sets the items."]
     #[serde(rename = "Items", default, skip_serializing_if = "Vec::is_empty")]
@@ -1793,16 +1484,6 @@ pub struct MediaSegmentDtoQueryResult {
         skip_serializing_if = "Option::is_none"
     )]
     pub total_record_count: Option<i32>,
-}
-
-impl Default for MediaSegmentDtoQueryResult {
-    fn default() -> Self {
-        Self {
-            items: Default::default(),
-            start_index: Default::default(),
-            total_record_count: Default::default(),
-        }
-    }
 }
 
 #[derive(
@@ -1867,7 +1548,7 @@ impl TryFrom<String> for MediaSegmentType {
 }
 
 #[doc = "`MediaSourceInfo`"]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct MediaSourceInfo {
     #[serde(
         rename = "AnalyzeDurationMs",
@@ -2070,58 +1751,6 @@ pub struct MediaSourceInfo {
     pub video_type: Option<VideoType>,
 }
 
-impl Default for MediaSourceInfo {
-    fn default() -> Self {
-        Self {
-            analyze_duration_ms: Default::default(),
-            bitrate: Default::default(),
-            buffer_ms: Default::default(),
-            container: Default::default(),
-            default_audio_stream_index: Default::default(),
-            default_subtitle_stream_index: Default::default(),
-            e_tag: Default::default(),
-            encoder_path: Default::default(),
-            encoder_protocol: Default::default(),
-            fallback_max_streaming_bitrate: Default::default(),
-            formats: Default::default(),
-            gen_pts_input: Default::default(),
-            has_segments: Default::default(),
-            id: Default::default(),
-            ignore_dts: Default::default(),
-            ignore_index: Default::default(),
-            is_infinite_stream: Default::default(),
-            is_remote: Default::default(),
-            iso_type: Default::default(),
-            live_stream_id: Default::default(),
-            media_attachments: Default::default(),
-            media_streams: Default::default(),
-            name: Default::default(),
-            open_token: Default::default(),
-            path: Default::default(),
-            protocol: Default::default(),
-            read_at_native_framerate: Default::default(),
-            required_http_headers: Default::default(),
-            requires_closing: Default::default(),
-            requires_looping: Default::default(),
-            requires_opening: Default::default(),
-            run_time_ticks: Default::default(),
-            size: Default::default(),
-            supports_direct_play: Default::default(),
-            supports_direct_stream: Default::default(),
-            supports_probing: Default::default(),
-            supports_transcoding: Default::default(),
-            timestamp: Default::default(),
-            transcoding_container: Default::default(),
-            transcoding_sub_protocol: Default::default(),
-            transcoding_url: Default::default(),
-            type_: Default::default(),
-            use_most_compatible_transcoding_profile: Default::default(),
-            video3_d_format: Default::default(),
-            video_type: Default::default(),
-        }
-    }
-}
-
 #[derive(
     serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd,
 )]
@@ -2175,7 +1804,7 @@ impl TryFrom<String> for MediaSourceType {
 }
 
 #[doc = "Class MediaStream."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct MediaStream {
     #[doc = "Gets or sets the aspect ratio."]
     #[serde(
@@ -2517,77 +2146,6 @@ pub struct MediaStream {
     pub width: Option<i32>,
 }
 
-impl Default for MediaStream {
-    fn default() -> Self {
-        Self {
-            aspect_ratio: Default::default(),
-            audio_spatial_format: Default::default(),
-            average_frame_rate: Default::default(),
-            bit_depth: Default::default(),
-            bit_rate: Default::default(),
-            bl_present_flag: Default::default(),
-            channel_layout: Default::default(),
-            channels: Default::default(),
-            codec: Default::default(),
-            codec_tag: Default::default(),
-            codec_time_base: Default::default(),
-            color_primaries: Default::default(),
-            color_range: Default::default(),
-            color_space: Default::default(),
-            color_transfer: Default::default(),
-            comment: Default::default(),
-            delivery_method: Default::default(),
-            delivery_url: Default::default(),
-            display_title: Default::default(),
-            dv_bl_signal_compatibility_id: Default::default(),
-            dv_level: Default::default(),
-            dv_profile: Default::default(),
-            dv_version_major: Default::default(),
-            dv_version_minor: Default::default(),
-            el_present_flag: Default::default(),
-            hdr10_plus_present_flag: Default::default(),
-            height: Default::default(),
-            index: Default::default(),
-            is_anamorphic: Default::default(),
-            is_avc: Default::default(),
-            is_default: Default::default(),
-            is_external: Default::default(),
-            is_external_url: Default::default(),
-            is_forced: Default::default(),
-            is_hearing_impaired: Default::default(),
-            is_interlaced: Default::default(),
-            is_text_subtitle_stream: Default::default(),
-            language: Default::default(),
-            level: Default::default(),
-            localized_default: Default::default(),
-            localized_external: Default::default(),
-            localized_forced: Default::default(),
-            localized_hearing_impaired: Default::default(),
-            localized_undefined: Default::default(),
-            nal_length_size: Default::default(),
-            packet_length: Default::default(),
-            path: Default::default(),
-            pixel_format: Default::default(),
-            profile: Default::default(),
-            real_frame_rate: Default::default(),
-            ref_frames: Default::default(),
-            reference_frame_rate: Default::default(),
-            rotation: Default::default(),
-            rpu_present_flag: Default::default(),
-            sample_rate: Default::default(),
-            score: Default::default(),
-            supports_external_stream: Default::default(),
-            time_base: Default::default(),
-            title: Default::default(),
-            type_: Default::default(),
-            video_do_vi_title: Default::default(),
-            video_range: Default::default(),
-            video_range_type: Default::default(),
-            width: Default::default(),
-        }
-    }
-}
-
 #[derive(
     serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd,
 )]
@@ -2701,7 +2259,7 @@ impl TryFrom<String> for MediaStreamType {
 }
 
 #[doc = "`MediaUrl`"]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct MediaUrl {
     #[serde(rename = "Name", default, skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
@@ -2709,17 +2267,8 @@ pub struct MediaUrl {
     pub url: Option<String>,
 }
 
-impl Default for MediaUrl {
-    fn default() -> Self {
-        Self {
-            name: Default::default(),
-            url: Default::default(),
-        }
-    }
-}
-
 #[doc = "A class representing metadata editor information."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct MetadataEditorInfo {
     #[doc = "Gets or sets the content type."]
     #[serde(
@@ -2757,21 +2306,8 @@ pub struct MetadataEditorInfo {
     pub parental_rating_options: Vec<ParentalRating>,
 }
 
-impl Default for MetadataEditorInfo {
-    fn default() -> Self {
-        Self {
-            content_type: Default::default(),
-            content_type_options: Default::default(),
-            countries: Default::default(),
-            cultures: Default::default(),
-            external_id_infos: Default::default(),
-            parental_rating_options: Default::default(),
-        }
-    }
-}
-
 #[doc = "`NameGuidPair`"]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct NameGuidPair {
     #[serde(rename = "Id", default, skip_serializing_if = "Option::is_none")]
     pub id: Option<uuid::Uuid>,
@@ -2779,17 +2315,8 @@ pub struct NameGuidPair {
     pub name: Option<String>,
 }
 
-impl Default for NameGuidPair {
-    fn default() -> Self {
-        Self {
-            id: Default::default(),
-            name: Default::default(),
-        }
-    }
-}
-
 #[doc = "`NameValuePair`"]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct NameValuePair {
     #[doc = "Gets or sets the name."]
     #[serde(rename = "Name", default, skip_serializing_if = "Option::is_none")]
@@ -2799,17 +2326,8 @@ pub struct NameValuePair {
     pub value: Option<String>,
 }
 
-impl Default for NameValuePair {
-    fn default() -> Self {
-        Self {
-            name: Default::default(),
-            value: Default::default(),
-        }
-    }
-}
-
 #[doc = "Class ThemeMediaResult."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct ThemeMediaResult {
     #[doc = "Gets or sets the items."]
     #[serde(rename = "Items", default, skip_serializing_if = "Vec::is_empty")]
@@ -2833,19 +2351,8 @@ pub struct ThemeMediaResult {
     pub total_record_count: Option<i32>,
 }
 
-impl Default for ThemeMediaResult {
-    fn default() -> Self {
-        Self {
-            items: Default::default(),
-            owner_id: Default::default(),
-            start_index: Default::default(),
-            total_record_count: Default::default(),
-        }
-    }
-}
-
 #[doc = "This is used by the api to get information about a item user data."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct UpdateUserItemDataDto {
     #[doc = "Gets or sets a value indicating whether this instance is favorite."]
     #[serde(
@@ -2902,26 +2409,8 @@ pub struct UpdateUserItemDataDto {
     pub unplayed_item_count: Option<i32>,
 }
 
-impl Default for UpdateUserItemDataDto {
-    fn default() -> Self {
-        Self {
-            is_favorite: Default::default(),
-            item_id: Default::default(),
-            key: Default::default(),
-            last_played_date: Default::default(),
-            likes: Default::default(),
-            play_count: Default::default(),
-            playback_position_ticks: Default::default(),
-            played: Default::default(),
-            played_percentage: Default::default(),
-            rating: Default::default(),
-            unplayed_item_count: Default::default(),
-        }
-    }
-}
-
 #[doc = "Class UserItemDataDto."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct UserItemDataDto {
     #[doc = "Gets or sets a value indicating whether this instance is favorite."]
     #[serde(
@@ -2976,22 +2465,4 @@ pub struct UserItemDataDto {
         skip_serializing_if = "Option::is_none"
     )]
     pub unplayed_item_count: Option<i32>,
-}
-
-impl Default for UserItemDataDto {
-    fn default() -> Self {
-        Self {
-            is_favorite: Default::default(),
-            item_id: Default::default(),
-            key: Default::default(),
-            last_played_date: Default::default(),
-            likes: Default::default(),
-            play_count: Default::default(),
-            playback_position_ticks: Default::default(),
-            played: Default::default(),
-            played_percentage: Default::default(),
-            rating: Default::default(),
-            unplayed_item_count: Default::default(),
-        }
-    }
 }

@@ -3,6 +3,7 @@ use std::cell::{Cell, RefCell};
 use wasm_bindgen::JsCast;
 use wasm_bindgen::prelude::Closure;
 
+use crate::failure::Call;
 use crate::failure::{self, Cause, Failure};
 use crate::text::{self, Text};
 
@@ -56,7 +57,10 @@ fn boot_element() -> Option<web_sys::Element> {
 
 pub fn hide_static_page() {
     if let Some(element) = boot_element() {
-        failure::called("Element.setAttribute", element.set_attribute("hidden", ""));
+        failure::called(
+            Call::ElementSetAttribute,
+            element.set_attribute("hidden", ""),
+        );
     }
 }
 
@@ -71,11 +75,11 @@ fn show(sentence: &str, retry: bool) {
     }
     if let Some(element) = document.get_element_by_id("jellium-boot") {
         failure::called(
-            "Element.removeAttribute",
+            Call::ElementRemoveAttribute,
             element.remove_attribute("hidden"),
         );
         failure::called(
-            "Element.setAttribute",
+            Call::ElementSetAttribute,
             element.set_attribute("data-state", "failed"),
         );
     }
@@ -83,7 +87,10 @@ fn show(sentence: &str, retry: bool) {
         return;
     };
     if !retry {
-        failure::called("Element.setAttribute", button.set_attribute("hidden", ""));
+        failure::called(
+            Call::ElementSetAttribute,
+            button.set_attribute("hidden", ""),
+        );
         return;
     }
     RETRY.with(|held| {
@@ -94,14 +101,17 @@ fn show(sentence: &str, retry: bool) {
             wasm_bindgen_futures::spawn_local(start());
         });
         failure::called(
-            "addEventListener",
+            Call::AddEventListener,
             button
                 .unchecked_ref::<web_sys::EventTarget>()
                 .add_event_listener_with_callback("click", again.as_ref().unchecked_ref()),
         );
         *held.borrow_mut() = Some(again);
     });
-    failure::called("Element.removeAttribute", button.remove_attribute("hidden"));
+    failure::called(
+        Call::ElementRemoveAttribute,
+        button.remove_attribute("hidden"),
+    );
 }
 
 /// Renders `sentence` on the boot page and shows the retry that re-runs
@@ -121,7 +131,7 @@ pub fn stopped(sentence: &str) {
 /// The string a WebGL2 context answers for `parameter`, or `unknown`.
 fn gl_parameter(context: &wasm_bindgen::JsValue, parameter: u32) -> String {
     let Some(get) = failure::called(
-        "Reflect.get",
+        Call::ReflectGet,
         js_sys::Reflect::get(context, &"getParameter".into()),
     ) else {
         return "unknown".to_owned();
@@ -129,7 +139,10 @@ fn gl_parameter(context: &wasm_bindgen::JsValue, parameter: u32) -> String {
     let Some(get) = get.dyn_ref::<js_sys::Function>() else {
         return "unknown".to_owned();
     };
-    match failure::called("WebGL2.getParameter", get.call1(context, &parameter.into())) {
+    match failure::called(
+        Call::WebGl2GetParameter,
+        get.call1(context, &parameter.into()),
+    ) {
         Some(value) => value.as_string().unwrap_or_else(|| "unknown".to_owned()),
         None => "unknown".to_owned(),
     }
@@ -139,13 +152,16 @@ fn gl_parameter(context: &wasm_bindgen::JsValue, parameter: u32) -> String {
 /// none.
 fn webgl2_context() -> Option<wasm_bindgen::JsValue> {
     let document = web_sys::window()?.document()?;
-    let canvas = failure::called("Document.createElement", document.create_element("canvas"))?;
+    let canvas = failure::called(
+        Call::DocumentCreateElement,
+        document.create_element("canvas"),
+    )?;
     let get = failure::called(
-        "Reflect.get",
+        Call::ReflectGet,
         js_sys::Reflect::get(canvas.as_ref(), &"getContext".into()),
     )?;
     let context = failure::called(
-        "HTMLCanvasElement.getContext",
+        Call::HtmlCanvasElementGetContext,
         get.dyn_ref::<js_sys::Function>()?
             .call1(canvas.as_ref(), &"webgl2".into()),
     )?;

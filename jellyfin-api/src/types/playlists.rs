@@ -1,7 +1,7 @@
 use super::*;
 
 #[doc = "Create new playlist dto."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct CreatePlaylistDto {
     #[doc = "Gets or sets item ids to add to the playlist."]
     #[serde(rename = "Ids", default, skip_serializing_if = "Vec::is_empty")]
@@ -23,36 +23,15 @@ pub struct CreatePlaylistDto {
     pub users: Vec<PlaylistUserPermissions>,
 }
 
-impl Default for CreatePlaylistDto {
-    fn default() -> Self {
-        Self {
-            ids: Default::default(),
-            is_public: Default::default(),
-            media_type: Default::default(),
-            name: Default::default(),
-            user_id: Default::default(),
-            users: Default::default(),
-        }
-    }
-}
-
 #[doc = "`PlaylistCreationResult`"]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct PlaylistCreationResult {
     #[serde(rename = "Id", default, skip_serializing_if = "Option::is_none")]
     pub id: Option<String>,
 }
 
-impl Default for PlaylistCreationResult {
-    fn default() -> Self {
-        Self {
-            id: Default::default(),
-        }
-    }
-}
-
 #[doc = "DTO for playlists."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct PlaylistDto {
     #[doc = "Gets or sets the item ids."]
     #[serde(rename = "ItemIds", default, skip_serializing_if = "Vec::is_empty")]
@@ -69,18 +48,8 @@ pub struct PlaylistDto {
     pub shares: Vec<PlaylistUserPermissions>,
 }
 
-impl Default for PlaylistDto {
-    fn default() -> Self {
-        Self {
-            item_ids: Default::default(),
-            open_access: Default::default(),
-            shares: Default::default(),
-        }
-    }
-}
-
 #[doc = "Class to hold data on user permissions for playlists."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct PlaylistUserPermissions {
     #[doc = "Gets or sets a value indicating whether the user has edit permissions."]
     #[serde(rename = "CanEdit", default, skip_serializing_if = "Option::is_none")]
@@ -90,17 +59,8 @@ pub struct PlaylistUserPermissions {
     pub user_id: Option<uuid::Uuid>,
 }
 
-impl Default for PlaylistUserPermissions {
-    fn default() -> Self {
-        Self {
-            can_edit: Default::default(),
-            user_id: Default::default(),
-        }
-    }
-}
-
 #[doc = "Update existing playlist dto. Fields set to `null` will not be updated and keep their current values."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct UpdatePlaylistDto {
     #[doc = "Gets or sets item ids of the playlist."]
     #[serde(rename = "Ids", default, skip_serializing_if = "Option::is_none")]
@@ -116,29 +76,10 @@ pub struct UpdatePlaylistDto {
     pub users: Option<Vec<PlaylistUserPermissions>>,
 }
 
-impl Default for UpdatePlaylistDto {
-    fn default() -> Self {
-        Self {
-            ids: Default::default(),
-            is_public: Default::default(),
-            name: Default::default(),
-            users: Default::default(),
-        }
-    }
-}
-
 #[doc = "Update existing playlist user dto. Fields set to `null` will not be updated and keep their current values."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct UpdatePlaylistUserDto {
     #[doc = "Gets or sets a value indicating whether the user can edit the playlist."]
     #[serde(rename = "CanEdit", default, skip_serializing_if = "Option::is_none")]
     pub can_edit: Option<bool>,
-}
-
-impl Default for UpdatePlaylistUserDto {
-    fn default() -> Self {
-        Self {
-            can_edit: Default::default(),
-        }
-    }
 }

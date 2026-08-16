@@ -4,8 +4,12 @@ set positional-arguments
 list:
     @just --list
 
+# Fail on any lint suppression or strictness-lowering configuration
+suppressions:
+    cargo test -p jellium-cli --test suppressions
+
 # Build the debug release
-build:
+build: suppressions
     cargo build
     cargo clippy --all-targets -- -D warnings
     cd jellium-web && cargo clippy --all-targets -- -D warnings
@@ -16,7 +20,7 @@ fmt:
     cd jellium-web && cargo fmt --all --check
 
 # Run both workspaces' tests
-test: fmt
+test: fmt suppressions
     cargo test --workspace
     cd jellium-web && cargo test
 

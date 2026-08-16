@@ -1,7 +1,7 @@
 use super::*;
 
 #[doc = "The authenticate user by name request body."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct AuthenticateUserByName {
     #[doc = "Gets or sets the plain text password."]
     #[serde(rename = "Pw", default, skip_serializing_if = "Option::is_none")]
@@ -11,17 +11,8 @@ pub struct AuthenticateUserByName {
     pub username: Option<String>,
 }
 
-impl Default for AuthenticateUserByName {
-    fn default() -> Self {
-        Self {
-            pw: Default::default(),
-            username: Default::default(),
-        }
-    }
-}
-
 #[doc = "`AuthenticationInfo`"]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct AuthenticationInfo {
     #[doc = "Gets or sets the access token."]
     #[serde(
@@ -83,27 +74,8 @@ pub struct AuthenticationInfo {
     pub user_name: Option<String>,
 }
 
-impl Default for AuthenticationInfo {
-    fn default() -> Self {
-        Self {
-            access_token: Default::default(),
-            app_name: Default::default(),
-            app_version: Default::default(),
-            date_created: Default::default(),
-            date_last_activity: Default::default(),
-            date_revoked: Default::default(),
-            device_id: Default::default(),
-            device_name: Default::default(),
-            id: Default::default(),
-            is_active: Default::default(),
-            user_id: Default::default(),
-            user_name: Default::default(),
-        }
-    }
-}
-
 #[doc = "Query result container."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct AuthenticationInfoQueryResult {
     #[doc = "Gets or sets the items."]
     #[serde(rename = "Items", default, skip_serializing_if = "Vec::is_empty")]
@@ -124,18 +96,8 @@ pub struct AuthenticationInfoQueryResult {
     pub total_record_count: Option<i32>,
 }
 
-impl Default for AuthenticationInfoQueryResult {
-    fn default() -> Self {
-        Self {
-            items: Default::default(),
-            start_index: Default::default(),
-            total_record_count: Default::default(),
-        }
-    }
-}
-
 #[doc = "A class representing an authentication result."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct AuthenticationResult {
     #[doc = "Gets or sets the access token."]
     #[serde(
@@ -157,17 +119,6 @@ pub struct AuthenticationResult {
     #[doc = "Class UserDto."]
     #[serde(rename = "User", default, skip_serializing_if = "Option::is_none")]
     pub user: Option<UserDto>,
-}
-
-impl Default for AuthenticationResult {
-    fn default() -> Self {
-        Self {
-            access_token: Default::default(),
-            server_id: Default::default(),
-            session_info: Default::default(),
-            user: Default::default(),
-        }
-    }
 }
 
 #[derive(
@@ -239,7 +190,7 @@ pub struct ForgotPasswordPinDto {
 }
 
 #[doc = "`ForgotPasswordResult`"]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct ForgotPasswordResult {
     #[serde(rename = "Action", default, skip_serializing_if = "Option::is_none")]
     pub action: Option<ForgotPasswordAction>,
@@ -255,16 +206,6 @@ pub struct ForgotPasswordResult {
     pub pin_file: Option<String>,
 }
 
-impl Default for ForgotPasswordResult {
-    fn default() -> Self {
-        Self {
-            action: Default::default(),
-            pin_expiration_date: Default::default(),
-            pin_file: Default::default(),
-        }
-    }
-}
-
 #[doc = "The quick connect request body."]
 #[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
 pub struct QuickConnectDto {
@@ -274,7 +215,7 @@ pub struct QuickConnectDto {
 }
 
 #[doc = "Stores the state of an quick connect request."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct QuickConnectResult {
     #[doc = "Gets the requesting app name."]
     #[serde(rename = "AppName", default, skip_serializing_if = "Option::is_none")]
@@ -312,19 +253,4 @@ pub struct QuickConnectResult {
     #[doc = "Gets the secret value used to uniquely identify this request. Can be used to retrieve authentication information."]
     #[serde(rename = "Secret", default, skip_serializing_if = "Option::is_none")]
     pub secret: Option<String>,
-}
-
-impl Default for QuickConnectResult {
-    fn default() -> Self {
-        Self {
-            app_name: Default::default(),
-            app_version: Default::default(),
-            authenticated: Default::default(),
-            code: Default::default(),
-            date_added: Default::default(),
-            device_id: Default::default(),
-            device_name: Default::default(),
-            secret: Default::default(),
-        }
-    }
 }

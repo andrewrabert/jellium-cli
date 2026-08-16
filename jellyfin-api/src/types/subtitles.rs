@@ -54,7 +54,7 @@ impl TryFrom<String> for EmbeddedSubtitleOptions {
 }
 
 #[doc = "Class FontFile."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct FontFile {
     #[doc = "Gets or sets the date created."]
     #[serde(
@@ -78,19 +78,8 @@ pub struct FontFile {
     pub size: Option<i64>,
 }
 
-impl Default for FontFile {
-    fn default() -> Self {
-        Self {
-            date_created: Default::default(),
-            date_modified: Default::default(),
-            name: Default::default(),
-            size: Default::default(),
-        }
-    }
-}
-
 #[doc = "LyricResponse model."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct LyricDto {
     #[doc = "Gets or sets a collection of individual lyric lines."]
     #[serde(rename = "Lyrics", default, skip_serializing_if = "Vec::is_empty")]
@@ -100,17 +89,8 @@ pub struct LyricDto {
     pub metadata: Option<LyricMetadata>,
 }
 
-impl Default for LyricDto {
-    fn default() -> Self {
-        Self {
-            lyrics: Default::default(),
-            metadata: Default::default(),
-        }
-    }
-}
-
 #[doc = "Lyric model."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct LyricLine {
     #[doc = "Gets the time-aligned cues for the song's lyrics."]
     #[serde(rename = "Cues", default, skip_serializing_if = "Option::is_none")]
@@ -123,18 +103,8 @@ pub struct LyricLine {
     pub text: Option<String>,
 }
 
-impl Default for LyricLine {
-    fn default() -> Self {
-        Self {
-            cues: Default::default(),
-            start: Default::default(),
-            text: Default::default(),
-        }
-    }
-}
-
 #[doc = "LyricLineCue model, holds information about the timing of words within a LyricLine."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct LyricLineCue {
     #[doc = "Gets the end timestamp the lyric is synced to in ticks."]
     #[serde(rename = "End", default, skip_serializing_if = "Option::is_none")]
@@ -154,19 +124,8 @@ pub struct LyricLineCue {
     pub start: Option<i64>,
 }
 
-impl Default for LyricLineCue {
-    fn default() -> Self {
-        Self {
-            end: Default::default(),
-            end_position: Default::default(),
-            position: Default::default(),
-            start: Default::default(),
-        }
-    }
-}
-
 #[doc = "LyricMetadata model."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct LyricMetadata {
     #[doc = "Gets or sets the album this song is on."]
     #[serde(rename = "Album", default, skip_serializing_if = "Option::is_none")]
@@ -200,25 +159,8 @@ pub struct LyricMetadata {
     pub version: Option<String>,
 }
 
-impl Default for LyricMetadata {
-    fn default() -> Self {
-        Self {
-            album: Default::default(),
-            artist: Default::default(),
-            author: Default::default(),
-            by: Default::default(),
-            creator: Default::default(),
-            is_synced: Default::default(),
-            length: Default::default(),
-            offset: Default::default(),
-            title: Default::default(),
-            version: Default::default(),
-        }
-    }
-}
-
 #[doc = "The remote lyric info dto."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct RemoteLyricInfoDto {
     #[doc = "Gets or sets the id for the lyric."]
     #[serde(rename = "Id", default, skip_serializing_if = "Option::is_none")]
@@ -235,18 +177,8 @@ pub struct RemoteLyricInfoDto {
     pub provider_name: Option<String>,
 }
 
-impl Default for RemoteLyricInfoDto {
-    fn default() -> Self {
-        Self {
-            id: Default::default(),
-            lyrics: Default::default(),
-            provider_name: Default::default(),
-        }
-    }
-}
-
 #[doc = "`RemoteSubtitleInfo`"]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct RemoteSubtitleInfo {
     #[serde(
         rename = "AiTranslated",
@@ -318,29 +250,6 @@ pub struct RemoteSubtitleInfo {
     pub three_letter_iso_language_name: Option<String>,
 }
 
-impl Default for RemoteSubtitleInfo {
-    fn default() -> Self {
-        Self {
-            ai_translated: Default::default(),
-            author: Default::default(),
-            comment: Default::default(),
-            community_rating: Default::default(),
-            date_created: Default::default(),
-            download_count: Default::default(),
-            forced: Default::default(),
-            format: Default::default(),
-            frame_rate: Default::default(),
-            hearing_impaired: Default::default(),
-            id: Default::default(),
-            is_hash_match: Default::default(),
-            machine_translated: Default::default(),
-            name: Default::default(),
-            provider_name: Default::default(),
-            three_letter_iso_language_name: Default::default(),
-        }
-    }
-}
-
 #[derive(
     serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd,
 )]
@@ -400,7 +309,7 @@ impl TryFrom<String> for SubtitleDeliveryMethod {
 }
 
 #[doc = "`SubtitleOptions`"]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct SubtitleOptions {
     #[serde(
         rename = "DownloadEpisodeSubtitles",
@@ -456,22 +365,6 @@ pub struct SubtitleOptions {
         skip_serializing_if = "Option::is_none"
     )]
     pub skip_if_embedded_subtitles_present: Option<bool>,
-}
-
-impl Default for SubtitleOptions {
-    fn default() -> Self {
-        Self {
-            download_episode_subtitles: Default::default(),
-            download_languages: Default::default(),
-            download_movie_subtitles: Default::default(),
-            is_open_subtitle_vip_account: Default::default(),
-            open_subtitles_password_hash: Default::default(),
-            open_subtitles_username: Default::default(),
-            require_perfect_match: Default::default(),
-            skip_if_audio_track_matches: Default::default(),
-            skip_if_embedded_subtitles_present: Default::default(),
-        }
-    }
 }
 
 #[doc = "Upload subtitles dto."]

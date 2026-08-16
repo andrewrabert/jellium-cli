@@ -1,6 +1,7 @@
 use jellium_protocol::Quality;
 use serde::{Deserialize, Serialize};
 
+use crate::failure::Call;
 use crate::failure::{self, Cause, Failure};
 use crate::text::Text;
 
@@ -24,11 +25,11 @@ impl Default for Device {
 }
 
 fn storage() -> Option<web_sys::Storage> {
-    failure::called("localStorage", web_sys::window()?.local_storage())?
+    failure::called(Call::LocalStorage, web_sys::window()?.local_storage())?
 }
 
 fn entry() -> Option<serde_json::Value> {
-    let raw = failure::called("localStorage.getItem", storage()?.get_item(STORAGE_KEY))??;
+    let raw = failure::called(Call::LocalStorageGetItem, storage()?.get_item(STORAGE_KEY))??;
     failure::decoded(Text::FailureStored, &raw)
 }
 
@@ -39,7 +40,10 @@ fn write(held: &serde_json::Value) {
     let Some(raw) = failure::rendered(Text::FailureStored, held) else {
         return;
     };
-    failure::called("localStorage.setItem", storage.set_item(STORAGE_KEY, &raw));
+    failure::called(
+        Call::LocalStorageSetItem,
+        storage.set_item(STORAGE_KEY, &raw),
+    );
 }
 
 impl Device {
