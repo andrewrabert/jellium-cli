@@ -678,6 +678,8 @@
   "loginServersRemove": "Remove",
   "loginServersAdd": "Add a server",
   "loginAddTitle": "Add a server",
+  "loginAddUrl": "Server",
+  "loginAddUrlHelp": "Enter the host name or ip address of your server, with the port if it is not the default.",
   "loginAddSubmit": "Connect",
   "loginAddWorking": "Connecting",
   "loginBack": "Back",

@@ -12,7 +12,7 @@ use uuid::Uuid;
 
 use crate::app::Message;
 use crate::control;
-use crate::style::space;
+use crate::style::{Viewport, space};
 use crate::text::Text;
 
 pub struct State {
@@ -148,10 +148,10 @@ pub fn entered(screen: jellium_protocol::LoginScreen) -> (State, Task<Message>) 
     )
 }
 
-pub fn view(state: &State) -> Element<'_, Message> {
+pub fn view(state: &State, viewport: Viewport) -> Element<'_, Message> {
     let shown = match state.screen {
         jellium_model::login::Screen::Servers => servers::view(state),
-        jellium_model::login::Screen::Add => add::view(state),
+        jellium_model::login::Screen::Add => add::view(state, viewport),
         jellium_model::login::Screen::Credentials => credentials::view(state),
         jellium_model::login::Screen::QuickConnect => quickconnect::view(state),
         jellium_model::login::Screen::Reset => reset::view(state),

@@ -721,6 +721,78 @@ pub fn form<'a>(viewport: Viewport, rows: Vec<Element<'a, Message>>) -> Element<
     container(capped).center_x(Fill).into()
 }
 
+/// A page's own title, which the reference writes as the `h1` at the head of
+/// each of its login pages.
+pub fn heading<'a>(content: impl Into<Cow<'a, str>>) -> Element<'a, Message> {
+    prose(content, typeface::HEADING_1)
+}
+
+/// Whether a field shows what is typed into it.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Secrecy {
+    Shown,
+    Hidden,
+}
+
+/// A labelled field over its description, which is the reference's own
+/// `.inputContainer`: an `emby-input` carrying its label, and the
+/// `.fieldDescription` beneath it.
+// reference: control-input
+// reference: control-field
+pub fn field<'a>(
+    label: Text,
+    value: &'a str,
+    description: Option<Text>,
+    edited: impl Fn(String) -> Message + 'a,
+    submitted: Message,
+    secrecy: Secrecy,
+) -> Element<'a, Message> {
+    let typed = iced::widget::text_input("", value)
+        .style(style::input)
+        .size(style::drawn(typeface::FIELD.drawn()))
+        .padding(style::padding(space::INPUT_PAD))
+        .secure(secrecy == Secrecy::Hidden)
+        .on_input(edited)
+        .on_submit(submitted);
+
+    let mut held = column![prose(strings::lookup(label), typeface::BODY), typed]
+        .spacing(style::drawn(space::BLOCK_GAP.drawn()));
+    if let Some(description) = description {
+        held = held.push(prose(strings::lookup(description), typeface::SECONDARY));
+    }
+    held.into()
+}
+
+/// Which of the reference's two block faces a control draws.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Emphasis {
+    Submit,
+    Raised,
+}
+
+/// A control filling the width it is given, which is the reference's own
+/// `.block`.
+// reference: control-button-block
+pub fn block<'a>(
+    label: impl Into<Cow<'a, str>>,
+    press: Option<Message>,
+    emphasis: Emphasis,
+) -> Element<'a, Message> {
+    let face: fn(&iced::Theme, iced::widget::button::Status) -> iced::widget::button::Style =
+        match emphasis {
+            Emphasis::Submit => style::submit,
+            Emphasis::Raised => style::raised,
+        };
+    let mut control = button(container(prose(label, typeface::BODY)).center_x(Fill))
+        .style(face)
+        .padding(style::padding(space::BUTTON_PAD))
+        .width(Fill);
+    if let Some(message) = press {
+        control = control.on_press(message);
+    }
+    control.into()
+}
+
 /// One sentence shown above a screen.
 pub fn banner<'a>(message: String) -> Element<'a, Message> {
     container(prose(message, typeface::BODY))

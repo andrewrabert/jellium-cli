@@ -85,6 +85,8 @@ text! {
     LoginServersRemove => "loginServersRemove",
     LoginServersAdd => "loginServersAdd",
     LoginAddTitle => "loginAddTitle",
+    LoginAddUrl => "loginAddUrl",
+    LoginAddUrlHelp => "loginAddUrlHelp",
     LoginAddSubmit => "loginAddSubmit",
     LoginAddWorking => "loginAddWorking",
     LoginBack => "loginBack",

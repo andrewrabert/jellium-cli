@@ -2845,7 +2845,7 @@ impl Jellium {
                 .spacing(style::drawn(space::GUTTER.drawn())),
             )
             .into(),
-            Stage::Login(state) => login::view(state),
+            Stage::Login(state) => login::view(state, self.viewport),
             Stage::Setup(state) => crate::screen::setup::view(state, self.viewport),
             Stage::Lost(failure) => center(widget::lost(failure)).into(),
             Stage::Signed(signed) => {
