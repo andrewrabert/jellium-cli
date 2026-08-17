@@ -41,12 +41,12 @@ const WEIGHTS = ['400', '700'];
 // the_icon_table_and_the_variants_agree in that file.
 const ICONS = [
     'arrow_back', 'audiotrack', 'autorenew', 'book', 'cast', 'closed_caption',
-    'fast_forward', 'fast_rewind', 'filter_alt', 'folder', 'fullscreen',
-    'fullscreen_exit', 'groups', 'live_tv', 'movie', 'music_note',
-    'music_video', 'pause', 'person', 'photo', 'play_arrow', 'queue', 'quiz',
-    'repeat', 'repeat_one', 'search', 'settings', 'shuffle', 'skip_next',
-    'skip_previous', 'sort_by_alpha', 'storage', 'theaters', 'tv',
-    'video_library', 'volume_off', 'volume_up'
+    'fast_forward', 'fast_rewind', 'favorite', 'favorite_border', 'filter_alt',
+    'folder', 'fullscreen', 'fullscreen_exit', 'groups', 'live_tv', 'movie',
+    'music_note', 'music_video', 'pause', 'person', 'photo', 'play_arrow',
+    'queue', 'quiz', 'repeat', 'repeat_one', 'search', 'settings', 'shuffle',
+    'skip_next', 'skip_previous', 'sort_by_alpha', 'stop', 'storage',
+    'theaters', 'tv', 'video_library', 'volume_off', 'volume_up'
 ];
 
 const BRANDING = [

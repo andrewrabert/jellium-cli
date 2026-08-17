@@ -106,6 +106,8 @@
   "playerChapters": "Chapters",
   "playerVersion": "Version",
   "playerQueue": "Queue",
+  "playerFavorite": "Add to favorites",
+  "playerUnfavorite": "Remove from favorites",
   "playerLeave": "Close",
   "playerEndsAt": "Ends at {0}",
   "playerFetching": "Fetching additional data",

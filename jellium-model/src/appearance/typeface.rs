@@ -52,6 +52,10 @@ pub const CARD_ICON: Length = Length::em(5.0);
 // reference: bar-text
 pub const BAR_TEXT: Length = BODY.times(Ratio::thousandths(920));
 
+/// `.mediaButton`'s glyph, which the bar draws larger than a page's.
+// reference: bar-button
+pub const BAR_ICON: Length = ICON_BUTTON.times(Ratio::thousandths(1200));
+
 /// `.filterIndicator`'s lettering, 60% of the control it sits on.
 // reference: filter-indicator
 pub const INDICATOR: Length = BODY.times(Ratio::thousandths(600));

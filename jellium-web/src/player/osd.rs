@@ -32,17 +32,17 @@ fn clock(position: Duration) -> String {
     }
 }
 
-fn acting<'a>(glyph: crate::icon::Icon, label: Text, action: Action) -> Element<'a, Message> {
-    crate::widget::icon_button(
-        glyph,
-        typeface::ICON_BUTTON,
-        label,
-        Message::PlayerAction(action),
-    )
+fn acting<'a>(
+    glyph: crate::icon::Icon,
+    size: style::Length,
+    label: Text,
+    action: Action,
+) -> Element<'a, Message> {
+    crate::widget::icon_button(glyph, size, label, Message::PlayerAction(action))
 }
 
 fn opening<'a>(glyph: crate::icon::Icon, label: Text, menu: Menu) -> Element<'a, Message> {
-    acting(glyph, label, Action::OpenMenu(menu))
+    acting(glyph, typeface::ICON_BUTTON, label, Action::OpenMenu(menu))
 }
 
 fn art_key(playing: &Playing) -> Option<images::Key> {
@@ -224,7 +224,12 @@ fn menu<'a>(
         container(
             column![
                 scrollable(column(entries).spacing(style::drawn(space::BLOCK_GAP.drawn()))),
-                acting(Icon::ArrowBack, Text::PlayerLeave, Action::CloseMenu),
+                acting(
+                    Icon::ArrowBack,
+                    typeface::ICON_BUTTON,
+                    Text::PlayerLeave,
+                    Action::CloseMenu
+                ),
             ]
             .spacing(style::drawn(space::BLOCK_GAP.drawn())),
         )
@@ -242,8 +247,18 @@ fn volume<'a>(device: crate::prefs::Device, _viewport: Viewport) -> Element<'a, 
     .step(0.01_f32)
     .width(style::drawn(space::OSD_VOLUME_SLIDER.drawn()));
     let muted = match device.muted {
-        true => acting(Icon::VolumeOff, Text::PlayerUnmute, Action::ToggleMute),
-        false => acting(Icon::VolumeUp, Text::PlayerMute, Action::ToggleMute),
+        true => acting(
+            Icon::VolumeOff,
+            typeface::ICON_BUTTON,
+            Text::PlayerUnmute,
+            Action::ToggleMute,
+        ),
+        false => acting(
+            Icon::VolumeUp,
+            typeface::ICON_BUTTON,
+            Text::PlayerMute,
+            Action::ToggleMute,
+        ),
     };
     container(row![muted, level].align_y(iced::Center))
         .padding(style::padding(space::OSD_VOLUME_MARGIN))
@@ -376,6 +391,7 @@ fn transport<'a>(
     };
     let mut controls = row![acting(
         Icon::SkipPrevious,
+        typeface::ICON_BUTTON,
         Text::PlayerPrevious,
         Action::Previous
     )]
@@ -385,19 +401,31 @@ fn transport<'a>(
     if !viewport.matches(space::OSD_SEEK_AT) {
         controls = controls.push(acting(
             Icon::FastRewind,
+            typeface::ICON_BUTTON,
             Text::PlayerSkipBack,
             Action::SkipBack,
         ));
     }
-    controls = controls.push(acting(paused, Text::PlayerPlay, Action::TogglePlay));
+    controls = controls.push(acting(
+        paused,
+        typeface::ICON_BUTTON,
+        Text::PlayerPlay,
+        Action::TogglePlay,
+    ));
     if !viewport.matches(space::OSD_SEEK_AT) {
         controls = controls.push(acting(
             Icon::FastForward,
+            typeface::ICON_BUTTON,
             Text::PlayerSkipForward,
             Action::SkipForward,
         ));
     }
-    controls = controls.push(acting(Icon::SkipNext, Text::PlayerNext, Action::Next));
+    controls = controls.push(acting(
+        Icon::SkipNext,
+        typeface::ICON_BUTTON,
+        Text::PlayerNext,
+        Action::Next,
+    ));
 
     if !viewport.matches(space::OSD_ENDS_AT) {
         controls = controls.push(
@@ -437,6 +465,7 @@ fn transport<'a>(
         ))
         .push(acting(
             Icon::Shuffle,
+            typeface::ICON_BUTTON,
             Text::QueueShuffle,
             Action::ToggleShuffle,
         ));
@@ -447,7 +476,12 @@ fn transport<'a>(
         Repeat::Off | Repeat::All => Icon::Repeat,
     };
     controls = controls
-        .push(acting(repeating, repeat_label(repeat), Action::CycleRepeat))
+        .push(acting(
+            repeating,
+            typeface::ICON_BUTTON,
+            repeat_label(repeat),
+            Action::CycleRepeat,
+        ))
         .push(crate::widget::icon_button(
             Icon::Queue,
             typeface::ICON_BUTTON,
@@ -473,7 +507,12 @@ fn transport<'a>(
         true => (Icon::FullscreenExit, Text::PlayerExitFullscreen),
         false => (Icon::Fullscreen, Text::PlayerFullscreen),
     };
-    controls = controls.push(acting(fullscreen, label, Action::ToggleFullscreen));
+    controls = controls.push(acting(
+        fullscreen,
+        typeface::ICON_BUTTON,
+        label,
+        Action::ToggleFullscreen,
+    ));
 
     container(controls)
         .padding(iced::Padding {
@@ -574,16 +613,32 @@ fn live_transport<'a>(
     let controls = row![
         acting(
             Icon::SkipPrevious,
+            typeface::ICON_BUTTON,
             Text::PlayerChannelPrevious,
             Action::Previous
         ),
-        acting(paused, Text::PlayerPlay, Action::TogglePlay),
-        acting(Icon::SkipNext, Text::PlayerChannelNext, Action::Next),
+        acting(
+            paused,
+            typeface::ICON_BUTTON,
+            Text::PlayerPlay,
+            Action::TogglePlay
+        ),
+        acting(
+            Icon::SkipNext,
+            typeface::ICON_BUTTON,
+            Text::PlayerChannelNext,
+            Action::Next
+        ),
         record,
         opening(Icon::Audiotrack, Text::PlayerAudio, Menu::Audio),
         opening(Icon::Settings, Text::PlayerQuality, Menu::Quality),
         Space::new().width(Fill),
-        acting(Icon::ArrowBack, Text::PlayerLeave, Action::Leave),
+        acting(
+            Icon::ArrowBack,
+            typeface::ICON_BUTTON,
+            Text::PlayerLeave,
+            Action::Leave
+        ),
     ]
     .spacing(style::drawn(space::ICON_GAP.drawn()))
     .align_y(iced::Center);
@@ -772,31 +827,56 @@ fn info<'a>(
     .into()
 }
 
-/// The bar's centred group: the controls that step through the queue, and the
-/// reading it has reached.
+/// The bar's centred group: the controls that step through the queue, the one
+/// that stops it, and the reading it has reached.
 // reference: bar-centre
 // reference: bar-markup-centre
+// reference: bar-time
 fn centre<'a>(playing: &'a Playing, _viewport: Viewport) -> Element<'a, Message> {
     let paused = match playing.paused {
         true => Icon::PlayArrow,
         false => Icon::Pause,
     };
     row![
-        acting(Icon::SkipPrevious, Text::PlayerPrevious, Action::Previous),
-        acting(paused, Text::PlayerPlay, Action::TogglePlay),
-        acting(Icon::SkipNext, Text::PlayerNext, Action::Next),
-        prose(clock(playing.shown()), typeface::BAR_TEXT),
+        acting(
+            Icon::SkipPrevious,
+            typeface::BAR_ICON,
+            Text::PlayerPrevious,
+            Action::Previous
+        ),
+        acting(
+            paused,
+            typeface::BAR_ICON,
+            Text::PlayerPlay,
+            Action::TogglePlay
+        ),
+        acting(
+            Icon::Stop,
+            typeface::BAR_ICON,
+            Text::PlayerStop,
+            Action::Leave
+        ),
+        acting(
+            Icon::SkipNext,
+            typeface::BAR_ICON,
+            Text::PlayerNext,
+            Action::Next
+        ),
+        container(prose(clock(playing.shown()), typeface::BAR_TEXT))
+            .padding(iced::Padding::ZERO.left(style::drawn(space::BAR_TIME_INSET.drawn()))),
     ]
     .align_y(iced::Center)
     .into()
 }
 
-/// The bar's trailing group: volume, the queue's own two controls, and the
-/// surfaces it opens. It draws no control that plays and pauses, which is what
-/// the desktop layout takes out of it.
+/// The bar's trailing group: volume, the queue's own two controls, what
+/// favourites the item, and the surfaces it opens. It draws no control that
+/// plays and pauses, which is what the desktop layout takes out of it.
 // reference: bar-right
 // reference: bar-markup-right
 // reference: bar-markup-queue
+// reference: bar-markup-rating
+// reference: bar-rating
 // reference: bar-layout-desktop
 fn trailing<'a>(
     playing: &'a Playing,
@@ -809,19 +889,44 @@ fn trailing<'a>(
         Repeat::One => Icon::RepeatOne,
         Repeat::Off | Repeat::All => Icon::Repeat,
     };
+    let (muting, mute) = match device.muted {
+        true => (Icon::VolumeOff, Text::PlayerUnmute),
+        false => (Icon::VolumeUp, Text::PlayerMute),
+    };
+    let (favouring, favourite) = match playing.favourited() {
+        true => (Icon::Favorite, Text::PlayerUnfavorite),
+        false => (Icon::FavoriteBorder, Text::PlayerFavorite),
+    };
     let mut controls = row![
-        volume(device, viewport),
-        acting(repeating, repeat_label(repeat), Action::CycleRepeat),
-        acting(Icon::Shuffle, Text::QueueShuffle, Action::ToggleShuffle),
+        acting(muting, typeface::BAR_ICON, mute, Action::ToggleMute),
+        volume_slider(device, viewport),
+        acting(
+            repeating,
+            typeface::BAR_ICON,
+            repeat_label(repeat),
+            Action::CycleRepeat
+        ),
+        acting(
+            Icon::Shuffle,
+            typeface::BAR_ICON,
+            Text::QueueShuffle,
+            Action::ToggleShuffle
+        ),
+        acting(
+            favouring,
+            typeface::BAR_ICON,
+            favourite,
+            Action::ToggleFavorite
+        ),
         crate::widget::icon_button(
             Icon::Queue,
-            typeface::ICON_BUTTON,
+            typeface::BAR_ICON,
             Text::PlayerQueue,
             Message::Navigated(Route::Queue),
         ),
         crate::widget::icon_button(
             Icon::Cast,
-            typeface::ICON_BUTTON,
+            typeface::BAR_ICON,
             Text::PlayerRemote,
             Message::Navigated(Route::Remote),
         ),
@@ -830,12 +935,27 @@ fn trailing<'a>(
     if sync_play != SyncAccess::None {
         controls = controls.push(crate::widget::icon_button(
             Icon::Groups,
-            typeface::ICON_BUTTON,
+            typeface::BAR_ICON,
             Text::PlayerSyncPlay,
             Message::Navigated(Route::SyncPlay),
         ));
     }
     controls.into()
+}
+
+/// `.nowPlayingBarVolumeSliderContainer`: the bar's own volume slider, which
+/// stands apart from the control that mutes rather than beside it.
+// reference: bar-volume
+// reference: bar-markup-right
+fn volume_slider<'a>(device: crate::prefs::Device, _viewport: Viewport) -> Element<'a, Message> {
+    let handle = slider(0.0..=1.0_f32, device.volume, |value| {
+        Message::PlayerAction(Action::SetVolume(value))
+    })
+    .step(0.01_f32)
+    .width(style::drawn(space::BAR_VOLUME_SLIDER.drawn()));
+    container(handle)
+        .padding(iced::Padding::ZERO.right(style::drawn(space::BAR_VOLUME_MARGIN.drawn())))
+        .into()
 }
 
 /// The position slider, drawn in the strip that straddles the bar's top edge.

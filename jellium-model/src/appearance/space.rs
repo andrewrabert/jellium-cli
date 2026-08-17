@@ -238,6 +238,18 @@ pub const BAR_TEXT_MARGIN: Padding = Padding {
 // reference: bar-right
 pub const BAR_RIGHT_MARGIN: Length = Length::em(0.5);
 
+/// `.nowPlayingBarCurrentTime`'s inset from the controls it follows.
+// reference: bar-time
+pub const BAR_TIME_INSET: Length = Length::em(1.5);
+
+/// `.nowPlayingBarVolumeSliderContainer`'s margin against what follows it.
+// reference: bar-volume
+pub const BAR_VOLUME_MARGIN: Length = Length::em(2.0);
+
+/// That slider's own width.
+// reference: bar-markup-right
+pub const BAR_VOLUME_SLIDER: Length = Length::em(9.0);
+
 /// `.nowPlayingBarInfoContainer`'s share of the bar at rest.
 // reference: bar-info
 const BAR_INFO: Share = Share::per_ten_thousand(4000);

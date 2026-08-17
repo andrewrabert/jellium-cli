@@ -310,6 +310,8 @@ text! {
     PlayerChapters => "playerChapters",
     PlayerVersion => "playerVersion",
     PlayerQueue => "playerQueue",
+    PlayerFavorite => "playerFavorite",
+    PlayerUnfavorite => "playerUnfavorite",
     PlayerLeave => "playerLeave",
     PlayerEndsAt => "playerEndsAt",
     PlayerFetching => "playerFetching",

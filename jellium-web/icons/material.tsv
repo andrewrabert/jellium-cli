@@ -6,6 +6,8 @@ cast	E307
 closed_caption	E01C
 fast_forward	E01F
 fast_rewind	E020
+favorite	E87D
+favorite_border	E87E
 filter_alt	EF4F
 folder	E2C7
 fullscreen	E5D0
@@ -29,6 +31,7 @@ shuffle	E043
 skip_next	E044
 skip_previous	E045
 sort_by_alpha	E053
+stop	E047
 storage	E1DB
 theaters	E8DA
 tv	E333
