@@ -2853,7 +2853,6 @@ impl Jellium {
                             signed.remote.as_ref(),
                             &signed.targets,
                             signed.device,
-                            signed.held.quality,
                             &self.images,
                             self.viewport,
                         ),
@@ -2865,7 +2864,7 @@ impl Jellium {
                         _ => player::osd::view(
                             playing,
                             signed.group.as_ref(),
-                            signed.session.sync_play != jellium_protocol::SyncAccess::None,
+                            signed.session.sync_play,
                             signed.device,
                             signed.held.quality,
                             &self.images,
@@ -2927,7 +2926,6 @@ impl Jellium {
                         signed.remote.as_ref(),
                         &signed.targets,
                         signed.device,
-                        signed.held.quality,
                         &self.images,
                         self.viewport,
                     ),
@@ -2980,8 +2978,6 @@ impl Jellium {
                 if let Some((notice, _)) = signed.message.as_ref() {
                     page = page.push(widget::message(notice));
                 }
-                let offers_sync_play =
-                    signed.session.sync_play != jellium_protocol::SyncAccess::None;
                 if let Some(playing) = signed.playing.as_ref() {
                     let transport = match signed.group.as_ref() {
                         Some(joined) => player::osd::Transport::Group(playing, joined),
@@ -2989,20 +2985,16 @@ impl Jellium {
                     };
                     page = page.push(player::osd::bar(
                         transport,
-                        offers_sync_play,
+                        signed.session.sync_play,
                         signed.device,
-                        signed.held.quality,
-                        chrono::Utc::now(),
                         &self.images,
                         self.viewport,
                     ));
                 } else if let Some(bound) = signed.remote.as_ref() {
                     page = page.push(player::osd::bar(
                         player::osd::Transport::Remote(bound),
-                        offers_sync_play,
+                        signed.session.sync_play,
                         signed.device,
-                        signed.held.quality,
-                        chrono::Utc::now(),
                         &self.images,
                         self.viewport,
                     ));

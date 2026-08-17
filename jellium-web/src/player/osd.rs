@@ -4,7 +4,7 @@ use std::time::Duration;
 use iced::widget::Space;
 use iced::widget::{button, column, container, image, row, scrollable, slider};
 use iced::{Element, Fill, Length};
-use jellium_protocol::{Method, Quality, Repeat, Subtitles};
+use jellium_protocol::{Method, Quality, Repeat, Subtitles, SyncAccess};
 
 use crate::app::Message;
 use crate::images::{self, Cache, Kind as ImageKind};
@@ -293,7 +293,7 @@ fn remote_scrub<'a>(bound: &'a Bound) -> Element<'a, Message> {
 fn transport<'a>(
     playing: &'a Playing,
     full: bool,
-    sync_play: bool,
+    sync_play: SyncAccess,
     device: crate::prefs::Device,
 ) -> Element<'a, Message> {
     let mut controls = row![
@@ -336,7 +336,7 @@ fn transport<'a>(
         button(prose(strings::lookup(Text::PlayerRemote), typeface::BODY))
             .on_press(Message::Navigated(Route::Remote)),
     );
-    if sync_play {
+    if sync_play != SyncAccess::None {
         controls = controls.push(
             button(prose(strings::lookup(Text::PlayerSyncPlay), typeface::BODY))
                 .on_press(Message::Navigated(Route::SyncPlay)),
@@ -485,7 +485,7 @@ fn live_transport<'a>(
 pub fn view<'a>(
     playing: &'a Playing,
     group: Option<&'a Joined>,
-    sync_play: bool,
+    sync_play: SyncAccess,
     device: crate::prefs::Device,
     quality: Quality,
     images: &'a Cache,
@@ -546,22 +546,15 @@ pub fn view<'a>(
         .into()
 }
 
-/// The bar drawn under every screen while audio plays.
-/// The bar drawn under every screen while audio plays here, and while a
-/// remote target is bound.
 /// The bar drawn under every screen while audio plays here, while a radio
 /// channel plays, and while a remote target is bound.
 pub fn bar<'a>(
     transport: Transport<'a>,
-    sync_play: bool,
+    sync_play: SyncAccess,
     device: crate::prefs::Device,
-    quality: Quality,
-    now: chrono::DateTime<chrono::Utc>,
     images: &'a Cache,
     viewport: Viewport,
 ) -> Element<'a, Message> {
-    let _ = now;
-    let _ = quality;
     let (art_key, heading, scrubber, controls) = match transport {
         Transport::Local(playing) => (
             self::art_key(playing),

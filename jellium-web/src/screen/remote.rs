@@ -2,7 +2,7 @@ use std::collections::HashSet;
 
 use iced::widget::{button, column, container, scrollable};
 use iced::{Element, Fill};
-use jellium_protocol::Target;
+use jellium_protocol::{SyncAccess, Target};
 
 use crate::app::Message;
 use crate::images::{self, Cache};
@@ -48,7 +48,6 @@ pub fn view<'a>(
     bound: Option<&'a Bound>,
     targets: &'a [Target],
     device: crate::prefs::Device,
-    quality: jellium_protocol::Quality,
     images: &'a Cache,
     viewport: Viewport,
 ) -> Element<'a, Message> {
@@ -59,10 +58,8 @@ pub fn view<'a>(
             prose(bound.target.client_name.clone(), typeface::SECONDARY),
             osd::bar(
                 Transport::Remote(bound),
-                false,
+                SyncAccess::None,
                 device,
-                quality,
-                chrono::Utc::now(),
                 images,
                 viewport,
             ),
