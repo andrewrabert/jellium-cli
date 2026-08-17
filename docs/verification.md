@@ -765,3 +765,33 @@ in order. A section passes only when every line in it holds.
   `Jellyfin Web`, `10.11.11`, the announced device and the announced device id.
 - Playing an item with cinema mode on requests `Intros` and plays its items
   before the item.
+
+## Appearance
+
+Run against a real browser at 360x800, 800x360, 768x1024 and 1920x1080.
+
+- The page background is #101010 before the canvas paints and after, with no
+  flash at the handoff.
+- The browser tab shows Jellyfin's favicon, and the header shows its banner in
+  a slot 13.2em wide.
+- Body text is Noto Sans, headings are its regular weight, and no button label
+  is upper-cased.
+- Every button on every screen carries the reference's face: a submit in
+  `#00a4dc`, a raised one in `#303030`, a flat one transparent, and a link
+  underlined on hover.
+- No viewport width produces a horizontal page scrollbar, and no control is cut
+  off by the viewport edge.
+- The select-server page centers its cards, and a card's name longer than the
+  card ends in an ellipsis on one line.
+- The login page shows the user picker above the manual form, and both are
+  centered with the page padded 3.3% at each side.
+- At exactly 600px wide the type is 90% of 16px, at 601px it is 93%, measured
+  by the height of a heading.
+- A library item whose title is Japanese, Korean or Chinese draws in the
+  fallback lettering and then, once its face registers, in Noto Sans.
+- A title in Cyrillic, Greek, Vietnamese or Devanagari draws in Noto Sans at
+  once, with no fetch.
+- A bold Cyrillic title draws in Noto Sans Bold, which the reference's own
+  inverted `U+0700-045F` range denies a browser, and fetches nothing.
+- With the network panel open, loading a page of Latin titles fetches no font
+  file.
