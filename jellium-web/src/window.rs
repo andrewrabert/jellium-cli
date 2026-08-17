@@ -12,23 +12,24 @@ pub use jellium_model::window::{Grid, Id, Scrolled, Window};
 /// The scrollable a window drives, named so a scroll routes back to the
 /// surface it came from.
 fn scrollable_id(id: Id) -> WidgetId {
-    WidgetId::new(match id {
-        Id::Guide => "window-guide",
-        Id::Channels => "window-channels",
-        Id::Queue => "window-queue",
-        Id::Recordings => "window-recordings",
-        Id::Schedule => "window-schedule",
-        Id::Series => "window-series",
-        Id::Activity => "window-activity",
-        Id::Log => "window-log",
-        Id::Catalog => "window-catalog",
-        Id::Users => "window-users",
-        Id::Tasks => "window-tasks",
-        Id::Devices => "window-devices",
-        Id::Plugins => "window-plugins",
-        Id::Browse => "window-browse",
-        Id::Entries => "window-entries",
-    })
+    match id {
+        Id::Guide => WidgetId::new("window-guide"),
+        Id::Channels => WidgetId::new("window-channels"),
+        Id::Queue => WidgetId::new("window-queue"),
+        Id::Recordings => WidgetId::new("window-recordings"),
+        Id::Schedule => WidgetId::new("window-schedule"),
+        Id::Series => WidgetId::new("window-series"),
+        Id::Activity => WidgetId::new("window-activity"),
+        Id::Log => WidgetId::new("window-log"),
+        Id::Catalog => WidgetId::new("window-catalog"),
+        Id::Users => WidgetId::new("window-users"),
+        Id::Tasks => WidgetId::new("window-tasks"),
+        Id::Devices => WidgetId::new("window-devices"),
+        Id::Plugins => WidgetId::new("window-plugins"),
+        Id::Browse => WidgetId::new("window-browse"),
+        Id::Entries => WidgetId::new("window-entries"),
+        Id::Section(section) => WidgetId::from(format!("window-section-{section:?}")),
+    }
 }
 
 /// Scrolls `window` so `index` is the first row shown.
@@ -37,7 +38,7 @@ pub fn showing(window: Window, index: usize) -> Task<Message> {
         scrollable_id(window.id()),
         AbsoluteOffset {
             x: Some(0.0),
-            y: Some(index as f32 * style::drawn(window.row())),
+            y: Some(index as f32 * style::drawn(window.cell())),
         },
     )
 }
@@ -91,7 +92,7 @@ pub fn grid<'a>(
             Message::Scrolled(Scrolled {
                 id,
                 offset: Drawn::of(viewport.absolute_offset().y),
-                height: Drawn::of(viewport.bounds().height),
+                extent: Drawn::of(viewport.bounds().height),
             })
         })
         .height(Fill)
@@ -100,8 +101,8 @@ pub fn grid<'a>(
 
 /// A windowed list: a scrollable whose content stands `count` rows tall, with
 /// only `Window::built` constructed and the rest standing as space.
-/// The rows built are computed from the height the layout measures, so a
-/// resize needs no message; `Window`'s own height follows scrolls and page
+/// The rows built are computed from the extent the layout measures, so a
+/// resize needs no message; `Window`'s own extent follows scrolls and page
 /// resizes and is what `shown` answers from.
 pub fn list<'a>(
     window: Window,
@@ -109,8 +110,8 @@ pub fn list<'a>(
     build: impl Fn(usize) -> Element<'a, Message> + 'a,
 ) -> Element<'a, Message> {
     let built = window.built(count);
-    let above = built.start as f32 * style::drawn(window.row());
-    let below = count.saturating_sub(built.end) as f32 * style::drawn(window.row());
+    let above = built.start as f32 * style::drawn(window.cell());
+    let below = count.saturating_sub(built.end) as f32 * style::drawn(window.cell());
 
     let rows = built.map(build).collect::<Vec<_>>();
     let content = column![
@@ -127,9 +128,43 @@ pub fn list<'a>(
             Message::Scrolled(Scrolled {
                 id,
                 offset: Drawn::of(viewport.absolute_offset().y),
-                height: Drawn::of(viewport.bounds().height),
+                extent: Drawn::of(viewport.bounds().height),
             })
         })
         .height(Fill)
+        .into()
+}
+
+/// A windowed row: a horizontal scrollable whose content stands `count` cells
+/// wide, with only `Window::built` constructed and the rest standing as space.
+pub fn rail<'a>(
+    window: Window,
+    count: usize,
+    build: impl Fn(usize) -> Element<'a, Message> + 'a,
+) -> Element<'a, Message> {
+    let built = window.built(count);
+    let before = built.start as f32 * style::drawn(window.cell());
+    let after = count.saturating_sub(built.end) as f32 * style::drawn(window.cell());
+
+    let cells = built.map(build).collect::<Vec<_>>();
+    let content = iced::widget::row![
+        Space::new().width(before),
+        iced::widget::row(cells).spacing(style::drawn(space::GUTTER.drawn())),
+        Space::new().width(after),
+    ];
+
+    let id = window.id();
+    scrollable(content)
+        .id(scrollable_id(id))
+        .direction(scrollable::Direction::Horizontal(
+            scrollable::Scrollbar::default(),
+        ))
+        .on_scroll(move |viewport| {
+            Message::Scrolled(Scrolled {
+                id,
+                offset: Drawn::of(viewport.absolute_offset().x),
+                extent: Drawn::of(viewport.bounds().width),
+            })
+        })
         .into()
 }

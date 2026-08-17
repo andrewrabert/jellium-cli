@@ -283,6 +283,14 @@ pub const SEARCH_ICON_GAP: Length = Length::em(0.25);
 // reference: search-icon
 pub const SEARCH_ICON_DROP: Length = Length::em(0.1);
 
+/// `.centerMessage`'s share of the page.
+// reference: center-message
+pub const CENTER_MESSAGE: Share = Share::per_ten_thousand(3000);
+
+/// Its padding above and below.
+// reference: center-message
+pub const CENTER_MESSAGE_PAD: Length = Length::em(5.0);
+
 /// One suggestion's padding, which is what spaces the column.
 // reference: search-suggestions
 pub const SUGGESTION_PAD: Padding = Padding {

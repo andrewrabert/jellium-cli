@@ -459,6 +459,21 @@ impl Card {
         }
     }
 
+    /// The card a scrolling row draws for items of this aspect: the
+    /// reference's overflow shapes, and the banner card it falls to where they
+    /// are three times as wide as they are tall.
+    /// `Rail(Square)` where they share no aspect.
+    // reference: card-auto-shape
+    pub fn overflowing(aspect: Option<Aspect>) -> Card {
+        match Shape::fitting(aspect) {
+            Shape::Portrait => Card::Rail(Rail::Portrait),
+            Shape::Backdrop => Card::Rail(Rail::Backdrop),
+            Shape::SmallBackdrop => Card::Rail(Rail::SmallBackdrop),
+            Shape::Banner => Card::Wall(Shape::Banner),
+            Shape::Square | Shape::Mixed(_) => Card::Rail(Rail::Square),
+        }
+    }
+
     pub fn shape(self) -> Shape {
         match self {
             Card::Wall(shape) => shape,

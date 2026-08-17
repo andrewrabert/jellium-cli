@@ -3,16 +3,18 @@ use std::rc::Rc;
 
 use iced::Element;
 use iced::widget::column;
-use jellium_model::paged::Paged;
+use jellium_model::facets::Facets;
+use jellium_model::search::Section;
+use jellium_model::sort::Sort;
 use jellium_model::window;
-use jellyfin_api::types::BaseItemDto;
+use jellyfin_api::types::{BaseItemDto, BaseItemKind};
 
 use crate::api::Api;
 use crate::app::Message;
 use crate::error::Answer;
 use crate::images::{self, Cache};
 use crate::route::Listing;
-use crate::screen::browse::{self, Browse};
+use crate::style::card::{Aspect, Card, Rail};
 use crate::style::space::Room;
 use crate::style::{self, Viewport, card, space, typeface};
 use crate::text::{self as strings, Text};
@@ -22,160 +24,194 @@ use crate::widget::prose;
 #[derive(Debug, Clone)]
 pub struct State {
     pub term: String,
-    pub browse: Browse,
-    /// A bounded strip rather than a windowed grid; each entry opens that
-    /// person's filtered list.
-    pub people: Vec<BaseItemDto>,
-    /// Each entry opens that studio's filtered list.
-    pub studios: Vec<BaseItemDto>,
-    pub programs: Vec<BaseItemDto>,
+    /// Each section that answered with items, in the reference's order.
+    pub sections: Vec<Results>,
     /// What the page offers while the term is empty.
     pub suggestions: Vec<BaseItemDto>,
 }
 
-/// The most entries one search section shows.
-pub const SECTION: i32 = 12;
+/// One section's items and the window over them.
+#[derive(Debug, Clone)]
+pub struct Results {
+    pub section: Section,
+    pub items: Vec<BaseItemDto>,
+    pub window: window::Window,
+}
+
+/// The most entries one section holds, which is the reference's own limit.
+// reference: search-limit
+pub const SECTION: i32 = 100;
 
 /// The suggestions an empty term draws.
 // reference: search-suggestions-listed
 pub const SUGGESTIONS: i32 = 20;
 
-pub async fn load(
-    api: Rc<Api>,
-    term: String,
-    listing: Listing,
-    viewport: Viewport,
-    overflow: widget::Overflow,
-) -> Answer<State> {
+/// The most items one search reads across every kind at once.
+// reference: search-sections-listed
+pub const RESULTS: i32 = 800;
+
+pub async fn load(api: Rc<Api>, term: String, viewport: Viewport) -> Answer<State> {
     Answer::of(async {
-        let heading = strings::lookup(Text::NavSearch).to_string();
-        let mut browse = Browse::new(
-            window::Id::Browse,
-            heading,
-            listing.clone(),
-            None,
-            viewport,
-            overflow,
-        );
-
-        let mut people = Vec::new();
-        let mut studios = Vec::new();
-        let mut programs = Vec::new();
-        let mut suggestions = Vec::new();
-
         if term.trim().is_empty() {
-            suggestions = api
+            let suggestions = api
                 .suggestions(SUGGESTIONS)
                 .await
                 .or_default(Text::FailureSuggestionsUnread);
-        } else {
-            let answered = api
-                .browse(
-                    None,
-                    Some(&term),
-                    &listing,
-                    0,
-                    Paged::<BaseItemDto>::PAGE as i32,
-                )
-                .await
-                .bubbled()?;
-            browse.items = Paged::new(answered.total.max(0) as usize);
-            browse.filled(0..answered.items.len(), answered.items);
-
-            people = api
-                .people(&term, SECTION)
-                .await
-                .or_default(Text::FailurePeopleUnread);
-            studios = api
-                .studios(None)
-                .await
-                .or_default(Text::FailureStudiosUnread)
-                .into_iter()
-                .filter(|studio| {
-                    studio
-                        .name
-                        .as_deref()
-                        .is_some_and(|name| name.to_lowercase().contains(&term.to_lowercase()))
-                })
-                .take(SECTION as usize)
-                .collect();
-            programs = api
-                .browse(
-                    None,
-                    Some(&term),
-                    &Listing {
-                        sort: listing.sort,
-                        facets: jellium_model::facets::Facets::of_kind(
-                            jellyfin_api::types::BaseItemKind::Program,
-                        ),
-                    },
-                    0,
-                    SECTION,
-                )
-                .await
-                .map(|page| page.items)
-                .or_default(Text::FailureLatestUnread);
+            return Ok(State {
+                term,
+                sections: Vec::new(),
+                suggestions,
+            });
         }
+
+        let listed = api
+            .browse(None, Some(&term), &Listing::default(), 0, RESULTS)
+            .await
+            .bubbled()?
+            .items;
+        let people = api
+            .people(&term, SECTION)
+            .await
+            .or_default(Text::FailurePeopleUnread);
+        let studios = api
+            .studios(None)
+            .await
+            .or_default(Text::FailureStudiosUnread)
+            .into_iter()
+            .filter(|studio| {
+                studio
+                    .name
+                    .as_deref()
+                    .is_some_and(|name| name.to_lowercase().contains(&term.to_lowercase()))
+            })
+            .take(SECTION as usize)
+            .collect::<Vec<BaseItemDto>>();
+        let programs = api
+            .browse(
+                None,
+                Some(&term),
+                &Listing {
+                    sort: Sort::default(),
+                    facets: Facets::of_kind(BaseItemKind::Program),
+                },
+                0,
+                SECTION,
+            )
+            .await
+            .map(|page| page.items)
+            .or_default(Text::FailureLatestUnread);
+
+        let sections = Section::ALL
+            .into_iter()
+            .filter_map(|section| {
+                let items: Vec<BaseItemDto> = match section.kind() {
+                    Some(kind) => listed
+                        .iter()
+                        .filter(|item| item.type_ == Some(kind))
+                        .take(SECTION as usize)
+                        .cloned()
+                        .collect(),
+                    None => match section {
+                        Section::People => people.clone(),
+                        Section::Studios => studios.clone(),
+                        Section::Programs => programs.clone(),
+                        _ => Vec::new(),
+                    },
+                };
+                (!items.is_empty()).then(|| Results {
+                    section,
+                    window: windowed(section, &items, viewport),
+                    items,
+                })
+            })
+            .collect();
 
         Ok(State {
             term,
-            browse,
-            people,
-            studios,
-            programs,
-            suggestions,
+            sections,
+            suggestions: Vec::new(),
         })
     })
     .await
 }
 
-/// One search section: a bounded strip of cards, each opening the route its
-/// entry names.
-fn section<'a>(
-    title: Text,
-    items: &'a [BaseItemDto],
-    viewport: Viewport,
-    images: &'a Cache,
-    opens: impl Fn(uuid::Uuid) -> crate::route::Route + 'a,
-) -> Element<'a, Message> {
-    let cards = items.iter().filter_map(|item| {
-        let id = item.id?;
-        Some(
-            iced::widget::button(widget::poster(
-                card::Card::Wall(card::Shape::Portrait),
-                item,
-                Room::content(viewport),
-                widget::poster_key(item).and_then(|key| images.handle(key)),
-                widget::Overflow::Withheld,
-            ))
-            .style(style::flat)
-            .on_press(Message::Navigated(opens(id)))
-            .into(),
-        )
-    });
-    column![
-        prose(strings::lookup(title), typeface::HEADING_2),
-        iced::widget::scrollable(
-            iced::widget::row(cards).spacing(style::drawn(space::GUTTER.drawn()))
-        )
-        .direction(iced::widget::scrollable::Direction::Horizontal(
-            iced::widget::scrollable::Scrollbar::default()
-        )),
-    ]
-    .spacing(style::drawn(space::CONTROL_GAP.drawn()))
-    .into()
+/// The window one section's row scrolls, measured against the room the page
+/// lays its cards in.
+fn windowed(section: Section, items: &[BaseItemDto], viewport: Viewport) -> window::Window {
+    let room = Room::content(viewport);
+    window::Window::new(
+        window::Id::Section(section),
+        card(section, shared(items)).width(room),
+        room.width(),
+    )
 }
 
-/// The filtered list one facet value opens, across the server.
-fn narrowed(facet: jellium_model::facets::Facet, id: uuid::Uuid) -> crate::route::Route {
-    crate::route::Route::Filtered(Box::new(crate::route::Filtered {
-        library: None,
-        header: Some(id),
-        listing: Listing {
-            sort: jellium_model::sort::Sort::default(),
-            facets: jellium_model::facets::Facets::of(facet, id),
-        },
-    }))
+/// The aspect a section's items share.
+fn shared(items: &[BaseItemDto]) -> Option<Aspect> {
+    Aspect::shared(
+        items
+            .iter()
+            .filter_map(|item| item.primary_image_aspect_ratio)
+            .map(Aspect::of),
+    )
+}
+
+/// The heading this section writes.
+// reference: search-section-title
+pub fn title(section: Section) -> Text {
+    match section {
+        Section::Movies => Text::SearchMovies,
+        Section::Shows => Text::SearchShows,
+        Section::Episodes => Text::SearchEpisodes,
+        Section::People => Text::SearchPeople,
+        Section::Playlists => Text::SearchPlaylists,
+        Section::Artists => Text::SearchArtists,
+        Section::Albums => Text::SearchAlbums,
+        Section::Songs => Text::SearchSongs,
+        Section::Videos => Text::SearchVideos,
+        Section::Programs => Text::SearchPrograms,
+        Section::Channels => Text::SearchChannels,
+        Section::PhotoAlbums => Text::SearchPhotoAlbums,
+        Section::Photos => Text::SearchPhotos,
+        Section::AudioBooks => Text::SearchAudioBooks,
+        Section::Books => Text::SearchBooks,
+        Section::Collections => Text::SearchCollections,
+        Section::Studios => Text::SearchStudios,
+    }
+}
+
+/// The card this section's items draw on, which is the shape they share except
+/// where the reference fixes it.
+// reference: search-section-cards
+pub fn card(section: Section, aspect: Option<Aspect>) -> Card {
+    match section {
+        Section::Songs => Card::Rail(Rail::Square),
+        _ => Card::overflowing(aspect),
+    }
+}
+
+/// What this section writes under a card.
+// reference: search-section-cards
+pub fn footer(section: Section) -> card::Footer {
+    match section {
+        Section::Movies
+        | Section::Shows
+        | Section::Albums
+        | Section::Episodes
+        | Section::Songs
+        | Section::Videos
+        | Section::Programs => card::Footer::NameAndSubtitle,
+        Section::People
+        | Section::Playlists
+        | Section::Artists
+        | Section::Channels
+        | Section::PhotoAlbums
+        | Section::Photos
+        | Section::AudioBooks
+        | Section::Books
+        | Section::Collections
+        | Section::Studios => card::Footer::Name,
+    }
 }
 
 /// The column an empty term draws: the reference's heading over one centred
@@ -204,6 +240,43 @@ fn suggesting(suggestions: &[BaseItemDto]) -> Element<'_, Message> {
     .into()
 }
 
+/// One section's row: its heading over the windowed rail of its items.
+// reference: search-results
+fn sectioned<'a>(
+    results: &'a Results,
+    viewport: Viewport,
+    images: &'a Cache,
+) -> Element<'a, Message> {
+    let room = Room::content(viewport);
+    let drawn = card(results.section, shared(&results.items));
+    let rail = crate::window::rail(
+        results.window,
+        results.items.len(),
+        move |index| match results.items.get(index) {
+            Some(item) => widget::poster(
+                drawn,
+                item,
+                room,
+                widget::poster_key(item).and_then(|key| images.handle(key)),
+                widget::Overflow::Withheld,
+            ),
+            None => iced::widget::Space::new()
+                .width(style::drawn(drawn.width(room)))
+                .into(),
+        },
+    );
+    widget::section(
+        strings::lookup(title(results.section)),
+        iced::widget::container(rail)
+            .height(style::drawn(drawn.row(
+                room,
+                footer(results.section),
+                card::Bottom::Flush,
+            )))
+            .into(),
+    )
+}
+
 pub fn view<'a>(state: &'a State, viewport: Viewport, images: &'a Cache) -> Element<'a, Message> {
     let mut page = column![widget::searching(&state.term, viewport)]
         .spacing(style::drawn(space::GUTTER.drawn()))
@@ -213,50 +286,32 @@ pub fn view<'a>(state: &'a State, viewport: Viewport, images: &'a Cache) -> Elem
         return page.push(suggesting(&state.suggestions)).into();
     }
 
-    if state.browse.items.is_empty() {
-        page = page.push(widget::banner(
-            strings::lookup(Text::SearchEmpty).to_string(),
-        ));
-        return page.into();
+    // reference: search-empty
+    if state.sections.is_empty() {
+        return page
+            .push(widget::centered(strings::format(
+                Text::SearchResultsEmpty,
+                &[&state.term],
+            )))
+            .into();
     }
 
-    page = page.push(browse::view(&state.browse, viewport, images));
-
-    if !state.people.is_empty() {
-        page = page.push(section(
-            Text::SearchPeople,
-            &state.people,
-            viewport,
-            images,
-            |id| narrowed(jellium_model::facets::Facet::Person, id),
-        ));
+    for results in &state.sections {
+        page = page.push(sectioned(results, viewport, images));
     }
-    if !state.studios.is_empty() {
-        page = page.push(section(
-            Text::SearchStudios,
-            &state.studios,
-            viewport,
-            images,
-            |id| narrowed(jellium_model::facets::Facet::Studio, id),
-        ));
-    }
-    if !state.programs.is_empty() {
-        page = page.push(section(
-            Text::SearchPrograms,
-            &state.programs,
-            viewport,
-            images,
-            |id| crate::route::Route::Detail { id },
-        ));
-    }
-
     page.into()
 }
 
 pub fn images(state: &State) -> HashSet<images::Key> {
-    let mut wanted = browse::images(&state.browse);
-    wanted.extend(widget::card_images(&state.people));
-    wanted.extend(widget::card_images(&state.studios));
-    wanted.extend(widget::card_images(&state.programs));
-    wanted
+    state
+        .sections
+        .iter()
+        .flat_map(|results| {
+            results
+                .window
+                .shown(results.items.len())
+                .filter_map(|index| results.items.get(index))
+                .filter_map(widget::poster_key)
+        })
+        .collect()
 }

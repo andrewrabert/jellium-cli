@@ -133,7 +133,7 @@ impl Browse {
         overflow: widget::Overflow,
     ) -> Browse {
         let drawn = Card::grid(collection, None);
-        let room = Room::content(viewport);
+        let room = Browse::laid(listing.sort, viewport);
         Browse {
             heading,
             listing,
@@ -154,6 +154,22 @@ impl Browse {
         }
     }
 
+    /// The room a grid sorted by `sort` lays its cards in at `viewport`: the
+    /// content box, less the letter picker's own reserve where the sort draws
+    /// the picker.
+    fn laid(sort: Sort, viewport: Viewport) -> Room {
+        match sort.by_name() {
+            true => Room::lettered(viewport),
+            false => Room::content(viewport),
+        }
+    }
+
+    /// The room this grid's cards are laid in, which is what the window counts
+    /// its columns in.
+    pub fn room(&self) -> Room {
+        Browse::laid(self.listing.sort, self.viewport)
+    }
+
     /// The card every cell of this grid draws.
     pub fn card(&self) -> Card {
         self.card
@@ -169,7 +185,7 @@ impl Browse {
 
     /// Relays the grid at the card and the page standing now.
     fn relaid(&mut self) {
-        let room = Room::content(self.viewport);
+        let room = self.room();
         self.grid.resized(
             room,
             self.card.width(room),
@@ -493,10 +509,7 @@ fn filter_surface<'a>(browse: &'a Browse, viewport: Viewport) -> Element<'a, Mes
 /// grid.
 pub fn view<'a>(browse: &'a Browse, viewport: Viewport, images: &'a Cache) -> Element<'a, Message> {
     let wall = browse.card();
-    let room = match browse.listing.sort.by_name() {
-        true => Room::lettered(viewport),
-        false => Room::content(viewport),
-    };
+    let room = browse.room();
     let mut page = column![
         prose(browse.heading.clone(), typeface::HEADING_1),
         paging(browse),

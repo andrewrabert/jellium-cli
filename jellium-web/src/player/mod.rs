@@ -1480,7 +1480,6 @@ pub fn controlled(signed: &mut Signed, control: Control, viewport: Viewport) -> 
         Control::GoToSearch => {
             return Task::done(Message::Navigated(Route::Search {
                 term: String::new(),
-                listing: Box::default(),
             }));
         }
         Control::Show { item } => {

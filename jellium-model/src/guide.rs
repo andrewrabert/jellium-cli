@@ -182,8 +182,8 @@ impl State {
                 if self.focus.channel < shown.start {
                     self.window.scrolled(window::Scrolled {
                         id: self.window.id(),
-                        offset: rows(self.focus.channel, self.window.row()),
-                        height: rows(shown.len(), self.window.row()),
+                        offset: rows(self.focus.channel, self.window.cell()),
+                        extent: rows(shown.len(), self.window.cell()),
                     });
                 }
             }
@@ -198,8 +198,8 @@ impl State {
                         .saturating_sub(shown.len().saturating_sub(1));
                     self.window.scrolled(window::Scrolled {
                         id: self.window.id(),
-                        offset: rows(first, self.window.row()),
-                        height: rows(shown.len(), self.window.row()),
+                        offset: rows(first, self.window.cell()),
+                        extent: rows(shown.len(), self.window.cell()),
                     });
                 }
             }

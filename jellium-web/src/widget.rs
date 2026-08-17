@@ -683,7 +683,6 @@ pub fn chrome<'a>(
                     .style(style::flat)
                     .on_press(Message::Navigated(Route::Search {
                         term: String::new(),
-                        listing: Box::default(),
                     })),
             )
             .push(
@@ -962,6 +961,27 @@ pub fn block<'a>(
         control = control.on_press(message);
     }
     control.into()
+}
+
+/// `.centerMessage`: one sentence in the middle of the page, in a column three
+/// tenths of it wide.
+// reference: center-message
+pub fn centered<'a>(sentence: String) -> Element<'a, Message> {
+    let held = style::drawn(space::CENTER_MESSAGE.of(Drawn::of(f32::from(PORTIONS)))) as u16;
+    let beside = (PORTIONS - held) / 2;
+    row![
+        Space::new().width(Length::FillPortion(beside)),
+        container(prose(sentence, typeface::BODY))
+            .width(Length::FillPortion(held))
+            .padding(
+                iced::Padding::ZERO
+                    .top(style::drawn(space::CENTER_MESSAGE_PAD.drawn()))
+                    .bottom(style::drawn(space::CENTER_MESSAGE_PAD.drawn())),
+            )
+            .center_x(Fill),
+        Space::new().width(Length::FillPortion(beside)),
+    ]
+    .into()
 }
 
 /// One sentence shown above a screen.

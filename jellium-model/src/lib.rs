@@ -11,6 +11,7 @@ pub mod login;
 pub mod paged;
 pub mod prefs;
 pub mod quickconnect;
+pub mod search;
 pub mod setup;
 pub mod sort;
 pub mod trickplay;

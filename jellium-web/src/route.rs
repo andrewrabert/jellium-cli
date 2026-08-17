@@ -34,7 +34,6 @@ pub enum Route {
     },
     Search {
         term: String,
-        listing: Box<Listing>,
     },
     Queue,
     Remote,

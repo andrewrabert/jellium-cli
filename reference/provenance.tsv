@@ -206,3 +206,13 @@ search-field-page	src/apps/stable/features/search/components/SearchFields.tsx	38
 search-field-letters	src/apps/stable/features/search/components/SearchFields.tsx	61	63	a9ba2040f3f3f5ca3c24bbabc3193fde0a9bb02ddbe05ae719feacc9142d614b	dead
 search-suggestions	src/apps/stable/features/search/components/SearchSuggestions.tsx	20	44	5b314d6fbbe1ef84028642032ea4d704e4cc8742a609c58541e267866949b0ef	ported
 search-suggestions-listed	src/apps/stable/features/search/api/useSearchSuggestions.ts	25	25	adc9b423468754063676ea3276fffc5508c39cfd562a8f200f6b0c15d07650c9	ported
+search-empty	src/apps/stable/features/search/components/SearchResults.tsx	29	43	3552d58f777dfdb8283aec824e6bb3e5446b73004ccde6aaf8a0f6d4c95afbe8	ported
+center-message	src/styles/librarybrowser.scss	322	327	acaea0270a5660c84ab68afb031599e7dd910ca289e20694481995450353af53	ported
+search-results	src/apps/stable/features/search/components/SearchResults.tsx	45	68	a1b5c140610bd64ef8121dc565862a7923fd9f2597f0d93a08d4b79b87915249	ported
+search-section-order	src/apps/stable/features/search/constants/sectionSortOrder.ts	1	18	72271cc881b635384b28c915d8d2584a1f4e73c60825ff60f1d92bf50b93bec8	ported
+search-section-title	src/apps/stable/features/search/utils/search.ts	77	108	e550a71d805aef46b4f402317ccf645f74d9073f4c14dc096df5cac1218d19b3	ported
+search-section-cards	src/apps/stable/features/search/utils/search.ts	48	75	8cbaadb2ac3a3319cdba164d0a5fc2e5c54f4dcd3dce7166ec63f380969c882b	ported
+search-section-kinds	src/apps/stable/features/search/utils/search.ts	125	139	408c335b04378d87a392f0f3818661df0b81b7c716aff589e8cd61a7c0d4a356	ported
+search-section-scoped	src/apps/stable/features/search/utils/search.ts	111	124	c2629ff37a6a30fbcdbbc15e161abf548b5520ea1ed661f4df907e7ba8464670	dead
+search-sections-listed	src/apps/stable/features/search/api/useSearchItems.ts	42	85	e9f834df8c87562ea7d589c0a5d050f5065ac701edb3a740d6e9be7b133c5ba8	ported
+search-limit	src/apps/stable/features/search/constants/queryOptions.ts	3	12	b2b81879a88b1e3228ddc689f4606e039bd5fadc66dab3427551fd4e7938b0e2	ported

@@ -21,6 +21,8 @@ pub enum Id {
     Browse,
     /// A playlist's entries in playlist order.
     Entries,
+    /// One section of a search result, each scrolling on its own.
+    Section(crate::search::Section),
 }
 
 /// The initials a name-sorted list offers, `#` first and then `A` to `Z`.
@@ -35,29 +37,29 @@ pub fn letter_bound(letter: char) -> Option<String> {
     (letter != '#').then(|| letter.to_ascii_uppercase().to_string())
 }
 
-/// Where one windowed surface is scrolled, how tall its rows are, and how tall
-/// its viewport is.
+/// Where one windowed surface is scrolled, how long its cells are along the
+/// axis it scrolls, and how long its viewport is along that same axis.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Window {
     id: Id,
-    row: Drawn,
+    cell: Drawn,
     offset: Drawn,
-    height: Drawn,
+    extent: Drawn,
 }
 
 impl Window {
-    /// Rows beyond the viewport built at each end, which is what keeps a
+    /// Cells beyond the viewport built at each end, which is what keeps a
     /// scroll from showing an empty band.
     pub const MARGIN: usize = 4;
 
-    /// A window over rows `row` tall inside a page `height` tall, scrolled to
-    /// the top.
-    pub fn new(id: Id, row: Drawn, height: Drawn) -> Window {
+    /// A window over cells `cell` long inside a viewport `extent` long,
+    /// scrolled to the start.
+    pub fn new(id: Id, cell: Drawn, extent: Drawn) -> Window {
         Window {
             id,
-            row: Drawn::of(row.count().max(1.0)),
+            cell: Drawn::of(cell.count().max(1.0)),
             offset: Drawn::ZERO,
-            height: Drawn::of(height.count().max(0.0)),
+            extent: Drawn::of(extent.count().max(0.0)),
         }
     }
 
@@ -65,8 +67,8 @@ impl Window {
         self.id
     }
 
-    pub fn row(self) -> Drawn {
-        self.row
+    pub fn cell(self) -> Drawn {
+        self.cell
     }
 
     /// Where the window is scrolled to.
@@ -79,31 +81,31 @@ impl Window {
         self.offset = Drawn::of(offset.count().max(0.0));
     }
 
-    /// Applies a scroll and the viewport height it reported.
+    /// Applies a scroll and the viewport extent it reported.
     pub fn scrolled(&mut self, scrolled: Scrolled) {
         self.moved(scrolled.offset);
-        self.resized(scrolled.height);
+        self.resized(scrolled.extent);
     }
 
     /// Applies a page resize.
-    pub fn resized(&mut self, height: Drawn) {
-        self.height = Drawn::of(height.count().max(0.0));
+    pub fn resized(&mut self, extent: Drawn) {
+        self.extent = Drawn::of(extent.count().max(0.0));
     }
 
-    /// The rows of `count` the viewport shows, without the margin; it is what
+    /// The cells of `count` the viewport shows, without the margin; it is what
     /// the image cache's wanted-set and a page step are computed from.
     pub fn shown(self, count: usize) -> std::ops::Range<usize> {
         if count == 0 {
             return 0..0;
         }
-        let first = (self.offset.count() / self.row.count()).floor().max(0.0) as usize;
-        let across = (self.height.count() / self.row.count()).ceil().max(1.0) as usize;
+        let first = (self.offset.count() / self.cell.count()).floor().max(0.0) as usize;
+        let across = (self.extent.count() / self.cell.count()).ceil().max(1.0) as usize;
         let first = first.min(count);
         let last = first.saturating_add(across).min(count);
         first..last
     }
 
-    /// The rows of `count` that are built: those the viewport shows, widened
+    /// The cells of `count` that are built: those the viewport shows, widened
     /// by `MARGIN` at each end and clamped to `0..count`.
     pub fn built(self, count: usize) -> std::ops::Range<usize> {
         let shown = self.shown(count);
@@ -140,7 +142,7 @@ impl Grid {
     }
 
     pub fn row(self) -> Drawn {
-        self.window.row()
+        self.window.cell()
     }
 
     /// Cells across, never fewer than one.
@@ -161,7 +163,7 @@ impl Grid {
     pub fn resized(&mut self, room: Room, cell: Drawn, row: Drawn) {
         self.width = Drawn::of(room.width().count().max(0.0));
         self.cell = Drawn::of(cell.count().max(1.0));
-        self.window.row = Drawn::of(row.count().max(1.0));
+        self.window.cell = Drawn::of(row.count().max(1.0));
         self.window.resized(room.viewport().canvas().height());
     }
 
@@ -205,7 +207,8 @@ impl Grid {
 pub struct Scrolled {
     pub id: Id,
     pub offset: Drawn,
-    pub height: Drawn,
+    /// The viewport's own length along the axis the surface scrolls.
+    pub extent: Drawn,
 }
 
 #[cfg(test)]
@@ -227,7 +230,7 @@ mod tests {
         window.scrolled(Scrolled {
             id: Id::Guide,
             offset: Drawn::of(scrolled * ROW_HEIGHT.count()),
-            height: Drawn::of(rows * ROW_HEIGHT.count()),
+            extent: Drawn::of(rows * ROW_HEIGHT.count()),
         });
         window
     }
@@ -273,7 +276,7 @@ mod tests {
         grid.scrolled(Scrolled {
             id: Id::Browse,
             offset: Drawn::of(scrolled * ROW_HEIGHT.count()),
-            height: Drawn::of(rows * ROW_HEIGHT.count()),
+            extent: Drawn::of(rows * ROW_HEIGHT.count()),
         });
         grid
     }

@@ -581,10 +581,9 @@ pub fn load(signed: &Signed, route: &Route, viewport: Viewport) -> Task<Message>
             Message::MetadataLoaded,
         ),
         Route::Detail { id } => Task::perform(detail::load(api, id), Message::DetailLoaded),
-        Route::Search { term, listing } => Task::perform(
-            search::load(api, term, *listing, viewport, overflow),
-            Message::SearchLoaded,
-        ),
+        Route::Search { term } => {
+            Task::perform(search::load(api, term, viewport), Message::SearchLoaded)
+        }
         Route::Queue | Route::Remote | Route::SyncPlay => Task::none(),
         Route::LiveTv { tab } if reachable => {
             Task::perform(livetv::load(api, tab, height), Message::LiveTvLoaded)
@@ -1647,7 +1646,7 @@ impl Jellium {
                 let Some((items, total)) = answered.or_none(Text::FailureBrowseUnread) else {
                     return Task::none();
                 };
-                let Some(browse) = self.browsing() else {
+                let Some(browse) = self.browsing_mut() else {
                     return Task::none();
                 };
                 if browse.items.len() != total {
@@ -1661,7 +1660,7 @@ impl Jellium {
                 let Some(index) = answered.or_none(Text::FailureBrowseUnread) else {
                     return Task::none();
                 };
-                let Some(browse) = self.browsing() else {
+                let Some(browse) = self.browsing_mut() else {
                     return Task::none();
                 };
                 let offset = browse.grid.resting(index);
@@ -1687,10 +1686,7 @@ impl Jellium {
                     }) => state.term.clone(),
                     _ => return Task::none(),
                 };
-                self.replace(Route::Search {
-                    term,
-                    listing: Box::default(),
-                })
+                self.replace(Route::Search { term })
             }
             Message::PlayedToggled(id, played) => {
                 let Some(signed) = self.signed() else {
@@ -2132,7 +2128,7 @@ impl Jellium {
                 if let Some(signed) = self.signed() {
                     signed.queue.resized(canvas.height());
                 }
-                if let Some(browse) = self.browsing() {
+                if let Some(browse) = self.browsing_mut() {
                     browse.resized(page);
                 }
                 if let Some(hub) = self.hubbing() {
@@ -2179,8 +2175,19 @@ impl Jellium {
                     }
                     self.settle();
                     return Task::batch([self.entries_fetch(), self.fetch_images()]);
+                } else if let window::Id::Section(section) = scrolled.id {
+                    if let View::Search(state) = &mut signed.view
+                        && let Some(results) = state
+                            .sections
+                            .iter_mut()
+                            .find(|held| held.section == section)
+                    {
+                        results.window.scrolled(scrolled);
+                    }
+                    self.settle();
+                    return self.fetch_images();
                 } else if scrolled.id == window::Id::Browse {
-                    if let Some(browse) = self.browsing() {
+                    if let Some(browse) = self.browsing_mut() {
                         browse.scrolled(scrolled);
                     }
                     if let Some(hub) = self.hubbing() {
@@ -2567,41 +2574,37 @@ impl Jellium {
 
     /// The browse surface the view on top holds, and `None` for a view holding
     /// none.
-    fn browsing(&mut self) -> Option<&mut crate::screen::browse::Browse> {
+    fn browsing(&self) -> Option<&crate::screen::browse::Browse> {
+        let Stage::Signed(signed) = &self.stage else {
+            return None;
+        };
+        match &signed.view {
+            View::Library(state) => match &state.body {
+                crate::screen::library::Body::Browse(browse)
+                | crate::screen::library::Body::Rows(browse) => Some(browse),
+                _ => None,
+            },
+            View::Filtered(browse) => Some(browse),
+            View::Collections(state) => Some(&state.browse),
+            View::Collection(state) => Some(&state.browse),
+            View::Playlists(state) => Some(&state.browse),
+            _ => None,
+        }
+    }
+
+    fn browsing_mut(&mut self) -> Option<&mut crate::screen::browse::Browse> {
         match &mut self.signed()?.view {
             View::Library(state) => match &mut state.body {
                 crate::screen::library::Body::Browse(browse)
                 | crate::screen::library::Body::Rows(browse) => Some(browse),
                 _ => None,
             },
-            View::Search(state) => Some(&mut state.browse),
             View::Filtered(browse) => Some(browse),
             View::Collections(state) => Some(&mut state.browse),
             View::Collection(state) => Some(&mut state.browse),
             View::Playlists(state) => Some(&mut state.browse),
             _ => None,
         }
-    }
-
-    /// The letter picker the view on top lays over the page.
-    fn lettering(&self) -> Option<Element<'_, Message>> {
-        let Stage::Signed(signed) = &self.stage else {
-            return None;
-        };
-        let browse = match &signed.view {
-            View::Library(state) => match &state.body {
-                crate::screen::library::Body::Browse(browse)
-                | crate::screen::library::Body::Rows(browse) => browse,
-                _ => return None,
-            },
-            View::Search(state) => &state.browse,
-            View::Filtered(browse) => browse,
-            View::Collections(state) => &state.browse,
-            View::Collection(state) => &state.browse,
-            View::Playlists(state) => &state.browse,
-            _ => return None,
-        };
-        crate::screen::browse::letters(browse, self.viewport)
     }
 
     /// Re-reads the trickplay the playing item describes, which is what a
@@ -2738,7 +2741,6 @@ impl Jellium {
     fn browse_source(&self) -> Option<(Option<Uuid>, Option<String>)> {
         match self.route()? {
             Route::Library { id, .. } => Some((Some(id), None)),
-            Route::Search { term, .. } => Some((None, Some(term))),
             _ => None,
         }
     }
@@ -2753,7 +2755,7 @@ impl Jellium {
             return Task::none();
         };
         let api = signed.api.clone();
-        let Some(browse) = self.browsing() else {
+        let Some(browse) = self.browsing_mut() else {
             return Task::none();
         };
         let Some(page) = browse.wanted() else {
@@ -2780,7 +2782,7 @@ impl Jellium {
                 return Task::none();
             };
             let api = signed.api.clone();
-            let Some(browse) = self.browsing() else {
+            let Some(browse) = self.browsing_mut() else {
                 return Task::none();
             };
             let listing = browse.listing.clone();
@@ -2790,7 +2792,7 @@ impl Jellium {
             );
         }
 
-        let Some(browse) = self.browsing() else {
+        let Some(browse) = self.browsing_mut() else {
             return Task::none();
         };
         match action {
@@ -2849,10 +2851,6 @@ impl Jellium {
                 filtered.listing = listing;
                 Route::Filtered(filtered)
             }
-            Some(Route::Search { term, .. }) => Route::Search {
-                term,
-                listing: Box::new(listing),
-            },
             _ => return Task::none(),
         };
         self.replace(route)
@@ -3074,7 +3072,10 @@ impl Jellium {
                         self.viewport,
                     ));
                 }
-                match self.lettering() {
+                match self
+                    .browsing()
+                    .and_then(|browse| crate::screen::browse::letters(browse, self.viewport))
+                {
                     Some(letters) => widget::lettered(page.into(), letters, self.viewport),
                     None => page.into(),
                 }
@@ -3193,7 +3194,6 @@ fn library_changed(
             | crate::screen::library::Body::Rows(browse) => reread(browse),
             _ => Task::none(),
         },
-        View::Search(state) => reread(&mut state.browse),
         View::Filtered(browse) => reread(browse),
         View::Collections(state) => reread(&mut state.browse),
         View::Collection(state) => reread(&mut state.browse),
