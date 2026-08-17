@@ -531,6 +531,8 @@ pub fn view<'a>(browse: &'a Browse, viewport: Viewport, images: &'a Cache) -> El
                 wall,
                 item,
                 room,
+                card::Footer::NameAndSubtitle,
+                card::Bottom::Padded,
                 widget::poster_key(item).and_then(|key| images.handle(key)),
                 browse.overflow,
             ),

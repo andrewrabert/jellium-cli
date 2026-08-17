@@ -131,6 +131,7 @@ fn boxed<'a>(
     card: card::Card,
     room: Room,
     face: Option<Face>,
+    footer: card::Footer,
     name: String,
     subtitle: Option<String>,
 ) -> Element<'a, Message> {
@@ -156,10 +157,14 @@ fn boxed<'a>(
             .into(),
     };
 
+    if footer == card::Footer::Bare {
+        return column![drawn_face].width(width).into();
+    }
+
     let mut written = column![line(name, typeface::BODY, typeface::Weight::Regular)]
         .align_x(iced::Center)
         .width(width);
-    if let Some(subtitle) = subtitle {
+    if let Some(subtitle) = subtitle.filter(|_| footer == card::Footer::NameAndSubtitle) {
         written = written.push(line(
             subtitle,
             typeface::SECONDARY,
@@ -176,6 +181,22 @@ fn boxed<'a>(
     ]
     .width(width)
     .into()
+}
+
+/// The margin `.cardBox-bottompadded` reserves under a card, which the
+/// reference sets by the section the card stands in.
+// reference: card-box-bottom
+fn reserving<'a>(body: Element<'a, Message>, room: Room, bottom: card::Bottom) -> Element<'a, Message> {
+    match bottom {
+        card::Bottom::Flush => body,
+        card::Bottom::Padded => {
+            let reserved = match room.viewport().matches(space::CARD_BOTTOM_AT) {
+                true => space::CARD_BOTTOM_NARROW,
+                false => space::CARD_BOTTOM,
+            };
+            column![body, Space::new().height(style::drawn(reserved.drawn()))].into()
+        }
+    }
 }
 
 /// An image at a card's pitch with its shape's aspect and nothing under it.
@@ -206,18 +227,18 @@ pub fn card<'a>(
     bottom: card::Bottom,
     press: Message,
 ) -> Element<'a, Message> {
-    let body = boxed(card, room, Some(face), name.into().into_owned(), None);
-    let held: Element<'a, Message> = match bottom {
-        card::Bottom::Flush => body,
-        card::Bottom::Padded => {
-            let reserved = match room.viewport().matches(space::CARD_BOTTOM_AT) {
-                true => space::CARD_BOTTOM_NARROW,
-                false => space::CARD_BOTTOM,
-            };
-            column![body, Space::new().height(style::drawn(reserved.drawn()))].into()
-        }
-    };
-    button(held).style(style::flat).on_press(press).into()
+    let body = boxed(
+        card,
+        room,
+        Some(face),
+        card::Footer::Name,
+        name.into().into_owned(),
+        None,
+    );
+    button(reserving(body, room, bottom))
+        .style(style::flat)
+        .on_press(press)
+        .into()
 }
 
 /// Cards laid out the way the reference's `.vertical-wrap.centered` lays them
@@ -316,22 +337,30 @@ pub fn page<'a>(viewport: Viewport, body: Element<'a, Message>) -> Element<'a, M
         .into()
 }
 
-/// A library item's card: its poster, its name and its subtitle, which is
-/// `Footer::NameAndSubtitle` and `Bottom::Padded` always, so neither is a
-/// parameter.
+/// A library item's card: its poster over what the section it stands in writes
+/// under it. What the card writes, and whether its box reserves the bottom
+/// margin, are the caller's, because the reference varies both by the section
+/// a card stands in.
 pub fn poster<'a>(
     card: card::Card,
     item: &'a BaseItemDto,
     room: Room,
+    footer: card::Footer,
+    bottom: card::Bottom,
     image: Option<image::Handle>,
     overflow: Overflow,
 ) -> Element<'a, Message> {
-    let body = boxed(
-        card,
+    let body = reserving(
+        boxed(
+            card,
+            room,
+            image.map(Face::Image),
+            footer,
+            item.name.clone().unwrap_or_default(),
+            Some(subtitle(item)),
+        ),
         room,
-        image.map(Face::Image),
-        item.name.clone().unwrap_or_default(),
-        Some(subtitle(item)),
+        bottom,
     );
 
     let pressed = item.id.map(|id| Message::Navigated(opens(item, id)));
@@ -373,6 +402,8 @@ fn cards<'a>(
                 card,
                 item,
                 room,
+                card::Footer::NameAndSubtitle,
+                card::Bottom::Padded,
                 poster_key(item).and_then(|key| images.handle(key)),
                 overflow,
             )
@@ -499,6 +530,7 @@ pub fn channel_card<'a>(
         on_now,
         room,
         image.map(Face::Image),
+        card::Footer::NameAndSubtitle,
         format!("{} {}", channel.number, channel.name),
         channel
             .current

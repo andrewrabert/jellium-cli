@@ -1636,9 +1636,14 @@ impl Jellium {
                 self.loaded(View::Detail(state))
             }
             Message::SearchLoaded(answered) => {
-                let Some(state) = answered.or_none(Text::FailureSearchUnread) else {
+                let Some(mut state) = answered.or_none(Text::FailureSearchUnread) else {
                     return Task::none();
                 };
+                if let Some(View::Search(open)) = self.signed().map(|signed| &signed.view)
+                    && open.term == state.term
+                {
+                    state.rested(open);
+                }
                 self.loaded(View::Search(state))
             }
             Message::BrowseAction(action) => self.browse_action(action),
@@ -2443,7 +2448,7 @@ impl Jellium {
                 removed,
                 updated,
             } => {
-                let task = library_changed(signed, &added, &removed, &updated);
+                let task = library_changed(signed, viewport, &added, &removed, &updated);
                 Task::batch([task, self.browse_fetch()])
             }
             Event::GroupQueue(queue) => group::queued(signed, queue, viewport),
@@ -3173,6 +3178,7 @@ impl Jellium {
 /// Neither the scroll position nor the sort moves.
 fn library_changed(
     signed: &mut Signed,
+    viewport: Viewport,
     _added: &[uuid::Uuid],
     removed: &[uuid::Uuid],
     updated: &[uuid::Uuid],
@@ -3204,7 +3210,22 @@ fn library_changed(
             };
             Task::perform(detail::load(api, id), Message::DetailLoaded)
         }
-        _ => Task::none(),
+        View::Search(state) => Task::perform(
+            search::load(api, state.term.clone(), viewport),
+            Message::SearchLoaded,
+        ),
+        View::Detail(_)
+        | View::Loading
+        | View::LiveTv(_)
+        | View::Program(_)
+        | View::Metadata(_)
+        | View::Playlist(_)
+        | View::Queue
+        | View::Remote
+        | View::SyncPlay
+        | View::Dashboard(_)
+        | View::Settings(_)
+        | View::Unavailable => Task::none(),
     }
 }
 

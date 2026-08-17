@@ -30,6 +30,23 @@ pub struct State {
     pub suggestions: Vec<BaseItemDto>,
 }
 
+impl State {
+    /// Takes the offsets the sections of a search on the same term were
+    /// resting at, so a re-read leaves every rail where it stood.
+    pub fn rested(&mut self, previous: &State) {
+        for results in &mut self.sections {
+            let Some(stood) = previous
+                .sections
+                .iter()
+                .find(|earlier| earlier.section == results.section)
+            else {
+                continue;
+            };
+            results.window.moved(stood.window.offset());
+        }
+    }
+}
+
 /// One section's items and the window over them.
 #[derive(Debug, Clone)]
 pub struct Results {
@@ -257,6 +274,8 @@ fn sectioned<'a>(
                 drawn,
                 item,
                 room,
+                footer(results.section),
+                card::Bottom::Flush,
                 widget::poster_key(item).and_then(|key| images.handle(key)),
                 widget::Overflow::Withheld,
             ),

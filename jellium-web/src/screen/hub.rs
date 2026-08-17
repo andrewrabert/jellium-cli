@@ -129,6 +129,8 @@ pub fn view<'a>(state: &'a State, viewport: Viewport, images: &'a Cache) -> Elem
                     wall,
                     entry,
                     Room::content(viewport),
+                    card::Footer::NameAndSubtitle,
+                    card::Bottom::Padded,
                     widget::poster_key(entry).and_then(|key| images.handle(key)),
                     widget::Overflow::Withheld,
                 );
