@@ -420,6 +420,60 @@ pub const OSD_HEADER_TOP: Length = Length::em(3.5);
 // reference: osd-controls
 pub const OSD_CONTROLS: Length = Length::em(0.8);
 
+/// The gap under one line of the panel's text.
+// reference: osd-text
+pub const OSD_TEXT_GAP: Length = Length::em(0.7);
+
+/// That text's own inset.
+// reference: osd-text
+pub const OSD_TEXT_INSET: Length = Length::em(0.5);
+
+/// The secondary line's deeper inset.
+// reference: osd-secondary
+pub const OSD_SECONDARY_INSET: Length = Length::em(0.6);
+
+/// The gap between the slider and the clock at either end of it.
+// reference: osd-markup
+pub const OSD_TIME_GAP: Length = Length::em(0.25);
+
+/// The slider's own room in that row.
+// reference: osd-markup
+pub const OSD_SLIDER_PAD: Padding = Padding {
+    top: Length::em(0.5),
+    right: Length::em(0.0),
+    bottom: Length::em(0.25),
+    left: Length::em(0.0),
+};
+
+/// The gap above the row of controls.
+// reference: osd-controls
+pub const OSD_BUTTONS_TOP: Length = Length::em(0.25);
+
+/// `.osdTimeText`'s gap to the controls it follows.
+// reference: osd-time
+pub const OSD_ENDS_GAP: Length = Length::em(1.0);
+
+/// `.osdTitle`'s gap to whatever follows it on its line.
+// reference: osd-title
+pub const OSD_TITLE_GAP: Length = Length::em(1.0);
+
+/// The gap between the status glyph and the word beside it.
+// reference: osd-status
+pub const OSD_STATUS_GAP: Length = Length::em(0.125);
+
+/// `.volumeButtons`' own margins, leading and trailing.
+// reference: osd-volume
+pub const OSD_VOLUME_MARGIN: Padding = Padding {
+    top: Length::em(0.0),
+    right: Length::em(1.0),
+    bottom: Length::em(0.0),
+    left: ICON_MARGIN,
+};
+
+/// `.osdVolumeSliderContainer`.
+// reference: osd-volume
+pub const OSD_VOLUME_SLIDER: Length = Length::em(9.0);
+
 /// The frame the scrub preview draws in, as tall as the page allows it.
 // reference: osd-preview
 const PREVIEW: Share = Share::units(20.0);

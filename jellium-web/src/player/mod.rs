@@ -154,6 +154,9 @@ pub struct Commanded {
 /// Which menu the on-screen display has open, if any.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Menu {
+    /// What the reference's own settings control opens: the three menus it
+    /// gathers rather than drawing beside it.
+    Settings,
     Audio,
     Subtitle,
     Quality,

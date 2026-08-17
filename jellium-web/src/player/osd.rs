@@ -7,6 +7,7 @@ use iced::{Element, Fill, Length};
 use jellium_protocol::{Method, Quality, Repeat, Subtitles, SyncAccess};
 
 use crate::app::Message;
+use crate::icon::Icon;
 use crate::images::{self, Cache, Kind as ImageKind};
 use crate::player::group::Joined;
 use crate::player::live::Live;
@@ -31,11 +32,20 @@ fn clock(position: Duration) -> String {
     }
 }
 
-fn control<'a>(label: Text, action: Action) -> Element<'a, Message> {
-    button(prose(strings::lookup(label), typeface::BODY))
-        .style(style::flat)
-        .on_press(Message::PlayerAction(action))
-        .into()
+/// Which surface a transport row is drawn on, which is what decides the
+/// controls it carries.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Surface {
+    Osd,
+    Bar,
+}
+
+fn acting<'a>(glyph: crate::icon::Icon, label: Text, action: Action) -> Element<'a, Message> {
+    crate::widget::icon_button(glyph, label, Message::PlayerAction(action))
+}
+
+fn opening<'a>(glyph: crate::icon::Icon, label: Text, menu: Menu) -> Element<'a, Message> {
+    acting(glyph, label, Action::OpenMenu(menu))
 }
 
 fn art_key(playing: &Playing) -> Option<images::Key> {
@@ -142,6 +152,19 @@ fn menu<'a>(
     viewport: Viewport,
 ) -> Option<Element<'a, Message>> {
     let entries: Vec<Element<'a, Message>> = match playing.menu? {
+        Menu::Settings => [
+            (Text::PlayerQuality, Menu::Quality),
+            (Text::PlayerChapters, Menu::Chapters),
+            (Text::PlayerVersion, Menu::Version),
+        ]
+        .into_iter()
+        .map(|(label, menu)| {
+            button(prose(strings::lookup(label), typeface::BODY))
+                .style(style::flat)
+                .on_press(Message::PlayerAction(Action::OpenMenu(menu)))
+                .into()
+        })
+        .collect(),
         Menu::Audio => playing
             .plan
             .audio_streams
@@ -204,7 +227,7 @@ fn menu<'a>(
         container(
             column![
                 scrollable(column(entries).spacing(style::drawn(space::BLOCK_GAP.drawn()))),
-                control(Text::PlayerLeave, Action::CloseMenu),
+                acting(Icon::ArrowBack, Text::PlayerLeave, Action::CloseMenu),
             ]
             .spacing(style::drawn(space::BLOCK_GAP.drawn())),
         )
@@ -213,13 +236,21 @@ fn menu<'a>(
     )
 }
 
-fn volume<'a>(device: crate::prefs::Device) -> Element<'a, Message> {
-    slider(0.0..=1.0_f32, device.volume, |value| {
+/// The volume control and its slider, which the panel drops on a narrow page.
+// reference: osd-volume
+fn volume<'a>(device: crate::prefs::Device, _viewport: Viewport) -> Element<'a, Message> {
+    let level = slider(0.0..=1.0_f32, device.volume, |value| {
         Message::PlayerAction(Action::SetVolume(value))
     })
     .step(0.01_f32)
-    .width(VOLUME_WIDTH)
-    .into()
+    .width(style::drawn(space::OSD_VOLUME_SLIDER.drawn()));
+    let muted = match device.muted {
+        true => acting(Icon::VolumeOff, Text::PlayerUnmute, Action::ToggleMute),
+        false => acting(Icon::VolumeUp, Text::PlayerMute, Action::ToggleMute),
+    };
+    container(row![muted, level].align_y(iced::Center))
+        .padding(style::padding(space::OSD_VOLUME_MARGIN))
+        .into()
 }
 
 /// What the transport controls are pointed at.
@@ -256,13 +287,6 @@ fn remote_transport<'a>(bound: &'a Bound) -> Element<'a, Message> {
         remote_control(Text::PlayerSkipForward, remote::Action::SkipForward),
         remote_control(Text::PlayerNext, remote::Action::Next),
         remote_control(Text::PlayerStop, remote::Action::Stop),
-        prose(
-            strings::format(
-                Text::PlayerPosition,
-                &[&clock(bound.shown()), &clock(bound.duration())],
-            ),
-            typeface::BODY
-        ),
         Space::new().width(Fill),
         remote_control(Text::QueueShuffle, remote::Action::ToggleShuffle),
         remote_control(
@@ -291,116 +315,171 @@ fn remote_transport<'a>(bound: &'a Bound) -> Element<'a, Message> {
     .into()
 }
 
-/// The scrub bar pointed at a bound target.
+/// The scrub bar pointed at a bound target, between the same two clocks the
+/// panel's own slider stands between.
 fn remote_scrub<'a>(bound: &'a Bound) -> Element<'a, Message> {
     let seconds = bound.duration().as_secs_f32().max(0.001);
-    slider(
+    let handle = slider(
         0.0..=seconds,
         bound.shown().as_secs_f32().min(seconds),
         |value| Message::RemoteAction(remote::Action::Scrub(Duration::from_secs_f32(value))),
     )
-    .on_release(Message::RemoteAction(remote::Action::ScrubReleased))
+    .on_release(Message::RemoteAction(remote::Action::ScrubReleased));
+    between(bound.shown(), bound.duration(), handle.into())
+}
+
+/// A slider between the clock it has reached and the clock it ends at.
+// reference: osd-markup
+fn between<'a>(
+    shown: Duration,
+    duration: Duration,
+    handle: Element<'a, Message>,
+) -> Element<'a, Message> {
+    let gap = style::drawn(space::OSD_TIME_GAP.drawn());
+    row![
+        container(prose(clock(shown), typeface::BODY)).padding(iced::Padding {
+            top: 0.0,
+            right: gap,
+            bottom: 0.0,
+            left: 0.0,
+        }),
+        container(handle)
+            .padding(style::padding(space::OSD_SLIDER_PAD))
+            .width(Fill),
+        container(prose(clock(duration), typeface::BODY)).padding(iced::Padding {
+            top: 0.0,
+            right: 0.0,
+            bottom: 0.0,
+            left: gap,
+        }),
+    ]
+    .align_y(iced::Center)
     .into()
 }
 
+/// The row of controls the panel carries, in the reference's own order.
+// reference: osd-previous
+// reference: osd-transport
+// reference: osd-next
+// reference: osd-buttons
+// reference: osd-fullscreen
 fn transport<'a>(
     playing: &'a Playing,
-    full: bool,
+    surface: Surface,
     sync_play: SyncAccess,
     device: crate::prefs::Device,
+    viewport: Viewport,
 ) -> Element<'a, Message> {
+    let paused = match playing.paused {
+        true => Icon::PlayArrow,
+        false => Icon::Pause,
+    };
     let mut controls = row![
-        control(Text::PlayerPrevious, Action::Previous),
-        control(Text::PlayerSkipBack, Action::SkipBack),
-        control(
-            if playing.paused {
-                Text::PlayerPlay
-            } else {
-                Text::PlayerPause
-            },
-            Action::TogglePlay
+        acting(Icon::SkipPrevious, Text::PlayerPrevious, Action::Previous),
+        acting(Icon::FastRewind, Text::PlayerSkipBack, Action::SkipBack),
+        acting(paused, Text::PlayerPlay, Action::TogglePlay),
+        acting(
+            Icon::FastForward,
+            Text::PlayerSkipForward,
+            Action::SkipForward
         ),
-        control(Text::PlayerSkipForward, Action::SkipForward),
-        control(Text::PlayerNext, Action::Next),
-        prose(
-            strings::format(
-                Text::PlayerPosition,
-                &[&clock(playing.shown()), &clock(playing.duration)],
-            ),
-            typeface::BODY
-        ),
-        Space::new().width(Fill),
-        control(Text::QueueShuffle, Action::ToggleShuffle),
-        control(repeat_label(playing.queue.repeat()), Action::CycleRepeat),
-        volume(device),
-        control(
-            if device.muted {
-                Text::PlayerUnmute
-            } else {
-                Text::PlayerMute
-            },
-            Action::ToggleMute
-        ),
+        acting(Icon::SkipNext, Text::PlayerNext, Action::Next),
     ]
     .spacing(style::drawn(space::ICON_GAP.drawn()))
     .align_y(iced::Center);
 
-    controls = controls.push(
-        button(prose(strings::lookup(Text::PlayerRemote), typeface::BODY))
-            .style(style::flat)
-            .on_press(Message::Navigated(Route::Remote)),
-    );
-    if sync_play != SyncAccess::None {
+    if surface == Surface::Osd {
         controls = controls.push(
-            button(prose(strings::lookup(Text::PlayerSyncPlay), typeface::BODY))
-                .style(style::flat)
-                .on_press(Message::Navigated(Route::SyncPlay)),
+            container(prose(
+                strings::format(Text::PlayerEndsAt, &[&clock(ends_at(playing))]),
+                typeface::BODY,
+            ))
+            .padding(iced::Padding {
+                top: 0.0,
+                right: 0.0,
+                bottom: 0.0,
+                left: style::drawn(space::OSD_ENDS_GAP.drawn()),
+            }),
         );
     }
 
+    controls = controls.push(Space::new().width(Fill));
+
+    if !playing.plan.subtitle_streams.is_empty() {
+        controls = controls.push(opening(
+            Icon::ClosedCaption,
+            Text::PlayerSubtitles,
+            Menu::Subtitle,
+        ));
+    }
     if !playing.plan.audio_streams.is_empty() {
-        controls = controls.push(control(Text::PlayerAudio, Action::OpenMenu(Menu::Audio)));
+        controls = controls.push(opening(Icon::Audiotrack, Text::PlayerAudio, Menu::Audio));
     }
-    if playing.plan.sources.len() > 1 {
-        controls = controls.push(control(
-            Text::PlayerVersion,
-            Action::OpenMenu(Menu::Version),
+    controls = controls
+        .push(volume(device, viewport))
+        .push(opening(Icon::Settings, Text::PlayerSettings, Menu::Settings))
+        .push(acting(
+            Icon::Shuffle,
+            Text::QueueShuffle,
+            Action::ToggleShuffle,
         ));
-    }
-    if !playing.plan.chapters.is_empty() {
-        controls = controls.push(control(
-            Text::PlayerChapters,
-            Action::OpenMenu(Menu::Chapters),
+
+    let repeat = playing.queue.repeat();
+    let repeating = match repeat {
+        Repeat::One => Icon::RepeatOne,
+        Repeat::Off | Repeat::All => Icon::Repeat,
+    };
+    controls = controls
+        .push(acting(repeating, repeat_label(repeat), Action::CycleRepeat))
+        .push(crate::widget::icon_button(
+            Icon::Queue,
+            Text::PlayerQueue,
+            Message::Navigated(Route::Queue),
+        ))
+        .push(crate::widget::icon_button(
+            Icon::Cast,
+            Text::PlayerRemote,
+            Message::Navigated(Route::Remote),
         ));
-    }
-    if full {
-        controls = controls
-            .push(control(
-                Text::PlayerSubtitles,
-                Action::OpenMenu(Menu::Subtitle),
-            ))
-            .push(control(
-                Text::PlayerQuality,
-                Action::OpenMenu(Menu::Quality),
-            ))
-            .push(control(
-                if playing.fullscreen {
-                    Text::PlayerExitFullscreen
-                } else {
-                    Text::PlayerFullscreen
-                },
-                Action::ToggleFullscreen,
-            ));
+    if sync_play != SyncAccess::None {
+        controls = controls.push(crate::widget::icon_button(
+            Icon::Groups,
+            Text::PlayerSyncPlay,
+            Message::Navigated(Route::SyncPlay),
+        ));
     }
 
-    controls
-        .push(
-            button(prose(strings::lookup(Text::PlayerQueue), typeface::BODY))
-                .style(style::flat)
-                .on_press(Message::Navigated(Route::Queue)),
-        )
-        .push(control(Text::PlayerLeave, Action::Leave))
+    if surface == Surface::Osd {
+        let (fullscreen, label) = match playing.fullscreen {
+            true => (Icon::FullscreenExit, Text::PlayerExitFullscreen),
+            false => (Icon::Fullscreen, Text::PlayerFullscreen),
+        };
+        controls = controls.push(acting(fullscreen, label, Action::ToggleFullscreen));
+    }
+
+    container(controls)
+        .padding(iced::Padding {
+            top: style::drawn(space::OSD_BUTTONS_TOP.drawn()),
+            right: 0.0,
+            bottom: 0.0,
+            left: 0.0,
+        })
         .into()
+}
+
+/// The time of day the item runs out at, which is what `.endsAtText` writes:
+/// the reading now plus what is left to play, counted from midnight so the
+/// same clock writes it.
+// reference: osd-time
+fn ends_at(playing: &Playing) -> Duration {
+    const DAY: u64 = 24 * 60 * 60;
+    let left = playing.duration.saturating_sub(playing.shown());
+    let now = chrono::Local::now()
+        .time()
+        .signed_duration_since(chrono::NaiveTime::MIN)
+        .num_seconds()
+        .unsigned_abs();
+    Duration::from_secs((now + left.as_secs()) % DAY)
 }
 
 fn upcoming(playing: &Playing) -> Option<String> {
@@ -470,22 +549,23 @@ fn live_transport<'a>(
             .into()
     };
 
+    let paused = match playing.paused {
+        true => Icon::PlayArrow,
+        false => Icon::Pause,
+    };
     let controls = row![
-        control(Text::PlayerChannelPrevious, Action::Previous),
-        control(
-            if playing.paused {
-                Text::PlayerPlay
-            } else {
-                Text::PlayerPause
-            },
-            Action::TogglePlay
+        acting(
+            Icon::SkipPrevious,
+            Text::PlayerChannelPrevious,
+            Action::Previous
         ),
-        control(Text::PlayerChannelNext, Action::Next),
+        acting(paused, Text::PlayerPlay, Action::TogglePlay),
+        acting(Icon::SkipNext, Text::PlayerChannelNext, Action::Next),
         record,
-        control(Text::PlayerAudio, Action::OpenMenu(Menu::Audio)),
-        control(Text::PlayerQuality, Action::OpenMenu(Menu::Quality)),
+        opening(Icon::Audiotrack, Text::PlayerAudio, Menu::Audio),
+        opening(Icon::Settings, Text::PlayerQuality, Menu::Quality),
         Space::new().width(Fill),
-        control(Text::PlayerLeave, Action::Leave),
+        acting(Icon::ArrowBack, Text::PlayerLeave, Action::Leave),
     ]
     .spacing(style::drawn(space::ICON_GAP.drawn()))
     .align_y(iced::Center);
@@ -493,6 +573,68 @@ fn live_transport<'a>(
     column![named, controls]
         .spacing(style::drawn(space::ICON_GAP.drawn()))
         .into()
+}
+
+/// The panel's first line: the title, and the status the server's own fetching
+/// puts at the end of it.
+// reference: osd-text
+// reference: osd-title
+// reference: osd-status
+fn heading<'a>(playing: &'a Playing, _viewport: Viewport) -> Element<'a, Message> {
+    let mut line = row![
+        container(prose(title(playing), typeface::HEADING_3)).padding(iced::Padding {
+            top: 0.0,
+            right: style::drawn(space::OSD_TITLE_GAP.drawn()),
+            bottom: 0.0,
+            left: 0.0,
+        })
+    ]
+    .align_y(iced::Center);
+
+    if playing.changing {
+        line = line.push(Space::new().width(Fill)).push(
+            row![
+                crate::icon::icon(Icon::Autorenew, typeface::BODY),
+                prose(strings::lookup(Text::PlayerFetching), typeface::BODY),
+            ]
+            .spacing(style::drawn(space::OSD_STATUS_GAP.drawn()))
+            .align_y(iced::Center),
+        );
+    }
+
+    osd_text(line.into(), space::OSD_TEXT_INSET)
+}
+
+/// One `.osdTextContainer`: its own inset, and the gap it leaves under itself.
+// reference: osd-text
+fn osd_text<'a>(held: Element<'a, Message>, inset: style::Length) -> Element<'a, Message> {
+    container(held)
+        .width(Fill)
+        .padding(iced::Padding {
+            top: 0.0,
+            right: 0.0,
+            bottom: style::drawn(space::OSD_TEXT_GAP.drawn()),
+            left: style::drawn(inset.drawn()),
+        })
+        .into()
+}
+
+/// The slider between the clock it has reached and the clock it ends at.
+// reference: osd-time-row
+// reference: osd-markup
+fn elapsed<'a>(playing: &'a Playing, viewport: Viewport) -> Element<'a, Message> {
+    between(
+        playing.shown(),
+        playing.duration,
+        scrub(
+            playing.shown(),
+            playing.duration,
+            playing.buffered,
+            &playing.plan.chapters,
+            playing.preview.as_ref(),
+            viewport,
+        ),
+    )
 }
 
 /// The full-viewport on-screen display drawn over the video element; `group`
@@ -516,10 +658,12 @@ pub fn view<'a>(
     }
 
     let mut body = column![
-        prose(title(playing), typeface::HEADING_2),
-        prose(method(playing).to_owned(), typeface::SECONDARY),
-    ]
-    .spacing(style::drawn(space::BLOCK_GAP.drawn()));
+        heading(playing, viewport),
+        osd_text(
+            prose(method(playing).to_owned(), typeface::SECONDARY),
+            space::OSD_SECONDARY_INSET,
+        ),
+    ];
 
     if let Some(trouble) = playing.trouble {
         body = body.push(prose(strings::lookup(trouble), typeface::BODY));
@@ -545,15 +689,8 @@ pub fn view<'a>(
     panel = match playing.live.as_ref() {
         Some(live) => panel.push(live_transport(playing, live, chrono::Utc::now())),
         None => panel
-            .push(scrub(
-                playing.shown(),
-                playing.duration,
-                playing.buffered,
-                &playing.plan.chapters,
-                playing.preview.as_ref(),
-                viewport,
-            ))
-            .push(transport(playing, true, sync_play, device)),
+            .push(elapsed(playing, viewport))
+            .push(transport(playing, Surface::Osd, sync_play, device, viewport)),
     };
 
     column![
@@ -609,7 +746,7 @@ pub fn bar<'a>(
                 None,
                 viewport,
             ),
-            self::transport(playing, false, sync_play, device),
+            self::transport(playing, Surface::Bar, sync_play, device, viewport),
         ),
         Transport::Remote(bound) => (
             remote_art_key(bound),
@@ -632,7 +769,7 @@ pub fn bar<'a>(
                 None,
                 viewport,
             ),
-            self::transport(playing, false, sync_play, device),
+            self::transport(playing, Surface::Bar, sync_play, device, viewport),
         ),
     };
 
