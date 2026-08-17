@@ -15,6 +15,7 @@ use crate::app::Message;
 use crate::error::Answer;
 use crate::images::{self, Cache};
 use crate::route::{Filtered, Listing, Route};
+use crate::style::space::Room;
 use crate::style::{self, Viewport, card};
 use crate::widget;
 
@@ -43,6 +44,7 @@ pub async fn load(
     viewport: Viewport,
 ) -> Answer<State> {
     let wall = card::Card::Wall(card::Shape::Portrait);
+    let room = Room::content(viewport);
     Answer::of(async move {
         let answered = api
             .hub(facet, library, sort, 0, Paged::<BaseItemDto>::PAGE as i32)
@@ -57,13 +59,9 @@ pub async fn load(
             sort,
             grid: window::Grid::new(
                 window::Id::Browse,
-                wall.width(viewport),
-                wall.row(
-                    viewport,
-                    card::Footer::NameAndSubtitle,
-                    card::Bottom::Padded,
-                ),
-                viewport.canvas(),
+                wall.width(room),
+                wall.row(room, card::Footer::NameAndSubtitle, card::Bottom::Padded),
+                room,
             ),
             entries,
         })
@@ -112,7 +110,7 @@ pub fn view<'a>(state: &'a State, viewport: Viewport, images: &'a Cache) -> Elem
                 let card = widget::poster(
                     wall,
                     entry,
-                    viewport,
+                    Room::content(viewport),
                     widget::poster_key(entry).and_then(|key| images.handle(key)),
                     widget::Overflow::Withheld,
                 );
@@ -125,9 +123,9 @@ pub fn view<'a>(state: &'a State, viewport: Viewport, images: &'a Cache) -> Elem
                 }
             }
             None => iced::widget::Space::new()
-                .width(style::drawn(wall.width(viewport)))
+                .width(style::drawn(wall.width(Room::content(viewport))))
                 .height(style::drawn(wall.row(
-                    viewport,
+                    Room::content(viewport),
                     card::Footer::NameAndSubtitle,
                     card::Bottom::Padded,
                 )))

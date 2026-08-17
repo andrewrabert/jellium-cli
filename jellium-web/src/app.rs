@@ -28,6 +28,7 @@ use crate::route::Route;
 use crate::screen::livetv::{self, guide};
 use crate::screen::program;
 use crate::screen::{dashboard, detail, home, library, login, search};
+use crate::style::space::Room;
 use crate::style::{self, Drawn, Viewport, card, space, typeface};
 use crate::text::{self as strings, Text};
 use crate::widget;
@@ -2134,7 +2135,13 @@ impl Jellium {
                     browse.resized(page);
                 }
                 if let Some(hub) = self.hubbing() {
-                    hub.grid.resized(canvas);
+                    let wall = card::Card::Wall(card::Shape::Portrait);
+                    let room = Room::content(page);
+                    hub.grid.resized(
+                        room,
+                        wall.width(room),
+                        wall.row(room, card::Footer::NameAndSubtitle, card::Bottom::Padded),
+                    );
                 }
                 let Some(signed) = self.signed() else {
                     return Task::none();
@@ -2987,6 +2994,7 @@ impl Jellium {
                     },
                     signed.live,
                     signed.group.as_ref(),
+                    self.viewport,
                     body,
                 )];
 

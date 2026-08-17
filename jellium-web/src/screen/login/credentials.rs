@@ -4,6 +4,7 @@ use uuid::Uuid;
 
 use crate::app::Message;
 use crate::icon::Icon;
+use crate::style::space::Room;
 use crate::style::{self, Viewport, card, space};
 use crate::text::{self as strings, Text};
 use crate::widget::{self, Emphasis, Face, Secrecy};
@@ -42,14 +43,14 @@ fn picker<'a>(state: &'a super::State, viewport: Viewport) -> Option<Element<'a,
     let wall = card::Card::Wall(card::Shape::Square);
     Some(widget::picker(
         wall,
-        viewport,
+        Room::content(viewport),
         screen
             .users
             .iter()
             .map(|user| {
                 widget::card(
                     wall,
-                    viewport,
+                    Room::content(viewport),
                     match state.images.get(&user.id) {
                         Some(handle) => Face::Image(handle.clone()),
                         None => Face::Icon(Icon::Person),

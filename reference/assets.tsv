@@ -1110,4 +1110,4 @@ jellium-web/fonts/served/noto-sans-tc-98-700-normal.woff2	node_modules/@fontsour
 jellium-web/fonts/served/noto-sans-tc-99-400-normal.woff2	node_modules/@fontsource/noto-sans-tc/files/noto-sans-tc-99-400-normal.woff2	6e11f50cd2f729029bd54cdaf2956199f50d1ea9bf19e979af23ee15a74660ca
 jellium-web/fonts/served/noto-sans-tc-99-700-normal.woff2	node_modules/@fontsource/noto-sans-tc/files/noto-sans-tc-99-700-normal.woff2	9088c5aafc44d6b5ce0a210f46746c5c85bc94d2e8ebc89abeca3f3153330423
 jellium-web/icons/material.tsv	node_modules/material-design-icons-iconfont/dist/fonts/MaterialIcons-Regular.json	15adc5d6ce491d58321fd321d44aa6f7959f40f6a5ba58bb6cbe15075f17baf4
-reference/breakpoints.tsv	src	87a32218fa43023ae6a214c52f01a643ec1c4e154e9d729d758744029b3f2896
+reference/breakpoints.tsv	src	9923f65ac34a259ae066390ee6e2150ee7cf709593333a03c4fb5b5dd6cea14e

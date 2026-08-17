@@ -15,6 +15,7 @@ use crate::app::Message;
 use crate::error::Answer;
 use crate::images::{self, Cache};
 use crate::route::Listing;
+use crate::style::space::Room;
 use crate::style::{self, Drawn, Viewport, card, space, typeface};
 use crate::text::{self as strings, Text};
 use crate::widget;
@@ -115,18 +116,15 @@ impl Browse {
         overflow: widget::Overflow,
     ) -> Browse {
         let wall = card::Card::Wall(card::Shape::Portrait);
+        let room = Room::content(viewport);
         Browse {
             heading,
             listing,
             grid: window::Grid::new(
                 id,
-                wall.width(viewport),
-                wall.row(
-                    viewport,
-                    card::Footer::NameAndSubtitle,
-                    card::Bottom::Padded,
-                ),
-                viewport.canvas(),
+                wall.width(room),
+                wall.row(room, card::Footer::NameAndSubtitle, card::Bottom::Padded),
+                room,
             ),
             items: Paged::new(0),
             choices: Choices::default(),
@@ -160,7 +158,13 @@ impl Browse {
     }
 
     pub fn resized(&mut self, viewport: Viewport) {
-        self.grid.resized(viewport.canvas());
+        let wall = card::Card::Wall(card::Shape::Portrait);
+        let room = Room::content(viewport);
+        self.grid.resized(
+            room,
+            wall.width(room),
+            wall.row(room, card::Footer::NameAndSubtitle, card::Bottom::Padded),
+        );
     }
 
     /// Records where the grid rests under the sort shown and answers the offset
@@ -424,14 +428,14 @@ pub fn view<'a>(browse: &'a Browse, viewport: Viewport, images: &'a Cache) -> El
             Some(item) => widget::poster(
                 wall,
                 item,
-                viewport,
+                Room::content(viewport),
                 widget::poster_key(item).and_then(|key| images.handle(key)),
                 browse.overflow,
             ),
             None => iced::widget::Space::new()
-                .width(style::drawn(wall.width(viewport)))
+                .width(style::drawn(wall.width(Room::content(viewport))))
                 .height(style::drawn(wall.row(
-                    viewport,
+                    Room::content(viewport),
                     card::Footer::NameAndSubtitle,
                     card::Bottom::Padded,
                 )))

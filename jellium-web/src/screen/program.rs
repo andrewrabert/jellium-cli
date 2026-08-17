@@ -11,6 +11,7 @@ use crate::error::Answer;
 use crate::images::{self, Cache};
 use crate::livetv::Program;
 use crate::screen::livetv::Action;
+use crate::style::space::Room;
 use crate::style::{self, Viewport, card, space, typeface};
 use crate::text::{self as strings, Text};
 use crate::widget::{self, prose};
@@ -57,7 +58,7 @@ pub fn view<'a>(
 
     let art = widget::tile(
         card::Card::Wall(card::Shape::Backdrop),
-        viewport,
+        Room::content(viewport),
         images.handle(key(program)),
     );
 

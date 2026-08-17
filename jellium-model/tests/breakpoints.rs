@@ -8,6 +8,7 @@
 use std::collections::BTreeSet;
 
 use jellium_model::appearance::card::{Card, Mixed, PerRow, Rail, Shape};
+use jellium_model::appearance::space::Room;
 use jellium_model::appearance::{
     Across, Band, Breakpoint, Css, Dialog, HEIGHTS, Letters, Orientation, Screen, Viewport, WIDTHS,
 };
@@ -34,6 +35,11 @@ impl Row {
         Viewport::new(Css::of(self.width), Css::of(self.height))
     }
 
+    /// The box the page lays this row's card in.
+    fn room(&self) -> Room {
+        Room::content(self.viewport())
+    }
+
     /// The card the row's `kind` and `shape` columns name.
     fn card(&self) -> Card {
         match (self.kind.as_str(), self.shape.as_str()) {
@@ -55,12 +61,11 @@ impl Row {
         }
     }
 
-    /// The share of the page one card's pitch takes, as a percentage, which is
-    /// the quantity the `percent` column carries.
+    /// The share of the content box one card's pitch takes, as a percentage,
+    /// which is the quantity the `percent` column carries.
     fn share(&self) -> f64 {
-        let viewport = self.viewport();
-        let canvas = viewport.canvas().width().count() as f64;
-        100.0 * self.card().width(viewport).count() as f64 / canvas
+        let room = self.room();
+        100.0 * self.card().width(room).count() as f64 / room.width().count() as f64
     }
 }
 
@@ -143,7 +148,7 @@ fn every_width_threshold_lands_where_the_reference_puts_it() {
             (viewport.band().root().factor() as f64 - row.root / 1000.0).abs() < 1e-6,
             "{at}"
         );
-        assert_eq!(row.card().across(viewport).count(), row.across, "{at}");
+        assert_eq!(row.card().across(row.room()).count(), row.across, "{at}");
         assert!(apart(row.share(), row.percent) < 1e-3, "{at}");
     }
 }
@@ -156,11 +161,7 @@ fn every_rail_width_lands_where_the_reference_puts_it() {
     for row in rail {
         let at = format!("{}x{} {}", row.width, row.height, row.shape);
         assert!(apart(row.share(), row.percent) < 1e-3, "{at}");
-        assert_eq!(
-            row.card().across(row.viewport()).count(),
-            row.across,
-            "{at}"
-        );
+        assert_eq!(row.card().across(row.room()).count(), row.across, "{at}");
     }
 }
 
@@ -209,16 +210,16 @@ fn a_wall_row_holds_the_count_the_percentage_names() {
         if row.kind != "width" || row.shape.starts_with("mixed") {
             continue;
         }
-        let viewport = row.viewport();
-        let across = row.card().across(viewport);
+        let room = row.room();
+        let across = row.card().across(room);
         let at = format!("{}x{} {}", row.width, row.height, row.shape);
         assert!(
             apart(row.percent * across.count() as f64, 100.0) < 1e-6,
             "{at}"
         );
-        let canvas = viewport.canvas().width().count();
-        let laid = row.card().width(viewport).count() * across.count() as f32;
-        assert!((laid - canvas).abs() < canvas * 1e-5, "{at}");
+        let box_width = room.width().count();
+        let laid = row.card().width(room).count() * across.count() as f32;
+        assert!((laid - box_width).abs() < box_width * 1e-5, "{at}");
     }
 }
 
@@ -230,7 +231,7 @@ fn a_mixed_card_counts_the_same_on_the_page_and_on_the_canvas() {
         }
         let at = format!("{}x{} {}", row.width, row.height, row.shape);
         let counted = (100.0 / row.percent).floor().max(1.0) as usize;
-        assert_eq!(row.card().across(row.viewport()).count(), counted, "{at}");
+        assert_eq!(row.card().across(row.room()).count(), counted, "{at}");
         assert_eq!(counted, row.across, "{at}");
     }
 }
@@ -387,6 +388,6 @@ fn orientation_follows_the_viewports_own_aspect_ratio() {
 #[test]
 fn a_row_always_holds_a_card() {
     for row in oracle() {
-        assert!(row.card().across(row.viewport()).count() >= 1);
+        assert!(row.card().across(row.room()).count() >= 1);
     }
 }

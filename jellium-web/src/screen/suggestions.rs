@@ -10,6 +10,7 @@ use crate::api::Api;
 use crate::app::Message;
 use crate::error::Answer;
 use crate::images::{self, Cache};
+use crate::style::space::Room;
 use crate::style::{self, Viewport, card, space};
 use crate::text::{self as strings, Text};
 use crate::widget;
@@ -74,7 +75,7 @@ pub fn view<'a>(
         widget::rail(
             card::Card::Rail(card::Rail::Portrait),
             state.suggestions.iter(),
-            viewport,
+            Room::content(viewport),
             images,
             overflow,
         ),
@@ -87,7 +88,7 @@ pub fn view<'a>(
             widget::rail(
                 card::Card::Rail(card::Rail::Portrait),
                 rail.items.iter(),
-                viewport,
+                Room::content(viewport),
                 images,
                 overflow,
             ),

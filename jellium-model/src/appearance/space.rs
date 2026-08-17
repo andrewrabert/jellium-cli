@@ -29,6 +29,35 @@ pub struct Slot {
     pub height: Length,
 }
 
+/// The width a page lays its content inside, with the viewport that width was
+/// measured in, so a card is never a share of anything wider than the box it
+/// is drawn in.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct Room {
+    viewport: Viewport,
+    width: Drawn,
+}
+
+impl Room {
+    /// The canvas less `page_side` at each edge.
+    // reference: page-side
+    pub fn content(viewport: Viewport) -> Room {
+        let side = page_side(viewport.canvas());
+        Room {
+            viewport,
+            width: Drawn::of((viewport.canvas().width().count() - side.count() * 2.0).max(0.0)),
+        }
+    }
+
+    pub fn viewport(self) -> Viewport {
+        self.viewport
+    }
+
+    pub fn width(self) -> Drawn {
+        self.width
+    }
+}
+
 /// The margin a `.cardBox` carries on every side.
 // reference: card-box
 pub const CARD_MARGIN: Length = Length::em(0.6);

@@ -13,6 +13,7 @@ use crate::error::Answer;
 use crate::images::{self, Cache};
 use crate::route::Listing;
 use crate::screen::browse::{self, Browse};
+use crate::style::space::Room;
 use crate::style::{self, Viewport, card, space, typeface};
 use crate::text::{self as strings, Text};
 use crate::widget;
@@ -129,7 +130,7 @@ fn section<'a>(
             iced::widget::button(widget::poster(
                 card::Card::Wall(card::Shape::Portrait),
                 item,
-                viewport,
+                Room::content(viewport),
                 widget::poster_key(item).and_then(|key| images.handle(key)),
                 widget::Overflow::Withheld,
             ))

@@ -11,6 +11,7 @@ use crate::error::Answer;
 use crate::images::{self, Cache};
 use crate::livetv::Channel;
 use crate::route::Route;
+use crate::style::space::Room;
 use crate::style::{Viewport, card};
 use crate::text::{self as strings, Text};
 use crate::widget;
@@ -186,13 +187,13 @@ pub fn view<'a>(
             strings::lookup(Text::HomeMyMedia),
             widget::wall(
                 card::Card::LIBRARY,
-                viewport,
+                Room::content(viewport),
                 libraries
                     .iter()
                     .filter_map(|library| {
                         Some(widget::library_tile(
                             library,
-                            viewport,
+                            Room::content(viewport),
                             Message::Navigated(opens(library)?),
                         ))
                     })
@@ -208,7 +209,7 @@ pub fn view<'a>(
                 widget::rail(
                     card::Card::resumed(media),
                     items,
-                    viewport,
+                    Room::content(viewport),
                     images,
                     overflow,
                 ),
@@ -231,7 +232,7 @@ pub fn view<'a>(
         ));
         page = page.push(widget::section(
             strings::lookup(Text::HomeOnNow),
-            widget::on_now_row(&state.on_now, viewport, now, images),
+            widget::on_now_row(&state.on_now, Room::content(viewport), now, images),
         ));
     }
 
@@ -241,7 +242,7 @@ pub fn view<'a>(
             widget::rail(
                 card::Card::NEXT_UP,
                 state.next_up.iter(),
-                viewport,
+                Room::content(viewport),
                 images,
                 overflow,
             ),
@@ -253,7 +254,7 @@ pub fn view<'a>(
             widget::rail(
                 card::Card::latest(row.library.collection_type),
                 row.items.iter(),
-                viewport,
+                Room::content(viewport),
                 images,
                 overflow,
             ),

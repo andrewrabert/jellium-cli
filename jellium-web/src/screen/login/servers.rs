@@ -3,6 +3,7 @@ use iced::widget::column;
 
 use crate::app::Message;
 use crate::icon::Icon;
+use crate::style::space::Room;
 use crate::style::{self, Viewport, card, space, typeface};
 use crate::text::{self as strings, Text};
 use crate::widget::{self, Emphasis, Face};
@@ -24,7 +25,7 @@ fn saved<'a>(
     };
     let mut entry = column![widget::card(
         card::Card::Rail(card::Rail::Square),
-        viewport,
+        Room::content(viewport),
         Face::Icon(Icon::Storage),
         named,
         card::Bottom::Flush,
@@ -70,7 +71,7 @@ pub fn view<'a>(state: &'a super::State, viewport: Viewport) -> Element<'a, Mess
             widget::heading(strings::lookup(Text::LoginServersTitle)),
             widget::picker(
                 card::Card::Rail(card::Rail::Square),
-                viewport,
+                Room::content(viewport),
                 state
                     .servers
                     .iter()

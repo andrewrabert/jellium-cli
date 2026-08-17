@@ -17,6 +17,7 @@ use crate::live;
 use crate::livetv::Channel;
 use crate::player::group::Joined;
 use crate::route::Route;
+use crate::style::space::Room;
 use crate::style::{self, Drawn, Share, Viewport, card, scheme, space, typeface};
 use crate::text::{self as strings, Text};
 
@@ -110,8 +111,8 @@ pub enum Overflow {
 
 /// The card's own width inside its pitch, the pitch reserving the gutter its
 /// `.cardBox` margin makes.
-fn inside(card: card::Card, viewport: Viewport) -> Drawn {
-    Drawn::of(card.width(viewport).count() - space::GUTTER.drawn().count())
+fn inside(card: card::Card, room: Room) -> Drawn {
+    Drawn::of(card.width(room).count() - space::GUTTER.drawn().count())
 }
 
 /// What a card draws where its image goes: the image itself, or the glyph the
@@ -128,13 +129,13 @@ pub enum Face {
 // reference: card-text-centered
 fn boxed<'a>(
     card: card::Card,
-    viewport: Viewport,
+    room: Room,
     face: Option<Face>,
     name: String,
     subtitle: Option<String>,
 ) -> Element<'a, Message> {
-    let width = style::drawn(inside(card, viewport));
-    let height = style::drawn(card.shape().aspect().of(inside(card, viewport)));
+    let width = style::drawn(inside(card, room));
+    let height = style::drawn(card.shape().aspect().of(inside(card, room)));
     let background = scheme::card_background(&name);
     let painted = move |theme: &iced::Theme| style::card_face(theme, background);
     let drawn_face: Element<'a, Message> = match face {
@@ -179,13 +180,9 @@ fn boxed<'a>(
 
 /// An image at a card's pitch with its shape's aspect and nothing under it.
 // reference: card-container
-pub fn tile<'a>(
-    card: card::Card,
-    viewport: Viewport,
-    face: Option<image::Handle>,
-) -> Element<'a, Message> {
-    let width = style::drawn(inside(card, viewport));
-    let height = style::drawn(card.shape().aspect().of(inside(card, viewport)));
+pub fn tile<'a>(card: card::Card, room: Room, face: Option<image::Handle>) -> Element<'a, Message> {
+    let width = style::drawn(inside(card, room));
+    let height = style::drawn(card.shape().aspect().of(inside(card, room)));
     match face {
         Some(handle) => container(image(handle).width(width))
             .width(width)
@@ -196,24 +193,24 @@ pub fn tile<'a>(
     }
 }
 
-/// A card sized for `viewport`: its face over its centered, elided name, drawn
+/// A card sized for `room`: its face over its centered, elided name, drawn
 /// inside its own pitch. `bottom` is what the login picker's cards and the
 /// select-server page's differ by, the reference setting
 /// `.cardBox-bottompadded` on the first and not the second.
 // reference: card-box-bottom
 pub fn card<'a>(
     card: card::Card,
-    viewport: Viewport,
+    room: Room,
     face: Face,
     name: impl Into<Cow<'a, str>>,
     bottom: card::Bottom,
     press: Message,
 ) -> Element<'a, Message> {
-    let body = boxed(card, viewport, Some(face), name.into().into_owned(), None);
+    let body = boxed(card, room, Some(face), name.into().into_owned(), None);
     let held: Element<'a, Message> = match bottom {
         card::Bottom::Flush => body,
         card::Bottom::Padded => {
-            let reserved = match viewport.matches(space::CARD_BOTTOM_AT) {
+            let reserved = match room.viewport().matches(space::CARD_BOTTOM_AT) {
                 true => space::CARD_BOTTOM_NARROW,
                 false => space::CARD_BOTTOM,
             };
@@ -224,15 +221,15 @@ pub fn card<'a>(
 }
 
 /// Cards laid out the way the reference's `.vertical-wrap.centered` lays them
-/// out: broken into rows of `card.across(viewport)` and each row centered, so a
+/// out: broken into rows of `card.across(room)` and each row centered, so a
 /// short last row sits under the middle of the one above it.
 // reference: page-centering
 pub fn picker<'a>(
     card: card::Card,
-    viewport: Viewport,
+    room: Room,
     cards: Vec<Element<'a, Message>>,
 ) -> Element<'a, Message> {
-    let across = card.across(viewport).count();
+    let across = card.across(room).count();
     let mut rows: Vec<Vec<Element<'a, Message>>> = Vec::new();
     for held in cards {
         if rows.last().is_none_or(|last| last.len() == across) {
@@ -251,16 +248,16 @@ pub fn picker<'a>(
     .into()
 }
 
-/// Cards broken into rows of `card.across(viewport)` and left-aligned, which is
+/// Cards broken into rows of `card.across(room)` and left-aligned, which is
 /// the reference's `.vertical-wrap` without the `.centered` only the login
 /// pickers carry.
 // reference: card-container
 pub fn wall<'a>(
     card: card::Card,
-    viewport: Viewport,
+    room: Room,
     cards: Vec<Element<'a, Message>>,
 ) -> Element<'a, Message> {
-    let across = card.across(viewport).count();
+    let across = card.across(room).count();
     let mut rows: Vec<Vec<Element<'a, Message>>> = Vec::new();
     for held in cards {
         if rows.last().is_none_or(|last| last.len() == across) {
@@ -325,13 +322,13 @@ pub fn page<'a>(viewport: Viewport, body: Element<'a, Message>) -> Element<'a, M
 pub fn poster<'a>(
     card: card::Card,
     item: &'a BaseItemDto,
-    viewport: Viewport,
+    room: Room,
     image: Option<image::Handle>,
     overflow: Overflow,
 ) -> Element<'a, Message> {
     let body = boxed(
         card,
-        viewport,
+        room,
         image.map(Face::Image),
         item.name.clone().unwrap_or_default(),
         Some(subtitle(item)),
@@ -365,7 +362,7 @@ pub fn poster<'a>(
 fn cards<'a>(
     card: card::Card,
     items: impl IntoIterator<Item = &'a BaseItemDto>,
-    viewport: Viewport,
+    room: Room,
     images: &'a Cache,
     overflow: Overflow,
 ) -> Vec<Element<'a, Message>> {
@@ -375,7 +372,7 @@ fn cards<'a>(
             poster(
                 card,
                 item,
-                viewport,
+                room,
                 poster_key(item).and_then(|key| images.handle(key)),
                 overflow,
             )
@@ -390,19 +387,19 @@ fn cards<'a>(
 pub fn rail<'a>(
     card: card::Card,
     items: impl IntoIterator<Item = &'a BaseItemDto>,
-    viewport: Viewport,
+    room: Room,
     images: &'a Cache,
     overflow: Overflow,
 ) -> Element<'a, Message> {
     scrollable(
-        row(cards(card, items, viewport, images, overflow))
+        row(cards(card, items, room, images, overflow))
             .spacing(style::drawn(space::GUTTER.drawn())),
     )
     .direction(scrollable::Direction::Horizontal(
         scrollable::Scrollbar::default(),
     ))
     .height(style::drawn(card.row(
-        viewport,
+        room,
         card::Footer::NameAndSubtitle,
         card::Bottom::Padded,
     )))
@@ -432,13 +429,13 @@ pub fn section<'a>(
 pub fn posters<'a>(
     card: card::Card,
     items: impl IntoIterator<Item = &'a BaseItemDto>,
-    viewport: Viewport,
+    room: Room,
     images: &'a Cache,
     overflow: Overflow,
 ) -> Element<'a, Message> {
     scrollable(
-        grid(cards(card, items, viewport, images, overflow))
-            .columns(card.across(viewport).count())
+        grid(cards(card, items, room, images, overflow))
+            .columns(card.across(room).count())
             .spacing(style::drawn(space::GUTTER.drawn())),
     )
     .height(Fill)
@@ -450,12 +447,12 @@ pub fn posters<'a>(
 // reference: home-library-tiles
 pub fn library_tile<'a>(
     library: &'a BaseItemDto,
-    viewport: Viewport,
+    room: Room,
     press: Message,
 ) -> Element<'a, Message> {
     card(
         card::Card::LIBRARY,
-        viewport,
+        room,
         Face::Icon(crate::icon::Icon::library(library.collection_type)),
         library.name.clone().unwrap_or_default(),
         card::Bottom::Flush,
@@ -492,15 +489,15 @@ pub fn elapsed_bar<'a>(elapsed: Share) -> Element<'a, Message> {
 /// title with an elapsed bar, on the card the reference's on-now rail draws.
 pub fn channel_card<'a>(
     channel: &'a Channel,
-    viewport: Viewport,
+    room: Room,
     now: chrono::DateTime<chrono::Utc>,
     image: Option<image::Handle>,
 ) -> Element<'a, Message> {
     let on_now = card::Card::Rail(card::Rail::Backdrop);
-    let width = style::drawn(inside(on_now, viewport));
+    let width = style::drawn(inside(on_now, room));
     let mut body = column![boxed(
         on_now,
-        viewport,
+        room,
         image.map(Face::Image),
         format!("{} {}", channel.number, channel.name),
         channel
@@ -526,7 +523,7 @@ pub fn channel_card<'a>(
 /// drawing their title.
 pub fn on_now_row<'a>(
     channels: &'a [Channel],
-    viewport: Viewport,
+    room: Room,
     now: chrono::DateTime<chrono::Utc>,
     images: &'a Cache,
 ) -> Element<'a, Message> {
@@ -541,7 +538,7 @@ pub fn on_now_row<'a>(
                     index: None,
                 })
                 .clone();
-            channel_card(channel, viewport, now, handle)
+            channel_card(channel, room, now, handle)
         });
 
     scrollable(row(cards).spacing(style::drawn(space::GUTTER.drawn())))
@@ -662,6 +659,7 @@ pub fn chrome<'a>(
     nav: Nav,
     live: live::Link,
     group: Option<&'a Joined>,
+    viewport: Viewport,
     body: Element<'a, Message>,
 ) -> Element<'a, Message> {
     let mut controls = row![].spacing(style::drawn(space::GUTTER.drawn()));
@@ -765,7 +763,13 @@ pub fn chrome<'a>(
         ));
     }
 
-    page.push(body).into()
+    page.push(container(body).padding(iced::Padding {
+        top: 0.0,
+        right: style::drawn(space::page_side(viewport.canvas())),
+        bottom: 0.0,
+        left: style::drawn(space::page_side(viewport.canvas())),
+    }))
+    .into()
 }
 
 /// Whether the chrome offers the control that steps back.

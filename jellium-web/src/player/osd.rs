@@ -14,6 +14,7 @@ use crate::player::remote::{self, Bound};
 use crate::player::scrub::scrub;
 use crate::player::{Action, Menu, Playing};
 use crate::route::Route;
+use crate::style::space::Room;
 use crate::style::{self, Viewport, card, space, typeface};
 use crate::text::{self as strings, Text};
 use crate::widget::prose;
@@ -117,8 +118,11 @@ pub fn chapters<'a>(
                     index: numbered,
                 })
             });
-            let thumbnail =
-                crate::widget::tile(card::Card::Rail(card::Rail::Backdrop), viewport, handle);
+            let thumbnail = crate::widget::tile(
+                card::Card::Rail(card::Rail::Backdrop),
+                Room::content(viewport),
+                handle,
+            );
             button(
                 iced::widget::column![thumbnail, prose(chapter.name.clone(), typeface::BODY)]
                     .spacing(style::drawn(space::BLOCK_GAP.drawn())),

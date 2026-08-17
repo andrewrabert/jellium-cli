@@ -7,7 +7,7 @@
 
 use jellyfin_api::types::{CollectionType, MediaType};
 
-use super::space::{self, GUTTER};
+use super::space::{self, GUTTER, Room};
 use super::typeface;
 use super::{Across, Breakpoint, Css, Drawn, Length, Orientation, Query, Screen, Share, Viewport};
 
@@ -375,40 +375,39 @@ impl Card {
     }
 
     /// The pitch one card occupies, gutter included.
-    pub fn width(self, viewport: Viewport) -> Drawn {
-        let canvas = viewport.canvas().width();
+    pub fn width(self, room: Room) -> Drawn {
         match self {
             Card::Wall(shape) => match shape.fixed() {
                 Some(width) => width.drawn(),
-                None => wall(shape).resolved(viewport).pitch(canvas),
+                None => wall(shape).resolved(room.viewport()).pitch(room.width()),
             },
-            Card::Rail(rail) => rail_ladder(rail).resolved(viewport).of(canvas),
+            Card::Rail(rail) => rail_ladder(rail).resolved(room.viewport()).of(room.width()),
         }
     }
 
     /// Cards a row holds.
-    pub fn across(self, viewport: Viewport) -> Across {
+    pub fn across(self, room: Room) -> Across {
         if let Card::Wall(shape) = self
             && shape.fixed().is_none()
         {
-            return wall(shape).resolved(viewport);
+            return wall(shape).resolved(room.viewport());
         }
-        let width = self.width(viewport).count();
+        let width = self.width(room).count();
         if width <= 0.0 {
             return Across::cards(1);
         }
-        Across::cards((viewport.canvas().width().count() / width) as u32)
+        Across::cards((room.width().count() / width) as u32)
     }
 
     /// The pitch one card occupies down the page, gutter included.
-    pub fn row(self, viewport: Viewport, footer: Footer, bottom: Bottom) -> Drawn {
+    pub fn row(self, room: Room, footer: Footer, bottom: Bottom) -> Drawn {
         let gutter = GUTTER.drawn();
-        let inside = Drawn::of(self.width(viewport).count() - gutter.count());
+        let inside = Drawn::of(self.width(room).count() - gutter.count());
         self.shape()
             .aspect()
             .of(inside)
             .plus(written(footer))
-            .plus(reserved(bottom, viewport))
+            .plus(reserved(bottom, room.viewport()))
             .plus(gutter)
     }
 

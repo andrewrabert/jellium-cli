@@ -10,6 +10,7 @@ use crate::images::{self, Cache, Foreign};
 use crate::text::{self as strings, Text};
 
 use super::Action as Outer;
+use crate::style::space::Room;
 use crate::style::{self, Viewport, card, space, typeface};
 use crate::widget::{self, prose};
 
@@ -160,7 +161,7 @@ pub fn view<'a>(
         for (position, (index, _)) in held.into_iter().enumerate() {
             let drawn = widget::tile(
                 card::Card::Wall(card::Shape::Backdrop),
-                viewport,
+                Room::content(viewport),
                 images.handle(images::Key {
                     item,
                     kind: kind.cached(),
@@ -244,7 +245,7 @@ pub fn view<'a>(
     let found = row(state.remote.iter().enumerate().map(|(at, remote)| {
         let drawn = widget::tile(
             card::Card::Wall(card::Shape::Backdrop),
-            viewport,
+            Room::content(viewport),
             remote
                 .thumbnail_url
                 .as_deref()

@@ -1,4 +1,4 @@
-use crate::appearance::{Canvas, Drawn};
+use crate::appearance::{Drawn, space::Room};
 
 /// Which windowed surface a scroll belongs to.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -125,13 +125,13 @@ pub struct Grid {
 }
 
 impl Grid {
-    /// A grid of cells `cell` wide in rows `row` tall, inside `canvas`,
+    /// A grid of cells `cell` wide in rows `row` tall, inside `room`,
     /// scrolled to the top.
-    pub fn new(id: Id, cell: Drawn, row: Drawn, canvas: Canvas) -> Grid {
+    pub fn new(id: Id, cell: Drawn, row: Drawn, room: Room) -> Grid {
         Grid {
-            window: Window::new(id, row, canvas.height()),
+            window: Window::new(id, row, room.viewport().canvas().height()),
             cell: Drawn::of(cell.count().max(1.0)),
-            width: Drawn::of(canvas.width().count().max(0.0)),
+            width: Drawn::of(room.width().count().max(0.0)),
         }
     }
 
@@ -157,9 +157,12 @@ impl Grid {
         self.window.scrolled(scrolled);
     }
 
-    pub fn resized(&mut self, canvas: Canvas) {
-        self.width = Drawn::of(canvas.width().count().max(0.0));
-        self.window.resized(canvas.height());
+    /// Relays the grid in `room`, at the cell and row the card now measures.
+    pub fn resized(&mut self, room: Room, cell: Drawn, row: Drawn) {
+        self.width = Drawn::of(room.width().count().max(0.0));
+        self.cell = Drawn::of(cell.count().max(1.0));
+        self.window.row = Drawn::of(row.count().max(1.0));
+        self.window.resized(room.viewport().canvas().height());
     }
 
     /// The cells of `count` the viewport shows, without the margin.
@@ -212,9 +215,9 @@ mod tests {
 
     const ROW_HEIGHT: Drawn = Drawn::of(64.0);
 
-    /// The canvas a page `width` css pixels wide draws on.
-    fn page(width: f32) -> Canvas {
-        Viewport::new(Css::of(width), Css::of(1000.0)).canvas()
+    /// The content box a page `width` css pixels wide lays its cards in.
+    fn page(width: f32) -> Room {
+        Room::content(Viewport::new(Css::of(width), Css::of(1000.0)))
     }
 
     /// A window over `ROW_HEIGHT` rows in a viewport `rows` rows tall,
@@ -255,18 +258,18 @@ mod tests {
         assert_eq!(window(10.0, 0.0).built(0), 0..0);
     }
 
-    /// A cell five and a half of which span the canvas `page` draws, so the
+    /// A cell five and a half of which span the box `page` lays out, so the
     /// grid lays out five columns with the width to spare that keeps the count
     /// off a rounding boundary.
-    fn cell(canvas: Canvas) -> Drawn {
-        Drawn::of(canvas.width().count() / 5.5)
+    fn cell(room: Room) -> Drawn {
+        Drawn::of(room.width().count() / 5.5)
     }
 
     /// A grid five cells across in a viewport `rows` rows tall, scrolled
     /// `scrolled` rows down.
     fn grid(rows: f32, scrolled: f32) -> Grid {
-        let canvas = page(1440.0);
-        let mut grid = Grid::new(Id::Browse, cell(canvas), ROW_HEIGHT, canvas);
+        let room = page(1440.0);
+        let mut grid = Grid::new(Id::Browse, cell(room), ROW_HEIGHT, room);
         grid.scrolled(Scrolled {
             id: Id::Browse,
             offset: Drawn::of(scrolled * ROW_HEIGHT.count()),
@@ -333,7 +336,7 @@ mod tests {
     #[test]
     fn a_resize_relays_the_grid_across_the_new_width() {
         let mut grid = grid(10.0, 0.0);
-        grid.resized(page(1440.0 * 3.5 / 5.5));
+        grid.resized(page(1440.0 * 3.5 / 5.5), cell(page(1440.0)), grid.row());
         assert_eq!(grid.columns(), 3);
         assert_eq!(grid.rows(7), 3);
     }

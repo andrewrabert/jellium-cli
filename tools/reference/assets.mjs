@@ -208,6 +208,8 @@ const QUERY_EM = 16;
 const WIDTH = 'width';
 const HEIGHT = 'height';
 
+const LIBRARY_BROWSER = 'src/styles/librarybrowser.scss';
+
 // Every stylesheet under the checkout's `src` that a browser drawing this
 // client would resolve.
 function resolved(checkout) {
@@ -517,9 +519,22 @@ function requesting(checkout) {
     };
 }
 
+// `.padded-left` and `.padded-right`: the share of the page a card wall's own
+// container keeps clear on each side.
+function padding(checkout) {
+    const text = readFileSync(join(checkout, LIBRARY_BROWSER), 'utf8');
+    const share = /\.padded-left\s*\{[\s\S]*?conditional-max\(padding-left,\s*([0-9.]+)%/.exec(
+        text
+    );
+    if (!share) {
+        throw new Error(`${LIBRARY_BROWSER} holds no .padded-left share`);
+    }
+    return Number(share[1]);
+}
+
 // One row: the whole viewport it was resolved at, and what the reference draws
 // there.
-function measured(kind, ladder, requested, shapes, width, height) {
+function measured(kind, ladder, requested, shapes, side, width, height) {
     const orientation = width >= height ? 'landscape' : 'portrait';
     const band = width <= 600 ? 'mobile' : 'desktop';
     const root = band === 'mobile' ? 900 : 930;
@@ -530,9 +545,10 @@ function measured(kind, ladder, requested, shapes, width, height) {
     let rows = '';
     for (const [shape, selector, asked] of shapes) {
         const held = standing(ladder, selector, viewport);
+        const box = width * (1 - (2 * side) / 100);
         const percent =
             held.unit === 'em'
-                ? (100 * Number(held.count) * ((root / 1000) * QUERY_EM)) / width
+                ? (100 * Number(held.count) * ((root / 1000) * QUERY_EM)) / box
                 : Number(held.count);
         const cards =
             held.unit === '%' ? across(held.count) : Math.max(1, Math.floor(100 / percent));
@@ -567,6 +583,7 @@ const UNTESTED_WIDTH = 1440;
 
 function breakpoints(checkout) {
     const ladder = widths(checkout, 'src/components/cardbuilder/card.scss');
+    const side = padding(checkout);
     const requested = requesting(checkout);
     const tested = thresholds(checkout);
     let table = row([
@@ -587,20 +604,20 @@ function breakpoints(checkout) {
     for (const threshold of tested[WIDTH]) {
         for (const width of [threshold - 1, threshold]) {
             for (const height of [width * 2, Math.max(200, width / 2)]) {
-                table += measured(WIDTH, ladder, requested, WALL, width, height);
+                table += measured(WIDTH, ladder, requested, WALL, side, width, height);
             }
         }
     }
     for (const threshold of tested[WIDTH]) {
         for (const width of [threshold - 1, threshold]) {
             for (const height of [width * 2, Math.max(200, width / 2)]) {
-                table += measured('rail', ladder, requested, RAIL, width, height);
+                table += measured('rail', ladder, requested, RAIL, side, width, height);
             }
         }
     }
     for (const threshold of tested[HEIGHT]) {
         for (const height of [threshold - 1, threshold]) {
-            table += measured(HEIGHT, ladder, requested, WALL, UNTESTED_WIDTH, height);
+            table += measured(HEIGHT, ladder, requested, WALL, side, UNTESTED_WIDTH, height);
         }
     }
     generated('reference/breakpoints.tsv', 'src', table);

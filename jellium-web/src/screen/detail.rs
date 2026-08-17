@@ -11,6 +11,7 @@ use crate::app::Message;
 use crate::error::Answer;
 use crate::images::{self, Cache, Kind};
 use crate::player::Intent;
+use crate::style::space::Room;
 use crate::style::{self, Viewport, card, space, typeface};
 use crate::text::{self as strings, Text};
 use crate::widget;
@@ -189,7 +190,7 @@ pub fn view<'a>(
 
     let poster = widget::tile(
         card::Card::Wall(card::Shape::Portrait),
-        viewport,
+        Room::content(viewport),
         item.id.and_then(|id| {
             images.handle(images::Key {
                 item: id,
@@ -296,7 +297,7 @@ pub fn view<'a>(
             .push(widget::posters(
                 card::Card::Wall(card::Shape::Portrait),
                 state.children.iter(),
-                viewport,
+                Room::content(viewport),
                 images,
                 overflow,
             ));
@@ -322,7 +323,7 @@ pub fn view<'a>(
             widget::rail(
                 card::Card::Rail(card::Rail::Portrait),
                 state.similar.iter(),
-                viewport,
+                Room::content(viewport),
                 images,
                 overflow,
             ),
