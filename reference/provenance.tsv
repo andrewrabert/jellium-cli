@@ -132,6 +132,7 @@ card-image-width	src/components/cardbuilder/cardBuilder.js	61	71	1b75af04297a403
 card-screen-rounding	src/components/cardbuilder/cardBuilder.js	118	131	96a43c3d5bb7a052b97c1e67e4a679b39e44e4b4cd10dd51b7896fa530453851	ported
 card-resizable	src/components/cardbuilder/cardBuilderUtils.ts	39	50	3d5781719905a5eee3cb3723e9e60ed9a466517ba4189e3d67dd949df71cff66	ported
 page-bottom	src/styles/site.scss	115	134	da6bb9f82946e4e68926426781b36161b7c360dbc5c97f7d1b3746ff863ff7f6	ported
+page-centering	src/styles/site.scss	172	180	2f0322279a79240d5deb025830b8f85bc77406b57407358b445557953974ea6f	ported
 page-standalone	src/styles/librarybrowser.scss	103	105	4b2153a4ef71b15525d84512e75575fa4fe7660c6f9f694c25e1b2175d142a36	ported
 header-title	src/styles/librarybrowser.scss	172	189	2f8c8fad8dbde9525ed97704fc93a001f14b64129a54f0a85fada5bffd677a34	ported
 header-logo	src/styles/librarybrowser.scss	201	210	9363e8c1db0cd7207606840262e74a44de533a1bfb06a6af1eaf8d81978b7ecd	ported

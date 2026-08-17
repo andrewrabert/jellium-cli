@@ -2846,7 +2846,7 @@ impl Jellium {
             )
             .into(),
             Stage::Login(state) => login::view(state),
-            Stage::Setup(state) => crate::screen::setup::view(state),
+            Stage::Setup(state) => crate::screen::setup::view(state, self.viewport),
             Stage::Lost(failure) => center(widget::lost(failure)).into(),
             Stage::Signed(signed) => {
                 let read_only = signed.session.read_only;

@@ -8,16 +8,15 @@ pub mod metadata;
 pub mod remote;
 pub mod user;
 
-use iced::widget::{button, center, column, container, row, scrollable};
-use iced::{Element, Fill, Task};
+use iced::widget::{button, center, row, scrollable};
+use iced::{Element, Task};
 use jellium_model::setup::Step;
 
 use crate::app::Message;
 use crate::error::{Answer, Operation};
-use crate::style::{self, space, typeface};
+use crate::style::{self, Viewport, space, typeface};
 use crate::text::{self as strings, Text};
-use crate::widget::Choice;
-use crate::widget::prose;
+use crate::widget::{self, Choice, prose};
 
 pub struct State {
     pub startup: jellium_protocol::Startup,
@@ -456,8 +455,8 @@ fn body(state: &State) -> Element<'_, Message> {
 /// text and never as a control, the off-snapshot warning when the server's
 /// version and the snapshot's differ, the sentence naming a resumed saved
 /// server, Back, Next, and the refusal over the server's own message.
-pub fn view(state: &State) -> Element<'_, Message> {
-    let mut page = column![
+pub fn view(state: &State, viewport: Viewport) -> Element<'_, Message> {
+    let mut rows = vec![
         prose(strings::lookup(Text::SetupTitle), typeface::HEADING_2),
         prose(
             strings::format(
@@ -467,15 +466,12 @@ pub fn view(state: &State) -> Element<'_, Message> {
                     &Step::ORDER.len().to_string(),
                 ],
             ),
-            typeface::SECONDARY
+            typeface::SECONDARY,
         ),
-    ]
-    .spacing(style::drawn(space::GUTTER.drawn()))
-    .padding(style::drawn(space::GUTTER.drawn()))
-    .max_width(560);
+    ];
 
     if state.startup.off_snapshot() {
-        page = page.push(prose(
+        rows.push(prose(
             strings::format(
                 Text::WarningOffSnapshot,
                 &[
@@ -487,13 +483,13 @@ pub fn view(state: &State) -> Element<'_, Message> {
         ));
     }
     if state.startup.resumed {
-        page = page.push(prose(
+        rows.push(prose(
             strings::lookup(Text::SetupResumed),
             typeface::SECONDARY,
         ));
     }
 
-    page = page.push(body(state));
+    rows.push(body(state));
 
     let mut controls = row![
         button(prose(strings::lookup(Text::SetupBack), typeface::BODY))
@@ -508,7 +504,7 @@ pub fn view(state: &State) -> Element<'_, Message> {
                 .on_press(Message::SetupAction(Action::Next)),
         );
     }
-    page = page.push(controls);
+    rows.push(controls.into());
 
-    center(scrollable(container(page).width(Fill).center_x(Fill))).into()
+    center(scrollable(widget::form(viewport, rows))).into()
 }

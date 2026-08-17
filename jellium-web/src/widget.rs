@@ -706,6 +706,21 @@ pub enum Nav {
     Settings,
 }
 
+/// A form, held to the reference's own cap on a page wide enough for it, and
+/// centered in whatever page it is drawn on.
+// reference: page-bottom
+// reference: page-centering
+pub fn form<'a>(viewport: Viewport, rows: Vec<Element<'a, Message>>) -> Element<'a, Message> {
+    let held = column(rows)
+        .spacing(style::drawn(space::FIELD_GAP.drawn()))
+        .padding(style::drawn(space::PAD.drawn()));
+    let capped = match viewport.matches(space::FORM_WIDTH_AT) {
+        true => held.max_width(style::drawn(space::FORM_WIDTH.drawn())),
+        false => held,
+    };
+    container(capped).center_x(Fill).into()
+}
+
 /// One sentence shown above a screen.
 pub fn banner<'a>(message: String) -> Element<'a, Message> {
     container(prose(message, typeface::BODY))
