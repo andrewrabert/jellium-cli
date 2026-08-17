@@ -92,11 +92,18 @@ pub enum Narrow {
     Series(SeriesState, bool),
 }
 
+/// Whether a value stays in the set or leaves it.
+pub enum Membership {
+    Held,
+    Dropped,
+}
+
 /// Adds or removes `value`, keeping the list a set.
-fn toggled<T: PartialEq>(held: &mut Vec<T>, value: T, on: bool) {
+fn toggled<T: PartialEq>(held: &mut Vec<T>, value: T, membership: Membership) {
     held.retain(|other| *other != value);
-    if on {
-        held.push(value);
+    match membership {
+        Membership::Held => held.push(value),
+        Membership::Dropped => {}
     }
 }
 
@@ -162,7 +169,7 @@ impl Browse {
     pub fn resorting(&mut self, sort: Sort) -> Option<Drawn> {
         let leaving = self.listing.sort;
         let offset = self.grid.offset();
-        toggled(&mut self.rested, (leaving, offset), true);
+        toggled(&mut self.rested, (leaving, offset), Membership::Held);
         self.rested
             .iter()
             .find(|(held, _)| *held == sort)
@@ -172,22 +179,37 @@ impl Browse {
     /// Applies one narrowing, which is what re-reads the surface from the top.
     pub fn narrow(&mut self, narrow: Narrow) {
         let facets = &mut self.listing.facets;
+        let membership = |on: bool| {
+            if on {
+                Membership::Held
+            } else {
+                Membership::Dropped
+            }
+        };
         match narrow {
             Narrow::Played(played) => facets.played = played,
             Narrow::Resumable(on) => facets.resumable = on,
             Narrow::Favorite(on) => facets.favorite = on,
-            Narrow::Genre(id, on) => toggled(&mut facets.genres, id, on),
-            Narrow::Studio(id, on) => toggled(&mut facets.studios, id, on),
-            Narrow::OfficialRating(rating, on) => {
-                toggled(&mut facets.official_ratings, rating, on);
+            Narrow::Genre(id, on) => toggled(&mut facets.genres, id, membership(on)),
+            Narrow::Studio(id, on) => {
+                toggled(&mut facets.studios, id, membership(on));
             }
-            Narrow::Year(year, on) => toggled(&mut facets.years, year, on),
-            Narrow::Tag(tag, on) => toggled(&mut facets.tags, tag, on),
+            Narrow::OfficialRating(rating, on) => {
+                toggled(&mut facets.official_ratings, rating, membership(on));
+            }
+            Narrow::Year(year, on) => {
+                toggled(&mut facets.years, year, membership(on));
+            }
+            Narrow::Tag(tag, on) => toggled(&mut facets.tags, tag, membership(on)),
             Narrow::HasSubtitles(on) => facets.has_subtitles = on,
             Narrow::Hd(on) => facets.hd = on,
             Narrow::Uhd(on) => facets.uhd = on,
-            Narrow::Video(kind, on) => toggled(&mut facets.video_kinds, kind, on),
-            Narrow::Series(state, on) => toggled(&mut facets.series_states, state, on),
+            Narrow::Video(kind, on) => {
+                toggled(&mut facets.video_kinds, kind, membership(on));
+            }
+            Narrow::Series(state, on) => {
+                toggled(&mut facets.series_states, state, membership(on));
+            }
         }
     }
 }
