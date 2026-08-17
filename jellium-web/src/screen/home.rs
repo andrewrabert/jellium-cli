@@ -3,14 +3,14 @@ use std::rc::Rc;
 
 use iced::Element;
 use iced::widget::{column, scrollable};
-use jellyfin_api::types::{BaseItemDto, CollectionType};
+use jellyfin_api::types::{BaseItemDto, CollectionType, MediaType};
 
 use crate::api::Api;
 use crate::app::Message;
 use crate::error::Answer;
 use crate::images::{self, Cache};
 use crate::livetv::Channel;
-use crate::style::{self, Viewport, space, typeface};
+use crate::style::{self, Viewport, card, space, typeface};
 use crate::text::{self as strings, Text};
 use crate::widget;
 use crate::widget::prose;
@@ -112,6 +112,37 @@ impl Arrangement {
     }
 }
 
+/// Where a media type's resumed section stands among the reference's own
+/// defaults, a media type none of the three names standing after all three.
+fn sectioned(media: Option<MediaType>) -> usize {
+    match media {
+        Some(MediaType::Video) => 0,
+        Some(MediaType::Audio) => 1,
+        Some(MediaType::Book) => 2,
+        Some(MediaType::Unknown | MediaType::Photo) | None => 3,
+    }
+}
+
+/// The resumed items grouped the way the reference's own `Resume`,
+/// `ResumeAudio` and `ResumeBook` sections group them, in that order. The
+/// reference reaches those three through three requests where this client holds
+/// one list, so this splits what is already fetched by the media type each item
+/// carries, and a group the list holds nothing for draws no section at all.
+pub fn resumed(items: &[BaseItemDto]) -> Vec<(Option<MediaType>, Vec<&BaseItemDto>)> {
+    let mut groups: Vec<(Option<MediaType>, Vec<&BaseItemDto>)> = Vec::new();
+    for item in items {
+        match groups
+            .iter_mut()
+            .find(|(media, _)| *media == item.media_type)
+        {
+            Some((_, held)) => held.push(item),
+            None => groups.push((item.media_type, vec![item])),
+        }
+    }
+    groups.sort_by_key(|(media, _)| sectioned(*media));
+    groups
+}
+
 /// The on-now row above the existing rows, the library list in the arrangement's
 /// order carrying a Live TV entry when `live_tv`, and a row the arrangement
 /// turns off absent rather than empty.
@@ -139,22 +170,42 @@ pub fn view<'a>(
         });
     }
 
-    if arrangement.continue_watching && !state.continue_watching.is_empty() {
-        page = page.push(widget::section(
-            strings::lookup(Text::HomeContinueWatching),
-            widget::rail(&state.continue_watching, viewport, images, overflow),
-        ));
+    if arrangement.continue_watching {
+        for (media, items) in resumed(&state.continue_watching) {
+            page = page.push(widget::section(
+                strings::lookup(Text::HomeContinueWatching),
+                widget::rail(
+                    card::Card::resumed(media),
+                    items,
+                    viewport,
+                    images,
+                    overflow,
+                ),
+            ));
+        }
     }
     if arrangement.next_up && !state.next_up.is_empty() {
         page = page.push(widget::section(
             strings::lookup(Text::HomeNextUp),
-            widget::rail(&state.next_up, viewport, images, overflow),
+            widget::rail(
+                card::Card::NEXT_UP,
+                state.next_up.iter(),
+                viewport,
+                images,
+                overflow,
+            ),
         ));
     }
     for row in &state.latest {
         page = page.push(widget::section(
             row.library.name.as_deref().unwrap_or_default(),
-            widget::rail(&row.items, viewport, images, overflow),
+            widget::rail(
+                card::Card::latest(row.library.collection_type),
+                row.items.iter(),
+                viewport,
+                images,
+                overflow,
+            ),
         ));
     }
     let ids: Vec<uuid::Uuid> = state.libraries.iter().filter_map(|it| it.id).collect();

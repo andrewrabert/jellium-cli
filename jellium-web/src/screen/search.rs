@@ -13,7 +13,7 @@ use crate::error::Answer;
 use crate::images::{self, Cache};
 use crate::route::Listing;
 use crate::screen::browse::{self, Browse};
-use crate::style::{self, Viewport, space, typeface};
+use crate::style::{self, Viewport, card, space, typeface};
 use crate::text::{self as strings, Text};
 use crate::widget;
 use crate::widget::prose;
@@ -127,6 +127,7 @@ fn section<'a>(
         let id = item.id?;
         Some(
             iced::widget::button(widget::poster(
+                card::Card::Wall(card::Shape::Portrait),
                 item,
                 viewport,
                 widget::poster_key(item).and_then(|key| images.handle(key)),

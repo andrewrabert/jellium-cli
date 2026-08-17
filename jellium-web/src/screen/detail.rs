@@ -293,7 +293,13 @@ pub fn view<'a>(
                 strings::lookup(children_heading(item.type_)),
                 typeface::HEADING_2,
             ))
-            .push(widget::posters(&state.children, viewport, images, overflow));
+            .push(widget::posters(
+                card::Card::Wall(card::Shape::Portrait),
+                state.children.iter(),
+                viewport,
+                images,
+                overflow,
+            ));
     }
 
     if session.administrator
@@ -313,7 +319,13 @@ pub fn view<'a>(
     if !state.similar.is_empty() {
         page = page.push(widget::section(
             strings::lookup(Text::DetailSimilar),
-            widget::rail(&state.similar, viewport, images, overflow),
+            widget::rail(
+                card::Card::Rail(card::Rail::Portrait),
+                state.similar.iter(),
+                viewport,
+                images,
+                overflow,
+            ),
         ));
     }
 

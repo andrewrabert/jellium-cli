@@ -110,6 +110,7 @@ pub fn view<'a>(state: &'a State, viewport: Viewport, images: &'a Cache) -> Elem
         match state.entries.row(index) {
             Some(entry) => {
                 let card = widget::poster(
+                    wall,
                     entry,
                     viewport,
                     widget::poster_key(entry).and_then(|key| images.handle(key)),

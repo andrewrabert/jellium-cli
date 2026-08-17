@@ -5,6 +5,8 @@
 //! matches wins over an earlier one, and the rail ladder's orientation blocks
 //! sit between its width blocks rather than beside them.
 
+use jellyfin_api::types::{CollectionType, MediaType};
+
 use super::space::{self, GUTTER};
 use super::typeface;
 use super::{Across, Breakpoint, Css, Drawn, Length, Orientation, Query, Screen, Share, Viewport};
@@ -317,6 +319,49 @@ impl Rail {
 }
 
 impl Card {
+    /// The card a resumed item draws on, which its own media type decides: a
+    /// resumed book is a portrait rail and every other resumed item a backdrop
+    /// one.
+    // reference: home-resume
+    pub fn resumed(media: Option<MediaType>) -> Card {
+        match media {
+            Some(MediaType::Book) => Card::Rail(Rail::Portrait),
+            Some(MediaType::Unknown | MediaType::Video | MediaType::Audio | MediaType::Photo)
+            | None => Card::Rail(Rail::Backdrop),
+        }
+    }
+
+    /// The card the next-up section draws on.
+    // reference: home-next-up
+    pub const NEXT_UP: Card = Card::Rail(Rail::Backdrop);
+
+    /// The card a library's latest row draws on, which the library's own
+    /// collection type decides.
+    // reference: home-latest
+    // the same rule's fourth disjunct reaches portrait for an item type of
+    // `Channel` rather than for a collection type, and this client's latest
+    // rows carry no such type, so a channels view draws backdrop here where the
+    // reference draws portrait
+    pub fn latest(collection: Option<CollectionType>) -> Card {
+        match collection {
+            Some(CollectionType::Movies | CollectionType::Books | CollectionType::Tvshows) => {
+                Card::Rail(Rail::Portrait)
+            }
+            Some(CollectionType::Music | CollectionType::Homevideos) => Card::Rail(Rail::Square),
+            Some(
+                CollectionType::Unknown
+                | CollectionType::Musicvideos
+                | CollectionType::Trailers
+                | CollectionType::Boxsets
+                | CollectionType::Photos
+                | CollectionType::Livetv
+                | CollectionType::Playlists
+                | CollectionType::Folders,
+            )
+            | None => Card::Rail(Rail::Backdrop),
+        }
+    }
+
     pub fn shape(self) -> Shape {
         match self {
             Card::Wall(shape) => shape,

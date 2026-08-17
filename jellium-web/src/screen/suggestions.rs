@@ -10,7 +10,7 @@ use crate::api::Api;
 use crate::app::Message;
 use crate::error::Answer;
 use crate::images::{self, Cache};
-use crate::style::{self, Viewport, space};
+use crate::style::{self, Viewport, card, space};
 use crate::text::{self as strings, Text};
 use crate::widget;
 
@@ -71,14 +71,26 @@ pub fn view<'a>(
 ) -> Element<'a, Message> {
     let mut page = column![widget::section(
         strings::lookup(Text::LibraryTabSuggestions),
-        widget::rail(&state.suggestions, viewport, images, overflow),
+        widget::rail(
+            card::Card::Rail(card::Rail::Portrait),
+            state.suggestions.iter(),
+            viewport,
+            images,
+            overflow,
+        ),
     )]
     .spacing(style::drawn(space::GUTTER.drawn()));
 
     for rail in &state.recommendations {
         page = page.push(widget::section(
             rail.heading.as_str(),
-            widget::rail(&rail.items, viewport, images, overflow),
+            widget::rail(
+                card::Card::Rail(card::Rail::Portrait),
+                rail.items.iter(),
+                viewport,
+                images,
+                overflow,
+            ),
         ));
     }
 

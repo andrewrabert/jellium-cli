@@ -295,13 +295,14 @@ pub fn page<'a>(viewport: Viewport, body: Element<'a, Message>) -> Element<'a, M
 /// `Footer::NameAndSubtitle` and `Bottom::Padded` always, so neither is a
 /// parameter.
 pub fn poster<'a>(
+    card: card::Card,
     item: &'a BaseItemDto,
     viewport: Viewport,
     image: Option<image::Handle>,
     overflow: Overflow,
 ) -> Element<'a, Message> {
     let body = boxed(
-        card::Card::Wall(card::Shape::Portrait),
+        card,
         viewport,
         image.map(Face::Image),
         item.name.clone().unwrap_or_default(),
@@ -334,15 +335,17 @@ pub fn poster<'a>(
 }
 
 fn cards<'a>(
-    items: &'a [BaseItemDto],
+    card: card::Card,
+    items: impl IntoIterator<Item = &'a BaseItemDto>,
     viewport: Viewport,
     images: &'a Cache,
     overflow: Overflow,
 ) -> Vec<Element<'a, Message>> {
     items
-        .iter()
+        .into_iter()
         .map(|item| {
             poster(
+                card,
                 item,
                 viewport,
                 poster_key(item).and_then(|key| images.handle(key)),
@@ -353,21 +356,24 @@ fn cards<'a>(
 }
 
 /// A rail of cards, scrolled sideways under whatever title the section it
-/// stands in carries.
+/// stands in carries. Items arrive as an iterator rather than a slice, because
+/// a section's items are as often a group borrowed out of one list as a list of
+/// their own.
 pub fn rail<'a>(
-    items: &'a [BaseItemDto],
+    card: card::Card,
+    items: impl IntoIterator<Item = &'a BaseItemDto>,
     viewport: Viewport,
     images: &'a Cache,
     overflow: Overflow,
 ) -> Element<'a, Message> {
-    let wall = card::Card::Wall(card::Shape::Portrait);
     scrollable(
-        row(cards(items, viewport, images, overflow)).spacing(style::drawn(space::GUTTER.drawn())),
+        row(cards(card, items, viewport, images, overflow))
+            .spacing(style::drawn(space::GUTTER.drawn())),
     )
     .direction(scrollable::Direction::Horizontal(
         scrollable::Scrollbar::default(),
     ))
-    .height(style::drawn(wall.row(
+    .height(style::drawn(card.row(
         viewport,
         card::Footer::NameAndSubtitle,
         card::Bottom::Padded,
@@ -396,15 +402,15 @@ pub fn section<'a>(
 /// A wall of posters, laid out at the count the shape's own ladder puts in a
 /// row at this page.
 pub fn posters<'a>(
-    items: &'a [BaseItemDto],
+    card: card::Card,
+    items: impl IntoIterator<Item = &'a BaseItemDto>,
     viewport: Viewport,
     images: &'a Cache,
     overflow: Overflow,
 ) -> Element<'a, Message> {
-    let wall = card::Card::Wall(card::Shape::Portrait);
     scrollable(
-        grid(cards(items, viewport, images, overflow))
-            .columns(wall.across(viewport).count())
+        grid(cards(card, items, viewport, images, overflow))
+            .columns(card.across(viewport).count())
             .spacing(style::drawn(space::GUTTER.drawn())),
     )
     .height(Fill)

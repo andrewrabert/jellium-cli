@@ -422,6 +422,7 @@ pub fn view<'a>(browse: &'a Browse, viewport: Viewport, images: &'a Cache) -> El
         count,
         move |index| match browse.items.row(index) {
             Some(item) => widget::poster(
+                wall,
                 item,
                 viewport,
                 widget::poster_key(item).and_then(|key| images.handle(key)),
