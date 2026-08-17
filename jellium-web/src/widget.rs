@@ -838,6 +838,27 @@ pub fn indicated<'a>(control: Element<'a, Message>, band: Band) -> Element<'a, M
     iced::widget::stack![control, mark].into()
 }
 
+/// `body` with `letters` laid over the page's trailing edge, at the letter
+/// picker's own insets from the edge and the foot of the page.
+// reference: alpha-picker
+// reference: alpha-picker-right
+// reference: alpha-picker-fixed
+pub fn lettered<'a>(
+    body: Element<'a, Message>,
+    letters: Element<'a, Message>,
+    viewport: Viewport,
+) -> Element<'a, Message> {
+    let held = container(letters)
+        .padding(
+            iced::Padding::ZERO
+                .right(style::drawn(space::letters_right(viewport)))
+                .bottom(style::drawn(space::letters_bottom(viewport))),
+        )
+        .align_right(Fill)
+        .align_bottom(Fill);
+    iced::widget::stack![body, held].into()
+}
+
 /// A page's own title, which the reference writes as the `h1` at the head of
 /// each of its login pages.
 pub fn heading<'a>(content: impl Into<Cow<'a, str>>) -> Element<'a, Message> {

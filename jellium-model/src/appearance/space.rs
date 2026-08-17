@@ -5,7 +5,9 @@ use chrono::TimeDelta;
 
 use super::scheme::{self, Color};
 use super::typeface;
-use super::{Breakpoint, Canvas, Css, Drawn, Length, Orientation, Query, Ratio, Share, Viewport};
+use super::{
+    Breakpoint, Canvas, Css, Drawn, Length, Letters, Orientation, Query, Ratio, Share, Viewport,
+};
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Padding {
@@ -46,6 +48,23 @@ impl Room {
         Room {
             viewport,
             width: Drawn::of((viewport.canvas().width().count() - side.count() * 2.0).max(0.0)),
+        }
+    }
+
+    /// `content` less the letter picker's own reserve.
+    /// `content` itself where the page is too short to draw the picker.
+    // reference: alpha-picker-reserve
+    // reference: letter-jump
+    pub fn lettered(viewport: Viewport) -> Room {
+        let content = Room::content(viewport);
+        match viewport.letters() {
+            Letters::Hidden => content,
+            Letters::Shown => Room {
+                viewport,
+                width: Drawn::of(
+                    (content.width.count() - LETTERS_RESERVE.of(content.width).count()).max(0.0),
+                ),
+            },
         }
     }
 
@@ -225,6 +244,33 @@ pub const INDICATOR: Length = typeface::INDICATOR.times(Ratio::thousandths(1800)
 // reference: filter-indicator
 pub const INDICATOR_INSET: Css = Css::of(2.0);
 
+/// `.alphaPicker-fixed`'s inset from the foot of the page.
+// reference: alpha-picker
+pub const LETTERS_BOTTOM: Length = Length::em(5.5);
+
+/// The same inset on a short page.
+// reference: alpha-picker-size
+pub const LETTERS_BOTTOM_SHORT: Length = Length::em(5.0);
+
+// reference: alpha-picker-size
+pub const LETTERS_SHORT: Query = Query::MaxHeight(Breakpoint::em(50.0));
+
+/// `.alphaPicker-fixed-right`'s inset from the edge of the page.
+// reference: alpha-picker-right
+pub const LETTERS_RIGHT: Length = Length::em(0.4);
+
+/// The same inset on a wide page.
+// reference: alpha-picker-right
+pub const LETTERS_RIGHT_ROOMY: Length = Length::em(1.0);
+
+// reference: alpha-picker-right
+pub const LETTERS_ROOMY: Query = Query::MinWidth(Breakpoint::em(62.5));
+
+/// The share of the page `.padded-right-withalphapicker` keeps clear for the
+/// letter picker.
+// reference: alpha-picker-reserve
+pub const LETTERS_RESERVE: Share = Share::per_ten_thousand(750);
+
 // reference: control-icon-button
 pub const ICON_MARGIN: Length = Length::em(0.29);
 
@@ -356,4 +402,22 @@ pub fn preview(viewport: Viewport) -> Css {
 // reference: page-side
 pub fn page_side(canvas: Canvas) -> Drawn {
     PAGE_SIDE.of(canvas.width())
+}
+
+/// The letter picker's inset from the foot of the page at this viewport.
+// reference: alpha-picker-size
+pub fn letters_bottom(viewport: Viewport) -> Drawn {
+    match viewport.matches(LETTERS_SHORT) {
+        true => LETTERS_BOTTOM_SHORT.drawn(),
+        false => LETTERS_BOTTOM.drawn(),
+    }
+}
+
+/// Its inset from the edge of the page at this viewport.
+// reference: alpha-picker-right
+pub fn letters_right(viewport: Viewport) -> Drawn {
+    match viewport.matches(LETTERS_ROOMY) {
+        true => LETTERS_RIGHT_ROOMY.drawn(),
+        false => LETTERS_RIGHT.drawn(),
+    }
 }

@@ -194,3 +194,9 @@ grid-paging-filter	src/scripts/libraryBrowser.js	72	74	78271fcaccfcfdb9328558f85
 filter-indicator	src/components/filterdialog/filterIndicator.scss	5	17	c1f0bd400cea9ec8b849fadc5ea704723cfe72e71b588d5f6909f7333293b39e	ported
 filter-indicator-shadow	src/components/filterdialog/filterIndicator.scss	18	18	a9155880daa403542c49f7e687cf57ab7f4789201027a2c2066386d551986c0d	dead
 filter-indicator-face	src/components/filterdialog/filterIndicator.scss	19	21	8737fc0b3b6e52780f1baa907ae62e207d5eb368f43acb85b4026006794e24d3	ported
+alpha-picker	src/components/alphaPicker/style.scss	1	26	c675ffa364bf4b3c1793aa8b70fe0cff3633f5e786955473cb615ad9701041b7	ported
+alpha-picker-size	src/components/alphaPicker/style.scss	48	86	39ea24ed635870480293a68353106e4cc1eedeeb4663c619f23e15826f986a77	ported
+alpha-picker-tv	src/components/alphaPicker/style.scss	88	90	e794ca22e953714d7215a8976c2f4ff8a60210766117df37e171ef6d084f4a6c	dead
+alpha-picker-right	src/components/alphaPicker/style.scss	112	132	c20df5c92d2abe1d1d0bc16d1974cef3d6e3e8101bed08e32bd0581dd2741811	ported
+alpha-picker-reserve	src/styles/librarybrowser.scss	1418	1426	558a70575fa751042a8638203b3aadbd82b593a548118ccb98ba735e89acbd7c	ported
+alpha-picker-fixed	src/controllers/list.js	636	638	cf65f236761ea6d8af2b22df2912d2ad2d19deadb525fe56e426b41cb5ae2cdf	ported

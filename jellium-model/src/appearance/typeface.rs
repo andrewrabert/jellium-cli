@@ -1,7 +1,7 @@
 //! The reference's type scale over the 16px base, and the two weights the
 //! client draws.
 
-use super::{Length, Ratio};
+use super::{Breakpoint, Length, Query, Ratio, Viewport};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Weight {
@@ -46,3 +46,39 @@ pub const CARD_ICON: Length = Length::em(5.0);
 /// `.filterIndicator`'s lettering, 60% of the control it sits on.
 // reference: filter-indicator
 pub const INDICATOR: Length = BODY.times(Ratio::thousandths(600));
+
+/// The steps `.alphaPicker-vertical` takes as the page shortens, in the order
+/// the cascade resolves them.
+// reference: alpha-picker-size
+const LETTERS_STEPS: [(Query, Length); 4] = [
+    (
+        Query::MaxHeight(Breakpoint::em(49.0)),
+        BODY.times(Ratio::thousandths(940)),
+    ),
+    (
+        Query::MaxHeight(Breakpoint::em(44.0)),
+        BODY.times(Ratio::thousandths(900)),
+    ),
+    (
+        Query::MaxHeight(Breakpoint::em(37.0)),
+        BODY.times(Ratio::thousandths(820)),
+    ),
+    (
+        Query::MaxHeight(Breakpoint::em(32.0)),
+        BODY.times(Ratio::thousandths(740)),
+    ),
+];
+
+/// The size the letter picker's letters draw at.
+/// 94% of the body at 49em of height and shorter, 90% at 44em, 82% at 37em,
+/// 74% at 32em.
+// reference: alpha-picker-size
+pub fn letters(viewport: Viewport) -> Length {
+    let mut standing = BODY;
+    for (at, size) in LETTERS_STEPS {
+        if viewport.matches(at) {
+            standing = size;
+        }
+    }
+    standing
+}

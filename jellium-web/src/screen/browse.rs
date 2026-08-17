@@ -18,7 +18,7 @@ use crate::images::{self, Cache};
 use crate::route::Listing;
 use crate::style::card::{Aspect, Card};
 use crate::style::space::Room;
-use crate::style::{self, Drawn, Viewport, card, space, typeface};
+use crate::style::{self, Drawn, Letters, Viewport, card, space, typeface};
 use crate::text::{self as strings, Text};
 use crate::widget;
 use crate::widget::prose;
@@ -338,15 +338,23 @@ fn paging<'a>(browse: &Browse) -> Element<'a, Message> {
     .into()
 }
 
-fn letter_jump<'a>() -> Element<'a, Message> {
-    row(window::LETTERS.into_iter().map(|letter| {
-        button(prose(letter.to_string(), typeface::BODY))
-            .style(style::flat)
-            .on_press(Message::BrowseAction(Action::Jumped(letter)))
-            .into()
-    }))
-    .spacing(style::drawn(space::BLOCK_GAP.drawn()))
-    .into()
+/// The letter picker this surface lays over the page, and `None` where the sort
+/// is not by name or the page is too short to draw it.
+// reference: alpha-picker
+pub fn letters<'a>(browse: &Browse, viewport: Viewport) -> Option<Element<'a, Message>> {
+    if !browse.listing.sort.by_name() || viewport.letters() == Letters::Hidden {
+        return None;
+    }
+    let size = typeface::letters(viewport);
+    Some(
+        column(window::LETTERS.into_iter().map(|letter| {
+            button(prose(letter.to_string(), size))
+                .style(style::flat)
+                .on_press(Message::BrowseAction(Action::Jumped(letter)))
+                .into()
+        }))
+        .into(),
+    )
 }
 
 fn narrowing<'a>(label: String, on: bool, narrow: Narrow) -> Element<'a, Message> {
@@ -481,10 +489,14 @@ fn filter_surface<'a>(browse: &'a Browse, viewport: Viewport) -> Element<'a, Mes
         .into()
 }
 
-/// The heading, the paging bar, the surface the bar has open, the letter jump
-/// on a name sort alone, and the windowed grid.
+/// The heading, the paging bar, the surface the bar has open, and the windowed
+/// grid.
 pub fn view<'a>(browse: &'a Browse, viewport: Viewport, images: &'a Cache) -> Element<'a, Message> {
     let wall = browse.card();
+    let room = match browse.listing.sort.by_name() {
+        true => Room::lettered(viewport),
+        false => Room::content(viewport),
+    };
     let mut page = column![
         prose(browse.heading.clone(), typeface::HEADING_1),
         paging(browse),
@@ -497,10 +509,6 @@ pub fn view<'a>(browse: &'a Browse, viewport: Viewport, images: &'a Cache) -> El
         Some(Opened::Filters) => page = page.push(filter_surface(browse, viewport)),
         None => {}
     }
-    if browse.listing.sort.by_name() {
-        page = page.push(letter_jump());
-    }
-
     let count = browse.items.len();
     page = page.push(crate::window::grid(
         browse.grid,
@@ -509,14 +517,14 @@ pub fn view<'a>(browse: &'a Browse, viewport: Viewport, images: &'a Cache) -> El
             Some(item) => widget::poster(
                 wall,
                 item,
-                Room::content(viewport),
+                room,
                 widget::poster_key(item).and_then(|key| images.handle(key)),
                 browse.overflow,
             ),
             None => iced::widget::Space::new()
-                .width(style::drawn(wall.width(Room::content(viewport))))
+                .width(style::drawn(wall.width(room)))
                 .height(style::drawn(wall.row(
-                    Room::content(viewport),
+                    room,
                     card::Footer::NameAndSubtitle,
                     card::Bottom::Padded,
                 )))

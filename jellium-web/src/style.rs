@@ -4,7 +4,8 @@
 //! root size as its scale and so resolves every em once for the whole surface.
 
 pub use jellium_model::appearance::{
-    Band, Css, Dialog, Drawn, Length, Screen, Share, Viewport, card, scheme, space, typeface,
+    Band, Css, Dialog, Drawn, Length, Letters, Screen, Share, Viewport, card, scheme, space,
+    typeface,
 };
 
 /// The one site a ported length becomes a number iced takes.

@@ -2583,6 +2583,27 @@ impl Jellium {
         }
     }
 
+    /// The letter picker the view on top lays over the page.
+    fn lettering(&self) -> Option<Element<'_, Message>> {
+        let Stage::Signed(signed) = &self.stage else {
+            return None;
+        };
+        let browse = match &signed.view {
+            View::Library(state) => match &state.body {
+                crate::screen::library::Body::Browse(browse)
+                | crate::screen::library::Body::Rows(browse) => browse,
+                _ => return None,
+            },
+            View::Search(state) => &state.browse,
+            View::Filtered(browse) => browse,
+            View::Collections(state) => &state.browse,
+            View::Collection(state) => &state.browse,
+            View::Playlists(state) => &state.browse,
+            _ => return None,
+        };
+        crate::screen::browse::letters(browse, self.viewport)
+    }
+
     /// Re-reads the trickplay the playing item describes, which is what a
     /// version change and a new item each need.
     fn read_trickplay(&mut self) -> Task<Message> {
@@ -3053,7 +3074,10 @@ impl Jellium {
                         self.viewport,
                     ));
                 }
-                page.into()
+                match self.lettering() {
+                    Some(letters) => widget::lettered(page.into(), letters, self.viewport),
+                    None => page.into(),
+                }
             }
         }
     }
