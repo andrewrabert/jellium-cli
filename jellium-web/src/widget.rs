@@ -5,9 +5,7 @@ use std::collections::HashSet;
 
 pub use line::Line;
 
-use iced::widget::{
-    Space, button, column, container, grid as grid_widget, image, row, scrollable, text,
-};
+use iced::widget::{Space, button, column, container, grid, image, row, scrollable, text};
 use iced::{Element, Fill, Length};
 use jellium_protocol::{Notice, Session, SyncAccess};
 use jellyfin_api::types::BaseItemDto;
@@ -18,9 +16,8 @@ use crate::live;
 use crate::livetv::Channel;
 use crate::player::group::Joined;
 use crate::route::Route;
-use crate::style::{self, Drawn, Share, space, typeface};
+use crate::style::{self, Drawn, Share, Viewport, card, scheme, space, typeface};
 use crate::text::{self as strings, Text};
-use crate::theme;
 
 /// Wrapping text, which is what a server's own disclaimer is. Every string the
 /// client draws passes here, so the coverage it needs is observed once. A
@@ -89,28 +86,85 @@ fn subtitle(item: &BaseItemDto) -> String {
     }
 }
 
-/// A card, with an overflow menu when `overflow`; the menu is absent entirely
-/// under read-only.
-pub fn card<'a>(
-    item: &'a BaseItemDto,
-    image: Option<image::Handle>,
-    overflow: bool,
+/// Whether a card offers the overflow menu; the menu is absent entirely under
+/// read-only.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Overflow {
+    Offered,
+    Withheld,
+}
+
+/// The card's own width inside its pitch, the pitch reserving the gutter its
+/// `.cardBox` margin makes.
+fn inside(card: card::Card, viewport: Viewport) -> Drawn {
+    Drawn::of(card.width(viewport).count() - space::GUTTER.drawn().count())
+}
+
+/// A card as the reference draws one: its face in the shape's own aspect over
+/// its centered footer, both held to the card's width inside its pitch.
+// reference: card-container
+// reference: card-text-centered
+fn boxed<'a>(
+    card: card::Card,
+    viewport: Viewport,
+    face: Option<image::Handle>,
+    name: String,
+    subtitle: Option<String>,
 ) -> Element<'a, Message> {
-    let poster: Element<'a, Message> = match image {
-        Some(handle) => iced::widget::image(handle).width(theme::CARD_WIDTH).into(),
-        None => container(prose("", typeface::BODY))
-            .width(theme::CARD_WIDTH)
-            .height(theme::CARD_WIDTH * 1.5)
+    let width = style::drawn(inside(card, viewport));
+    let height = style::drawn(card.shape().aspect().of(inside(card, viewport)));
+    let background = scheme::card_background(&name);
+    let drawn_face: Element<'a, Message> = match face {
+        Some(handle) => container(image(handle).width(width))
+            .width(width)
+            .height(height)
+            .style(style::card_padder)
+            .into(),
+        None => container(Space::new())
+            .width(width)
+            .height(height)
+            .style(move |theme: &iced::Theme| style::card_face(theme, background))
             .into(),
     };
 
-    let body = column![
-        poster,
-        prose(item.name.clone().unwrap_or_default(), typeface::BODY),
-        prose(subtitle(item), typeface::SECONDARY),
+    let mut written = column![line(name, typeface::BODY, typeface::Weight::Regular)]
+        .align_x(iced::Center)
+        .width(width);
+    if let Some(subtitle) = subtitle {
+        written = written.push(line(
+            subtitle,
+            typeface::SECONDARY,
+            typeface::Weight::Regular,
+        ));
+    }
+
+    column![
+        drawn_face,
+        container(written)
+            .padding(style::padding(space::CARD_FOOTER_PAD))
+            .width(width)
+            .style(style::card_footer),
     ]
-    .spacing(style::drawn(space::BLOCK_GAP.drawn()))
-    .width(theme::CARD_WIDTH);
+    .width(width)
+    .into()
+}
+
+/// A library item's card: its poster, its name and its subtitle, which is
+/// `Footer::NameAndSubtitle` and `Bottom::Padded` always, so neither is a
+/// parameter.
+pub fn poster<'a>(
+    item: &'a BaseItemDto,
+    viewport: Viewport,
+    image: Option<image::Handle>,
+    overflow: Overflow,
+) -> Element<'a, Message> {
+    let body = boxed(
+        card::Card::Wall(card::Shape::Portrait),
+        viewport,
+        image,
+        item.name.clone().unwrap_or_default(),
+        Some(subtitle(item)),
+    );
 
     let pressed = item.id.map(|id| Message::Navigated(opens(item, id)));
     let mut control = button(body).style(style::flat);
@@ -118,7 +172,7 @@ pub fn card<'a>(
         control = control.on_press(message);
     }
 
-    let Some(id) = item.id.filter(|_| overflow) else {
+    let Some(id) = item.id.filter(|_| overflow == Overflow::Offered) else {
         return control.into();
     };
     let held = item.user_data.as_ref();
@@ -139,14 +193,16 @@ pub fn card<'a>(
 
 fn cards<'a>(
     items: &'a [BaseItemDto],
+    viewport: Viewport,
     images: &'a Cache,
-    overflow: bool,
+    overflow: Overflow,
 ) -> Vec<Element<'a, Message>> {
     items
         .iter()
         .map(|item| {
-            card(
+            poster(
                 item,
+                viewport,
                 poster_key(item).and_then(|key| images.handle(key)),
                 overflow,
             )
@@ -157,12 +213,14 @@ fn cards<'a>(
 pub fn rail<'a>(
     title: Text,
     items: &'a [BaseItemDto],
+    viewport: Viewport,
     images: &'a Cache,
-    overflow: bool,
+    overflow: Overflow,
 ) -> Element<'a, Message> {
     strip(
         prose(strings::lookup(title), typeface::HEADING_2),
         items,
+        viewport,
         images,
         overflow,
     )
@@ -172,64 +230,103 @@ pub fn rail<'a>(
 pub fn named_rail<'a>(
     title: &'a str,
     items: &'a [BaseItemDto],
+    viewport: Viewport,
     images: &'a Cache,
-    overflow: bool,
+    overflow: Overflow,
 ) -> Element<'a, Message> {
-    strip(prose(title, typeface::HEADING_2), items, images, overflow)
+    strip(
+        prose(title, typeface::HEADING_2),
+        items,
+        viewport,
+        images,
+        overflow,
+    )
 }
 
 fn strip<'a>(
     title: Element<'a, Message>,
     items: &'a [BaseItemDto],
+    viewport: Viewport,
     images: &'a Cache,
-    overflow: bool,
+    overflow: Overflow,
 ) -> Element<'a, Message> {
+    let wall = card::Card::Wall(card::Shape::Portrait);
     column![
         title,
         scrollable(
-            row(cards(items, images, overflow)).spacing(style::drawn(space::GUTTER.drawn()))
+            row(cards(items, viewport, images, overflow))
+                .spacing(style::drawn(space::GUTTER.drawn()))
         )
         .direction(scrollable::Direction::Horizontal(
             scrollable::Scrollbar::default(),
         ))
-        .height(theme::RAIL_HEIGHT),
+        .height(style::drawn(wall.row(
+            viewport,
+            card::Footer::NameAndSubtitle,
+            card::Bottom::Padded
+        ))),
     ]
     .spacing(style::drawn(space::CONTROL_GAP.drawn()))
     .into()
 }
 
-pub fn grid<'a>(
+/// A wall of posters, laid out at the count the shape's own ladder puts in a
+/// row at this page.
+pub fn posters<'a>(
     items: &'a [BaseItemDto],
+    viewport: Viewport,
     images: &'a Cache,
-    overflow: bool,
+    overflow: Overflow,
 ) -> Element<'a, Message> {
+    let wall = card::Card::Wall(card::Shape::Portrait);
     scrollable(
-        grid_widget(cards(items, images, overflow))
-            .fluid(theme::CARD_WIDTH)
+        grid(cards(items, viewport, images, overflow))
+            .columns(wall.across(viewport).count())
             .spacing(style::drawn(space::GUTTER.drawn())),
     )
     .height(Fill)
     .into()
 }
 
-/// The libraries, with a Live TV entry ahead of them when `live_tv` and the
-/// Collections and Playlists destinations after them.
+/// One destination the library row offers beside the libraries themselves.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Destination {
+    LiveTv,
+    Collections,
+    Playlists,
+}
+
+impl Destination {
+    fn label(self) -> Text {
+        match self {
+            Destination::LiveTv => Text::HomeLiveTv,
+            Destination::Collections => Text::NavCollections,
+            Destination::Playlists => Text::NavPlaylists,
+        }
+    }
+
+    fn route(self) -> Route {
+        match self {
+            Destination::LiveTv => Route::LiveTv {
+                tab: crate::screen::livetv::Tab::Guide,
+            },
+            Destination::Collections => Route::Collections,
+            Destination::Playlists => Route::Playlists,
+        }
+    }
+}
+
+/// The libraries, with the destinations offered beside them: a Live TV entry
+/// ahead of them, and Collections and Playlists after.
 pub fn library_row<'a>(
     libraries: impl IntoIterator<Item = &'a BaseItemDto>,
-    live_tv: bool,
-    collections: bool,
+    destinations: &[Destination],
 ) -> Element<'a, Message> {
-    let live_entry: Vec<Element<'a, Message>> = if live_tv {
-        vec![
-            button(prose(strings::lookup(Text::HomeLiveTv), typeface::BODY))
-                .on_press(Message::Navigated(Route::LiveTv {
-                    tab: crate::screen::livetv::Tab::Guide,
-                }))
-                .into(),
-        ]
-    } else {
-        Vec::new()
-    };
+    let ahead: Vec<Element<'a, Message>> = destinations
+        .iter()
+        .filter(|destination| **destination == Destination::LiveTv)
+        .map(|destination| offered(*destination))
+        .collect();
     let entries = libraries.into_iter().filter_map(|library| {
         let id = library.id?;
         Some(
@@ -237,6 +334,7 @@ pub fn library_row<'a>(
                 library.name.clone().unwrap_or_default(),
                 typeface::BODY,
             ))
+            .style(style::flat)
             .on_press(Message::Navigated(Route::Library {
                 id,
                 tab: Box::new(crate::screen::library::Tab::Items(Box::default())),
@@ -244,29 +342,27 @@ pub fn library_row<'a>(
             .into(),
         )
     });
-
-    let mut destinations: Vec<Element<'a, Message>> = Vec::new();
-    if collections {
-        destinations.push(
-            button(prose(strings::lookup(Text::NavCollections), typeface::BODY))
-                .on_press(Message::Navigated(Route::Collections))
-                .into(),
-        );
-    }
-    destinations.push(
-        button(prose(strings::lookup(Text::NavPlaylists), typeface::BODY))
-            .on_press(Message::Navigated(Route::Playlists))
-            .into(),
-    );
+    let after: Vec<Element<'a, Message>> = destinations
+        .iter()
+        .filter(|destination| **destination != Destination::LiveTv)
+        .map(|destination| offered(*destination))
+        .collect();
 
     scrollable(
-        row(live_entry.into_iter().chain(entries).chain(destinations))
+        row(ahead.into_iter().chain(entries).chain(after))
             .spacing(style::drawn(space::GUTTER.drawn())),
     )
     .direction(scrollable::Direction::Horizontal(
         scrollable::Scrollbar::default(),
     ))
     .into()
+}
+
+fn offered<'a>(destination: Destination) -> Element<'a, Message> {
+    button(prose(strings::lookup(destination.label()), typeface::BODY))
+        .style(style::flat)
+        .on_press(Message::Navigated(destination.route()))
+        .into()
 }
 
 /// The portions a bar is divided into, which is the resolution a share the
@@ -295,32 +391,28 @@ pub fn elapsed_bar<'a>(elapsed: Share) -> Element<'a, Message> {
 }
 
 /// One on-now card: the channel's logo, its number, and its current program's
-/// title with an elapsed bar.
+/// title with an elapsed bar, on the card the reference's on-now rail draws.
 pub fn channel_card<'a>(
     channel: &'a Channel,
+    viewport: Viewport,
     now: chrono::DateTime<chrono::Utc>,
     image: Option<image::Handle>,
 ) -> Element<'a, Message> {
-    let logo: Element<'a, Message> = match image {
-        Some(handle) => iced::widget::image(handle).width(theme::CARD_WIDTH).into(),
-        None => container(prose("", typeface::BODY))
-            .width(theme::CARD_WIDTH)
-            .height(theme::CARD_WIDTH * 0.6)
-            .into(),
-    };
-
-    let mut body = column![
-        logo,
-        prose(
-            format!("{} {}", channel.number, channel.name),
-            typeface::BODY
-        ),
-    ]
-    .spacing(style::drawn(space::BLOCK_GAP.drawn()))
-    .width(theme::CARD_WIDTH);
+    let on_now = card::Card::Rail(card::Rail::Backdrop);
+    let width = style::drawn(inside(on_now, viewport));
+    let mut body = column![boxed(
+        on_now,
+        viewport,
+        image,
+        format!("{} {}", channel.number, channel.name),
+        channel
+            .current
+            .as_ref()
+            .map(|program| program.title.clone()),
+    )]
+    .width(width);
 
     if let Some(program) = &channel.current {
-        body = body.push(prose(program.title.clone(), typeface::SECONDARY));
         body = body.push(elapsed_bar(program.elapsed(now)));
     }
 
@@ -335,6 +427,7 @@ pub fn channel_card<'a>(
 /// The on-now row, capped at `home::ON_NOW`.
 pub fn on_now_row<'a>(
     channels: &'a [Channel],
+    viewport: Viewport,
     now: chrono::DateTime<chrono::Utc>,
     images: &'a Cache,
 ) -> Element<'a, Message> {
@@ -349,7 +442,7 @@ pub fn on_now_row<'a>(
                     index: None,
                 })
                 .clone();
-            channel_card(channel, now, handle)
+            channel_card(channel, viewport, now, handle)
         });
 
     column![
@@ -418,7 +511,7 @@ pub fn lost<'a>(failure: &'a crate::failure::Failure) -> Element<'a, Message> {
 /// itself while it is open.
 pub fn shell<'a>(
     failures: &'a crate::failure::Log,
-    listing: bool,
+    listing: Listing,
     body: Element<'a, Message>,
 ) -> Element<'a, Message> {
     let mut page = column![].spacing(style::drawn(space::GUTTER.drawn()));
@@ -426,13 +519,14 @@ pub fn shell<'a>(
         page = page.push(self::failure(showing));
     }
     page = page.push(
-        button(prose(strings::lookup(Text::FailuresOpen), typeface::BODY)).on_press(if listing {
-            Message::FailuresClosed
-        } else {
-            Message::FailuresOpened
-        }),
+        button(prose(strings::lookup(Text::FailuresOpen), typeface::BODY))
+            .style(style::flat)
+            .on_press(match listing {
+                Listing::Open => Message::FailuresClosed,
+                Listing::Closed => Message::FailuresOpened,
+            }),
     );
-    if listing {
+    if listing == Listing::Open {
         let mut listed = column![prose(strings::lookup(Text::FailuresTitle), typeface::BODY)]
             .spacing(style::drawn(space::GUTTER.drawn()))
             .padding(style::drawn(space::GUTTER.drawn()));
@@ -451,30 +545,37 @@ pub fn shell<'a>(
     page.push(body).into()
 }
 
+/// Whether the session's failure list is drawn under the control that opens it.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Listing {
+    Open,
+    Closed,
+}
+
 /// The nav row — with controls opening `/settings`, `/remote` and, for a user
 /// whose access allows it, `/syncplay` — the off-snapshot warning, the group
 /// indicator and the waiting indicator while membership lasts, the live-updates
 /// indicator while `live` is down, above `body`.
-/// `browse` is false while a settings route is on top, which is what the
+/// `nav` is `Settings` while a settings route is on top, which is what the
 /// settings column replaces; Back and Logout stand either way.
 pub fn chrome<'a>(
     session: &'a Session,
-    back: bool,
-    browse: bool,
+    back: Back,
+    nav: Nav,
     live: live::Link,
     group: Option<&'a Joined>,
     body: Element<'a, Message>,
 ) -> Element<'a, Message> {
-    let mut nav = row![].spacing(style::drawn(space::GUTTER.drawn()));
+    let mut controls = row![].spacing(style::drawn(space::GUTTER.drawn()));
 
-    if back {
-        nav = nav.push(
+    if back == Back::Offered {
+        controls = controls.push(
             button(prose(strings::lookup(Text::NavBack), typeface::BODY))
                 .on_press(Message::WentBack),
         );
     }
-    if browse {
-        nav = nav
+    if nav == Nav::Browse {
+        controls = controls
             .push(
                 button(prose(strings::lookup(Text::NavHome), typeface::BODY))
                     .on_press(Message::Navigated(Route::Home)),
@@ -500,13 +601,13 @@ pub fn chrome<'a>(
             );
 
         if session.sync_play != SyncAccess::None {
-            nav = nav.push(
+            controls = controls.push(
                 button(prose(strings::lookup(Text::NavSyncPlay), typeface::BODY))
                     .on_press(Message::Navigated(Route::SyncPlay)),
             );
         }
         if session.administrator {
-            nav = nav.push(
+            controls = controls.push(
                 button(prose(strings::lookup(Text::NavDashboard), typeface::BODY)).on_press(
                     Message::Navigated(Route::Dashboard {
                         screen: crate::screen::dashboard::Screen::Plugins,
@@ -515,18 +616,18 @@ pub fn chrome<'a>(
             );
         }
     }
-    nav = nav.push(
+    controls = controls.push(
         button(prose(strings::lookup(Text::NavSwitch), typeface::BODY))
             .on_press(Message::SwitchPressed),
     );
     if !session.read_only {
-        nav = nav.push(
+        controls = controls.push(
             button(prose(strings::lookup(Text::NavLogout), typeface::BODY))
                 .on_press(Message::LogoutPressed),
         );
     }
 
-    let mut page = column![nav]
+    let mut page = column![controls]
         .spacing(style::drawn(space::GUTTER.drawn()))
         .padding(style::drawn(space::GUTTER.drawn()));
 
@@ -561,6 +662,21 @@ pub fn chrome<'a>(
     }
 
     page.push(body).into()
+}
+
+/// Whether the chrome offers the control that steps back.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Back {
+    Offered,
+    Withheld,
+}
+
+/// Which column the chrome's nav draws: the browse row, or the settings column
+/// that replaces it.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Nav {
+    Browse,
+    Settings,
 }
 
 /// One sentence shown above a screen.

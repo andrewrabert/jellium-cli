@@ -10,7 +10,7 @@ use crate::app::Message;
 use crate::error::Answer;
 use crate::images::{self, Cache};
 use crate::livetv::Channel;
-use crate::style::{self, space, typeface};
+use crate::style::{self, Viewport, space, typeface};
 use crate::text::{self as strings, Text};
 use crate::widget;
 use crate::widget::prose;
@@ -120,9 +120,14 @@ pub fn view<'a>(
     arrangement: &'a Arrangement,
     live_tv: bool,
     now: chrono::DateTime<chrono::Utc>,
+    viewport: Viewport,
     images: &'a Cache,
     read_only: bool,
 ) -> Element<'a, Message> {
+    let overflow = match read_only {
+        true => widget::Overflow::Withheld,
+        false => widget::Overflow::Offered,
+    };
     if state.libraries.is_empty() && state.continue_watching.is_empty() && state.next_up.is_empty()
     {
         return widget::banner(strings::lookup(Text::HomeEmpty).to_string());
@@ -134,7 +139,7 @@ pub fn view<'a>(
         page = page.push(if state.on_now.is_empty() {
             widget::banner(strings::lookup(Text::ChannelsEmpty).to_string())
         } else {
-            widget::on_now_row(&state.on_now, now, images)
+            widget::on_now_row(&state.on_now, viewport, now, images)
         });
     }
 
@@ -142,24 +147,27 @@ pub fn view<'a>(
         page = page.push(widget::rail(
             Text::HomeContinueWatching,
             &state.continue_watching,
+            viewport,
             images,
-            !read_only,
+            overflow,
         ));
     }
     if arrangement.next_up && !state.next_up.is_empty() {
         page = page.push(widget::rail(
             Text::HomeNextUp,
             &state.next_up,
+            viewport,
             images,
-            !read_only,
+            overflow,
         ));
     }
     for row in &state.latest {
         page = page.push(widget::named_rail(
             row.library.name.as_deref().unwrap_or_default(),
             &row.items,
+            viewport,
             images,
-            !read_only,
+            overflow,
         ));
     }
     let ids: Vec<uuid::Uuid> = state.libraries.iter().filter_map(|it| it.id).collect();
@@ -173,11 +181,15 @@ pub fn view<'a>(
             strings::lookup(Text::HomeLibraries),
             typeface::HEADING_2,
         ));
-        page = page.push(widget::library_row(
-            libraries,
-            live_tv,
-            state.collections_view,
-        ));
+        let mut destinations = Vec::new();
+        if live_tv {
+            destinations.push(widget::Destination::LiveTv);
+        }
+        if state.collections_view {
+            destinations.push(widget::Destination::Collections);
+        }
+        destinations.push(widget::Destination::Playlists);
+        page = page.push(widget::library_row(libraries, &destinations));
     }
 
     scrollable(page).into()

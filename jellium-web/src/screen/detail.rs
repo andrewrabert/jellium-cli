@@ -11,7 +11,7 @@ use crate::app::Message;
 use crate::error::Answer;
 use crate::images::{self, Cache, Kind};
 use crate::player::Intent;
-use crate::style::{self, space, typeface};
+use crate::style::{self, Viewport, space, typeface};
 use crate::text::{self as strings, Text};
 use crate::theme;
 use crate::widget;
@@ -177,10 +177,15 @@ fn play_controls<'a>(item: &BaseItemDto) -> Vec<Element<'a, Message>> {
 /// Metadata with its replace and scan mode options.
 pub fn view<'a>(
     state: &'a State,
+    viewport: Viewport,
     images: &'a Cache,
     session: &'a jellium_protocol::Session,
 ) -> Element<'a, Message> {
     let item = &state.item;
+    let overflow = match session.read_only {
+        true => widget::Overflow::Withheld,
+        false => widget::Overflow::Offered,
+    };
 
     let poster: Element<'a, Message> = match item.id.and_then(|id| {
         images.handle(images::Key {
@@ -284,7 +289,7 @@ pub fn view<'a>(
                 strings::lookup(children_heading(item.type_)),
                 typeface::HEADING_2,
             ))
-            .push(widget::grid(&state.children, images, !session.read_only));
+            .push(widget::posters(&state.children, viewport, images, overflow));
     }
 
     if session.administrator
@@ -305,8 +310,9 @@ pub fn view<'a>(
         page = page.push(widget::rail(
             Text::DetailSimilar,
             &state.similar,
+            viewport,
             images,
-            !session.read_only,
+            overflow,
         ));
     }
 

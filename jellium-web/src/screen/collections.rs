@@ -17,6 +17,7 @@ use crate::screen::browse::{self, Browse};
 use crate::style::{self, Viewport, space, typeface};
 use crate::text::{self as strings, Text};
 
+use crate::widget;
 use crate::widget::prose;
 use iced::Task;
 
@@ -48,10 +49,20 @@ pub enum Action {
     PlayAll { id: Uuid, shuffle: bool },
 }
 
-pub async fn listed(api: Rc<Api>, viewport: Viewport) -> Answer<Listed> {
+pub async fn listed(
+    api: Rc<Api>,
+    viewport: Viewport,
+    overflow: widget::Overflow,
+) -> Answer<Listed> {
     Answer::of(async {
         let heading = strings::lookup(Text::NavCollections).to_string();
-        let mut browse = Browse::new(window::Id::Browse, heading, Listing::default(), viewport);
+        let mut browse = Browse::new(
+            window::Id::Browse,
+            heading,
+            Listing::default(),
+            viewport,
+            overflow,
+        );
         let answered = api
             .collections(0, Paged::<BaseItemDto>::PAGE as i32)
             .await
@@ -72,11 +83,18 @@ pub async fn load(
     collection: Uuid,
     listing: Listing,
     viewport: Viewport,
+    overflow: widget::Overflow,
 ) -> Answer<State> {
     Answer::of(async {
         let held = api.item(collection).await.bubbled()?;
         let heading = held.name.clone().unwrap_or_default();
-        let mut browse = Browse::new(window::Id::Browse, heading, listing.clone(), viewport);
+        let mut browse = Browse::new(
+            window::Id::Browse,
+            heading,
+            listing.clone(),
+            viewport,
+            overflow,
+        );
         let answered = api
             .browse(
                 Some(collection),
@@ -115,6 +133,7 @@ fn naming<'a>(held: &'a str, label: Text, apply: Message) -> Element<'a, Message
 
 pub fn view_listed<'a>(
     state: &'a Listed,
+    viewport: Viewport,
     images: &'a Cache,
     read_only: bool,
 ) -> Element<'a, Message> {
@@ -126,11 +145,16 @@ pub fn view_listed<'a>(
             Message::CollectionAction(Action::Create),
         ));
     }
-    page.push(browse::view(&state.browse, images, read_only))
+    page.push(browse::view(&state.browse, viewport, images))
         .into()
 }
 
-pub fn view<'a>(state: &'a State, images: &'a Cache, read_only: bool) -> Element<'a, Message> {
+pub fn view<'a>(
+    state: &'a State,
+    viewport: Viewport,
+    images: &'a Cache,
+    read_only: bool,
+) -> Element<'a, Message> {
     let Some(id) = state.collection.id else {
         return column![].into();
     };
@@ -161,7 +185,7 @@ pub fn view<'a>(state: &'a State, images: &'a Cache, read_only: bool) -> Element
             );
     }
 
-    page.push(browse::view(&state.browse, images, read_only))
+    page.push(browse::view(&state.browse, viewport, images))
         .into()
 }
 

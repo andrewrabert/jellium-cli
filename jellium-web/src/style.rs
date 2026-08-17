@@ -21,6 +21,25 @@ pub fn color(color: scheme::Color) -> iced::Color {
     )
 }
 
+pub fn padding(padding: space::Padding) -> iced::Padding {
+    iced::Padding {
+        top: drawn(padding.top.drawn()),
+        right: drawn(padding.right.drawn()),
+        bottom: drawn(padding.bottom.drawn()),
+        left: drawn(padding.left.drawn()),
+    }
+}
+
+/// The ported shadow as iced draws one; iced's own shadow carries no spread,
+/// which is the one part of `space::Shadow` that does not cross.
+pub fn shadow(shadow: space::Shadow) -> iced::Shadow {
+    iced::Shadow {
+        color: color(shadow.color),
+        offset: iced::Vector::new(0.0, drawn(shadow.drop.drawn())),
+        blur_radius: drawn(shadow.blur.drawn()),
+    }
+}
+
 pub fn radius() -> iced::border::Radius {
     iced::border::Radius::new(drawn(space::RADIUS.drawn()))
 }
@@ -128,6 +147,42 @@ pub fn flat(
         text_color: color(scheme::TEXT),
         ..iced::widget::button::Style::default()
     }
+}
+
+/// The frame a card's image sits in, which the reference fills with
+/// `.cardPadder`'s own color behind an image that has not arrived.
+// reference: card-container
+pub fn card_padder(_theme: &iced::Theme) -> iced::widget::container::Style {
+    iced::widget::container::Style::default()
+        .background(color(scheme::CARD_PADDER))
+        .border(iced::Border {
+            radius: radius(),
+            ..iced::Border::default()
+        })
+        .shadow(shadow(space::CARD_SHADOW))
+}
+
+/// A card drawing no image, which the reference gives one of five backgrounds
+/// chosen from the item's own name.
+// reference: card-container
+// reference: card-shadow
+pub fn card_face(
+    _theme: &iced::Theme,
+    background: scheme::Color,
+) -> iced::widget::container::Style {
+    iced::widget::container::Style::default()
+        .background(color(background))
+        .border(iced::Border {
+            radius: radius(),
+            ..iced::Border::default()
+        })
+        .shadow(shadow(space::CARD_SHADOW))
+}
+
+/// What a card writes under its image.
+// reference: card-footer
+pub fn card_footer(_theme: &iced::Theme) -> iced::widget::container::Style {
+    iced::widget::container::Style::default().color(color(scheme::TEXT))
 }
 
 // reference: scheme-input

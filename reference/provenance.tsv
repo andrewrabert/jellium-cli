@@ -142,6 +142,8 @@ card-aspect	src/components/cardbuilder/card.scss	58	86	2f24399449711db454e202f61
 card-box	src/components/cardbuilder/card.scss	88	99	ced046c031cf3e217e29d8c1335e74665df2594b235a3e7962896192bb885419	ported
 card-box-bottom	src/components/cardbuilder/card.scss	120	128	23197c4c6e619a63ff78e1c3556721dc10564e5558b55f33dd05dc16f044a55e	ported
 card-content	src/components/cardbuilder/card.scss	197	243	1707b8af4c7bd0052737b768bf93d939866aac72fe650f3762f05a2702998d2b	ported
+card-container	src/components/cardbuilder/card.scss	33	51	8ca352903ecb7399c2e395fa7164ba13fa7ccf31dbcfc262da38d4280b1fa5e9	ported
+card-text-centered	src/components/cardbuilder/card.scss	373	376	c14776ba455dbcd1b7216eb804a7e997b5adbe8fcd12b63e8b0a59d48a6480a0	ported
 card-shadow	src/components/cardbuilder/card.scss	245	249	e94fecb864a733eafb6009107f46cc44e3eaa86a44c966251a50e09d4ab2c667	ported
 card-footer	src/components/cardbuilder/card.scss	271	279	67f5e6dc68d9be83d5acd1f7c645c213f8002cd032f39faea4f29662bc91f2fc	ported
 card-text	src/components/cardbuilder/card.scss	301	322	ef0f82e2ad46e467c035def9e599f52e1e32d23b10fdfca5b5a90bab6d4bc421	ported

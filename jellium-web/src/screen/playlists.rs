@@ -115,10 +115,20 @@ pub enum Action {
     },
 }
 
-pub async fn listed(api: Rc<Api>, viewport: Viewport) -> Answer<Listed> {
+pub async fn listed(
+    api: Rc<Api>,
+    viewport: Viewport,
+    overflow: widget::Overflow,
+) -> Answer<Listed> {
     Answer::of(async {
         let heading = strings::lookup(Text::NavPlaylists).to_string();
-        let mut browse = Browse::new(window::Id::Browse, heading, Listing::default(), viewport);
+        let mut browse = Browse::new(
+            window::Id::Browse,
+            heading,
+            Listing::default(),
+            viewport,
+            overflow,
+        );
         let answered = api
             .playlists(0, Paged::<BaseItemDto>::PAGE as i32)
             .await
@@ -205,6 +215,7 @@ fn naming<'a>(held: &'a str, label: Text, apply: Message) -> Element<'a, Message
 
 pub fn view_listed<'a>(
     state: &'a Listed,
+    viewport: Viewport,
     images: &'a Cache,
     read_only: bool,
 ) -> Element<'a, Message> {
@@ -216,7 +227,7 @@ pub fn view_listed<'a>(
             Message::PlaylistAction(Action::Create),
         ));
     }
-    page.push(browse::view(&state.browse, images, read_only))
+    page.push(browse::view(&state.browse, viewport, images))
         .into()
 }
 

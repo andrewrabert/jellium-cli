@@ -10,7 +10,7 @@ use crate::api::Api;
 use crate::app::Message;
 use crate::error::Answer;
 use crate::images::{self, Cache};
-use crate::style::{self, space};
+use crate::style::{self, Viewport, space};
 use crate::text::Text;
 use crate::widget;
 
@@ -63,11 +63,20 @@ pub async fn load(api: Rc<Api>, library: Uuid, movies: bool) -> Answer<State> {
     .await
 }
 
-pub fn view<'a>(state: &'a State, images: &'a Cache, read_only: bool) -> Element<'a, Message> {
-    let overflow = !read_only;
+pub fn view<'a>(
+    state: &'a State,
+    viewport: Viewport,
+    images: &'a Cache,
+    read_only: bool,
+) -> Element<'a, Message> {
+    let overflow = match read_only {
+        true => widget::Overflow::Withheld,
+        false => widget::Overflow::Offered,
+    };
     let mut page = column![widget::rail(
         Text::LibraryTabSuggestions,
         &state.suggestions,
+        viewport,
         images,
         overflow,
     )]
@@ -77,6 +86,7 @@ pub fn view<'a>(state: &'a State, images: &'a Cache, read_only: bool) -> Element
         page = page.push(widget::named_rail(
             &rail.heading,
             &rail.items,
+            viewport,
             images,
             overflow,
         ));

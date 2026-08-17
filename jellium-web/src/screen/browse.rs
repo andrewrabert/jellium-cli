@@ -15,7 +15,7 @@ use crate::app::Message;
 use crate::error::Answer;
 use crate::images::{self, Cache};
 use crate::route::Listing;
-use crate::style::{self, Drawn, Viewport, space, typeface};
+use crate::style::{self, Drawn, Viewport, card, space, typeface};
 use crate::text::{self as strings, Text};
 use crate::theme;
 use crate::widget;
@@ -37,6 +37,8 @@ pub struct Browse {
     /// Where the grid rested under each sort visited, so returning to a sort
     /// returns to its place.
     rested: Vec<(Sort, Drawn)>,
+    /// Whether this surface's cards offer the overflow menu.
+    overflow: widget::Overflow,
 }
 
 /// One facet value: the id every query carries and the name every control
@@ -99,20 +101,32 @@ fn toggled<T: PartialEq>(held: &mut Vec<T>, value: T, on: bool) {
 }
 
 impl Browse {
-    pub fn new(id: window::Id, heading: String, listing: Listing, viewport: Viewport) -> Browse {
+    pub fn new(
+        id: window::Id,
+        heading: String,
+        listing: Listing,
+        viewport: Viewport,
+        overflow: widget::Overflow,
+    ) -> Browse {
+        let wall = card::Card::Wall(card::Shape::Portrait);
         Browse {
             heading,
             listing,
             grid: window::Grid::new(
                 id,
-                Drawn::of(theme::CARD_WIDTH + style::drawn(space::GUTTER.drawn())),
-                Drawn::of(theme::CARD_HEIGHT + style::drawn(space::GUTTER.drawn())),
+                wall.width(viewport),
+                wall.row(
+                    viewport,
+                    card::Footer::NameAndSubtitle,
+                    card::Bottom::Padded,
+                ),
                 viewport.canvas(),
             ),
             items: Paged::new(0),
             choices: Choices::default(),
             filtering: false,
             rested: Vec::new(),
+            overflow,
         }
     }
 
@@ -349,7 +363,8 @@ fn filter_surface<'a>(browse: &'a Browse) -> Element<'a, Message> {
 /// The heading with the total item count, the sort surface, the filter surface
 /// with its active count and its one clear, the letter jump on a name sort
 /// alone, and the windowed grid.
-pub fn view<'a>(browse: &'a Browse, images: &'a Cache, read_only: bool) -> Element<'a, Message> {
+pub fn view<'a>(browse: &'a Browse, viewport: Viewport, images: &'a Cache) -> Element<'a, Message> {
+    let wall = card::Card::Wall(card::Shape::Portrait);
     let active = browse.listing.facets.count();
     let mut page = column![
         prose(browse.heading.clone(), typeface::HEADING_1),
@@ -379,14 +394,19 @@ pub fn view<'a>(browse: &'a Browse, images: &'a Cache, read_only: bool) -> Eleme
         browse.grid,
         count,
         move |index| match browse.items.row(index) {
-            Some(item) => widget::card(
+            Some(item) => widget::poster(
                 item,
+                viewport,
                 widget::poster_key(item).and_then(|key| images.handle(key)),
-                !read_only,
+                browse.overflow,
             ),
             None => iced::widget::Space::new()
-                .width(theme::CARD_WIDTH)
-                .height(theme::CARD_HEIGHT + style::drawn(space::GUTTER.drawn()))
+                .width(style::drawn(wall.width(viewport)))
+                .height(style::drawn(wall.row(
+                    viewport,
+                    card::Footer::NameAndSubtitle,
+                    card::Bottom::Padded,
+                )))
                 .into(),
         },
     ));

@@ -18,6 +18,7 @@ use crate::route::{Listing, Route};
 use crate::screen::browse::{self, Browse};
 use crate::style::{self, Viewport, space, typeface};
 use crate::text::{self as strings, Text};
+use crate::widget;
 use crate::widget::prose;
 
 /// A library tab named without what its list carries, which is what the strip
@@ -184,7 +185,13 @@ pub struct State {
     pub body: Body,
 }
 
-pub async fn load(api: Rc<Api>, library: Uuid, tab: Tab, viewport: Viewport) -> Answer<State> {
+pub async fn load(
+    api: Rc<Api>,
+    library: Uuid,
+    tab: Tab,
+    viewport: Viewport,
+    overflow: widget::Overflow,
+) -> Answer<State> {
     Answer::of(async {
         let held = api.item(library).await.bubbled()?;
         let tabs = Kind::of(held.collection_type);
@@ -209,14 +216,26 @@ pub async fn load(api: Rc<Api>, library: Uuid, tab: Tab, viewport: Viewport) -> 
                 .bubbled()?,
             ))
         } else if kind == Kind::Upcoming {
-            let mut rows = Browse::new(window::Id::Browse, heading, Listing::default(), viewport);
+            let mut rows = Browse::new(
+                window::Id::Browse,
+                heading,
+                Listing::default(),
+                viewport,
+                overflow,
+            );
             let items = api.upcoming(library, UPCOMING).await.bubbled()?;
             rows.items = Paged::new(items.len());
             rows.filled(0..items.len(), items);
             Body::Rows(Box::new(rows))
         } else {
             let listing = tab.listing().cloned().unwrap_or_default();
-            let mut browse = Browse::new(window::Id::Browse, heading, listing.clone(), viewport);
+            let mut browse = Browse::new(
+                window::Id::Browse,
+                heading,
+                listing.clone(),
+                viewport,
+                overflow,
+            );
             let answered = api
                 .browse(
                     Some(library),
@@ -287,7 +306,12 @@ pub async fn choices(api: &Api, parent: Option<Uuid>, library: &BaseItemDto) -> 
     }
 }
 
-pub fn view<'a>(state: &'a State, images: &'a Cache, read_only: bool) -> Element<'a, Message> {
+pub fn view<'a>(
+    state: &'a State,
+    viewport: Viewport,
+    images: &'a Cache,
+    read_only: bool,
+) -> Element<'a, Message> {
     let Some(id) = state.library.id else {
         return column![].into();
     };
@@ -305,9 +329,11 @@ pub fn view<'a>(state: &'a State, images: &'a Cache, read_only: bool) -> Element
     .spacing(style::drawn(space::GUTTER.drawn()));
 
     let body = match &state.body {
-        Body::Browse(browse) | Body::Rows(browse) => browse::view(browse, images, read_only),
-        Body::Suggestions(held) => crate::screen::suggestions::view(held, images, read_only),
-        Body::Hub(held) => crate::screen::hub::view(held, images),
+        Body::Browse(browse) | Body::Rows(browse) => browse::view(browse, viewport, images),
+        Body::Suggestions(held) => {
+            crate::screen::suggestions::view(held, viewport, images, read_only)
+        }
+        Body::Hub(held) => crate::screen::hub::view(held, viewport, images),
     };
 
     column![strip, body]

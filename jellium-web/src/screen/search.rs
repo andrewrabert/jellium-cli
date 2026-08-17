@@ -38,10 +38,17 @@ pub async fn load(
     term: String,
     listing: Listing,
     viewport: Viewport,
+    overflow: widget::Overflow,
 ) -> Answer<State> {
     Answer::of(async {
         let heading = strings::lookup(Text::NavSearch).to_string();
-        let mut browse = Browse::new(window::Id::Browse, heading, listing.clone(), viewport);
+        let mut browse = Browse::new(
+            window::Id::Browse,
+            heading,
+            listing.clone(),
+            viewport,
+            overflow,
+        );
 
         let mut people = Vec::new();
         let mut studios = Vec::new();
@@ -112,16 +119,18 @@ pub async fn load(
 fn section<'a>(
     title: Text,
     items: &'a [BaseItemDto],
+    viewport: Viewport,
     images: &'a Cache,
     opens: impl Fn(uuid::Uuid) -> crate::route::Route + 'a,
 ) -> Element<'a, Message> {
     let cards = items.iter().filter_map(|item| {
         let id = item.id?;
         Some(
-            iced::widget::button(widget::card(
+            iced::widget::button(widget::poster(
                 item,
+                viewport,
                 widget::poster_key(item).and_then(|key| images.handle(key)),
-                false,
+                widget::Overflow::Withheld,
             ))
             .style(style::flat)
             .on_press(Message::Navigated(opens(id)))
@@ -153,7 +162,7 @@ fn narrowed(facet: jellium_model::facets::Facet, id: uuid::Uuid) -> crate::route
     }))
 }
 
-pub fn view<'a>(state: &'a State, images: &'a Cache, read_only: bool) -> Element<'a, Message> {
+pub fn view<'a>(state: &'a State, viewport: Viewport, images: &'a Cache) -> Element<'a, Message> {
     let bar = row![
         text_input(strings::lookup(Text::SearchPlaceholder), &state.term)
             .style(style::input)
@@ -177,22 +186,31 @@ pub fn view<'a>(state: &'a State, images: &'a Cache, read_only: bool) -> Element
         return page.into();
     }
 
-    page = page.push(browse::view(&state.browse, images, read_only));
+    page = page.push(browse::view(&state.browse, viewport, images));
 
     if !state.people.is_empty() {
-        page = page.push(section(Text::SearchPeople, &state.people, images, |id| {
-            narrowed(jellium_model::facets::Facet::Person, id)
-        }));
+        page = page.push(section(
+            Text::SearchPeople,
+            &state.people,
+            viewport,
+            images,
+            |id| narrowed(jellium_model::facets::Facet::Person, id),
+        ));
     }
     if !state.studios.is_empty() {
-        page = page.push(section(Text::SearchStudios, &state.studios, images, |id| {
-            narrowed(jellium_model::facets::Facet::Studio, id)
-        }));
+        page = page.push(section(
+            Text::SearchStudios,
+            &state.studios,
+            viewport,
+            images,
+            |id| narrowed(jellium_model::facets::Facet::Studio, id),
+        ));
     }
     if !state.programs.is_empty() {
         page = page.push(section(
             Text::SearchPrograms,
             &state.programs,
+            viewport,
             images,
             |id| crate::route::Route::Detail { id },
         ));

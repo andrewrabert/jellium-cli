@@ -15,8 +15,7 @@ use crate::app::Message;
 use crate::error::Answer;
 use crate::images::{self, Cache};
 use crate::route::{Filtered, Listing, Route};
-use crate::style::{self, Drawn, Viewport, space};
-use crate::theme;
+use crate::style::{self, Viewport, card};
 use crate::widget;
 
 /// A hub: the values one facet takes across the library that owns it.
@@ -43,7 +42,8 @@ pub async fn load(
     sort: Sort,
     viewport: Viewport,
 ) -> Answer<State> {
-    Answer::of(async {
+    let wall = card::Card::Wall(card::Shape::Portrait);
+    Answer::of(async move {
         let answered = api
             .hub(facet, library, sort, 0, Paged::<BaseItemDto>::PAGE as i32)
             .await
@@ -57,8 +57,12 @@ pub async fn load(
             sort,
             grid: window::Grid::new(
                 window::Id::Browse,
-                Drawn::of(theme::CARD_WIDTH + style::drawn(space::GUTTER.drawn())),
-                Drawn::of(theme::CARD_HEIGHT + style::drawn(space::GUTTER.drawn())),
+                wall.width(viewport),
+                wall.row(
+                    viewport,
+                    card::Footer::NameAndSubtitle,
+                    card::Bottom::Padded,
+                ),
                 viewport.canvas(),
             ),
             entries,
@@ -99,15 +103,17 @@ pub fn opens(state: &State, entry: &BaseItemDto) -> Option<Route> {
 }
 
 /// Each entry opens the filtered list narrowed to that value by id.
-pub fn view<'a>(state: &'a State, images: &'a Cache) -> Element<'a, Message> {
+pub fn view<'a>(state: &'a State, viewport: Viewport, images: &'a Cache) -> Element<'a, Message> {
+    let wall = card::Card::Wall(card::Shape::Portrait);
     let count = state.entries.len();
     column![crate::window::grid(state.grid, count, move |index| {
         match state.entries.row(index) {
             Some(entry) => {
-                let card = widget::card(
+                let card = widget::poster(
                     entry,
+                    viewport,
                     widget::poster_key(entry).and_then(|key| images.handle(key)),
-                    false,
+                    widget::Overflow::Withheld,
                 );
                 match opens(state, entry) {
                     Some(route) => button(card)
@@ -118,8 +124,12 @@ pub fn view<'a>(state: &'a State, images: &'a Cache) -> Element<'a, Message> {
                 }
             }
             None => iced::widget::Space::new()
-                .width(theme::CARD_WIDTH)
-                .height(theme::CARD_HEIGHT + style::drawn(space::GUTTER.drawn()))
+                .width(style::drawn(wall.width(viewport)))
+                .height(style::drawn(wall.row(
+                    viewport,
+                    card::Footer::NameAndSubtitle,
+                    card::Bottom::Padded,
+                )))
                 .into(),
         }
     })]
