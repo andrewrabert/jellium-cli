@@ -91,8 +91,41 @@ impl Share {
         Share::per_ten_thousand(share.min(10_000) as u32)
     }
 
-    pub fn of(self, length: Drawn) -> Drawn {
-        Drawn::of(length.count() * self.per_ten_thousand as f32 / 10_000.0)
+    /// A share is taken of either measurement and answers in the one it was
+    /// given, so a share of the page is a page length and a share of the canvas
+    /// a canvas length; it cannot mix them and it is not a way around
+    /// `Css::drawn` being the only crossing.
+    pub fn of<M: Measure>(self, length: M) -> M {
+        length.scaled(self.per_ten_thousand as f32 / 10_000.0)
+    }
+}
+
+/// The two measurements a page length can be, sealed so nothing else becomes
+/// one.
+pub trait Measure: Copy + sealed::Scaled {}
+
+impl Measure for Css {}
+
+impl Measure for Drawn {}
+
+mod sealed {
+    use super::{Css, Drawn};
+
+    pub trait Scaled {
+        /// This length multiplied by `factor`, in the measurement it already is.
+        fn scaled(self, factor: f32) -> Self;
+    }
+
+    impl Scaled for Css {
+        fn scaled(self, factor: f32) -> Css {
+            Css::of(self.count * factor)
+        }
+    }
+
+    impl Scaled for Drawn {
+        fn scaled(self, factor: f32) -> Drawn {
+            Drawn::of(self.count * factor)
+        }
     }
 }
 

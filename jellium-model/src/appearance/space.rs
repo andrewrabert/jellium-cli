@@ -266,14 +266,15 @@ const PREVIEW_SHORT_SIDE: Share = Share::units(30.0);
 
 /// The scrub preview's frame, `.chapterThumb`, which is a share of the viewport
 /// rather than a card: 20vh, 30vw in portrait, and 30vh in a landscape page no
-/// taller than 50em.
+/// taller than 50em. It is a page measurement because it is both drawn and
+/// asked for: the frame draws at `preview(viewport).drawn(viewport.band())` and
+/// the tile is asked for at `Fill::of(preview(viewport))`.
 // reference: osd-preview
-pub fn preview(viewport: Viewport) -> Drawn {
-    let canvas = viewport.canvas();
+pub fn preview(viewport: Viewport) -> Css {
     match (viewport.orientation(), viewport.matches(PREVIEW_SHORT)) {
-        (Orientation::Portrait, _) => PREVIEW_PORTRAIT.of(canvas.width()),
-        (Orientation::Landscape, true) => PREVIEW_SHORT_SIDE.of(canvas.height()),
-        (Orientation::Landscape, false) => PREVIEW.of(canvas.height()),
+        (Orientation::Portrait, _) => PREVIEW_PORTRAIT.of(viewport.width()),
+        (Orientation::Landscape, true) => PREVIEW_SHORT_SIDE.of(viewport.height()),
+        (Orientation::Landscape, false) => PREVIEW.of(viewport.height()),
     }
 }
 
