@@ -600,6 +600,57 @@ fn no_literal_reaches_a_text_size_or_a_gap() {
     );
 }
 
+/// The six spellings a drawn length reaches iced through, named rather than
+/// matched on a word boundary, so `max_width` is inside this gate's scope
+/// rather than caught by the `width` that ends it.
+const LENGTHS: &[&str] = &[
+    ".width(",
+    ".max_width(",
+    ".height(",
+    ".max_height(",
+    ".radius(",
+    ".margin(",
+];
+
+#[test]
+fn no_literal_reaches_a_drawn_length() {
+    let root = workspace_root();
+    let directory = root.join("jellium-web/src");
+    let files = sources(&directory);
+    assert!(
+        !files.is_empty(),
+        "no source was read out of jellium-web/src"
+    );
+
+    let mut spelled = Vec::new();
+    for file in files {
+        let text = std::fs::read_to_string(&file).expect("the source is readable");
+        let named = file
+            .strip_prefix(&root)
+            .expect("the source sits under the workspace")
+            .display()
+            .to_string();
+        for call in LENGTHS {
+            let mut at = 0;
+            while let Some(found) = text[at..].find(call) {
+                let opened = at + found + call.len();
+                at = opened;
+                let Some(first) = argument(&text, opened) else {
+                    continue;
+                };
+                if first.is_ascii_digit() || first == '-' {
+                    let line = text[..opened].lines().count();
+                    spelled.push(format!("{named}:{line} spells a number in {call}"));
+                }
+            }
+        }
+    }
+    assert!(
+        spelled.is_empty(),
+        "numbers reaching a drawn length: {spelled:#?}"
+    );
+}
+
 /// The ligature of every `Icon` variant, read out of the enum's own
 /// `ligature` arms, so the gate cannot drift from the variants it binds.
 fn ligatures(root: &Path) -> Vec<String> {
