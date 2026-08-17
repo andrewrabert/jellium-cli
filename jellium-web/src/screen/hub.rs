@@ -15,6 +15,7 @@ use crate::app::Message;
 use crate::error::Answer;
 use crate::images::{self, Cache};
 use crate::route::{Filtered, Listing, Route};
+use crate::style::card::{Aspect, Card};
 use crate::style::space::Room;
 use crate::style::{self, Viewport, card};
 use crate::widget;
@@ -43,7 +44,6 @@ pub async fn load(
     sort: Sort,
     viewport: Viewport,
 ) -> Answer<State> {
-    let wall = card::Card::Wall(card::Shape::Portrait);
     let room = Room::content(viewport);
     Answer::of(async move {
         let answered = api
@@ -52,6 +52,15 @@ pub async fn load(
             .bubbled()?;
         let mut entries = Paged::new(answered.total.max(0) as usize);
         entries.filled(0..answered.items.len(), answered.items);
+        let wall = Card::grid(
+            None,
+            Aspect::shared(
+                entries
+                    .held()
+                    .filter_map(|item| item.primary_image_aspect_ratio)
+                    .map(Aspect::of),
+            ),
+        );
 
         Ok(State {
             facet,
@@ -102,7 +111,16 @@ pub fn opens(state: &State, entry: &BaseItemDto) -> Option<Route> {
 
 /// Each entry opens the filtered list narrowed to that value by id.
 pub fn view<'a>(state: &'a State, viewport: Viewport, images: &'a Cache) -> Element<'a, Message> {
-    let wall = card::Card::Wall(card::Shape::Portrait);
+    let wall = Card::grid(
+        None,
+        Aspect::shared(
+            state
+                .entries
+                .held()
+                .filter_map(|item| item.primary_image_aspect_ratio)
+                .map(Aspect::of),
+        ),
+    );
     let count = state.entries.len();
     column![crate::window::grid(state.grid, count, move |index| {
         match state.entries.row(index) {

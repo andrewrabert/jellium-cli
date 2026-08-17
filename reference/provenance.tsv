@@ -180,3 +180,9 @@ home-library-tiles	src/components/homesections/sections/libraryTiles.ts	17	40	05
 library-icon	src/utils/image.ts	98	120	da18aaf36836943cf9b13d8fc244275500013a107dc3658d5aa7c7e9baf646ed	ported
 library-icon-channels	src/utils/image.ts	121	122	47d2d4e05ddb5900b7f359f63c9899659dac6180d504ba5f1d53335085c814c1	dead
 library-icon-unknown	src/utils/image.ts	123	128	747a6878a352f04209fadd66ad6926855cc29a143657785131fb02b352df606f	ported
+grid-card	src/controllers/movies/movies.js	169	179	aac3f33e1d539188f180998e20e44aaef8aa21b0008cb9856c3621797bcea88c	ported
+grid-card-series	src/controllers/shows/tvshows.js	155	166	ec0eec5cc0101af488cb8f726c388a56d7f61681a8305736f76c977d970d8ea4	ported
+grid-card-album	src/controllers/music/musicalbums.js	144	155	6dfd4714afdcf507a54bacea4b79226557b37d9d1581009f45439a494787391b	ported
+grid-card-auto	src/controllers/list.js	552	554	404b56d2c92d9e4a1d2ea07dc6b0d9d9b645f5bc5b18b8d252e2860e19a86a18	ported
+card-auto-shape	src/components/cardbuilder/cardBuilder.js	83	103	bd180854586aa0cb21ea5de3b4eea1a6881a6c68079906eb0b516df56416e8ce	ported
+primary-aspect	src/components/images/imageLoader.js	178	234	b50fd3873b67e23dadc07cfd384cb1e5eb139529e171004583ee7d1af262b920	ported

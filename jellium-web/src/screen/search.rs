@@ -47,6 +47,7 @@ pub async fn load(
             window::Id::Browse,
             heading,
             listing.clone(),
+            None,
             viewport,
             overflow,
         );

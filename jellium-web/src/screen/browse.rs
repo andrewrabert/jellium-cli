@@ -7,7 +7,7 @@ use jellium_model::facets::{SeriesState, VideoKind};
 use jellium_model::paged::Paged;
 use jellium_model::sort::Sort;
 use jellium_model::window;
-use jellyfin_api::types::BaseItemDto;
+use jellyfin_api::types::{BaseItemDto, CollectionType};
 use uuid::Uuid;
 
 use crate::api::Api;
@@ -15,6 +15,7 @@ use crate::app::Message;
 use crate::error::Answer;
 use crate::images::{self, Cache};
 use crate::route::Listing;
+use crate::style::card::{Aspect, Card};
 use crate::style::space::Room;
 use crate::style::{self, Drawn, Viewport, card, space, typeface};
 use crate::text::{self as strings, Text};
@@ -34,6 +35,13 @@ pub struct Browse {
     pub choices: Choices,
     /// True while the filter surface is open.
     pub filtering: bool,
+    /// The library this grid is of, which decides the card it draws.
+    collection: Option<CollectionType>,
+    /// The card every cell draws, which the items' own aspect settles for a
+    /// library whose controller writes no shape.
+    card: Card,
+    /// The page these measurements were taken in.
+    viewport: Viewport,
     /// Where the grid rested under each sort visited, so returning to a sort
     /// returns to its place.
     rested: Vec<(Sort, Drawn)>,
@@ -112,26 +120,46 @@ impl Browse {
         id: window::Id,
         heading: String,
         listing: Listing,
+        collection: Option<CollectionType>,
         viewport: Viewport,
         overflow: widget::Overflow,
     ) -> Browse {
-        let wall = card::Card::Wall(card::Shape::Portrait);
+        let drawn = Card::grid(collection, None);
         let room = Room::content(viewport);
         Browse {
             heading,
             listing,
             grid: window::Grid::new(
                 id,
-                wall.width(room),
-                wall.row(room, card::Footer::NameAndSubtitle, card::Bottom::Padded),
+                drawn.width(room),
+                drawn.row(room, card::Footer::NameAndSubtitle, card::Bottom::Padded),
                 room,
             ),
             items: Paged::new(0),
             choices: Choices::default(),
             filtering: false,
+            collection,
+            card: drawn,
+            viewport,
             rested: Vec::new(),
             overflow,
         }
+    }
+
+    /// The card every cell of this grid draws.
+    pub fn card(&self) -> Card {
+        self.card
+    }
+
+    /// Relays the grid at the card and the page standing now.
+    fn relaid(&mut self) {
+        let room = Room::content(self.viewport);
+        self.grid.resized(
+            room,
+            self.card.width(room),
+            self.card
+                .row(room, card::Footer::NameAndSubtitle, card::Bottom::Padded),
+        );
     }
 
     /// The page the window wants that is neither held nor in flight.
@@ -145,6 +173,16 @@ impl Browse {
 
     pub fn filled(&mut self, page: std::ops::Range<usize>, items: Vec<BaseItemDto>) {
         self.items.filled(page, items);
+        self.card = Card::grid(
+            self.collection,
+            Aspect::shared(
+                self.items
+                    .held()
+                    .filter_map(|item| item.primary_image_aspect_ratio)
+                    .map(Aspect::of),
+            ),
+        );
+        self.relaid();
     }
 
     /// Drops the rows `page` covers so the next fetch re-reads them; the grid's
@@ -158,13 +196,8 @@ impl Browse {
     }
 
     pub fn resized(&mut self, viewport: Viewport) {
-        let wall = card::Card::Wall(card::Shape::Portrait);
-        let room = Room::content(viewport);
-        self.grid.resized(
-            room,
-            wall.width(room),
-            wall.row(room, card::Footer::NameAndSubtitle, card::Bottom::Padded),
-        );
+        self.viewport = viewport;
+        self.relaid();
     }
 
     /// Records where the grid rests under the sort shown and answers the offset
@@ -394,7 +427,7 @@ fn filter_surface<'a>(browse: &'a Browse, viewport: Viewport) -> Element<'a, Mes
 /// with its active count and its one clear, the letter jump on a name sort
 /// alone, and the windowed grid.
 pub fn view<'a>(browse: &'a Browse, viewport: Viewport, images: &'a Cache) -> Element<'a, Message> {
-    let wall = card::Card::Wall(card::Shape::Portrait);
+    let wall = browse.card();
     let active = browse.listing.facets.count();
     let mut page = column![
         prose(browse.heading.clone(), typeface::HEADING_1),

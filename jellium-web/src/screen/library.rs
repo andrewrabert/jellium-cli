@@ -220,6 +220,7 @@ pub async fn load(
                 window::Id::Browse,
                 heading,
                 Listing::default(),
+                held.collection_type,
                 viewport,
                 overflow,
             );
@@ -233,6 +234,7 @@ pub async fn load(
                 window::Id::Browse,
                 heading,
                 listing.clone(),
+                held.collection_type,
                 viewport,
                 overflow,
             );

@@ -36,6 +36,11 @@ impl<T> Paged<T> {
         self.rows.get(index)?.as_ref()
     }
 
+    /// Every row held, in order.
+    pub fn held(&self) -> impl Iterator<Item = &T> {
+        self.rows.iter().filter_map(Option::as_ref)
+    }
+
     /// The one page `built` needs that is neither held nor in flight, and
     /// `None` when everything `built` covers is held or asked for.
     /// The page is aligned to `PAGE`, so the same rows are always asked for

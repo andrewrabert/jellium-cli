@@ -5,7 +5,7 @@ use iced::widget::{button, checkbox, column, row, text_input};
 use iced::{Element, Task};
 use jellium_model::paged::Paged;
 use jellium_model::window;
-use jellyfin_api::types::BaseItemDto;
+use jellyfin_api::types::{BaseItemDto, CollectionType};
 use uuid::Uuid;
 
 use crate::api::Api;
@@ -126,6 +126,7 @@ pub async fn listed(
             window::Id::Browse,
             heading,
             Listing::default(),
+            Some(CollectionType::Playlists),
             viewport,
             overflow,
         );

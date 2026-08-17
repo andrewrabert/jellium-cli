@@ -258,7 +258,72 @@ fn rail_ladder(rail: Rail) -> &'static Ladder<Share> {
     }
 }
 
+/// An image's width over its height, as the server reports it.
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
+pub struct Aspect {
+    ratio: f64,
+}
+
+/// The ratios the reference snaps a median onto, each with the distance it
+/// snaps from: 2:3, 16:9, 1:1, 4:3, in the order the reference tests them.
+// reference: primary-aspect
+const SNAPPED: [(f64, f64); 4] = [
+    (2.0 / 3.0, 0.15),
+    (16.0 / 9.0, 0.2),
+    (1.0, 0.15),
+    (4.0 / 3.0, 0.15),
+];
+
+impl Aspect {
+    pub const fn of(ratio: f64) -> Aspect {
+        Aspect { ratio }
+    }
+
+    pub fn ratio(self) -> f64 {
+        self.ratio
+    }
+
+    /// The aspect a set of items shares: the median of those that report one,
+    /// snapped to 2:3, 16:9, 1:1 or 4:3 inside the reference's own tolerance.
+    /// `None` where no item reports one.
+    // reference: primary-aspect
+    pub fn shared(reported: impl Iterator<Item = Aspect>) -> Option<Aspect> {
+        let mut held: Vec<f64> = reported
+            .map(Aspect::ratio)
+            .filter(|ratio| *ratio != 0.0)
+            .collect();
+        held.sort_by(|one, other| one.total_cmp(other));
+        let half = held.len() / 2;
+        let middle = match held.len() % 2 {
+            0 => (held.get(half.checked_sub(1)?)? + held.get(half)?) / 2.0,
+            _ => *held.get(half)?,
+        };
+        Some(Aspect::of(
+            SNAPPED
+                .into_iter()
+                .find(|(onto, apart)| (onto - middle).abs() <= *apart)
+                .map_or(middle, |(onto, _)| onto),
+        ))
+    }
+}
+
 impl Shape {
+    /// The shape items of this aspect ask for: banner at 3 and wider, backdrop
+    /// at 1.33, square above 0.8, portrait below it.
+    /// `Square` where they share no aspect.
+    // reference: card-auto-shape
+    pub fn fitting(aspect: Option<Aspect>) -> Shape {
+        let Some(aspect) = aspect else {
+            return Shape::Square;
+        };
+        match aspect.ratio() {
+            ratio if ratio >= 3.0 => Shape::Banner,
+            ratio if ratio >= 1.33 => Shape::Backdrop,
+            ratio if ratio > 0.8 => Shape::Square,
+            _ => Shape::Portrait,
+        }
+    }
+
     /// The padder's share of the card's own width: 150%, 56.25%, 100%, 18.5%.
     // reference: card-aspect
     pub fn aspect(self) -> Share {
@@ -364,6 +429,33 @@ impl Card {
                 | CollectionType::Folders,
             )
             | None => Card::Rail(Rail::Backdrop),
+        }
+    }
+
+    /// The card a library's grid draws: the shape that library's own
+    /// controller writes, and for a library with no controller of its own the
+    /// shape its items ask for.
+    // reference: grid-card
+    // reference: grid-card-series
+    // reference: grid-card-album
+    // reference: grid-card-auto
+    pub fn grid(collection: Option<CollectionType>, aspect: Option<Aspect>) -> Card {
+        match collection {
+            Some(CollectionType::Movies | CollectionType::Tvshows) => Card::Wall(Shape::Portrait),
+            Some(CollectionType::Music) => Card::Wall(Shape::Square),
+            Some(
+                CollectionType::Unknown
+                | CollectionType::Musicvideos
+                | CollectionType::Trailers
+                | CollectionType::Books
+                | CollectionType::Homevideos
+                | CollectionType::Boxsets
+                | CollectionType::Photos
+                | CollectionType::Livetv
+                | CollectionType::Playlists
+                | CollectionType::Folders,
+            )
+            | None => Card::Wall(Shape::fitting(aspect)),
         }
     }
 

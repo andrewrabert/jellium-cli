@@ -5,7 +5,7 @@ use iced::Element;
 use iced::widget::{button, column, row, text_input};
 use jellium_model::paged::Paged;
 use jellium_model::window;
-use jellyfin_api::types::BaseItemDto;
+use jellyfin_api::types::{BaseItemDto, CollectionType};
 use uuid::Uuid;
 
 use crate::api::Api;
@@ -60,6 +60,7 @@ pub async fn listed(
             window::Id::Browse,
             heading,
             Listing::default(),
+            Some(CollectionType::Boxsets),
             viewport,
             overflow,
         );
@@ -92,6 +93,7 @@ pub async fn load(
             window::Id::Browse,
             heading,
             listing.clone(),
+            Some(CollectionType::Boxsets),
             viewport,
             overflow,
         );

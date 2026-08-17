@@ -495,6 +495,7 @@ async fn filtered_load(
             window::Id::Browse,
             heading,
             listing.clone(),
+            None,
             viewport,
             overflow,
         );
@@ -2135,7 +2136,15 @@ impl Jellium {
                     browse.resized(page);
                 }
                 if let Some(hub) = self.hubbing() {
-                    let wall = card::Card::Wall(card::Shape::Portrait);
+                    let wall = card::Card::grid(
+                        None,
+                        card::Aspect::shared(
+                            hub.entries
+                                .held()
+                                .filter_map(|item| item.primary_image_aspect_ratio)
+                                .map(card::Aspect::of),
+                        ),
+                    );
                     let room = Room::content(page);
                     hub.grid.resized(
                         room,
