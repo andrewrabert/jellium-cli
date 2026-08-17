@@ -311,12 +311,9 @@ pub fn view<'a>(
     }
 
     if !state.similar.is_empty() {
-        page = page.push(widget::rail(
-            Text::DetailSimilar,
-            &state.similar,
-            viewport,
-            images,
-            overflow,
+        page = page.push(widget::section(
+            strings::lookup(Text::DetailSimilar),
+            widget::rail(&state.similar, viewport, images, overflow),
         ));
     }
 

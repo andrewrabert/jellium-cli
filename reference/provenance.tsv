@@ -138,6 +138,7 @@ header-title	src/styles/librarybrowser.scss	172	189	2f8c8fad8dbde9525ed97704fc93
 header-logo	src/styles/librarybrowser.scss	201	210	9363e8c1db0cd7207606840262e74a44de533a1bfb06a6af1eaf8d81978b7ecd	ported
 header-top	src/styles/librarybrowser.scss	238	240	e4b5ad9d413fdba0d4208e8dd7c6b6c488ff399f4a1a063ff0ae99cabaf9181b	ported
 section-title	src/styles/librarybrowser.scss	1292	1300	f42cb439ecb9fe44f615faa2c1706cc0b6c2de46d5860ebbab6aa90b14332ec9	ported
+section-title-cards	src/styles/librarybrowser.scss	1303	1317	100b8bcce30738ca3b8f7ba49c8dc909d6ab7443522a860922bb58def73d7703	ported
 splash-logo	src/styles/site.scss	17	36	0720b5fbb0e0b0b28991354f80bd085277fcf51d1501e1f2fcb3eb12628052fd	ported
 band-threshold	src/styles/librarybrowser.scss	422	426	97b6d00bf260b8803f27b275fdc3f81792e87b73e1d2e49968aa6b6321cd2726	ported
 card-aspect	src/components/cardbuilder/card.scss	58	86	2f24399449711db454e202f61f52aa44006d7e0a1426499eb582632a472db75e	ported

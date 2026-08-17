@@ -331,9 +331,15 @@ pub fn view<'a>(
 
     let body = match &state.body {
         Body::Browse(browse) | Body::Rows(browse) => browse::view(browse, viewport, images),
-        Body::Suggestions(held) => {
-            crate::screen::suggestions::view(held, viewport, images, read_only)
-        }
+        Body::Suggestions(held) => crate::screen::suggestions::view(
+            held,
+            viewport,
+            images,
+            match read_only {
+                true => widget::Overflow::Withheld,
+                false => widget::Overflow::Offered,
+            },
+        ),
         Body::Hub(held) => crate::screen::hub::view(held, viewport, images),
     };
 

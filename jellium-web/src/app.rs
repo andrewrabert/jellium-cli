@@ -2902,7 +2902,10 @@ impl Jellium {
                         chrono::Utc::now(),
                         self.viewport,
                         &self.images,
-                        read_only,
+                        match read_only {
+                            true => widget::Overflow::Withheld,
+                            false => widget::Overflow::Offered,
+                        },
                     ),
                     View::Library(state) => {
                         library::view(state, self.viewport, &self.images, read_only)

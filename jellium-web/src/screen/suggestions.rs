@@ -11,7 +11,7 @@ use crate::app::Message;
 use crate::error::Answer;
 use crate::images::{self, Cache};
 use crate::style::{self, Viewport, space};
-use crate::text::Text;
+use crate::text::{self as strings, Text};
 use crate::widget;
 
 /// The rails a Suggestions tab shows: the server's suggestions, and on a movie
@@ -67,28 +67,18 @@ pub fn view<'a>(
     state: &'a State,
     viewport: Viewport,
     images: &'a Cache,
-    read_only: bool,
+    overflow: widget::Overflow,
 ) -> Element<'a, Message> {
-    let overflow = match read_only {
-        true => widget::Overflow::Withheld,
-        false => widget::Overflow::Offered,
-    };
-    let mut page = column![widget::rail(
-        Text::LibraryTabSuggestions,
-        &state.suggestions,
-        viewport,
-        images,
-        overflow,
+    let mut page = column![widget::section(
+        strings::lookup(Text::LibraryTabSuggestions),
+        widget::rail(&state.suggestions, viewport, images, overflow),
     )]
     .spacing(style::drawn(space::GUTTER.drawn()));
 
     for rail in &state.recommendations {
-        page = page.push(widget::named_rail(
-            &rail.heading,
-            &rail.items,
-            viewport,
-            images,
-            overflow,
+        page = page.push(widget::section(
+            rail.heading.as_str(),
+            widget::rail(&rail.items, viewport, images, overflow),
         ));
     }
 

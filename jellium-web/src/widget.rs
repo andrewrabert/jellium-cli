@@ -352,63 +352,44 @@ fn cards<'a>(
         .collect()
 }
 
+/// A rail of cards, scrolled sideways under whatever title the section it
+/// stands in carries.
 pub fn rail<'a>(
-    title: Text,
-    items: &'a [BaseItemDto],
-    viewport: Viewport,
-    images: &'a Cache,
-    overflow: Overflow,
-) -> Element<'a, Message> {
-    strip(
-        prose(strings::lookup(title), typeface::HEADING_2),
-        items,
-        viewport,
-        images,
-        overflow,
-    )
-}
-
-/// A rail under a heading the server named rather than one this client holds.
-pub fn named_rail<'a>(
-    title: &'a str,
-    items: &'a [BaseItemDto],
-    viewport: Viewport,
-    images: &'a Cache,
-    overflow: Overflow,
-) -> Element<'a, Message> {
-    strip(
-        prose(title, typeface::HEADING_2),
-        items,
-        viewport,
-        images,
-        overflow,
-    )
-}
-
-fn strip<'a>(
-    title: Element<'a, Message>,
     items: &'a [BaseItemDto],
     viewport: Viewport,
     images: &'a Cache,
     overflow: Overflow,
 ) -> Element<'a, Message> {
     let wall = card::Card::Wall(card::Shape::Portrait);
+    scrollable(
+        row(cards(items, viewport, images, overflow)).spacing(style::drawn(space::GUTTER.drawn())),
+    )
+    .direction(scrollable::Direction::Horizontal(
+        scrollable::Scrollbar::default(),
+    ))
+    .height(style::drawn(wall.row(
+        viewport,
+        card::Footer::NameAndSubtitle,
+        card::Bottom::Padded,
+    )))
+    .into()
+}
+
+/// A section's title over its body, the title padded above and below by the two
+/// lengths `.sectionTitleContainer-cards` gives it.
+// reference: section-title-cards
+pub fn section<'a>(
+    title: impl Into<Cow<'a, str>>,
+    body: Element<'a, Message>,
+) -> Element<'a, Message> {
     column![
-        title,
-        scrollable(
-            row(cards(items, viewport, images, overflow))
-                .spacing(style::drawn(space::GUTTER.drawn()))
-        )
-        .direction(scrollable::Direction::Horizontal(
-            scrollable::Scrollbar::default(),
-        ))
-        .height(style::drawn(wall.row(
-            viewport,
-            card::Footer::NameAndSubtitle,
-            card::Bottom::Padded
-        ))),
+        container(prose(title, typeface::HEADING_2)).padding(
+            iced::Padding::ZERO
+                .top(style::drawn(space::SECTION_TITLE_TOP.drawn()))
+                .bottom(style::drawn(space::SECTION_TITLE_BOTTOM.drawn()))
+        ),
+        body,
     ]
-    .spacing(style::drawn(space::CONTROL_GAP.drawn()))
     .into()
 }
 

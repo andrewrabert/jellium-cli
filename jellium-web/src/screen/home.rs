@@ -122,12 +122,8 @@ pub fn view<'a>(
     now: chrono::DateTime<chrono::Utc>,
     viewport: Viewport,
     images: &'a Cache,
-    read_only: bool,
+    overflow: widget::Overflow,
 ) -> Element<'a, Message> {
-    let overflow = match read_only {
-        true => widget::Overflow::Withheld,
-        false => widget::Overflow::Offered,
-    };
     if state.libraries.is_empty() && state.continue_watching.is_empty() && state.next_up.is_empty()
     {
         return widget::banner(strings::lookup(Text::HomeEmpty).to_string());
@@ -144,30 +140,21 @@ pub fn view<'a>(
     }
 
     if arrangement.continue_watching && !state.continue_watching.is_empty() {
-        page = page.push(widget::rail(
-            Text::HomeContinueWatching,
-            &state.continue_watching,
-            viewport,
-            images,
-            overflow,
+        page = page.push(widget::section(
+            strings::lookup(Text::HomeContinueWatching),
+            widget::rail(&state.continue_watching, viewport, images, overflow),
         ));
     }
     if arrangement.next_up && !state.next_up.is_empty() {
-        page = page.push(widget::rail(
-            Text::HomeNextUp,
-            &state.next_up,
-            viewport,
-            images,
-            overflow,
+        page = page.push(widget::section(
+            strings::lookup(Text::HomeNextUp),
+            widget::rail(&state.next_up, viewport, images, overflow),
         ));
     }
     for row in &state.latest {
-        page = page.push(widget::named_rail(
+        page = page.push(widget::section(
             row.library.name.as_deref().unwrap_or_default(),
-            &row.items,
-            viewport,
-            images,
-            overflow,
+            widget::rail(&row.items, viewport, images, overflow),
         ));
     }
     let ids: Vec<uuid::Uuid> = state.libraries.iter().filter_map(|it| it.id).collect();
