@@ -32,7 +32,7 @@ pub async fn load(api: std::rc::Rc<crate::api::Api>) -> Answer<State> {
 /// adds one behind a confirmation naming the url.
 pub fn view<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
     let mut page = column![prose(
-        strings::lookup(Text::RepositoriesTitle).to_owned(),
+        strings::lookup(Text::RepositoriesTitle),
         typeface::HEADING_2
     )]
     .spacing(style::drawn(space::GUTTER.drawn()))
@@ -48,7 +48,7 @@ pub fn view<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
         if !read_only {
             held = held.push(
                 button(prose(
-                    strings::lookup(Text::RepositoriesRemove).to_owned(),
+                    strings::lookup(Text::RepositoriesRemove),
                     typeface::BODY,
                 ))
                 .on_press(Message::DashboardAction(super::Action::Ask(
@@ -74,7 +74,7 @@ pub fn view<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
                         Message::DashboardAction(super::Action::TypedPassword(typed))
                     }),
                 button(prose(
-                    strings::lookup(Text::RepositoriesAdd).to_owned(),
+                    strings::lookup(Text::RepositoriesAdd),
                     typeface::BODY
                 ))
                 .on_press(Message::DashboardAction(super::Action::Ask(

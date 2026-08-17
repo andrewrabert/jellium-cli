@@ -152,17 +152,14 @@ pub fn view<'a>(
     }
 
     let tabs = row(Tab::ALL.iter().map(|tab| {
-        button(prose(
-            strings::lookup(tab.label()).to_owned(),
-            typeface::BODY,
-        ))
-        .style(if *tab == state.tab {
-            style::submit
-        } else {
-            style::raised
-        })
-        .on_press(Message::LiveTvAction(Action::Selected(*tab)))
-        .into()
+        button(prose(strings::lookup(tab.label()), typeface::BODY))
+            .style(if *tab == state.tab {
+                style::submit
+            } else {
+                style::raised
+            })
+            .on_press(Message::LiveTvAction(Action::Selected(*tab)))
+            .into()
     }))
     .spacing(style::drawn(space::GUTTER.drawn()));
 
@@ -175,10 +172,7 @@ pub fn view<'a>(
     };
 
     column![
-        prose(
-            strings::lookup(Text::LiveTvTitle).to_owned(),
-            typeface::HEADING_2
-        ),
+        prose(strings::lookup(Text::LiveTvTitle), typeface::HEADING_2),
         tabs,
         body,
     ]

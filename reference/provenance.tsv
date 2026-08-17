@@ -153,3 +153,4 @@ card-count-ladder	src/components/cardbuilder/cardBuilderUtils.ts	192	317	65a373f
 login-disclaimer	src/controllers/session/login/login.scss	1	26	7082c7c4e9983ab430ba2bb2a0699383219be84536c811fae7f210c5b241c5ee	ported
 dialog-fullscreen	src/components/dialogHelper/dialoghelper.scss	115	135	76dcde0540783a115a192bd74a35b3b689d1cdd2ddb8fc3f8c86221d70e64b68	ported
 scheme-dialog-backdrop	src/components/dialogHelper/dialoghelper.scss	142	158	67962f638bb5c0dd9fa64b250c305c105b72302b08fb3a00cf990ad90700cca5	ported
+face-base-bold-cyrillic	src/styles/noto-sans/base-700-normal.scss	10	15	ac3cedbce70cabd48e4275ac18c47062c5ec84d4b27795e8f4f8f2fef19e44e0	ported

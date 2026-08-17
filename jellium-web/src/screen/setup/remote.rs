@@ -28,14 +28,14 @@ pub async fn load() -> Answer<State> {
 pub fn view(state: &State) -> Element<'_, Message> {
     column![
         prose(
-            strings::lookup(Text::SetupRemoteAccess).to_owned(),
+            strings::lookup(Text::SetupRemoteAccess),
             typeface::HEADING_3
         ),
         row![
             checkbox(state.access.enable_remote_access)
                 .on_toggle(|on| Message::SetupAction(Action::Edited(Edit::RemoteAccess(on)))),
             prose(
-                strings::lookup(Text::SetupRemoteAccessEnable).to_owned(),
+                strings::lookup(Text::SetupRemoteAccessEnable),
                 typeface::BODY
             ),
         ]
@@ -44,7 +44,7 @@ pub fn view(state: &State) -> Element<'_, Message> {
             checkbox(state.access.enable_automatic_port_mapping)
                 .on_toggle(|on| Message::SetupAction(Action::Edited(Edit::PortMapping(on)))),
             prose(
-                strings::lookup(Text::SetupRemoteAccessPortMapping).to_owned(),
+                strings::lookup(Text::SetupRemoteAccessPortMapping),
                 typeface::BODY
             ),
         ]

@@ -8,7 +8,7 @@ use crate::app::Message;
 use crate::error::Answer;
 use crate::style::{self, Drawn, space, typeface};
 use crate::text::{self as strings, Text};
-use crate::widget::prose;
+use crate::widget::{line, prose};
 use crate::window;
 use jellium_protocol::{Event, Packaged};
 
@@ -78,13 +78,10 @@ fn version<'a>(state: &'a State, package: &'a jellyfin_api::types::PackageInfo) 
 /// behind a confirmation, and a running install's cancel.
 pub fn view<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
     column![
-        prose(
-            strings::lookup(Text::CatalogTitle).to_owned(),
-            typeface::HEADING_2
-        ),
+        prose(strings::lookup(Text::CatalogTitle), typeface::HEADING_2),
         window::list(state.window, state.packages.len(), move |index| {
             let Some(package) = state.packages.get(index) else {
-                return prose(String::new(), typeface::BODY);
+                return prose("", typeface::BODY);
             };
             let name = package.name.clone().unwrap_or_default();
             let chosen = version(state, package);
@@ -95,55 +92,52 @@ pub fn view<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
                 .unwrap_or_default();
 
             let mut held = column![
-                prose(name.clone(), typeface::BODY),
-                prose(
+                line(name.clone(), typeface::BODY, typeface::Weight::Regular),
+                line(
                     package.description.clone().unwrap_or_default(),
-                    typeface::BODY
+                    typeface::BODY,
+                    typeface::Weight::Regular,
                 ),
-                prose(
+                line(
                     strings::format(Text::CatalogVersions, &[&chosen]),
-                    typeface::BODY
+                    typeface::BODY,
+                    typeface::Weight::Regular,
                 ),
             ]
             .spacing(style::drawn(space::GUTTER.drawn()));
 
             if state.installing.contains_key(&name) {
                 let mut running = row![prose(
-                    strings::lookup(Text::CatalogInstalling).to_owned(),
+                    strings::lookup(Text::CatalogInstalling),
                     typeface::BODY
                 )]
                 .spacing(style::drawn(space::GUTTER.drawn()));
                 if !read_only && let Some(plugin) = state.installing[&name].plugin {
                     running = running.push(
-                        button(prose(
-                            strings::lookup(Text::CatalogCancel).to_owned(),
-                            typeface::BODY,
-                        ))
-                        .on_press(Message::DashboardAction(
-                            super::Action::Write(super::Written::CancelInstall {
-                                package: plugin,
-                                name: name.clone(),
-                            }),
-                        )),
+                        button(prose(strings::lookup(Text::CatalogCancel), typeface::BODY))
+                            .on_press(Message::DashboardAction(super::Action::Write(
+                                super::Written::CancelInstall {
+                                    package: plugin,
+                                    name: name.clone(),
+                                },
+                            ))),
                     );
                 }
                 held = held.push(running);
             } else if !read_only {
                 held = held.push(
-                    button(prose(
-                        strings::lookup(Text::CatalogInstall).to_owned(),
-                        typeface::BODY,
-                    ))
-                    .on_press(Message::DashboardAction(super::Action::Ask(
-                        crate::screen::confirm::Pending::of(
-                            crate::screen::confirm::Destructive::InstallPackage {
-                                name: name.clone(),
-                                version: chosen.clone(),
-                                repository: repository.clone(),
-                            },
-                            name.clone(),
-                        ),
-                    ))),
+                    button(prose(strings::lookup(Text::CatalogInstall), typeface::BODY)).on_press(
+                        Message::DashboardAction(super::Action::Ask(
+                            crate::screen::confirm::Pending::of(
+                                crate::screen::confirm::Destructive::InstallPackage {
+                                    name: name.clone(),
+                                    version: chosen.clone(),
+                                    repository: repository.clone(),
+                                },
+                                name.clone(),
+                            ),
+                        )),
+                    ),
                 );
             }
             held.into()

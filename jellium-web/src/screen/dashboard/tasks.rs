@@ -7,7 +7,7 @@ use crate::app::Message;
 use crate::error::Answer;
 use crate::style::{self, space, typeface};
 use crate::text::{self as strings, Text};
-use crate::widget::prose;
+use crate::widget::{line, prose};
 
 /// Every scheduled task, with the state and progress each push carries.
 #[derive(Debug, Clone)]
@@ -83,7 +83,7 @@ fn state_text(state: jellium_protocol::TaskRunState) -> Text {
 /// Every task with its state and its running progress.
 pub fn view<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
     let mut page = column![prose(
-        strings::lookup(Text::TasksTitle).to_owned(),
+        strings::lookup(Text::TasksTitle),
         typeface::HEADING_2
     )]
     .spacing(style::drawn(space::GUTTER.drawn()))
@@ -95,42 +95,44 @@ pub fn view<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
             .map(|progress| format!(" {progress:.0}%"))
             .unwrap_or_default();
         let mut held = row![
-            button(prose(task.name.clone(), typeface::BODY)).on_press(Message::DashboardAction(
-                super::Action::Open(super::Screen::Task {
-                    id: task.id.clone()
-                })
-            )),
-            prose(
+            button(line(
+                task.name.clone(),
+                typeface::BODY,
+                typeface::Weight::Regular
+            ))
+            .on_press(Message::DashboardAction(super::Action::Open(
+                super::Screen::Task {
+                    id: task.id.clone(),
+                }
+            ))),
+            line(
                 format!("{}{progress}", strings::lookup(state_text(task.state))),
-                typeface::BODY
+                typeface::BODY,
+                typeface::Weight::Regular,
             ),
         ]
         .spacing(style::drawn(space::GUTTER.drawn()));
 
         if !read_only {
             held = held.push(match task.state {
-                jellium_protocol::TaskRunState::Running => button(prose(
-                    strings::lookup(Text::TasksStop).to_owned(),
-                    typeface::BODY,
-                ))
-                .on_press(Message::DashboardAction(super::Action::Ask(
-                    crate::screen::confirm::Pending::of(
-                        crate::screen::confirm::Destructive::StopTask {
-                            id: task.id.clone(),
-                        },
-                        task.name.clone(),
-                    ),
-                ))),
-                _ => button(prose(
-                    strings::lookup(Text::TasksStart).to_owned(),
-                    typeface::BODY,
-                ))
-                .on_press(Message::DashboardAction(super::Action::Write(
-                    super::Written::StartTask {
+                jellium_protocol::TaskRunState::Running => {
+                    button(prose(strings::lookup(Text::TasksStop), typeface::BODY)).on_press(
+                        Message::DashboardAction(super::Action::Ask(
+                            crate::screen::confirm::Pending::of(
+                                crate::screen::confirm::Destructive::StopTask {
+                                    id: task.id.clone(),
+                                },
+                                task.name.clone(),
+                            ),
+                        )),
+                    )
+                }
+                _ => button(prose(strings::lookup(Text::TasksStart), typeface::BODY)).on_press(
+                    Message::DashboardAction(super::Action::Write(super::Written::StartTask {
                         id: task.id.clone(),
                         name: task.name.clone(),
-                    },
-                ))),
+                    })),
+                ),
             });
         }
         page = page.push(held);
@@ -178,10 +180,7 @@ pub fn one<'a>(state: &'a One, read_only: bool) -> Element<'a, Message> {
         }
     }
 
-    page = page.push(prose(
-        strings::lookup(Text::TasksTriggers).to_owned(),
-        typeface::BODY,
-    ));
+    page = page.push(prose(strings::lookup(Text::TasksTriggers), typeface::BODY));
     for (index, trigger) in state.triggers.iter().enumerate() {
         let mut held = row![prose(
             trigger
@@ -194,7 +193,7 @@ pub fn one<'a>(state: &'a One, read_only: bool) -> Element<'a, Message> {
         if !read_only {
             held = held.push(
                 button(prose(
-                    strings::lookup(Text::TasksTriggerRemove).to_owned(),
+                    strings::lookup(Text::TasksTriggerRemove),
                     typeface::BODY,
                 ))
                 .on_press(Message::DashboardAction(super::Action::Write(
@@ -209,7 +208,7 @@ pub fn one<'a>(state: &'a One, read_only: bool) -> Element<'a, Message> {
         page = page.push(
             row![
                 button(prose(
-                    strings::lookup(Text::TasksTriggerDaily).to_owned(),
+                    strings::lookup(Text::TasksTriggerDaily),
                     typeface::BODY
                 ))
                 .on_press(Message::DashboardAction(super::Action::Write(
@@ -218,7 +217,7 @@ pub fn one<'a>(state: &'a One, read_only: bool) -> Element<'a, Message> {
                     }
                 ))),
                 button(prose(
-                    strings::lookup(Text::TasksTriggerInterval).to_owned(),
+                    strings::lookup(Text::TasksTriggerInterval),
                     typeface::BODY
                 ))
                 .on_press(Message::DashboardAction(super::Action::Write(
@@ -227,7 +226,7 @@ pub fn one<'a>(state: &'a One, read_only: bool) -> Element<'a, Message> {
                     }
                 ))),
                 button(prose(
-                    strings::lookup(Text::TasksTriggerStartup).to_owned(),
+                    strings::lookup(Text::TasksTriggerStartup),
                     typeface::BODY
                 ))
                 .on_press(Message::DashboardAction(super::Action::Write(
@@ -239,16 +238,12 @@ pub fn one<'a>(state: &'a One, read_only: bool) -> Element<'a, Message> {
             .spacing(style::drawn(space::GUTTER.drawn())),
         );
         page = page.push(
-            button(prose(
-                strings::lookup(Text::DashboardSave).to_owned(),
-                typeface::BODY,
-            ))
-            .on_press(Message::DashboardAction(super::Action::Write(
-                super::Written::SetTriggers {
+            button(prose(strings::lookup(Text::DashboardSave), typeface::BODY)).on_press(
+                Message::DashboardAction(super::Action::Write(super::Written::SetTriggers {
                     id: state.info.id.clone().unwrap_or_default(),
                     name: state.info.name.clone().unwrap_or_default(),
-                },
-            ))),
+                })),
+            ),
         );
     }
 

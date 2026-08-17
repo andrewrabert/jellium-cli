@@ -350,8 +350,11 @@ pub enum Message {
     FontWanted(Served),
     /// The face's woff2 bytes, as the origin answered for them.
     FontFetched(Served, Answer<Vec<u8>>),
-    /// The face iced has registered, which is what redraws the text in it.
-    FontLoaded(Served),
+    /// A face iced has registered. Registering one bumps the text engine's
+    /// version and invalidates every cached paragraph, so this exists to wake
+    /// the view for the redraw; which face it was is already settled and read
+    /// by nobody.
+    FontLoaded,
     Scrolled(window::Scrolled),
     OnNowLoaded(Answer<Vec<Channel>>),
     LiveTvLoaded(Answer<livetv::State>),
@@ -2101,8 +2104,8 @@ impl Jellium {
                 })
             }
             Message::FontFetched(face, answer) => {
+                crate::fonts::settled(face);
                 let Some(packed) = answer.disregarded(Text::FailureFontUnread) else {
-                    crate::fonts::refused(face);
                     crate::failure::raise(crate::error::stated(strings::format(
                         Text::FailureFontFamily,
                         &[face.family().name()],
@@ -2111,15 +2114,11 @@ impl Jellium {
                 };
                 let Some(sfnt) = crate::failure::unpacked(Text::FailureFontUnpacked, &packed)
                 else {
-                    crate::fonts::refused(face);
                     return Task::none();
                 };
-                iced::font::load(sfnt).map(move |_| Message::FontLoaded(face))
+                iced::font::load(sfnt).map(|_| Message::FontLoaded)
             }
-            Message::FontLoaded(face) => {
-                crate::fonts::landed(face);
-                Task::none()
-            }
+            Message::FontLoaded => Task::none(),
             Message::Resized(page) => {
                 self.viewport = page;
                 let canvas = page.canvas();
@@ -2824,22 +2823,14 @@ impl Jellium {
     /// The stage's own screen, under the failure surfaces `view` wraps it in.
     fn staged(&self) -> Element<'_, Message> {
         match &self.stage {
-            Stage::Booting { stalled: false } => center(prose(
-                strings::lookup(Text::StatusLoading).to_owned(),
-                typeface::BODY,
-            ))
-            .into(),
+            Stage::Booting { stalled: false } => {
+                center(prose(strings::lookup(Text::StatusLoading), typeface::BODY)).into()
+            }
             Stage::Booting { stalled: true } => center(
                 column![
-                    prose(
-                        strings::lookup(Text::BootSessionStalled).to_owned(),
-                        typeface::BODY
-                    ),
-                    iced::widget::button(prose(
-                        strings::lookup(Text::BootRecheck).to_owned(),
-                        typeface::BODY
-                    ))
-                    .on_press(Message::SessionRechecked),
+                    prose(strings::lookup(Text::BootSessionStalled), typeface::BODY),
+                    iced::widget::button(prose(strings::lookup(Text::BootRecheck), typeface::BODY))
+                        .on_press(Message::SessionRechecked),
                 ]
                 .spacing(style::drawn(space::GUTTER.drawn())),
             )
@@ -2892,11 +2883,9 @@ impl Jellium {
                     )
                 });
                 let body: Element<'_, Message> = match &signed.view {
-                    View::Loading => center(prose(
-                        strings::lookup(Text::StatusLoading).to_owned(),
-                        typeface::BODY,
-                    ))
-                    .into(),
+                    View::Loading => {
+                        center(prose(strings::lookup(Text::StatusLoading), typeface::BODY)).into()
+                    }
                     View::Home(state) => home::view(
                         state,
                         &signed.arrangement,

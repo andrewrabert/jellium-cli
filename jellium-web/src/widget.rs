@@ -1,4 +1,9 @@
+mod line;
+
+use std::borrow::Cow;
 use std::collections::HashSet;
+
+pub use line::Line;
 
 use iced::widget::{
     Space, button, column, container, grid as grid_widget, image, row, scrollable, text,
@@ -18,10 +23,24 @@ use crate::text::{self as strings, Text};
 use crate::theme;
 
 /// Wrapping text, which is what a server's own disclaimer is. Every string the
-/// client draws passes here, so the coverage it needs is observed once.
-pub fn prose<'a>(content: String, size: style::Length) -> Element<'a, Message> {
+/// client draws passes here, so the coverage it needs is observed once. A
+/// sentence out of the string table arrives borrowed and is drawn as it lies.
+pub fn prose<'a>(content: impl Into<Cow<'a, str>>, size: style::Length) -> Element<'a, Message> {
+    let content = content.into();
     crate::fonts::observed(&content, typeface::Weight::Regular);
     text(content).size(style::drawn(size.drawn())).into()
+}
+
+/// One line of text, cut with an ellipsis at the width it is given, which is
+/// what the reference does to a list row's title and its secondary line.
+pub fn line<'a>(
+    content: impl Into<Cow<'a, str>>,
+    size: style::Length,
+    weight: typeface::Weight,
+) -> Element<'a, Message> {
+    let content = content.into();
+    crate::fonts::observed(&content, weight);
+    Line::new(content.into_owned(), size, weight).into()
 }
 
 /// One option a picker offers: what it shows, and the value a write sends.
@@ -80,7 +99,7 @@ pub fn card<'a>(
 ) -> Element<'a, Message> {
     let poster: Element<'a, Message> = match image {
         Some(handle) => iced::widget::image(handle).width(theme::CARD_WIDTH).into(),
-        None => container(prose(String::new(), typeface::BODY))
+        None => container(prose("", typeface::BODY))
             .width(theme::CARD_WIDTH)
             .height(theme::CARD_WIDTH * 1.5)
             .into(),
@@ -106,18 +125,15 @@ pub fn card<'a>(
     let held = item.user_data.as_ref();
     column![
         control,
-        button(prose(
-            strings::lookup(Text::OverflowOpen).to_owned(),
-            typeface::BODY
-        ))
-        .style(style::flat)
-        .on_press(Message::OverflowAction(
-            crate::screen::overflow::Action::Open {
-                item: id,
-                played: held.and_then(|held| held.played).unwrap_or(false),
-                favorite: held.and_then(|held| held.is_favorite).unwrap_or(false),
-            }
-        )),
+        button(prose(strings::lookup(Text::OverflowOpen), typeface::BODY))
+            .style(style::flat)
+            .on_press(Message::OverflowAction(
+                crate::screen::overflow::Action::Open {
+                    item: id,
+                    played: held.and_then(|held| held.played).unwrap_or(false),
+                    favorite: held.and_then(|held| held.is_favorite).unwrap_or(false),
+                }
+            )),
     ]
     .into()
 }
@@ -146,7 +162,7 @@ pub fn rail<'a>(
     overflow: bool,
 ) -> Element<'a, Message> {
     strip(
-        prose(strings::lookup(title).to_owned(), typeface::HEADING_2),
+        prose(strings::lookup(title), typeface::HEADING_2),
         items,
         images,
         overflow,
@@ -160,12 +176,7 @@ pub fn named_rail<'a>(
     images: &'a Cache,
     overflow: bool,
 ) -> Element<'a, Message> {
-    strip(
-        prose(title.to_owned(), typeface::HEADING_2),
-        items,
-        images,
-        overflow,
-    )
+    strip(prose(title, typeface::HEADING_2), items, images, overflow)
 }
 
 fn strip<'a>(
@@ -211,14 +222,11 @@ pub fn library_row<'a>(
 ) -> Element<'a, Message> {
     let live_entry: Vec<Element<'a, Message>> = if live_tv {
         vec![
-            button(prose(
-                strings::lookup(Text::HomeLiveTv).to_owned(),
-                typeface::BODY,
-            ))
-            .on_press(Message::Navigated(Route::LiveTv {
-                tab: crate::screen::livetv::Tab::Guide,
-            }))
-            .into(),
+            button(prose(strings::lookup(Text::HomeLiveTv), typeface::BODY))
+                .on_press(Message::Navigated(Route::LiveTv {
+                    tab: crate::screen::livetv::Tab::Guide,
+                }))
+                .into(),
         ]
     } else {
         Vec::new()
@@ -241,21 +249,15 @@ pub fn library_row<'a>(
     let mut destinations: Vec<Element<'a, Message>> = Vec::new();
     if collections {
         destinations.push(
-            button(prose(
-                strings::lookup(Text::NavCollections).to_owned(),
-                typeface::BODY,
-            ))
-            .on_press(Message::Navigated(Route::Collections))
-            .into(),
+            button(prose(strings::lookup(Text::NavCollections), typeface::BODY))
+                .on_press(Message::Navigated(Route::Collections))
+                .into(),
         );
     }
     destinations.push(
-        button(prose(
-            strings::lookup(Text::NavPlaylists).to_owned(),
-            typeface::BODY,
-        ))
-        .on_press(Message::Navigated(Route::Playlists))
-        .into(),
+        button(prose(strings::lookup(Text::NavPlaylists), typeface::BODY))
+            .on_press(Message::Navigated(Route::Playlists))
+            .into(),
     );
 
     scrollable(
@@ -302,7 +304,7 @@ pub fn channel_card<'a>(
 ) -> Element<'a, Message> {
     let logo: Element<'a, Message> = match image {
         Some(handle) => iced::widget::image(handle).width(theme::CARD_WIDTH).into(),
-        None => container(prose(String::new(), typeface::BODY))
+        None => container(prose("", typeface::BODY))
             .width(theme::CARD_WIDTH)
             .height(theme::CARD_WIDTH * 0.6)
             .into(),
@@ -353,10 +355,7 @@ pub fn on_now_row<'a>(
         });
 
     column![
-        prose(
-            strings::lookup(Text::HomeOnNow).to_owned(),
-            typeface::HEADING_2
-        ),
+        prose(strings::lookup(Text::HomeOnNow), typeface::HEADING_2),
         scrollable(row(cards).spacing(style::drawn(space::GUTTER.drawn()))).direction(
             scrollable::Direction::Horizontal(scrollable::Scrollbar::default(),)
         ),
@@ -375,17 +374,14 @@ fn failure<'a>(failure: &'a crate::failure::Failure) -> Element<'a, Message> {
     if let Some(server) = &failure.server {
         shown = shown
             .push(prose(
-                strings::lookup(Text::ServerSaid).to_owned(),
+                strings::lookup(Text::ServerSaid),
                 typeface::SECONDARY,
             ))
             .push(prose(format!("> {server}"), typeface::SECONDARY));
     }
     shown = shown.push(
-        button(prose(
-            strings::lookup(Text::FailureDismiss).to_owned(),
-            typeface::BODY,
-        ))
-        .on_press(Message::FailureDismissed),
+        button(prose(strings::lookup(Text::FailureDismiss), typeface::BODY))
+            .on_press(Message::FailureDismissed),
     );
     container(shown)
         .padding(style::drawn(space::GUTTER.drawn()))
@@ -401,14 +397,14 @@ pub fn lost<'a>(failure: &'a crate::failure::Failure) -> Element<'a, Message> {
     if let Some(server) = &failure.server {
         shown = shown
             .push(prose(
-                strings::lookup(Text::ServerSaid).to_owned(),
+                strings::lookup(Text::ServerSaid),
                 typeface::SECONDARY,
             ))
             .push(prose(format!("> {server}"), typeface::SECONDARY));
     }
     shown = shown.push(
         button(prose(
-            strings::lookup(Text::FailureSignInAgain).to_owned(),
+            strings::lookup(Text::FailureSignInAgain),
             typeface::BODY,
         ))
         .on_press(Message::SignInAgain),
@@ -432,28 +428,18 @@ pub fn shell<'a>(
         page = page.push(self::failure(showing));
     }
     page = page.push(
-        button(prose(
-            strings::lookup(Text::FailuresOpen).to_owned(),
-            typeface::BODY,
-        ))
-        .on_press(if listing {
+        button(prose(strings::lookup(Text::FailuresOpen), typeface::BODY)).on_press(if listing {
             Message::FailuresClosed
         } else {
             Message::FailuresOpened
         }),
     );
     if listing {
-        let mut listed = column![prose(
-            strings::lookup(Text::FailuresTitle).to_owned(),
-            typeface::BODY
-        )]
-        .spacing(style::drawn(space::GUTTER.drawn()))
-        .padding(style::drawn(space::GUTTER.drawn()));
+        let mut listed = column![prose(strings::lookup(Text::FailuresTitle), typeface::BODY)]
+            .spacing(style::drawn(space::GUTTER.drawn()))
+            .padding(style::drawn(space::GUTTER.drawn()));
         if failures.raised().is_empty() {
-            listed = listed.push(prose(
-                strings::lookup(Text::FailuresEmpty).to_owned(),
-                typeface::BODY,
-            ));
+            listed = listed.push(prose(strings::lookup(Text::FailuresEmpty), typeface::BODY));
         }
         for raised in failures.raised() {
             let mut one = column![prose(raised.sentence.clone(), typeface::BODY)];
@@ -485,84 +471,60 @@ pub fn chrome<'a>(
 
     if back {
         nav = nav.push(
-            button(prose(
-                strings::lookup(Text::NavBack).to_owned(),
-                typeface::BODY,
-            ))
-            .on_press(Message::WentBack),
+            button(prose(strings::lookup(Text::NavBack), typeface::BODY))
+                .on_press(Message::WentBack),
         );
     }
     if browse {
         nav = nav
             .push(
-                button(prose(
-                    strings::lookup(Text::NavHome).to_owned(),
-                    typeface::BODY,
-                ))
-                .on_press(Message::Navigated(Route::Home)),
+                button(prose(strings::lookup(Text::NavHome), typeface::BODY))
+                    .on_press(Message::Navigated(Route::Home)),
             )
             .push(
-                button(prose(
-                    strings::lookup(Text::NavSearch).to_owned(),
-                    typeface::BODY,
-                ))
-                .on_press(Message::Navigated(Route::Search {
-                    term: String::new(),
-                    listing: Box::default(),
-                })),
+                button(prose(strings::lookup(Text::NavSearch), typeface::BODY)).on_press(
+                    Message::Navigated(Route::Search {
+                        term: String::new(),
+                        listing: Box::default(),
+                    }),
+                ),
             )
             .push(
-                button(prose(
-                    strings::lookup(Text::NavSettings).to_owned(),
-                    typeface::BODY,
-                ))
-                .on_press(Message::Navigated(Route::Settings {
-                    screen: crate::screen::settings::Screen::Profile,
-                })),
+                button(prose(strings::lookup(Text::NavSettings), typeface::BODY)).on_press(
+                    Message::Navigated(Route::Settings {
+                        screen: crate::screen::settings::Screen::Profile,
+                    }),
+                ),
             )
             .push(
-                button(prose(
-                    strings::lookup(Text::NavRemote).to_owned(),
-                    typeface::BODY,
-                ))
-                .on_press(Message::Navigated(Route::Remote)),
+                button(prose(strings::lookup(Text::NavRemote), typeface::BODY))
+                    .on_press(Message::Navigated(Route::Remote)),
             );
 
         if session.sync_play != SyncAccess::None {
             nav = nav.push(
-                button(prose(
-                    strings::lookup(Text::NavSyncPlay).to_owned(),
-                    typeface::BODY,
-                ))
-                .on_press(Message::Navigated(Route::SyncPlay)),
+                button(prose(strings::lookup(Text::NavSyncPlay), typeface::BODY))
+                    .on_press(Message::Navigated(Route::SyncPlay)),
             );
         }
         if session.administrator {
             nav = nav.push(
-                button(prose(
-                    strings::lookup(Text::NavDashboard).to_owned(),
-                    typeface::BODY,
-                ))
-                .on_press(Message::Navigated(Route::Dashboard {
-                    screen: crate::screen::dashboard::Screen::Plugins,
-                })),
+                button(prose(strings::lookup(Text::NavDashboard), typeface::BODY)).on_press(
+                    Message::Navigated(Route::Dashboard {
+                        screen: crate::screen::dashboard::Screen::Plugins,
+                    }),
+                ),
             );
         }
     }
     nav = nav.push(
-        button(prose(
-            strings::lookup(Text::NavSwitch).to_owned(),
-            typeface::BODY,
-        ))
-        .on_press(Message::SwitchPressed),
+        button(prose(strings::lookup(Text::NavSwitch), typeface::BODY))
+            .on_press(Message::SwitchPressed),
     );
     if !session.read_only {
         nav = nav.push(
-            button(prose(
-                strings::lookup(Text::NavLogout).to_owned(),
-                typeface::BODY,
-            ))
-            .on_press(Message::LogoutPressed),
+            button(prose(strings::lookup(Text::NavLogout), typeface::BODY))
+                .on_press(Message::LogoutPressed),
         );
     }
 
@@ -626,18 +588,15 @@ pub fn message<'a>(notice: &'a Notice) -> Element<'a, Message> {
 /// lost, and the two controls.
 pub fn leaving<'a>() -> Element<'a, Message> {
     column![
-        prose(
-            strings::lookup(Text::DashboardUnsaved).to_owned(),
-            typeface::BODY
-        ),
+        prose(strings::lookup(Text::DashboardUnsaved), typeface::BODY),
         row![
             button(prose(
-                strings::lookup(Text::DashboardLeaveAnyway).to_owned(),
+                strings::lookup(Text::DashboardLeaveAnyway),
                 typeface::BODY
             ))
             .on_press(Message::LeaveAnyway),
             button(prose(
-                strings::lookup(Text::DashboardStayHere).to_owned(),
+                strings::lookup(Text::DashboardStayHere),
                 typeface::BODY
             ))
             .on_press(Message::StayHere),

@@ -73,7 +73,7 @@ pub fn view<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
 /// role, added and removed one at a time.
 pub fn people<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
     let mut page = column![prose(
-        strings::lookup(Text::MetadataPeople).to_owned(),
+        strings::lookup(Text::MetadataPeople),
         typeface::HEADING_3
     )]
     .spacing(style::drawn(space::GUTTER.drawn()));
@@ -119,7 +119,7 @@ pub fn people<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
                     })
                     .padding(style::drawn(space::CONTROL_GAP.drawn())),
                 button(prose(
-                    strings::lookup(Text::MetadataPersonRemove).to_owned(),
+                    strings::lookup(Text::MetadataPersonRemove),
                     typeface::BODY
                 ))
                 .on_press(Message::MetadataAction(Action::PersonRemoved { at })),
@@ -132,7 +132,7 @@ pub fn people<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
     if !read_only {
         page = page.push(
             button(prose(
-                strings::lookup(Text::MetadataPersonAdd).to_owned(),
+                strings::lookup(Text::MetadataPersonAdd),
                 typeface::BODY,
             ))
             .on_press(Message::MetadataAction(Action::PersonAdded)),
@@ -145,7 +145,7 @@ pub fn people<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
 /// The provider id control: one row per provider the server named.
 pub fn providers<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
     let mut page = column![prose(
-        strings::lookup(Text::MetadataProviders).to_owned(),
+        strings::lookup(Text::MetadataProviders),
         typeface::HEADING_3
     )]
     .spacing(style::drawn(space::GUTTER.drawn()));

@@ -12,7 +12,7 @@ use crate::player::{Action, Playing};
 use crate::style::{self, space, typeface};
 use crate::text::{self as strings, Text};
 use crate::theme;
-use crate::widget::prose;
+use crate::widget::{line, prose};
 use crate::window;
 
 fn key(item: &jellyfin_api::types::BaseItemDto) -> Option<images::Key> {
@@ -65,21 +65,17 @@ fn entry<'a>(
     remove: Message,
 ) -> Element<'a, Message> {
     let title: Element<'a, Message> = match play {
-        Some(play) => button(prose(name, typeface::BODY))
+        Some(play) => button(line(name, typeface::BODY, typeface::Weight::Regular))
             .style(style::flat)
             .on_press(play)
+            .width(Fill)
             .into(),
-        None => prose(name, typeface::BODY),
+        None => line(name, typeface::BODY, typeface::Weight::Regular),
     };
     row![
         art,
         title,
-        Space::new().width(Fill),
-        button(prose(
-            strings::lookup(Text::QueueRemove).to_owned(),
-            typeface::BODY
-        ))
-        .on_press(remove),
+        button(prose(strings::lookup(Text::QueueRemove), typeface::BODY)).on_press(remove),
     ]
     .spacing(style::drawn(space::GUTTER.drawn()))
     .align_y(iced::Center)
@@ -150,26 +146,16 @@ pub fn view<'a>(
     };
 
     let controls = row![
-        button(prose(
-            strings::lookup(Text::QueueBack).to_owned(),
-            typeface::BODY
-        ))
-        .on_press(Message::WentBack),
-        button(prose(
-            strings::lookup(Text::QueueShuffle).to_owned(),
-            typeface::BODY
-        ))
-        .on_press(Message::PlayerAction(Action::ToggleShuffle)),
-        button(prose(
-            strings::lookup(repeat_label(repeat)).to_owned(),
-            typeface::BODY
-        ))
-        .on_press(Message::PlayerAction(Action::CycleRepeat)),
+        button(prose(strings::lookup(Text::QueueBack), typeface::BODY)).on_press(Message::WentBack),
+        button(prose(strings::lookup(Text::QueueShuffle), typeface::BODY))
+            .on_press(Message::PlayerAction(Action::ToggleShuffle)),
+        button(prose(strings::lookup(repeat_label(repeat)), typeface::BODY))
+            .on_press(Message::PlayerAction(Action::CycleRepeat)),
     ]
     .spacing(style::drawn(space::GUTTER.drawn()));
 
     let body: Element<'a, Message> = if rows.is_empty() {
-        prose(strings::lookup(Text::QueueEmpty).to_owned(), typeface::BODY)
+        prose(strings::lookup(Text::QueueEmpty), typeface::BODY)
     } else {
         window::list(window, rows.len(), move |index| {
             let row = &rows[index];
@@ -186,10 +172,7 @@ pub fn view<'a>(
 
     container(
         column![
-            prose(
-                strings::lookup(Text::QueueTitle).to_owned(),
-                typeface::HEADING_2
-            ),
+            prose(strings::lookup(Text::QueueTitle), typeface::HEADING_2),
             controls,
             body,
         ]

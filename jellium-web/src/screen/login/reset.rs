@@ -23,17 +23,14 @@ pub struct State {
 pub fn view<'a>(state: &'a super::State) -> Element<'a, Message> {
     let held = &state.reset;
     let mut form = column![
-        prose(
-            strings::lookup(Text::LoginResetTitle).to_owned(),
-            typeface::HEADING_1
-        ),
+        prose(strings::lookup(Text::LoginResetTitle), typeface::HEADING_1),
         text_input(strings::lookup(Text::LoginResetUsername), &held.username)
             .style(style::input)
             .on_input(|value| Message::LoginAction(Action::Edited(Edit::ResetUsername(value))))
             .on_submit(Message::LoginAction(Action::ResetSubmit))
             .padding(style::drawn(space::CONTROL_GAP.drawn())),
         button(prose(
-            strings::lookup(Text::LoginResetSubmit).to_owned(),
+            strings::lookup(Text::LoginResetSubmit),
             typeface::BODY
         ))
         .on_press(Message::LoginAction(Action::ResetSubmit)),
@@ -44,13 +41,13 @@ pub fn view<'a>(state: &'a super::State) -> Element<'a, Message> {
     match held.answered {
         Some(jellium_model::login::Reset::PinWritten) => {
             form = form.push(prose(
-                strings::lookup(Text::LoginResetPinWritten).to_owned(),
+                strings::lookup(Text::LoginResetPinWritten),
                 typeface::BODY,
             ));
             if let Some(file) = &held.pin_file {
                 form = form
                     .push(prose(
-                        strings::lookup(Text::LoginResetPinFile).to_owned(),
+                        strings::lookup(Text::LoginResetPinFile),
                         typeface::BODY,
                     ))
                     .push(prose(format!("> {file}"), typeface::SECONDARY));
@@ -71,7 +68,7 @@ pub fn view<'a>(state: &'a super::State) -> Element<'a, Message> {
                 )
                 .push(
                     button(prose(
-                        strings::lookup(Text::LoginResetPinSubmit).to_owned(),
+                        strings::lookup(Text::LoginResetPinSubmit),
                         typeface::BODY,
                     ))
                     .on_press(Message::LoginAction(Action::PinSubmit)),
@@ -79,13 +76,13 @@ pub fn view<'a>(state: &'a super::State) -> Element<'a, Message> {
         }
         Some(jellium_model::login::Reset::ContactAdministrator) => {
             form = form.push(prose(
-                strings::lookup(Text::LoginResetContactAdministrator).to_owned(),
+                strings::lookup(Text::LoginResetContactAdministrator),
                 typeface::BODY,
             ));
         }
         Some(jellium_model::login::Reset::InNetworkRequired) => {
             form = form.push(prose(
-                strings::lookup(Text::LoginResetInNetwork).to_owned(),
+                strings::lookup(Text::LoginResetInNetwork),
                 typeface::BODY,
             ));
         }
@@ -93,11 +90,8 @@ pub fn view<'a>(state: &'a super::State) -> Element<'a, Message> {
     }
 
     form = form.push(
-        button(prose(
-            strings::lookup(Text::LoginBack).to_owned(),
-            typeface::BODY,
-        ))
-        .on_press(Message::LoginAction(Action::Back)),
+        button(prose(strings::lookup(Text::LoginBack), typeface::BODY))
+            .on_press(Message::LoginAction(Action::Back)),
     );
 
     container(form)

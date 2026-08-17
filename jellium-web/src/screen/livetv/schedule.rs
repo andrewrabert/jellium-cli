@@ -11,7 +11,7 @@ use crate::error::Answer;
 use crate::style::{self, Drawn, space, typeface};
 use crate::text::{self as strings, Text};
 use crate::widget;
-use crate::widget::prose;
+use crate::widget::{line, prose};
 use crate::window;
 
 #[derive(Debug, Clone)]
@@ -88,32 +88,35 @@ fn entry<'a>(timers: &'a [TimerInfoDto], index: usize) -> Element<'a, Message> {
     };
 
     let mut named = column![
-        prose(timer.name.clone().unwrap_or_default(), typeface::BODY),
-        prose(
+        line(
+            timer.name.clone().unwrap_or_default(),
+            typeface::BODY,
+            typeface::Weight::Regular
+        ),
+        line(
             format!(
                 "{} — {}",
                 timer.channel_name.clone().unwrap_or_default(),
                 airtime(timer)
             ),
-            typeface::SECONDARY
+            typeface::SECONDARY,
+            typeface::Weight::Regular,
         ),
     ]
     .spacing(style::drawn(space::BLOCK_GAP.drawn()))
     .width(Fill);
     if conflicted(timer) {
-        named = named.push(prose(
-            strings::lookup(Text::ScheduleConflicted).to_owned(),
+        named = named.push(line(
+            strings::lookup(Text::ScheduleConflicted),
             typeface::SECONDARY,
+            typeface::Weight::Regular,
         ));
     }
 
     let cancel: Element<'a, Message> = match timer.id.clone() {
-        Some(id) => button(prose(
-            strings::lookup(Text::ScheduleCancel).to_owned(),
-            typeface::BODY,
-        ))
-        .on_press(Message::LiveTvAction(Action::CancelTimer(id)))
-        .into(),
+        Some(id) => button(prose(strings::lookup(Text::ScheduleCancel), typeface::BODY))
+            .on_press(Message::LiveTvAction(Action::CancelTimer(id)))
+            .into(),
         None => iced::widget::Space::new().into(),
     };
 

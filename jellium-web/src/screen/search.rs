@@ -129,7 +129,7 @@ fn section<'a>(
         )
     });
     column![
-        prose(strings::lookup(title).to_owned(), typeface::HEADING_2),
+        prose(strings::lookup(title), typeface::HEADING_2),
         iced::widget::scrollable(
             iced::widget::row(cards).spacing(style::drawn(space::GUTTER.drawn()))
         )
@@ -160,11 +160,8 @@ pub fn view<'a>(state: &'a State, images: &'a Cache, read_only: bool) -> Element
             .on_input(Message::SearchEdited)
             .on_submit(Message::SearchSubmitted)
             .padding(style::drawn(space::CONTROL_GAP.drawn())),
-        button(prose(
-            strings::lookup(Text::SearchSubmit).to_owned(),
-            typeface::BODY
-        ))
-        .on_press(Message::SearchSubmitted),
+        button(prose(strings::lookup(Text::SearchSubmit), typeface::BODY))
+            .on_press(Message::SearchSubmitted),
     ]
     .spacing(style::drawn(space::GUTTER.drawn()))
     .align_y(iced::Alignment::Center);

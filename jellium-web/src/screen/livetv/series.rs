@@ -11,7 +11,7 @@ use crate::error::Answer;
 use crate::style::{self, Drawn, Viewport, space, typeface};
 use crate::text::{self as strings, Text};
 use crate::widget;
-use crate::widget::prose;
+use crate::widget::{line, prose};
 use crate::window;
 
 #[derive(Debug, Clone)]
@@ -120,16 +120,10 @@ pub async fn load(api: Rc<Api>, height: Drawn) -> Answer<State> {
 fn entry<'a>(timer: &'a SeriesTimerInfoDto) -> Element<'a, Message> {
     let controls: Element<'a, Message> = match timer.id.clone() {
         Some(id) => row![
-            button(prose(
-                strings::lookup(Text::SeriesEdit).to_owned(),
-                typeface::BODY
-            ))
-            .on_press(Message::LiveTvAction(Action::EditSeries(id.clone()))),
-            button(prose(
-                strings::lookup(Text::SeriesCancel).to_owned(),
-                typeface::BODY
-            ))
-            .on_press(Message::LiveTvAction(Action::CancelSeriesTimer(id))),
+            button(prose(strings::lookup(Text::SeriesEdit), typeface::BODY))
+                .on_press(Message::LiveTvAction(Action::EditSeries(id.clone()))),
+            button(prose(strings::lookup(Text::SeriesCancel), typeface::BODY))
+                .on_press(Message::LiveTvAction(Action::CancelSeriesTimer(id))),
         ]
         .spacing(style::drawn(space::GUTTER.drawn()))
         .into(),
@@ -138,9 +132,10 @@ fn entry<'a>(timer: &'a SeriesTimerInfoDto) -> Element<'a, Message> {
 
     container(
         row![
-            container(prose(
+            container(line(
                 timer.name.clone().unwrap_or_default(),
-                typeface::BODY
+                typeface::BODY,
+                typeface::Weight::Regular,
             ))
             .width(Fill),
             controls,
@@ -171,7 +166,7 @@ fn number<'a>(
     viewport: Viewport,
 ) -> Element<'a, Message> {
     row![
-        container(prose(strings::lookup(label).to_owned(), typeface::BODY))
+        container(prose(strings::lookup(label), typeface::BODY))
             .width(style::drawn(space::guide_channel(viewport))),
         iced::widget::text_input("", &value.to_string())
             .style(style::input)
@@ -192,7 +187,7 @@ fn switch<'a>(label: Text, value: bool, edited: fn(bool) -> Field) -> Element<'a
     row![
         checkbox(value)
             .on_toggle(move |value| Message::LiveTvAction(Action::Edited(edited(value)))),
-        prose(strings::lookup(label).to_owned(), typeface::BODY),
+        prose(strings::lookup(label), typeface::BODY),
     ]
     .spacing(style::drawn(space::CONTROL_GAP.drawn()))
     .align_y(iced::Center)
@@ -259,12 +254,9 @@ pub fn options<'a>(editing: &'a Editing, viewport: Viewport) -> Element<'a, Mess
     container(
         column![
             prose(held.name.clone().unwrap_or_default(), typeface::HEADING_2),
-            prose(
-                strings::lookup(Text::SeriesDayPattern).to_owned(),
-                typeface::BODY
-            ),
+            prose(strings::lookup(Text::SeriesDayPattern), typeface::BODY),
             patterns,
-            prose(strings::lookup(Text::SeriesDays).to_owned(), typeface::BODY),
+            prose(strings::lookup(Text::SeriesDays), typeface::BODY),
             chosen,
             switch(
                 Text::SeriesAnyChannel,
@@ -286,10 +278,7 @@ pub fn options<'a>(editing: &'a Editing, viewport: Viewport) -> Element<'a, Mess
                 held.skip_episodes_in_library.unwrap_or(false),
                 Field::SkipEpisodesInLibrary
             ),
-            prose(
-                strings::lookup(Text::SeriesKeepUntil).to_owned(),
-                typeface::BODY
-            ),
+            prose(strings::lookup(Text::SeriesKeepUntil), typeface::BODY),
             keep,
             number(
                 Text::SeriesKeepUpTo,
@@ -316,13 +305,10 @@ pub fn options<'a>(editing: &'a Editing, viewport: Viewport) -> Element<'a, Mess
                 viewport
             ),
             row![
-                button(prose(strings::lookup(confirm).to_owned(), typeface::BODY))
+                button(prose(strings::lookup(confirm), typeface::BODY))
                     .on_press(Message::LiveTvAction(Action::ConfirmSeries)),
-                button(prose(
-                    strings::lookup(Text::SeriesClose).to_owned(),
-                    typeface::BODY
-                ))
-                .on_press(Message::LiveTvAction(Action::CloseSeries)),
+                button(prose(strings::lookup(Text::SeriesClose), typeface::BODY))
+                    .on_press(Message::LiveTvAction(Action::CloseSeries)),
             ]
             .spacing(style::drawn(space::GUTTER.drawn())),
         ]

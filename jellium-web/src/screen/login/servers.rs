@@ -19,20 +19,20 @@ fn entry<'a>(saved: &'a jellium_protocol::SavedServer, read_only: bool) -> Eleme
     named = named.push(prose(saved.server.clone(), typeface::BODY));
     if saved.active {
         named = named.push(prose(
-            strings::lookup(Text::LoginServersActive).to_owned(),
+            strings::lookup(Text::LoginServersActive),
             typeface::SECONDARY,
         ));
     }
     if saved.credentialed {
         named = named.push(prose(
-            strings::lookup(Text::LoginServersSignedIn).to_owned(),
+            strings::lookup(Text::LoginServersSignedIn),
             typeface::SECONDARY,
         ));
     }
 
     let mut controls = row![
         button(prose(
-            strings::lookup(Text::LoginServersSelect).to_owned(),
+            strings::lookup(Text::LoginServersSelect),
             typeface::BODY
         ))
         .on_press(Message::LoginAction(Action::Select {
@@ -44,7 +44,7 @@ fn entry<'a>(saved: &'a jellium_protocol::SavedServer, read_only: bool) -> Eleme
     if !(read_only && saved.credentialed) {
         controls = controls.push(
             button(prose(
-                strings::lookup(Text::LoginServersRemove).to_owned(),
+                strings::lookup(Text::LoginServersRemove),
                 typeface::BODY,
             ))
             .on_press(Message::LoginAction(Action::Remove {
@@ -71,12 +71,12 @@ pub fn view<'a>(state: &'a super::State) -> Element<'a, Message> {
 
     let listed = column![
         prose(
-            strings::lookup(Text::LoginServersTitle).to_owned(),
+            strings::lookup(Text::LoginServersTitle),
             typeface::HEADING_1
         ),
         scrollable(entries),
         button(prose(
-            strings::lookup(Text::LoginServersAdd).to_owned(),
+            strings::lookup(Text::LoginServersAdd),
             typeface::BODY
         ))
         .on_press(Message::LoginAction(Action::Add)),

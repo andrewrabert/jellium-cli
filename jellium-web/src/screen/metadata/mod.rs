@@ -166,10 +166,7 @@ pub fn view<'a>(
         if part == Part::Identify && !searchable {
             return None;
         }
-        let mut control = button(prose(
-            strings::lookup(part.label()).to_owned(),
-            typeface::BODY,
-        ));
+        let mut control = button(prose(strings::lookup(part.label()), typeface::BODY));
         if part != state.part {
             control = control.on_press(Message::MetadataAction(Action::Open(part)));
         }
@@ -200,11 +197,8 @@ pub fn view<'a>(
 
     if !read_only && state.part == Part::Fields {
         page = page.push(
-            button(prose(
-                strings::lookup(Text::MetadataSave).to_owned(),
-                typeface::BODY,
-            ))
-            .on_press(Message::MetadataAction(Action::Save)),
+            button(prose(strings::lookup(Text::MetadataSave), typeface::BODY))
+                .on_press(Message::MetadataAction(Action::Save)),
         );
     }
 
@@ -212,11 +206,8 @@ pub fn view<'a>(
         column![
             page,
             row![parts, body].spacing(style::drawn(space::GUTTER.drawn())),
-            button(prose(
-                strings::lookup(Text::MetadataClose).to_owned(),
-                typeface::BODY
-            ))
-            .on_press(Message::MetadataAction(Action::Close)),
+            button(prose(strings::lookup(Text::MetadataClose), typeface::BODY))
+                .on_press(Message::MetadataAction(Action::Close)),
         ]
         .spacing(style::drawn(space::GUTTER.drawn()))
         .padding(style::drawn(space::GUTTER.drawn())),
@@ -262,7 +253,7 @@ fn locks<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
 fn content_type<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
     if read_only {
         return prose(
-            strings::lookup(Text::MetadataPartContentType).to_owned(),
+            strings::lookup(Text::MetadataPartContentType),
             typeface::BODY,
         );
     }
@@ -287,36 +278,23 @@ fn content_type<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
 /// removes an item from the library and from disk.
 fn deletion<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
     if read_only {
-        return prose(
-            strings::lookup(Text::MetadataPartDeletion).to_owned(),
-            typeface::BODY,
-        );
+        return prose(strings::lookup(Text::MetadataPartDeletion), typeface::BODY);
     }
     if let Some(pending) = &state.confirming {
         return crate::screen::confirm::view(pending, crate::screen::confirm::Region::Metadata);
     }
     let Some(id) = state.item.id else {
-        return prose(
-            strings::lookup(Text::MetadataPartDeletion).to_owned(),
-            typeface::BODY,
-        );
+        return prose(strings::lookup(Text::MetadataPartDeletion), typeface::BODY);
     };
     let name = state.item.name.clone().unwrap_or_default();
     column![
-        prose(
-            strings::lookup(Text::MetadataDeleteWarning).to_owned(),
-            typeface::BODY
-        ),
-        button(prose(
-            strings::lookup(Text::MetadataDelete).to_owned(),
-            typeface::BODY
-        ))
-        .on_press(Message::MetadataAction(Action::Ask(
-            crate::screen::confirm::Pending::of(
+        prose(strings::lookup(Text::MetadataDeleteWarning), typeface::BODY),
+        button(prose(strings::lookup(Text::MetadataDelete), typeface::BODY)).on_press(
+            Message::MetadataAction(Action::Ask(crate::screen::confirm::Pending::of(
                 crate::screen::confirm::Destructive::DeleteItem { id },
                 name,
-            )
-        ))),
+            )))
+        ),
     ]
     .spacing(style::drawn(space::GUTTER.drawn()))
     .into()

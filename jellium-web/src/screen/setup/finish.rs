@@ -14,16 +14,10 @@ use crate::widget::prose;
 /// reported.
 pub fn view<'a>() -> Element<'a, Message> {
     column![
-        prose(
-            strings::lookup(Text::SetupFinish).to_owned(),
-            typeface::HEADING_3
-        ),
-        prose(
-            strings::lookup(Text::SetupFinishMessage).to_owned(),
-            typeface::BODY
-        ),
+        prose(strings::lookup(Text::SetupFinish), typeface::HEADING_3),
+        prose(strings::lookup(Text::SetupFinishMessage), typeface::BODY),
         button(prose(
-            strings::lookup(Text::SetupFinishAction).to_owned(),
+            strings::lookup(Text::SetupFinishAction),
             typeface::BODY
         ))
         .on_press(Message::SetupAction(Action::Complete)),

@@ -111,8 +111,14 @@ fn ranges<'a>(fields: impl Iterator<Item = &'a str>) -> Option<Vec<(Codepoint, C
 }
 
 /// The same codepoints, as the fewest ranges that hold them, so a lookup can
-/// bisect. A range whose start is past its end holds no codepoint and is left
-/// out, which is what the reference's own bold cyrillic declaration is.
+/// bisect.
+// reference: face-base-bold-cyrillic — base-700-normal.scss:10-15
+// the bold cyrillic face declares U+0700-045F, whose start is past its end, so
+// the range matches no codepoint; it is copied as written
+// the reference loads no bold cyrillic face for U+0400-045F on that range and
+// leaves bold cyrillic to whatever the browser has, and this client draws it
+// in Noto Sans Bold anyway, because it embeds the face whole and the range
+// table it reads decides only what to fetch
 fn merged(mut ranges: Vec<(Codepoint, Codepoint)>) -> Vec<(Codepoint, Codepoint)> {
     ranges.retain(|(start, end)| start <= end);
     ranges.sort_unstable();

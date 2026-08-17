@@ -14,7 +14,7 @@ use crate::livetv::Program;
 use crate::style::{self, Drawn, Viewport, space, typeface};
 use crate::text::{self as strings, Text};
 use crate::theme;
-use crate::widget::prose;
+use crate::widget::{line, prose};
 use crate::window;
 
 pub use jellium_model::guide::{Fetched, Focus, Move, SPAN, STEP, State, Step, Trouble, half_hour};
@@ -64,12 +64,9 @@ pub async fn fetch(
 }
 
 fn badge<'a>(label: Text) -> Element<'a, Message> {
-    container(prose(
-        strings::lookup(label).to_owned(),
-        typeface::SECONDARY,
-    ))
-    .padding(style::drawn(space::BLOCK_GAP.drawn()))
-    .into()
+    container(prose(strings::lookup(label), typeface::SECONDARY))
+        .padding(style::drawn(space::BLOCK_GAP.drawn()))
+        .into()
 }
 
 /// One cell: its title, its airtime, its badges and its record marker.
@@ -95,8 +92,16 @@ fn cell<'a>(program: &'a Program, focused: bool, viewport: Viewport) -> Element<
 
     let minutes = (program.end - program.start).num_minutes().max(1) as f32;
     let body = column![
-        prose(program.title.clone(), typeface::BODY),
-        prose(crate::livetv::airtime(program), typeface::SECONDARY),
+        line(
+            program.title.clone(),
+            typeface::BODY,
+            typeface::Weight::Regular
+        ),
+        line(
+            crate::livetv::airtime(program),
+            typeface::SECONDARY,
+            typeface::Weight::Regular,
+        ),
         marks,
     ]
     .spacing(style::drawn(space::BLOCK_GAP.drawn()));
@@ -167,29 +172,19 @@ pub fn view<'a>(
     let _ = images;
 
     let controls = row![
-        button(prose(
-            strings::lookup(Text::GuideEarlier).to_owned(),
-            typeface::BODY
-        ))
-        .on_press(Message::LiveTvAction(Action::Step(Step::Back))),
+        button(prose(strings::lookup(Text::GuideEarlier), typeface::BODY))
+            .on_press(Message::LiveTvAction(Action::Step(Step::Back))),
         prose(
             chrono::DateTime::<chrono::Local>::from(state.start)
                 .format("%a %d %b")
                 .to_string(),
             typeface::BODY
         ),
-        button(prose(
-            strings::lookup(Text::GuideLater).to_owned(),
-            typeface::BODY
-        ))
-        .on_press(Message::LiveTvAction(Action::Step(Step::Forward))),
-        button(prose(
-            strings::lookup(Text::GuideNow).to_owned(),
-            typeface::BODY
-        ))
-        .on_press(Message::LiveTvAction(Action::Date(
-            chrono::Local::now().date_naive()
-        ))),
+        button(prose(strings::lookup(Text::GuideLater), typeface::BODY))
+            .on_press(Message::LiveTvAction(Action::Step(Step::Forward))),
+        button(prose(strings::lookup(Text::GuideNow), typeface::BODY)).on_press(
+            Message::LiveTvAction(Action::Date(chrono::Local::now().date_naive()))
+        ),
     ]
     .spacing(style::drawn(space::GUTTER.drawn()))
     .align_y(iced::Center);
@@ -227,9 +222,10 @@ pub fn view<'a>(
             })
             .collect::<Vec<_>>();
         row![
-            container(prose(
+            container(line(
                 format!("{} {}", channel.number, channel.name),
-                typeface::BODY
+                typeface::BODY,
+                typeface::Weight::Regular,
             ))
             .width(style::drawn(space::guide_channel(viewport)))
             .height(style::drawn(space::LIST_ROW.drawn())),

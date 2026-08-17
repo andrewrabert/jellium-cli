@@ -32,21 +32,12 @@ pub async fn load(_api: std::rc::Rc<crate::api::Api>) -> Answer<State> {
 /// `jellium_model::setup::user_ready` is false.
 pub fn view(state: &State) -> Element<'_, Message> {
     let mut page = column![
-        prose(
-            strings::lookup(Text::SetupUser).to_owned(),
-            typeface::HEADING_3
-        ),
-        prose(
-            strings::lookup(Text::SetupUserName).to_owned(),
-            typeface::BODY
-        ),
+        prose(strings::lookup(Text::SetupUser), typeface::HEADING_3),
+        prose(strings::lookup(Text::SetupUserName), typeface::BODY),
         text_input(strings::lookup(Text::SetupUserName), &state.user.name)
             .style(style::input)
             .on_input(|typed| Message::SetupAction(Action::Edited(Edit::UserName(typed)))),
-        prose(
-            strings::lookup(Text::SetupUserPassword).to_owned(),
-            typeface::BODY
-        ),
+        prose(strings::lookup(Text::SetupUserPassword), typeface::BODY),
         text_input(
             strings::lookup(Text::SetupUserPassword),
             &state.user.password
@@ -54,10 +45,7 @@ pub fn view(state: &State) -> Element<'_, Message> {
         .style(style::input)
         .secure(true)
         .on_input(|typed| Message::SetupAction(Action::Edited(Edit::Password(typed)))),
-        prose(
-            strings::lookup(Text::SetupUserConfirm).to_owned(),
-            typeface::BODY
-        ),
+        prose(strings::lookup(Text::SetupUserConfirm), typeface::BODY),
         text_input(strings::lookup(Text::SetupUserConfirm), &state.confirmation)
             .style(style::input)
             .secure(true)
@@ -67,7 +55,7 @@ pub fn view(state: &State) -> Element<'_, Message> {
 
     if state.user.password != state.confirmation {
         page = page.push(prose(
-            strings::lookup(Text::SetupUserMismatch).to_owned(),
+            strings::lookup(Text::SetupUserMismatch),
             typeface::SECONDARY,
         ));
     }

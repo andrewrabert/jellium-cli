@@ -27,13 +27,10 @@ pub struct State {
 pub fn view<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
     let mut shown = column![
         prose(
-            strings::lookup(Text::QuickConnectDescription).to_owned(),
+            strings::lookup(Text::QuickConnectDescription),
             typeface::BODY
         ),
-        prose(
-            strings::lookup(Text::QuickConnectCode).to_owned(),
-            typeface::BODY
-        ),
+        prose(strings::lookup(Text::QuickConnectCode), typeface::BODY),
         text_input("", &state.code)
             .style(style::input)
             .on_input(|typed| Message::SettingsAction(Action::Typed(typed))),
@@ -43,7 +40,7 @@ pub fn view<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
     if !read_only {
         shown = shown.push(
             button(prose(
-                strings::lookup(Text::QuickConnectAuthorize).to_owned(),
+                strings::lookup(Text::QuickConnectAuthorize),
                 typeface::BODY,
             ))
             .on_press(Message::SettingsAction(Action::Ask(
@@ -59,7 +56,7 @@ pub fn view<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
 
     if let Some(Outcome::Authorized) = state.outcome {
         shown = shown.push(prose(
-            strings::lookup(Text::QuickConnectAuthorized).to_owned(),
+            strings::lookup(Text::QuickConnectAuthorized),
             typeface::BODY,
         ));
     }

@@ -32,7 +32,7 @@ fn clock(position: Duration) -> String {
 }
 
 fn control<'a>(label: Text, action: Action) -> Element<'a, Message> {
-    button(prose(strings::lookup(label).to_owned(), typeface::BODY))
+    button(prose(strings::lookup(label), typeface::BODY))
         .on_press(Message::PlayerAction(action))
         .into()
 }
@@ -149,7 +149,7 @@ fn menu<'a>(playing: &'a Playing, images: &'a Cache) -> Option<Element<'a, Messa
             .collect(),
         Menu::Subtitle => std::iter::once(
             button(prose(
-                strings::lookup(Text::PlayerSubtitlesOff).to_owned(),
+                strings::lookup(Text::PlayerSubtitlesOff),
                 typeface::BODY,
             ))
             .on_press(Message::PlayerAction(Action::SelectSubtitle(
@@ -222,7 +222,7 @@ pub enum Transport<'a> {
 }
 
 fn remote_control<'a>(label: Text, action: remote::Action) -> Element<'a, Message> {
-    button(prose(strings::lookup(label).to_owned(), typeface::BODY))
+    button(prose(strings::lookup(label), typeface::BODY))
         .on_press(Message::RemoteAction(action))
         .into()
 }
@@ -335,19 +335,13 @@ fn transport<'a>(
     .align_y(iced::Center);
 
     controls = controls.push(
-        button(prose(
-            strings::lookup(Text::PlayerRemote).to_owned(),
-            typeface::BODY,
-        ))
-        .on_press(Message::Navigated(Route::Remote)),
+        button(prose(strings::lookup(Text::PlayerRemote), typeface::BODY))
+            .on_press(Message::Navigated(Route::Remote)),
     );
     if sync_play {
         controls = controls.push(
-            button(prose(
-                strings::lookup(Text::PlayerSyncPlay).to_owned(),
-                typeface::BODY,
-            ))
-            .on_press(Message::Navigated(Route::SyncPlay)),
+            button(prose(strings::lookup(Text::PlayerSyncPlay), typeface::BODY))
+                .on_press(Message::Navigated(Route::SyncPlay)),
         );
     }
 
@@ -388,11 +382,8 @@ fn transport<'a>(
 
     controls
         .push(
-            button(prose(
-                strings::lookup(Text::PlayerQueue).to_owned(),
-                typeface::BODY,
-            ))
-            .on_press(Message::Navigated(Route::Queue)),
+            button(prose(strings::lookup(Text::PlayerQueue), typeface::BODY))
+                .on_press(Message::Navigated(Route::Queue)),
         )
         .push(control(Text::PlayerLeave, Action::Leave))
         .into()
@@ -421,7 +412,7 @@ fn live_transport<'a>(
     let mut named = column![
         row![
             container(prose(
-                strings::lookup(Text::PlayerLive).to_owned(),
+                strings::lookup(Text::PlayerLive),
                 typeface::SECONDARY
             ))
             .padding(style::drawn(space::BLOCK_GAP.drawn())),
@@ -457,17 +448,11 @@ fn live_transport<'a>(
         .is_some_and(|program| program.timer.is_some() || program.series_timer.is_some());
 
     let record: Element<'a, Message> = if recording {
-        prose(
-            strings::lookup(Text::PlayerRecording).to_owned(),
-            typeface::SECONDARY,
-        )
+        prose(strings::lookup(Text::PlayerRecording), typeface::SECONDARY)
     } else {
-        button(prose(
-            strings::lookup(Text::PlayerRecord).to_owned(),
-            typeface::BODY,
-        ))
-        .on_press(Message::PlayerAction(Action::Record))
-        .into()
+        button(prose(strings::lookup(Text::PlayerRecord), typeface::BODY))
+            .on_press(Message::PlayerAction(Action::Record))
+            .into()
     };
 
     let controls = row![
@@ -522,14 +507,14 @@ pub fn view<'a>(
     .spacing(style::drawn(space::BLOCK_GAP.drawn()));
 
     if let Some(trouble) = playing.trouble {
-        body = body.push(prose(strings::lookup(trouble).to_owned(), typeface::BODY));
+        body = body.push(prose(strings::lookup(trouble), typeface::BODY));
     }
     if let Some(next) = upcoming(playing) {
         body = body.push(prose(next, typeface::SECONDARY));
     }
     if group.is_some_and(Joined::waiting) {
         body = body.push(prose(
-            strings::lookup(Text::SyncPlayWaiting).to_owned(),
+            strings::lookup(Text::SyncPlayWaiting),
             typeface::SECONDARY,
         ));
     }

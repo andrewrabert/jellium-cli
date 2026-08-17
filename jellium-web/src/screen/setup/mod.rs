@@ -442,10 +442,7 @@ pub fn reread(state: &mut State) -> Task<Message> {
 
 fn body(state: &State) -> Element<'_, Message> {
     match &state.body {
-        Body::Loading => prose(
-            strings::lookup(Text::LoginWorking).to_owned(),
-            typeface::BODY,
-        ),
+        Body::Loading => prose(strings::lookup(Text::LoginWorking), typeface::BODY),
         Body::Language(language) => language::view(language),
         Body::User(user) => user::view(user),
         Body::Libraries(libraries) => libraries::view(libraries),
@@ -461,10 +458,7 @@ fn body(state: &State) -> Element<'_, Message> {
 /// server, Back, Next, and the refusal over the server's own message.
 pub fn view(state: &State) -> Element<'_, Message> {
     let mut page = column![
-        prose(
-            strings::lookup(Text::SetupTitle).to_owned(),
-            typeface::HEADING_2
-        ),
+        prose(strings::lookup(Text::SetupTitle), typeface::HEADING_2),
         prose(
             strings::format(
                 Text::SetupPosition,
@@ -494,7 +488,7 @@ pub fn view(state: &State) -> Element<'_, Message> {
     }
     if state.startup.resumed {
         page = page.push(prose(
-            strings::lookup(Text::SetupResumed).to_owned(),
+            strings::lookup(Text::SetupResumed),
             typeface::SECONDARY,
         ));
     }
@@ -502,20 +496,14 @@ pub fn view(state: &State) -> Element<'_, Message> {
     page = page.push(body(state));
 
     let mut controls = row![
-        button(prose(
-            strings::lookup(Text::SetupBack).to_owned(),
-            typeface::BODY
-        ))
-        .on_press(Message::SetupAction(Action::Back)),
+        button(prose(strings::lookup(Text::SetupBack), typeface::BODY))
+            .on_press(Message::SetupAction(Action::Back)),
     ]
     .spacing(style::drawn(space::GUTTER.drawn()));
     if ready(state) && !state.working {
         controls = controls.push(
-            button(prose(
-                strings::lookup(Text::SetupNext).to_owned(),
-                typeface::BODY,
-            ))
-            .on_press(Message::SetupAction(Action::Next)),
+            button(prose(strings::lookup(Text::SetupNext), typeface::BODY))
+                .on_press(Message::SetupAction(Action::Next)),
         );
     }
     page = page.push(controls);

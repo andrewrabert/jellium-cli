@@ -20,11 +20,11 @@ pub struct State {
 pub fn view<'a>(state: &'a super::State) -> Element<'a, Message> {
     let mut shown = column![
         prose(
-            strings::lookup(Text::LoginQuickConnectTitle).to_owned(),
+            strings::lookup(Text::LoginQuickConnectTitle),
             typeface::HEADING_1
         ),
         prose(
-            strings::lookup(Text::LoginQuickConnectInstruction).to_owned(),
+            strings::lookup(Text::LoginQuickConnectInstruction),
             typeface::BODY
         ),
     ]
@@ -34,7 +34,7 @@ pub fn view<'a>(state: &'a super::State) -> Element<'a, Message> {
     if let Some(code) = &state.quick_connect.code {
         shown = shown
             .push(prose(
-                strings::lookup(Text::LoginQuickConnectCode).to_owned(),
+                strings::lookup(Text::LoginQuickConnectCode),
                 typeface::BODY,
             ))
             .push(prose(code.clone(), typeface::HEADING_1));
@@ -43,14 +43,14 @@ pub fn view<'a>(state: &'a super::State) -> Element<'a, Message> {
     match state.quick_connect.standing {
         None | Some(jellium_model::quickconnect::SignIn::Pending) => {
             shown = shown.push(prose(
-                strings::lookup(Text::LoginQuickConnectWaiting).to_owned(),
+                strings::lookup(Text::LoginQuickConnectWaiting),
                 typeface::BODY,
             ));
         }
         Some(jellium_model::quickconnect::SignIn::Expired) => {
             shown = shown.push(
                 button(prose(
-                    strings::lookup(Text::LoginQuickConnectRetry).to_owned(),
+                    strings::lookup(Text::LoginQuickConnectRetry),
                     typeface::BODY,
                 ))
                 .on_press(Message::LoginAction(Action::QuickConnectRetry)),
@@ -63,11 +63,8 @@ pub fn view<'a>(state: &'a super::State) -> Element<'a, Message> {
     }
 
     shown = shown.push(
-        button(prose(
-            strings::lookup(Text::LoginBack).to_owned(),
-            typeface::BODY,
-        ))
-        .on_press(Message::LoginAction(Action::Back)),
+        button(prose(strings::lookup(Text::LoginBack), typeface::BODY))
+            .on_press(Message::LoginAction(Action::Back)),
     );
 
     container(shown)

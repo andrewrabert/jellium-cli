@@ -134,10 +134,7 @@ pub fn view<'a>(
     read_only: bool,
 ) -> Element<'a, Message> {
     let strip = row(Kind::ALL.into_iter().map(|kind| {
-        let mut control = button(prose(
-            strings::lookup(kind.label()).to_owned(),
-            typeface::BODY,
-        ));
+        let mut control = button(prose(strings::lookup(kind.label()), typeface::BODY));
         if state.kind != Some(kind) {
             control = control.on_press(Message::MetadataAction(Outer::Artwork(Action::Select(
                 kind,
@@ -155,12 +152,9 @@ pub fn view<'a>(
             continue;
         }
         let count = held.len();
-        let mut shown = row![prose(
-            strings::lookup(kind.label()).to_owned(),
-            typeface::BODY
-        )]
-        .spacing(style::drawn(space::GUTTER.drawn()))
-        .align_y(iced::Alignment::Center);
+        let mut shown = row![prose(strings::lookup(kind.label()), typeface::BODY)]
+            .spacing(style::drawn(space::GUTTER.drawn()))
+            .align_y(iced::Alignment::Center);
 
         for (position, (index, _)) in held.into_iter().enumerate() {
             let handle = images.handle(images::Key {
@@ -180,13 +174,9 @@ pub fn view<'a>(
             let mut cell = column![drawn].spacing(style::drawn(space::BLOCK_GAP.drawn()));
             if !read_only {
                 cell = cell.push(
-                    button(prose(
-                        strings::lookup(Text::ArtworkRemove).to_owned(),
-                        typeface::BODY,
-                    ))
-                    .on_press(Message::MetadataAction(Outer::Artwork(
-                        Action::Remove { kind, index },
-                    ))),
+                    button(prose(strings::lookup(Text::ArtworkRemove), typeface::BODY)).on_press(
+                        Message::MetadataAction(Outer::Artwork(Action::Remove { kind, index })),
+                    ),
                 );
                 if kind == Kind::Backdrop
                     && let Some(at) = index
@@ -194,7 +184,7 @@ pub fn view<'a>(
                     if position > 0 {
                         cell = cell.push(
                             button(prose(
-                                strings::lookup(Text::ArtworkMoveEarlier).to_owned(),
+                                strings::lookup(Text::ArtworkMoveEarlier),
                                 typeface::BODY,
                             ))
                             .on_press(Message::MetadataAction(
@@ -208,7 +198,7 @@ pub fn view<'a>(
                     if position + 1 < count {
                         cell = cell.push(
                             button(prose(
-                                strings::lookup(Text::ArtworkMoveLater).to_owned(),
+                                strings::lookup(Text::ArtworkMoveLater),
                                 typeface::BODY,
                             ))
                             .on_press(Message::MetadataAction(
@@ -231,11 +221,8 @@ pub fn view<'a>(
     }
 
     page = page.push(
-        button(prose(
-            strings::lookup(Text::ArtworkUpload).to_owned(),
-            typeface::BODY,
-        ))
-        .on_press(Message::MetadataAction(Outer::Artwork(Action::Upload))),
+        button(prose(strings::lookup(Text::ArtworkUpload), typeface::BODY))
+            .on_press(Message::MetadataAction(Outer::Artwork(Action::Upload))),
     );
 
     let providers = row(state.providers.iter().map(|provider| {
@@ -250,11 +237,8 @@ pub fn view<'a>(
     .spacing(style::drawn(space::GUTTER.drawn()));
 
     page = page.push(providers).push(
-        button(prose(
-            strings::lookup(Text::ArtworkSearch).to_owned(),
-            typeface::BODY,
-        ))
-        .on_press(Message::MetadataAction(Outer::Artwork(Action::Search))),
+        button(prose(strings::lookup(Text::ArtworkSearch), typeface::BODY))
+            .on_press(Message::MetadataAction(Outer::Artwork(Action::Search))),
     );
 
     let found = row(state.remote.iter().enumerate().map(|(at, remote)| {
@@ -273,7 +257,7 @@ pub fn view<'a>(
         column![
             drawn,
             button(prose(
-                strings::lookup(Text::ArtworkDownload).to_owned(),
+                strings::lookup(Text::ArtworkDownload),
                 typeface::BODY
             ))
             .on_press(Message::MetadataAction(Outer::Artwork(Action::Download {

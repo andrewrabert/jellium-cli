@@ -192,20 +192,14 @@ pub fn sort_label(sort: Sort) -> Text {
 
 fn sort_surface<'a>(listing: &Listing) -> Element<'a, Message> {
     let controls = Sort::ALL.into_iter().map(|sort| {
-        let mut control = button(prose(
-            strings::lookup(sort_label(sort)).to_owned(),
-            typeface::BODY,
-        ));
+        let mut control = button(prose(strings::lookup(sort_label(sort)), typeface::BODY));
         if sort != listing.sort {
             control = control.on_press(Message::BrowseAction(Action::Sorted(sort)));
         }
         control.into()
     });
     row![
-        prose(
-            strings::lookup(Text::LibrarySort).to_owned(),
-            typeface::BODY
-        ),
+        prose(strings::lookup(Text::LibrarySort), typeface::BODY),
         row(controls).spacing(style::drawn(space::GUTTER.drawn())),
     ]
     .spacing(style::drawn(space::GUTTER.drawn()))
@@ -258,16 +252,10 @@ fn filter_surface<'a>(browse: &'a Browse) -> Element<'a, Message> {
 
     let mut surface = column![
         row![
-            button(prose(
-                strings::lookup(Text::FilterClose).to_owned(),
-                typeface::BODY
-            ))
-            .on_press(Message::BrowseAction(Action::CloseFilters)),
-            button(prose(
-                strings::lookup(Text::FilterClear).to_owned(),
-                typeface::BODY
-            ))
-            .on_press(Message::BrowseAction(Action::ClearFilters)),
+            button(prose(strings::lookup(Text::FilterClose), typeface::BODY))
+                .on_press(Message::BrowseAction(Action::CloseFilters)),
+            button(prose(strings::lookup(Text::FilterClear), typeface::BODY))
+                .on_press(Message::BrowseAction(Action::ClearFilters)),
         ]
         .spacing(style::drawn(space::GUTTER.drawn())),
         narrowing(

@@ -250,12 +250,9 @@ pub async fn load(
 /// The one save control, which is the only control on a settings screen that
 /// writes.
 pub fn save<'a>() -> Element<'a, Message> {
-    button(prose(
-        strings::lookup(Text::SettingsSave).to_owned(),
-        typeface::BODY,
-    ))
-    .on_press(Message::SettingsAction(Action::Save))
-    .into()
+    button(prose(strings::lookup(Text::SettingsSave), typeface::BODY))
+        .on_press(Message::SettingsAction(Action::Save))
+        .into()
 }
 
 /// One row of choices, the one held drawn without a press, so no control on a
@@ -275,12 +272,9 @@ pub fn choices<'a, T: Copy + PartialEq + 'static>(
         }
         controls = controls.push(control);
     }
-    column![
-        prose(strings::lookup(label).to_owned(), typeface::BODY),
-        controls
-    ]
-    .spacing(style::drawn(space::GUTTER.drawn()))
-    .into()
+    column![prose(strings::lookup(label), typeface::BODY), controls]
+        .spacing(style::drawn(space::GUTTER.drawn()))
+        .into()
 }
 
 /// One flag of the user configuration, labelled by this region's own text
@@ -294,7 +288,7 @@ pub fn flag<'a>(
         checkbox(configuration.value(field) == "true").on_toggle(move |on| {
             Message::SettingsAction(Action::Edited(field, on.to_string()))
         }),
-        prose(strings::lookup(label).to_owned(), typeface::BODY),
+        prose(strings::lookup(label), typeface::BODY),
     ]
     .spacing(style::drawn(space::GUTTER.drawn()))
     .align_y(iced::Center)
@@ -309,7 +303,7 @@ pub fn toggle<'a>(
 ) -> Element<'a, Message> {
     row![
         checkbox(held).on_toggle(move |on| Message::SettingsAction(Action::Set(setting(on)))),
-        prose(strings::lookup(label).to_owned(), typeface::BODY),
+        prose(strings::lookup(label), typeface::BODY),
     ]
     .spacing(style::drawn(space::GUTTER.drawn()))
     .align_y(iced::Center)
@@ -334,15 +328,12 @@ pub fn choice<'a>(
     configuration: &jellium_model::form::Form,
 ) -> Element<'a, Message> {
     let jellium_model::form::Field::Choice { options, .. } = field else {
-        return prose(strings::lookup(label).to_owned(), typeface::BODY);
+        return prose(strings::lookup(label), typeface::BODY);
     };
     let held = configuration.value(field);
     let mut controls = row![].spacing(style::drawn(space::GUTTER.drawn()));
     for option in options {
-        let mut control = button(prose(
-            strings::lookup(mode_label(option)).to_owned(),
-            typeface::BODY,
-        ));
+        let mut control = button(prose(strings::lookup(mode_label(option)), typeface::BODY));
         if *option != held {
             control = control.on_press(Message::SettingsAction(Action::Edited(
                 field,
@@ -351,12 +342,9 @@ pub fn choice<'a>(
         }
         controls = controls.push(control);
     }
-    column![
-        prose(strings::lookup(label).to_owned(), typeface::BODY),
-        controls
-    ]
-    .spacing(style::drawn(space::GUTTER.drawn()))
-    .into()
+    column![prose(strings::lookup(label), typeface::BODY), controls]
+        .spacing(style::drawn(space::GUTTER.drawn()))
+        .into()
 }
 
 /// One `Field::Listed` of the user configuration, offered against the list the
@@ -370,7 +358,7 @@ pub fn listed<'a>(
     let held = configuration.value(field);
     let mut controls = row![].spacing(style::drawn(space::GUTTER.drawn()));
     let mut any = button(prose(
-        strings::lookup(Text::PlaybackLanguageAny).to_owned(),
+        strings::lookup(Text::PlaybackLanguageAny),
         typeface::BODY,
     ));
     if !held.is_empty() {
@@ -393,12 +381,9 @@ pub fn listed<'a>(
         }
         controls = controls.push(control);
     }
-    column![
-        prose(strings::lookup(label).to_owned(), typeface::BODY),
-        controls
-    ]
-    .spacing(style::drawn(space::GUTTER.drawn()))
-    .into()
+    column![prose(strings::lookup(label), typeface::BODY), controls]
+        .spacing(style::drawn(space::GUTTER.drawn()))
+        .into()
 }
 
 /// The navigation column beside the screen shown, the read-only indicator above
@@ -411,15 +396,12 @@ pub fn view<'a>(
     let read_only = signed.session.read_only;
 
     let mut nav = column![prose(
-        strings::lookup(Text::SettingsTitle).to_owned(),
+        strings::lookup(Text::SettingsTitle),
         typeface::HEADING_3
     )]
     .spacing(style::drawn(space::GUTTER.drawn()));
     for screen in column_of(&signed.session) {
-        let mut control = button(prose(
-            strings::lookup(screen.label()).to_owned(),
-            typeface::BODY,
-        ));
+        let mut control = button(prose(strings::lookup(screen.label()), typeface::BODY));
         if screen != state.screen {
             control = control.on_press(Message::SettingsAction(Action::Open(screen)));
         }
@@ -453,7 +435,7 @@ pub fn view<'a>(
     let mut page = column![].spacing(style::drawn(space::GUTTER.drawn()));
     if signed.server_changed {
         page = page.push(prose(
-            strings::lookup(Text::SettingsServerChanged).to_owned(),
+            strings::lookup(Text::SettingsServerChanged),
             typeface::BODY,
         ));
     }

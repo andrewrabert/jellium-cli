@@ -40,12 +40,9 @@ fn key(program: &Program) -> images::Key {
 }
 
 fn badge<'a>(label: Text) -> Element<'a, Message> {
-    container(prose(
-        strings::lookup(label).to_owned(),
-        typeface::SECONDARY,
-    ))
-    .padding(style::drawn(space::BLOCK_GAP.drawn()))
-    .into()
+    container(prose(strings::lookup(label), typeface::SECONDARY))
+        .padding(style::drawn(space::BLOCK_GAP.drawn()))
+        .into()
 }
 
 /// The program's title, its channel by name and number, its start and end, its
@@ -77,18 +74,15 @@ pub fn view<'a>(state: &'a State, now: DateTime<Utc>, images: &'a Cache) -> Elem
     let mut controls = row![].spacing(style::drawn(space::GUTTER.drawn()));
     if program.airing(now) {
         controls = controls.push(
-            button(prose(
-                strings::lookup(Text::ProgramPlay).to_owned(),
-                typeface::BODY,
-            ))
-            .on_press(Message::LiveTvAction(Action::PlayChannel(program.channel))),
+            button(prose(strings::lookup(Text::ProgramPlay), typeface::BODY))
+                .on_press(Message::LiveTvAction(Action::PlayChannel(program.channel))),
         );
     }
     match program.timer.clone() {
         Some(timer) => {
             controls = controls.push(
                 button(prose(
-                    strings::lookup(Text::ProgramCancelRecording).to_owned(),
+                    strings::lookup(Text::ProgramCancelRecording),
                     typeface::BODY,
                 ))
                 .on_press(Message::LiveTvAction(Action::CancelTimer(timer))),
@@ -96,11 +90,8 @@ pub fn view<'a>(state: &'a State, now: DateTime<Utc>, images: &'a Cache) -> Elem
         }
         None => {
             controls = controls.push(
-                button(prose(
-                    strings::lookup(Text::ProgramRecord).to_owned(),
-                    typeface::BODY,
-                ))
-                .on_press(Message::LiveTvAction(Action::Record(program.id.clone()))),
+                button(prose(strings::lookup(Text::ProgramRecord), typeface::BODY))
+                    .on_press(Message::LiveTvAction(Action::Record(program.id.clone()))),
             );
         }
     }
@@ -108,7 +99,7 @@ pub fn view<'a>(state: &'a State, now: DateTime<Utc>, images: &'a Cache) -> Elem
         Some(timer) => {
             controls = controls.push(
                 button(prose(
-                    strings::lookup(Text::ProgramCancelSeries).to_owned(),
+                    strings::lookup(Text::ProgramCancelSeries),
                     typeface::BODY,
                 ))
                 .on_press(Message::LiveTvAction(Action::CancelSeriesTimer(timer))),
@@ -117,7 +108,7 @@ pub fn view<'a>(state: &'a State, now: DateTime<Utc>, images: &'a Cache) -> Elem
         None => {
             controls = controls.push(
                 button(prose(
-                    strings::lookup(Text::ProgramRecordSeries).to_owned(),
+                    strings::lookup(Text::ProgramRecordSeries),
                     typeface::BODY,
                 ))
                 .on_press(Message::LiveTvAction(Action::RecordSeries(

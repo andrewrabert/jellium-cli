@@ -29,12 +29,9 @@ pub async fn load(api: std::rc::Rc<crate::api::Api>) -> Answer<State> {
 /// Each key's application name and creation date, the control that creates
 /// one, and its revocation behind a confirmation naming it.
 pub fn view<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
-    let mut page = column![prose(
-        strings::lookup(Text::KeysTitle).to_owned(),
-        typeface::HEADING_2
-    )]
-    .spacing(style::drawn(space::GUTTER.drawn()))
-    .padding(style::drawn(space::GUTTER.drawn()));
+    let mut page = column![prose(strings::lookup(Text::KeysTitle), typeface::HEADING_2)]
+        .spacing(style::drawn(space::GUTTER.drawn()))
+        .padding(style::drawn(space::GUTTER.drawn()));
 
     if !read_only {
         page = page.push(
@@ -42,15 +39,11 @@ pub fn view<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
                 text_input(strings::lookup(Text::KeysApp), &state.naming)
                     .style(style::input)
                     .on_input(|typed| Message::DashboardAction(super::Action::Typed(typed))),
-                button(prose(
-                    strings::lookup(Text::KeysCreate).to_owned(),
-                    typeface::BODY
-                ))
-                .on_press(Message::DashboardAction(super::Action::Write(
-                    super::Written::CreateKey {
+                button(prose(strings::lookup(Text::KeysCreate), typeface::BODY)).on_press(
+                    Message::DashboardAction(super::Action::Write(super::Written::CreateKey {
                         app: state.naming.clone(),
-                    }
-                ))),
+                    }))
+                ),
             ]
             .spacing(style::drawn(space::GUTTER.drawn())),
         );
@@ -73,16 +66,14 @@ pub fn view<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
         .spacing(style::drawn(space::GUTTER.drawn()));
         if !read_only {
             held = held.push(
-                button(prose(
-                    strings::lookup(Text::KeysRevoke).to_owned(),
-                    typeface::BODY,
-                ))
-                .on_press(Message::DashboardAction(super::Action::Ask(
-                    crate::screen::confirm::Pending::of(
-                        crate::screen::confirm::Destructive::RevokeKey { key: token },
-                        app,
-                    ),
-                ))),
+                button(prose(strings::lookup(Text::KeysRevoke), typeface::BODY)).on_press(
+                    Message::DashboardAction(super::Action::Ask(
+                        crate::screen::confirm::Pending::of(
+                            crate::screen::confirm::Destructive::RevokeKey { key: token },
+                            app,
+                        ),
+                    )),
+                ),
             );
         }
         page = page.push(held);

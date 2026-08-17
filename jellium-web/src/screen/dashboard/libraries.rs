@@ -170,7 +170,7 @@ pub fn refreshed(state: &mut State, items: &[jellium_protocol::Refreshed]) {
 /// Every library with its scan control, and the control that creates one.
 pub fn view<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
     let mut page = column![prose(
-        strings::lookup(Text::LibrariesTitle).to_owned(),
+        strings::lookup(Text::LibrariesTitle),
         typeface::HEADING_2
     )]
     .spacing(style::drawn(space::GUTTER.drawn()))
@@ -188,7 +188,7 @@ pub fn view<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
                     |choice| Message::DashboardAction(super::Action::ContentType(choice)),
                 ),
                 button(prose(
-                    strings::lookup(Text::LibrariesCreate).to_owned(),
+                    strings::lookup(Text::LibrariesCreate),
                     typeface::BODY
                 ))
                 .on_press(Message::DashboardAction(super::Action::Write(
@@ -225,17 +225,15 @@ pub fn view<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
 
         if !read_only {
             held = held.push(
-                button(prose(
-                    strings::lookup(Text::LibrariesScan).to_owned(),
-                    typeface::BODY,
-                ))
-                .on_press(Message::DashboardAction(super::Action::Write(
-                    super::Written::ScanLibrary { name: name.clone() },
-                ))),
+                button(prose(strings::lookup(Text::LibrariesScan), typeface::BODY)).on_press(
+                    Message::DashboardAction(super::Action::Write(super::Written::ScanLibrary {
+                        name: name.clone(),
+                    })),
+                ),
             );
             held = held.push(
                 button(prose(
-                    strings::lookup(Text::LibrariesRemove).to_owned(),
+                    strings::lookup(Text::LibrariesRemove),
                     typeface::BODY,
                 ))
                 .on_press(Message::DashboardAction(super::Action::Ask(
@@ -268,7 +266,7 @@ pub fn one<'a>(state: &'a One, read_only: bool) -> Element<'a, Message> {
                     .style(style::input)
                     .on_input(|typed| Message::DashboardAction(super::Action::Typed(typed))),
                 button(prose(
-                    strings::lookup(Text::LibrariesRename).to_owned(),
+                    strings::lookup(Text::LibrariesRename),
                     typeface::BODY
                 ))
                 .on_press(Message::DashboardAction(super::Action::Write(
@@ -282,17 +280,14 @@ pub fn one<'a>(state: &'a One, read_only: bool) -> Element<'a, Message> {
         );
     }
 
-    page = page.push(prose(
-        strings::lookup(Text::LibrariesPaths).to_owned(),
-        typeface::BODY,
-    ));
+    page = page.push(prose(strings::lookup(Text::LibrariesPaths), typeface::BODY));
     for path in &state.paths {
         let mut held =
             row![prose(path.clone(), typeface::BODY)].spacing(style::drawn(space::GUTTER.drawn()));
         if !read_only {
             held = held.push(
                 button(prose(
-                    strings::lookup(Text::LibrariesPathRemove).to_owned(),
+                    strings::lookup(Text::LibrariesPathRemove),
                     typeface::BODY,
                 ))
                 .on_press(Message::DashboardAction(super::Action::Ask(
@@ -312,7 +307,7 @@ pub fn one<'a>(state: &'a One, read_only: bool) -> Element<'a, Message> {
     if !read_only {
         page = page.push(
             button(prose(
-                strings::lookup(Text::LibrariesBrowse).to_owned(),
+                strings::lookup(Text::LibrariesBrowse),
                 typeface::BODY,
             ))
             .on_press(Message::DashboardAction(super::Action::Browse(
@@ -333,7 +328,7 @@ pub fn one<'a>(state: &'a One, read_only: bool) -> Element<'a, Message> {
                         super::Action::Browse(path.clone())
                     )),
                     button(prose(
-                        strings::lookup(Text::LibrariesPathAdd).to_owned(),
+                        strings::lookup(Text::LibrariesPathAdd),
                         typeface::BODY
                     ))
                     .on_press(Message::DashboardAction(super::Action::Write(
@@ -349,7 +344,7 @@ pub fn one<'a>(state: &'a One, read_only: bool) -> Element<'a, Message> {
     }
 
     page = page.push(prose(
-        strings::lookup(Text::LibrariesOptions).to_owned(),
+        strings::lookup(Text::LibrariesOptions),
         typeface::BODY,
     ));
     for field in OPTIONS {
@@ -357,11 +352,8 @@ pub fn one<'a>(state: &'a One, read_only: bool) -> Element<'a, Message> {
     }
     if !read_only {
         page = page.push(
-            button(prose(
-                strings::lookup(Text::DashboardSave).to_owned(),
-                typeface::BODY,
-            ))
-            .on_press(Message::DashboardAction(super::Action::Save)),
+            button(prose(strings::lookup(Text::DashboardSave), typeface::BODY))
+                .on_press(Message::DashboardAction(super::Action::Save)),
         );
     }
 

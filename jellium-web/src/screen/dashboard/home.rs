@@ -60,10 +60,7 @@ fn running(state: &State) -> impl Iterator<Item = &jellium_protocol::TaskState> 
 /// restart and shutdown controls.
 pub fn view<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
     let mut page = column![
-        prose(
-            strings::lookup(Text::DashboardHome).to_owned(),
-            typeface::HEADING_2
-        ),
+        prose(strings::lookup(Text::DashboardHome), typeface::HEADING_2),
         prose(
             strings::format(
                 Text::DashboardServer,
@@ -90,7 +87,7 @@ pub fn view<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
     }
 
     page = page.push(prose(
-        strings::lookup(Text::DashboardSessions).to_owned(),
+        strings::lookup(Text::DashboardSessions),
         typeface::BODY,
     ));
     for session in &state.sessions {
@@ -108,7 +105,7 @@ pub fn view<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
     }
 
     page = page.push(prose(
-        strings::lookup(Text::DashboardRunningTasks).to_owned(),
+        strings::lookup(Text::DashboardRunningTasks),
         typeface::BODY,
     ));
     for task in running(state) {
@@ -123,14 +120,14 @@ pub fn view<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
         page = page.push(
             row![
                 button(prose(
-                    strings::lookup(Text::DashboardScanAll).to_owned(),
+                    strings::lookup(Text::DashboardScanAll),
                     typeface::BODY
                 ))
                 .on_press(Message::DashboardAction(super::Action::Write(
                     super::Written::ScanAll
                 ))),
                 button(prose(
-                    strings::lookup(Text::DashboardRestart).to_owned(),
+                    strings::lookup(Text::DashboardRestart),
                     typeface::BODY
                 ))
                 .on_press(Message::DashboardAction(super::Action::Ask(
@@ -140,7 +137,7 @@ pub fn view<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
                     )
                 ))),
                 button(prose(
-                    strings::lookup(Text::DashboardShutdown).to_owned(),
+                    strings::lookup(Text::DashboardShutdown),
                     typeface::BODY
                 ))
                 .on_press(Message::DashboardAction(super::Action::Ask(

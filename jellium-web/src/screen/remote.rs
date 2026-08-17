@@ -31,10 +31,7 @@ fn offered(target: &Target) -> Element<'_, Message> {
 
 fn picker<'a>(targets: &'a [Target]) -> Element<'a, Message> {
     if targets.is_empty() {
-        return prose(
-            strings::lookup(Text::RemoteEmpty).to_owned(),
-            typeface::BODY,
-        );
+        return prose(strings::lookup(Text::RemoteEmpty), typeface::BODY);
     }
     let listed = targets.iter().fold(
         column![].spacing(style::drawn(space::GUTTER.drawn())),
@@ -76,10 +73,7 @@ pub fn view<'a>(
 
     container(
         column![
-            prose(
-                strings::lookup(Text::RemoteTitle).to_owned(),
-                typeface::HEADING_2
-            ),
+            prose(strings::lookup(Text::RemoteTitle), typeface::HEADING_2),
             body
         ]
         .spacing(style::drawn(space::GUTTER.drawn())),

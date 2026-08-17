@@ -55,11 +55,8 @@ pub fn view<'a>(
     let hidden = jellium_model::user::ids(configuration, jellium_model::user::MY_MEDIA_EXCLUDES);
     let arranged = jellium_model::user::arranged(&ids, &order, &[]);
 
-    let mut shown = column![prose(
-        strings::lookup(Text::HomeOrder).to_owned(),
-        typeface::BODY
-    )]
-    .spacing(style::drawn(space::GUTTER.drawn()));
+    let mut shown = column![prose(strings::lookup(Text::HomeOrder), typeface::BODY)]
+        .spacing(style::drawn(space::GUTTER.drawn()));
 
     for id in arranged {
         let is_hidden = hidden.contains(&id);
@@ -68,24 +65,14 @@ pub fn view<'a>(
         if !read_only {
             controls = controls
                 .push(
-                    button(prose(
-                        strings::lookup(Text::HomeMoveUp).to_owned(),
-                        typeface::BODY,
-                    ))
-                    .on_press(Message::SettingsAction(Action::MoveLibrary {
-                        id,
-                        down: false,
-                    })),
+                    button(prose(strings::lookup(Text::HomeMoveUp), typeface::BODY)).on_press(
+                        Message::SettingsAction(Action::MoveLibrary { id, down: false }),
+                    ),
                 )
                 .push(
-                    button(prose(
-                        strings::lookup(Text::HomeMoveDown).to_owned(),
-                        typeface::BODY,
-                    ))
-                    .on_press(Message::SettingsAction(Action::MoveLibrary {
-                        id,
-                        down: true,
-                    })),
+                    button(prose(strings::lookup(Text::HomeMoveDown), typeface::BODY)).on_press(
+                        Message::SettingsAction(Action::MoveLibrary { id, down: true }),
+                    ),
                 )
                 .push(
                     button(prose(

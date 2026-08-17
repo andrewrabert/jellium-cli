@@ -98,7 +98,7 @@ fn resumable(item: &BaseItemDto) -> bool {
 }
 
 fn intent_button<'a>(label: Text, intent: Intent) -> Element<'a, Message> {
-    button(prose(strings::lookup(label).to_owned(), typeface::BODY))
+    button(prose(strings::lookup(label), typeface::BODY))
         .on_press(Message::PlayPressed(intent))
         .into()
 }
@@ -193,7 +193,7 @@ pub fn view<'a>(
         Some(handle) => iced::widget::image(handle)
             .width(theme::CARD_WIDTH * 1.5)
             .into(),
-        None => prose(String::new(), typeface::BODY),
+        None => prose("", typeface::BODY),
     };
 
     let mut actions = row![].spacing(style::drawn(space::GUTTER.drawn()));
@@ -213,11 +213,11 @@ pub fn view<'a>(
         };
         actions = actions
             .push(
-                button(prose(strings::lookup(mark).to_owned(), typeface::BODY))
+                button(prose(strings::lookup(mark), typeface::BODY))
                     .on_press(Message::PlayedToggled(id, !played(item))),
             )
             .push(
-                button(prose(strings::lookup(star).to_owned(), typeface::BODY))
+                button(prose(strings::lookup(star), typeface::BODY))
                     .on_press(Message::FavoriteToggled(id, !favorite(item))),
             );
 
@@ -225,7 +225,7 @@ pub fn view<'a>(
             actions = actions
                 .push(
                     button(prose(
-                        strings::lookup(Text::DetailRefreshMetadata).to_owned(),
+                        strings::lookup(Text::DetailRefreshMetadata),
                         typeface::BODY,
                     ))
                     .on_press(Message::RefreshItem {
@@ -236,7 +236,7 @@ pub fn view<'a>(
                 )
                 .push(
                     button(prose(
-                        strings::lookup(Text::DetailRefreshReplace).to_owned(),
+                        strings::lookup(Text::DetailRefreshReplace),
                         typeface::BODY,
                     ))
                     .on_press(Message::RefreshItem {
@@ -247,7 +247,7 @@ pub fn view<'a>(
                 )
                 .push(
                     button(prose(
-                        strings::lookup(Text::DetailRefreshScanMode).to_owned(),
+                        strings::lookup(Text::DetailRefreshScanMode),
                         typeface::BODY,
                     ))
                     .on_press(Message::RefreshItem {
@@ -269,7 +269,7 @@ pub fn view<'a>(
     if let Some(overview) = &item.overview {
         summary = summary
             .push(prose(
-                strings::lookup(Text::DetailOverview).to_owned(),
+                strings::lookup(Text::DetailOverview),
                 typeface::HEADING_3,
             ))
             .push(prose(overview.clone(), typeface::BODY));
@@ -282,7 +282,7 @@ pub fn view<'a>(
     if !state.children.is_empty() {
         page = page
             .push(prose(
-                strings::lookup(children_heading(item.type_)).to_owned(),
+                strings::lookup(children_heading(item.type_)),
                 typeface::HEADING_2,
             ))
             .push(widget::grid(&state.children, images, !session.read_only));
@@ -293,14 +293,12 @@ pub fn view<'a>(
         && let Some(id) = item.id
     {
         page = page.push(
-            button(prose(
-                strings::lookup(Text::MetadataOpen).to_owned(),
-                typeface::BODY,
-            ))
-            .on_press(Message::Navigated(crate::route::Route::Metadata {
-                item: id,
-                part: crate::screen::metadata::Part::Fields,
-            })),
+            button(prose(strings::lookup(Text::MetadataOpen), typeface::BODY)).on_press(
+                Message::Navigated(crate::route::Route::Metadata {
+                    item: id,
+                    part: crate::screen::metadata::Part::Fields,
+                }),
+            ),
         );
     }
 

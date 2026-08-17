@@ -51,20 +51,14 @@ pub fn view(state: &State) -> Element<'_, Message> {
         .find(|choice| choice.value == state.configuration.ui_culture)
         .cloned();
     column![
-        prose(
-            strings::lookup(Text::SetupLanguage).to_owned(),
-            typeface::HEADING_3
-        ),
-        prose(
-            strings::lookup(Text::SetupLanguageCulture).to_owned(),
-            typeface::BODY
-        ),
+        prose(strings::lookup(Text::SetupLanguage), typeface::HEADING_3),
+        prose(strings::lookup(Text::SetupLanguageCulture), typeface::BODY),
         pick_list(state.cultures.clone(), chosen, |choice| {
             Message::SetupAction(Action::Edited(Edit::Culture(choice)))
         })
         .width(Fill),
         prose(
-            strings::lookup(Text::SetupLanguageServerName).to_owned(),
+            strings::lookup(Text::SetupLanguageServerName),
             typeface::BODY
         ),
         text_input(
@@ -74,7 +68,7 @@ pub fn view(state: &State) -> Element<'_, Message> {
         .style(style::input)
         .on_input(|typed| Message::SetupAction(Action::Edited(Edit::ServerName(typed)))),
         prose(
-            strings::lookup(Text::SetupLanguageScope).to_owned(),
+            strings::lookup(Text::SetupLanguageScope),
             typeface::SECONDARY
         ),
     ]

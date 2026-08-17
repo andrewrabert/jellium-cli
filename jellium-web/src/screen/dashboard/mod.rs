@@ -273,14 +273,14 @@ pub fn control<'a>(
                 iced::widget::checkbox(held == "true").on_toggle(move |held| {
                     Message::DashboardAction(Action::Edited(field, held.to_string()))
                 }),
-                prose(key.to_owned(), typeface::BODY),
+                prose(key, typeface::BODY),
             ]
             .spacing(style::drawn(space::GUTTER.drawn()))
             .align_y(iced::Center),
         ),
         _ => Element::from(
             column![
-                prose(field.key().to_owned(), typeface::BODY),
+                prose(field.key(), typeface::BODY),
                 iced::widget::text_input(field.key(), &held)
                     .style(style::input)
                     .on_input(move |held| {
@@ -649,10 +649,7 @@ pub fn view<'a>(state: &'a State, session: &'a jellium_protocol::Session) -> Ele
     let mut column_of = column![].spacing(style::drawn(space::GUTTER.drawn()));
     for entry in Screen::COLUMN {
         let shown = state.screen == entry;
-        let control = button(prose(
-            strings::lookup(entry.label()).to_owned(),
-            typeface::BODY,
-        ));
+        let control = button(prose(strings::lookup(entry.label()), typeface::BODY));
         column_of = column_of.push(if shown {
             control
         } else {
@@ -710,10 +707,7 @@ fn shown_page<'a>(held: &'a page::State) -> Element<'a, Message> {
     let mut shown = column![prose(held.name.clone(), typeface::BODY)]
         .spacing(style::drawn(space::GUTTER.drawn()));
     if held.busy {
-        shown = shown.push(prose(
-            strings::lookup(Text::StatusLoading).to_owned(),
-            typeface::BODY,
-        ));
+        shown = shown.push(prose(strings::lookup(Text::StatusLoading), typeface::BODY));
     }
     if let Some(notice) = held.notice.as_ref() {
         shown = shown.push(crate::widget::banner(notice.clone()));

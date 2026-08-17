@@ -15,14 +15,8 @@ use crate::widget::prose;
 pub fn view<'a>() -> Element<'a, Message> {
     let mut shown = column![
         row![
-            prose(
-                strings::lookup(Text::ControlsKey).to_owned(),
-                typeface::BODY
-            ),
-            prose(
-                strings::lookup(Text::ControlsDoes).to_owned(),
-                typeface::BODY
-            ),
+            prose(strings::lookup(Text::ControlsKey), typeface::BODY),
+            prose(strings::lookup(Text::ControlsDoes), typeface::BODY),
         ]
         .spacing(style::drawn(space::GUTTER.drawn()))
     ]
@@ -31,11 +25,8 @@ pub fn view<'a>() -> Element<'a, Message> {
     for binding in BINDINGS {
         shown = shown.push(
             row![
-                prose(strings::lookup(binding.named).to_owned(), typeface::BODY),
-                prose(
-                    strings::lookup(binding.does.text()).to_owned(),
-                    typeface::BODY
-                ),
+                prose(strings::lookup(binding.named), typeface::BODY),
+                prose(strings::lookup(binding.does.text()), typeface::BODY),
             ]
             .spacing(style::drawn(space::GUTTER.drawn())),
         );

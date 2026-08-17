@@ -122,7 +122,7 @@ impl State {
 
 fn typed<'a>(label: Text, field: Field, held: &'a str) -> Element<'a, Message> {
     row![
-        prose(strings::lookup(label).to_owned(), typeface::BODY),
+        prose(strings::lookup(label), typeface::BODY),
         text_input("", held)
             .style(style::input)
             .on_input(
@@ -157,7 +157,7 @@ pub fn view<'a>(state: &'a State, foreign: &'a Foreign, read_only: bool) -> Elem
     if !read_only {
         page = page.push(
             button(prose(
-                strings::lookup(Text::MetadataIdentifyRun).to_owned(),
+                strings::lookup(Text::MetadataIdentifyRun),
                 typeface::BODY,
             ))
             .on_press(Message::MetadataAction(Outer::Identify(Action::Run))),
@@ -180,24 +180,15 @@ pub fn view<'a>(state: &'a State, foreign: &'a Foreign, read_only: bool) -> Elem
                     checkbox(state.replace_images).on_toggle(|on| Message::MetadataAction(
                         Outer::Identify(Action::SetReplaceImages(on))
                     )),
-                    prose(
-                        strings::lookup(Text::MetadataReplaceImages).to_owned(),
-                        typeface::BODY
-                    ),
+                    prose(strings::lookup(Text::MetadataReplaceImages), typeface::BODY),
                 ]
                 .spacing(style::drawn(space::GUTTER.drawn()))
                 .align_y(iced::Alignment::Center),
                 row![
-                    button(prose(
-                        strings::lookup(Text::MetadataApply).to_owned(),
-                        typeface::BODY
-                    ))
-                    .on_press(Message::MetadataAction(Outer::Identify(Action::Apply))),
-                    button(prose(
-                        strings::lookup(Text::MetadataCancel).to_owned(),
-                        typeface::BODY
-                    ))
-                    .on_press(Message::MetadataAction(Outer::Identify(Action::Cancel))),
+                    button(prose(strings::lookup(Text::MetadataApply), typeface::BODY))
+                        .on_press(Message::MetadataAction(Outer::Identify(Action::Apply))),
+                    button(prose(strings::lookup(Text::MetadataCancel), typeface::BODY))
+                        .on_press(Message::MetadataAction(Outer::Identify(Action::Cancel))),
                 ]
                 .spacing(style::drawn(space::GUTTER.drawn())),
             ]
@@ -243,13 +234,9 @@ pub fn view<'a>(state: &'a State, foreign: &'a Foreign, read_only: bool) -> Elem
         }
         if !read_only {
             summary = summary.push(
-                button(prose(
-                    strings::lookup(Text::MetadataChoose).to_owned(),
-                    typeface::BODY,
-                ))
-                .on_press(Message::MetadataAction(Outer::Identify(
-                    Action::Choose { at },
-                ))),
+                button(prose(strings::lookup(Text::MetadataChoose), typeface::BODY)).on_press(
+                    Message::MetadataAction(Outer::Identify(Action::Choose { at })),
+                ),
             );
         }
 

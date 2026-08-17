@@ -4,7 +4,7 @@
 
 use std::cell::RefCell;
 use std::cmp::Ordering;
-use std::collections::HashMap;
+use std::collections::HashSet;
 
 use iced::Subscription;
 use iced::futures::Stream;
@@ -134,17 +134,10 @@ fn holds(ranges: &[(Codepoint, Codepoint)], codepoint: Codepoint) -> bool {
         .is_ok()
 }
 
-/// What became of a face this client asked the origin for. Its presence is
-/// what keeps a later miss from asking twice.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-enum Standing {
-    Asked,
-    Drawn,
-    Refused,
-}
-
 thread_local! {
-    static STANDING: RefCell<HashMap<Served, Standing>> = RefCell::new(HashMap::new());
+    /// Every face this client has already put the question to the origin for,
+    /// which is what keeps a later miss from asking twice.
+    static ASKED: RefCell<HashSet<Served>> = RefCell::new(HashSet::new());
 
     /// The one channel every want is written into, held for the life of the
     /// page so a want raised before the subscription starts is still
@@ -197,12 +190,10 @@ pub fn observed(content: &str, weight: Weight) {
 }
 
 fn ask(face: Served) {
-    STANDING.with(|standing| {
-        let mut standing = standing.borrow_mut();
-        if standing.contains_key(&face) {
+    ASKED.with(|asked| {
+        if !asked.borrow_mut().insert(face) {
             return;
         }
-        standing.insert(face, Standing::Asked);
         CHANNEL.with(|(sender, _)| {
             if sender.unbounded_send(face).is_err() {
                 web_sys::console::error_1(&wasm_bindgen::JsValue::from_str(
@@ -253,19 +244,12 @@ pub async fn fetched(face: Served) -> Answer<Vec<u8>> {
     .await
 }
 
-/// Marks `face` drawn, so no later miss asks for it.
-pub fn landed(face: Served) {
-    settle(face, Standing::Drawn);
-}
-
-/// Marks `face` refused, so no later miss asks for it and no second failure is
-/// raised for it.
-pub fn refused(face: Served) {
-    settle(face, Standing::Refused);
-}
-
-fn settle(face: Served, standing: Standing) {
-    STANDING.with(|held| {
-        held.borrow_mut().insert(face, standing);
+/// Marks `face` asked and answered, whether it drew or failed, so no later
+/// miss asks for it again and no second failure is raised for it. One door,
+/// because what a caller needs is that the question is closed, and nothing
+/// reads which way it closed.
+pub fn settled(face: Served) {
+    ASKED.with(|asked| {
+        asked.borrow_mut().insert(face);
     });
 }

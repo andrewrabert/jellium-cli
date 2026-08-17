@@ -54,10 +54,7 @@ fn opacity_label(opacity: i32) -> String {
 /// the save, which is absent under read-only.
 pub fn view<'a>(held: Held, read_only: bool) -> Element<'a, Message> {
     let mut shown = column![
-        prose(
-            strings::lookup(Text::SubtitlesBurnedIn).to_owned(),
-            typeface::BODY
-        ),
+        prose(strings::lookup(Text::SubtitlesBurnedIn), typeface::BODY),
         choices(
             Text::SubtitlesSize,
             &SubtitleSize::ALL,

@@ -293,10 +293,7 @@ pub fn view<'a>(state: &'a State, images: &'a Cache, read_only: bool) -> Element
     };
     let shown = state.tab.kind();
     let strip = row(state.tabs.iter().map(|kind| {
-        let mut control = button(prose(
-            strings::lookup(kind.label()).to_owned(),
-            typeface::BODY,
-        ));
+        let mut control = button(prose(strings::lookup(kind.label()), typeface::BODY));
         if *kind != shown {
             control = control.on_press(Message::Navigated(Route::Library {
                 id,

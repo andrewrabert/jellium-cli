@@ -171,7 +171,7 @@ pub fn view<'a>(
         .collect();
     if !libraries.is_empty() {
         page = page.push(prose(
-            strings::lookup(Text::HomeLibraries).to_owned(),
+            strings::lookup(Text::HomeLibraries),
             typeface::HEADING_2,
         ));
         page = page.push(widget::library_row(

@@ -15,7 +15,7 @@ use crate::style::{self, Drawn, space, typeface};
 use crate::text::{self as strings, Text};
 use crate::theme;
 use crate::widget;
-use crate::widget::prose;
+use crate::widget::{line, prose};
 use crate::window;
 
 #[derive(Debug, Clone)]
@@ -68,14 +68,19 @@ fn entry<'a>(
             .into(),
     };
 
-    let mut named = column![prose(
+    let mut named = column![line(
         format!("{} {}", channel.number, channel.name),
-        typeface::BODY
+        typeface::BODY,
+        typeface::Weight::Regular,
     )]
     .spacing(style::drawn(space::BLOCK_GAP.drawn()))
     .width(Fill);
     if let Some(program) = &channel.current {
-        named = named.push(prose(program.title.clone(), typeface::SECONDARY));
+        named = named.push(line(
+            program.title.clone(),
+            typeface::SECONDARY,
+            typeface::Weight::Regular,
+        ));
         named = named.push(widget::elapsed_bar(program.elapsed(now)));
     }
 
@@ -91,7 +96,7 @@ fn entry<'a>(
             button(named)
                 .style(style::flat)
                 .on_press(Message::LiveTvAction(Action::PlayChannel(channel.id))),
-            button(prose(strings::lookup(favourite).to_owned(), typeface::BODY)).on_press(
+            button(prose(strings::lookup(favourite), typeface::BODY)).on_press(
                 Message::LiveTvAction(Action::Favorited(channel.id, !channel.favorite))
             ),
         ]
@@ -109,26 +114,20 @@ pub fn view<'a>(state: &'a State, now: DateTime<Utc>, images: &'a Cache) -> Elem
     use jellyfin_api::types::ChannelType;
 
     let filter = row![
-        button(prose(
-            strings::lookup(Text::ChannelsTv).to_owned(),
-            typeface::BODY
-        ))
-        .style(if state.kind == ChannelType::Tv {
-            style::submit
-        } else {
-            style::raised
-        })
-        .on_press(Message::LiveTvAction(Action::Kind(ChannelType::Tv))),
-        button(prose(
-            strings::lookup(Text::ChannelsRadio).to_owned(),
-            typeface::BODY
-        ))
-        .style(if state.kind == ChannelType::Radio {
-            style::submit
-        } else {
-            style::raised
-        })
-        .on_press(Message::LiveTvAction(Action::Kind(ChannelType::Radio))),
+        button(prose(strings::lookup(Text::ChannelsTv), typeface::BODY))
+            .style(if state.kind == ChannelType::Tv {
+                style::submit
+            } else {
+                style::raised
+            })
+            .on_press(Message::LiveTvAction(Action::Kind(ChannelType::Tv))),
+        button(prose(strings::lookup(Text::ChannelsRadio), typeface::BODY))
+            .style(if state.kind == ChannelType::Radio {
+                style::submit
+            } else {
+                style::raised
+            })
+            .on_press(Message::LiveTvAction(Action::Kind(ChannelType::Radio))),
     ]
     .spacing(style::drawn(space::GUTTER.drawn()));
 

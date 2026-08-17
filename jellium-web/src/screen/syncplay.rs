@@ -31,17 +31,14 @@ fn offered(group: &Group) -> Element<'_, Message> {
             prose(group.name.clone(), typeface::BODY),
             prose(participants(group), typeface::SECONDARY),
             prose(
-                strings::lookup(state_label(group.state)).to_owned(),
+                strings::lookup(state_label(group.state)),
                 typeface::SECONDARY
             ),
         ]
         .spacing(style::drawn(space::BLOCK_GAP.drawn())),
         iced::widget::Space::new().width(Fill),
-        button(prose(
-            strings::lookup(Text::SyncPlayJoin).to_owned(),
-            typeface::BODY
-        ))
-        .on_press(Message::GroupAction(group::Action::Join(group.id))),
+        button(prose(strings::lookup(Text::SyncPlayJoin), typeface::BODY))
+            .on_press(Message::GroupAction(group::Action::Join(group.id))),
     ]
     .spacing(style::drawn(space::GUTTER.drawn()))
     .align_y(iced::Center)
@@ -52,19 +49,13 @@ fn picker<'a>(groups: &'a [Group], access: SyncAccess) -> Element<'a, Message> {
     let mut body = column![].spacing(style::drawn(space::GUTTER.drawn()));
     if access == SyncAccess::CreateAndJoin {
         body = body.push(
-            button(prose(
-                strings::lookup(Text::SyncPlayCreate).to_owned(),
-                typeface::BODY,
-            ))
-            .on_press(Message::GroupAction(group::Action::Create)),
+            button(prose(strings::lookup(Text::SyncPlayCreate), typeface::BODY))
+                .on_press(Message::GroupAction(group::Action::Create)),
         );
     }
     if groups.is_empty() {
         return body
-            .push(prose(
-                strings::lookup(Text::SyncPlayEmpty).to_owned(),
-                typeface::BODY,
-            ))
+            .push(prose(strings::lookup(Text::SyncPlayEmpty), typeface::BODY))
             .into();
     }
     let listed = groups.iter().fold(
@@ -79,7 +70,7 @@ fn active<'a>(joined: &'a Joined) -> Element<'a, Message> {
         prose(joined.group.name.clone(), typeface::BODY),
         prose(participants(&joined.group), typeface::SECONDARY),
         prose(
-            strings::lookup(state_label(joined.group.state)).to_owned(),
+            strings::lookup(state_label(joined.group.state)),
             typeface::SECONDARY
         ),
     ]
@@ -87,25 +78,19 @@ fn active<'a>(joined: &'a Joined) -> Element<'a, Message> {
 
     if joined.waiting() {
         body = body.push(prose(
-            strings::lookup(Text::SyncPlayWaiting).to_owned(),
+            strings::lookup(Text::SyncPlayWaiting),
             typeface::SECONDARY,
         ));
     }
 
     body.push(
-        button(prose(
-            strings::lookup(Text::SyncPlayStop).to_owned(),
-            typeface::BODY,
-        ))
-        .on_press(Message::GroupAction(group::Action::Stop)),
+        button(prose(strings::lookup(Text::SyncPlayStop), typeface::BODY))
+            .on_press(Message::GroupAction(group::Action::Stop)),
     )
     .push(iced::widget::Space::new().height(style::drawn(space::GUTTER.drawn())))
     .push(
-        button(prose(
-            strings::lookup(Text::SyncPlayLeave).to_owned(),
-            typeface::BODY,
-        ))
-        .on_press(Message::GroupAction(group::Action::Leave)),
+        button(prose(strings::lookup(Text::SyncPlayLeave), typeface::BODY))
+            .on_press(Message::GroupAction(group::Action::Leave)),
     )
     .spacing(style::drawn(space::GUTTER.drawn()))
     .into()
@@ -128,10 +113,7 @@ pub fn view<'a>(
 
     container(
         column![
-            prose(
-                strings::lookup(Text::SyncPlayTitle).to_owned(),
-                typeface::HEADING_2
-            ),
+            prose(strings::lookup(Text::SyncPlayTitle), typeface::HEADING_2),
             body
         ]
         .spacing(style::drawn(space::GUTTER.drawn())),

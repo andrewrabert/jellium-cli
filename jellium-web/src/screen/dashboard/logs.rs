@@ -7,7 +7,7 @@ use crate::app::Message;
 use crate::error::Answer;
 use crate::style::{self, Drawn, space, typeface};
 use crate::text::{self as strings, Text};
-use crate::widget::prose;
+use crate::widget::{line, prose};
 use crate::window;
 
 /// The log files the server holds.
@@ -65,12 +65,9 @@ fn sized(bytes: u64) -> String {
 
 /// Each log file with its name and size.
 pub fn view<'a>(state: &'a State) -> Element<'a, Message> {
-    let mut page = column![prose(
-        strings::lookup(Text::LogsTitle).to_owned(),
-        typeface::HEADING_2
-    )]
-    .spacing(style::drawn(space::GUTTER.drawn()))
-    .padding(style::drawn(space::GUTTER.drawn()));
+    let mut page = column![prose(strings::lookup(Text::LogsTitle), typeface::HEADING_2)]
+        .spacing(style::drawn(space::GUTTER.drawn()))
+        .padding(style::drawn(space::GUTTER.drawn()));
 
     for file in &state.files {
         let name = file.name.clone().unwrap_or_default();
@@ -116,7 +113,11 @@ pub fn viewer<'a>(held: &'a Viewer) -> Element<'a, Message> {
     }
 
     page.push(window::list(held.window, held.tail.lines(), |index| {
-        prose(held.tail.line(index).to_owned(), typeface::BODY)
+        line(
+            held.tail.line(index),
+            typeface::BODY,
+            typeface::Weight::Regular,
+        )
     }))
     .width(Fill)
     .height(Fill)

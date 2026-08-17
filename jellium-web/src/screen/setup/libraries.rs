@@ -69,7 +69,7 @@ fn browser(adding: &Adding) -> Element<'_, Message> {
     let mut listing = column![
         row![
             button(prose(
-                strings::lookup(Text::SetupLibrariesUp).to_owned(),
+                strings::lookup(Text::SetupLibrariesUp),
                 typeface::BODY
             ))
             .on_press(Message::SetupAction(Action::BrowseUp)),
@@ -126,7 +126,7 @@ fn dialog(adding: &Adding) -> Element<'_, Message> {
     page = page.push(match &adding.browsing {
         Some(_) => browser(adding),
         None => button(prose(
-            strings::lookup(Text::LibrariesBrowse).to_owned(),
+            strings::lookup(Text::LibrariesBrowse),
             typeface::BODY,
         ))
         .on_press(Message::SetupAction(Action::Browse(String::new())))
@@ -136,12 +136,12 @@ fn dialog(adding: &Adding) -> Element<'_, Message> {
     page = page.push(
         row![
             button(prose(
-                strings::lookup(Text::SetupLibrariesAdd).to_owned(),
+                strings::lookup(Text::SetupLibrariesAdd),
                 typeface::BODY
             ))
             .on_press(Message::SetupAction(Action::CreateLibrary)),
             button(prose(
-                strings::lookup(Text::SetupLibrariesCancel).to_owned(),
+                strings::lookup(Text::SetupLibrariesCancel),
                 typeface::BODY
             ))
             .on_press(Message::SetupAction(Action::Adding(false))),
@@ -155,12 +155,9 @@ fn dialog(adding: &Adding) -> Element<'_, Message> {
 /// and the sentence stating that the step completes with none configured.
 pub fn view(state: &State) -> Element<'_, Message> {
     let mut page = column![
+        prose(strings::lookup(Text::SetupLibraries), typeface::HEADING_3),
         prose(
-            strings::lookup(Text::SetupLibraries).to_owned(),
-            typeface::HEADING_3
-        ),
-        prose(
-            strings::lookup(Text::SetupLibrariesEmpty).to_owned(),
+            strings::lookup(Text::SetupLibrariesEmpty),
             typeface::SECONDARY
         ),
     ]
@@ -181,7 +178,7 @@ pub fn view(state: &State) -> Element<'_, Message> {
                         Message::SetupAction(Action::Edited(Edit::Renaming(typed)))
                     }),
                 button(prose(
-                    strings::lookup(Text::LibrariesRename).to_owned(),
+                    strings::lookup(Text::LibrariesRename),
                     typeface::BODY
                 ))
                 .on_press(Message::SetupAction(Action::RenameLibrary { name: typed })),
@@ -191,14 +188,14 @@ pub fn view(state: &State) -> Element<'_, Message> {
             None => row![
                 container(prose(name.clone(), typeface::BODY)).width(Fill),
                 button(prose(
-                    strings::lookup(Text::LibrariesRename).to_owned(),
+                    strings::lookup(Text::LibrariesRename),
                     typeface::BODY
                 ))
                 .on_press(Message::SetupAction(Action::Renaming {
                     name: name.clone()
                 })),
                 button(prose(
-                    strings::lookup(Text::LibrariesRemove).to_owned(),
+                    strings::lookup(Text::LibrariesRemove),
                     typeface::BODY
                 ))
                 .on_press(Message::SetupAction(Action::RemoveLibrary {
@@ -214,7 +211,7 @@ pub fn view(state: &State) -> Element<'_, Message> {
     page = page.push(match &state.adding {
         Some(adding) => dialog(adding),
         None => button(prose(
-            strings::lookup(Text::SetupLibrariesAdd).to_owned(),
+            strings::lookup(Text::SetupLibrariesAdd),
             typeface::BODY,
         ))
         .on_press(Message::SetupAction(Action::Adding(true)))

@@ -118,7 +118,7 @@ pub fn view<'a>(
                 favorite: !open.favorite,
             })),
             button(prose(
-                strings::lookup(Text::OverflowAddToCollection).to_owned(),
+                strings::lookup(Text::OverflowAddToCollection),
                 typeface::BODY
             ))
             .on_press(Message::OverflowAction(Action::AddTo {
@@ -126,7 +126,7 @@ pub fn view<'a>(
                 into: Into::Collection,
             })),
             button(prose(
-                strings::lookup(Text::OverflowAddToPlaylist).to_owned(),
+                strings::lookup(Text::OverflowAddToPlaylist),
                 typeface::BODY
             ))
             .on_press(Message::OverflowAction(Action::AddTo {
@@ -139,7 +139,7 @@ pub fn view<'a>(
         if let Some(collection) = collection {
             menu = menu.push(
                 button(prose(
-                    strings::lookup(Text::OverflowRemoveFromCollection).to_owned(),
+                    strings::lookup(Text::OverflowRemoveFromCollection),
                     typeface::BODY,
                 ))
                 .on_press(Message::OverflowAction(Action::RemoveFrom {
@@ -151,11 +151,8 @@ pub fn view<'a>(
 
         return menu
             .push(
-                button(prose(
-                    strings::lookup(Text::OverflowClose).to_owned(),
-                    typeface::BODY,
-                ))
-                .on_press(Message::OverflowAction(Action::Close)),
+                button(prose(strings::lookup(Text::OverflowClose), typeface::BODY))
+                    .on_press(Message::OverflowAction(Action::Close)),
             )
             .padding(style::drawn(space::GUTTER.drawn()))
             .into();
@@ -178,7 +175,7 @@ pub fn view<'a>(
                 .on_input(|typed| Message::OverflowAction(Action::Typed(typed)))
                 .padding(style::drawn(space::CONTROL_GAP.drawn())),
             button(prose(
-                strings::lookup(Text::OverflowCreateAndFile).to_owned(),
+                strings::lookup(Text::OverflowCreateAndFile),
                 typeface::BODY
             ))
             .on_press(Message::OverflowAction(Action::CreateAndFile)),
@@ -186,11 +183,8 @@ pub fn view<'a>(
         .spacing(style::drawn(space::GUTTER.drawn()))
         .align_y(iced::Alignment::Center),
         column(offered).spacing(style::drawn(space::BLOCK_GAP.drawn())),
-        button(prose(
-            strings::lookup(Text::OverflowClose).to_owned(),
-            typeface::BODY
-        ))
-        .on_press(Message::OverflowAction(Action::Close)),
+        button(prose(strings::lookup(Text::OverflowClose), typeface::BODY))
+            .on_press(Message::OverflowAction(Action::Close)),
     ]
     .spacing(style::drawn(space::GUTTER.drawn()))
     .padding(style::drawn(space::GUTTER.drawn()))

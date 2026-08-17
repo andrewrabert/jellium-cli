@@ -92,10 +92,7 @@ pub fn view<'a>(state: &'a State, read_only: bool, images: &'a Cache) -> Element
         ));
     }
 
-    shown = shown.push(prose(
-        strings::lookup(Text::ProfileImage).to_owned(),
-        typeface::BODY,
-    ));
+    shown = shown.push(prose(strings::lookup(Text::ProfileImage), typeface::BODY));
     if let Some(handle) = images.handle(image_key(state)) {
         shown = shown.push(iced::widget::image(handle));
     }
@@ -104,14 +101,14 @@ pub fn view<'a>(state: &'a State, read_only: bool, images: &'a Cache) -> Element
         shown = shown
             .push(
                 button(prose(
-                    strings::lookup(Text::ProfileImageChoose).to_owned(),
+                    strings::lookup(Text::ProfileImageChoose),
                     typeface::BODY,
                 ))
                 .on_press(Message::SettingsAction(Action::ChooseImage)),
             )
             .push(
                 button(prose(
-                    strings::lookup(Text::UsersImageRemove).to_owned(),
+                    strings::lookup(Text::UsersImageRemove),
                     typeface::BODY,
                 ))
                 .on_press(Message::SettingsAction(Action::Ask(
@@ -125,7 +122,7 @@ pub fn view<'a>(state: &'a State, read_only: bool, images: &'a Cache) -> Element
 
     shown = shown
         .push(prose(
-            strings::lookup(Text::ProfileDisplayName).to_owned(),
+            strings::lookup(Text::ProfileDisplayName),
             typeface::BODY,
         ))
         .push(
@@ -137,7 +134,7 @@ pub fn view<'a>(state: &'a State, read_only: bool, images: &'a Cache) -> Element
     if !read_only {
         shown = shown.push(
             button(prose(
-                strings::lookup(Text::ProfileSaveName).to_owned(),
+                strings::lookup(Text::ProfileSaveName),
                 typeface::BODY,
             ))
             .on_press(Message::SettingsAction(Action::SaveName)),

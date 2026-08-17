@@ -40,10 +40,7 @@ pub async fn load(api: std::rc::Rc<crate::api::Api>, section: super::Section) ->
 pub fn view<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
     let mut tabs = iced::widget::row![].spacing(style::drawn(space::GUTTER.drawn()));
     for section in super::Section::ALL {
-        let control = button(prose(
-            strings::lookup(section.label()).to_owned(),
-            typeface::BODY,
-        ));
+        let control = button(prose(strings::lookup(section.label()), typeface::BODY));
         tabs = tabs.push(if section == state.section {
             control
         } else {
@@ -55,10 +52,7 @@ pub fn view<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
 
     let mut page = column![
         tabs,
-        prose(
-            strings::lookup(state.section.label()).to_owned(),
-            typeface::HEADING_2
-        )
+        prose(strings::lookup(state.section.label()), typeface::HEADING_2)
     ]
     .spacing(style::drawn(space::GUTTER.drawn()))
     .padding(style::drawn(space::GUTTER.drawn()));
@@ -72,14 +66,14 @@ pub fn view<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
                     checkbox(held == "true").on_toggle(move |held| {
                         Message::DashboardAction(super::Action::Edited(field, held.to_string()))
                     }),
-                    prose(key.to_owned(), typeface::BODY),
+                    prose(key, typeface::BODY),
                 ]
                 .spacing(style::drawn(space::GUTTER.drawn()))
                 .align_y(iced::Center),
             ),
             _ => Element::from(
                 column![
-                    prose(field.key().to_owned(), typeface::BODY),
+                    prose(field.key(), typeface::BODY),
                     text_input(field.key(), &held)
                         .style(style::input)
                         .on_input(move |held| {
@@ -93,21 +87,15 @@ pub fn view<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
 
     if state.form.dirty() {
         page = page.push(prose(
-            strings::lookup(Text::DashboardUnsaved).to_owned(),
+            strings::lookup(Text::DashboardUnsaved),
             typeface::BODY,
         ));
     } else if state.saved {
-        page = page.push(prose(
-            strings::lookup(Text::DashboardSaved).to_owned(),
-            typeface::BODY,
-        ));
+        page = page.push(prose(strings::lookup(Text::DashboardSaved), typeface::BODY));
     }
 
     if !read_only {
-        let mut save = button(prose(
-            strings::lookup(Text::DashboardSave).to_owned(),
-            typeface::BODY,
-        ));
+        let mut save = button(prose(strings::lookup(Text::DashboardSave), typeface::BODY));
         if state.form.dirty() {
             save = save.on_press(Message::DashboardAction(super::Action::Save));
         }

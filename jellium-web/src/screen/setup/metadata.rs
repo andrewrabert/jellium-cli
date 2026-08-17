@@ -61,14 +61,8 @@ fn chosen(options: &[Choice], held: &str) -> Option<Choice> {
 
 pub fn view(state: &State) -> Element<'_, Message> {
     column![
-        prose(
-            strings::lookup(Text::SetupMetadata).to_owned(),
-            typeface::HEADING_3
-        ),
-        prose(
-            strings::lookup(Text::SetupMetadataLanguage).to_owned(),
-            typeface::BODY
-        ),
+        prose(strings::lookup(Text::SetupMetadata), typeface::HEADING_3),
+        prose(strings::lookup(Text::SetupMetadataLanguage), typeface::BODY),
         pick_list(
             state.languages.clone(),
             chosen(
@@ -78,10 +72,7 @@ pub fn view(state: &State) -> Element<'_, Message> {
             |choice| Message::SetupAction(Action::Edited(Edit::MetadataLanguage(choice))),
         )
         .width(Fill),
-        prose(
-            strings::lookup(Text::SetupMetadataCountry).to_owned(),
-            typeface::BODY
-        ),
+        prose(strings::lookup(Text::SetupMetadataCountry), typeface::BODY),
         pick_list(
             state.countries.clone(),
             chosen(&state.countries, &state.configuration.metadata_country_code),

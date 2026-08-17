@@ -23,22 +23,13 @@ pub struct State {
 /// read-only.
 pub fn view<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
     let mut shown = column![
-        prose(
-            strings::lookup(Text::PasswordOtherDevices).to_owned(),
-            typeface::BODY
-        ),
-        prose(
-            strings::lookup(Text::PasswordCurrent).to_owned(),
-            typeface::BODY
-        ),
+        prose(strings::lookup(Text::PasswordOtherDevices), typeface::BODY),
+        prose(strings::lookup(Text::PasswordCurrent), typeface::BODY),
         text_input("", &state.current)
             .style(style::input)
             .secure(true)
             .on_input(|typed| Message::SettingsAction(Action::TypedCurrentPassword(typed))),
-        prose(
-            strings::lookup(Text::PasswordNew).to_owned(),
-            typeface::BODY
-        ),
+        prose(strings::lookup(Text::PasswordNew), typeface::BODY),
         text_input("", &state.replacement)
             .style(style::input)
             .secure(true)
@@ -48,11 +39,8 @@ pub fn view<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
 
     if !read_only {
         shown = shown.push(
-            button(prose(
-                strings::lookup(Text::PasswordChange).to_owned(),
-                typeface::BODY,
-            ))
-            .on_press(Message::SettingsAction(Action::ChangePassword)),
+            button(prose(strings::lookup(Text::PasswordChange), typeface::BODY))
+                .on_press(Message::SettingsAction(Action::ChangePassword)),
         );
     }
 

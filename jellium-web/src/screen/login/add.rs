@@ -23,22 +23,16 @@ pub fn view<'a>(state: &'a super::State) -> Element<'a, Message> {
 
     let submit = if state.working {
         button(prose(
-            strings::lookup(Text::LoginAddWorking).to_owned(),
+            strings::lookup(Text::LoginAddWorking),
             typeface::BODY,
         ))
     } else {
-        button(prose(
-            strings::lookup(Text::LoginAddSubmit).to_owned(),
-            typeface::BODY,
-        ))
-        .on_press(Message::LoginAction(Action::AddSubmit))
+        button(prose(strings::lookup(Text::LoginAddSubmit), typeface::BODY))
+            .on_press(Message::LoginAction(Action::AddSubmit))
     };
 
     let mut form = column![
-        prose(
-            strings::lookup(Text::LoginAddTitle).to_owned(),
-            typeface::HEADING_1
-        ),
+        prose(strings::lookup(Text::LoginAddTitle), typeface::HEADING_1),
         typed,
         submit,
     ]
@@ -47,11 +41,8 @@ pub fn view<'a>(state: &'a super::State) -> Element<'a, Message> {
 
     if !state.servers.is_empty() {
         form = form.push(
-            button(prose(
-                strings::lookup(Text::LoginBack).to_owned(),
-                typeface::BODY,
-            ))
-            .on_press(Message::LoginAction(Action::Back)),
+            button(prose(strings::lookup(Text::LoginBack), typeface::BODY))
+                .on_press(Message::LoginAction(Action::Back)),
         );
     }
 

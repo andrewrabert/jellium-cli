@@ -7,7 +7,7 @@ use crate::app::Message;
 use crate::error::Answer;
 use crate::style::{self, Drawn, space, typeface};
 use crate::text::{self as strings, Text};
-use crate::widget::prose;
+use crate::widget::{line, prose};
 use crate::window;
 use jellium_model::paged::Paged;
 use jellium_protocol::ActivityEntry;
@@ -78,7 +78,7 @@ pub fn view<'a>(state: &'a State) -> Element<'a, Message> {
         (Text::ActivityWithUser, Some(true)),
         (Text::ActivityWithoutUser, Some(false)),
     ] {
-        let control = button(prose(strings::lookup(label).to_owned(), typeface::BODY));
+        let control = button(prose(strings::lookup(label), typeface::BODY));
         filters = filters.push(if state.with_user == wanted {
             control
         } else {
@@ -87,25 +87,24 @@ pub fn view<'a>(state: &'a State) -> Element<'a, Message> {
     }
 
     column![
-        prose(
-            strings::lookup(Text::ActivityTitle).to_owned(),
-            typeface::HEADING_2
-        ),
+        prose(strings::lookup(Text::ActivityTitle), typeface::HEADING_2),
         filters,
         window::list(state.window, state.entries.len(), |index| {
             match state.entries.row(index) {
                 Some(entry) => column![
-                    prose(
+                    line(
                         format!("{} · {}", stamped(entry.at), entry.name),
-                        typeface::BODY
+                        typeface::BODY,
+                        typeface::Weight::Regular,
                     ),
-                    prose(
+                    line(
                         format!("{} · {} · {}", entry.overview, entry.kind, entry.user_name),
-                        typeface::BODY
+                        typeface::BODY,
+                        typeface::Weight::Regular,
                     ),
                 ]
                 .into(),
-                None => prose(String::new(), typeface::BODY),
+                None => prose("", typeface::BODY),
             }
         }),
     ]

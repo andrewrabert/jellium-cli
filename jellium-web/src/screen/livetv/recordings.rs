@@ -15,7 +15,7 @@ use crate::style::{self, Drawn, space, typeface};
 use crate::text::{self as strings, Text};
 use crate::theme;
 use crate::widget;
-use crate::widget::prose;
+use crate::widget::{line, prose};
 use crate::window;
 
 #[derive(Debug, Clone)]
@@ -76,46 +76,44 @@ fn entry<'a>(
         return Space::new().into();
     };
 
-    let mut named = column![prose(item.name.clone().unwrap_or_default(), typeface::BODY)]
-        .spacing(style::drawn(space::BLOCK_GAP.drawn()))
-        .width(Fill);
+    let mut named = column![line(
+        item.name.clone().unwrap_or_default(),
+        typeface::BODY,
+        typeface::Weight::Regular,
+    )]
+    .spacing(style::drawn(space::BLOCK_GAP.drawn()))
+    .width(Fill);
     if in_progress(item) {
-        named = named.push(prose(
-            strings::lookup(Text::RecordingsInProgress).to_owned(),
+        named = named.push(line(
+            strings::lookup(Text::RecordingsInProgress),
             typeface::SECONDARY,
+            typeface::Weight::Regular,
         ));
     }
 
     let mut controls = row![
-        button(prose(
-            strings::lookup(Text::ProgramPlay).to_owned(),
-            typeface::BODY
-        ))
-        .on_press(Message::LiveTvAction(Action::PlayRecording(id))),
+        button(prose(strings::lookup(Text::ProgramPlay), typeface::BODY))
+            .on_press(Message::LiveTvAction(Action::PlayRecording(id))),
     ]
     .spacing(style::drawn(space::GUTTER.drawn()));
 
     if let Some(timer) = writing(item) {
         controls = controls.push(
-            button(prose(
-                strings::lookup(Text::RecordingsStop).to_owned(),
-                typeface::BODY,
-            ))
-            .on_press(Message::LiveTvAction(Action::StopRecording(
-                timer.to_string(),
-            ))),
+            button(prose(strings::lookup(Text::RecordingsStop), typeface::BODY)).on_press(
+                Message::LiveTvAction(Action::StopRecording(timer.to_string())),
+            ),
         );
     } else if confirming == Some(id) {
         controls = controls.push(
             button(prose(
-                strings::lookup(Text::RecordingsDeleteConfirm).to_owned(),
+                strings::lookup(Text::RecordingsDeleteConfirm),
                 typeface::BODY,
             ))
             .on_press(Message::LiveTvAction(Action::ConfirmDelete(id))),
         );
         controls = controls.push(
             button(prose(
-                strings::lookup(Text::RecordingsDeleteCancel).to_owned(),
+                strings::lookup(Text::RecordingsDeleteCancel),
                 typeface::BODY,
             ))
             .on_press(Message::LiveTvAction(Action::CloseDelete)),
@@ -123,7 +121,7 @@ fn entry<'a>(
     } else {
         controls = controls.push(
             button(prose(
-                strings::lookup(Text::RecordingsDelete).to_owned(),
+                strings::lookup(Text::RecordingsDelete),
                 typeface::BODY,
             ))
             .on_press(Message::LiveTvAction(Action::Delete(id))),

@@ -52,17 +52,11 @@ fn picker<'a>(state: &'a super::State) -> Option<Element<'a, Message>> {
     });
     Some(
         column![
-            prose(
-                strings::lookup(Text::LoginPickUser).to_owned(),
-                typeface::BODY
-            ),
+            prose(strings::lookup(Text::LoginPickUser), typeface::BODY),
             scrollable(row(cards).spacing(style::drawn(space::GUTTER.drawn()))).direction(
                 scrollable::Direction::Horizontal(scrollable::Scrollbar::default(),)
             ),
-            prose(
-                strings::lookup(Text::LoginTypeName).to_owned(),
-                typeface::SECONDARY
-            ),
+            prose(strings::lookup(Text::LoginTypeName), typeface::SECONDARY),
         ]
         .spacing(style::drawn(space::GUTTER.drawn()))
         .into(),
@@ -111,16 +105,10 @@ pub fn view<'a>(state: &'a super::State) -> Element<'a, Message> {
             .padding(style::drawn(space::CONTROL_GAP.drawn())),
         )
         .push(if state.working {
-            button(prose(
-                strings::lookup(Text::LoginWorking).to_owned(),
-                typeface::BODY,
-            ))
+            button(prose(strings::lookup(Text::LoginWorking), typeface::BODY))
         } else {
-            button(prose(
-                strings::lookup(Text::LoginSubmit).to_owned(),
-                typeface::BODY,
-            ))
-            .on_press(Message::LoginAction(Action::Submit))
+            button(prose(strings::lookup(Text::LoginSubmit), typeface::BODY))
+                .on_press(Message::LoginAction(Action::Submit))
         });
 
     if state
@@ -130,7 +118,7 @@ pub fn view<'a>(state: &'a super::State) -> Element<'a, Message> {
     {
         form = form.push(
             button(prose(
-                strings::lookup(Text::LoginQuickConnect).to_owned(),
+                strings::lookup(Text::LoginQuickConnect),
                 typeface::BODY,
             ))
             .on_press(Message::LoginAction(Action::QuickConnect)),
@@ -139,18 +127,15 @@ pub fn view<'a>(state: &'a super::State) -> Element<'a, Message> {
     if !state.read_only {
         form = form.push(
             button(prose(
-                strings::lookup(Text::LoginForgotPassword).to_owned(),
+                strings::lookup(Text::LoginForgotPassword),
                 typeface::BODY,
             ))
             .on_press(Message::LoginAction(Action::Reset)),
         );
     }
     form = form.push(
-        button(prose(
-            strings::lookup(Text::LoginBack).to_owned(),
-            typeface::BODY,
-        ))
-        .on_press(Message::LoginAction(Action::Back)),
+        button(prose(strings::lookup(Text::LoginBack), typeface::BODY))
+            .on_press(Message::LoginAction(Action::Back)),
     );
 
     container(form.max_width(520))
