@@ -103,6 +103,7 @@ pub fn view<'a>(state: &'a State, read_only: bool, images: &'a Cache) -> Element
                     strings::lookup(Text::ProfileImageChoose),
                     typeface::BODY,
                 ))
+                .style(style::raised)
                 .on_press(Message::SettingsAction(Action::ChooseImage)),
             )
             .push(
@@ -110,6 +111,7 @@ pub fn view<'a>(state: &'a State, read_only: bool, images: &'a Cache) -> Element
                     strings::lookup(Text::UsersImageRemove),
                     typeface::BODY,
                 ))
+                .style(style::raised)
                 .on_press(Message::SettingsAction(Action::Ask(
                     crate::screen::confirm::Pending::of(
                         crate::screen::confirm::Destructive::RemoveUserImage { id: state.id },
@@ -136,6 +138,7 @@ pub fn view<'a>(state: &'a State, read_only: bool, images: &'a Cache) -> Element
                 strings::lookup(Text::ProfileSaveName),
                 typeface::BODY,
             ))
+            .style(style::submit)
             .on_press(Message::SettingsAction(Action::SaveName)),
         );
     }

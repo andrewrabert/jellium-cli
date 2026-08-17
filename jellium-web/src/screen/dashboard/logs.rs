@@ -73,9 +73,11 @@ pub fn view<'a>(state: &'a State) -> Element<'a, Message> {
         let name = file.name.clone().unwrap_or_default();
         page = page.push(
             iced::widget::row![
-                button(prose(name.clone(), typeface::BODY)).on_press(Message::DashboardAction(
-                    super::Action::Open(super::Screen::Log { name })
-                )),
+                button(prose(name.clone(), typeface::BODY))
+                    .style(style::link)
+                    .on_press(Message::DashboardAction(super::Action::Open(
+                        super::Screen::Log { name }
+                    ))),
                 prose(
                     strings::format(Text::LogsSize, &[&sized(file.size.unwrap_or(0) as u64)]),
                     typeface::BODY

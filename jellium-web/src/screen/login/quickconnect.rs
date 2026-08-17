@@ -53,6 +53,7 @@ pub fn view<'a>(state: &'a super::State) -> Element<'a, Message> {
                     strings::lookup(Text::LoginQuickConnectRetry),
                     typeface::BODY,
                 ))
+                .style(style::raised)
                 .on_press(Message::LoginAction(Action::QuickConnectRetry)),
             );
         }
@@ -64,6 +65,7 @@ pub fn view<'a>(state: &'a super::State) -> Element<'a, Message> {
 
     shown = shown.push(
         button(prose(strings::lookup(Text::LoginBack), typeface::BODY))
+            .style(style::raised)
             .on_press(Message::LoginAction(Action::Back)),
     );
 

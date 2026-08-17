@@ -73,7 +73,9 @@ fn entry<'a>(
     row![
         art,
         title,
-        button(prose(strings::lookup(Text::QueueRemove), typeface::BODY)).on_press(remove),
+        button(prose(strings::lookup(Text::QueueRemove), typeface::BODY))
+            .style(style::flat)
+            .on_press(remove),
     ]
     .spacing(style::drawn(space::GUTTER.drawn()))
     .align_y(iced::Center)
@@ -144,10 +146,14 @@ pub fn view<'a>(
     };
 
     let controls = row![
-        button(prose(strings::lookup(Text::QueueBack), typeface::BODY)).on_press(Message::WentBack),
+        button(prose(strings::lookup(Text::QueueBack), typeface::BODY))
+            .style(style::raised)
+            .on_press(Message::WentBack),
         button(prose(strings::lookup(Text::QueueShuffle), typeface::BODY))
+            .style(style::raised)
             .on_press(Message::PlayerAction(Action::ToggleShuffle)),
         button(prose(strings::lookup(repeat_label(repeat)), typeface::BODY))
+            .style(style::raised)
             .on_press(Message::PlayerAction(Action::CycleRepeat)),
     ]
     .spacing(style::drawn(space::GUTTER.drawn()));

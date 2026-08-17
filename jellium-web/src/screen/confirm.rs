@@ -264,7 +264,8 @@ pub fn view<'a>(pending: &'a Pending, region: Region) -> Element<'a, Message> {
         );
     }
 
-    let mut proceed = button(prose(strings::lookup(Text::ConfirmProceed), typeface::BODY));
+    let mut proceed =
+        button(prose(strings::lookup(Text::ConfirmProceed), typeface::BODY)).style(style::submit);
     if pending.ready() {
         proceed = proceed.on_press(region.confirm());
     }
@@ -274,6 +275,7 @@ pub fn view<'a>(pending: &'a Pending, region: Region) -> Element<'a, Message> {
             row![
                 proceed,
                 button(prose(strings::lookup(Text::ConfirmCancel), typeface::BODY))
+                    .style(style::raised)
                     .on_press(region.close()),
             ]
             .spacing(style::drawn(space::GUTTER.drawn())),

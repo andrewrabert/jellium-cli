@@ -40,6 +40,7 @@ pub fn view<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
     if !read_only {
         shown = shown.push(
             button(prose(strings::lookup(Text::PasswordChange), typeface::BODY))
+                .style(style::submit)
                 .on_press(Message::SettingsAction(Action::ChangePassword)),
         );
     }

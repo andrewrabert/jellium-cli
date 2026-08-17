@@ -115,6 +115,7 @@ fn entry<'a>(timers: &'a [TimerInfoDto], index: usize) -> Element<'a, Message> {
 
     let cancel: Element<'a, Message> = match timer.id.clone() {
         Some(id) => button(prose(strings::lookup(Text::ScheduleCancel), typeface::BODY))
+            .style(style::raised)
             .on_press(Message::LiveTvAction(Action::CancelTimer(id)))
             .into(),
         None => iced::widget::Space::new().into(),

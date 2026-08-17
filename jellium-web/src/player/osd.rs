@@ -32,6 +32,7 @@ fn clock(position: Duration) -> String {
 
 fn control<'a>(label: Text, action: Action) -> Element<'a, Message> {
     button(prose(strings::lookup(label), typeface::BODY))
+        .style(style::flat)
         .on_press(Message::PlayerAction(action))
         .into()
 }
@@ -143,6 +144,7 @@ fn menu<'a>(
             .iter()
             .map(|stream| {
                 button(prose(stream.label.clone(), typeface::BODY))
+                    .style(style::flat)
                     .on_press(Message::PlayerAction(Action::SelectAudio(stream.index)))
                     .into()
             })
@@ -152,6 +154,7 @@ fn menu<'a>(
                 strings::lookup(Text::PlayerSubtitlesOff),
                 typeface::BODY,
             ))
+            .style(style::flat)
             .on_press(Message::PlayerAction(Action::SelectSubtitle(
                 Subtitles::Off,
             )))
@@ -159,6 +162,7 @@ fn menu<'a>(
         )
         .chain(playing.plan.subtitle_streams.iter().map(|stream| {
             button(prose(stream.label.clone(), typeface::BODY))
+                .style(style::flat)
                 .on_press(Message::PlayerAction(Action::SelectSubtitle(
                     Subtitles::Stream {
                         index: stream.index,
@@ -171,6 +175,7 @@ fn menu<'a>(
             .iter()
             .map(|quality| {
                 button(prose(quality_label(*quality), typeface::BODY))
+                    .style(style::flat)
                     .on_press(Message::PlayerAction(Action::SelectQuality(*quality)))
                     .into()
             })
@@ -182,6 +187,7 @@ fn menu<'a>(
             .iter()
             .map(|source| {
                 button(prose(source.name.clone(), typeface::BODY))
+                    .style(style::flat)
                     .on_press(Message::PlayerAction(Action::SelectVersion(
                         source.id.clone(),
                     )))
@@ -223,6 +229,7 @@ pub enum Transport<'a> {
 
 fn remote_control<'a>(label: Text, action: remote::Action) -> Element<'a, Message> {
     button(prose(strings::lookup(label), typeface::BODY))
+        .style(style::flat)
         .on_press(Message::RemoteAction(action))
         .into()
 }
@@ -336,11 +343,13 @@ fn transport<'a>(
 
     controls = controls.push(
         button(prose(strings::lookup(Text::PlayerRemote), typeface::BODY))
+            .style(style::flat)
             .on_press(Message::Navigated(Route::Remote)),
     );
     if sync_play != SyncAccess::None {
         controls = controls.push(
             button(prose(strings::lookup(Text::PlayerSyncPlay), typeface::BODY))
+                .style(style::flat)
                 .on_press(Message::Navigated(Route::SyncPlay)),
         );
     }
@@ -383,6 +392,7 @@ fn transport<'a>(
     controls
         .push(
             button(prose(strings::lookup(Text::PlayerQueue), typeface::BODY))
+                .style(style::flat)
                 .on_press(Message::Navigated(Route::Queue)),
         )
         .push(control(Text::PlayerLeave, Action::Leave))
@@ -451,6 +461,7 @@ fn live_transport<'a>(
         prose(strings::lookup(Text::PlayerRecording), typeface::SECONDARY)
     } else {
         button(prose(strings::lookup(Text::PlayerRecord), typeface::BODY))
+            .style(style::flat)
             .on_press(Message::PlayerAction(Action::Record))
             .into()
     };

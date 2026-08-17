@@ -72,6 +72,7 @@ fn browser(adding: &Adding) -> Element<'_, Message> {
                 strings::lookup(Text::SetupLibrariesUp),
                 typeface::BODY
             ))
+            .style(style::raised)
             .on_press(Message::SetupAction(Action::BrowseUp)),
             prose(adding.browsing.clone().unwrap_or_default(), typeface::BODY),
         ]
@@ -90,6 +91,7 @@ fn browser(adding: &Adding) -> Element<'_, Message> {
                 .style(style::flat)
                 .on_press(Message::SetupAction(Action::Browse(path.clone()))),
                 button(prose("+".to_owned(), typeface::BODY))
+                    .style(style::raised)
                     .on_press(Message::SetupAction(Action::AddPath(path))),
             ]
             .spacing(style::drawn(space::GUTTER.drawn())),
@@ -117,6 +119,7 @@ fn dialog(adding: &Adding) -> Element<'_, Message> {
             row![
                 prose(path.clone(), typeface::BODY),
                 button(prose("-".to_owned(), typeface::BODY))
+                    .style(style::raised)
                     .on_press(Message::SetupAction(Action::RemovePath(index))),
             ]
             .spacing(style::drawn(space::GUTTER.drawn())),
@@ -129,6 +132,7 @@ fn dialog(adding: &Adding) -> Element<'_, Message> {
             strings::lookup(Text::LibrariesBrowse),
             typeface::BODY,
         ))
+        .style(style::raised)
         .on_press(Message::SetupAction(Action::Browse(String::new())))
         .into(),
     });
@@ -139,11 +143,13 @@ fn dialog(adding: &Adding) -> Element<'_, Message> {
                 strings::lookup(Text::SetupLibrariesAdd),
                 typeface::BODY
             ))
+            .style(style::submit)
             .on_press(Message::SetupAction(Action::CreateLibrary)),
             button(prose(
                 strings::lookup(Text::SetupLibrariesCancel),
                 typeface::BODY
             ))
+            .style(style::raised)
             .on_press(Message::SetupAction(Action::Adding(false))),
         ]
         .spacing(style::drawn(space::GUTTER.drawn())),
@@ -181,6 +187,7 @@ pub fn view(state: &State) -> Element<'_, Message> {
                     strings::lookup(Text::LibrariesRename),
                     typeface::BODY
                 ))
+                .style(style::submit)
                 .on_press(Message::SetupAction(Action::RenameLibrary { name: typed })),
             ]
             .spacing(style::drawn(space::GUTTER.drawn()))
@@ -191,6 +198,7 @@ pub fn view(state: &State) -> Element<'_, Message> {
                     strings::lookup(Text::LibrariesRename),
                     typeface::BODY
                 ))
+                .style(style::raised)
                 .on_press(Message::SetupAction(Action::Renaming {
                     name: name.clone()
                 })),
@@ -198,6 +206,7 @@ pub fn view(state: &State) -> Element<'_, Message> {
                     strings::lookup(Text::LibrariesRemove),
                     typeface::BODY
                 ))
+                .style(style::raised)
                 .on_press(Message::SetupAction(Action::RemoveLibrary {
                     name: name.clone()
                 })),
@@ -214,6 +223,7 @@ pub fn view(state: &State) -> Element<'_, Message> {
             strings::lookup(Text::SetupLibrariesAdd),
             typeface::BODY,
         ))
+        .style(style::raised)
         .on_press(Message::SetupAction(Action::Adding(true)))
         .into(),
     });

@@ -167,12 +167,14 @@ pub fn new<'a>(state: &'a State) -> Element<'a, Message> {
             .style(style::input)
             .secure(true)
             .on_input(|typed| Message::DashboardAction(super::Action::TypedPassword(typed))),
-        button(prose(strings::lookup(Text::UsersCreate), typeface::BODY)).on_press(
-            Message::DashboardAction(super::Action::Write(super::Written::CreateUser {
-                name: state.naming.clone(),
-                password: state.password.clone(),
-            }))
-        ),
+        button(prose(strings::lookup(Text::UsersCreate), typeface::BODY))
+            .style(style::submit)
+            .on_press(Message::DashboardAction(super::Action::Write(
+                super::Written::CreateUser {
+                    name: state.naming.clone(),
+                    password: state.password.clone(),
+                }
+            ))),
     ]
     .spacing(style::drawn(space::GUTTER.drawn()))
     .padding(style::drawn(space::GUTTER.drawn()))
@@ -190,9 +192,11 @@ pub fn view<'a>(state: &'a State, read_only: bool, own: Uuid) -> Element<'a, Mes
 
     if !read_only {
         page = page.push(
-            button(prose(strings::lookup(Text::UsersCreate), typeface::BODY)).on_press(
-                Message::DashboardAction(super::Action::Open(super::Screen::UserNew)),
-            ),
+            button(prose(strings::lookup(Text::UsersCreate), typeface::BODY))
+                .style(style::raised)
+                .on_press(Message::DashboardAction(super::Action::Open(
+                    super::Screen::UserNew,
+                ))),
         );
     }
 
@@ -207,6 +211,7 @@ pub fn view<'a>(state: &'a State, read_only: bool, own: Uuid) -> Element<'a, Mes
                 typeface::BODY,
                 typeface::Weight::Regular
             ))
+            .style(style::link)
             .on_press(Message::DashboardAction(super::Action::Open(
                 super::Screen::User {
                     id,
@@ -223,14 +228,14 @@ pub fn view<'a>(state: &'a State, read_only: bool, own: Uuid) -> Element<'a, Mes
             ));
         } else if !read_only {
             held = held.push(
-                button(prose(strings::lookup(Text::UsersDelete), typeface::BODY)).on_press(
-                    Message::DashboardAction(super::Action::Ask(
+                button(prose(strings::lookup(Text::UsersDelete), typeface::BODY))
+                    .style(style::raised)
+                    .on_press(Message::DashboardAction(super::Action::Ask(
                         crate::screen::confirm::Pending::of(
                             crate::screen::confirm::Destructive::DeleteUser { id },
                             name,
                         ),
-                    )),
-                ),
+                    ))),
             );
         }
         page = page.push(held);
@@ -247,7 +252,8 @@ pub fn view<'a>(state: &'a State, read_only: bool, own: Uuid) -> Element<'a, Mes
 pub fn one<'a>(state: &'a One, read_only: bool, own: Uuid) -> Element<'a, Message> {
     let mut tabs = row![].spacing(style::drawn(space::GUTTER.drawn()));
     for tab in super::UserTab::ALL {
-        let control = button(prose(strings::lookup(tab.label()), typeface::BODY));
+        let control =
+            button(prose(strings::lookup(tab.label()), typeface::BODY)).style(style::flat);
         tabs = tabs.push(if tab == state.tab {
             control
         } else {
@@ -281,17 +287,18 @@ pub fn one<'a>(state: &'a One, read_only: bool, own: Uuid) -> Element<'a, Messag
             );
             if !read_only {
                 page = page.push(
-                    button(prose(strings::lookup(Text::DashboardSave), typeface::BODY)).on_press(
-                        Message::DashboardAction(super::Action::Write(
+                    button(prose(strings::lookup(Text::DashboardSave), typeface::BODY))
+                        .style(style::submit)
+                        .on_press(Message::DashboardAction(super::Action::Write(
                             super::Written::SetPassword { id: state.id },
-                        )),
-                    ),
+                        ))),
                 );
                 page = page.push(
                     button(prose(
                         strings::lookup(Text::UsersImageUpload),
                         typeface::BODY,
                     ))
+                    .style(style::raised)
                     .on_press(Message::DashboardAction(super::Action::ChooseImage)),
                 );
                 page = page.push(
@@ -299,6 +306,7 @@ pub fn one<'a>(state: &'a One, read_only: bool, own: Uuid) -> Element<'a, Messag
                         strings::lookup(Text::UsersImageRemove),
                         typeface::BODY,
                     ))
+                    .style(style::raised)
                     .on_press(Message::DashboardAction(super::Action::Ask(
                         crate::screen::confirm::Pending::of(
                             crate::screen::confirm::Destructive::RemoveUserImage { id: state.id },
@@ -327,6 +335,7 @@ pub fn one<'a>(state: &'a One, read_only: bool, own: Uuid) -> Element<'a, Messag
             if !read_only {
                 page = page.push(
                     button(prose(strings::lookup(Text::DashboardSave), typeface::BODY))
+                        .style(style::submit)
                         .on_press(Message::DashboardAction(super::Action::Save)),
                 );
             }

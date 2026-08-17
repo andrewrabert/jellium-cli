@@ -121,8 +121,10 @@ fn entry<'a>(timer: &'a SeriesTimerInfoDto) -> Element<'a, Message> {
     let controls: Element<'a, Message> = match timer.id.clone() {
         Some(id) => row![
             button(prose(strings::lookup(Text::SeriesEdit), typeface::BODY))
+                .style(style::raised)
                 .on_press(Message::LiveTvAction(Action::EditSeries(id.clone()))),
             button(prose(strings::lookup(Text::SeriesCancel), typeface::BODY))
+                .style(style::raised)
                 .on_press(Message::LiveTvAction(Action::CancelSeriesTimer(id))),
         ]
         .spacing(style::drawn(space::GUTTER.drawn()))
@@ -306,8 +308,10 @@ pub fn options<'a>(editing: &'a Editing, viewport: Viewport) -> Element<'a, Mess
             ),
             row![
                 button(prose(strings::lookup(confirm), typeface::BODY))
+                    .style(style::submit)
                     .on_press(Message::LiveTvAction(Action::ConfirmSeries)),
                 button(prose(strings::lookup(Text::SeriesClose), typeface::BODY))
+                    .style(style::raised)
                     .on_press(Message::LiveTvAction(Action::CloseSeries)),
             ]
             .spacing(style::drawn(space::GUTTER.drawn())),

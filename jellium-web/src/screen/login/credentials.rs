@@ -44,6 +44,7 @@ fn picker<'a>(state: &'a super::State) -> Option<Element<'a, Message>> {
         }
         card = card.push(prose(user.name.clone(), typeface::BODY));
         button(card)
+            .style(style::flat)
             .on_press(Message::LoginAction(Action::Pick {
                 user: user.id,
                 name: user.name.clone(),
@@ -105,9 +106,10 @@ pub fn view<'a>(state: &'a super::State) -> Element<'a, Message> {
             .padding(style::drawn(space::CONTROL_GAP.drawn())),
         )
         .push(if state.working {
-            button(prose(strings::lookup(Text::LoginWorking), typeface::BODY))
+            button(prose(strings::lookup(Text::LoginWorking), typeface::BODY)).style(style::submit)
         } else {
             button(prose(strings::lookup(Text::LoginSubmit), typeface::BODY))
+                .style(style::submit)
                 .on_press(Message::LoginAction(Action::Submit))
         });
 
@@ -121,6 +123,7 @@ pub fn view<'a>(state: &'a super::State) -> Element<'a, Message> {
                 strings::lookup(Text::LoginQuickConnect),
                 typeface::BODY,
             ))
+            .style(style::raised)
             .on_press(Message::LoginAction(Action::QuickConnect)),
         );
     }
@@ -130,11 +133,13 @@ pub fn view<'a>(state: &'a super::State) -> Element<'a, Message> {
                 strings::lookup(Text::LoginForgotPassword),
                 typeface::BODY,
             ))
+            .style(style::raised)
             .on_press(Message::LoginAction(Action::Reset)),
         );
     }
     form = form.push(
         button(prose(strings::lookup(Text::LoginBack), typeface::BODY))
+            .style(style::raised)
             .on_press(Message::LoginAction(Action::Back)),
     );
 

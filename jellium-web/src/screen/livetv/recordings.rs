@@ -91,15 +91,18 @@ fn entry<'a>(
 
     let mut controls = row![
         button(prose(strings::lookup(Text::ProgramPlay), typeface::BODY))
+            .style(style::raised)
             .on_press(Message::LiveTvAction(Action::PlayRecording(id))),
     ]
     .spacing(style::drawn(space::GUTTER.drawn()));
 
     if let Some(timer) = writing(item) {
         controls = controls.push(
-            button(prose(strings::lookup(Text::RecordingsStop), typeface::BODY)).on_press(
-                Message::LiveTvAction(Action::StopRecording(timer.to_string())),
-            ),
+            button(prose(strings::lookup(Text::RecordingsStop), typeface::BODY))
+                .style(style::raised)
+                .on_press(Message::LiveTvAction(Action::StopRecording(
+                    timer.to_string(),
+                ))),
         );
     } else if confirming == Some(id) {
         controls = controls.push(
@@ -107,6 +110,7 @@ fn entry<'a>(
                 strings::lookup(Text::RecordingsDeleteConfirm),
                 typeface::BODY,
             ))
+            .style(style::raised)
             .on_press(Message::LiveTvAction(Action::ConfirmDelete(id))),
         );
         controls = controls.push(
@@ -114,6 +118,7 @@ fn entry<'a>(
                 strings::lookup(Text::RecordingsDeleteCancel),
                 typeface::BODY,
             ))
+            .style(style::raised)
             .on_press(Message::LiveTvAction(Action::CloseDelete)),
         );
     } else {
@@ -122,6 +127,7 @@ fn entry<'a>(
                 strings::lookup(Text::RecordingsDelete),
                 typeface::BODY,
             ))
+            .style(style::raised)
             .on_press(Message::LiveTvAction(Action::Delete(id))),
         );
     }

@@ -51,6 +51,7 @@ pub fn view<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
                     strings::lookup(Text::RepositoriesRemove),
                     typeface::BODY,
                 ))
+                .style(style::raised)
                 .on_press(Message::DashboardAction(super::Action::Ask(
                     crate::screen::confirm::Pending::of(
                         crate::screen::confirm::Destructive::RemoveRepository { url: url.clone() },
@@ -77,6 +78,7 @@ pub fn view<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
                     strings::lookup(Text::RepositoriesAdd),
                     typeface::BODY
                 ))
+                .style(style::submit)
                 .on_press(Message::DashboardAction(super::Action::Ask(
                     crate::screen::confirm::Pending::of(
                         crate::screen::confirm::Destructive::AddRepository {

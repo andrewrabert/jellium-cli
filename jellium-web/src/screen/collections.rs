@@ -124,7 +124,9 @@ fn naming<'a>(held: &'a str, label: Text, apply: Message) -> Element<'a, Message
             .style(style::input)
             .on_input(|typed| Message::CollectionAction(Action::Typed(typed)))
             .padding(style::drawn(space::CONTROL_GAP.drawn())),
-        button(prose(strings::lookup(label), typeface::BODY)).on_press(apply),
+        button(prose(strings::lookup(label), typeface::BODY))
+            .style(style::submit)
+            .on_press(apply),
     ]
     .spacing(style::drawn(space::GUTTER.drawn()))
     .align_y(iced::Alignment::Center)
@@ -169,16 +171,23 @@ pub fn view<'a>(
             ))
             .push(
                 row![
-                    button(prose(strings::lookup(Text::DetailPlayAll), typeface::BODY)).on_press(
-                        Message::CollectionAction(Action::PlayAll { id, shuffle: false })
-                    ),
-                    button(prose(strings::lookup(Text::DetailShuffle), typeface::BODY)).on_press(
-                        Message::CollectionAction(Action::PlayAll { id, shuffle: true })
-                    ),
+                    button(prose(strings::lookup(Text::DetailPlayAll), typeface::BODY))
+                        .style(style::raised)
+                        .on_press(Message::CollectionAction(Action::PlayAll {
+                            id,
+                            shuffle: false
+                        })),
+                    button(prose(strings::lookup(Text::DetailShuffle), typeface::BODY))
+                        .style(style::raised)
+                        .on_press(Message::CollectionAction(Action::PlayAll {
+                            id,
+                            shuffle: true
+                        })),
                     button(prose(
                         strings::lookup(Text::CollectionDelete),
                         typeface::BODY
                     ))
+                    .style(style::raised)
                     .on_press(Message::CollectionAction(Action::Delete { id })),
                 ]
                 .spacing(style::drawn(space::GUTTER.drawn())),

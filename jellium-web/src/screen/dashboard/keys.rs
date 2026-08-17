@@ -39,11 +39,13 @@ pub fn view<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
                 text_input(strings::lookup(Text::KeysApp), &state.naming)
                     .style(style::input)
                     .on_input(|typed| Message::DashboardAction(super::Action::Typed(typed))),
-                button(prose(strings::lookup(Text::KeysCreate), typeface::BODY)).on_press(
-                    Message::DashboardAction(super::Action::Write(super::Written::CreateKey {
-                        app: state.naming.clone(),
-                    }))
-                ),
+                button(prose(strings::lookup(Text::KeysCreate), typeface::BODY))
+                    .style(style::submit)
+                    .on_press(Message::DashboardAction(super::Action::Write(
+                        super::Written::CreateKey {
+                            app: state.naming.clone(),
+                        }
+                    ))),
             ]
             .spacing(style::drawn(space::GUTTER.drawn())),
         );
@@ -66,14 +68,14 @@ pub fn view<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
         .spacing(style::drawn(space::GUTTER.drawn()));
         if !read_only {
             held = held.push(
-                button(prose(strings::lookup(Text::KeysRevoke), typeface::BODY)).on_press(
-                    Message::DashboardAction(super::Action::Ask(
+                button(prose(strings::lookup(Text::KeysRevoke), typeface::BODY))
+                    .style(style::raised)
+                    .on_press(Message::DashboardAction(super::Action::Ask(
                         crate::screen::confirm::Pending::of(
                             crate::screen::confirm::Destructive::RevokeKey { key: token },
                             app,
                         ),
-                    )),
-                ),
+                    ))),
             );
         }
         page = page.push(held);

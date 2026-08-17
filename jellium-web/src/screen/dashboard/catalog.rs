@@ -115,6 +115,7 @@ pub fn view<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
                 if !read_only && let Some(plugin) = state.installing[&name].plugin {
                     running = running.push(
                         button(prose(strings::lookup(Text::CatalogCancel), typeface::BODY))
+                            .style(style::raised)
                             .on_press(Message::DashboardAction(super::Action::Write(
                                 super::Written::CancelInstall {
                                     package: plugin,
@@ -126,8 +127,9 @@ pub fn view<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
                 held = held.push(running);
             } else if !read_only {
                 held = held.push(
-                    button(prose(strings::lookup(Text::CatalogInstall), typeface::BODY)).on_press(
-                        Message::DashboardAction(super::Action::Ask(
+                    button(prose(strings::lookup(Text::CatalogInstall), typeface::BODY))
+                        .style(style::submit)
+                        .on_press(Message::DashboardAction(super::Action::Ask(
                             crate::screen::confirm::Pending::of(
                                 crate::screen::confirm::Destructive::InstallPackage {
                                     name: name.clone(),
@@ -136,8 +138,7 @@ pub fn view<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
                                 },
                                 name.clone(),
                             ),
-                        )),
-                    ),
+                        ))),
                 );
             }
             held.into()

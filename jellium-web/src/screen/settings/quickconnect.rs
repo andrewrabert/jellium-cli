@@ -43,6 +43,7 @@ pub fn view<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
                 strings::lookup(Text::QuickConnectAuthorize),
                 typeface::BODY,
             ))
+            .style(style::submit)
             .on_press(Message::SettingsAction(Action::Ask(
                 crate::screen::confirm::Pending::of(
                     crate::screen::confirm::Destructive::AuthorizeQuickConnect {

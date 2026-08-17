@@ -497,12 +497,14 @@ pub fn view(state: &State) -> Element<'_, Message> {
 
     let mut controls = row![
         button(prose(strings::lookup(Text::SetupBack), typeface::BODY))
+            .style(style::raised)
             .on_press(Message::SetupAction(Action::Back)),
     ]
     .spacing(style::drawn(space::GUTTER.drawn()));
     if ready(state) && !state.working {
         controls = controls.push(
             button(prose(strings::lookup(Text::SetupNext), typeface::BODY))
+                .style(style::submit)
                 .on_press(Message::SetupAction(Action::Next)),
         );
     }

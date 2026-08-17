@@ -167,7 +167,8 @@ pub fn view<'a>(
         if part == Part::Identify && !searchable {
             return None;
         }
-        let mut control = button(prose(strings::lookup(part.label()), typeface::BODY));
+        let mut control =
+            button(prose(strings::lookup(part.label()), typeface::BODY)).style(style::flat);
         if part != state.part {
             control = control.on_press(Message::MetadataAction(Action::Open(part)));
         }
@@ -199,6 +200,7 @@ pub fn view<'a>(
     if !read_only && state.part == Part::Fields {
         page = page.push(
             button(prose(strings::lookup(Text::MetadataSave), typeface::BODY))
+                .style(style::submit)
                 .on_press(Message::MetadataAction(Action::Save)),
         );
     }
@@ -208,6 +210,7 @@ pub fn view<'a>(
             page,
             row![parts, body].spacing(style::drawn(space::GUTTER.drawn())),
             button(prose(strings::lookup(Text::MetadataClose), typeface::BODY))
+                .style(style::raised)
                 .on_press(Message::MetadataAction(Action::Close)),
         ]
         .spacing(style::drawn(space::GUTTER.drawn()))
@@ -265,6 +268,7 @@ fn content_type<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
                 option.name.clone().unwrap_or_default(),
                 typeface::BODY,
             ))
+            .style(style::flat)
             .on_press(Message::MetadataAction(Action::ContentType(value)))
             .into(),
         )
@@ -290,12 +294,14 @@ fn deletion<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
     let name = state.item.name.clone().unwrap_or_default();
     column![
         prose(strings::lookup(Text::MetadataDeleteWarning), typeface::BODY),
-        button(prose(strings::lookup(Text::MetadataDelete), typeface::BODY)).on_press(
-            Message::MetadataAction(Action::Ask(crate::screen::confirm::Pending::of(
-                crate::screen::confirm::Destructive::DeleteItem { id },
-                name,
-            )))
-        ),
+        button(prose(strings::lookup(Text::MetadataDelete), typeface::BODY))
+            .style(style::raised)
+            .on_press(Message::MetadataAction(Action::Ask(
+                crate::screen::confirm::Pending::of(
+                    crate::screen::confirm::Destructive::DeleteItem { id },
+                    name,
+                )
+            ))),
     ]
     .spacing(style::drawn(space::GUTTER.drawn()))
     .into()

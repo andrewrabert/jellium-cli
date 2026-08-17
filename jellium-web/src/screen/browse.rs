@@ -227,7 +227,8 @@ pub fn sort_label(sort: Sort) -> Text {
 
 fn sort_surface<'a>(listing: &Listing) -> Element<'a, Message> {
     let controls = Sort::ALL.into_iter().map(|sort| {
-        let mut control = button(prose(strings::lookup(sort_label(sort)), typeface::BODY));
+        let mut control =
+            button(prose(strings::lookup(sort_label(sort)), typeface::BODY)).style(style::flat);
         if sort != listing.sort {
             control = control.on_press(Message::BrowseAction(Action::Sorted(sort)));
         }
@@ -288,8 +289,10 @@ fn filter_surface<'a>(browse: &'a Browse, viewport: Viewport) -> Element<'a, Mes
     let mut surface = column![
         row![
             button(prose(strings::lookup(Text::FilterClose), typeface::BODY))
+                .style(style::raised)
                 .on_press(Message::BrowseAction(Action::CloseFilters)),
             button(prose(strings::lookup(Text::FilterClear), typeface::BODY))
+                .style(style::raised)
                 .on_press(Message::BrowseAction(Action::ClearFilters)),
         ]
         .spacing(style::drawn(space::GUTTER.drawn())),
@@ -400,6 +403,7 @@ pub fn view<'a>(browse: &'a Browse, viewport: Viewport, images: &'a Cache) -> El
             strings::format(Text::FilterOpen, &[&active.to_string()],),
             typeface::BODY
         ))
+        .style(style::raised)
         .on_press(Message::BrowseAction(Action::OpenFilters)),
     ]
     .spacing(style::drawn(space::GUTTER.drawn()))

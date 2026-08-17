@@ -65,14 +65,20 @@ pub fn view<'a>(
         if !read_only {
             controls = controls
                 .push(
-                    button(prose(strings::lookup(Text::HomeMoveUp), typeface::BODY)).on_press(
-                        Message::SettingsAction(Action::MoveLibrary { id, down: false }),
-                    ),
+                    button(prose(strings::lookup(Text::HomeMoveUp), typeface::BODY))
+                        .style(style::raised)
+                        .on_press(Message::SettingsAction(Action::MoveLibrary {
+                            id,
+                            down: false,
+                        })),
                 )
                 .push(
-                    button(prose(strings::lookup(Text::HomeMoveDown), typeface::BODY)).on_press(
-                        Message::SettingsAction(Action::MoveLibrary { id, down: true }),
-                    ),
+                    button(prose(strings::lookup(Text::HomeMoveDown), typeface::BODY))
+                        .style(style::raised)
+                        .on_press(Message::SettingsAction(Action::MoveLibrary {
+                            id,
+                            down: true,
+                        })),
                 )
                 .push(
                     button(prose(
@@ -84,6 +90,7 @@ pub fn view<'a>(
                         .to_owned(),
                         typeface::BODY,
                     ))
+                    .style(style::raised)
                     .on_press(Message::SettingsAction(Action::HideLibrary {
                         id,
                         hidden: !is_hidden,

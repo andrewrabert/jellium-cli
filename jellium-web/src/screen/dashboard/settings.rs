@@ -40,7 +40,8 @@ pub async fn load(api: std::rc::Rc<crate::api::Api>, section: super::Section) ->
 pub fn view<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
     let mut tabs = iced::widget::row![].spacing(style::drawn(space::GUTTER.drawn()));
     for section in super::Section::ALL {
-        let control = button(prose(strings::lookup(section.label()), typeface::BODY));
+        let control =
+            button(prose(strings::lookup(section.label()), typeface::BODY)).style(style::flat);
         tabs = tabs.push(if section == state.section {
             control
         } else {
@@ -95,7 +96,8 @@ pub fn view<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
     }
 
     if !read_only {
-        let mut save = button(prose(strings::lookup(Text::DashboardSave), typeface::BODY));
+        let mut save = button(prose(strings::lookup(Text::DashboardSave), typeface::BODY))
+            .style(style::submit);
         if state.form.dirty() {
             save = save.on_press(Message::DashboardAction(super::Action::Save));
         }

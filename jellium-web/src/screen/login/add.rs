@@ -26,8 +26,10 @@ pub fn view<'a>(state: &'a super::State) -> Element<'a, Message> {
             strings::lookup(Text::LoginAddWorking),
             typeface::BODY,
         ))
+        .style(style::submit)
     } else {
         button(prose(strings::lookup(Text::LoginAddSubmit), typeface::BODY))
+            .style(style::submit)
             .on_press(Message::LoginAction(Action::AddSubmit))
     };
 
@@ -42,6 +44,7 @@ pub fn view<'a>(state: &'a super::State) -> Element<'a, Message> {
     if !state.servers.is_empty() {
         form = form.push(
             button(prose(strings::lookup(Text::LoginBack), typeface::BODY))
+                .style(style::raised)
                 .on_press(Message::LoginAction(Action::Back)),
         );
     }

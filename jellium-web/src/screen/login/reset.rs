@@ -33,6 +33,7 @@ pub fn view<'a>(state: &'a super::State) -> Element<'a, Message> {
             strings::lookup(Text::LoginResetSubmit),
             typeface::BODY
         ))
+        .style(style::submit)
         .on_press(Message::LoginAction(Action::ResetSubmit)),
     ]
     .spacing(style::drawn(space::GUTTER.drawn()))
@@ -71,6 +72,7 @@ pub fn view<'a>(state: &'a super::State) -> Element<'a, Message> {
                         strings::lookup(Text::LoginResetPinSubmit),
                         typeface::BODY,
                     ))
+                    .style(style::submit)
                     .on_press(Message::LoginAction(Action::PinSubmit)),
                 );
         }
@@ -91,6 +93,7 @@ pub fn view<'a>(state: &'a super::State) -> Element<'a, Message> {
 
     form = form.push(
         button(prose(strings::lookup(Text::LoginBack), typeface::BODY))
+            .style(style::raised)
             .on_press(Message::LoginAction(Action::Back)),
     );
 

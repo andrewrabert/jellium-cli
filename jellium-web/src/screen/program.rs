@@ -79,6 +79,7 @@ pub fn view<'a>(
     if program.airing(now) {
         controls = controls.push(
             button(prose(strings::lookup(Text::ProgramPlay), typeface::BODY))
+                .style(style::raised)
                 .on_press(Message::LiveTvAction(Action::PlayChannel(program.channel))),
         );
     }
@@ -89,12 +90,14 @@ pub fn view<'a>(
                     strings::lookup(Text::ProgramCancelRecording),
                     typeface::BODY,
                 ))
+                .style(style::raised)
                 .on_press(Message::LiveTvAction(Action::CancelTimer(timer))),
             );
         }
         None => {
             controls = controls.push(
                 button(prose(strings::lookup(Text::ProgramRecord), typeface::BODY))
+                    .style(style::raised)
                     .on_press(Message::LiveTvAction(Action::Record(program.id.clone()))),
             );
         }
@@ -106,6 +109,7 @@ pub fn view<'a>(
                     strings::lookup(Text::ProgramCancelSeries),
                     typeface::BODY,
                 ))
+                .style(style::raised)
                 .on_press(Message::LiveTvAction(Action::CancelSeriesTimer(timer))),
             );
         }
@@ -115,6 +119,7 @@ pub fn view<'a>(
                     strings::lookup(Text::ProgramRecordSeries),
                     typeface::BODY,
                 ))
+                .style(style::raised)
                 .on_press(Message::LiveTvAction(Action::RecordSeries(
                     program.id.clone(),
                 ))),

@@ -172,6 +172,7 @@ pub fn view<'a>(
 
     let controls = row![
         button(prose(strings::lookup(Text::GuideEarlier), typeface::BODY))
+            .style(style::raised)
             .on_press(Message::LiveTvAction(Action::Step(Step::Back))),
         prose(
             chrono::DateTime::<chrono::Local>::from(state.start)
@@ -180,10 +181,13 @@ pub fn view<'a>(
             typeface::BODY
         ),
         button(prose(strings::lookup(Text::GuideLater), typeface::BODY))
+            .style(style::raised)
             .on_press(Message::LiveTvAction(Action::Step(Step::Forward))),
-        button(prose(strings::lookup(Text::GuideNow), typeface::BODY)).on_press(
-            Message::LiveTvAction(Action::Date(chrono::Local::now().date_naive()))
-        ),
+        button(prose(strings::lookup(Text::GuideNow), typeface::BODY))
+            .style(style::raised)
+            .on_press(Message::LiveTvAction(Action::Date(
+                chrono::Local::now().date_naive()
+            ))),
     ]
     .spacing(style::drawn(space::GUTTER.drawn()))
     .align_y(iced::Center);

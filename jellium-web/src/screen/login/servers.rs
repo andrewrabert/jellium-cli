@@ -35,6 +35,7 @@ fn entry<'a>(saved: &'a jellium_protocol::SavedServer, read_only: bool) -> Eleme
             strings::lookup(Text::LoginServersSelect),
             typeface::BODY
         ))
+        .style(style::raised)
         .on_press(Message::LoginAction(Action::Select {
             server: saved.server.clone(),
         })),
@@ -47,6 +48,7 @@ fn entry<'a>(saved: &'a jellium_protocol::SavedServer, read_only: bool) -> Eleme
                 strings::lookup(Text::LoginServersRemove),
                 typeface::BODY,
             ))
+            .style(style::raised)
             .on_press(Message::LoginAction(Action::Remove {
                 server: saved.server.clone(),
             })),
@@ -79,6 +81,7 @@ pub fn view<'a>(state: &'a super::State) -> Element<'a, Message> {
             strings::lookup(Text::LoginServersAdd),
             typeface::BODY
         ))
+        .style(style::raised)
         .on_press(Message::LoginAction(Action::Add)),
     ]
     .spacing(style::drawn(space::GUTTER.drawn()))

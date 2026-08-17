@@ -191,6 +191,7 @@ pub fn view<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
                     strings::lookup(Text::LibrariesCreate),
                     typeface::BODY
                 ))
+                .style(style::submit)
                 .on_press(Message::DashboardAction(super::Action::Write(
                     super::Written::CreateLibrary {
                         name: state.naming.clone(),
@@ -204,13 +205,14 @@ pub fn view<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
 
     for folder in &state.folders {
         let name = folder.name.clone().unwrap_or_default();
-        let mut held =
-            row![
-                button(prose(name.clone(), typeface::BODY)).on_press(Message::DashboardAction(
-                    super::Action::Open(super::Screen::Library { name: name.clone() })
-                )),
-            ]
-            .spacing(style::drawn(space::GUTTER.drawn()));
+        let mut held = row![
+            button(prose(name.clone(), typeface::BODY))
+                .style(style::link)
+                .on_press(Message::DashboardAction(super::Action::Open(
+                    super::Screen::Library { name: name.clone() }
+                ))),
+        ]
+        .spacing(style::drawn(space::GUTTER.drawn()));
 
         let named = folder
             .item_id
@@ -225,17 +227,18 @@ pub fn view<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
 
         if !read_only {
             held = held.push(
-                button(prose(strings::lookup(Text::LibrariesScan), typeface::BODY)).on_press(
-                    Message::DashboardAction(super::Action::Write(super::Written::ScanLibrary {
-                        name: name.clone(),
-                    })),
-                ),
+                button(prose(strings::lookup(Text::LibrariesScan), typeface::BODY))
+                    .style(style::raised)
+                    .on_press(Message::DashboardAction(super::Action::Write(
+                        super::Written::ScanLibrary { name: name.clone() },
+                    ))),
             );
             held = held.push(
                 button(prose(
                     strings::lookup(Text::LibrariesRemove),
                     typeface::BODY,
                 ))
+                .style(style::raised)
                 .on_press(Message::DashboardAction(super::Action::Ask(
                     crate::screen::confirm::Pending::of(
                         crate::screen::confirm::Destructive::DeleteLibrary { name: name.clone() },
@@ -269,6 +272,7 @@ pub fn one<'a>(state: &'a One, read_only: bool) -> Element<'a, Message> {
                     strings::lookup(Text::LibrariesRename),
                     typeface::BODY
                 ))
+                .style(style::submit)
                 .on_press(Message::DashboardAction(super::Action::Write(
                     super::Written::RenameLibrary {
                         name: state.name.clone(),
@@ -290,6 +294,7 @@ pub fn one<'a>(state: &'a One, read_only: bool) -> Element<'a, Message> {
                     strings::lookup(Text::LibrariesPathRemove),
                     typeface::BODY,
                 ))
+                .style(style::raised)
                 .on_press(Message::DashboardAction(super::Action::Ask(
                     crate::screen::confirm::Pending::of(
                         crate::screen::confirm::Destructive::DeletePath {
@@ -310,6 +315,7 @@ pub fn one<'a>(state: &'a One, read_only: bool) -> Element<'a, Message> {
                 strings::lookup(Text::LibrariesBrowse),
                 typeface::BODY,
             ))
+            .style(style::raised)
             .on_press(Message::DashboardAction(super::Action::Browse(
                 state.browsing.clone().unwrap_or_default(),
             ))),
@@ -324,6 +330,7 @@ pub fn one<'a>(state: &'a One, read_only: bool) -> Element<'a, Message> {
                         entry.name.clone().unwrap_or_default(),
                         typeface::BODY
                     ))
+                    .style(style::link)
                     .on_press(Message::DashboardAction(
                         super::Action::Browse(path.clone())
                     )),
@@ -331,6 +338,7 @@ pub fn one<'a>(state: &'a One, read_only: bool) -> Element<'a, Message> {
                         strings::lookup(Text::LibrariesPathAdd),
                         typeface::BODY
                     ))
+                    .style(style::submit)
                     .on_press(Message::DashboardAction(super::Action::Write(
                         super::Written::AddPath {
                             library: state.name.clone(),
@@ -353,6 +361,7 @@ pub fn one<'a>(state: &'a One, read_only: bool) -> Element<'a, Message> {
     if !read_only {
         page = page.push(
             button(prose(strings::lookup(Text::DashboardSave), typeface::BODY))
+                .style(style::submit)
                 .on_press(Message::DashboardAction(super::Action::Save)),
         );
     }

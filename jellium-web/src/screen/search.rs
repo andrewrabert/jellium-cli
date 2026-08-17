@@ -170,6 +170,7 @@ pub fn view<'a>(state: &'a State, viewport: Viewport, images: &'a Cache) -> Elem
             .on_submit(Message::SearchSubmitted)
             .padding(style::drawn(space::CONTROL_GAP.drawn())),
         button(prose(strings::lookup(Text::SearchSubmit), typeface::BODY))
+            .style(style::submit)
             .on_press(Message::SearchSubmitted),
     ]
     .spacing(style::drawn(space::GUTTER.drawn()))

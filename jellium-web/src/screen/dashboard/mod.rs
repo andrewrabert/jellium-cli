@@ -649,7 +649,8 @@ pub fn view<'a>(state: &'a State, session: &'a jellium_protocol::Session) -> Ele
     let mut column_of = column![].spacing(style::drawn(space::GUTTER.drawn()));
     for entry in Screen::COLUMN {
         let shown = state.screen == entry;
-        let control = button(prose(strings::lookup(entry.label()), typeface::BODY));
+        let control =
+            button(prose(strings::lookup(entry.label()), typeface::BODY)).style(style::flat);
         column_of = column_of.push(if shown {
             control
         } else {

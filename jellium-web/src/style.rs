@@ -149,6 +149,22 @@ pub fn flat(
     }
 }
 
+/// A control that reads as one of the reference's anchors: its accent lettering
+/// on no face of its own, brightening where it is reached.
+// reference: scheme-anchors
+pub fn link(
+    _theme: &iced::Theme,
+    status: iced::widget::button::Status,
+) -> iced::widget::button::Style {
+    iced::widget::button::Style {
+        text_color: match lit(status) {
+            true => color(scheme::ACCENT_FOCUS),
+            false => color(scheme::ACCENT),
+        },
+        ..iced::widget::button::Style::default()
+    }
+}
+
 /// The frame a card's image sits in, which the reference fills with
 /// `.cardPadder`'s own color behind an image that has not arrived.
 // reference: card-container

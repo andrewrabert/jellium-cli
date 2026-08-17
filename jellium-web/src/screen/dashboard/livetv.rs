@@ -138,7 +138,8 @@ pub async fn load(api: std::rc::Rc<crate::api::Api>, tab: super::LiveTvTab) -> A
 pub fn view<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
     let mut tabs = row![].spacing(style::drawn(space::GUTTER.drawn()));
     for tab in super::LiveTvTab::ALL {
-        let control = button(prose(strings::lookup(tab.label()), typeface::BODY));
+        let control =
+            button(prose(strings::lookup(tab.label()), typeface::BODY)).style(style::flat);
         tabs = tabs.push(if tab == state.tab {
             control
         } else {
@@ -185,22 +186,24 @@ fn tuners<'a>(mut page: Page<'a>, state: &'a State, read_only: bool) -> Page<'a>
         .spacing(style::drawn(space::GUTTER.drawn()));
         if !read_only {
             held = held.push(
-                button(prose(strings::lookup(Text::TunersReset), typeface::BODY)).on_press(
-                    Message::DashboardAction(super::Action::Write(super::Written::ResetTuner {
-                        id: id.clone(),
-                        name: url.clone(),
-                    })),
-                ),
+                button(prose(strings::lookup(Text::TunersReset), typeface::BODY))
+                    .style(style::raised)
+                    .on_press(Message::DashboardAction(super::Action::Write(
+                        super::Written::ResetTuner {
+                            id: id.clone(),
+                            name: url.clone(),
+                        },
+                    ))),
             );
             held = held.push(
-                button(prose(strings::lookup(Text::TunersDelete), typeface::BODY)).on_press(
-                    Message::DashboardAction(super::Action::Ask(
+                button(prose(strings::lookup(Text::TunersDelete), typeface::BODY))
+                    .style(style::raised)
+                    .on_press(Message::DashboardAction(super::Action::Ask(
                         crate::screen::confirm::Pending::of(
                             crate::screen::confirm::Destructive::DeleteTuner { id },
                             url,
                         ),
-                    )),
-                ),
+                    ))),
             );
         }
         page = page.push(held);
@@ -211,9 +214,11 @@ fn tuners<'a>(mut page: Page<'a>, state: &'a State, read_only: bool) -> Page<'a>
     }
 
     page = page.push(
-        button(prose(strings::lookup(Text::TunersDiscover), typeface::BODY)).on_press(
-            Message::DashboardAction(super::Action::Write(super::Written::DiscoverTuners)),
-        ),
+        button(prose(strings::lookup(Text::TunersDiscover), typeface::BODY))
+            .style(style::raised)
+            .on_press(Message::DashboardAction(super::Action::Write(
+                super::Written::DiscoverTuners,
+            ))),
     );
     for found in &state.discovered {
         page = page.push(prose(found.url.clone().unwrap_or_default(), typeface::BODY));
@@ -232,12 +237,14 @@ fn tuners<'a>(mut page: Page<'a>, state: &'a State, read_only: bool) -> Page<'a>
             text_input(strings::lookup(Text::TunersUrl), &state.tuner_url)
                 .style(style::input)
                 .on_input(|typed| Message::DashboardAction(super::Action::Typed(typed))),
-            button(prose(strings::lookup(Text::TunersAdd), typeface::BODY)).on_press(
-                Message::DashboardAction(super::Action::Write(super::Written::AddTuner {
-                    url: state.tuner_url.clone(),
-                    kind: state.tuner_type.clone(),
-                }))
-            ),
+            button(prose(strings::lookup(Text::TunersAdd), typeface::BODY))
+                .style(style::submit)
+                .on_press(Message::DashboardAction(super::Action::Write(
+                    super::Written::AddTuner {
+                        url: state.tuner_url.clone(),
+                        kind: state.tuner_type.clone(),
+                    }
+                ))),
         ]
         .spacing(style::drawn(space::GUTTER.drawn())),
     )
@@ -262,6 +269,7 @@ fn providers<'a>(mut page: Page<'a>, state: &'a State, read_only: bool) -> Page<
                     strings::lookup(Text::ProvidersDelete),
                     typeface::BODY,
                 ))
+                .style(style::raised)
                 .on_press(Message::DashboardAction(super::Action::Ask(
                     crate::screen::confirm::Pending::of(
                         crate::screen::confirm::Destructive::DeleteProvider { id },
@@ -283,8 +291,10 @@ fn providers<'a>(mut page: Page<'a>, state: &'a State, read_only: bool) -> Page<
                 strings::lookup(Text::ProvidersSchedulesDirect),
                 typeface::BODY
             ))
+            .style(style::flat)
             .on_press(Message::DashboardAction(super::Action::ProviderKind(true))),
             button(prose(strings::lookup(Text::ProvidersXmltv), typeface::BODY))
+                .style(style::flat)
                 .on_press(Message::DashboardAction(super::Action::ProviderKind(false))),
         ]
         .spacing(style::drawn(space::GUTTER.drawn())),
@@ -327,6 +337,7 @@ fn providers<'a>(mut page: Page<'a>, state: &'a State, read_only: bool) -> Page<
                     strings::lookup(Text::ProvidersLineup),
                     typeface::BODY,
                 ))
+                .style(style::raised)
                 .on_press(Message::DashboardAction(super::Action::Write(
                     super::Written::FetchLineups,
                 ))),
@@ -337,6 +348,7 @@ fn providers<'a>(mut page: Page<'a>, state: &'a State, read_only: bool) -> Page<
                     lineup.name.clone().unwrap_or_default(),
                     typeface::BODY,
                 ))
+                .style(style::link)
                 .on_press(Message::DashboardAction(
                     super::Action::ProviderLineup(lineup.id.clone().unwrap_or_default()),
                 )),
@@ -351,9 +363,11 @@ fn providers<'a>(mut page: Page<'a>, state: &'a State, read_only: bool) -> Page<
     }
 
     page.push(
-        button(prose(strings::lookup(Text::ProvidersAdd), typeface::BODY)).on_press(
-            Message::DashboardAction(super::Action::Write(super::Written::AddProvider)),
-        ),
+        button(prose(strings::lookup(Text::ProvidersAdd), typeface::BODY))
+            .style(style::submit)
+            .on_press(Message::DashboardAction(super::Action::Write(
+                super::Written::AddProvider,
+            ))),
     )
 }
 
@@ -407,6 +421,7 @@ fn dvr<'a>(mut page: Page<'a>, state: &'a State, read_only: bool) -> Page<'a> {
     if !read_only {
         page = page.push(
             button(prose(strings::lookup(Text::DashboardSave), typeface::BODY))
+                .style(style::submit)
                 .on_press(Message::DashboardAction(super::Action::Save)),
         );
     }

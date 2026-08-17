@@ -134,7 +134,8 @@ pub fn view<'a>(
     read_only: bool,
 ) -> Element<'a, Message> {
     let strip = row(Kind::ALL.into_iter().map(|kind| {
-        let mut control = button(prose(strings::lookup(kind.label()), typeface::BODY));
+        let mut control =
+            button(prose(strings::lookup(kind.label()), typeface::BODY)).style(style::flat);
         if state.kind != Some(kind) {
             control = control.on_press(Message::MetadataAction(Outer::Artwork(Action::Select(
                 kind,
@@ -170,9 +171,12 @@ pub fn view<'a>(
             let mut cell = column![drawn].spacing(style::drawn(space::BLOCK_GAP.drawn()));
             if !read_only {
                 cell = cell.push(
-                    button(prose(strings::lookup(Text::ArtworkRemove), typeface::BODY)).on_press(
-                        Message::MetadataAction(Outer::Artwork(Action::Remove { kind, index })),
-                    ),
+                    button(prose(strings::lookup(Text::ArtworkRemove), typeface::BODY))
+                        .style(style::raised)
+                        .on_press(Message::MetadataAction(Outer::Artwork(Action::Remove {
+                            kind,
+                            index,
+                        }))),
                 );
                 if kind == Kind::Backdrop
                     && let Some(at) = index
@@ -183,12 +187,11 @@ pub fn view<'a>(
                                 strings::lookup(Text::ArtworkMoveEarlier),
                                 typeface::BODY,
                             ))
-                            .on_press(Message::MetadataAction(
-                                Outer::Artwork(Action::Move {
-                                    index: at,
-                                    to: at - 1,
-                                }),
-                            )),
+                            .style(style::raised)
+                            .on_press(Message::MetadataAction(Outer::Artwork(Action::Move {
+                                index: at,
+                                to: at - 1,
+                            }))),
                         );
                     }
                     if position + 1 < count {
@@ -197,12 +200,11 @@ pub fn view<'a>(
                                 strings::lookup(Text::ArtworkMoveLater),
                                 typeface::BODY,
                             ))
-                            .on_press(Message::MetadataAction(
-                                Outer::Artwork(Action::Move {
-                                    index: at,
-                                    to: at + 1,
-                                }),
-                            )),
+                            .style(style::raised)
+                            .on_press(Message::MetadataAction(Outer::Artwork(Action::Move {
+                                index: at,
+                                to: at + 1,
+                            }))),
                         );
                     }
                 }
@@ -218,6 +220,7 @@ pub fn view<'a>(
 
     page = page.push(
         button(prose(strings::lookup(Text::ArtworkUpload), typeface::BODY))
+            .style(style::submit)
             .on_press(Message::MetadataAction(Outer::Artwork(Action::Upload))),
     );
 
@@ -234,6 +237,7 @@ pub fn view<'a>(
 
     page = page.push(providers).push(
         button(prose(strings::lookup(Text::ArtworkSearch), typeface::BODY))
+            .style(style::submit)
             .on_press(Message::MetadataAction(Outer::Artwork(Action::Search))),
     );
 
@@ -253,6 +257,7 @@ pub fn view<'a>(
                 strings::lookup(Text::ArtworkDownload),
                 typeface::BODY
             ))
+            .style(style::raised)
             .on_press(Message::MetadataAction(Outer::Artwork(Action::Download {
                 at
             }))),

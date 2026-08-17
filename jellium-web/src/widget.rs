@@ -491,6 +491,7 @@ fn failure<'a>(failure: &'a crate::failure::Failure) -> Element<'a, Message> {
     }
     shown = shown.push(
         button(prose(strings::lookup(Text::FailureDismiss), typeface::BODY))
+            .style(style::raised)
             .on_press(Message::FailureDismissed),
     );
     container(shown)
@@ -517,6 +518,7 @@ pub fn lost<'a>(failure: &'a crate::failure::Failure) -> Element<'a, Message> {
             strings::lookup(Text::FailureSignInAgain),
             typeface::BODY,
         ))
+        .style(style::raised)
         .on_press(Message::SignInAgain),
     );
     container(shown)
@@ -590,6 +592,7 @@ pub fn chrome<'a>(
     if back == Back::Offered {
         controls = controls.push(
             button(prose(strings::lookup(Text::NavBack), typeface::BODY))
+                .style(style::flat)
                 .on_press(Message::WentBack),
         );
     }
@@ -597,51 +600,56 @@ pub fn chrome<'a>(
         controls = controls
             .push(
                 button(prose(strings::lookup(Text::NavHome), typeface::BODY))
+                    .style(style::flat)
                     .on_press(Message::Navigated(Route::Home)),
             )
             .push(
-                button(prose(strings::lookup(Text::NavSearch), typeface::BODY)).on_press(
-                    Message::Navigated(Route::Search {
+                button(prose(strings::lookup(Text::NavSearch), typeface::BODY))
+                    .style(style::flat)
+                    .on_press(Message::Navigated(Route::Search {
                         term: String::new(),
                         listing: Box::default(),
-                    }),
-                ),
+                    })),
             )
             .push(
-                button(prose(strings::lookup(Text::NavSettings), typeface::BODY)).on_press(
-                    Message::Navigated(Route::Settings {
+                button(prose(strings::lookup(Text::NavSettings), typeface::BODY))
+                    .style(style::flat)
+                    .on_press(Message::Navigated(Route::Settings {
                         screen: crate::screen::settings::Screen::Profile,
-                    }),
-                ),
+                    })),
             )
             .push(
                 button(prose(strings::lookup(Text::NavRemote), typeface::BODY))
+                    .style(style::flat)
                     .on_press(Message::Navigated(Route::Remote)),
             );
 
         if session.sync_play != SyncAccess::None {
             controls = controls.push(
                 button(prose(strings::lookup(Text::NavSyncPlay), typeface::BODY))
+                    .style(style::flat)
                     .on_press(Message::Navigated(Route::SyncPlay)),
             );
         }
         if session.administrator {
             controls = controls.push(
-                button(prose(strings::lookup(Text::NavDashboard), typeface::BODY)).on_press(
-                    Message::Navigated(Route::Dashboard {
+                button(prose(strings::lookup(Text::NavDashboard), typeface::BODY))
+                    .style(style::flat)
+                    .on_press(Message::Navigated(Route::Dashboard {
                         screen: crate::screen::dashboard::Screen::Plugins,
-                    }),
-                ),
+                    })),
             );
         }
     }
     controls = controls.push(
         button(prose(strings::lookup(Text::NavSwitch), typeface::BODY))
+            .style(style::flat)
             .on_press(Message::SwitchPressed),
     );
     if !session.read_only {
         controls = controls.push(
             button(prose(strings::lookup(Text::NavLogout), typeface::BODY))
+                .style(style::flat)
                 .on_press(Message::LogoutPressed),
         );
     }
@@ -727,11 +735,13 @@ pub fn leaving<'a>() -> Element<'a, Message> {
                 strings::lookup(Text::DashboardLeaveAnyway),
                 typeface::BODY
             ))
+            .style(style::raised)
             .on_press(Message::LeaveAnyway),
             button(prose(
                 strings::lookup(Text::DashboardStayHere),
                 typeface::BODY
             ))
+            .style(style::raised)
             .on_press(Message::StayHere),
         ]
         .spacing(style::drawn(space::GUTTER.drawn())),

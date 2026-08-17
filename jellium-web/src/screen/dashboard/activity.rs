@@ -78,7 +78,7 @@ pub fn view<'a>(state: &'a State) -> Element<'a, Message> {
         (Text::ActivityWithUser, Some(true)),
         (Text::ActivityWithoutUser, Some(false)),
     ] {
-        let control = button(prose(strings::lookup(label), typeface::BODY));
+        let control = button(prose(strings::lookup(label), typeface::BODY)).style(style::flat);
         filters = filters.push(if state.with_user == wanted {
             control
         } else {

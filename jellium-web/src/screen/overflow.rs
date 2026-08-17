@@ -100,6 +100,7 @@ pub fn view<'a>(
                 .to_owned(),
                 typeface::BODY
             ))
+            .style(style::flat)
             .on_press(Message::OverflowAction(Action::MarkPlayed {
                 item,
                 played: !open.played,
@@ -113,6 +114,7 @@ pub fn view<'a>(
                 .to_owned(),
                 typeface::BODY
             ))
+            .style(style::flat)
             .on_press(Message::OverflowAction(Action::Favorite {
                 item,
                 favorite: !open.favorite,
@@ -121,6 +123,7 @@ pub fn view<'a>(
                 strings::lookup(Text::OverflowAddToCollection),
                 typeface::BODY
             ))
+            .style(style::flat)
             .on_press(Message::OverflowAction(Action::AddTo {
                 item,
                 into: Into::Collection,
@@ -129,6 +132,7 @@ pub fn view<'a>(
                 strings::lookup(Text::OverflowAddToPlaylist),
                 typeface::BODY
             ))
+            .style(style::flat)
             .on_press(Message::OverflowAction(Action::AddTo {
                 item,
                 into: Into::Playlist,
@@ -142,6 +146,7 @@ pub fn view<'a>(
                     strings::lookup(Text::OverflowRemoveFromCollection),
                     typeface::BODY,
                 ))
+                .style(style::flat)
                 .on_press(Message::OverflowAction(Action::RemoveFrom {
                     collection,
                     item,
@@ -152,6 +157,7 @@ pub fn view<'a>(
         return menu
             .push(
                 button(prose(strings::lookup(Text::OverflowClose), typeface::BODY))
+                    .style(style::raised)
                     .on_press(Message::OverflowAction(Action::Close)),
             )
             .padding(style::drawn(space::GUTTER.drawn()))
@@ -178,12 +184,14 @@ pub fn view<'a>(
                 strings::lookup(Text::OverflowCreateAndFile),
                 typeface::BODY
             ))
+            .style(style::submit)
             .on_press(Message::OverflowAction(Action::CreateAndFile)),
         ]
         .spacing(style::drawn(space::GUTTER.drawn()))
         .align_y(iced::Alignment::Center),
         column(offered).spacing(style::drawn(space::BLOCK_GAP.drawn())),
         button(prose(strings::lookup(Text::OverflowClose), typeface::BODY))
+            .style(style::raised)
             .on_press(Message::OverflowAction(Action::Close)),
     ]
     .spacing(style::drawn(space::GUTTER.drawn()))

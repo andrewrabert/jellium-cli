@@ -38,6 +38,7 @@ fn offered(group: &Group) -> Element<'_, Message> {
         .spacing(style::drawn(space::BLOCK_GAP.drawn())),
         iced::widget::Space::new().width(Fill),
         button(prose(strings::lookup(Text::SyncPlayJoin), typeface::BODY))
+            .style(style::raised)
             .on_press(Message::GroupAction(group::Action::Join(group.id))),
     ]
     .spacing(style::drawn(space::GUTTER.drawn()))
@@ -50,6 +51,7 @@ fn picker<'a>(groups: &'a [Group], access: SyncAccess) -> Element<'a, Message> {
     if access == SyncAccess::CreateAndJoin {
         body = body.push(
             button(prose(strings::lookup(Text::SyncPlayCreate), typeface::BODY))
+                .style(style::submit)
                 .on_press(Message::GroupAction(group::Action::Create)),
         );
     }
@@ -85,11 +87,13 @@ fn active<'a>(joined: &'a Joined) -> Element<'a, Message> {
 
     body.push(
         button(prose(strings::lookup(Text::SyncPlayStop), typeface::BODY))
+            .style(style::raised)
             .on_press(Message::GroupAction(group::Action::Stop)),
     )
     .push(iced::widget::Space::new().height(style::drawn(space::GUTTER.drawn())))
     .push(
         button(prose(strings::lookup(Text::SyncPlayLeave), typeface::BODY))
+            .style(style::raised)
             .on_press(Message::GroupAction(group::Action::Leave)),
     )
     .spacing(style::drawn(space::GUTTER.drawn()))

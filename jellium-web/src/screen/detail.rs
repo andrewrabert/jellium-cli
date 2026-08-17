@@ -98,6 +98,7 @@ fn resumable(item: &BaseItemDto) -> bool {
 
 fn intent_button<'a>(label: Text, intent: Intent) -> Element<'a, Message> {
     button(prose(strings::lookup(label), typeface::BODY))
+        .style(style::raised)
         .on_press(Message::PlayPressed(intent))
         .into()
 }
@@ -216,10 +217,12 @@ pub fn view<'a>(
         actions = actions
             .push(
                 button(prose(strings::lookup(mark), typeface::BODY))
+                    .style(style::raised)
                     .on_press(Message::PlayedToggled(id, !played(item))),
             )
             .push(
                 button(prose(strings::lookup(star), typeface::BODY))
+                    .style(style::raised)
                     .on_press(Message::FavoriteToggled(id, !favorite(item))),
             );
 
@@ -230,6 +233,7 @@ pub fn view<'a>(
                         strings::lookup(Text::DetailRefreshMetadata),
                         typeface::BODY,
                     ))
+                    .style(style::raised)
                     .on_press(Message::RefreshItem {
                         item: id,
                         replace: false,
@@ -241,6 +245,7 @@ pub fn view<'a>(
                         strings::lookup(Text::DetailRefreshReplace),
                         typeface::BODY,
                     ))
+                    .style(style::raised)
                     .on_press(Message::RefreshItem {
                         item: id,
                         replace: true,
@@ -252,6 +257,7 @@ pub fn view<'a>(
                         strings::lookup(Text::DetailRefreshScanMode),
                         typeface::BODY,
                     ))
+                    .style(style::raised)
                     .on_press(Message::RefreshItem {
                         item: id,
                         replace: false,
@@ -295,12 +301,12 @@ pub fn view<'a>(
         && let Some(id) = item.id
     {
         page = page.push(
-            button(prose(strings::lookup(Text::MetadataOpen), typeface::BODY)).on_press(
-                Message::Navigated(crate::route::Route::Metadata {
+            button(prose(strings::lookup(Text::MetadataOpen), typeface::BODY))
+                .style(style::raised)
+                .on_press(Message::Navigated(crate::route::Route::Metadata {
                     item: id,
                     part: crate::screen::metadata::Part::Fields,
-                }),
-            ),
+                })),
         );
     }
 

@@ -553,3 +553,78 @@ fn no_literal_reaches_a_text_size_or_a_gap() {
         "numbers reaching a text size or a gap: {spelled:#?}"
     );
 }
+
+/// The call this gate reads, which is iced's button constructor and not a
+/// function whose own name ends in it.
+const CONTROL: &str = "button(";
+
+/// The end of the method chain hanging off the call that opens at `at`, which
+/// is where the statement holding that call closes.
+fn chained(text: &str, at: usize) -> Option<usize> {
+    let mut end = at + closing(&text[at..])? + 1;
+    loop {
+        let rest = &text[end..];
+        let skipped = rest.len() - rest.trim_start().len();
+        if !rest[skipped..].starts_with('.') {
+            return Some(end);
+        }
+        let named = end + skipped + 1;
+        let read: usize = text[named..]
+            .chars()
+            .take_while(|value| value.is_alphanumeric() || *value == '_')
+            .map(char::len_utf8)
+            .sum();
+        if read == 0 {
+            return Some(end);
+        }
+        let after = named + read;
+        end = match text[after..].starts_with('(') {
+            true => after + closing(&text[after + 1..])? + 2,
+            false => after,
+        };
+    }
+}
+
+#[test]
+fn every_button_carries_a_style() {
+    let root = workspace_root();
+    let directory = root.join("jellium-web/src");
+    let files = sources(&directory);
+    assert!(
+        !files.is_empty(),
+        "no source was read out of jellium-web/src"
+    );
+
+    let mut bare = Vec::new();
+    for file in files {
+        let text = std::fs::read_to_string(&file).expect("the source is readable");
+        let named = file
+            .strip_prefix(&root)
+            .expect("the source sits under the workspace")
+            .display()
+            .to_string();
+        let mut at = 0;
+        while let Some(found) = text[at..].find(CONTROL) {
+            let opened = at + found;
+            at = opened + CONTROL.len();
+            let held = text[..opened]
+                .chars()
+                .next_back()
+                .is_some_and(|value| value.is_alphanumeric() || value == '_');
+            if held {
+                continue;
+            }
+            let Some(end) = chained(&text, at) else {
+                continue;
+            };
+            if !text[opened..end].contains(".style(") {
+                let line = text[..opened].lines().count();
+                bare.push(format!("{named}:{line} draws a button with no style"));
+            }
+        }
+    }
+    assert!(
+        bare.is_empty(),
+        "buttons drawing iced's own face: {bare:#?}"
+    );
+}

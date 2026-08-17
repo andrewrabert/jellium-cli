@@ -22,6 +22,7 @@ fn offered(target: &Target) -> Element<'_, Message> {
         ]
         .spacing(style::drawn(space::BLOCK_GAP.drawn())),
     )
+    .style(style::flat)
     .on_press(Message::RemoteAction(remote::Action::Take(
         target.session.clone(),
     )))

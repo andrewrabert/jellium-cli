@@ -251,6 +251,7 @@ pub async fn load(
 /// writes.
 pub fn save<'a>() -> Element<'a, Message> {
     button(prose(strings::lookup(Text::SettingsSave), typeface::BODY))
+        .style(style::submit)
         .on_press(Message::SettingsAction(Action::Save))
         .into()
 }
@@ -266,7 +267,7 @@ pub fn choices<'a, T: Copy + PartialEq + 'static>(
 ) -> Element<'a, Message> {
     let mut controls = row![].spacing(style::drawn(space::GUTTER.drawn()));
     for offer in offered.iter().copied() {
-        let mut control = button(prose(naming(offer), typeface::BODY));
+        let mut control = button(prose(naming(offer), typeface::BODY)).style(style::flat);
         if offer != held {
             control = control.on_press(Message::SettingsAction(Action::Set(setting(offer))));
         }
@@ -333,7 +334,8 @@ pub fn choice<'a>(
     let held = configuration.value(field);
     let mut controls = row![].spacing(style::drawn(space::GUTTER.drawn()));
     for option in options {
-        let mut control = button(prose(strings::lookup(mode_label(option)), typeface::BODY));
+        let mut control =
+            button(prose(strings::lookup(mode_label(option)), typeface::BODY)).style(style::flat);
         if *option != held {
             control = control.on_press(Message::SettingsAction(Action::Edited(
                 field,
@@ -360,7 +362,8 @@ pub fn listed<'a>(
     let mut any = button(prose(
         strings::lookup(Text::PlaybackLanguageAny),
         typeface::BODY,
-    ));
+    ))
+    .style(style::flat);
     if !held.is_empty() {
         any = any.on_press(Message::SettingsAction(Action::Edited(
             field,
@@ -375,7 +378,8 @@ pub fn listed<'a>(
         let mut control = button(prose(
             culture.name.clone().unwrap_or_else(|| code.clone()),
             typeface::BODY,
-        ));
+        ))
+        .style(style::flat);
         if code != held {
             control = control.on_press(Message::SettingsAction(Action::Edited(field, code)));
         }
@@ -401,7 +405,8 @@ pub fn view<'a>(
     )]
     .spacing(style::drawn(space::GUTTER.drawn()));
     for screen in column_of(&signed.session) {
-        let mut control = button(prose(strings::lookup(screen.label()), typeface::BODY));
+        let mut control =
+            button(prose(strings::lookup(screen.label()), typeface::BODY)).style(style::flat);
         if screen != state.screen {
             control = control.on_press(Message::SettingsAction(Action::Open(screen)));
         }

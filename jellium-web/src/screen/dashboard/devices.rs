@@ -88,16 +88,19 @@ pub fn view<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
 
         if !read_only {
             held = held.push(
-                button(prose(strings::lookup(Text::DevicesRename), typeface::BODY)).on_press(
-                    Message::DashboardAction(super::Action::Write(super::Written::SetDeviceName {
-                        id: id.clone(),
-                        name: state.renaming.clone(),
-                    })),
-                ),
+                button(prose(strings::lookup(Text::DevicesRename), typeface::BODY))
+                    .style(style::submit)
+                    .on_press(Message::DashboardAction(super::Action::Write(
+                        super::Written::SetDeviceName {
+                            id: id.clone(),
+                            name: state.renaming.clone(),
+                        },
+                    ))),
             );
             held = held.push(
-                button(prose(strings::lookup(Text::DevicesDelete), typeface::BODY)).on_press(
-                    Message::DashboardAction(super::Action::Ask(
+                button(prose(strings::lookup(Text::DevicesDelete), typeface::BODY))
+                    .style(style::raised)
+                    .on_press(Message::DashboardAction(super::Action::Ask(
                         crate::screen::confirm::Pending::of(
                             crate::screen::confirm::Destructive::DeleteDevice {
                                 id: id.clone(),
@@ -105,8 +108,7 @@ pub fn view<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
                             },
                             name,
                         ),
-                    )),
-                ),
+                    ))),
             );
         }
         held.into()

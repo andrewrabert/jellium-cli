@@ -206,7 +206,9 @@ fn naming<'a>(held: &'a str, label: Text, apply: Message) -> Element<'a, Message
             .style(style::input)
             .on_input(|typed| Message::PlaylistAction(Action::Typed(typed)))
             .padding(style::drawn(space::CONTROL_GAP.drawn())),
-        button(prose(strings::lookup(label), typeface::BODY)).on_press(apply),
+        button(prose(strings::lookup(label), typeface::BODY))
+            .style(style::submit)
+            .on_press(apply),
     ]
     .spacing(style::drawn(space::GUTTER.drawn()))
     .align_y(iced::Alignment::Center)
@@ -265,13 +267,13 @@ fn entry_row<'a>(
         let entry_id = entry.entry.clone();
         if index > 0 {
             held = held.push(
-                button(prose(strings::lookup(Text::PlaylistMoveUp), typeface::BODY)).on_press(
-                    Message::PlaylistAction(Action::Move {
+                button(prose(strings::lookup(Text::PlaylistMoveUp), typeface::BODY))
+                    .style(style::raised)
+                    .on_press(Message::PlaylistAction(Action::Move {
                         playlist,
                         entry: entry_id.clone(),
                         to: index - 1,
-                    }),
-                ),
+                    })),
             );
         }
         if index + 1 < state.entries.len() {
@@ -280,6 +282,7 @@ fn entry_row<'a>(
                     strings::lookup(Text::PlaylistMoveDown),
                     typeface::BODY,
                 ))
+                .style(style::raised)
                 .on_press(Message::PlaylistAction(Action::Move {
                     playlist,
                     entry: entry_id.clone(),
@@ -288,12 +291,12 @@ fn entry_row<'a>(
             );
         }
         held = held.push(
-            button(prose(strings::lookup(Text::PlaylistRemove), typeface::BODY)).on_press(
-                Message::PlaylistAction(Action::Remove {
+            button(prose(strings::lookup(Text::PlaylistRemove), typeface::BODY))
+                .style(style::raised)
+                .on_press(Message::PlaylistAction(Action::Remove {
                     playlist,
                     entry: entry_id,
-                }),
-            ),
+                })),
         );
     }
 
@@ -312,12 +315,18 @@ pub fn view<'a>(state: &'a State, images: &'a Cache, read_only: bool) -> Element
             typeface::HEADING_1
         ),
         row![
-            button(prose(strings::lookup(Text::DetailPlayAll), typeface::BODY)).on_press(
-                Message::PlaylistAction(Action::PlayAll { id, shuffle: false })
-            ),
-            button(prose(strings::lookup(Text::DetailShuffle), typeface::BODY)).on_press(
-                Message::PlaylistAction(Action::PlayAll { id, shuffle: true })
-            ),
+            button(prose(strings::lookup(Text::DetailPlayAll), typeface::BODY))
+                .style(style::raised)
+                .on_press(Message::PlaylistAction(Action::PlayAll {
+                    id,
+                    shuffle: false
+                })),
+            button(prose(strings::lookup(Text::DetailShuffle), typeface::BODY))
+                .style(style::raised)
+                .on_press(Message::PlaylistAction(Action::PlayAll {
+                    id,
+                    shuffle: true
+                })),
         ]
         .spacing(style::drawn(space::GUTTER.drawn())),
     ]
@@ -333,6 +342,7 @@ pub fn view<'a>(state: &'a State, images: &'a Cache, read_only: bool) -> Element
             ))
             .push(
                 button(prose(strings::lookup(Text::PlaylistDelete), typeface::BODY))
+                    .style(style::raised)
                     .on_press(Message::PlaylistAction(Action::Delete { id })),
             )
             .push(
@@ -362,6 +372,7 @@ pub fn view<'a>(state: &'a State, images: &'a Cache, read_only: bool) -> Element
                         strings::lookup(Text::PlaylistUnshare),
                         typeface::BODY
                     ))
+                    .style(style::raised)
                     .on_press(Message::PlaylistAction(Action::Unshare {
                         playlist: id,
                         user

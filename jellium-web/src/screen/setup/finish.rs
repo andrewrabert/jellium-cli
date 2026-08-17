@@ -20,6 +20,7 @@ pub fn view<'a>() -> Element<'a, Message> {
             strings::lookup(Text::SetupFinishAction),
             typeface::BODY
         ))
+        .style(style::submit)
         .on_press(Message::SetupAction(Action::Complete)),
     ]
     .spacing(style::drawn(space::GUTTER.drawn()))

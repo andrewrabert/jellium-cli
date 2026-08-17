@@ -94,9 +94,12 @@ fn entry<'a>(
             button(named)
                 .style(style::flat)
                 .on_press(Message::LiveTvAction(Action::PlayChannel(channel.id))),
-            button(prose(strings::lookup(favourite), typeface::BODY)).on_press(
-                Message::LiveTvAction(Action::Favorited(channel.id, !channel.favorite))
-            ),
+            button(prose(strings::lookup(favourite), typeface::BODY))
+                .style(style::flat)
+                .on_press(Message::LiveTvAction(Action::Favorited(
+                    channel.id,
+                    !channel.favorite
+                ))),
         ]
         .spacing(style::drawn(space::GUTTER.drawn()))
         .align_y(iced::Center),

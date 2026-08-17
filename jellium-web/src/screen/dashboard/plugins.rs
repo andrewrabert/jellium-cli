@@ -83,41 +83,43 @@ pub fn view<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
         .spacing(style::drawn(space::GUTTER.drawn()));
 
         if !read_only {
-            held =
-                held.push(
-                    row![
-                        button(prose(strings::lookup(Text::PluginsEnable), typeface::BODY))
-                            .on_press(Message::DashboardAction(super::Action::Write(
-                                super::Written::EnablePlugin {
-                                    id,
-                                    version: version.clone(),
-                                    name: plugin.name.clone().unwrap_or_default(),
-                                }
-                            ))),
-                        button(prose(strings::lookup(Text::PluginsDisable), typeface::BODY))
-                            .on_press(Message::DashboardAction(super::Action::Write(
-                                super::Written::DisablePlugin {
-                                    id,
-                                    version: version.clone(),
-                                    name: plugin.name.clone().unwrap_or_default(),
-                                }
-                            ))),
-                        button(prose(
-                            strings::lookup(Text::PluginsUninstall),
-                            typeface::BODY
-                        ))
-                        .on_press(Message::DashboardAction(
-                            super::Action::Ask(crate::screen::confirm::Pending::of(
-                                crate::screen::confirm::Destructive::UninstallPlugin {
-                                    id,
-                                    version: version.clone(),
-                                },
-                                plugin.name.clone().unwrap_or_default(),
-                            ))
-                        )),
-                    ]
-                    .spacing(style::drawn(space::GUTTER.drawn())),
-                );
+            held = held.push(
+                row![
+                    button(prose(strings::lookup(Text::PluginsEnable), typeface::BODY))
+                        .style(style::raised)
+                        .on_press(Message::DashboardAction(super::Action::Write(
+                            super::Written::EnablePlugin {
+                                id,
+                                version: version.clone(),
+                                name: plugin.name.clone().unwrap_or_default(),
+                            }
+                        ))),
+                    button(prose(strings::lookup(Text::PluginsDisable), typeface::BODY))
+                        .style(style::raised)
+                        .on_press(Message::DashboardAction(super::Action::Write(
+                            super::Written::DisablePlugin {
+                                id,
+                                version: version.clone(),
+                                name: plugin.name.clone().unwrap_or_default(),
+                            }
+                        ))),
+                    button(prose(
+                        strings::lookup(Text::PluginsUninstall),
+                        typeface::BODY
+                    ))
+                    .style(style::raised)
+                    .on_press(Message::DashboardAction(super::Action::Ask(
+                        crate::screen::confirm::Pending::of(
+                            crate::screen::confirm::Destructive::UninstallPlugin {
+                                id,
+                                version: version.clone(),
+                            },
+                            plugin.name.clone().unwrap_or_default(),
+                        )
+                    ))),
+                ]
+                .spacing(style::drawn(space::GUTTER.drawn())),
+            );
         }
 
         let pages = state.pages_of(id);
@@ -128,12 +130,13 @@ pub fn view<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
                 let Some(name) = page.name.clone() else {
                     continue;
                 };
-                held = held.push(button(prose(name.clone(), typeface::BODY)).on_press(
-                    Message::DashboardAction(super::Action::Open(super::Screen::PluginPage {
-                        plugin: id,
-                        name,
-                    })),
-                ));
+                held = held.push(
+                    button(prose(name.clone(), typeface::BODY))
+                        .style(style::link)
+                        .on_press(Message::DashboardAction(super::Action::Open(
+                            super::Screen::PluginPage { plugin: id, name },
+                        ))),
+                );
             }
         }
         listed = listed.push(held);

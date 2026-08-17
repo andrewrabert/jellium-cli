@@ -317,7 +317,8 @@ pub fn view<'a>(
     };
     let shown = state.tab.kind();
     let strip = row(state.tabs.iter().map(|kind| {
-        let mut control = button(prose(strings::lookup(kind.label()), typeface::BODY));
+        let mut control =
+            button(prose(strings::lookup(kind.label()), typeface::BODY)).style(style::flat);
         if *kind != shown {
             control = control.on_press(Message::Navigated(Route::Library {
                 id,

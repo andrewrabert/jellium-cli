@@ -2839,6 +2839,7 @@ impl Jellium {
                 column![
                     prose(strings::lookup(Text::BootSessionStalled), typeface::BODY),
                     iced::widget::button(prose(strings::lookup(Text::BootRecheck), typeface::BODY))
+                        .style(style::raised)
                         .on_press(Message::SessionRechecked),
                 ]
                 .spacing(style::drawn(space::GUTTER.drawn())),

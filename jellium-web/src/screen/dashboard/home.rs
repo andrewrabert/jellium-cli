@@ -123,6 +123,7 @@ pub fn view<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
                     strings::lookup(Text::DashboardScanAll),
                     typeface::BODY
                 ))
+                .style(style::raised)
                 .on_press(Message::DashboardAction(super::Action::Write(
                     super::Written::ScanAll
                 ))),
@@ -130,6 +131,7 @@ pub fn view<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
                     strings::lookup(Text::DashboardRestart),
                     typeface::BODY
                 ))
+                .style(style::raised)
                 .on_press(Message::DashboardAction(super::Action::Ask(
                     crate::screen::confirm::Pending::of(
                         crate::screen::confirm::Destructive::Restart,
@@ -140,6 +142,7 @@ pub fn view<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
                     strings::lookup(Text::DashboardShutdown),
                     typeface::BODY
                 ))
+                .style(style::raised)
                 .on_press(Message::DashboardAction(super::Action::Ask(
                     crate::screen::confirm::Pending::of(
                         crate::screen::confirm::Destructive::Shutdown,

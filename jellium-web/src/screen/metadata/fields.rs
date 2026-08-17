@@ -122,6 +122,7 @@ pub fn people<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
                     strings::lookup(Text::MetadataPersonRemove),
                     typeface::BODY
                 ))
+                .style(style::raised)
                 .on_press(Message::MetadataAction(Action::PersonRemoved { at })),
             ]
             .spacing(style::drawn(space::GUTTER.drawn()))
@@ -135,6 +136,7 @@ pub fn people<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
                 strings::lookup(Text::MetadataPersonAdd),
                 typeface::BODY,
             ))
+            .style(style::submit)
             .on_press(Message::MetadataAction(Action::PersonAdded)),
         );
     }

@@ -164,6 +164,7 @@ pub fn view<'a>(
                 strings::lookup(Text::MetadataIdentifyRun),
                 typeface::BODY,
             ))
+            .style(style::submit)
             .on_press(Message::MetadataAction(Outer::Identify(Action::Run))),
         );
     }
@@ -190,8 +191,10 @@ pub fn view<'a>(
                 .align_y(iced::Alignment::Center),
                 row![
                     button(prose(strings::lookup(Text::MetadataApply), typeface::BODY))
+                        .style(style::submit)
                         .on_press(Message::MetadataAction(Outer::Identify(Action::Apply))),
                     button(prose(strings::lookup(Text::MetadataCancel), typeface::BODY))
+                        .style(style::raised)
                         .on_press(Message::MetadataAction(Outer::Identify(Action::Cancel))),
                 ]
                 .spacing(style::drawn(space::GUTTER.drawn())),
@@ -235,9 +238,11 @@ pub fn view<'a>(
         }
         if !read_only {
             summary = summary.push(
-                button(prose(strings::lookup(Text::MetadataChoose), typeface::BODY)).on_press(
-                    Message::MetadataAction(Outer::Identify(Action::Choose { at })),
-                ),
+                button(prose(strings::lookup(Text::MetadataChoose), typeface::BODY))
+                    .style(style::raised)
+                    .on_press(Message::MetadataAction(Outer::Identify(Action::Choose {
+                        at,
+                    }))),
             );
         }
 
