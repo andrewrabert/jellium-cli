@@ -12,21 +12,37 @@ use crate::style::{self, Length};
 /// ligature per row, with the codepoint it draws in base sixteen.
 const TABLE: &str = include_str!("../icons/material.tsv");
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum Icon {
-    Person,
-    Storage,
+/// Declares the glyph enum, the roll the gate reads and the ligature each
+/// variant draws under, from one list. A variant named here is in all three; a
+/// variant named nowhere else does not exist.
+macro_rules! icons {
+    ($($variant:ident => $ligature:literal,)*) => {
+        #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+        pub enum Icon {
+            $($variant,)*
+        }
+
+        impl Icon {
+            /// Every variant, which is what the icon table is checked against.
+            #[cfg(test)]
+            pub const ALL: &'static [Icon] = &[$(Icon::$variant,)*];
+
+            /// The ligature the reference writes for this glyph.
+            pub fn ligature(self) -> &'static str {
+                match self {
+                    $(Icon::$variant => $ligature,)*
+                }
+            }
+        }
+    };
+}
+
+icons! {
+    Person => "person",
+    Storage => "storage",
 }
 
 impl Icon {
-    /// The ligature the reference writes for this glyph.
-    pub fn ligature(self) -> &'static str {
-        match self {
-            Icon::Person => "person",
-            Icon::Storage => "storage",
-        }
-    }
-
     /// The codepoint the table records for the ligature, and None where it
     /// holds no row for it.
     pub fn glyph(self) -> Option<Codepoint> {
@@ -53,4 +69,33 @@ pub fn icon<'a>(icon: Icon, size: Length) -> Element<'a, Message> {
         .font(style::ICONS)
         .size(style::drawn(size.drawn()))
         .into()
+}
+
+#[cfg(test)]
+mod tests {
+    use std::collections::HashSet;
+
+    use wasm_bindgen_test::wasm_bindgen_test;
+
+    use super::{Icon, TABLE};
+
+    /// Every variant's ligature has a row in the icon table and every row of
+    /// the table has a variant.
+    #[wasm_bindgen_test]
+    fn the_icon_table_and_the_variants_agree() {
+        let named: HashSet<&str> = Icon::ALL.iter().map(|icon| icon.ligature()).collect();
+        let held: HashSet<&str> = TABLE
+            .lines()
+            .filter_map(|line| line.split('\t').next())
+            .filter(|ligature| !ligature.is_empty())
+            .collect();
+        let mut missing: Vec<&str> = named.difference(&held).copied().collect();
+        let mut stray: Vec<&str> = held.difference(&named).copied().collect();
+        missing.sort_unstable();
+        stray.sort_unstable();
+        assert!(
+            missing.is_empty() && stray.is_empty(),
+            "the icon table lacks {missing:?} and holds {stray:?} under no variant"
+        );
+    }
 }
