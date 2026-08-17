@@ -388,6 +388,68 @@ pub const PROGRESS: Length = Length::em(0.28);
 // reference: guide-row
 pub const GUIDE_ROW: Length = Length::em(4.42);
 
+/// `.itemBackdrop`'s height.
+// reference: detail-backdrop — 40vh
+pub const BACKDROP: Share = Share::units(40.0);
+
+/// What the stacked arrangement leaves above the backdrop.
+// reference: detail-backdrop
+pub const BACKDROP_TOP: Length = Length::em(3.0);
+
+/// `.detailRibbon`'s height, which is also how far it stands over the
+/// backdrop.
+// reference: detail-ribbon
+pub const RIBBON: Length = Length::em(7.2);
+
+/// The room the ribbon and the page's own content leave for the poster beside
+/// them.
+// reference: detail-ribbon — 32.45vw
+// reference: detail-content
+pub const RIBBON_INSET: Share = Share::units(32.45);
+
+/// The ribbon's padding in the stacked arrangement.
+// reference: detail-ribbon
+pub const RIBBON_PAD: Padding = Padding {
+    top: Length::em(0.5),
+    right: Length::em(0.0),
+    bottom: Length::em(0.5),
+    left: Length::em(0.0),
+};
+
+/// The share of the page the stacked arrangement insets by.
+// reference: detail-ribbon
+// reference: detail-content
+pub const DETAIL_SIDE: Share = Share::per_ten_thousand(500);
+
+/// The trailing inset the ribbon arrangement leaves.
+// reference: detail-content
+pub const DETAIL_TRAIL: Share = Share::per_ten_thousand(200);
+
+/// The poster's width beside the ribbon.
+// reference: detail-poster — 25vw
+pub const DETAIL_POSTER: Share = Share::units(25.0);
+
+/// Its width over the backdrop in the stacked arrangement.
+// reference: detail-poster — 30vw
+pub const DETAIL_POSTER_STACKED: Share = Share::units(30.0);
+
+/// How far the poster rises over the ribbon, which is the ribbon's own height
+/// and four fifths again.
+// reference: detail-poster
+pub const DETAIL_POSTER_RISE: Length = RIBBON.times(Ratio::thousandths(1800));
+
+/// The poster's inset from the leading edge beside the ribbon.
+// reference: detail-poster
+pub const DETAIL_POSTER_INSET: Share = PAGE_SIDE;
+
+/// The gap under the page's own head.
+// reference: detail-secondary
+pub const DETAIL_BODY_TOP: Length = Length::em(1.25);
+
+/// The same gap in the stacked arrangement.
+// reference: detail-secondary
+pub const DETAIL_BODY_TOP_STACKED: Length = Length::em(1.0);
+
 /// The last step of a viewport-unit ladder the page reaches, and `base` where
 /// it reaches none, which is the order the cascade resolves them in.
 fn stepped(viewport: Viewport, base: Share, steps: &[(Query, Share)]) -> Share {

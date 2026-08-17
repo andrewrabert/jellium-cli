@@ -1,8 +1,8 @@
 use std::collections::HashSet;
 use std::rc::Rc;
 
-use iced::Element;
-use iced::widget::{button, column, row, scrollable};
+use iced::widget::{Space, button, column, container, image, row, scrollable, stack};
+use iced::{Element, Fill};
 use jellium_model::item::{self, Mark};
 use jellyfin_api::types::{BaseItemDto, BaseItemKind};
 use uuid::Uuid;
@@ -13,7 +13,7 @@ use crate::error::Answer;
 use crate::images::{self, Cache, Kind};
 use crate::player::Intent;
 use crate::style::space::Room;
-use crate::style::{self, Viewport, card, space, typeface};
+use crate::style::{self, Band, Drawn, Viewport, card, space, typeface};
 use crate::text::{self as strings, Text};
 use crate::widget;
 use crate::widget::prose;
@@ -161,32 +161,82 @@ fn play_controls<'a>(item: &BaseItemDto) -> Vec<Element<'a, Message>> {
     controls
 }
 
-/// The item, its controls, and — for an administrator alone — Refresh
-/// Metadata with its replace and scan mode options.
-pub fn view<'a>(
-    state: &'a State,
+/// `.itemBackdrop`, the item's own backdrop standing at the head of the page,
+/// covering the width it is given.
+// reference: detail-backdrop
+fn backdrop<'a>(item: &BaseItemDto, images: &'a Cache, height: Drawn) -> Element<'a, Message> {
+    let height = style::drawn(height);
+    let face = item.id.and_then(|id| {
+        images.handle(images::Key {
+            item: id,
+            kind: Kind::Backdrop,
+            index: None,
+        })
+    });
+    match face {
+        Some(handle) => image(handle)
+            .width(Fill)
+            .height(height)
+            .content_fit(iced::ContentFit::Cover)
+            .into(),
+        None => Space::new().width(Fill).height(height).into(),
+    }
+}
+
+/// The item's primary image at the width its arrangement gives it.
+// reference: detail-image
+fn poster<'a>(item: &BaseItemDto, images: &'a Cache, width: Drawn) -> Element<'a, Message> {
+    let width = style::drawn(width);
+    let face = item.id.and_then(|id| {
+        images.handle(images::Key {
+            item: id,
+            kind: Kind::Primary,
+            index: None,
+        })
+    });
+    match face {
+        Some(handle) => container(image(handle).width(width))
+            .width(width)
+            .style(style::card_padder)
+            .into(),
+        None => Space::new().width(width).into(),
+    }
+}
+
+/// A quarter of the page beside the ribbon and three tenths of it over the
+/// backdrop, which is the one measure the two arrangements disagree on before
+/// they are laid out.
+// reference: detail-poster
+fn poster_width(viewport: Viewport) -> Drawn {
+    match viewport.band() {
+        Band::Desktop => space::DETAIL_POSTER,
+        Band::Mobile => space::DETAIL_POSTER_STACKED,
+    }
+    .of(viewport.canvas().width())
+}
+
+/// What both arrangements lay out, built once.
+struct Head<'a> {
+    backdrop: Element<'a, Message>,
+    poster: Element<'a, Message>,
+    name: Element<'a, Message>,
+    lines: Element<'a, Message>,
+    buttons: Element<'a, Message>,
+}
+
+/// The parts the reference's own primary container holds, drawn once and
+/// placed by whichever arrangement the band names.
+// reference: detail-markup
+// reference: detail-primary
+// reference: detail-parent-name
+// reference: detail-name-container
+// reference: detail-misc
+fn head<'a>(
+    item: &'a BaseItemDto,
     viewport: Viewport,
     images: &'a Cache,
     session: &'a jellium_protocol::Session,
-) -> Element<'a, Message> {
-    let item = &state.item;
-    let overflow = match session.read_only {
-        true => widget::Overflow::Withheld,
-        false => widget::Overflow::Offered,
-    };
-
-    let poster = widget::tile(
-        card::Card::Wall(card::Shape::Portrait),
-        Room::content(viewport),
-        item.id.and_then(|id| {
-            images.handle(images::Key {
-                item: id,
-                kind: Kind::Primary,
-                index: None,
-            })
-        }),
-    );
-
+) -> Head<'a> {
     let mut actions = row![].spacing(style::drawn(space::GUTTER.drawn()));
     for control in play_controls(item) {
         actions = actions.push(control);
@@ -256,15 +306,9 @@ pub fn view<'a>(
         }
     }
 
-    let mut summary = column![
-        prose(item.name.clone().unwrap_or_default(), typeface::HEADING_1),
-        prose(heading(item), typeface::BODY),
-        actions,
-    ]
-    .spacing(style::drawn(space::GUTTER.drawn()));
-
+    let mut lines = column![].spacing(style::drawn(space::GUTTER.drawn()));
     if let Some(overview) = &item.overview {
-        summary = summary
+        lines = lines
             .push(prose(
                 strings::lookup(Text::DetailOverview),
                 typeface::HEADING_3,
@@ -272,7 +316,127 @@ pub fn view<'a>(
             .push(prose(overview.clone(), typeface::BODY));
     }
 
-    let mut page = column![row![poster, summary].spacing(style::drawn(space::GUTTER.drawn()))]
+    Head {
+        backdrop: backdrop(item, images, space::BACKDROP.of(viewport.canvas().height())),
+        poster: poster(item, images, poster_width(viewport)),
+        name: column![
+            prose(heading(item), typeface::BODY),
+            prose(item.name.clone().unwrap_or_default(), typeface::HEADING_1),
+        ]
+        .into(),
+        lines: lines.into(),
+        buttons: actions.into(),
+    }
+}
+
+/// The backdrop, the poster over it, the ribbon carrying the name, the item's
+/// own lines and the row of buttons: side by side on the desktop band.
+// reference: detail-markup
+// reference: detail-ribbon
+// reference: detail-poster
+// reference: detail-content
+fn ribboned<'a>(head: Head<'a>, viewport: Viewport) -> Element<'a, Message> {
+    let canvas = viewport.canvas();
+    let tall = space::BACKDROP.of(canvas.height());
+    let ribbon = space::RIBBON.drawn();
+    let rise = space::DETAIL_POSTER_RISE.drawn();
+    let lead = style::drawn(space::RIBBON_INSET.of(canvas.width()));
+    let trail = style::drawn(space::DETAIL_TRAIL.of(canvas.width()));
+
+    // the reference lifts the ribbon 7.2em over the backdrop and the poster a
+    // further 12.96em over the ribbon, and iced takes no negative offset
+    // this client stands both over the backdrop instead: the ribbon on its
+    // foot, and the poster's own top on what the rise leaves above that foot
+    let cleared = Drawn::of((tall.count() - ribbon.count() - rise.count()).max(0.0));
+
+    let banner = stack![
+        head.backdrop,
+        container(
+            row![
+                Space::new().width(lead),
+                container(head.name).width(Fill),
+                head.buttons,
+                Space::new().width(trail),
+            ]
+            .align_y(iced::Center)
+            .height(style::drawn(ribbon))
+        )
+        .height(Fill)
+        .align_y(iced::Bottom),
+        container(row![
+            Space::new().width(style::drawn(space::DETAIL_POSTER_INSET.of(canvas.width()))),
+            head.poster,
+        ])
+        .padding(iced::Padding::ZERO.top(style::drawn(cleared))),
+    ];
+
+    column![
+        banner,
+        container(row![
+            Space::new().width(lead),
+            container(head.lines).width(Fill),
+            Space::new().width(trail),
+        ])
+        .padding(iced::Padding::ZERO.top(style::drawn(space::DETAIL_BODY_TOP.drawn()))),
+    ]
+    .into()
+}
+
+/// The same parts stacked and centred, which is what the mobile band draws.
+// reference: detail-info-wrapper
+// reference: detail-centred
+// reference: detail-misc-narrow
+fn stacked<'a>(head: Head<'a>, viewport: Viewport) -> Element<'a, Message> {
+    let side = style::drawn(space::DETAIL_SIDE.of(viewport.canvas().width()));
+
+    let banner = stack![
+        head.backdrop,
+        container(row![Space::new().width(side), head.poster])
+            .height(Fill)
+            .align_y(iced::Bottom),
+    ];
+
+    column![
+        Space::new().height(style::drawn(space::BACKDROP_TOP.drawn())),
+        banner,
+        container(
+            column![head.name, head.buttons]
+                .align_x(iced::Center)
+                .width(Fill)
+        )
+        .padding(style::padding(space::RIBBON_PAD).left(side).right(side)),
+        container(container(head.lines).center_x(Fill)).padding(
+            iced::Padding::ZERO
+                .top(style::drawn(space::DETAIL_BODY_TOP_STACKED.drawn()))
+                .left(side)
+                .right(side)
+        ),
+    ]
+    .into()
+}
+
+/// The item drawn in the arrangement its band names, and under it what the
+/// server holds beneath the item: its children, its similar rail and — for an
+/// administrator alone — the way into its metadata.
+pub fn view<'a>(
+    state: &'a State,
+    viewport: Viewport,
+    images: &'a Cache,
+    session: &'a jellium_protocol::Session,
+) -> Element<'a, Message> {
+    let item = &state.item;
+    let overflow = match session.read_only {
+        true => widget::Overflow::Withheld,
+        false => widget::Overflow::Offered,
+    };
+
+    let head = head(item, viewport, images, session);
+    let drawn = match viewport.band() {
+        Band::Desktop => ribboned(head, viewport),
+        Band::Mobile => stacked(head, viewport),
+    };
+
+    let mut page = column![]
         .spacing(style::drawn(space::GUTTER.drawn()))
         .padding(style::drawn(space::GUTTER.drawn()));
 
@@ -318,7 +482,7 @@ pub fn view<'a>(
         ));
     }
 
-    scrollable(page).into()
+    scrollable(column![drawn, page]).into()
 }
 
 pub fn images(state: &State) -> HashSet<images::Key> {
@@ -328,6 +492,11 @@ pub fn images(state: &State) -> HashSet<images::Key> {
         keys.insert(images::Key {
             item: id,
             kind: Kind::Primary,
+            index: None,
+        });
+        keys.insert(images::Key {
+            item: id,
+            kind: Kind::Backdrop,
             index: None,
         });
     }
