@@ -432,11 +432,14 @@ fn no_command_line_lowers_a_lint() {
     assert!(sites.is_empty(), "command lines lowering a lint: {sites:?}");
 }
 
-/// Every site in `jellium-web/src` outside `failure.rs` that names `spelling`,
-/// as repository-relative `path:line`.
-fn spelled_outside_the_door(spelling: &str) -> Vec<String> {
+/// The door `/CLAUDE.md`'s deserializing and unpacking rules name.
+const FAILURE_DOOR: &str = "jellium-web/src/failure.rs";
+
+/// Every site in `jellium-web/src` outside `door` that names `spelling`, as
+/// repository-relative `path:line`.
+fn spelled_outside_the_door(door: &str, spelling: &str) -> Vec<String> {
     let root = workspace_root();
-    let door = root.join("jellium-web/src/failure.rs");
+    let door = root.join(door);
     let mut sites = Vec::new();
     for path in sources(&root.join("jellium-web/src")) {
         if path == door {
@@ -457,7 +460,7 @@ fn spelled_outside_the_door(spelling: &str) -> Vec<String> {
 /// constructs, so the doors `/CLAUDE.md` names cannot be spelled around.
 #[test]
 fn only_the_doors_deserialize() {
-    let sites = spelled_outside_the_door("Deserializer::from_");
+    let sites = spelled_outside_the_door(FAILURE_DOOR, "Deserializer::from_");
     assert!(
         sites.is_empty(),
         "deserializers outside the doors: {sites:?}"
@@ -467,9 +470,17 @@ fn only_the_doors_deserialize() {
 /// `jellium-web/src/failure.rs` holds every woff2 decode `jellium-web` makes.
 #[test]
 fn the_woff2_decoder_is_named_only_behind_its_door() {
-    let sites = spelled_outside_the_door("convert_woff2_to_ttf");
+    let sites = spelled_outside_the_door(FAILURE_DOOR, "convert_woff2_to_ttf");
     assert!(
         sites.is_empty(),
         "woff2 decodes outside the door: {sites:?}"
     );
+}
+
+/// `jellium-web/src/page.rs` holds every reading of the page's own origin, so a
+/// seventh spelling cannot appear where six did.
+#[test]
+fn the_origin_is_read_only_behind_its_door() {
+    let sites = spelled_outside_the_door("jellium-web/src/page.rs", ".origin()");
+    assert!(sites.is_empty(), "origins read outside the door: {sites:?}");
 }
