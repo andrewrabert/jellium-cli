@@ -1,13 +1,15 @@
 //! The activity log, fetched a page at a time as its window moves.
 
-use iced::widget::{button, column, row, text};
+use iced::widget::{button, column, row};
 use iced::{Element, Fill};
 
 use crate::app::Message;
 use crate::error::Answer;
 use crate::style::Drawn;
+use crate::style::typeface;
 use crate::text::{self as strings, Text};
 use crate::theme;
+use crate::widget::prose;
 use crate::window;
 use jellium_model::paged::Paged;
 use jellium_protocol::ActivityEntry;
@@ -78,7 +80,7 @@ pub fn view<'a>(state: &'a State) -> Element<'a, Message> {
         (Text::ActivityWithUser, Some(true)),
         (Text::ActivityWithoutUser, Some(false)),
     ] {
-        let control = button(text(strings::lookup(label)));
+        let control = button(prose(strings::lookup(label).to_owned(), typeface::BODY));
         filters = filters.push(if state.with_user == wanted {
             control
         } else {
@@ -87,19 +89,25 @@ pub fn view<'a>(state: &'a State) -> Element<'a, Message> {
     }
 
     column![
-        text(strings::lookup(Text::ActivityTitle)).size(22),
+        prose(
+            strings::lookup(Text::ActivityTitle).to_owned(),
+            typeface::HEADING_2
+        ),
         filters,
         window::list(state.window, state.entries.len(), |index| {
             match state.entries.row(index) {
                 Some(entry) => column![
-                    text(format!("{} · {}", stamped(entry.at), entry.name)),
-                    text(format!(
-                        "{} · {} · {}",
-                        entry.overview, entry.kind, entry.user_name
-                    )),
+                    prose(
+                        format!("{} · {}", stamped(entry.at), entry.name),
+                        typeface::BODY
+                    ),
+                    prose(
+                        format!("{} · {} · {}", entry.overview, entry.kind, entry.user_name),
+                        typeface::BODY
+                    ),
                 ]
                 .into(),
-                None => text("").into(),
+                None => prose(String::new(), typeface::BODY),
             }
         }),
     ]

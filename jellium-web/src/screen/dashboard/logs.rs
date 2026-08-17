@@ -1,13 +1,15 @@
 //! The server's log files, and the tail of the one a viewer shows.
 
-use iced::widget::{button, column, text};
+use iced::widget::{button, column};
 use iced::{Element, Fill};
 
 use crate::app::Message;
 use crate::error::Answer;
 use crate::style::Drawn;
+use crate::style::typeface;
 use crate::text::{self as strings, Text};
 use crate::theme;
+use crate::widget::prose;
 use crate::window;
 
 /// The log files the server holds.
@@ -59,21 +61,24 @@ fn sized(bytes: u64) -> String {
 
 /// Each log file with its name and size.
 pub fn view<'a>(state: &'a State) -> Element<'a, Message> {
-    let mut page = column![text(strings::lookup(Text::LogsTitle)).size(22)]
-        .spacing(theme::CARD_SPACING)
-        .padding(theme::CARD_SPACING);
+    let mut page = column![prose(
+        strings::lookup(Text::LogsTitle).to_owned(),
+        typeface::HEADING_2
+    )]
+    .spacing(theme::CARD_SPACING)
+    .padding(theme::CARD_SPACING);
 
     for file in &state.files {
         let name = file.name.clone().unwrap_or_default();
         page = page.push(
             iced::widget::row![
-                button(text(name.clone())).on_press(Message::DashboardAction(super::Action::Open(
-                    super::Screen::Log { name }
-                ))),
-                text(strings::format(
-                    Text::LogsSize,
-                    &[&sized(file.size.unwrap_or(0) as u64)]
+                button(prose(name.clone(), typeface::BODY)).on_press(Message::DashboardAction(
+                    super::Action::Open(super::Screen::Log { name })
                 )),
+                prose(
+                    strings::format(Text::LogsSize, &[&sized(file.size.unwrap_or(0) as u64)]),
+                    typeface::BODY
+                ),
             ]
             .spacing(theme::CARD_SPACING),
         );
@@ -92,19 +97,22 @@ const TAIL_LIMIT: u64 = 2 * 1024 * 1024;
 /// The sentence naming the tail and the file's full size, and only the lines
 /// the window shows.
 pub fn viewer<'a>(held: &'a Viewer) -> Element<'a, Message> {
-    let mut page = column![text(held.name.clone()).size(22)]
+    let mut page = column![prose(held.name.clone(), typeface::HEADING_2)]
         .spacing(theme::CARD_SPACING)
         .padding(theme::CARD_SPACING);
 
     if held.tail.truncated() {
-        page = page.push(text(strings::format(
-            Text::LogsTail,
-            &[&sized(TAIL_LIMIT), &sized(held.tail.size())],
-        )));
+        page = page.push(prose(
+            strings::format(
+                Text::LogsTail,
+                &[&sized(TAIL_LIMIT), &sized(held.tail.size())],
+            ),
+            typeface::BODY,
+        ));
     }
 
     page.push(window::list(held.window, held.tail.lines(), |index| {
-        text(held.tail.line(index).to_owned()).into()
+        prose(held.tail.line(index).to_owned(), typeface::BODY)
     }))
     .width(Fill)
     .height(Fill)

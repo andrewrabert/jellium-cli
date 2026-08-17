@@ -1,11 +1,13 @@
 use iced::Element;
-use iced::widget::{button, column, container, text, text_input};
+use iced::widget::{button, column, container, text_input};
 
 use crate::app::Message;
 use crate::text::{self as strings, Text};
 use crate::theme;
 
 use super::{Action, Edit};
+use crate::style::typeface;
+use crate::widget::prose;
 
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct State {
@@ -22,30 +24,42 @@ pub struct State {
 pub fn view<'a>(state: &'a super::State) -> Element<'a, Message> {
     let held = &state.reset;
     let mut form = column![
-        text(strings::lookup(Text::LoginResetTitle)).size(28),
+        prose(
+            strings::lookup(Text::LoginResetTitle).to_owned(),
+            typeface::HEADING_1
+        ),
         text_input(strings::lookup(Text::LoginResetUsername), &held.username)
             .on_input(|value| Message::LoginAction(Action::Edited(Edit::ResetUsername(value))))
             .on_submit(Message::LoginAction(Action::ResetSubmit))
             .padding(8),
-        button(text(strings::lookup(Text::LoginResetSubmit)))
-            .on_press(Message::LoginAction(Action::ResetSubmit)),
+        button(prose(
+            strings::lookup(Text::LoginResetSubmit).to_owned(),
+            typeface::BODY
+        ))
+        .on_press(Message::LoginAction(Action::ResetSubmit)),
     ]
     .spacing(theme::CARD_SPACING)
     .max_width(520);
 
     match held.answered {
         Some(jellium_model::login::Reset::PinWritten) => {
-            form = form.push(text(strings::lookup(Text::LoginResetPinWritten)));
+            form = form.push(prose(
+                strings::lookup(Text::LoginResetPinWritten).to_owned(),
+                typeface::BODY,
+            ));
             if let Some(file) = &held.pin_file {
                 form = form
-                    .push(text(strings::lookup(Text::LoginResetPinFile)).size(14))
-                    .push(text(format!("> {file}")).size(13));
+                    .push(prose(
+                        strings::lookup(Text::LoginResetPinFile).to_owned(),
+                        typeface::BODY,
+                    ))
+                    .push(prose(format!("> {file}"), typeface::SECONDARY));
             }
             if let Some(expires) = held.expires {
-                form = form.push(text(crate::text::format(
-                    Text::LoginResetExpires,
-                    &[&stamped(expires)],
-                )));
+                form = form.push(prose(
+                    crate::text::format(Text::LoginResetExpires, &[&stamped(expires)]),
+                    typeface::BODY,
+                ));
             }
             form = form
                 .push(
@@ -55,21 +69,34 @@ pub fn view<'a>(state: &'a super::State) -> Element<'a, Message> {
                         .padding(8),
                 )
                 .push(
-                    button(text(strings::lookup(Text::LoginResetPinSubmit)))
-                        .on_press(Message::LoginAction(Action::PinSubmit)),
+                    button(prose(
+                        strings::lookup(Text::LoginResetPinSubmit).to_owned(),
+                        typeface::BODY,
+                    ))
+                    .on_press(Message::LoginAction(Action::PinSubmit)),
                 );
         }
         Some(jellium_model::login::Reset::ContactAdministrator) => {
-            form = form.push(text(strings::lookup(Text::LoginResetContactAdministrator)));
+            form = form.push(prose(
+                strings::lookup(Text::LoginResetContactAdministrator).to_owned(),
+                typeface::BODY,
+            ));
         }
         Some(jellium_model::login::Reset::InNetworkRequired) => {
-            form = form.push(text(strings::lookup(Text::LoginResetInNetwork)));
+            form = form.push(prose(
+                strings::lookup(Text::LoginResetInNetwork).to_owned(),
+                typeface::BODY,
+            ));
         }
         None => {}
     }
 
     form = form.push(
-        button(text(strings::lookup(Text::LoginBack))).on_press(Message::LoginAction(Action::Back)),
+        button(prose(
+            strings::lookup(Text::LoginBack).to_owned(),
+            typeface::BODY,
+        ))
+        .on_press(Message::LoginAction(Action::Back)),
     );
 
     container(form)

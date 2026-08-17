@@ -1,11 +1,13 @@
 use iced::Element;
-use iced::widget::{button, column, container, text, text_input};
+use iced::widget::{button, column, container, text_input};
 
 use crate::app::Message;
 use crate::text::{self as strings, Text};
 use crate::theme;
 
 use super::{Action, Edit};
+use crate::style::typeface;
+use crate::widget::prose;
 
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct State {
@@ -20,14 +22,23 @@ pub fn view<'a>(state: &'a super::State) -> Element<'a, Message> {
         .padding(8);
 
     let submit = if state.working {
-        button(text(strings::lookup(Text::LoginAddWorking)))
+        button(prose(
+            strings::lookup(Text::LoginAddWorking).to_owned(),
+            typeface::BODY,
+        ))
     } else {
-        button(text(strings::lookup(Text::LoginAddSubmit)))
-            .on_press(Message::LoginAction(Action::AddSubmit))
+        button(prose(
+            strings::lookup(Text::LoginAddSubmit).to_owned(),
+            typeface::BODY,
+        ))
+        .on_press(Message::LoginAction(Action::AddSubmit))
     };
 
     let mut form = column![
-        text(strings::lookup(Text::LoginAddTitle)).size(28),
+        prose(
+            strings::lookup(Text::LoginAddTitle).to_owned(),
+            typeface::HEADING_1
+        ),
         typed,
         submit,
     ]
@@ -36,8 +47,11 @@ pub fn view<'a>(state: &'a super::State) -> Element<'a, Message> {
 
     if !state.servers.is_empty() {
         form = form.push(
-            button(text(strings::lookup(Text::LoginBack)))
-                .on_press(Message::LoginAction(Action::Back)),
+            button(prose(
+                strings::lookup(Text::LoginBack).to_owned(),
+                typeface::BODY,
+            ))
+            .on_press(Message::LoginAction(Action::Back)),
         );
     }
 

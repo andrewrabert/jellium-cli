@@ -8,7 +8,7 @@ use std::collections::HashSet;
 use std::rc::Rc;
 
 use chrono::{DateTime, Utc};
-use iced::widget::{button, column, row, text};
+use iced::widget::{button, column, row};
 use iced::{Element, Fill, Subscription, Task};
 use jellium_protocol::TimerChanged;
 use uuid::Uuid;
@@ -17,9 +17,11 @@ use crate::api::Api;
 use crate::app::{Message, Signed};
 use crate::error::{Answer, Operation};
 use crate::images::{self, Cache};
+use crate::style::typeface;
 use crate::style::{Drawn, Viewport};
 use crate::text::{self as strings, Text};
 use crate::theme;
+use crate::widget::prose;
 use crate::window;
 
 /// Which of the five tabs the Live TV screen shows.
@@ -147,14 +149,17 @@ pub fn view<'a>(state: &'a State, now: DateTime<Utc>, images: &'a Cache) -> Elem
     }
 
     let tabs = row(Tab::ALL.iter().map(|tab| {
-        button(text(strings::lookup(tab.label())))
-            .style(if *tab == state.tab {
-                button::primary
-            } else {
-                button::secondary
-            })
-            .on_press(Message::LiveTvAction(Action::Selected(*tab)))
-            .into()
+        button(prose(
+            strings::lookup(tab.label()).to_owned(),
+            typeface::BODY,
+        ))
+        .style(if *tab == state.tab {
+            button::primary
+        } else {
+            button::secondary
+        })
+        .on_press(Message::LiveTvAction(Action::Selected(*tab)))
+        .into()
     }))
     .spacing(theme::CARD_SPACING);
 
@@ -167,7 +172,10 @@ pub fn view<'a>(state: &'a State, now: DateTime<Utc>, images: &'a Cache) -> Elem
     };
 
     column![
-        text(strings::lookup(Text::LiveTvTitle)).size(22),
+        prose(
+            strings::lookup(Text::LiveTvTitle).to_owned(),
+            typeface::HEADING_2
+        ),
         tabs,
         body,
     ]

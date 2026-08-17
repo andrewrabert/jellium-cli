@@ -2,7 +2,7 @@ use std::collections::HashSet;
 use std::rc::Rc;
 
 use iced::Element;
-use iced::widget::{column, scrollable, text};
+use iced::widget::{column, scrollable};
 use jellyfin_api::types::{BaseItemDto, CollectionType};
 
 use crate::api::Api;
@@ -10,9 +10,11 @@ use crate::app::Message;
 use crate::error::Answer;
 use crate::images::{self, Cache};
 use crate::livetv::Channel;
+use crate::style::typeface;
 use crate::text::{self as strings, Text};
 use crate::theme;
 use crate::widget;
+use crate::widget::prose;
 
 /// The most channels the on-now row shows.
 pub const ON_NOW: i32 = 20;
@@ -168,7 +170,10 @@ pub fn view<'a>(
         .filter_map(|id| state.libraries.iter().find(|it| it.id == Some(*id)))
         .collect();
     if !libraries.is_empty() {
-        page = page.push(text(strings::lookup(Text::HomeLibraries)).size(22));
+        page = page.push(prose(
+            strings::lookup(Text::HomeLibraries).to_owned(),
+            typeface::HEADING_2,
+        ));
         page = page.push(widget::library_row(
             libraries,
             live_tv,

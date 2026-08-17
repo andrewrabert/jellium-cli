@@ -1,6 +1,6 @@
 use std::collections::HashSet;
 
-use iced::widget::{button, column, container, scrollable, text};
+use iced::widget::{button, column, container, scrollable};
 use iced::{Element, Fill};
 use jellium_protocol::Target;
 
@@ -8,16 +8,18 @@ use crate::app::Message;
 use crate::images::{self, Cache};
 use crate::player::osd::{self, Transport};
 use crate::player::remote::{self, Bound};
+use crate::style::typeface;
 use crate::text::{self as strings, Text};
 use crate::theme;
+use crate::widget::prose;
 
 /// One target the picker offers, named by its device name with its client
 /// name beneath.
 fn offered(target: &Target) -> Element<'_, Message> {
     button(
         column![
-            text(target.device_name.clone()).size(16),
-            text(target.client_name.clone()).size(13),
+            prose(target.device_name.clone(), typeface::BODY),
+            prose(target.client_name.clone(), typeface::SECONDARY),
         ]
         .spacing(2),
     )
@@ -30,7 +32,10 @@ fn offered(target: &Target) -> Element<'_, Message> {
 
 fn picker<'a>(targets: &'a [Target]) -> Element<'a, Message> {
     if targets.is_empty() {
-        return text(strings::lookup(Text::RemoteEmpty)).into();
+        return prose(
+            strings::lookup(Text::RemoteEmpty).to_owned(),
+            typeface::BODY,
+        );
     }
     let listed = targets
         .iter()
@@ -54,8 +59,8 @@ pub fn view<'a>(
     let body: Element<'a, Message> = match bound {
         None => picker(targets),
         Some(bound) => column![
-            text(bound.target.device_name.clone()).size(16),
-            text(bound.target.client_name.clone()).size(13),
+            prose(bound.target.device_name.clone(), typeface::BODY),
+            prose(bound.target.client_name.clone(), typeface::SECONDARY),
             osd::bar(
                 Transport::Remote(bound),
                 false,
@@ -70,8 +75,14 @@ pub fn view<'a>(
     };
 
     container(
-        column![text(strings::lookup(Text::RemoteTitle)).size(24), body]
-            .spacing(theme::CARD_SPACING),
+        column![
+            prose(
+                strings::lookup(Text::RemoteTitle).to_owned(),
+                typeface::HEADING_2
+            ),
+            body
+        ]
+        .spacing(theme::CARD_SPACING),
     )
     .padding(theme::CARD_SPACING)
     .into()

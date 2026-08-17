@@ -5,6 +5,7 @@ use wasm_bindgen::prelude::Closure;
 
 use crate::failure::Call;
 use crate::failure::{self, Cause, Failure};
+use crate::style::typeface;
 use crate::text::{self, Text};
 
 thread_local! {
@@ -245,17 +246,27 @@ pub async fn start() {
         return;
     };
 
-    let run = iced::application(
+    let mut application = iced::application(
         move || crate::app::Jellium::boot(viewport),
         crate::app::Jellium::update,
         crate::app::Jellium::view,
     )
-    .title(crate::app::Jellium::title)
-    .theme(crate::app::Jellium::theme)
-    .style(crate::app::Jellium::style)
-    .subscription(crate::app::Jellium::subscription)
-    .transparent(true)
-    .run();
+    .settings(iced::Settings {
+        default_font: crate::style::font(typeface::Weight::Regular),
+        default_text_size: iced::Pixels(crate::style::drawn(typeface::BODY.drawn())),
+        ..iced::Settings::default()
+    })
+    .scale_factor(crate::app::Jellium::scale_factor);
+    for face in crate::fonts::embedded() {
+        application = application.font(face);
+    }
+    let run = application
+        .title(crate::app::Jellium::title)
+        .theme(crate::app::Jellium::theme)
+        .style(crate::app::Jellium::style)
+        .subscription(crate::app::Jellium::subscription)
+        .transparent(true)
+        .run();
 
     STARTING.with(|held| held.set(false));
     if let Err(error) = run {

@@ -18,16 +18,18 @@ pub mod users;
 
 use std::rc::Rc;
 
-use iced::widget::{button, column, row, text};
+use iced::widget::{button, column, row};
 use iced::{Element, Fill, Task};
 use uuid::Uuid;
 
 use crate::api::Api;
 use crate::app::{Message, Signed};
 use crate::error::{Answer, Operation, Wrote};
+use crate::style::typeface;
 use crate::style::{Drawn, Viewport};
 use crate::text::{self as strings, Text};
 use crate::theme;
+use crate::widget::prose;
 
 /// Which configuration section a settings screen edits.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -273,14 +275,14 @@ pub fn control<'a>(
                 iced::widget::checkbox(held == "true").on_toggle(move |held| {
                     Message::DashboardAction(Action::Edited(field, held.to_string()))
                 }),
-                text(key),
+                prose(key.to_owned(), typeface::BODY),
             ]
             .spacing(theme::CARD_SPACING)
             .align_y(iced::Center),
         ),
         _ => Element::from(
             column![
-                text(field.key()),
+                prose(field.key().to_owned(), typeface::BODY),
                 iced::widget::text_input(field.key(), &held).on_input(move |held| {
                     Message::DashboardAction(Action::Edited(field, held))
                 }),
@@ -647,7 +649,10 @@ pub fn view<'a>(state: &'a State, session: &'a jellium_protocol::Session) -> Ele
     let mut column_of = column![].spacing(theme::CARD_SPACING);
     for entry in Screen::COLUMN {
         let shown = state.screen == entry;
-        let control = button(text(strings::lookup(entry.label())));
+        let control = button(prose(
+            strings::lookup(entry.label()).to_owned(),
+            typeface::BODY,
+        ));
         column_of = column_of.push(if shown {
             control
         } else {
@@ -702,9 +707,12 @@ pub fn view<'a>(state: &'a State, session: &'a jellium_protocol::Session) -> Ele
 /// What stands beside a configuration page: the frame occupies the viewport
 /// itself, so only the page's name, its busy state and its notice are drawn.
 fn shown_page<'a>(held: &'a page::State) -> Element<'a, Message> {
-    let mut shown = column![text(held.name.clone())].spacing(theme::CARD_SPACING);
+    let mut shown = column![prose(held.name.clone(), typeface::BODY)].spacing(theme::CARD_SPACING);
     if held.busy {
-        shown = shown.push(text(strings::lookup(Text::StatusLoading)));
+        shown = shown.push(prose(
+            strings::lookup(Text::StatusLoading).to_owned(),
+            typeface::BODY,
+        ));
     }
     if let Some(notice) = held.notice.as_ref() {
         shown = shown.push(crate::widget::banner(notice.clone()));

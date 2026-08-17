@@ -1,12 +1,14 @@
 //! The scheduled tasks the server holds, and the one task a task screen shows.
 
-use iced::widget::{button, column, row, text};
+use iced::widget::{button, column, row};
 use iced::{Element, Fill};
 
 use crate::app::Message;
 use crate::error::Answer;
+use crate::style::typeface;
 use crate::text::{self as strings, Text};
 use crate::theme;
+use crate::widget::prose;
 
 /// Every scheduled task, with the state and progress each push carries.
 #[derive(Debug, Clone)]
@@ -81,9 +83,12 @@ fn state_text(state: jellium_protocol::TaskRunState) -> Text {
 
 /// Every task with its state and its running progress.
 pub fn view<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
-    let mut page = column![text(strings::lookup(Text::TasksTitle)).size(22)]
-        .spacing(theme::CARD_SPACING)
-        .padding(theme::CARD_SPACING);
+    let mut page = column![prose(
+        strings::lookup(Text::TasksTitle).to_owned(),
+        typeface::HEADING_2
+    )]
+    .spacing(theme::CARD_SPACING)
+    .padding(theme::CARD_SPACING);
 
     for task in &state.tasks {
         let progress = task
@@ -91,23 +96,24 @@ pub fn view<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
             .map(|progress| format!(" {progress:.0}%"))
             .unwrap_or_default();
         let mut held = row![
-            button(text(task.name.clone())).on_press(Message::DashboardAction(
+            button(prose(task.name.clone(), typeface::BODY)).on_press(Message::DashboardAction(
                 super::Action::Open(super::Screen::Task {
                     id: task.id.clone()
                 })
             )),
-            text(format!(
-                "{}{progress}",
-                strings::lookup(state_text(task.state))
-            )),
+            prose(
+                format!("{}{progress}", strings::lookup(state_text(task.state))),
+                typeface::BODY
+            ),
         ]
         .spacing(theme::CARD_SPACING);
 
         if !read_only {
             held = held.push(match task.state {
-                jellium_protocol::TaskRunState::Running => button(text(strings::lookup(
-                    Text::TasksStop,
-                )))
+                jellium_protocol::TaskRunState::Running => button(prose(
+                    strings::lookup(Text::TasksStop).to_owned(),
+                    typeface::BODY,
+                ))
                 .on_press(Message::DashboardAction(super::Action::Ask(
                     crate::screen::confirm::Pending::of(
                         crate::screen::confirm::Destructive::StopTask {
@@ -116,12 +122,16 @@ pub fn view<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
                         task.name.clone(),
                     ),
                 ))),
-                _ => button(text(strings::lookup(Text::TasksStart))).on_press(
-                    Message::DashboardAction(super::Action::Write(super::Written::StartTask {
+                _ => button(prose(
+                    strings::lookup(Text::TasksStart).to_owned(),
+                    typeface::BODY,
+                ))
+                .on_press(Message::DashboardAction(super::Action::Write(
+                    super::Written::StartTask {
                         id: task.id.clone(),
                         name: task.name.clone(),
-                    })),
-                ),
+                    },
+                ))),
             });
         }
         page = page.push(held);
@@ -137,45 +147,60 @@ pub fn view<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
 /// its triggers.
 pub fn one<'a>(state: &'a One, read_only: bool) -> Element<'a, Message> {
     let mut page = column![
-        text(state.info.name.clone().unwrap_or_default()).size(22),
-        text(state.info.description.clone().unwrap_or_default()),
+        prose(
+            state.info.name.clone().unwrap_or_default(),
+            typeface::HEADING_2
+        ),
+        prose(
+            state.info.description.clone().unwrap_or_default(),
+            typeface::BODY
+        ),
     ]
     .spacing(theme::CARD_SPACING)
     .padding(theme::CARD_SPACING);
 
     if let Some(last) = state.info.last_execution_result.as_ref() {
-        page = page.push(text(strings::format(
-            Text::TasksLastRun,
-            &[&last
-                .status
-                .map(|status| status.to_string())
-                .unwrap_or_default()],
-        )));
+        page = page.push(prose(
+            strings::format(
+                Text::TasksLastRun,
+                &[&last
+                    .status
+                    .map(|status| status.to_string())
+                    .unwrap_or_default()],
+            ),
+            typeface::BODY,
+        ));
         if let (Some(start), Some(end)) = (last.start_time_utc, last.end_time_utc) {
             let ran = end - start;
-            page = page.push(text(strings::format(
-                Text::TasksDuration,
-                &[&format!("{}", ran.num_seconds())],
-            )));
+            page = page.push(prose(
+                strings::format(Text::TasksDuration, &[&format!("{}", ran.num_seconds())]),
+                typeface::BODY,
+            ));
         }
     }
 
-    page = page.push(text(strings::lookup(Text::TasksTriggers)));
+    page = page.push(prose(
+        strings::lookup(Text::TasksTriggers).to_owned(),
+        typeface::BODY,
+    ));
     for (index, trigger) in state.triggers.iter().enumerate() {
-        let mut held = row![text(
+        let mut held = row![prose(
             trigger
                 .type_
                 .map(|kind| kind.to_string())
-                .unwrap_or_default()
+                .unwrap_or_default(),
+            typeface::BODY
         )]
         .spacing(theme::CARD_SPACING);
         if !read_only {
             held = held.push(
-                button(text(strings::lookup(Text::TasksTriggerRemove))).on_press(
-                    Message::DashboardAction(super::Action::Write(super::Written::RemoveTrigger {
-                        index,
-                    })),
-                ),
+                button(prose(
+                    strings::lookup(Text::TasksTriggerRemove).to_owned(),
+                    typeface::BODY,
+                ))
+                .on_press(Message::DashboardAction(super::Action::Write(
+                    super::Written::RemoveTrigger { index },
+                ))),
             );
         }
         page = page.push(held);
@@ -184,30 +209,48 @@ pub fn one<'a>(state: &'a One, read_only: bool) -> Element<'a, Message> {
     if !read_only {
         page = page.push(
             row![
-                button(text(strings::lookup(Text::TasksTriggerDaily))).on_press(
-                    Message::DashboardAction(super::Action::Write(super::Written::AddTrigger {
+                button(prose(
+                    strings::lookup(Text::TasksTriggerDaily).to_owned(),
+                    typeface::BODY
+                ))
+                .on_press(Message::DashboardAction(super::Action::Write(
+                    super::Written::AddTrigger {
                         kind: jellyfin_api::types::TaskTriggerInfoType::DailyTrigger,
-                    }))
-                ),
-                button(text(strings::lookup(Text::TasksTriggerInterval))).on_press(
-                    Message::DashboardAction(super::Action::Write(super::Written::AddTrigger {
+                    }
+                ))),
+                button(prose(
+                    strings::lookup(Text::TasksTriggerInterval).to_owned(),
+                    typeface::BODY
+                ))
+                .on_press(Message::DashboardAction(super::Action::Write(
+                    super::Written::AddTrigger {
                         kind: jellyfin_api::types::TaskTriggerInfoType::IntervalTrigger,
-                    }))
-                ),
-                button(text(strings::lookup(Text::TasksTriggerStartup))).on_press(
-                    Message::DashboardAction(super::Action::Write(super::Written::AddTrigger {
+                    }
+                ))),
+                button(prose(
+                    strings::lookup(Text::TasksTriggerStartup).to_owned(),
+                    typeface::BODY
+                ))
+                .on_press(Message::DashboardAction(super::Action::Write(
+                    super::Written::AddTrigger {
                         kind: jellyfin_api::types::TaskTriggerInfoType::StartupTrigger,
-                    }))
-                ),
+                    }
+                ))),
             ]
             .spacing(theme::CARD_SPACING),
         );
-        page = page.push(button(text(strings::lookup(Text::DashboardSave))).on_press(
-            Message::DashboardAction(super::Action::Write(super::Written::SetTriggers {
-                id: state.info.id.clone().unwrap_or_default(),
-                name: state.info.name.clone().unwrap_or_default(),
-            })),
-        ));
+        page = page.push(
+            button(prose(
+                strings::lookup(Text::DashboardSave).to_owned(),
+                typeface::BODY,
+            ))
+            .on_press(Message::DashboardAction(super::Action::Write(
+                super::Written::SetTriggers {
+                    id: state.info.id.clone().unwrap_or_default(),
+                    name: state.info.name.clone().unwrap_or_default(),
+                },
+            ))),
+        );
     }
 
     iced::widget::scrollable(page)

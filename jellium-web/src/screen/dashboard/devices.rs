@@ -1,13 +1,15 @@
 //! The devices the server has seen, and the API keys it holds.
 
-use iced::widget::{button, column, row, text, text_input};
+use iced::widget::{button, column, row, text_input};
 use iced::{Element, Fill};
 
 use crate::app::Message;
 use crate::error::Answer;
 use crate::style::Drawn;
+use crate::style::typeface;
 use crate::text::{self as strings, Text};
 use crate::theme;
+use crate::widget::prose;
 use crate::window;
 
 /// Every device the server has seen, and what one is being renamed to.
@@ -36,9 +38,12 @@ pub async fn load(api: std::rc::Rc<crate::api::Api>, own: String, height: Drawn)
 /// Each device's name, client, user and last-seen time, its rename, and its
 /// deletion behind a confirmation naming it.
 pub fn view<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
-    let mut page = column![text(strings::lookup(Text::DevicesTitle)).size(22)]
-        .spacing(theme::CARD_SPACING)
-        .padding(theme::CARD_SPACING);
+    let mut page = column![prose(
+        strings::lookup(Text::DevicesTitle).to_owned(),
+        typeface::HEADING_2
+    )]
+    .spacing(theme::CARD_SPACING)
+    .padding(theme::CARD_SPACING);
 
     if !read_only {
         page = page.push(
@@ -49,41 +54,57 @@ pub fn view<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
 
     let listed = window::list(state.window, state.devices.len(), move |index| {
         let Some(device) = state.devices.get(index) else {
-            return text("").into();
+            return prose(String::new(), typeface::BODY);
         };
         let Some(id) = device.id.clone() else {
-            return text("").into();
+            return prose(String::new(), typeface::BODY);
         };
         let name = device.name.clone().unwrap_or_default();
         let mut held = row![
-            text(name.clone()),
-            text(device.app_name.clone().unwrap_or_default()),
-            text(device.last_user_name.clone().unwrap_or_default()),
-            text(
+            prose(name.clone(), typeface::BODY),
+            prose(device.app_name.clone().unwrap_or_default(), typeface::BODY),
+            prose(
+                device.last_user_name.clone().unwrap_or_default(),
+                typeface::BODY
+            ),
+            prose(
                 device
                     .date_last_activity
                     .map(|at| at.format("%Y-%m-%d %H:%M").to_string())
-                    .unwrap_or_default()
+                    .unwrap_or_default(),
+                typeface::BODY
             ),
         ]
         .spacing(theme::CARD_SPACING);
 
         if !read_only {
-            held = held.push(button(text(strings::lookup(Text::DevicesRename))).on_press(
-                Message::DashboardAction(super::Action::Write(super::Written::SetDeviceName {
-                    id: id.clone(),
-                    name: state.renaming.clone(),
-                })),
-            ));
-            held = held.push(button(text(strings::lookup(Text::DevicesDelete))).on_press(
-                Message::DashboardAction(super::Action::Ask(crate::screen::confirm::Pending::of(
-                    crate::screen::confirm::Destructive::DeleteDevice {
+            held = held.push(
+                button(prose(
+                    strings::lookup(Text::DevicesRename).to_owned(),
+                    typeface::BODY,
+                ))
+                .on_press(Message::DashboardAction(super::Action::Write(
+                    super::Written::SetDeviceName {
                         id: id.clone(),
-                        own: id == state.own,
+                        name: state.renaming.clone(),
                     },
-                    name,
                 ))),
-            ));
+            );
+            held = held.push(
+                button(prose(
+                    strings::lookup(Text::DevicesDelete).to_owned(),
+                    typeface::BODY,
+                ))
+                .on_press(Message::DashboardAction(super::Action::Ask(
+                    crate::screen::confirm::Pending::of(
+                        crate::screen::confirm::Destructive::DeleteDevice {
+                            id: id.clone(),
+                            own: id == state.own,
+                        },
+                        name,
+                    ),
+                ))),
+            );
         }
         held.into()
     });

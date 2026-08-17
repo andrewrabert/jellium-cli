@@ -1,12 +1,14 @@
 //! Dashboard home: what the server is, who is on it, and what it is doing.
 
-use iced::widget::{button, column, row, text};
+use iced::widget::{button, column, row};
 use iced::{Element, Fill};
 
 use crate::app::Message;
 use crate::error::Answer;
+use crate::style::typeface;
 use crate::text::{self as strings, Text};
 use crate::theme;
+use crate::widget::prose;
 
 /// What dashboard home shows, all of it updating without the user acting.
 #[derive(Debug, Clone)]
@@ -59,69 +61,95 @@ fn running(state: &State) -> impl Iterator<Item = &jellium_protocol::TaskState> 
 /// restart and shutdown controls.
 pub fn view<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
     let mut page = column![
-        text(strings::lookup(Text::DashboardHome)).size(22),
-        text(strings::format(
-            Text::DashboardServer,
-            &[&state.info.server_name.clone().unwrap_or_default()]
-        )),
-        text(strings::format(
-            Text::DashboardVersion,
-            &[&state.info.version.clone().unwrap_or_default()]
-        )),
+        prose(
+            strings::lookup(Text::DashboardHome).to_owned(),
+            typeface::HEADING_2
+        ),
+        prose(
+            strings::format(
+                Text::DashboardServer,
+                &[&state.info.server_name.clone().unwrap_or_default()]
+            ),
+            typeface::BODY
+        ),
+        prose(
+            strings::format(
+                Text::DashboardVersion,
+                &[&state.info.version.clone().unwrap_or_default()]
+            ),
+            typeface::BODY
+        ),
     ]
     .spacing(theme::CARD_SPACING)
     .padding(theme::CARD_SPACING);
 
     if let Some(progress) = state.scanning {
-        page = page.push(text(strings::format(
-            Text::DashboardScanning,
-            &[&format!("{progress:.0}")],
-        )));
+        page = page.push(prose(
+            strings::format(Text::DashboardScanning, &[&format!("{progress:.0}")]),
+            typeface::BODY,
+        ));
     }
 
-    page = page.push(text(strings::lookup(Text::DashboardSessions)));
+    page = page.push(prose(
+        strings::lookup(Text::DashboardSessions).to_owned(),
+        typeface::BODY,
+    ));
     for session in &state.sessions {
         let playing = session
             .playing
             .clone()
             .unwrap_or_else(|| strings::lookup(Text::DashboardSessionNothing).to_string());
-        page = page.push(text(format!(
-            "{} · {} · {} · {}",
-            session.device_name, session.client_name, session.user_name, playing
-        )));
+        page = page.push(prose(
+            format!(
+                "{} · {} · {} · {}",
+                session.device_name, session.client_name, session.user_name, playing
+            ),
+            typeface::BODY,
+        ));
     }
 
-    page = page.push(text(strings::lookup(Text::DashboardRunningTasks)));
+    page = page.push(prose(
+        strings::lookup(Text::DashboardRunningTasks).to_owned(),
+        typeface::BODY,
+    ));
     for task in running(state) {
         let progress = task
             .progress
             .map(|progress| format!("{progress:.0}%"))
             .unwrap_or_default();
-        page = page.push(text(format!("{} {progress}", task.name)));
+        page = page.push(prose(format!("{} {progress}", task.name), typeface::BODY));
     }
 
     if !read_only {
         page = page.push(
             row![
-                button(text(strings::lookup(Text::DashboardScanAll))).on_press(
-                    Message::DashboardAction(super::Action::Write(super::Written::ScanAll))
-                ),
-                button(text(strings::lookup(Text::DashboardRestart))).on_press(
-                    Message::DashboardAction(super::Action::Ask(
-                        crate::screen::confirm::Pending::of(
-                            crate::screen::confirm::Destructive::Restart,
-                            state.info.server_name.clone().unwrap_or_default(),
-                        )
-                    ))
-                ),
-                button(text(strings::lookup(Text::DashboardShutdown))).on_press(
-                    Message::DashboardAction(super::Action::Ask(
-                        crate::screen::confirm::Pending::of(
-                            crate::screen::confirm::Destructive::Shutdown,
-                            state.info.server_name.clone().unwrap_or_default(),
-                        )
-                    ))
-                ),
+                button(prose(
+                    strings::lookup(Text::DashboardScanAll).to_owned(),
+                    typeface::BODY
+                ))
+                .on_press(Message::DashboardAction(super::Action::Write(
+                    super::Written::ScanAll
+                ))),
+                button(prose(
+                    strings::lookup(Text::DashboardRestart).to_owned(),
+                    typeface::BODY
+                ))
+                .on_press(Message::DashboardAction(super::Action::Ask(
+                    crate::screen::confirm::Pending::of(
+                        crate::screen::confirm::Destructive::Restart,
+                        state.info.server_name.clone().unwrap_or_default(),
+                    )
+                ))),
+                button(prose(
+                    strings::lookup(Text::DashboardShutdown).to_owned(),
+                    typeface::BODY
+                ))
+                .on_press(Message::DashboardAction(super::Action::Ask(
+                    crate::screen::confirm::Pending::of(
+                        crate::screen::confirm::Destructive::Shutdown,
+                        state.info.server_name.clone().unwrap_or_default(),
+                    )
+                ))),
             ]
             .spacing(theme::CARD_SPACING),
         );

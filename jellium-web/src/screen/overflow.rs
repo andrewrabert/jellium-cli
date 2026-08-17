@@ -1,4 +1,4 @@
-use iced::widget::{button, column, row, text, text_input};
+use iced::widget::{button, column, row, text_input};
 use iced::{Element, Task};
 use jellyfin_api::types::BaseItemDto;
 use uuid::Uuid;
@@ -7,8 +7,10 @@ use crate::app::{Message, Signed};
 use crate::error::Operation;
 use crate::images::Cache;
 use crate::route::Route;
+use crate::style::typeface;
 use crate::text::{self as strings, Text};
 use crate::theme;
+use crate::widget::prose;
 
 /// The overflow menu open now; at most one is open, and none is reachable under
 /// read-only.
@@ -90,51 +92,71 @@ pub fn view<'a>(
 
     let Some(filing) = &open.filing else {
         let mut menu = column![
-            button(text(strings::lookup(if open.played {
-                Text::OverflowMarkUnplayed
-            } else {
-                Text::OverflowMarkPlayed
-            })))
+            button(prose(
+                strings::lookup(if open.played {
+                    Text::OverflowMarkUnplayed
+                } else {
+                    Text::OverflowMarkPlayed
+                })
+                .to_owned(),
+                typeface::BODY
+            ))
             .on_press(Message::OverflowAction(Action::MarkPlayed {
                 item,
                 played: !open.played,
             })),
-            button(text(strings::lookup(if open.favorite {
-                Text::OverflowUnfavorite
-            } else {
-                Text::OverflowFavorite
-            })))
+            button(prose(
+                strings::lookup(if open.favorite {
+                    Text::OverflowUnfavorite
+                } else {
+                    Text::OverflowFavorite
+                })
+                .to_owned(),
+                typeface::BODY
+            ))
             .on_press(Message::OverflowAction(Action::Favorite {
                 item,
                 favorite: !open.favorite,
             })),
-            button(text(strings::lookup(Text::OverflowAddToCollection))).on_press(
-                Message::OverflowAction(Action::AddTo {
-                    item,
-                    into: Into::Collection,
-                })
-            ),
-            button(text(strings::lookup(Text::OverflowAddToPlaylist))).on_press(
-                Message::OverflowAction(Action::AddTo {
-                    item,
-                    into: Into::Playlist,
-                })
-            ),
+            button(prose(
+                strings::lookup(Text::OverflowAddToCollection).to_owned(),
+                typeface::BODY
+            ))
+            .on_press(Message::OverflowAction(Action::AddTo {
+                item,
+                into: Into::Collection,
+            })),
+            button(prose(
+                strings::lookup(Text::OverflowAddToPlaylist).to_owned(),
+                typeface::BODY
+            ))
+            .on_press(Message::OverflowAction(Action::AddTo {
+                item,
+                into: Into::Playlist,
+            })),
         ]
         .spacing(8);
 
         if let Some(collection) = collection {
             menu = menu.push(
-                button(text(strings::lookup(Text::OverflowRemoveFromCollection))).on_press(
-                    Message::OverflowAction(Action::RemoveFrom { collection, item }),
-                ),
+                button(prose(
+                    strings::lookup(Text::OverflowRemoveFromCollection).to_owned(),
+                    typeface::BODY,
+                ))
+                .on_press(Message::OverflowAction(Action::RemoveFrom {
+                    collection,
+                    item,
+                })),
             );
         }
 
         return menu
             .push(
-                button(text(strings::lookup(Text::OverflowClose)))
-                    .on_press(Message::OverflowAction(Action::Close)),
+                button(prose(
+                    strings::lookup(Text::OverflowClose).to_owned(),
+                    typeface::BODY,
+                ))
+                .on_press(Message::OverflowAction(Action::Close)),
             )
             .padding(theme::CARD_SPACING)
             .into();
@@ -143,7 +165,7 @@ pub fn view<'a>(
     let offered = filing.offered.iter().filter_map(|held| {
         let target = held.id?;
         Some(
-            button(text(held.name.clone().unwrap_or_default()))
+            button(prose(held.name.clone().unwrap_or_default(), typeface::BODY))
                 .style(button::text)
                 .on_press(Message::OverflowAction(Action::File { target }))
                 .into(),
@@ -155,14 +177,20 @@ pub fn view<'a>(
             text_input("", &filing.naming)
                 .on_input(|typed| Message::OverflowAction(Action::Typed(typed)))
                 .padding(8),
-            button(text(strings::lookup(Text::OverflowCreateAndFile)))
-                .on_press(Message::OverflowAction(Action::CreateAndFile)),
+            button(prose(
+                strings::lookup(Text::OverflowCreateAndFile).to_owned(),
+                typeface::BODY
+            ))
+            .on_press(Message::OverflowAction(Action::CreateAndFile)),
         ]
         .spacing(theme::CARD_SPACING)
         .align_y(iced::Alignment::Center),
         column(offered).spacing(4),
-        button(text(strings::lookup(Text::OverflowClose)))
-            .on_press(Message::OverflowAction(Action::Close)),
+        button(prose(
+            strings::lookup(Text::OverflowClose).to_owned(),
+            typeface::BODY
+        ))
+        .on_press(Message::OverflowAction(Action::Close)),
     ]
     .spacing(theme::CARD_SPACING)
     .padding(theme::CARD_SPACING)

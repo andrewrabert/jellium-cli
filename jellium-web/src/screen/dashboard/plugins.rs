@@ -1,14 +1,16 @@
 //! The installed plugins, each with its name, version and status, and the
 //! configuration pages it hosts.
 
-use iced::widget::{button, column, row, text};
+use iced::widget::{button, column, row};
 use iced::{Element, Fill};
 use uuid::Uuid;
 
 use crate::app::Message;
 use crate::error::Answer;
+use crate::style::typeface;
 use crate::text::{self as strings, Text};
 use crate::theme;
+use crate::widget::prose;
 
 /// The plugins installed on the server, and the configuration pages they host.
 #[derive(Debug, Clone)]
@@ -50,9 +52,12 @@ fn status(plugin: &jellyfin_api::types::PluginInfo) -> String {
 /// controls, and the configuration pages it hosts; a plugin hosting no page
 /// shows none.
 pub fn view<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
-    let mut listed = column![text(strings::lookup(Text::PluginsTitle)).size(22)]
-        .spacing(theme::CARD_SPACING)
-        .padding(theme::CARD_SPACING);
+    let mut listed = column![prose(
+        strings::lookup(Text::PluginsTitle).to_owned(),
+        typeface::HEADING_2
+    )]
+    .spacing(theme::CARD_SPACING)
+    .padding(theme::CARD_SPACING);
 
     for plugin in &state.plugins {
         let Some(id) = plugin.id else {
@@ -60,44 +65,56 @@ pub fn view<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
         };
         let version = plugin.version.clone().unwrap_or_default();
         let mut held = column![
-            text(plugin.name.clone().unwrap_or_default()),
-            text(strings::format(Text::PluginsVersion, &[&version])),
-            text(strings::format(Text::PluginsStatus, &[&status(plugin)])),
+            prose(plugin.name.clone().unwrap_or_default(), typeface::BODY),
+            prose(
+                strings::format(Text::PluginsVersion, &[&version]),
+                typeface::BODY
+            ),
+            prose(
+                strings::format(Text::PluginsStatus, &[&status(plugin)]),
+                typeface::BODY
+            ),
         ]
         .spacing(theme::CARD_SPACING);
 
         if !read_only {
             held = held.push(
                 row![
-                    button(text(strings::lookup(Text::PluginsEnable))).on_press(
-                        Message::DashboardAction(super::Action::Write(
-                            super::Written::EnablePlugin {
+                    button(prose(
+                        strings::lookup(Text::PluginsEnable).to_owned(),
+                        typeface::BODY
+                    ))
+                    .on_press(Message::DashboardAction(super::Action::Write(
+                        super::Written::EnablePlugin {
+                            id,
+                            version: version.clone(),
+                            name: plugin.name.clone().unwrap_or_default(),
+                        }
+                    ))),
+                    button(prose(
+                        strings::lookup(Text::PluginsDisable).to_owned(),
+                        typeface::BODY
+                    ))
+                    .on_press(Message::DashboardAction(super::Action::Write(
+                        super::Written::DisablePlugin {
+                            id,
+                            version: version.clone(),
+                            name: plugin.name.clone().unwrap_or_default(),
+                        }
+                    ))),
+                    button(prose(
+                        strings::lookup(Text::PluginsUninstall).to_owned(),
+                        typeface::BODY
+                    ))
+                    .on_press(Message::DashboardAction(super::Action::Ask(
+                        crate::screen::confirm::Pending::of(
+                            crate::screen::confirm::Destructive::UninstallPlugin {
                                 id,
                                 version: version.clone(),
-                                name: plugin.name.clone().unwrap_or_default(),
-                            }
-                        ))
-                    ),
-                    button(text(strings::lookup(Text::PluginsDisable))).on_press(
-                        Message::DashboardAction(super::Action::Write(
-                            super::Written::DisablePlugin {
-                                id,
-                                version: version.clone(),
-                                name: plugin.name.clone().unwrap_or_default(),
-                            }
-                        ))
-                    ),
-                    button(text(strings::lookup(Text::PluginsUninstall))).on_press(
-                        Message::DashboardAction(super::Action::Ask(
-                            crate::screen::confirm::Pending::of(
-                                crate::screen::confirm::Destructive::UninstallPlugin {
-                                    id,
-                                    version: version.clone(),
-                                },
-                                plugin.name.clone().unwrap_or_default(),
-                            )
-                        ))
-                    ),
+                            },
+                            plugin.name.clone().unwrap_or_default(),
+                        )
+                    ))),
                 ]
                 .spacing(theme::CARD_SPACING),
             );
@@ -105,17 +122,21 @@ pub fn view<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
 
         let pages = state.pages_of(id);
         if pages.is_empty() {
-            held = held.push(text(strings::lookup(Text::PluginsNoPages)));
+            held = held.push(prose(
+                strings::lookup(Text::PluginsNoPages).to_owned(),
+                typeface::BODY,
+            ));
         } else {
             for page in pages {
                 let Some(name) = page.name.clone() else {
                     continue;
                 };
-                held = held.push(
-                    button(text(name.clone())).on_press(Message::DashboardAction(
-                        super::Action::Open(super::Screen::PluginPage { plugin: id, name }),
-                    )),
-                );
+                held = held.push(button(prose(name.clone(), typeface::BODY)).on_press(
+                    Message::DashboardAction(super::Action::Open(super::Screen::PluginPage {
+                        plugin: id,
+                        name,
+                    })),
+                ));
             }
         }
         listed = listed.push(held);

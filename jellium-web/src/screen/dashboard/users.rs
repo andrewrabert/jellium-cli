@@ -1,13 +1,15 @@
 //! The users the server holds, and the one user a user screen edits.
 
-use iced::widget::{button, column, row, text, text_input};
+use iced::widget::{button, column, row, text_input};
 use iced::{Element, Fill};
 use uuid::Uuid;
 
 use crate::app::Message;
 use crate::error::Answer;
+use crate::style::typeface;
 use crate::text::{self as strings, Text};
 use crate::theme;
+use crate::widget::prose;
 use jellium_model::form::{Field, Form};
 
 /// Every user on the server, and what a new one is being named.
@@ -158,18 +160,25 @@ pub async fn open(api: std::rc::Rc<crate::api::Api>, id: Uuid, tab: super::UserT
 /// The form that creates a user: its name, its password and the control.
 pub fn new<'a>(state: &'a State) -> Element<'a, Message> {
     column![
-        text(strings::lookup(Text::UsersCreate)).size(22),
+        prose(
+            strings::lookup(Text::UsersCreate).to_owned(),
+            typeface::HEADING_2
+        ),
         text_input(strings::lookup(Text::UsersName), &state.naming)
             .on_input(|typed| Message::DashboardAction(super::Action::Typed(typed))),
         text_input(strings::lookup(Text::UsersPassword), &state.password)
             .secure(true)
             .on_input(|typed| Message::DashboardAction(super::Action::TypedPassword(typed))),
-        button(text(strings::lookup(Text::UsersCreate))).on_press(Message::DashboardAction(
-            super::Action::Write(super::Written::CreateUser {
+        button(prose(
+            strings::lookup(Text::UsersCreate).to_owned(),
+            typeface::BODY
+        ))
+        .on_press(Message::DashboardAction(super::Action::Write(
+            super::Written::CreateUser {
                 name: state.naming.clone(),
                 password: state.password.clone(),
-            })
-        )),
+            }
+        ))),
     ]
     .spacing(theme::CARD_SPACING)
     .padding(theme::CARD_SPACING)
@@ -178,14 +187,23 @@ pub fn new<'a>(state: &'a State) -> Element<'a, Message> {
 
 /// The user list, and the control that creates one.
 pub fn view<'a>(state: &'a State, read_only: bool, own: Uuid) -> Element<'a, Message> {
-    let mut page = column![text(strings::lookup(Text::UsersTitle)).size(22)]
-        .spacing(theme::CARD_SPACING)
-        .padding(theme::CARD_SPACING);
+    let mut page = column![prose(
+        strings::lookup(Text::UsersTitle).to_owned(),
+        typeface::HEADING_2
+    )]
+    .spacing(theme::CARD_SPACING)
+    .padding(theme::CARD_SPACING);
 
     if !read_only {
-        page = page.push(button(text(strings::lookup(Text::UsersCreate))).on_press(
-            Message::DashboardAction(super::Action::Open(super::Screen::UserNew)),
-        ));
+        page = page.push(
+            button(prose(
+                strings::lookup(Text::UsersCreate).to_owned(),
+                typeface::BODY,
+            ))
+            .on_press(Message::DashboardAction(super::Action::Open(
+                super::Screen::UserNew,
+            ))),
+        );
     }
 
     for user in &state.users {
@@ -193,25 +211,35 @@ pub fn view<'a>(state: &'a State, read_only: bool, own: Uuid) -> Element<'a, Mes
             continue;
         };
         let name = user.name.clone().unwrap_or_default();
-        let mut held = row![
-            button(text(name.clone())).on_press(Message::DashboardAction(super::Action::Open(
-                super::Screen::User {
-                    id,
-                    tab: super::UserTab::Profile,
-                }
-            ))),
-        ]
-        .spacing(theme::CARD_SPACING);
+        let mut held =
+            row![
+                button(prose(name.clone(), typeface::BODY)).on_press(Message::DashboardAction(
+                    super::Action::Open(super::Screen::User {
+                        id,
+                        tab: super::UserTab::Profile,
+                    })
+                )),
+            ]
+            .spacing(theme::CARD_SPACING);
 
         if id == own {
-            held = held.push(text(strings::lookup(Text::UsersOwnAccount)));
-        } else if !read_only {
-            held = held.push(button(text(strings::lookup(Text::UsersDelete))).on_press(
-                Message::DashboardAction(super::Action::Ask(crate::screen::confirm::Pending::of(
-                    crate::screen::confirm::Destructive::DeleteUser { id },
-                    name,
-                ))),
+            held = held.push(prose(
+                strings::lookup(Text::UsersOwnAccount).to_owned(),
+                typeface::BODY,
             ));
+        } else if !read_only {
+            held = held.push(
+                button(prose(
+                    strings::lookup(Text::UsersDelete).to_owned(),
+                    typeface::BODY,
+                ))
+                .on_press(Message::DashboardAction(super::Action::Ask(
+                    crate::screen::confirm::Pending::of(
+                        crate::screen::confirm::Destructive::DeleteUser { id },
+                        name,
+                    ),
+                ))),
+            );
         }
         page = page.push(held);
     }
@@ -227,7 +255,10 @@ pub fn view<'a>(state: &'a State, read_only: bool, own: Uuid) -> Element<'a, Mes
 pub fn one<'a>(state: &'a One, read_only: bool, own: Uuid) -> Element<'a, Message> {
     let mut tabs = row![].spacing(theme::CARD_SPACING);
     for tab in super::UserTab::ALL {
-        let control = button(text(strings::lookup(tab.label())));
+        let control = button(prose(
+            strings::lookup(tab.label()).to_owned(),
+            typeface::BODY,
+        ));
         tabs = tabs.push(if tab == state.tab {
             control
         } else {
@@ -237,7 +268,7 @@ pub fn one<'a>(state: &'a One, read_only: bool, own: Uuid) -> Element<'a, Messag
         });
     }
 
-    let mut page = column![tabs, text(state.name.clone()).size(22)]
+    let mut page = column![tabs, prose(state.name.clone(), typeface::HEADING_2)]
         .spacing(theme::CARD_SPACING)
         .padding(theme::CARD_SPACING);
 
@@ -258,26 +289,33 @@ pub fn one<'a>(state: &'a One, read_only: bool, own: Uuid) -> Element<'a, Messag
                     }),
             );
             if !read_only {
-                page = page.push(button(text(strings::lookup(Text::DashboardSave))).on_press(
-                    Message::DashboardAction(super::Action::Write(super::Written::SetPassword {
-                        id: state.id,
-                    })),
-                ));
                 page = page.push(
-                    button(text(strings::lookup(Text::UsersImageUpload)))
-                        .on_press(Message::DashboardAction(super::Action::ChooseImage)),
+                    button(prose(
+                        strings::lookup(Text::DashboardSave).to_owned(),
+                        typeface::BODY,
+                    ))
+                    .on_press(Message::DashboardAction(super::Action::Write(
+                        super::Written::SetPassword { id: state.id },
+                    ))),
                 );
                 page = page.push(
-                    button(text(strings::lookup(Text::UsersImageRemove))).on_press(
-                        Message::DashboardAction(super::Action::Ask(
-                            crate::screen::confirm::Pending::of(
-                                crate::screen::confirm::Destructive::RemoveUserImage {
-                                    id: state.id,
-                                },
-                                state.name.clone(),
-                            ),
-                        )),
-                    ),
+                    button(prose(
+                        strings::lookup(Text::UsersImageUpload).to_owned(),
+                        typeface::BODY,
+                    ))
+                    .on_press(Message::DashboardAction(super::Action::ChooseImage)),
+                );
+                page = page.push(
+                    button(prose(
+                        strings::lookup(Text::UsersImageRemove).to_owned(),
+                        typeface::BODY,
+                    ))
+                    .on_press(Message::DashboardAction(super::Action::Ask(
+                        crate::screen::confirm::Pending::of(
+                            crate::screen::confirm::Destructive::RemoveUserImage { id: state.id },
+                            state.name.clone(),
+                        ),
+                    ))),
                 );
             }
         }
@@ -289,15 +327,21 @@ pub fn one<'a>(state: &'a One, read_only: bool, own: Uuid) -> Element<'a, Messag
             let policy = !matches!(tab, super::UserTab::Profile);
             for field in fields.iter().filter(|field| shown(tab, **field)) {
                 if policy && state.id == own && field.key() == "IsAdministrator" {
-                    page = page.push(text(strings::lookup(Text::UsersOwnAdministrator)));
+                    page = page.push(prose(
+                        strings::lookup(Text::UsersOwnAdministrator).to_owned(),
+                        typeface::BODY,
+                    ));
                     continue;
                 }
                 page = page.push(super::control(*field, form.value(*field), policy));
             }
             if !read_only {
                 page = page.push(
-                    button(text(strings::lookup(Text::DashboardSave)))
-                        .on_press(Message::DashboardAction(super::Action::Save)),
+                    button(prose(
+                        strings::lookup(Text::DashboardSave).to_owned(),
+                        typeface::BODY,
+                    ))
+                    .on_press(Message::DashboardAction(super::Action::Save)),
                 );
             }
         }

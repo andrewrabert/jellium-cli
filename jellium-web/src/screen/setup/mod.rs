@@ -8,15 +8,17 @@ pub mod metadata;
 pub mod remote;
 pub mod user;
 
-use iced::widget::{button, center, column, container, row, scrollable, text};
+use iced::widget::{button, center, column, container, row, scrollable};
 use iced::{Element, Fill, Task};
 use jellium_model::setup::Step;
 
 use crate::app::Message;
 use crate::error::{Answer, Operation};
+use crate::style::typeface;
 use crate::text::{self as strings, Text};
 use crate::theme;
 use crate::widget::Choice;
+use crate::widget::prose;
 
 pub struct State {
     pub startup: jellium_protocol::Startup,
@@ -441,7 +443,10 @@ pub fn reread(state: &mut State) -> Task<Message> {
 
 fn body(state: &State) -> Element<'_, Message> {
     match &state.body {
-        Body::Loading => text(strings::lookup(Text::LoginWorking)).into(),
+        Body::Loading => prose(
+            strings::lookup(Text::LoginWorking).to_owned(),
+            typeface::BODY,
+        ),
         Body::Language(language) => language::view(language),
         Body::User(user) => user::view(user),
         Body::Libraries(libraries) => libraries::view(libraries),
@@ -457,46 +462,61 @@ fn body(state: &State) -> Element<'_, Message> {
 /// server, Back, Next, and the refusal over the server's own message.
 pub fn view(state: &State) -> Element<'_, Message> {
     let mut page = column![
-        text(strings::lookup(Text::SetupTitle)).size(24),
-        text(strings::format(
-            Text::SetupPosition,
-            &[
-                &state.step.position().to_string(),
-                &Step::ORDER.len().to_string(),
-            ],
-        ))
-        .size(13),
+        prose(
+            strings::lookup(Text::SetupTitle).to_owned(),
+            typeface::HEADING_2
+        ),
+        prose(
+            strings::format(
+                Text::SetupPosition,
+                &[
+                    &state.step.position().to_string(),
+                    &Step::ORDER.len().to_string(),
+                ],
+            ),
+            typeface::SECONDARY
+        ),
     ]
     .spacing(theme::CARD_SPACING)
     .padding(theme::CARD_SPACING)
     .max_width(560);
 
     if state.startup.off_snapshot() {
-        page = page.push(
-            text(strings::format(
+        page = page.push(prose(
+            strings::format(
                 Text::WarningOffSnapshot,
                 &[
                     &state.startup.server_version,
                     &state.startup.snapshot_version,
                 ],
-            ))
-            .size(13),
-        );
+            ),
+            typeface::SECONDARY,
+        ));
     }
     if state.startup.resumed {
-        page = page.push(text(strings::lookup(Text::SetupResumed)).size(13));
+        page = page.push(prose(
+            strings::lookup(Text::SetupResumed).to_owned(),
+            typeface::SECONDARY,
+        ));
     }
 
     page = page.push(body(state));
 
     let mut controls = row![
-        button(text(strings::lookup(Text::SetupBack))).on_press(Message::SetupAction(Action::Back)),
+        button(prose(
+            strings::lookup(Text::SetupBack).to_owned(),
+            typeface::BODY
+        ))
+        .on_press(Message::SetupAction(Action::Back)),
     ]
     .spacing(theme::CARD_SPACING);
     if ready(state) && !state.working {
         controls = controls.push(
-            button(text(strings::lookup(Text::SetupNext)))
-                .on_press(Message::SetupAction(Action::Next)),
+            button(prose(
+                strings::lookup(Text::SetupNext).to_owned(),
+                typeface::BODY,
+            ))
+            .on_press(Message::SetupAction(Action::Next)),
         );
     }
     page = page.push(controls);

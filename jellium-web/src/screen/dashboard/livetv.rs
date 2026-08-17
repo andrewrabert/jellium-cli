@@ -1,13 +1,15 @@
 //! The Live TV administration: tuners, listing providers, channel mapping and
 //! the DVR settings.
 
-use iced::widget::{button, column, pick_list, row, text, text_input};
+use iced::widget::{button, column, pick_list, row, text_input};
 use iced::{Element, Fill};
 
 use crate::app::Message;
 use crate::error::Answer;
+use crate::style::typeface;
 use crate::text::{self as strings, Text};
 use crate::theme;
+use crate::widget::prose;
 use jellium_model::form::{Field, Form};
 
 /// The Live TV administration, whichever tab is shown.
@@ -137,7 +139,10 @@ pub async fn load(api: std::rc::Rc<crate::api::Api>, tab: super::LiveTvTab) -> A
 pub fn view<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
     let mut tabs = row![].spacing(theme::CARD_SPACING);
     for tab in super::LiveTvTab::ALL {
-        let control = button(text(strings::lookup(tab.label())));
+        let control = button(prose(
+            strings::lookup(tab.label()).to_owned(),
+            typeface::BODY,
+        ));
         tabs = tabs.push(if tab == state.tab {
             control
         } else {
@@ -167,7 +172,10 @@ pub fn view<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
 type Page<'a> = iced::widget::Column<'a, Message>;
 
 fn tuners<'a>(mut page: Page<'a>, state: &'a State, read_only: bool) -> Page<'a> {
-    page = page.push(text(strings::lookup(Text::TunersTitle)).size(22));
+    page = page.push(prose(
+        strings::lookup(Text::TunersTitle).to_owned(),
+        typeface::HEADING_2,
+    ));
 
     for tuner in &state.tuners {
         let Some(id) = tuner.id.clone() else {
@@ -175,23 +183,35 @@ fn tuners<'a>(mut page: Page<'a>, state: &'a State, read_only: bool) -> Page<'a>
         };
         let url = tuner.url.clone().unwrap_or_default();
         let mut held = row![
-            text(url.clone()),
-            text(tuner.type_.clone().unwrap_or_default()),
+            prose(url.clone(), typeface::BODY),
+            prose(tuner.type_.clone().unwrap_or_default(), typeface::BODY),
         ]
         .spacing(theme::CARD_SPACING);
         if !read_only {
-            held = held.push(button(text(strings::lookup(Text::TunersReset))).on_press(
-                Message::DashboardAction(super::Action::Write(super::Written::ResetTuner {
-                    id: id.clone(),
-                    name: url.clone(),
-                })),
-            ));
-            held = held.push(button(text(strings::lookup(Text::TunersDelete))).on_press(
-                Message::DashboardAction(super::Action::Ask(crate::screen::confirm::Pending::of(
-                    crate::screen::confirm::Destructive::DeleteTuner { id },
-                    url,
+            held = held.push(
+                button(prose(
+                    strings::lookup(Text::TunersReset).to_owned(),
+                    typeface::BODY,
+                ))
+                .on_press(Message::DashboardAction(super::Action::Write(
+                    super::Written::ResetTuner {
+                        id: id.clone(),
+                        name: url.clone(),
+                    },
                 ))),
-            ));
+            );
+            held = held.push(
+                button(prose(
+                    strings::lookup(Text::TunersDelete).to_owned(),
+                    typeface::BODY,
+                ))
+                .on_press(Message::DashboardAction(super::Action::Ask(
+                    crate::screen::confirm::Pending::of(
+                        crate::screen::confirm::Destructive::DeleteTuner { id },
+                        url,
+                    ),
+                ))),
+            );
         }
         page = page.push(held);
     }
@@ -201,12 +221,16 @@ fn tuners<'a>(mut page: Page<'a>, state: &'a State, read_only: bool) -> Page<'a>
     }
 
     page = page.push(
-        button(text(strings::lookup(Text::TunersDiscover))).on_press(Message::DashboardAction(
-            super::Action::Write(super::Written::DiscoverTuners),
-        )),
+        button(prose(
+            strings::lookup(Text::TunersDiscover).to_owned(),
+            typeface::BODY,
+        ))
+        .on_press(Message::DashboardAction(super::Action::Write(
+            super::Written::DiscoverTuners,
+        ))),
     );
     for found in &state.discovered {
-        page = page.push(text(found.url.clone().unwrap_or_default()));
+        page = page.push(prose(found.url.clone().unwrap_or_default(), typeface::BODY));
     }
 
     let types = state
@@ -221,36 +245,45 @@ fn tuners<'a>(mut page: Page<'a>, state: &'a State, read_only: bool) -> Page<'a>
             }),
             text_input(strings::lookup(Text::TunersUrl), &state.tuner_url)
                 .on_input(|typed| Message::DashboardAction(super::Action::Typed(typed))),
-            button(text(strings::lookup(Text::TunersAdd))).on_press(Message::DashboardAction(
-                super::Action::Write(super::Written::AddTuner {
+            button(prose(
+                strings::lookup(Text::TunersAdd).to_owned(),
+                typeface::BODY
+            ))
+            .on_press(Message::DashboardAction(super::Action::Write(
+                super::Written::AddTuner {
                     url: state.tuner_url.clone(),
                     kind: state.tuner_type.clone(),
-                })
-            )),
+                }
+            ))),
         ]
         .spacing(theme::CARD_SPACING),
     )
 }
 
 fn providers<'a>(mut page: Page<'a>, state: &'a State, read_only: bool) -> Page<'a> {
-    page = page.push(text(strings::lookup(Text::ProvidersTitle)).size(22));
+    page = page.push(prose(
+        strings::lookup(Text::ProvidersTitle).to_owned(),
+        typeface::HEADING_2,
+    ));
 
     for provider in &state.providers {
         let Some(id) = provider.id.clone() else {
             continue;
         };
         let named = provider.type_.clone().unwrap_or_default();
-        let mut held = row![text(named.clone())].spacing(theme::CARD_SPACING);
+        let mut held = row![prose(named.clone(), typeface::BODY)].spacing(theme::CARD_SPACING);
         if !read_only {
             held = held.push(
-                button(text(strings::lookup(Text::ProvidersDelete))).on_press(
-                    Message::DashboardAction(super::Action::Ask(
-                        crate::screen::confirm::Pending::of(
-                            crate::screen::confirm::Destructive::DeleteProvider { id },
-                            named,
-                        ),
-                    )),
-                ),
+                button(prose(
+                    strings::lookup(Text::ProvidersDelete).to_owned(),
+                    typeface::BODY,
+                ))
+                .on_press(Message::DashboardAction(super::Action::Ask(
+                    crate::screen::confirm::Pending::of(
+                        crate::screen::confirm::Destructive::DeleteProvider { id },
+                        named,
+                    ),
+                ))),
             );
         }
         page = page.push(held);
@@ -262,10 +295,16 @@ fn providers<'a>(mut page: Page<'a>, state: &'a State, read_only: bool) -> Page<
 
     page = page.push(
         row![
-            button(text(strings::lookup(Text::ProvidersSchedulesDirect)))
-                .on_press(Message::DashboardAction(super::Action::ProviderKind(true))),
-            button(text(strings::lookup(Text::ProvidersXmltv)))
-                .on_press(Message::DashboardAction(super::Action::ProviderKind(false))),
+            button(prose(
+                strings::lookup(Text::ProvidersSchedulesDirect).to_owned(),
+                typeface::BODY
+            ))
+            .on_press(Message::DashboardAction(super::Action::ProviderKind(true))),
+            button(prose(
+                strings::lookup(Text::ProvidersXmltv).to_owned(),
+                typeface::BODY
+            ))
+            .on_press(Message::DashboardAction(super::Action::ProviderKind(false))),
         ]
         .spacing(theme::CARD_SPACING),
     );
@@ -300,17 +339,23 @@ fn providers<'a>(mut page: Page<'a>, state: &'a State, read_only: bool) -> Page<
                 .on_input(|typed| Message::DashboardAction(super::Action::ProviderPostcode(typed))),
             )
             .push(
-                button(text(strings::lookup(Text::ProvidersLineup))).on_press(
-                    Message::DashboardAction(super::Action::Write(super::Written::FetchLineups)),
-                ),
+                button(prose(
+                    strings::lookup(Text::ProvidersLineup).to_owned(),
+                    typeface::BODY,
+                ))
+                .on_press(Message::DashboardAction(super::Action::Write(
+                    super::Written::FetchLineups,
+                ))),
             );
         for lineup in &state.lineups {
             page = page.push(
-                button(text(lineup.name.clone().unwrap_or_default())).on_press(
-                    Message::DashboardAction(super::Action::ProviderLineup(
-                        lineup.id.clone().unwrap_or_default(),
-                    )),
-                ),
+                button(prose(
+                    lineup.name.clone().unwrap_or_default(),
+                    typeface::BODY,
+                ))
+                .on_press(Message::DashboardAction(
+                    super::Action::ProviderLineup(lineup.id.clone().unwrap_or_default()),
+                )),
             );
         }
     } else {
@@ -321,14 +366,21 @@ fn providers<'a>(mut page: Page<'a>, state: &'a State, read_only: bool) -> Page<
     }
 
     page.push(
-        button(text(strings::lookup(Text::ProvidersAdd))).on_press(Message::DashboardAction(
-            super::Action::Write(super::Written::AddProvider),
-        )),
+        button(prose(
+            strings::lookup(Text::ProvidersAdd).to_owned(),
+            typeface::BODY,
+        ))
+        .on_press(Message::DashboardAction(super::Action::Write(
+            super::Written::AddProvider,
+        ))),
     )
 }
 
 fn mapping<'a>(mut page: Page<'a>, state: &'a State, read_only: bool) -> Page<'a> {
-    page = page.push(text(strings::lookup(Text::MappingTitle)).size(22));
+    page = page.push(prose(
+        strings::lookup(Text::MappingTitle).to_owned(),
+        typeface::HEADING_2,
+    ));
     let Some(options) = state.mapping.as_ref() else {
         return page;
     };
@@ -343,8 +395,11 @@ fn mapping<'a>(mut page: Page<'a>, state: &'a State, read_only: bool) -> Page<'a
         let Some(id) = channel.id.clone() else {
             continue;
         };
-        let mut held =
-            row![text(channel.name.clone().unwrap_or_default())].spacing(theme::CARD_SPACING);
+        let mut held = row![prose(
+            channel.name.clone().unwrap_or_default(),
+            typeface::BODY
+        )]
+        .spacing(theme::CARD_SPACING);
         if !read_only {
             let tuner = id.clone();
             held = held.push(pick_list(
@@ -364,14 +419,20 @@ fn mapping<'a>(mut page: Page<'a>, state: &'a State, read_only: bool) -> Page<'a
 }
 
 fn dvr<'a>(mut page: Page<'a>, state: &'a State, read_only: bool) -> Page<'a> {
-    page = page.push(text(strings::lookup(Text::DvrTitle)).size(22));
+    page = page.push(prose(
+        strings::lookup(Text::DvrTitle).to_owned(),
+        typeface::HEADING_2,
+    ));
     for field in DVR {
         page = page.push(super::control(*field, state.dvr.value(*field), false));
     }
     if !read_only {
         page = page.push(
-            button(text(strings::lookup(Text::DashboardSave)))
-                .on_press(Message::DashboardAction(super::Action::Save)),
+            button(prose(
+                strings::lookup(Text::DashboardSave).to_owned(),
+                typeface::BODY,
+            ))
+            .on_press(Message::DashboardAction(super::Action::Save)),
         );
     }
     page

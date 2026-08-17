@@ -1,5 +1,5 @@
 use iced::Element;
-use iced::widget::{button, checkbox, column, row, text, text_input};
+use iced::widget::{button, checkbox, column, row, text_input};
 use jellium_model::item;
 
 use crate::app::Message;
@@ -7,6 +7,8 @@ use crate::text::{self as strings, Text};
 use crate::theme;
 
 use super::{Action, State};
+use crate::style::typeface;
+use crate::widget::prose;
 
 /// The label one field is shown under; every spelling is this client's own.
 fn label(field: jellium_model::form::Field) -> String {
@@ -29,12 +31,12 @@ pub fn view<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
 
     for field in item::fields_of(state.item.type_) {
         let held = state.form.value(field);
-        let mut line = row![text(label(field))]
+        let mut line = row![prose(label(field), typeface::BODY)]
             .spacing(theme::CARD_SPACING)
             .align_y(iced::Alignment::Center);
 
         line = line.push(if read_only {
-            Element::from(text(held))
+            Element::from(prose(held, typeface::BODY))
         } else {
             text_input("", &held)
                 .on_input(move |value| Message::MetadataAction(Action::Edited(field, value)))
@@ -45,11 +47,15 @@ pub fn view<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
         if let Some(lock) = item::lock_of(field) {
             let on = item::locked(&state.form, lock);
             line = line.push(if read_only {
-                Element::from(text(strings::lookup(if on {
-                    Text::MetadataLocked
-                } else {
-                    Text::MetadataUnlocked
-                })))
+                Element::from(prose(
+                    strings::lookup(if on {
+                        Text::MetadataLocked
+                    } else {
+                        Text::MetadataUnlocked
+                    })
+                    .to_owned(),
+                    typeface::BODY,
+                ))
             } else {
                 checkbox(on)
                     .on_toggle(move |on| Message::MetadataAction(Action::Locked(lock, on)))
@@ -66,15 +72,18 @@ pub fn view<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
 /// The cast and crew control: one row per person with a name, a kind and a
 /// role, added and removed one at a time.
 pub fn people<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
-    let mut page =
-        column![text(strings::lookup(Text::MetadataPeople)).size(20)].spacing(theme::CARD_SPACING);
+    let mut page = column![prose(
+        strings::lookup(Text::MetadataPeople).to_owned(),
+        typeface::HEADING_3
+    )]
+    .spacing(theme::CARD_SPACING);
 
     for (at, person) in state.people.iter().enumerate() {
         if read_only {
-            page = page.push(text(format!(
-                "{} — {} {}",
-                person.name, person.kind, person.role
-            )));
+            page = page.push(prose(
+                format!("{} — {} {}", person.name, person.kind, person.role),
+                typeface::BODY,
+            ));
             continue;
         }
 
@@ -106,8 +115,11 @@ pub fn people<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
                         Message::MetadataAction(Action::PersonEdited { at, person: edited })
                     })
                     .padding(8),
-                button(text(strings::lookup(Text::MetadataPersonRemove)))
-                    .on_press(Message::MetadataAction(Action::PersonRemoved { at })),
+                button(prose(
+                    strings::lookup(Text::MetadataPersonRemove).to_owned(),
+                    typeface::BODY
+                ))
+                .on_press(Message::MetadataAction(Action::PersonRemoved { at })),
             ]
             .spacing(theme::CARD_SPACING)
             .align_y(iced::Alignment::Center),
@@ -116,8 +128,11 @@ pub fn people<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
 
     if !read_only {
         page = page.push(
-            button(text(strings::lookup(Text::MetadataPersonAdd)))
-                .on_press(Message::MetadataAction(Action::PersonAdded)),
+            button(prose(
+                strings::lookup(Text::MetadataPersonAdd).to_owned(),
+                typeface::BODY,
+            ))
+            .on_press(Message::MetadataAction(Action::PersonAdded)),
         );
     }
 
@@ -126,15 +141,18 @@ pub fn people<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
 
 /// The provider id control: one row per provider the server named.
 pub fn providers<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
-    let mut page = column![text(strings::lookup(Text::MetadataProviders)).size(20)]
-        .spacing(theme::CARD_SPACING);
+    let mut page = column![prose(
+        strings::lookup(Text::MetadataProviders).to_owned(),
+        typeface::HEADING_3
+    )]
+    .spacing(theme::CARD_SPACING);
 
     for (at, (provider, id)) in state.providers.iter().enumerate() {
-        let mut line = row![text(provider.as_str())]
+        let mut line = row![prose(provider.clone(), typeface::BODY)]
             .spacing(theme::CARD_SPACING)
             .align_y(iced::Alignment::Center);
         line = line.push(if read_only {
-            Element::from(text(id.as_str()))
+            Element::from(prose(id.clone(), typeface::BODY))
         } else {
             text_input("", id)
                 .on_input(move |value| {

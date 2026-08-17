@@ -1,7 +1,7 @@
 use std::collections::HashSet;
 
 use iced::widget::Space;
-use iced::widget::{button, column, container, image, row, text};
+use iced::widget::{button, column, container, image, row};
 use iced::{Element, Fill};
 use jellium_protocol::Repeat;
 
@@ -9,8 +9,10 @@ use crate::app::Message;
 use crate::images::{self, Cache, Kind as ImageKind};
 use crate::player::group::{self, Joined};
 use crate::player::{Action, Playing};
+use crate::style::typeface;
 use crate::text::{self as strings, Text};
 use crate::theme;
+use crate::widget::prose;
 use crate::window;
 
 fn key(item: &jellyfin_api::types::BaseItemDto) -> Option<images::Key> {
@@ -63,14 +65,21 @@ fn entry<'a>(
     remove: Message,
 ) -> Element<'a, Message> {
     let title: Element<'a, Message> = match play {
-        Some(play) => button(text(name)).style(button::text).on_press(play).into(),
-        None => text(name).into(),
+        Some(play) => button(prose(name, typeface::BODY))
+            .style(button::text)
+            .on_press(play)
+            .into(),
+        None => prose(name, typeface::BODY),
     };
     row![
         art,
         title,
         Space::new().width(Fill),
-        button(text(strings::lookup(Text::QueueRemove))).on_press(remove),
+        button(prose(
+            strings::lookup(Text::QueueRemove).to_owned(),
+            typeface::BODY
+        ))
+        .on_press(remove),
     ]
     .spacing(theme::CARD_SPACING)
     .align_y(iced::Center)
@@ -137,16 +146,26 @@ pub fn view<'a>(
     };
 
     let controls = row![
-        button(text(strings::lookup(Text::QueueBack))).on_press(Message::WentBack),
-        button(text(strings::lookup(Text::QueueShuffle)))
-            .on_press(Message::PlayerAction(Action::ToggleShuffle)),
-        button(text(strings::lookup(repeat_label(repeat))))
-            .on_press(Message::PlayerAction(Action::CycleRepeat)),
+        button(prose(
+            strings::lookup(Text::QueueBack).to_owned(),
+            typeface::BODY
+        ))
+        .on_press(Message::WentBack),
+        button(prose(
+            strings::lookup(Text::QueueShuffle).to_owned(),
+            typeface::BODY
+        ))
+        .on_press(Message::PlayerAction(Action::ToggleShuffle)),
+        button(prose(
+            strings::lookup(repeat_label(repeat)).to_owned(),
+            typeface::BODY
+        ))
+        .on_press(Message::PlayerAction(Action::CycleRepeat)),
     ]
     .spacing(theme::CARD_SPACING);
 
     let body: Element<'a, Message> = if rows.is_empty() {
-        text(strings::lookup(Text::QueueEmpty)).into()
+        prose(strings::lookup(Text::QueueEmpty).to_owned(), typeface::BODY)
     } else {
         window::list(window, rows.len(), move |index| {
             let row = &rows[index];
@@ -163,7 +182,10 @@ pub fn view<'a>(
 
     container(
         column![
-            text(strings::lookup(Text::QueueTitle)).size(22),
+            prose(
+                strings::lookup(Text::QueueTitle).to_owned(),
+                typeface::HEADING_2
+            ),
             controls,
             body,
         ]

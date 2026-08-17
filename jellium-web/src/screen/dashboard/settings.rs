@@ -1,13 +1,15 @@
 //! The server's configuration, one section per screen, read whole and written
 //! whole.
 
-use iced::widget::{button, checkbox, column, text, text_input};
+use iced::widget::{button, checkbox, column, text_input};
 use iced::{Element, Fill};
 
 use crate::app::Message;
 use crate::error::Answer;
+use crate::style::typeface;
 use crate::text::{self as strings, Text};
 use crate::theme;
+use crate::widget::prose;
 use jellium_model::form::{Field, Form};
 
 /// One configuration screen: the section it edits, held as the server answered
@@ -39,7 +41,10 @@ pub async fn load(api: std::rc::Rc<crate::api::Api>, section: super::Section) ->
 pub fn view<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
     let mut tabs = iced::widget::row![].spacing(theme::CARD_SPACING);
     for section in super::Section::ALL {
-        let control = button(text(strings::lookup(section.label())));
+        let control = button(prose(
+            strings::lookup(section.label()).to_owned(),
+            typeface::BODY,
+        ));
         tabs = tabs.push(if section == state.section {
             control
         } else {
@@ -49,9 +54,15 @@ pub fn view<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
         });
     }
 
-    let mut page = column![tabs, text(strings::lookup(state.section.label())).size(22)]
-        .spacing(theme::CARD_SPACING)
-        .padding(theme::CARD_SPACING);
+    let mut page = column![
+        tabs,
+        prose(
+            strings::lookup(state.section.label()).to_owned(),
+            typeface::HEADING_2
+        )
+    ]
+    .spacing(theme::CARD_SPACING)
+    .padding(theme::CARD_SPACING);
 
     for field in state.section.fields() {
         let field = *field;
@@ -62,14 +73,14 @@ pub fn view<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
                     checkbox(held == "true").on_toggle(move |held| {
                         Message::DashboardAction(super::Action::Edited(field, held.to_string()))
                     }),
-                    text(key),
+                    prose(key.to_owned(), typeface::BODY),
                 ]
                 .spacing(theme::CARD_SPACING)
                 .align_y(iced::Center),
             ),
             _ => Element::from(
                 column![
-                    text(field.key()),
+                    prose(field.key().to_owned(), typeface::BODY),
                     text_input(field.key(), &held).on_input(move |held| {
                         Message::DashboardAction(super::Action::Edited(field, held))
                     }),
@@ -80,13 +91,22 @@ pub fn view<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
     }
 
     if state.form.dirty() {
-        page = page.push(text(strings::lookup(Text::DashboardUnsaved)));
+        page = page.push(prose(
+            strings::lookup(Text::DashboardUnsaved).to_owned(),
+            typeface::BODY,
+        ));
     } else if state.saved {
-        page = page.push(text(strings::lookup(Text::DashboardSaved)));
+        page = page.push(prose(
+            strings::lookup(Text::DashboardSaved).to_owned(),
+            typeface::BODY,
+        ));
     }
 
     if !read_only {
-        let mut save = button(text(strings::lookup(Text::DashboardSave)));
+        let mut save = button(prose(
+            strings::lookup(Text::DashboardSave).to_owned(),
+            typeface::BODY,
+        ));
         if state.form.dirty() {
             save = save.on_press(Message::DashboardAction(super::Action::Save));
         }

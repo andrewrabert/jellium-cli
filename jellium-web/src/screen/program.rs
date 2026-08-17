@@ -2,7 +2,7 @@ use std::collections::HashSet;
 use std::rc::Rc;
 
 use chrono::{DateTime, Utc};
-use iced::widget::{Space, button, column, container, image, row, text};
+use iced::widget::{Space, button, column, container, image, row};
 use iced::{Element, Fill};
 
 use crate::api::Api;
@@ -11,8 +11,10 @@ use crate::error::Answer;
 use crate::images::{self, Cache};
 use crate::livetv::Program;
 use crate::screen::livetv::Action;
+use crate::style::typeface;
 use crate::text::{self as strings, Text};
 use crate::theme;
+use crate::widget::prose;
 
 #[derive(Debug, Clone)]
 pub struct State {
@@ -38,9 +40,12 @@ fn key(program: &Program) -> images::Key {
 }
 
 fn badge<'a>(label: Text) -> Element<'a, Message> {
-    container(text(strings::lookup(label)).size(12))
-        .padding(2)
-        .into()
+    container(prose(
+        strings::lookup(label).to_owned(),
+        typeface::SECONDARY,
+    ))
+    .padding(2)
+    .into()
 }
 
 /// The program's title, its channel by name and number, its start and end, its
@@ -72,53 +77,75 @@ pub fn view<'a>(state: &'a State, now: DateTime<Utc>, images: &'a Cache) -> Elem
     let mut controls = row![].spacing(theme::CARD_SPACING);
     if program.airing(now) {
         controls = controls.push(
-            button(text(strings::lookup(Text::ProgramPlay)))
-                .on_press(Message::LiveTvAction(Action::PlayChannel(program.channel))),
+            button(prose(
+                strings::lookup(Text::ProgramPlay).to_owned(),
+                typeface::BODY,
+            ))
+            .on_press(Message::LiveTvAction(Action::PlayChannel(program.channel))),
         );
     }
     match program.timer.clone() {
         Some(timer) => {
             controls = controls.push(
-                button(text(strings::lookup(Text::ProgramCancelRecording)))
-                    .on_press(Message::LiveTvAction(Action::CancelTimer(timer))),
+                button(prose(
+                    strings::lookup(Text::ProgramCancelRecording).to_owned(),
+                    typeface::BODY,
+                ))
+                .on_press(Message::LiveTvAction(Action::CancelTimer(timer))),
             );
         }
         None => {
             controls = controls.push(
-                button(text(strings::lookup(Text::ProgramRecord)))
-                    .on_press(Message::LiveTvAction(Action::Record(program.id.clone()))),
+                button(prose(
+                    strings::lookup(Text::ProgramRecord).to_owned(),
+                    typeface::BODY,
+                ))
+                .on_press(Message::LiveTvAction(Action::Record(program.id.clone()))),
             );
         }
     }
     match program.series_timer.clone() {
         Some(timer) => {
             controls = controls.push(
-                button(text(strings::lookup(Text::ProgramCancelSeries)))
-                    .on_press(Message::LiveTvAction(Action::CancelSeriesTimer(timer))),
+                button(prose(
+                    strings::lookup(Text::ProgramCancelSeries).to_owned(),
+                    typeface::BODY,
+                ))
+                .on_press(Message::LiveTvAction(Action::CancelSeriesTimer(timer))),
             );
         }
         None => {
             controls = controls.push(
-                button(text(strings::lookup(Text::ProgramRecordSeries))).on_press(
-                    Message::LiveTvAction(Action::RecordSeries(program.id.clone())),
-                ),
+                button(prose(
+                    strings::lookup(Text::ProgramRecordSeries).to_owned(),
+                    typeface::BODY,
+                ))
+                .on_press(Message::LiveTvAction(Action::RecordSeries(
+                    program.id.clone(),
+                ))),
             );
         }
     }
 
     let described = column![
-        text(crate::text::format(Text::ProgramTitle, &[&program.title])).size(22),
-        text(crate::text::format(
-            Text::ProgramChannel,
-            &[&program.channel_name, &program.channel_number]
-        )),
-        text(crate::livetv::airtime(program)),
+        prose(
+            crate::text::format(Text::ProgramTitle, &[&program.title]),
+            typeface::HEADING_2
+        ),
+        prose(
+            crate::text::format(
+                Text::ProgramChannel,
+                &[&program.channel_name, &program.channel_number]
+            ),
+            typeface::BODY
+        ),
+        prose(crate::livetv::airtime(program), typeface::BODY),
         flags,
-        text(program.overview.clone()),
-        text(crate::text::format(
-            Text::ProgramGenres,
-            &[&program.genres.join(", ")]
-        )),
+        prose(program.overview.clone(), typeface::BODY),
+        prose(
+            crate::text::format(Text::ProgramGenres, &[&program.genres.join(", ")]),
+            typeface::BODY
+        ),
         controls,
     ]
     .spacing(theme::CARD_SPACING)

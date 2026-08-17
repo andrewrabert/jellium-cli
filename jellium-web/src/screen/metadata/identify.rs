@@ -1,5 +1,5 @@
 use iced::Element;
-use iced::widget::{button, checkbox, column, row, text, text_input};
+use iced::widget::{button, checkbox, column, row, text_input};
 use std::collections::HashMap;
 
 use jellyfin_api::types::{BaseItemKind, RemoteSearchResult};
@@ -10,6 +10,8 @@ use crate::text::{self as strings, Text};
 use crate::theme;
 
 use super::Action as Outer;
+use crate::style::typeface;
+use crate::widget::prose;
 
 /// The item kinds the Jellyfin server offers a remote search for.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -120,7 +122,7 @@ impl State {
 
 fn typed<'a>(label: Text, field: Field, held: &'a str) -> Element<'a, Message> {
     row![
-        text(strings::lookup(label)),
+        prose(strings::lookup(label).to_owned(), typeface::BODY),
         text_input("", held)
             .on_input(
                 move |value| Message::MetadataAction(Outer::Identify(Action::Typed(field, value)))
@@ -153,8 +155,11 @@ pub fn view<'a>(state: &'a State, foreign: &'a Foreign, read_only: bool) -> Elem
 
     if !read_only {
         page = page.push(
-            button(text(strings::lookup(Text::MetadataIdentifyRun)))
-                .on_press(Message::MetadataAction(Outer::Identify(Action::Run))),
+            button(prose(
+                strings::lookup(Text::MetadataIdentifyRun).to_owned(),
+                typeface::BODY,
+            ))
+            .on_press(Message::MetadataAction(Outer::Identify(Action::Run))),
         );
     }
 
@@ -166,20 +171,32 @@ pub fn view<'a>(state: &'a State, foreign: &'a Foreign, read_only: bool) -> Elem
             .unwrap_or_default();
         page = page.push(
             column![
-                text(strings::format(Text::MetadataApplyAsk, &[&named])),
+                prose(
+                    strings::format(Text::MetadataApplyAsk, &[&named]),
+                    typeface::BODY
+                ),
                 row![
                     checkbox(state.replace_images).on_toggle(|on| Message::MetadataAction(
                         Outer::Identify(Action::SetReplaceImages(on))
                     )),
-                    text(strings::lookup(Text::MetadataReplaceImages)),
+                    prose(
+                        strings::lookup(Text::MetadataReplaceImages).to_owned(),
+                        typeface::BODY
+                    ),
                 ]
                 .spacing(theme::CARD_SPACING)
                 .align_y(iced::Alignment::Center),
                 row![
-                    button(text(strings::lookup(Text::MetadataApply)))
-                        .on_press(Message::MetadataAction(Outer::Identify(Action::Apply))),
-                    button(text(strings::lookup(Text::MetadataCancel)))
-                        .on_press(Message::MetadataAction(Outer::Identify(Action::Cancel))),
+                    button(prose(
+                        strings::lookup(Text::MetadataApply).to_owned(),
+                        typeface::BODY
+                    ))
+                    .on_press(Message::MetadataAction(Outer::Identify(Action::Apply))),
+                    button(prose(
+                        strings::lookup(Text::MetadataCancel).to_owned(),
+                        typeface::BODY
+                    ))
+                    .on_press(Message::MetadataAction(Outer::Identify(Action::Cancel))),
                 ]
                 .spacing(theme::CARD_SPACING),
             ]
@@ -202,25 +219,36 @@ pub fn view<'a>(state: &'a State, foreign: &'a Foreign, read_only: bool) -> Elem
         };
 
         let mut summary = column![
-            text(candidate.name.clone().unwrap_or_default()).size(18),
-            text(
+            prose(
+                candidate.name.clone().unwrap_or_default(),
+                typeface::HEADING_3
+            ),
+            prose(
                 candidate
                     .production_year
                     .map(|year| year.to_string())
-                    .unwrap_or_default()
+                    .unwrap_or_default(),
+                typeface::BODY
             ),
-            text(candidate.search_provider_name.clone().unwrap_or_default()).size(13),
+            prose(
+                candidate.search_provider_name.clone().unwrap_or_default(),
+                typeface::SECONDARY
+            ),
         ]
         .spacing(4);
 
         if let Some(overview) = &candidate.overview {
-            summary = summary.push(text(overview.as_str()).size(13));
+            summary = summary.push(prose(overview.clone(), typeface::SECONDARY));
         }
         if !read_only {
             summary = summary.push(
-                button(text(strings::lookup(Text::MetadataChoose))).on_press(
-                    Message::MetadataAction(Outer::Identify(Action::Choose { at })),
-                ),
+                button(prose(
+                    strings::lookup(Text::MetadataChoose).to_owned(),
+                    typeface::BODY,
+                ))
+                .on_press(Message::MetadataAction(Outer::Identify(
+                    Action::Choose { at },
+                ))),
             );
         }
 

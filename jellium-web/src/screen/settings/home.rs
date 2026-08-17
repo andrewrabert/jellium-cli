@@ -4,7 +4,7 @@
 use std::rc::Rc;
 
 use iced::Element;
-use iced::widget::{button, column, row, text};
+use iced::widget::{button, column, row};
 use uuid::Uuid;
 
 use crate::api::Api;
@@ -14,6 +14,8 @@ use crate::text::{self as strings, Text};
 use crate::theme;
 
 use super::{Action, Setting, toggle};
+use crate::style::typeface;
+use crate::widget::prose;
 
 /// The libraries the server offers, so the order and the exclusions are edited
 /// against names rather than ids.
@@ -54,31 +56,52 @@ pub fn view<'a>(
     let hidden = jellium_model::user::ids(configuration, jellium_model::user::MY_MEDIA_EXCLUDES);
     let arranged = jellium_model::user::arranged(&ids, &order, &[]);
 
-    let mut shown = column![text(strings::lookup(Text::HomeOrder))].spacing(theme::CARD_SPACING);
+    let mut shown = column![prose(
+        strings::lookup(Text::HomeOrder).to_owned(),
+        typeface::BODY
+    )]
+    .spacing(theme::CARD_SPACING);
 
     for id in arranged {
         let is_hidden = hidden.contains(&id);
-        let mut controls = row![text(named(state, id))].spacing(theme::CARD_SPACING);
+        let mut controls =
+            row![prose(named(state, id), typeface::BODY)].spacing(theme::CARD_SPACING);
         if !read_only {
             controls = controls
-                .push(button(text(strings::lookup(Text::HomeMoveUp))).on_press(
-                    Message::SettingsAction(Action::MoveLibrary { id, down: false }),
-                ))
-                .push(button(text(strings::lookup(Text::HomeMoveDown))).on_press(
-                    Message::SettingsAction(Action::MoveLibrary { id, down: true }),
-                ))
                 .push(
-                    button(text(strings::lookup(if is_hidden {
-                        Text::HomeShowLibrary
-                    } else {
-                        Text::HomeHideLibrary
-                    })))
-                    .on_press(Message::SettingsAction(
-                        Action::HideLibrary {
-                            id,
-                            hidden: !is_hidden,
-                        },
-                    )),
+                    button(prose(
+                        strings::lookup(Text::HomeMoveUp).to_owned(),
+                        typeface::BODY,
+                    ))
+                    .on_press(Message::SettingsAction(Action::MoveLibrary {
+                        id,
+                        down: false,
+                    })),
+                )
+                .push(
+                    button(prose(
+                        strings::lookup(Text::HomeMoveDown).to_owned(),
+                        typeface::BODY,
+                    ))
+                    .on_press(Message::SettingsAction(Action::MoveLibrary {
+                        id,
+                        down: true,
+                    })),
+                )
+                .push(
+                    button(prose(
+                        strings::lookup(if is_hidden {
+                            Text::HomeShowLibrary
+                        } else {
+                            Text::HomeHideLibrary
+                        })
+                        .to_owned(),
+                        typeface::BODY,
+                    ))
+                    .on_press(Message::SettingsAction(Action::HideLibrary {
+                        id,
+                        hidden: !is_hidden,
+                    })),
                 );
         }
         shown = shown.push(controls);

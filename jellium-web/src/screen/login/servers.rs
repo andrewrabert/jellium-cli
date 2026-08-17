@@ -1,11 +1,13 @@
 use iced::Element;
-use iced::widget::{button, column, container, row, scrollable, text};
+use iced::widget::{button, column, container, row, scrollable};
 
 use crate::app::Message;
 use crate::text::{self as strings, Text};
 use crate::theme;
 
 use super::Action;
+use crate::style::typeface;
+use crate::widget::prose;
 
 /// One saved server's row: its stored name over its url, its url alone when no
 /// probe has ever succeeded, whether it holds a credential, and whether it is
@@ -13,32 +15,42 @@ use super::Action;
 fn entry<'a>(saved: &'a jellium_protocol::SavedServer, read_only: bool) -> Element<'a, Message> {
     let mut named = column![].spacing(4);
     if !saved.name.is_empty() {
-        named = named.push(text(saved.name.clone()).size(18));
+        named = named.push(prose(saved.name.clone(), typeface::HEADING_3));
     }
-    named = named.push(text(saved.server.clone()).size(14));
+    named = named.push(prose(saved.server.clone(), typeface::BODY));
     if saved.active {
-        named = named.push(text(strings::lookup(Text::LoginServersActive)).size(13));
+        named = named.push(prose(
+            strings::lookup(Text::LoginServersActive).to_owned(),
+            typeface::SECONDARY,
+        ));
     }
     if saved.credentialed {
-        named = named.push(text(strings::lookup(Text::LoginServersSignedIn)).size(13));
+        named = named.push(prose(
+            strings::lookup(Text::LoginServersSignedIn).to_owned(),
+            typeface::SECONDARY,
+        ));
     }
 
     let mut controls = row![
-        button(text(strings::lookup(Text::LoginServersSelect))).on_press(Message::LoginAction(
-            Action::Select {
-                server: saved.server.clone(),
-            }
-        )),
+        button(prose(
+            strings::lookup(Text::LoginServersSelect).to_owned(),
+            typeface::BODY
+        ))
+        .on_press(Message::LoginAction(Action::Select {
+            server: saved.server.clone(),
+        })),
     ]
     .spacing(theme::CARD_SPACING);
 
     if !(read_only && saved.credentialed) {
         controls = controls.push(
-            button(text(strings::lookup(Text::LoginServersRemove))).on_press(Message::LoginAction(
-                Action::Remove {
-                    server: saved.server.clone(),
-                },
-            )),
+            button(prose(
+                strings::lookup(Text::LoginServersRemove).to_owned(),
+                typeface::BODY,
+            ))
+            .on_press(Message::LoginAction(Action::Remove {
+                server: saved.server.clone(),
+            })),
         );
     }
 
@@ -59,10 +71,16 @@ pub fn view<'a>(state: &'a super::State) -> Element<'a, Message> {
     .spacing(theme::CARD_SPACING);
 
     let listed = column![
-        text(strings::lookup(Text::LoginServersTitle)).size(28),
+        prose(
+            strings::lookup(Text::LoginServersTitle).to_owned(),
+            typeface::HEADING_1
+        ),
         scrollable(entries),
-        button(text(strings::lookup(Text::LoginServersAdd)))
-            .on_press(Message::LoginAction(Action::Add)),
+        button(prose(
+            strings::lookup(Text::LoginServersAdd).to_owned(),
+            typeface::BODY
+        ))
+        .on_press(Message::LoginAction(Action::Add)),
     ]
     .spacing(theme::CARD_SPACING)
     .max_width(560);

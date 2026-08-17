@@ -2,7 +2,7 @@ use std::collections::HashSet;
 use std::rc::Rc;
 use std::time::Duration;
 
-use iced::widget::{center, column, text};
+use iced::widget::{center, column};
 use iced::{Element, Subscription, Task, Theme};
 use jellium_protocol::{
     Event, Feed, Group, Marked, Notice, PlaybackRefused, Quality, Report, Session, SessionStatus,
@@ -16,6 +16,7 @@ use crate::boot;
 use crate::control;
 use crate::error::Answer;
 use crate::failure;
+use crate::fonts::Served;
 use crate::images::{self, Cache};
 use crate::live;
 use crate::livetv::{Channel, Program};
@@ -27,10 +28,12 @@ use crate::route::Route;
 use crate::screen::livetv::{self, guide};
 use crate::screen::program;
 use crate::screen::{dashboard, detail, home, library, login, search};
+use crate::style::typeface;
 use crate::style::{Drawn, Viewport};
 use crate::text::{self as strings, Text};
 use crate::theme;
 use crate::widget;
+use crate::widget::prose;
 use crate::window;
 
 pub struct Jellium {
@@ -341,6 +344,12 @@ pub enum Message {
     GroupTicked,
     GroupItemsLoaded(Answer<Vec<jellyfin_api::types::BaseItemDto>>),
     Resized(Viewport),
+    /// A face the origin serves that a glyph on screen needs.
+    FontWanted(Served),
+    /// The face's woff2 bytes, as the origin answered for them.
+    FontFetched(Served, Answer<Vec<u8>>),
+    /// The face iced has registered, which is what redraws the text in it.
+    FontLoaded(Served),
     Scrolled(window::Scrolled),
     OnNowLoaded(Answer<Vec<Channel>>),
     LiveTvLoaded(Answer<livetv::State>),
@@ -2084,6 +2093,31 @@ impl Jellium {
                 };
                 group::ticked(signed, viewport)
             }
+            Message::FontWanted(face) => {
+                Task::perform(crate::fonts::fetched(face), move |answer| {
+                    Message::FontFetched(face, answer)
+                })
+            }
+            Message::FontFetched(face, answer) => {
+                let Some(packed) = answer.disregarded(Text::FailureFontUnread) else {
+                    crate::fonts::refused(face);
+                    crate::failure::raise(crate::error::stated(strings::format(
+                        Text::FailureFontFamily,
+                        &[face.family().name()],
+                    )));
+                    return Task::none();
+                };
+                let Some(sfnt) = crate::failure::unpacked(Text::FailureFontUnpacked, &packed)
+                else {
+                    crate::fonts::refused(face);
+                    return Task::none();
+                };
+                iced::font::load(sfnt).map(move |_| Message::FontLoaded(face))
+            }
+            Message::FontLoaded(face) => {
+                crate::fonts::landed(face);
+                Task::none()
+            }
             Message::Resized(page) => {
                 self.viewport = page;
                 let canvas = page.canvas();
@@ -2788,14 +2822,22 @@ impl Jellium {
     /// The stage's own screen, under the failure surfaces `view` wraps it in.
     fn staged(&self) -> Element<'_, Message> {
         match &self.stage {
-            Stage::Booting { stalled: false } => {
-                center(text(strings::lookup(Text::StatusLoading))).into()
-            }
+            Stage::Booting { stalled: false } => center(prose(
+                strings::lookup(Text::StatusLoading).to_owned(),
+                typeface::BODY,
+            ))
+            .into(),
             Stage::Booting { stalled: true } => center(
                 column![
-                    text(strings::lookup(Text::BootSessionStalled)),
-                    iced::widget::button(text(strings::lookup(Text::BootRecheck)))
-                        .on_press(Message::SessionRechecked),
+                    prose(
+                        strings::lookup(Text::BootSessionStalled).to_owned(),
+                        typeface::BODY
+                    ),
+                    iced::widget::button(prose(
+                        strings::lookup(Text::BootRecheck).to_owned(),
+                        typeface::BODY
+                    ))
+                    .on_press(Message::SessionRechecked),
                 ]
                 .spacing(theme::CARD_SPACING),
             )
@@ -2847,7 +2889,11 @@ impl Jellium {
                     )
                 });
                 let body: Element<'_, Message> = match &signed.view {
-                    View::Loading => center(text(strings::lookup(Text::StatusLoading))).into(),
+                    View::Loading => center(prose(
+                        strings::lookup(Text::StatusLoading).to_owned(),
+                        typeface::BODY,
+                    ))
+                    .into(),
                     View::Home(state) => home::view(
                         state,
                         &signed.arrangement,
@@ -2975,16 +3021,21 @@ impl Jellium {
     /// open, the live tick while a channel plays, the page's resizes, and the
     /// event socket's signals for the whole signed-in session.
     pub fn subscription(&self) -> Subscription<Message> {
-        let reports = crate::failure::reports().map(Message::Failed);
+        let everywhere = Subscription::batch([
+            crate::failure::reports().map(Message::Failed),
+            crate::fonts::wants().map(Message::FontWanted),
+            iced::window::resize_events()
+                .filter_map(|_| crate::viewport::read().map(Message::Resized)),
+        ]);
         let Stage::Signed(signed) = &self.stage else {
             if let Stage::Login(state) = &self.stage {
-                return Subscription::batch([reports, login::subscription(state)]);
+                return Subscription::batch([everywhere, login::subscription(state)]);
             }
-            return reports;
+            return everywhere;
         };
 
         let mut running = vec![
-            reports,
+            everywhere,
             live::signals().map(Message::LiveSignalled),
             crate::overlay::messages().map(Message::Overlaid),
         ];
@@ -3010,10 +3061,6 @@ impl Jellium {
         {
             running.push(iced::time::every(theme::LIVE_TICK).map(|_| Message::LiveTicked));
         }
-        running.push(
-            iced::window::resize_events()
-                .filter_map(|_| crate::viewport::read().map(Message::Resized)),
-        );
         Subscription::batch(running)
     }
 
@@ -3040,6 +3087,11 @@ impl Jellium {
 
     pub fn theme(&self) -> Theme {
         theme::theme()
+    }
+
+    /// The band's root size, which is what resolves every design length.
+    pub fn scale_factor(&self) -> f32 {
+        crate::style::scale(self.viewport.band())
     }
 }
 

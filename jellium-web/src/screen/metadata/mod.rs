@@ -5,7 +5,7 @@ pub mod identify;
 use std::collections::HashSet;
 use std::rc::Rc;
 
-use iced::widget::{button, column, row, scrollable, text};
+use iced::widget::{button, column, row, scrollable};
 use iced::{Element, Task};
 use jellium_model::form::Form;
 use jellium_model::item;
@@ -16,8 +16,10 @@ use crate::api::Api;
 use crate::app::{Message, Signed};
 use crate::error::{Answer, Operation};
 use crate::images::{self, Cache, Foreign};
+use crate::style::typeface;
 use crate::text::{self as strings, Text};
 use crate::theme;
+use crate::widget::prose;
 
 /// One part of the metadata manager.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -165,7 +167,10 @@ pub fn view<'a>(
         if part == Part::Identify && !searchable {
             return None;
         }
-        let mut control = button(text(strings::lookup(part.label())));
+        let mut control = button(prose(
+            strings::lookup(part.label()).to_owned(),
+            typeface::BODY,
+        ));
         if part != state.part {
             control = control.on_press(Message::MetadataAction(Action::Open(part)));
         }
@@ -188,13 +193,19 @@ pub fn view<'a>(
         Part::Deletion => deletion(state, read_only),
     };
 
-    let mut page = column![text(state.item.name.clone().unwrap_or_default()).size(28)]
-        .spacing(theme::CARD_SPACING);
+    let mut page = column![prose(
+        state.item.name.clone().unwrap_or_default(),
+        typeface::HEADING_1
+    )]
+    .spacing(theme::CARD_SPACING);
 
     if !read_only && state.part == Part::Fields {
         page = page.push(
-            button(text(strings::lookup(Text::MetadataSave)))
-                .on_press(Message::MetadataAction(Action::Save)),
+            button(prose(
+                strings::lookup(Text::MetadataSave).to_owned(),
+                typeface::BODY,
+            ))
+            .on_press(Message::MetadataAction(Action::Save)),
         );
     }
 
@@ -202,8 +213,11 @@ pub fn view<'a>(
         column![
             page,
             row![parts, body].spacing(theme::CARD_SPACING),
-            button(text(strings::lookup(Text::MetadataClose)))
-                .on_press(Message::MetadataAction(Action::Close)),
+            button(prose(
+                strings::lookup(Text::MetadataClose).to_owned(),
+                typeface::BODY
+            ))
+            .on_press(Message::MetadataAction(Action::Close)),
         ]
         .spacing(theme::CARD_SPACING)
         .padding(theme::CARD_SPACING),
@@ -215,15 +229,19 @@ pub fn view<'a>(
 fn locks<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
     let held = item::LOCKS.into_iter().map(|lock| {
         let on = item::locked(&state.form, lock);
-        let shown = text(lock.to_string());
+        let shown = prose(lock.to_string(), typeface::BODY);
         if read_only {
             return row![
                 shown,
-                text(strings::lookup(if on {
-                    Text::MetadataLocked
-                } else {
-                    Text::MetadataUnlocked
-                })),
+                prose(
+                    strings::lookup(if on {
+                        Text::MetadataLocked
+                    } else {
+                        Text::MetadataUnlocked
+                    })
+                    .to_owned(),
+                    typeface::BODY
+                ),
             ]
             .spacing(theme::CARD_SPACING)
             .into();
@@ -242,14 +260,20 @@ fn locks<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
 
 fn content_type<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
     if read_only {
-        return text(strings::lookup(Text::MetadataPartContentType)).into();
+        return prose(
+            strings::lookup(Text::MetadataPartContentType).to_owned(),
+            typeface::BODY,
+        );
     }
     let offered = state.content_types.iter().filter_map(|option| {
         let value = option.value.clone()?;
         Some(
-            button(text(option.name.clone().unwrap_or_default()))
-                .on_press(Message::MetadataAction(Action::ContentType(value)))
-                .into(),
+            button(prose(
+                option.name.clone().unwrap_or_default(),
+                typeface::BODY,
+            ))
+            .on_press(Message::MetadataAction(Action::ContentType(value)))
+            .into(),
         )
     });
     column(offered).spacing(8).into()
@@ -260,23 +284,36 @@ fn content_type<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
 /// removes an item from the library and from disk.
 fn deletion<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
     if read_only {
-        return text(strings::lookup(Text::MetadataPartDeletion)).into();
+        return prose(
+            strings::lookup(Text::MetadataPartDeletion).to_owned(),
+            typeface::BODY,
+        );
     }
     if let Some(pending) = &state.confirming {
         return crate::screen::confirm::view(pending, crate::screen::confirm::Region::Metadata);
     }
     let Some(id) = state.item.id else {
-        return text(strings::lookup(Text::MetadataPartDeletion)).into();
+        return prose(
+            strings::lookup(Text::MetadataPartDeletion).to_owned(),
+            typeface::BODY,
+        );
     };
     let name = state.item.name.clone().unwrap_or_default();
     column![
-        text(strings::lookup(Text::MetadataDeleteWarning)),
-        button(text(strings::lookup(Text::MetadataDelete))).on_press(Message::MetadataAction(
-            Action::Ask(crate::screen::confirm::Pending::of(
+        prose(
+            strings::lookup(Text::MetadataDeleteWarning).to_owned(),
+            typeface::BODY
+        ),
+        button(prose(
+            strings::lookup(Text::MetadataDelete).to_owned(),
+            typeface::BODY
+        ))
+        .on_press(Message::MetadataAction(Action::Ask(
+            crate::screen::confirm::Pending::of(
                 crate::screen::confirm::Destructive::DeleteItem { id },
                 name,
-            ))
-        )),
+            )
+        ))),
     ]
     .spacing(theme::CARD_SPACING)
     .into()

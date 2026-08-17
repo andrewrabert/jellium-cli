@@ -2,7 +2,7 @@ use std::collections::HashSet;
 use std::rc::Rc;
 
 use iced::Element;
-use iced::widget::{button, column, row, text, text_input};
+use iced::widget::{button, column, row, text_input};
 use jellium_model::paged::Paged;
 use jellium_model::window;
 use jellyfin_api::types::BaseItemDto;
@@ -14,9 +14,11 @@ use crate::images::{self, Cache};
 use crate::route::Listing;
 use crate::screen::browse::{self, Browse};
 use crate::style::Viewport;
+use crate::style::typeface;
 use crate::text::{self as strings, Text};
 use crate::theme;
 use crate::widget;
+use crate::widget::prose;
 
 #[derive(Debug, Clone)]
 pub struct State {
@@ -129,7 +131,7 @@ fn section<'a>(
         )
     });
     column![
-        text(strings::lookup(title)).size(22),
+        prose(strings::lookup(title).to_owned(), typeface::HEADING_2),
         iced::widget::scrollable(iced::widget::row(cards).spacing(theme::CARD_SPACING)).direction(
             iced::widget::scrollable::Direction::Horizontal(
                 iced::widget::scrollable::Scrollbar::default()
@@ -158,7 +160,11 @@ pub fn view<'a>(state: &'a State, images: &'a Cache, read_only: bool) -> Element
             .on_input(Message::SearchEdited)
             .on_submit(Message::SearchSubmitted)
             .padding(8),
-        button(text(strings::lookup(Text::SearchSubmit))).on_press(Message::SearchSubmitted),
+        button(prose(
+            strings::lookup(Text::SearchSubmit).to_owned(),
+            typeface::BODY
+        ))
+        .on_press(Message::SearchSubmitted),
     ]
     .spacing(theme::CARD_SPACING)
     .align_y(iced::Alignment::Center);

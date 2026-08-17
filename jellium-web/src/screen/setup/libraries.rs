@@ -1,7 +1,7 @@
 //! The libraries the server starts with, created from the same content types
 //! the dashboard offers.
 
-use iced::widget::{button, column, container, row, text, text_input};
+use iced::widget::{button, column, container, row, text_input};
 use iced::{Element, Fill};
 
 use crate::app::Message;
@@ -11,6 +11,8 @@ use crate::theme;
 use crate::widget::Choice;
 
 use super::{Action, Edit};
+use crate::style::typeface;
+use crate::widget::prose;
 
 #[derive(Debug, Clone)]
 pub struct State {
@@ -67,9 +69,12 @@ pub fn adding(state: &mut State, open: bool) {
 fn browser(adding: &Adding) -> Element<'_, Message> {
     let mut listing = column![
         row![
-            button(text(strings::lookup(Text::SetupLibrariesUp)))
-                .on_press(Message::SetupAction(Action::BrowseUp)),
-            text(adding.browsing.clone().unwrap_or_default()),
+            button(prose(
+                strings::lookup(Text::SetupLibrariesUp).to_owned(),
+                typeface::BODY
+            ))
+            .on_press(Message::SetupAction(Action::BrowseUp)),
+            prose(adding.browsing.clone().unwrap_or_default(), typeface::BODY),
         ]
         .spacing(theme::CARD_SPACING),
     ]
@@ -79,10 +84,14 @@ fn browser(adding: &Adding) -> Element<'_, Message> {
         let path = entry.path.clone().unwrap_or_default();
         listing = listing.push(
             row![
-                button(text(entry.name.clone().unwrap_or_default()))
-                    .style(button::text)
-                    .on_press(Message::SetupAction(Action::Browse(path.clone()))),
-                button(text("+")).on_press(Message::SetupAction(Action::AddPath(path))),
+                button(prose(
+                    entry.name.clone().unwrap_or_default(),
+                    typeface::BODY
+                ))
+                .style(button::text)
+                .on_press(Message::SetupAction(Action::Browse(path.clone()))),
+                button(prose("+".to_owned(), typeface::BODY))
+                    .on_press(Message::SetupAction(Action::AddPath(path))),
             ]
             .spacing(theme::CARD_SPACING),
         );
@@ -106,8 +115,9 @@ fn dialog(adding: &Adding) -> Element<'_, Message> {
     for (index, path) in adding.paths.iter().enumerate() {
         page = page.push(
             row![
-                text(path.clone()),
-                button(text("-")).on_press(Message::SetupAction(Action::RemovePath(index))),
+                prose(path.clone(), typeface::BODY),
+                button(prose("-".to_owned(), typeface::BODY))
+                    .on_press(Message::SetupAction(Action::RemovePath(index))),
             ]
             .spacing(theme::CARD_SPACING),
         );
@@ -115,17 +125,26 @@ fn dialog(adding: &Adding) -> Element<'_, Message> {
 
     page = page.push(match &adding.browsing {
         Some(_) => browser(adding),
-        None => button(text(strings::lookup(Text::LibrariesBrowse)))
-            .on_press(Message::SetupAction(Action::Browse(String::new())))
-            .into(),
+        None => button(prose(
+            strings::lookup(Text::LibrariesBrowse).to_owned(),
+            typeface::BODY,
+        ))
+        .on_press(Message::SetupAction(Action::Browse(String::new())))
+        .into(),
     });
 
     page = page.push(
         row![
-            button(text(strings::lookup(Text::SetupLibrariesAdd)))
-                .on_press(Message::SetupAction(Action::CreateLibrary)),
-            button(text(strings::lookup(Text::SetupLibrariesCancel)))
-                .on_press(Message::SetupAction(Action::Adding(false))),
+            button(prose(
+                strings::lookup(Text::SetupLibrariesAdd).to_owned(),
+                typeface::BODY
+            ))
+            .on_press(Message::SetupAction(Action::CreateLibrary)),
+            button(prose(
+                strings::lookup(Text::SetupLibrariesCancel).to_owned(),
+                typeface::BODY
+            ))
+            .on_press(Message::SetupAction(Action::Adding(false))),
         ]
         .spacing(theme::CARD_SPACING),
     );
@@ -136,8 +155,14 @@ fn dialog(adding: &Adding) -> Element<'_, Message> {
 /// and the sentence stating that the step completes with none configured.
 pub fn view(state: &State) -> Element<'_, Message> {
     let mut page = column![
-        text(strings::lookup(Text::SetupLibraries)).size(20),
-        text(strings::lookup(Text::SetupLibrariesEmpty)).size(13),
+        prose(
+            strings::lookup(Text::SetupLibraries).to_owned(),
+            typeface::HEADING_3
+        ),
+        prose(
+            strings::lookup(Text::SetupLibrariesEmpty).to_owned(),
+            typeface::SECONDARY
+        ),
     ]
     .spacing(theme::CARD_SPACING);
 
@@ -153,19 +178,30 @@ pub fn view(state: &State) -> Element<'_, Message> {
                 text_input(strings::lookup(Text::LibrariesRename), &typed).on_input(|typed| {
                     Message::SetupAction(Action::Edited(Edit::Renaming(typed)))
                 }),
-                button(text(strings::lookup(Text::LibrariesRename)))
-                    .on_press(Message::SetupAction(Action::RenameLibrary { name: typed })),
+                button(prose(
+                    strings::lookup(Text::LibrariesRename).to_owned(),
+                    typeface::BODY
+                ))
+                .on_press(Message::SetupAction(Action::RenameLibrary { name: typed })),
             ]
             .spacing(theme::CARD_SPACING)
             .into(),
             None => row![
-                text(name.clone()).width(Fill),
-                button(text(strings::lookup(Text::LibrariesRename))).on_press(
-                    Message::SetupAction(Action::Renaming { name: name.clone() })
-                ),
-                button(text(strings::lookup(Text::LibrariesRemove))).on_press(
-                    Message::SetupAction(Action::RemoveLibrary { name: name.clone() })
-                ),
+                container(prose(name.clone(), typeface::BODY)).width(Fill),
+                button(prose(
+                    strings::lookup(Text::LibrariesRename).to_owned(),
+                    typeface::BODY
+                ))
+                .on_press(Message::SetupAction(Action::Renaming {
+                    name: name.clone()
+                })),
+                button(prose(
+                    strings::lookup(Text::LibrariesRemove).to_owned(),
+                    typeface::BODY
+                ))
+                .on_press(Message::SetupAction(Action::RemoveLibrary {
+                    name: name.clone()
+                })),
             ]
             .spacing(theme::CARD_SPACING)
             .into(),
@@ -175,9 +211,12 @@ pub fn view(state: &State) -> Element<'_, Message> {
 
     page = page.push(match &state.adding {
         Some(adding) => dialog(adding),
-        None => button(text(strings::lookup(Text::SetupLibrariesAdd)))
-            .on_press(Message::SetupAction(Action::Adding(true)))
-            .into(),
+        None => button(prose(
+            strings::lookup(Text::SetupLibrariesAdd).to_owned(),
+            typeface::BODY,
+        ))
+        .on_press(Message::SetupAction(Action::Adding(true)))
+        .into(),
     });
     page.into()
 }

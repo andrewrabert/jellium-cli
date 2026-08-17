@@ -2,7 +2,7 @@ use std::collections::HashSet;
 use std::rc::Rc;
 
 use iced::Element;
-use iced::widget::{button, column, row, text, text_input};
+use iced::widget::{button, column, row, text_input};
 use jellium_model::paged::Paged;
 use jellium_model::window;
 use jellyfin_api::types::BaseItemDto;
@@ -18,6 +18,8 @@ use crate::style::Viewport;
 use crate::text::{self as strings, Text};
 use crate::theme;
 
+use crate::style::typeface;
+use crate::widget::prose;
 use iced::Task;
 
 /// The collections destination: every collection, windowed, with the create
@@ -105,7 +107,7 @@ fn naming<'a>(held: &'a str, label: Text, apply: Message) -> Element<'a, Message
         text_input("", held)
             .on_input(|typed| Message::CollectionAction(Action::Typed(typed)))
             .padding(8),
-        button(text(strings::lookup(label))).on_press(apply),
+        button(prose(strings::lookup(label).to_owned(), typeface::BODY)).on_press(apply),
     ]
     .spacing(theme::CARD_SPACING)
     .align_y(iced::Alignment::Center)
@@ -144,14 +146,27 @@ pub fn view<'a>(state: &'a State, images: &'a Cache, read_only: bool) -> Element
             ))
             .push(
                 row![
-                    button(text(strings::lookup(Text::DetailPlayAll))).on_press(
-                        Message::CollectionAction(Action::PlayAll { id, shuffle: false })
-                    ),
-                    button(text(strings::lookup(Text::DetailShuffle))).on_press(
-                        Message::CollectionAction(Action::PlayAll { id, shuffle: true })
-                    ),
-                    button(text(strings::lookup(Text::CollectionDelete)))
-                        .on_press(Message::CollectionAction(Action::Delete { id })),
+                    button(prose(
+                        strings::lookup(Text::DetailPlayAll).to_owned(),
+                        typeface::BODY
+                    ))
+                    .on_press(Message::CollectionAction(Action::PlayAll {
+                        id,
+                        shuffle: false
+                    })),
+                    button(prose(
+                        strings::lookup(Text::DetailShuffle).to_owned(),
+                        typeface::BODY
+                    ))
+                    .on_press(Message::CollectionAction(Action::PlayAll {
+                        id,
+                        shuffle: true
+                    })),
+                    button(prose(
+                        strings::lookup(Text::CollectionDelete).to_owned(),
+                        typeface::BODY
+                    ))
+                    .on_press(Message::CollectionAction(Action::Delete { id })),
                 ]
                 .spacing(theme::CARD_SPACING),
             );

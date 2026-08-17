@@ -1,7 +1,7 @@
 use std::collections::HashSet;
 
 use iced::Element;
-use iced::widget::{button, column, row, text};
+use iced::widget::{button, column, row};
 use jellyfin_api::types::{ImageInfo, RemoteImageInfo};
 use uuid::Uuid;
 
@@ -11,6 +11,8 @@ use crate::text::{self as strings, Text};
 use crate::theme;
 
 use super::Action as Outer;
+use crate::style::typeface;
+use crate::widget::prose;
 
 /// The image kinds the metadata manager uploads, replaces and removes; no other
 /// kind carries a control.
@@ -132,7 +134,10 @@ pub fn view<'a>(
     read_only: bool,
 ) -> Element<'a, Message> {
     let strip = row(Kind::ALL.into_iter().map(|kind| {
-        let mut control = button(text(strings::lookup(kind.label())));
+        let mut control = button(prose(
+            strings::lookup(kind.label()).to_owned(),
+            typeface::BODY,
+        ));
         if state.kind != Some(kind) {
             control = control.on_press(Message::MetadataAction(Outer::Artwork(Action::Select(
                 kind,
@@ -150,9 +155,12 @@ pub fn view<'a>(
             continue;
         }
         let count = held.len();
-        let mut shown = row![text(strings::lookup(kind.label()))]
-            .spacing(theme::CARD_SPACING)
-            .align_y(iced::Alignment::Center);
+        let mut shown = row![prose(
+            strings::lookup(kind.label()).to_owned(),
+            typeface::BODY
+        )]
+        .spacing(theme::CARD_SPACING)
+        .align_y(iced::Alignment::Center);
 
         for (position, (index, _)) in held.into_iter().enumerate() {
             let handle = images.handle(images::Key {
@@ -171,30 +179,44 @@ pub fn view<'a>(
 
             let mut cell = column![drawn].spacing(4);
             if !read_only {
-                cell = cell.push(button(text(strings::lookup(Text::ArtworkRemove))).on_press(
-                    Message::MetadataAction(Outer::Artwork(Action::Remove { kind, index })),
-                ));
+                cell = cell.push(
+                    button(prose(
+                        strings::lookup(Text::ArtworkRemove).to_owned(),
+                        typeface::BODY,
+                    ))
+                    .on_press(Message::MetadataAction(Outer::Artwork(
+                        Action::Remove { kind, index },
+                    ))),
+                );
                 if kind == Kind::Backdrop
                     && let Some(at) = index
                 {
                     if position > 0 {
                         cell = cell.push(
-                            button(text(strings::lookup(Text::ArtworkMoveEarlier))).on_press(
-                                Message::MetadataAction(Outer::Artwork(Action::Move {
+                            button(prose(
+                                strings::lookup(Text::ArtworkMoveEarlier).to_owned(),
+                                typeface::BODY,
+                            ))
+                            .on_press(Message::MetadataAction(
+                                Outer::Artwork(Action::Move {
                                     index: at,
                                     to: at - 1,
-                                })),
-                            ),
+                                }),
+                            )),
                         );
                     }
                     if position + 1 < count {
                         cell = cell.push(
-                            button(text(strings::lookup(Text::ArtworkMoveLater))).on_press(
-                                Message::MetadataAction(Outer::Artwork(Action::Move {
+                            button(prose(
+                                strings::lookup(Text::ArtworkMoveLater).to_owned(),
+                                typeface::BODY,
+                            ))
+                            .on_press(Message::MetadataAction(
+                                Outer::Artwork(Action::Move {
                                     index: at,
                                     to: at + 1,
-                                })),
-                            ),
+                                }),
+                            )),
                         );
                     }
                 }
@@ -209,13 +231,16 @@ pub fn view<'a>(
     }
 
     page = page.push(
-        button(text(strings::lookup(Text::ArtworkUpload)))
-            .on_press(Message::MetadataAction(Outer::Artwork(Action::Upload))),
+        button(prose(
+            strings::lookup(Text::ArtworkUpload).to_owned(),
+            typeface::BODY,
+        ))
+        .on_press(Message::MetadataAction(Outer::Artwork(Action::Upload))),
     );
 
     let providers = row(state.providers.iter().map(|provider| {
         let named = provider.clone();
-        button(text(provider.as_str()))
+        button(prose(provider.clone(), typeface::BODY))
             .style(button::text)
             .on_press(Message::MetadataAction(Outer::Artwork(
                 Action::SelectProvider(Some(named)),
@@ -225,8 +250,11 @@ pub fn view<'a>(
     .spacing(theme::CARD_SPACING);
 
     page = page.push(providers).push(
-        button(text(strings::lookup(Text::ArtworkSearch)))
-            .on_press(Message::MetadataAction(Outer::Artwork(Action::Search))),
+        button(prose(
+            strings::lookup(Text::ArtworkSearch).to_owned(),
+            typeface::BODY,
+        ))
+        .on_press(Message::MetadataAction(Outer::Artwork(Action::Search))),
     );
 
     let found = row(state.remote.iter().enumerate().map(|(at, remote)| {
@@ -244,9 +272,13 @@ pub fn view<'a>(
         };
         column![
             drawn,
-            button(text(strings::lookup(Text::ArtworkDownload))).on_press(Message::MetadataAction(
-                Outer::Artwork(Action::Download { at })
-            )),
+            button(prose(
+                strings::lookup(Text::ArtworkDownload).to_owned(),
+                typeface::BODY
+            ))
+            .on_press(Message::MetadataAction(Outer::Artwork(Action::Download {
+                at
+            }))),
         ]
         .spacing(4)
         .into()

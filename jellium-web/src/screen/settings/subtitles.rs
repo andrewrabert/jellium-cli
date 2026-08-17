@@ -2,7 +2,7 @@
 //! cues are drawn and nothing the server burns into the picture.
 
 use iced::Element;
-use iced::widget::{column, text};
+use iced::widget::column;
 use jellium_model::prefs::{Held, OPACITIES, SubtitleColour, SubtitleShadow, SubtitleSize};
 
 use crate::app::Message;
@@ -10,6 +10,8 @@ use crate::text::{self as strings, Text};
 use crate::theme;
 
 use super::{Setting, choices};
+use crate::style::typeface;
+use crate::widget::prose;
 
 fn size_label(size: SubtitleSize) -> String {
     strings::lookup(match size {
@@ -53,7 +55,10 @@ fn opacity_label(opacity: i32) -> String {
 /// the save, which is absent under read-only.
 pub fn view<'a>(held: Held, read_only: bool) -> Element<'a, Message> {
     let mut shown = column![
-        text(strings::lookup(Text::SubtitlesBurnedIn)),
+        prose(
+            strings::lookup(Text::SubtitlesBurnedIn).to_owned(),
+            typeface::BODY
+        ),
         choices(
             Text::SubtitlesSize,
             &SubtitleSize::ALL,

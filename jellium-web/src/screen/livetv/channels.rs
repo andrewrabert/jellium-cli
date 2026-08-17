@@ -2,7 +2,7 @@ use std::collections::HashSet;
 use std::rc::Rc;
 
 use chrono::{DateTime, Utc};
-use iced::widget::{Space, button, column, container, image, row, text};
+use iced::widget::{Space, button, column, container, image, row};
 use iced::{Element, Fill};
 
 use super::Action;
@@ -12,9 +12,11 @@ use crate::error::Answer;
 use crate::images::{self, Cache};
 use crate::livetv::Channel;
 use crate::style::Drawn;
+use crate::style::typeface;
 use crate::text::{self as strings, Text};
 use crate::theme;
 use crate::widget;
+use crate::widget::prose;
 use crate::window;
 
 #[derive(Debug, Clone)]
@@ -59,11 +61,14 @@ fn entry<'a>(
         None => Space::new().width(theme::BAR_ART_WIDTH).into(),
     };
 
-    let mut named = column![text(format!("{} {}", channel.number, channel.name)).size(15)]
-        .spacing(2)
-        .width(Fill);
+    let mut named = column![prose(
+        format!("{} {}", channel.number, channel.name),
+        typeface::BODY
+    )]
+    .spacing(2)
+    .width(Fill);
     if let Some(program) = &channel.current {
-        named = named.push(text(program.title.clone()).size(13));
+        named = named.push(prose(program.title.clone(), typeface::SECONDARY));
         named = named.push(widget::elapsed_bar(program.elapsed(now)));
     }
 
@@ -79,9 +84,9 @@ fn entry<'a>(
             button(named)
                 .style(button::text)
                 .on_press(Message::LiveTvAction(Action::PlayChannel(channel.id))),
-            button(text(strings::lookup(favourite))).on_press(Message::LiveTvAction(
-                Action::Favorited(channel.id, !channel.favorite)
-            )),
+            button(prose(strings::lookup(favourite).to_owned(), typeface::BODY)).on_press(
+                Message::LiveTvAction(Action::Favorited(channel.id, !channel.favorite))
+            ),
         ]
         .spacing(theme::CARD_SPACING)
         .align_y(iced::Center),
@@ -97,20 +102,26 @@ pub fn view<'a>(state: &'a State, now: DateTime<Utc>, images: &'a Cache) -> Elem
     use jellyfin_api::types::ChannelType;
 
     let filter = row![
-        button(text(strings::lookup(Text::ChannelsTv)))
-            .style(if state.kind == ChannelType::Tv {
-                button::primary
-            } else {
-                button::secondary
-            })
-            .on_press(Message::LiveTvAction(Action::Kind(ChannelType::Tv))),
-        button(text(strings::lookup(Text::ChannelsRadio)))
-            .style(if state.kind == ChannelType::Radio {
-                button::primary
-            } else {
-                button::secondary
-            })
-            .on_press(Message::LiveTvAction(Action::Kind(ChannelType::Radio))),
+        button(prose(
+            strings::lookup(Text::ChannelsTv).to_owned(),
+            typeface::BODY
+        ))
+        .style(if state.kind == ChannelType::Tv {
+            button::primary
+        } else {
+            button::secondary
+        })
+        .on_press(Message::LiveTvAction(Action::Kind(ChannelType::Tv))),
+        button(prose(
+            strings::lookup(Text::ChannelsRadio).to_owned(),
+            typeface::BODY
+        ))
+        .style(if state.kind == ChannelType::Radio {
+            button::primary
+        } else {
+            button::secondary
+        })
+        .on_press(Message::LiveTvAction(Action::Kind(ChannelType::Radio))),
     ]
     .spacing(theme::CARD_SPACING);
 

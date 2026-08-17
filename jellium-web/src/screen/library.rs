@@ -2,7 +2,7 @@ use std::collections::HashSet;
 use std::rc::Rc;
 
 use iced::Element;
-use iced::widget::{button, column, row, text};
+use iced::widget::{button, column, row};
 use jellium_model::facets::{Facet, Facets};
 use jellium_model::paged::Paged;
 use jellium_model::sort::Sort;
@@ -17,8 +17,10 @@ use crate::images::{self, Cache};
 use crate::route::{Listing, Route};
 use crate::screen::browse::{self, Browse};
 use crate::style::Viewport;
+use crate::style::typeface;
 use crate::text::{self as strings, Text};
 use crate::theme;
+use crate::widget::prose;
 
 /// A library tab named without what its list carries, which is what the strip
 /// draws and what a collection type offers.
@@ -293,7 +295,10 @@ pub fn view<'a>(state: &'a State, images: &'a Cache, read_only: bool) -> Element
     };
     let shown = state.tab.kind();
     let strip = row(state.tabs.iter().map(|kind| {
-        let mut control = button(text(strings::lookup(kind.label())));
+        let mut control = button(prose(
+            strings::lookup(kind.label()).to_owned(),
+            typeface::BODY,
+        ));
         if *kind != shown {
             control = control.on_press(Message::Navigated(Route::Library {
                 id,

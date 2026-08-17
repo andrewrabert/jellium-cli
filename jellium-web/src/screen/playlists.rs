@@ -1,7 +1,7 @@
 use std::collections::HashSet;
 use std::rc::Rc;
 
-use iced::widget::{button, checkbox, column, row, text, text_input};
+use iced::widget::{button, checkbox, column, row, text_input};
 use iced::{Element, Task};
 use jellium_model::paged::Paged;
 use jellium_model::window;
@@ -14,10 +14,12 @@ use crate::error::{Answer, Operation};
 use crate::images::{self, Cache};
 use crate::route::Listing;
 use crate::screen::browse::{self, Browse};
+use crate::style::typeface;
 use crate::style::{Drawn, Viewport};
 use crate::text::{self as strings, Text};
 use crate::theme;
 use crate::widget;
+use crate::widget::prose;
 
 /// The playlists destination: every playlist, windowed, with the create control
 /// absent under read-only.
@@ -195,7 +197,7 @@ fn naming<'a>(held: &'a str, label: Text, apply: Message) -> Element<'a, Message
         text_input("", held)
             .on_input(|typed| Message::PlaylistAction(Action::Typed(typed)))
             .padding(8),
-        button(text(strings::lookup(label))).on_press(apply),
+        button(prose(strings::lookup(label).to_owned(), typeface::BODY)).on_press(apply),
     ]
     .spacing(theme::CARD_SPACING)
     .align_y(iced::Alignment::Center)
@@ -232,13 +234,16 @@ fn entry_row<'a>(
     };
 
     let mut held = row![
-        text(format!("{}", index + 1)),
-        button(text(entry.item.name.clone().unwrap_or_default()))
-            .style(button::text)
-            .on_press(Message::PlaylistAction(Action::PlayFrom {
-                playlist,
-                index
-            })),
+        prose(format!("{}", index + 1), typeface::BODY),
+        button(prose(
+            entry.item.name.clone().unwrap_or_default(),
+            typeface::BODY
+        ))
+        .style(button::text)
+        .on_press(Message::PlaylistAction(Action::PlayFrom {
+            playlist,
+            index
+        })),
     ]
     .spacing(theme::CARD_SPACING)
     .align_y(iced::Alignment::Center);
@@ -247,33 +252,39 @@ fn entry_row<'a>(
         let entry_id = entry.entry.clone();
         if index > 0 {
             held = held.push(
-                button(text(strings::lookup(Text::PlaylistMoveUp))).on_press(
-                    Message::PlaylistAction(Action::Move {
-                        playlist,
-                        entry: entry_id.clone(),
-                        to: index - 1,
-                    }),
-                ),
+                button(prose(
+                    strings::lookup(Text::PlaylistMoveUp).to_owned(),
+                    typeface::BODY,
+                ))
+                .on_press(Message::PlaylistAction(Action::Move {
+                    playlist,
+                    entry: entry_id.clone(),
+                    to: index - 1,
+                })),
             );
         }
         if index + 1 < state.entries.len() {
             held = held.push(
-                button(text(strings::lookup(Text::PlaylistMoveDown))).on_press(
-                    Message::PlaylistAction(Action::Move {
-                        playlist,
-                        entry: entry_id.clone(),
-                        to: index + 1,
-                    }),
-                ),
+                button(prose(
+                    strings::lookup(Text::PlaylistMoveDown).to_owned(),
+                    typeface::BODY,
+                ))
+                .on_press(Message::PlaylistAction(Action::Move {
+                    playlist,
+                    entry: entry_id.clone(),
+                    to: index + 1,
+                })),
             );
         }
         held = held.push(
-            button(text(strings::lookup(Text::PlaylistRemove))).on_press(Message::PlaylistAction(
-                Action::Remove {
-                    playlist,
-                    entry: entry_id,
-                },
-            )),
+            button(prose(
+                strings::lookup(Text::PlaylistRemove).to_owned(),
+                typeface::BODY,
+            ))
+            .on_press(Message::PlaylistAction(Action::Remove {
+                playlist,
+                entry: entry_id,
+            })),
         );
     }
 
@@ -287,14 +298,27 @@ pub fn view<'a>(state: &'a State, images: &'a Cache, read_only: bool) -> Element
     let editable = state.editable && !read_only;
 
     let mut page = column![
-        text(state.playlist.name.clone().unwrap_or_default()).size(28),
+        prose(
+            state.playlist.name.clone().unwrap_or_default(),
+            typeface::HEADING_1
+        ),
         row![
-            button(text(strings::lookup(Text::DetailPlayAll))).on_press(Message::PlaylistAction(
-                Action::PlayAll { id, shuffle: false }
-            )),
-            button(text(strings::lookup(Text::DetailShuffle))).on_press(Message::PlaylistAction(
-                Action::PlayAll { id, shuffle: true }
-            )),
+            button(prose(
+                strings::lookup(Text::DetailPlayAll).to_owned(),
+                typeface::BODY
+            ))
+            .on_press(Message::PlaylistAction(Action::PlayAll {
+                id,
+                shuffle: false
+            })),
+            button(prose(
+                strings::lookup(Text::DetailShuffle).to_owned(),
+                typeface::BODY
+            ))
+            .on_press(Message::PlaylistAction(Action::PlayAll {
+                id,
+                shuffle: true
+            })),
         ]
         .spacing(theme::CARD_SPACING),
     ]
@@ -309,15 +333,21 @@ pub fn view<'a>(state: &'a State, images: &'a Cache, read_only: bool) -> Element
                 Message::PlaylistAction(Action::Rename { id }),
             ))
             .push(
-                button(text(strings::lookup(Text::PlaylistDelete)))
-                    .on_press(Message::PlaylistAction(Action::Delete { id })),
+                button(prose(
+                    strings::lookup(Text::PlaylistDelete).to_owned(),
+                    typeface::BODY,
+                ))
+                .on_press(Message::PlaylistAction(Action::Delete { id })),
             )
             .push(
                 row![
                     checkbox(state.sharing.open).on_toggle(move |open| Message::PlaylistAction(
                         Action::SetOpen { playlist: id, open }
                     )),
-                    text(strings::lookup(Text::PlaylistOpenAccess)),
+                    prose(
+                        strings::lookup(Text::PlaylistOpenAccess).to_owned(),
+                        typeface::BODY
+                    ),
                 ]
                 .spacing(theme::CARD_SPACING)
                 .align_y(iced::Alignment::Center),
@@ -327,7 +357,7 @@ pub fn view<'a>(state: &'a State, images: &'a Cache, read_only: bool) -> Element
             let user = shared.user;
             page = page.push(
                 row![
-                    text(shared.name.clone()),
+                    prose(shared.name.clone(), typeface::BODY),
                     checkbox(shared.can_edit).on_toggle(move |can_edit| Message::PlaylistAction(
                         Action::Share {
                             playlist: id,
@@ -335,9 +365,14 @@ pub fn view<'a>(state: &'a State, images: &'a Cache, read_only: bool) -> Element
                             can_edit,
                         }
                     )),
-                    button(text(strings::lookup(Text::PlaylistUnshare))).on_press(
-                        Message::PlaylistAction(Action::Unshare { playlist: id, user })
-                    ),
+                    button(prose(
+                        strings::lookup(Text::PlaylistUnshare).to_owned(),
+                        typeface::BODY
+                    ))
+                    .on_press(Message::PlaylistAction(Action::Unshare {
+                        playlist: id,
+                        user
+                    })),
                 ]
                 .spacing(theme::CARD_SPACING)
                 .align_y(iced::Alignment::Center),

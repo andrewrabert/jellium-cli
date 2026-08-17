@@ -2,13 +2,15 @@
 //! changing it does to every other device.
 
 use iced::Element;
-use iced::widget::{button, column, text, text_input};
+use iced::widget::{button, column, text_input};
 
 use crate::app::Message;
 use crate::text::{self as strings, Text};
 use crate::theme;
 
 use super::Action;
+use crate::style::typeface;
+use crate::widget::prose;
 
 /// What has been typed into the two password fields.
 #[derive(Debug, Clone, Default)]
@@ -22,12 +24,21 @@ pub struct State {
 /// read-only.
 pub fn view<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
     let mut shown = column![
-        text(strings::lookup(Text::PasswordOtherDevices)),
-        text(strings::lookup(Text::PasswordCurrent)),
+        prose(
+            strings::lookup(Text::PasswordOtherDevices).to_owned(),
+            typeface::BODY
+        ),
+        prose(
+            strings::lookup(Text::PasswordCurrent).to_owned(),
+            typeface::BODY
+        ),
         text_input("", &state.current)
             .secure(true)
             .on_input(|typed| Message::SettingsAction(Action::TypedCurrentPassword(typed))),
-        text(strings::lookup(Text::PasswordNew)),
+        prose(
+            strings::lookup(Text::PasswordNew).to_owned(),
+            typeface::BODY
+        ),
         text_input("", &state.replacement)
             .secure(true)
             .on_input(|typed| Message::SettingsAction(Action::TypedNewPassword(typed))),
@@ -36,8 +47,11 @@ pub fn view<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
 
     if !read_only {
         shown = shown.push(
-            button(text(strings::lookup(Text::PasswordChange)))
-                .on_press(Message::SettingsAction(Action::ChangePassword)),
+            button(prose(
+                strings::lookup(Text::PasswordChange).to_owned(),
+                typeface::BODY,
+            ))
+            .on_press(Message::SettingsAction(Action::ChangePassword)),
         );
     }
 

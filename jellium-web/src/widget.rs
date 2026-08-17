@@ -13,9 +13,17 @@ use crate::live;
 use crate::livetv::Channel;
 use crate::player::group::Joined;
 use crate::route::Route;
+use crate::style::typeface;
 use crate::style::{self, Drawn, Share};
 use crate::text::{self as strings, Text};
 use crate::theme;
+
+/// Wrapping text, which is what a server's own disclaimer is. Every string the
+/// client draws passes here, so the coverage it needs is observed once.
+pub fn prose<'a>(content: String, size: style::Length) -> Element<'a, Message> {
+    crate::fonts::observed(&content, typeface::Weight::Regular);
+    text(content).size(style::drawn(size.drawn())).into()
+}
 
 /// One option a picker offers: what it shows, and the value a write sends.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -73,7 +81,7 @@ pub fn card<'a>(
 ) -> Element<'a, Message> {
     let poster: Element<'a, Message> = match image {
         Some(handle) => iced::widget::image(handle).width(theme::CARD_WIDTH).into(),
-        None => container(text(""))
+        None => container(prose(String::new(), typeface::BODY))
             .width(theme::CARD_WIDTH)
             .height(theme::CARD_WIDTH * 1.5)
             .into(),
@@ -81,8 +89,8 @@ pub fn card<'a>(
 
     let body = column![
         poster,
-        text(item.name.clone().unwrap_or_default()).size(15),
-        text(subtitle(item)).size(13),
+        prose(item.name.clone().unwrap_or_default(), typeface::BODY),
+        prose(subtitle(item), typeface::SECONDARY),
     ]
     .spacing(4)
     .width(theme::CARD_WIDTH);
@@ -99,15 +107,18 @@ pub fn card<'a>(
     let held = item.user_data.as_ref();
     column![
         control,
-        button(text(strings::lookup(Text::OverflowOpen)))
-            .style(button::text)
-            .on_press(Message::OverflowAction(
-                crate::screen::overflow::Action::Open {
-                    item: id,
-                    played: held.and_then(|held| held.played).unwrap_or(false),
-                    favorite: held.and_then(|held| held.is_favorite).unwrap_or(false),
-                }
-            )),
+        button(prose(
+            strings::lookup(Text::OverflowOpen).to_owned(),
+            typeface::BODY
+        ))
+        .style(button::text)
+        .on_press(Message::OverflowAction(
+            crate::screen::overflow::Action::Open {
+                item: id,
+                played: held.and_then(|held| held.played).unwrap_or(false),
+                favorite: held.and_then(|held| held.is_favorite).unwrap_or(false),
+            }
+        )),
     ]
     .into()
 }
@@ -136,7 +147,7 @@ pub fn rail<'a>(
     overflow: bool,
 ) -> Element<'a, Message> {
     strip(
-        text(strings::lookup(title)).size(22).into(),
+        prose(strings::lookup(title).to_owned(), typeface::HEADING_2),
         items,
         images,
         overflow,
@@ -150,7 +161,12 @@ pub fn named_rail<'a>(
     images: &'a Cache,
     overflow: bool,
 ) -> Element<'a, Message> {
-    strip(text(title).size(22).into(), items, images, overflow)
+    strip(
+        prose(title.to_owned(), typeface::HEADING_2),
+        items,
+        images,
+        overflow,
+    )
 }
 
 fn strip<'a>(
@@ -194,11 +210,14 @@ pub fn library_row<'a>(
 ) -> Element<'a, Message> {
     let live_entry: Vec<Element<'a, Message>> = if live_tv {
         vec![
-            button(text(strings::lookup(Text::HomeLiveTv)))
-                .on_press(Message::Navigated(Route::LiveTv {
-                    tab: crate::screen::livetv::Tab::Guide,
-                }))
-                .into(),
+            button(prose(
+                strings::lookup(Text::HomeLiveTv).to_owned(),
+                typeface::BODY,
+            ))
+            .on_press(Message::Navigated(Route::LiveTv {
+                tab: crate::screen::livetv::Tab::Guide,
+            }))
+            .into(),
         ]
     } else {
         Vec::new()
@@ -206,27 +225,36 @@ pub fn library_row<'a>(
     let entries = libraries.into_iter().filter_map(|library| {
         let id = library.id?;
         Some(
-            button(text(library.name.clone().unwrap_or_default()))
-                .on_press(Message::Navigated(Route::Library {
-                    id,
-                    tab: Box::new(crate::screen::library::Tab::Items(Box::default())),
-                }))
-                .into(),
+            button(prose(
+                library.name.clone().unwrap_or_default(),
+                typeface::BODY,
+            ))
+            .on_press(Message::Navigated(Route::Library {
+                id,
+                tab: Box::new(crate::screen::library::Tab::Items(Box::default())),
+            }))
+            .into(),
         )
     });
 
     let mut destinations: Vec<Element<'a, Message>> = Vec::new();
     if collections {
         destinations.push(
-            button(text(strings::lookup(Text::NavCollections)))
-                .on_press(Message::Navigated(Route::Collections))
-                .into(),
+            button(prose(
+                strings::lookup(Text::NavCollections).to_owned(),
+                typeface::BODY,
+            ))
+            .on_press(Message::Navigated(Route::Collections))
+            .into(),
         );
     }
     destinations.push(
-        button(text(strings::lookup(Text::NavPlaylists)))
-            .on_press(Message::Navigated(Route::Playlists))
-            .into(),
+        button(prose(
+            strings::lookup(Text::NavPlaylists).to_owned(),
+            typeface::BODY,
+        ))
+        .on_press(Message::Navigated(Route::Playlists))
+        .into(),
     );
 
     scrollable(
@@ -272,7 +300,7 @@ pub fn channel_card<'a>(
 ) -> Element<'a, Message> {
     let logo: Element<'a, Message> = match image {
         Some(handle) => iced::widget::image(handle).width(theme::CARD_WIDTH).into(),
-        None => container(text(""))
+        None => container(prose(String::new(), typeface::BODY))
             .width(theme::CARD_WIDTH)
             .height(theme::CARD_WIDTH * 0.6)
             .into(),
@@ -280,13 +308,16 @@ pub fn channel_card<'a>(
 
     let mut body = column![
         logo,
-        text(format!("{} {}", channel.number, channel.name)).size(15),
+        prose(
+            format!("{} {}", channel.number, channel.name),
+            typeface::BODY
+        ),
     ]
     .spacing(4)
     .width(theme::CARD_WIDTH);
 
     if let Some(program) = &channel.current {
-        body = body.push(text(program.title.clone()).size(13));
+        body = body.push(prose(program.title.clone(), typeface::SECONDARY));
         body = body.push(elapsed_bar(program.elapsed(now)));
     }
 
@@ -320,7 +351,10 @@ pub fn on_now_row<'a>(
         });
 
     column![
-        text(strings::lookup(Text::HomeOnNow)).size(22),
+        prose(
+            strings::lookup(Text::HomeOnNow).to_owned(),
+            typeface::HEADING_2
+        ),
         scrollable(row(cards).spacing(theme::CARD_SPACING)).direction(
             scrollable::Direction::Horizontal(scrollable::Scrollbar::default(),)
         ),
@@ -334,14 +368,22 @@ pub fn on_now_row<'a>(
 /// and the control that dismisses it.
 /// Private, so the only failure text any screen can render is the log's.
 fn failure<'a>(failure: &'a crate::failure::Failure) -> Element<'a, Message> {
-    let mut shown = column![text(failure.sentence.clone())].spacing(theme::CARD_SPACING);
+    let mut shown =
+        column![prose(failure.sentence.clone(), typeface::BODY)].spacing(theme::CARD_SPACING);
     if let Some(server) = &failure.server {
         shown = shown
-            .push(text(strings::lookup(Text::ServerSaid)).size(13))
-            .push(text(format!("> {server}")).size(13));
+            .push(prose(
+                strings::lookup(Text::ServerSaid).to_owned(),
+                typeface::SECONDARY,
+            ))
+            .push(prose(format!("> {server}"), typeface::SECONDARY));
     }
     shown = shown.push(
-        button(text(strings::lookup(Text::FailureDismiss))).on_press(Message::FailureDismissed),
+        button(prose(
+            strings::lookup(Text::FailureDismiss).to_owned(),
+            typeface::BODY,
+        ))
+        .on_press(Message::FailureDismissed),
     );
     container(shown)
         .padding(theme::CARD_SPACING)
@@ -352,14 +394,22 @@ fn failure<'a>(failure: &'a crate::failure::Failure) -> Element<'a, Message> {
 /// The terminal stage's screen: the failure that ended the session, over the
 /// control that returns to a fresh login screen.
 pub fn lost<'a>(failure: &'a crate::failure::Failure) -> Element<'a, Message> {
-    let mut shown = column![text(failure.sentence.clone())].spacing(theme::CARD_SPACING);
+    let mut shown =
+        column![prose(failure.sentence.clone(), typeface::BODY)].spacing(theme::CARD_SPACING);
     if let Some(server) = &failure.server {
         shown = shown
-            .push(text(strings::lookup(Text::ServerSaid)).size(13))
-            .push(text(format!("> {server}")).size(13));
+            .push(prose(
+                strings::lookup(Text::ServerSaid).to_owned(),
+                typeface::SECONDARY,
+            ))
+            .push(prose(format!("> {server}"), typeface::SECONDARY));
     }
     shown = shown.push(
-        button(text(strings::lookup(Text::FailureSignInAgain))).on_press(Message::SignInAgain),
+        button(prose(
+            strings::lookup(Text::FailureSignInAgain).to_owned(),
+            typeface::BODY,
+        ))
+        .on_press(Message::SignInAgain),
     );
     container(shown)
         .padding(theme::CARD_SPACING)
@@ -380,23 +430,33 @@ pub fn shell<'a>(
         page = page.push(self::failure(showing));
     }
     page = page.push(
-        button(text(strings::lookup(Text::FailuresOpen))).on_press(if listing {
+        button(prose(
+            strings::lookup(Text::FailuresOpen).to_owned(),
+            typeface::BODY,
+        ))
+        .on_press(if listing {
             Message::FailuresClosed
         } else {
             Message::FailuresOpened
         }),
     );
     if listing {
-        let mut listed = column![text(strings::lookup(Text::FailuresTitle))]
-            .spacing(theme::CARD_SPACING)
-            .padding(theme::CARD_SPACING);
+        let mut listed = column![prose(
+            strings::lookup(Text::FailuresTitle).to_owned(),
+            typeface::BODY
+        )]
+        .spacing(theme::CARD_SPACING)
+        .padding(theme::CARD_SPACING);
         if failures.raised().is_empty() {
-            listed = listed.push(text(strings::lookup(Text::FailuresEmpty)));
+            listed = listed.push(prose(
+                strings::lookup(Text::FailuresEmpty).to_owned(),
+                typeface::BODY,
+            ));
         }
         for raised in failures.raised() {
-            let mut one = column![text(raised.sentence.clone())];
+            let mut one = column![prose(raised.sentence.clone(), typeface::BODY)];
             if let Some(server) = &raised.server {
-                one = one.push(text(format!("> {server}")).size(13));
+                one = one.push(prose(format!("> {server}"), typeface::SECONDARY));
             }
             listed = listed.push(one.spacing(4));
         }
@@ -422,52 +482,86 @@ pub fn chrome<'a>(
     let mut nav = row![].spacing(theme::CARD_SPACING);
 
     if back {
-        nav = nav.push(button(text(strings::lookup(Text::NavBack))).on_press(Message::WentBack));
+        nav = nav.push(
+            button(prose(
+                strings::lookup(Text::NavBack).to_owned(),
+                typeface::BODY,
+            ))
+            .on_press(Message::WentBack),
+        );
     }
     if browse {
         nav = nav
             .push(
-                button(text(strings::lookup(Text::NavHome)))
-                    .on_press(Message::Navigated(Route::Home)),
+                button(prose(
+                    strings::lookup(Text::NavHome).to_owned(),
+                    typeface::BODY,
+                ))
+                .on_press(Message::Navigated(Route::Home)),
             )
             .push(
-                button(text(strings::lookup(Text::NavSearch))).on_press(Message::Navigated(
-                    Route::Search {
-                        term: String::new(),
-                        listing: Box::default(),
-                    },
-                )),
+                button(prose(
+                    strings::lookup(Text::NavSearch).to_owned(),
+                    typeface::BODY,
+                ))
+                .on_press(Message::Navigated(Route::Search {
+                    term: String::new(),
+                    listing: Box::default(),
+                })),
             )
             .push(
-                button(text(strings::lookup(Text::NavSettings))).on_press(Message::Navigated(
-                    Route::Settings {
-                        screen: crate::screen::settings::Screen::Profile,
-                    },
-                )),
+                button(prose(
+                    strings::lookup(Text::NavSettings).to_owned(),
+                    typeface::BODY,
+                ))
+                .on_press(Message::Navigated(Route::Settings {
+                    screen: crate::screen::settings::Screen::Profile,
+                })),
             )
             .push(
-                button(text(strings::lookup(Text::NavRemote)))
-                    .on_press(Message::Navigated(Route::Remote)),
+                button(prose(
+                    strings::lookup(Text::NavRemote).to_owned(),
+                    typeface::BODY,
+                ))
+                .on_press(Message::Navigated(Route::Remote)),
             );
 
         if session.sync_play != SyncAccess::None {
             nav = nav.push(
-                button(text(strings::lookup(Text::NavSyncPlay)))
-                    .on_press(Message::Navigated(Route::SyncPlay)),
+                button(prose(
+                    strings::lookup(Text::NavSyncPlay).to_owned(),
+                    typeface::BODY,
+                ))
+                .on_press(Message::Navigated(Route::SyncPlay)),
             );
         }
         if session.administrator {
-            nav = nav.push(button(text(strings::lookup(Text::NavDashboard))).on_press(
-                Message::Navigated(Route::Dashboard {
+            nav = nav.push(
+                button(prose(
+                    strings::lookup(Text::NavDashboard).to_owned(),
+                    typeface::BODY,
+                ))
+                .on_press(Message::Navigated(Route::Dashboard {
                     screen: crate::screen::dashboard::Screen::Plugins,
-                }),
-            ));
+                })),
+            );
         }
     }
-    nav = nav.push(button(text(strings::lookup(Text::NavSwitch))).on_press(Message::SwitchPressed));
+    nav = nav.push(
+        button(prose(
+            strings::lookup(Text::NavSwitch).to_owned(),
+            typeface::BODY,
+        ))
+        .on_press(Message::SwitchPressed),
+    );
     if !session.read_only {
-        nav = nav
-            .push(button(text(strings::lookup(Text::NavLogout))).on_press(Message::LogoutPressed));
+        nav = nav.push(
+            button(prose(
+                strings::lookup(Text::NavLogout).to_owned(),
+                typeface::BODY,
+            ))
+            .on_press(Message::LogoutPressed),
+        );
     }
 
     let mut page = column![nav]
@@ -509,7 +603,7 @@ pub fn chrome<'a>(
 
 /// One sentence shown above a screen.
 pub fn banner<'a>(message: String) -> Element<'a, Message> {
-    container(text(message))
+    container(prose(message, typeface::BODY))
         .padding(theme::CARD_SPACING)
         .width(Length::Fill)
         .into()
@@ -517,21 +611,34 @@ pub fn banner<'a>(message: String) -> Element<'a, Message> {
 
 /// The transient notice a `DisplayMessage` renders: its header, then its text.
 pub fn message<'a>(notice: &'a Notice) -> Element<'a, Message> {
-    column![text(notice.header.clone()), text(notice.text.clone())]
-        .spacing(theme::CARD_SPACING)
-        .padding(theme::CARD_SPACING)
-        .into()
+    column![
+        prose(notice.header.clone(), typeface::BODY),
+        prose(notice.text.clone(), typeface::BODY)
+    ]
+    .spacing(theme::CARD_SPACING)
+    .padding(theme::CARD_SPACING)
+    .into()
 }
 
 /// The warning raised before leaving a screen holding unsaved edits: what is
 /// lost, and the two controls.
 pub fn leaving<'a>() -> Element<'a, Message> {
     column![
-        text(strings::lookup(Text::DashboardUnsaved)),
+        prose(
+            strings::lookup(Text::DashboardUnsaved).to_owned(),
+            typeface::BODY
+        ),
         row![
-            button(text(strings::lookup(Text::DashboardLeaveAnyway)))
-                .on_press(Message::LeaveAnyway),
-            button(text(strings::lookup(Text::DashboardStayHere))).on_press(Message::StayHere),
+            button(prose(
+                strings::lookup(Text::DashboardLeaveAnyway).to_owned(),
+                typeface::BODY
+            ))
+            .on_press(Message::LeaveAnyway),
+            button(prose(
+                strings::lookup(Text::DashboardStayHere).to_owned(),
+                typeface::BODY
+            ))
+            .on_press(Message::StayHere),
         ]
         .spacing(theme::CARD_SPACING),
     ]

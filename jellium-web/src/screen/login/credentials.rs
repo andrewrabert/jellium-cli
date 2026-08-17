@@ -1,5 +1,5 @@
 use iced::Element;
-use iced::widget::{button, column, container, row, scrollable, text, text_input};
+use iced::widget::{button, column, container, row, scrollable, text_input};
 use uuid::Uuid;
 
 use crate::app::Message;
@@ -7,6 +7,8 @@ use crate::text::{self as strings, Text};
 use crate::theme;
 
 use super::{Action, Edit};
+use crate::style::typeface;
+use crate::widget::prose;
 
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct State {
@@ -39,7 +41,7 @@ fn picker<'a>(state: &'a super::State) -> Option<Element<'a, Message>> {
         if let Some(handle) = state.images.get(&user.id) {
             card = card.push(iced::widget::image(handle.clone()).width(96.0));
         }
-        card = card.push(text(user.name.clone()).size(14));
+        card = card.push(prose(user.name.clone(), typeface::BODY));
         button(card)
             .on_press(Message::LoginAction(Action::Pick {
                 user: user.id,
@@ -49,11 +51,17 @@ fn picker<'a>(state: &'a super::State) -> Option<Element<'a, Message>> {
     });
     Some(
         column![
-            text(strings::lookup(Text::LoginPickUser)).size(16),
+            prose(
+                strings::lookup(Text::LoginPickUser).to_owned(),
+                typeface::BODY
+            ),
             scrollable(row(cards).spacing(theme::CARD_SPACING)).direction(
                 scrollable::Direction::Horizontal(scrollable::Scrollbar::default(),)
             ),
-            text(strings::lookup(Text::LoginTypeName)).size(13),
+            prose(
+                strings::lookup(Text::LoginTypeName).to_owned(),
+                typeface::SECONDARY
+            ),
         ]
         .spacing(theme::CARD_SPACING)
         .into(),
@@ -73,7 +81,7 @@ pub fn view<'a>(state: &'a super::State) -> Element<'a, Message> {
         })
         .unwrap_or_default();
 
-    let mut form = column![text(named).size(28)].spacing(theme::CARD_SPACING);
+    let mut form = column![prose(named, typeface::HEADING_1)].spacing(theme::CARD_SPACING);
     if let Some(picker) = picker(state) {
         form = form.push(picker);
     }
@@ -99,10 +107,16 @@ pub fn view<'a>(state: &'a super::State) -> Element<'a, Message> {
             .padding(8),
         )
         .push(if state.working {
-            button(text(strings::lookup(Text::LoginWorking)))
+            button(prose(
+                strings::lookup(Text::LoginWorking).to_owned(),
+                typeface::BODY,
+            ))
         } else {
-            button(text(strings::lookup(Text::LoginSubmit)))
-                .on_press(Message::LoginAction(Action::Submit))
+            button(prose(
+                strings::lookup(Text::LoginSubmit).to_owned(),
+                typeface::BODY,
+            ))
+            .on_press(Message::LoginAction(Action::Submit))
         });
 
     if state
@@ -111,18 +125,28 @@ pub fn view<'a>(state: &'a super::State) -> Element<'a, Message> {
         .is_some_and(|screen| screen.quick_connect)
     {
         form = form.push(
-            button(text(strings::lookup(Text::LoginQuickConnect)))
-                .on_press(Message::LoginAction(Action::QuickConnect)),
+            button(prose(
+                strings::lookup(Text::LoginQuickConnect).to_owned(),
+                typeface::BODY,
+            ))
+            .on_press(Message::LoginAction(Action::QuickConnect)),
         );
     }
     if !state.read_only {
         form = form.push(
-            button(text(strings::lookup(Text::LoginForgotPassword)))
-                .on_press(Message::LoginAction(Action::Reset)),
+            button(prose(
+                strings::lookup(Text::LoginForgotPassword).to_owned(),
+                typeface::BODY,
+            ))
+            .on_press(Message::LoginAction(Action::Reset)),
         );
     }
     form = form.push(
-        button(text(strings::lookup(Text::LoginBack))).on_press(Message::LoginAction(Action::Back)),
+        button(prose(
+            strings::lookup(Text::LoginBack).to_owned(),
+            typeface::BODY,
+        ))
+        .on_press(Message::LoginAction(Action::Back)),
     );
 
     container(form.max_width(520))

@@ -1,6 +1,6 @@
 use std::rc::Rc;
 
-use iced::widget::{button, checkbox, column, container, row, text};
+use iced::widget::{button, checkbox, column, container, row};
 use iced::{Element, Fill};
 use jellyfin_api::types::{DayOfWeek, DayPattern, KeepUntil, SeriesTimerInfoDto};
 
@@ -9,9 +9,11 @@ use crate::api::Api;
 use crate::app::Message;
 use crate::error::Answer;
 use crate::style::Drawn;
+use crate::style::typeface;
 use crate::text::{self as strings, Text};
 use crate::theme;
 use crate::widget;
+use crate::widget::prose;
 use crate::window;
 
 #[derive(Debug, Clone)]
@@ -116,10 +118,16 @@ pub async fn load(api: Rc<Api>, height: Drawn) -> Answer<State> {
 fn entry<'a>(timer: &'a SeriesTimerInfoDto) -> Element<'a, Message> {
     let controls: Element<'a, Message> = match timer.id.clone() {
         Some(id) => row![
-            button(text(strings::lookup(Text::SeriesEdit)))
-                .on_press(Message::LiveTvAction(Action::EditSeries(id.clone()))),
-            button(text(strings::lookup(Text::SeriesCancel)))
-                .on_press(Message::LiveTvAction(Action::CancelSeriesTimer(id))),
+            button(prose(
+                strings::lookup(Text::SeriesEdit).to_owned(),
+                typeface::BODY
+            ))
+            .on_press(Message::LiveTvAction(Action::EditSeries(id.clone()))),
+            button(prose(
+                strings::lookup(Text::SeriesCancel).to_owned(),
+                typeface::BODY
+            ))
+            .on_press(Message::LiveTvAction(Action::CancelSeriesTimer(id))),
         ]
         .spacing(theme::CARD_SPACING)
         .into(),
@@ -128,9 +136,11 @@ fn entry<'a>(timer: &'a SeriesTimerInfoDto) -> Element<'a, Message> {
 
     container(
         row![
-            text(timer.name.clone().unwrap_or_default())
-                .size(15)
-                .width(Fill),
+            container(prose(
+                timer.name.clone().unwrap_or_default(),
+                typeface::BODY
+            ))
+            .width(Fill),
             controls,
         ]
         .spacing(theme::CARD_SPACING)
@@ -154,7 +164,8 @@ pub fn view<'a>(state: &'a State) -> Element<'a, Message> {
 /// A number the user edits as text, kept as the number the server carries.
 fn number<'a>(label: Text, value: i32, edited: impl Fn(i32) -> Field + 'a) -> Element<'a, Message> {
     row![
-        text(strings::lookup(label)).width(theme::GUIDE_CHANNEL_WIDTH),
+        container(prose(strings::lookup(label).to_owned(), typeface::BODY))
+            .width(theme::GUIDE_CHANNEL_WIDTH),
         iced::widget::text_input("", &value.to_string()).on_input(move |typed| {
             let read = match crate::failure::unraised::read::<i32>(typed.trim()) {
                 Ok(read) => read,
@@ -172,7 +183,7 @@ fn switch<'a>(label: Text, value: bool, edited: fn(bool) -> Field) -> Element<'a
     row![
         checkbox(value)
             .on_toggle(move |value| Message::LiveTvAction(Action::Edited(edited(value)))),
-        text(strings::lookup(label)),
+        prose(strings::lookup(label).to_owned(), typeface::BODY),
     ]
     .spacing(8)
     .align_y(iced::Center)
@@ -192,7 +203,7 @@ pub fn options<'a>(editing: &'a Editing) -> Element<'a, Message> {
             None => strings::lookup(Text::SeriesDayPatternAny).to_string(),
             Some(pattern) => format!("{pattern:?}"),
         };
-        button(text(named))
+        button(prose(named, typeface::BODY))
             .style(if held.day_pattern == *pattern {
                 button::primary
             } else {
@@ -207,7 +218,7 @@ pub fn options<'a>(editing: &'a Editing) -> Element<'a, Message> {
 
     let chosen = row(DAYS.iter().map(|day| {
         let wanted = days.contains(day);
-        button(text(format!("{day:?}")))
+        button(prose(format!("{day:?}"), typeface::BODY))
             .style(if wanted {
                 button::primary
             } else {
@@ -221,7 +232,7 @@ pub fn options<'a>(editing: &'a Editing) -> Element<'a, Message> {
     .spacing(8);
 
     let keep = row(KEEP.iter().map(|until| {
-        button(text(format!("{until:?}")))
+        button(prose(format!("{until:?}"), typeface::BODY))
             .style(if held.keep_until == Some(*until) {
                 button::primary
             } else {
@@ -242,10 +253,13 @@ pub fn options<'a>(editing: &'a Editing) -> Element<'a, Message> {
 
     container(
         column![
-            text(held.name.clone().unwrap_or_default()).size(22),
-            text(strings::lookup(Text::SeriesDayPattern)),
+            prose(held.name.clone().unwrap_or_default(), typeface::HEADING_2),
+            prose(
+                strings::lookup(Text::SeriesDayPattern).to_owned(),
+                typeface::BODY
+            ),
             patterns,
-            text(strings::lookup(Text::SeriesDays)),
+            prose(strings::lookup(Text::SeriesDays).to_owned(), typeface::BODY),
             chosen,
             switch(
                 Text::SeriesAnyChannel,
@@ -267,7 +281,10 @@ pub fn options<'a>(editing: &'a Editing) -> Element<'a, Message> {
                 held.skip_episodes_in_library.unwrap_or(false),
                 Field::SkipEpisodesInLibrary
             ),
-            text(strings::lookup(Text::SeriesKeepUntil)),
+            prose(
+                strings::lookup(Text::SeriesKeepUntil).to_owned(),
+                typeface::BODY
+            ),
             keep,
             number(
                 Text::SeriesKeepUpTo,
@@ -290,10 +307,13 @@ pub fn options<'a>(editing: &'a Editing) -> Element<'a, Message> {
                 Field::PostPaddingSeconds
             ),
             row![
-                button(text(strings::lookup(confirm)))
+                button(prose(strings::lookup(confirm).to_owned(), typeface::BODY))
                     .on_press(Message::LiveTvAction(Action::ConfirmSeries)),
-                button(text(strings::lookup(Text::SeriesClose)))
-                    .on_press(Message::LiveTvAction(Action::CloseSeries)),
+                button(prose(
+                    strings::lookup(Text::SeriesClose).to_owned(),
+                    typeface::BODY
+                ))
+                .on_press(Message::LiveTvAction(Action::CloseSeries)),
             ]
             .spacing(theme::CARD_SPACING),
         ]

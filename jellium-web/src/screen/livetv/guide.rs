@@ -2,7 +2,7 @@ use std::collections::{HashMap, HashSet};
 use std::rc::Rc;
 
 use chrono::{DateTime, Utc};
-use iced::widget::{Space, button, column, container, row, text};
+use iced::widget::{Space, button, column, container, row};
 use iced::{Element, Fill, Subscription};
 use uuid::Uuid;
 
@@ -12,8 +12,10 @@ use crate::app::Message;
 use crate::images::{self, Cache};
 use crate::livetv::Program;
 use crate::style::Drawn;
+use crate::style::typeface;
 use crate::text::{self as strings, Text};
 use crate::theme;
+use crate::widget::prose;
 use crate::window;
 
 pub use jellium_model::guide::{Fetched, Focus, Move, SPAN, STEP, State, Step, Trouble, half_hour};
@@ -59,9 +61,12 @@ pub async fn fetch(
 }
 
 fn badge<'a>(label: Text) -> Element<'a, Message> {
-    container(text(strings::lookup(label)).size(11))
-        .padding(2)
-        .into()
+    container(prose(
+        strings::lookup(label).to_owned(),
+        typeface::SECONDARY,
+    ))
+    .padding(2)
+    .into()
 }
 
 /// One cell: its title, its airtime, its badges and its record marker.
@@ -87,8 +92,8 @@ fn cell<'a>(program: &'a Program, focused: bool) -> Element<'a, Message> {
 
     let minutes = (program.end - program.start).num_minutes().max(1) as f32;
     let body = column![
-        text(program.title.clone()).size(14),
-        text(crate::livetv::airtime(program)).size(12),
+        prose(program.title.clone(), typeface::BODY),
+        prose(crate::livetv::airtime(program), typeface::SECONDARY),
         marks,
     ]
     .spacing(2);
@@ -110,14 +115,12 @@ fn axis<'a>(state: &'a State, now: DateTime<Utc>) -> Element<'a, Message> {
     let steps = (SPAN.num_minutes() / STEP.num_minutes()).max(1);
     let ruled = (0..steps).map(|index| {
         let at = state.start + STEP * index as i32;
-        container(
-            text(
-                chrono::DateTime::<chrono::Local>::from(at)
-                    .format("%H:%M")
-                    .to_string(),
-            )
-            .size(12),
-        )
+        container(prose(
+            chrono::DateTime::<chrono::Local>::from(at)
+                .format("%H:%M")
+                .to_string(),
+            typeface::SECONDARY,
+        ))
         .width(STEP.num_minutes() as f32 * theme::GUIDE_MINUTE)
         .into()
     });
@@ -152,18 +155,29 @@ pub fn view<'a>(state: &'a State, now: DateTime<Utc>, images: &'a Cache) -> Elem
     let _ = images;
 
     let controls = row![
-        button(text(strings::lookup(Text::GuideEarlier)))
-            .on_press(Message::LiveTvAction(Action::Step(Step::Back))),
-        text(
+        button(prose(
+            strings::lookup(Text::GuideEarlier).to_owned(),
+            typeface::BODY
+        ))
+        .on_press(Message::LiveTvAction(Action::Step(Step::Back))),
+        prose(
             chrono::DateTime::<chrono::Local>::from(state.start)
                 .format("%a %d %b")
-                .to_string()
+                .to_string(),
+            typeface::BODY
         ),
-        button(text(strings::lookup(Text::GuideLater)))
-            .on_press(Message::LiveTvAction(Action::Step(Step::Forward))),
-        button(text(strings::lookup(Text::GuideNow))).on_press(Message::LiveTvAction(
-            Action::Date(chrono::Local::now().date_naive())
-        )),
+        button(prose(
+            strings::lookup(Text::GuideLater).to_owned(),
+            typeface::BODY
+        ))
+        .on_press(Message::LiveTvAction(Action::Step(Step::Forward))),
+        button(prose(
+            strings::lookup(Text::GuideNow).to_owned(),
+            typeface::BODY
+        ))
+        .on_press(Message::LiveTvAction(Action::Date(
+            chrono::Local::now().date_naive()
+        ))),
     ]
     .spacing(theme::CARD_SPACING)
     .align_y(iced::Center);
@@ -200,9 +214,12 @@ pub fn view<'a>(state: &'a State, now: DateTime<Utc>, images: &'a Cache) -> Elem
             })
             .collect::<Vec<_>>();
         row![
-            container(text(format!("{} {}", channel.number, channel.name)).size(14))
-                .width(theme::GUIDE_CHANNEL_WIDTH)
-                .height(theme::ROW_HEIGHT),
+            container(prose(
+                format!("{} {}", channel.number, channel.name),
+                typeface::BODY
+            ))
+            .width(theme::GUIDE_CHANNEL_WIDTH)
+            .height(theme::ROW_HEIGHT),
             row(cells).spacing(2),
         ]
         .height(theme::ROW_HEIGHT)

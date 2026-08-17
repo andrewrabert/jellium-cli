@@ -1,7 +1,7 @@
 //! The first administrator.
 
 use iced::Element;
-use iced::widget::{column, text, text_input};
+use iced::widget::{column, text_input};
 
 use crate::app::Message;
 use crate::error::Answer;
@@ -9,6 +9,8 @@ use crate::text::{self as strings, Text};
 use crate::theme;
 
 use super::{Action, Edit};
+use crate::style::typeface;
+use crate::widget::prose;
 
 #[derive(Debug, Clone)]
 pub struct State {
@@ -31,18 +33,30 @@ pub async fn load(_api: std::rc::Rc<crate::api::Api>) -> Answer<State> {
 /// `jellium_model::setup::user_ready` is false.
 pub fn view(state: &State) -> Element<'_, Message> {
     let mut page = column![
-        text(strings::lookup(Text::SetupUser)).size(20),
-        text(strings::lookup(Text::SetupUserName)),
+        prose(
+            strings::lookup(Text::SetupUser).to_owned(),
+            typeface::HEADING_3
+        ),
+        prose(
+            strings::lookup(Text::SetupUserName).to_owned(),
+            typeface::BODY
+        ),
         text_input(strings::lookup(Text::SetupUserName), &state.user.name)
             .on_input(|typed| Message::SetupAction(Action::Edited(Edit::UserName(typed)))),
-        text(strings::lookup(Text::SetupUserPassword)),
+        prose(
+            strings::lookup(Text::SetupUserPassword).to_owned(),
+            typeface::BODY
+        ),
         text_input(
             strings::lookup(Text::SetupUserPassword),
             &state.user.password
         )
         .secure(true)
         .on_input(|typed| Message::SetupAction(Action::Edited(Edit::Password(typed)))),
-        text(strings::lookup(Text::SetupUserConfirm)),
+        prose(
+            strings::lookup(Text::SetupUserConfirm).to_owned(),
+            typeface::BODY
+        ),
         text_input(strings::lookup(Text::SetupUserConfirm), &state.confirmation)
             .secure(true)
             .on_input(|typed| Message::SetupAction(Action::Edited(Edit::Confirmation(typed)))),
@@ -50,7 +64,10 @@ pub fn view(state: &State) -> Element<'_, Message> {
     .spacing(theme::CARD_SPACING);
 
     if state.user.password != state.confirmation {
-        page = page.push(text(strings::lookup(Text::SetupUserMismatch)).size(13));
+        page = page.push(prose(
+            strings::lookup(Text::SetupUserMismatch).to_owned(),
+            typeface::SECONDARY,
+        ));
     }
     page.into()
 }

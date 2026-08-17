@@ -1,6 +1,6 @@
 //! The server's UI culture and its name.
 
-use iced::widget::{column, pick_list, text, text_input};
+use iced::widget::{column, pick_list, text_input};
 use iced::{Element, Fill};
 
 use crate::app::Message;
@@ -10,6 +10,8 @@ use crate::theme;
 use crate::widget::Choice;
 
 use super::{Action, Edit};
+use crate::style::typeface;
+use crate::widget::prose;
 
 #[derive(Debug, Clone)]
 pub struct State {
@@ -50,19 +52,31 @@ pub fn view(state: &State) -> Element<'_, Message> {
         .find(|choice| choice.value == state.configuration.ui_culture)
         .cloned();
     column![
-        text(strings::lookup(Text::SetupLanguage)).size(20),
-        text(strings::lookup(Text::SetupLanguageCulture)),
+        prose(
+            strings::lookup(Text::SetupLanguage).to_owned(),
+            typeface::HEADING_3
+        ),
+        prose(
+            strings::lookup(Text::SetupLanguageCulture).to_owned(),
+            typeface::BODY
+        ),
         pick_list(state.cultures.clone(), chosen, |choice| {
             Message::SetupAction(Action::Edited(Edit::Culture(choice)))
         })
         .width(Fill),
-        text(strings::lookup(Text::SetupLanguageServerName)),
+        prose(
+            strings::lookup(Text::SetupLanguageServerName).to_owned(),
+            typeface::BODY
+        ),
         text_input(
             strings::lookup(Text::SetupLanguageServerName),
             &state.configuration.server_name,
         )
         .on_input(|typed| Message::SetupAction(Action::Edited(Edit::ServerName(typed)))),
-        text(strings::lookup(Text::SetupLanguageScope)).size(13),
+        prose(
+            strings::lookup(Text::SetupLanguageScope).to_owned(),
+            typeface::SECONDARY
+        ),
     ]
     .spacing(theme::CARD_SPACING)
     .into()

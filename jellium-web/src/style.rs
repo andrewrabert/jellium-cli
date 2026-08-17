@@ -10,8 +10,10 @@ pub fn drawn(length: Drawn) -> f32 {
     length.count()
 }
 
-/// The family the reference's own base faces register under.
-pub const FAMILY: &str = "Noto Sans";
+/// The family the reference's own base faces register under. Private because
+/// `iced::font::Family::Name` is the foreign boundary that can carry only a
+/// string and `font` is the one site that crosses it.
+const FAMILY: &str = "Noto Sans";
 
 pub fn font(weight: typeface::Weight) -> iced::Font {
     iced::Font {

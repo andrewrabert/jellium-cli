@@ -1,12 +1,14 @@
 //! The virtual folders the server holds, their media paths and their options.
 
-use iced::widget::{button, column, row, text, text_input};
+use iced::widget::{button, column, row, text_input};
 use iced::{Element, Fill};
 
 use crate::app::Message;
 use crate::error::Answer;
+use crate::style::typeface;
 use crate::text::{self as strings, Text};
 use crate::theme;
+use crate::widget::prose;
 use jellium_model::form::{Field, Form};
 
 /// The content types a library can be created as, in the order both the
@@ -168,9 +170,12 @@ pub fn refreshed(state: &mut State, items: &[jellium_protocol::Refreshed]) {
 
 /// Every library with its scan control, and the control that creates one.
 pub fn view<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
-    let mut page = column![text(strings::lookup(Text::LibrariesTitle)).size(22)]
-        .spacing(theme::CARD_SPACING)
-        .padding(theme::CARD_SPACING);
+    let mut page = column![prose(
+        strings::lookup(Text::LibrariesTitle).to_owned(),
+        typeface::HEADING_2
+    )]
+    .spacing(theme::CARD_SPACING)
+    .padding(theme::CARD_SPACING);
 
     if !read_only {
         page = page.push(
@@ -182,12 +187,16 @@ pub fn view<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
                     Some(state.content_type.clone()),
                     |choice| Message::DashboardAction(super::Action::ContentType(choice)),
                 ),
-                button(text(strings::lookup(Text::LibrariesCreate))).on_press(
-                    Message::DashboardAction(super::Action::Write(super::Written::CreateLibrary {
+                button(prose(
+                    strings::lookup(Text::LibrariesCreate).to_owned(),
+                    typeface::BODY
+                ))
+                .on_press(Message::DashboardAction(super::Action::Write(
+                    super::Written::CreateLibrary {
                         name: state.naming.clone(),
                         content_type: state.content_type.value.clone(),
-                    }))
-                ),
+                    }
+                ))),
             ]
             .spacing(theme::CARD_SPACING),
         );
@@ -195,41 +204,46 @@ pub fn view<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
 
     for folder in &state.folders {
         let name = folder.name.clone().unwrap_or_default();
-        let mut held = row![
-            button(text(name.clone())).on_press(Message::DashboardAction(super::Action::Open(
-                super::Screen::Library { name: name.clone() }
-            ))),
-        ]
-        .spacing(theme::CARD_SPACING);
+        let mut held =
+            row![
+                button(prose(name.clone(), typeface::BODY)).on_press(Message::DashboardAction(
+                    super::Action::Open(super::Screen::Library { name: name.clone() })
+                )),
+            ]
+            .spacing(theme::CARD_SPACING);
 
         let named = folder
             .item_id
             .as_deref()
             .and_then(|id| crate::failure::read::<uuid::Uuid>(Text::FailureLibraryId, id));
         if let Some(progress) = named.and_then(|id| state.refreshing.get(&id)) {
-            held = held.push(text(strings::format(
-                Text::LibrariesScanning,
-                &[&format!("{progress:.0}")],
-            )));
+            held = held.push(prose(
+                strings::format(Text::LibrariesScanning, &[&format!("{progress:.0}")]),
+                typeface::BODY,
+            ));
         }
 
         if !read_only {
-            held = held.push(button(text(strings::lookup(Text::LibrariesScan))).on_press(
-                Message::DashboardAction(super::Action::Write(super::Written::ScanLibrary {
-                    name: name.clone(),
-                })),
-            ));
             held = held.push(
-                button(text(strings::lookup(Text::LibrariesRemove))).on_press(
-                    Message::DashboardAction(super::Action::Ask(
-                        crate::screen::confirm::Pending::of(
-                            crate::screen::confirm::Destructive::DeleteLibrary {
-                                name: name.clone(),
-                            },
-                            name,
-                        ),
-                    )),
-                ),
+                button(prose(
+                    strings::lookup(Text::LibrariesScan).to_owned(),
+                    typeface::BODY,
+                ))
+                .on_press(Message::DashboardAction(super::Action::Write(
+                    super::Written::ScanLibrary { name: name.clone() },
+                ))),
+            );
+            held = held.push(
+                button(prose(
+                    strings::lookup(Text::LibrariesRemove).to_owned(),
+                    typeface::BODY,
+                ))
+                .on_press(Message::DashboardAction(super::Action::Ask(
+                    crate::screen::confirm::Pending::of(
+                        crate::screen::confirm::Destructive::DeleteLibrary { name: name.clone() },
+                        name,
+                    ),
+                ))),
             );
         }
         page = page.push(held);
@@ -243,7 +257,7 @@ pub fn view<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
 
 /// One library: its paths, the browser a path is chosen from, and its options.
 pub fn one<'a>(state: &'a One, read_only: bool) -> Element<'a, Message> {
-    let mut page = column![text(state.name.clone()).size(22)]
+    let mut page = column![prose(state.name.clone(), typeface::HEADING_2)]
         .spacing(theme::CARD_SPACING)
         .padding(theme::CARD_SPACING);
 
@@ -252,33 +266,42 @@ pub fn one<'a>(state: &'a One, read_only: bool) -> Element<'a, Message> {
             row![
                 text_input(strings::lookup(Text::LibrariesRename), &state.renaming)
                     .on_input(|typed| Message::DashboardAction(super::Action::Typed(typed))),
-                button(text(strings::lookup(Text::LibrariesRename))).on_press(
-                    Message::DashboardAction(super::Action::Write(super::Written::RenameLibrary {
+                button(prose(
+                    strings::lookup(Text::LibrariesRename).to_owned(),
+                    typeface::BODY
+                ))
+                .on_press(Message::DashboardAction(super::Action::Write(
+                    super::Written::RenameLibrary {
                         name: state.name.clone(),
                         renamed: state.renaming.clone(),
-                    }))
-                ),
+                    }
+                ))),
             ]
             .spacing(theme::CARD_SPACING),
         );
     }
 
-    page = page.push(text(strings::lookup(Text::LibrariesPaths)));
+    page = page.push(prose(
+        strings::lookup(Text::LibrariesPaths).to_owned(),
+        typeface::BODY,
+    ));
     for path in &state.paths {
-        let mut held = row![text(path.clone())].spacing(theme::CARD_SPACING);
+        let mut held = row![prose(path.clone(), typeface::BODY)].spacing(theme::CARD_SPACING);
         if !read_only {
             held = held.push(
-                button(text(strings::lookup(Text::LibrariesPathRemove))).on_press(
-                    Message::DashboardAction(super::Action::Ask(
-                        crate::screen::confirm::Pending::of(
-                            crate::screen::confirm::Destructive::DeletePath {
-                                library: state.name.clone(),
-                                path: path.clone(),
-                            },
-                            path.clone(),
-                        ),
-                    )),
-                ),
+                button(prose(
+                    strings::lookup(Text::LibrariesPathRemove).to_owned(),
+                    typeface::BODY,
+                ))
+                .on_press(Message::DashboardAction(super::Action::Ask(
+                    crate::screen::confirm::Pending::of(
+                        crate::screen::confirm::Destructive::DeletePath {
+                            library: state.name.clone(),
+                            path: path.clone(),
+                        },
+                        path.clone(),
+                    ),
+                ))),
             );
         }
         page = page.push(held);
@@ -286,11 +309,13 @@ pub fn one<'a>(state: &'a One, read_only: bool) -> Element<'a, Message> {
 
     if !read_only {
         page = page.push(
-            button(text(strings::lookup(Text::LibrariesBrowse))).on_press(
-                Message::DashboardAction(super::Action::Browse(
-                    state.browsing.clone().unwrap_or_default(),
-                )),
-            ),
+            button(prose(
+                strings::lookup(Text::LibrariesBrowse).to_owned(),
+                typeface::BODY,
+            ))
+            .on_press(Message::DashboardAction(super::Action::Browse(
+                state.browsing.clone().unwrap_or_default(),
+            ))),
         );
         for entry in &state.entries {
             let Some(path) = entry.path.clone() else {
@@ -298,29 +323,43 @@ pub fn one<'a>(state: &'a One, read_only: bool) -> Element<'a, Message> {
             };
             page = page.push(
                 row![
-                    button(text(entry.name.clone().unwrap_or_default())).on_press(
-                        Message::DashboardAction(super::Action::Browse(path.clone()))
-                    ),
-                    button(text(strings::lookup(Text::LibrariesPathAdd))).on_press(
-                        Message::DashboardAction(super::Action::Write(super::Written::AddPath {
+                    button(prose(
+                        entry.name.clone().unwrap_or_default(),
+                        typeface::BODY
+                    ))
+                    .on_press(Message::DashboardAction(
+                        super::Action::Browse(path.clone())
+                    )),
+                    button(prose(
+                        strings::lookup(Text::LibrariesPathAdd).to_owned(),
+                        typeface::BODY
+                    ))
+                    .on_press(Message::DashboardAction(super::Action::Write(
+                        super::Written::AddPath {
                             library: state.name.clone(),
                             path,
-                        }))
-                    ),
+                        }
+                    ))),
                 ]
                 .spacing(theme::CARD_SPACING),
             );
         }
     }
 
-    page = page.push(text(strings::lookup(Text::LibrariesOptions)));
+    page = page.push(prose(
+        strings::lookup(Text::LibrariesOptions).to_owned(),
+        typeface::BODY,
+    ));
     for field in OPTIONS {
         page = page.push(super::control(*field, state.options.value(*field), false));
     }
     if !read_only {
         page = page.push(
-            button(text(strings::lookup(Text::DashboardSave)))
-                .on_press(Message::DashboardAction(super::Action::Save)),
+            button(prose(
+                strings::lookup(Text::DashboardSave).to_owned(),
+                typeface::BODY,
+            ))
+            .on_press(Message::DashboardAction(super::Action::Save)),
         );
     }
 

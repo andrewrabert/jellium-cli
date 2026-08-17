@@ -4,15 +4,17 @@
 
 use std::rc::Rc;
 
-use iced::widget::{button, checkbox, column, row, text};
+use iced::widget::{button, checkbox, column, row};
 use iced::{Element, Task};
 use uuid::Uuid;
 
 use crate::api::Api;
 use crate::app::{Message, Signed};
 use crate::error::Answer;
+use crate::style::typeface;
 use crate::text::{self as strings, Text};
 use crate::theme;
+use crate::widget::prose;
 
 pub mod controls;
 pub mod display;
@@ -249,9 +251,12 @@ pub async fn load(
 /// The one save control, which is the only control on a settings screen that
 /// writes.
 pub fn save<'a>() -> Element<'a, Message> {
-    button(text(strings::lookup(Text::SettingsSave)))
-        .on_press(Message::SettingsAction(Action::Save))
-        .into()
+    button(prose(
+        strings::lookup(Text::SettingsSave).to_owned(),
+        typeface::BODY,
+    ))
+    .on_press(Message::SettingsAction(Action::Save))
+    .into()
 }
 
 /// One row of choices, the one held drawn without a press, so no control on a
@@ -265,15 +270,18 @@ pub fn choices<'a, T: Copy + PartialEq + 'static>(
 ) -> Element<'a, Message> {
     let mut controls = row![].spacing(theme::CARD_SPACING);
     for offer in offered.iter().copied() {
-        let mut control = button(text(naming(offer)));
+        let mut control = button(prose(naming(offer), typeface::BODY));
         if offer != held {
             control = control.on_press(Message::SettingsAction(Action::Set(setting(offer))));
         }
         controls = controls.push(control);
     }
-    column![text(strings::lookup(label)), controls]
-        .spacing(theme::CARD_SPACING)
-        .into()
+    column![
+        prose(strings::lookup(label).to_owned(), typeface::BODY),
+        controls
+    ]
+    .spacing(theme::CARD_SPACING)
+    .into()
 }
 
 /// One flag of the user configuration, labelled by this region's own text
@@ -287,7 +295,7 @@ pub fn flag<'a>(
         checkbox(configuration.value(field) == "true").on_toggle(move |on| {
             Message::SettingsAction(Action::Edited(field, on.to_string()))
         }),
-        text(strings::lookup(label)),
+        prose(strings::lookup(label).to_owned(), typeface::BODY),
     ]
     .spacing(theme::CARD_SPACING)
     .align_y(iced::Center)
@@ -302,7 +310,7 @@ pub fn toggle<'a>(
 ) -> Element<'a, Message> {
     row![
         checkbox(held).on_toggle(move |on| Message::SettingsAction(Action::Set(setting(on)))),
-        text(strings::lookup(label)),
+        prose(strings::lookup(label).to_owned(), typeface::BODY),
     ]
     .spacing(theme::CARD_SPACING)
     .align_y(iced::Center)
@@ -327,12 +335,15 @@ pub fn choice<'a>(
     configuration: &jellium_model::form::Form,
 ) -> Element<'a, Message> {
     let jellium_model::form::Field::Choice { options, .. } = field else {
-        return text(strings::lookup(label)).into();
+        return prose(strings::lookup(label).to_owned(), typeface::BODY);
     };
     let held = configuration.value(field);
     let mut controls = row![].spacing(theme::CARD_SPACING);
     for option in options {
-        let mut control = button(text(strings::lookup(mode_label(option))));
+        let mut control = button(prose(
+            strings::lookup(mode_label(option)).to_owned(),
+            typeface::BODY,
+        ));
         if *option != held {
             control = control.on_press(Message::SettingsAction(Action::Edited(
                 field,
@@ -341,9 +352,12 @@ pub fn choice<'a>(
         }
         controls = controls.push(control);
     }
-    column![text(strings::lookup(label)), controls]
-        .spacing(theme::CARD_SPACING)
-        .into()
+    column![
+        prose(strings::lookup(label).to_owned(), typeface::BODY),
+        controls
+    ]
+    .spacing(theme::CARD_SPACING)
+    .into()
 }
 
 /// One `Field::Listed` of the user configuration, offered against the list the
@@ -356,7 +370,10 @@ pub fn listed<'a>(
 ) -> Element<'a, Message> {
     let held = configuration.value(field);
     let mut controls = row![].spacing(theme::CARD_SPACING);
-    let mut any = button(text(strings::lookup(Text::PlaybackLanguageAny)));
+    let mut any = button(prose(
+        strings::lookup(Text::PlaybackLanguageAny).to_owned(),
+        typeface::BODY,
+    ));
     if !held.is_empty() {
         any = any.on_press(Message::SettingsAction(Action::Edited(
             field,
@@ -368,15 +385,21 @@ pub fn listed<'a>(
         let Some(code) = culture.three_letter_iso_language_name.clone() else {
             continue;
         };
-        let mut control = button(text(culture.name.clone().unwrap_or_else(|| code.clone())));
+        let mut control = button(prose(
+            culture.name.clone().unwrap_or_else(|| code.clone()),
+            typeface::BODY,
+        ));
         if code != held {
             control = control.on_press(Message::SettingsAction(Action::Edited(field, code)));
         }
         controls = controls.push(control);
     }
-    column![text(strings::lookup(label)), controls]
-        .spacing(theme::CARD_SPACING)
-        .into()
+    column![
+        prose(strings::lookup(label).to_owned(), typeface::BODY),
+        controls
+    ]
+    .spacing(theme::CARD_SPACING)
+    .into()
 }
 
 /// The navigation column beside the screen shown, the read-only indicator above
@@ -388,10 +411,16 @@ pub fn view<'a>(
 ) -> Element<'a, Message> {
     let read_only = signed.session.read_only;
 
-    let mut nav =
-        column![text(strings::lookup(Text::SettingsTitle)).size(20)].spacing(theme::CARD_SPACING);
+    let mut nav = column![prose(
+        strings::lookup(Text::SettingsTitle).to_owned(),
+        typeface::HEADING_3
+    )]
+    .spacing(theme::CARD_SPACING);
     for screen in column_of(&signed.session) {
-        let mut control = button(text(strings::lookup(screen.label())));
+        let mut control = button(prose(
+            strings::lookup(screen.label()).to_owned(),
+            typeface::BODY,
+        ));
         if screen != state.screen {
             control = control.on_press(Message::SettingsAction(Action::Open(screen)));
         }
@@ -424,7 +453,10 @@ pub fn view<'a>(
 
     let mut page = column![].spacing(theme::CARD_SPACING);
     if signed.server_changed {
-        page = page.push(text(strings::lookup(Text::SettingsServerChanged)));
+        page = page.push(prose(
+            strings::lookup(Text::SettingsServerChanged).to_owned(),
+            typeface::BODY,
+        ));
     }
     page = page.push(row![nav, shown].spacing(theme::CARD_SPACING));
 

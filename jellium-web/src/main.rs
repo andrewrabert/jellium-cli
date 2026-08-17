@@ -10,6 +10,7 @@ mod browser;
 mod control;
 mod error;
 mod failure;
+mod fonts;
 mod identity;
 mod images;
 mod live;

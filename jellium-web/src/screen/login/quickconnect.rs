@@ -1,11 +1,13 @@
 use iced::Element;
-use iced::widget::{button, column, container, text};
+use iced::widget::{button, column, container};
 
 use crate::app::Message;
 use crate::text::{self as strings, Text};
 use crate::theme;
 
 use super::Action;
+use crate::style::typeface;
+use crate::widget::prose;
 
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct State {
@@ -18,26 +20,41 @@ pub struct State {
 
 pub fn view<'a>(state: &'a super::State) -> Element<'a, Message> {
     let mut shown = column![
-        text(strings::lookup(Text::LoginQuickConnectTitle)).size(28),
-        text(strings::lookup(Text::LoginQuickConnectInstruction)),
+        prose(
+            strings::lookup(Text::LoginQuickConnectTitle).to_owned(),
+            typeface::HEADING_1
+        ),
+        prose(
+            strings::lookup(Text::LoginQuickConnectInstruction).to_owned(),
+            typeface::BODY
+        ),
     ]
     .spacing(theme::CARD_SPACING)
     .max_width(480);
 
     if let Some(code) = &state.quick_connect.code {
         shown = shown
-            .push(text(strings::lookup(Text::LoginQuickConnectCode)).size(14))
-            .push(text(code.clone()).size(36));
+            .push(prose(
+                strings::lookup(Text::LoginQuickConnectCode).to_owned(),
+                typeface::BODY,
+            ))
+            .push(prose(code.clone(), typeface::HEADING_1));
     }
 
     match state.quick_connect.standing {
         None | Some(jellium_model::quickconnect::SignIn::Pending) => {
-            shown = shown.push(text(strings::lookup(Text::LoginQuickConnectWaiting)));
+            shown = shown.push(prose(
+                strings::lookup(Text::LoginQuickConnectWaiting).to_owned(),
+                typeface::BODY,
+            ));
         }
         Some(jellium_model::quickconnect::SignIn::Expired) => {
             shown = shown.push(
-                button(text(strings::lookup(Text::LoginQuickConnectRetry)))
-                    .on_press(Message::LoginAction(Action::QuickConnectRetry)),
+                button(prose(
+                    strings::lookup(Text::LoginQuickConnectRetry).to_owned(),
+                    typeface::BODY,
+                ))
+                .on_press(Message::LoginAction(Action::QuickConnectRetry)),
             );
         }
         Some(
@@ -47,7 +64,11 @@ pub fn view<'a>(state: &'a super::State) -> Element<'a, Message> {
     }
 
     shown = shown.push(
-        button(text(strings::lookup(Text::LoginBack))).on_press(Message::LoginAction(Action::Back)),
+        button(prose(
+            strings::lookup(Text::LoginBack).to_owned(),
+            typeface::BODY,
+        ))
+        .on_press(Message::LoginAction(Action::Back)),
     );
 
     container(shown)

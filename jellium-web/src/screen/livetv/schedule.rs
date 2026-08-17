@@ -1,6 +1,6 @@
 use std::rc::Rc;
 
-use iced::widget::{button, column, container, row, text};
+use iced::widget::{button, column, container, row};
 use iced::{Element, Fill};
 use jellyfin_api::types::TimerInfoDto;
 
@@ -9,9 +9,11 @@ use crate::api::Api;
 use crate::app::Message;
 use crate::error::Answer;
 use crate::style::Drawn;
+use crate::style::typeface;
 use crate::text::{self as strings, Text};
 use crate::theme;
 use crate::widget;
+use crate::widget::prose;
 use crate::window;
 
 #[derive(Debug, Clone)]
@@ -76,31 +78,40 @@ fn airtime(timer: &TimerInfoDto) -> String {
 fn entry<'a>(timers: &'a [TimerInfoDto], index: usize) -> Element<'a, Message> {
     let timer = &timers[index];
     let heading: Element<'a, Message> = match day(timers, index) {
-        Some(named) => text(crate::text::format(Text::ScheduleDay, &[&named]))
-            .size(16)
-            .into(),
+        Some(named) => prose(
+            crate::text::format(Text::ScheduleDay, &[&named]),
+            typeface::BODY,
+        ),
         None => iced::widget::Space::new().into(),
     };
 
     let mut named = column![
-        text(timer.name.clone().unwrap_or_default()).size(15),
-        text(format!(
-            "{} — {}",
-            timer.channel_name.clone().unwrap_or_default(),
-            airtime(timer)
-        ))
-        .size(13),
+        prose(timer.name.clone().unwrap_or_default(), typeface::BODY),
+        prose(
+            format!(
+                "{} — {}",
+                timer.channel_name.clone().unwrap_or_default(),
+                airtime(timer)
+            ),
+            typeface::SECONDARY
+        ),
     ]
     .spacing(2)
     .width(Fill);
     if conflicted(timer) {
-        named = named.push(text(strings::lookup(Text::ScheduleConflicted)).size(13));
+        named = named.push(prose(
+            strings::lookup(Text::ScheduleConflicted).to_owned(),
+            typeface::SECONDARY,
+        ));
     }
 
     let cancel: Element<'a, Message> = match timer.id.clone() {
-        Some(id) => button(text(strings::lookup(Text::ScheduleCancel)))
-            .on_press(Message::LiveTvAction(Action::CancelTimer(id)))
-            .into(),
+        Some(id) => button(prose(
+            strings::lookup(Text::ScheduleCancel).to_owned(),
+            typeface::BODY,
+        ))
+        .on_press(Message::LiveTvAction(Action::CancelTimer(id)))
+        .into(),
         None => iced::widget::Space::new().into(),
     };
 

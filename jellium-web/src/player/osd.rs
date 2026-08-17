@@ -2,7 +2,7 @@ use std::collections::HashSet;
 use std::time::Duration;
 
 use iced::widget::Space;
-use iced::widget::{button, column, container, image, row, scrollable, slider, text};
+use iced::widget::{button, column, container, image, row, scrollable, slider};
 use iced::{Element, Fill, Length};
 use jellium_protocol::{Method, Quality, Repeat, Subtitles};
 
@@ -14,8 +14,10 @@ use crate::player::remote::{self, Bound};
 use crate::player::scrub::scrub;
 use crate::player::{Action, Menu, Playing};
 use crate::route::Route;
+use crate::style::typeface;
 use crate::text::{self as strings, Text};
 use crate::theme;
+use crate::widget::prose;
 
 const VOLUME_WIDTH: f32 = 96.0;
 
@@ -30,7 +32,7 @@ fn clock(position: Duration) -> String {
 }
 
 fn control<'a>(label: Text, action: Action) -> Element<'a, Message> {
-    button(text(strings::lookup(label)))
+    button(prose(strings::lookup(label).to_owned(), typeface::BODY))
         .on_press(Message::PlayerAction(action))
         .into()
 }
@@ -120,12 +122,15 @@ pub fn chapters<'a>(playing: &'a Playing, images: &'a Cache) -> Vec<Element<'a, 
                     .height(theme::CARD_WIDTH * 0.56)
                     .into(),
             };
-            button(iced::widget::column![thumbnail, text(chapter.name.clone())].spacing(4))
-                .style(button::text)
-                .on_press(Message::PlayerAction(Action::SelectChapter(
-                    chapter.start_ticks,
-                )))
-                .into()
+            button(
+                iced::widget::column![thumbnail, prose(chapter.name.clone(), typeface::BODY)]
+                    .spacing(4),
+            )
+            .style(button::text)
+            .on_press(Message::PlayerAction(Action::SelectChapter(
+                chapter.start_ticks,
+            )))
+            .into()
         })
         .collect()
 }
@@ -137,20 +142,23 @@ fn menu<'a>(playing: &'a Playing, images: &'a Cache) -> Option<Element<'a, Messa
             .audio_streams
             .iter()
             .map(|stream| {
-                button(text(stream.label.clone()))
+                button(prose(stream.label.clone(), typeface::BODY))
                     .on_press(Message::PlayerAction(Action::SelectAudio(stream.index)))
                     .into()
             })
             .collect(),
         Menu::Subtitle => std::iter::once(
-            button(text(strings::lookup(Text::PlayerSubtitlesOff)))
-                .on_press(Message::PlayerAction(Action::SelectSubtitle(
-                    Subtitles::Off,
-                )))
-                .into(),
+            button(prose(
+                strings::lookup(Text::PlayerSubtitlesOff).to_owned(),
+                typeface::BODY,
+            ))
+            .on_press(Message::PlayerAction(Action::SelectSubtitle(
+                Subtitles::Off,
+            )))
+            .into(),
         )
         .chain(playing.plan.subtitle_streams.iter().map(|stream| {
-            button(text(stream.label.clone()))
+            button(prose(stream.label.clone(), typeface::BODY))
                 .on_press(Message::PlayerAction(Action::SelectSubtitle(
                     Subtitles::Stream {
                         index: stream.index,
@@ -162,7 +170,7 @@ fn menu<'a>(playing: &'a Playing, images: &'a Cache) -> Option<Element<'a, Messa
         Menu::Quality => Quality::LADDER
             .iter()
             .map(|quality| {
-                button(text(quality_label(*quality)))
+                button(prose(quality_label(*quality), typeface::BODY))
                     .on_press(Message::PlayerAction(Action::SelectQuality(*quality)))
                     .into()
             })
@@ -173,7 +181,7 @@ fn menu<'a>(playing: &'a Playing, images: &'a Cache) -> Option<Element<'a, Messa
             .sources
             .iter()
             .map(|source| {
-                button(text(source.name.clone()))
+                button(prose(source.name.clone(), typeface::BODY))
                     .on_press(Message::PlayerAction(Action::SelectVersion(
                         source.id.clone(),
                     )))
@@ -214,7 +222,7 @@ pub enum Transport<'a> {
 }
 
 fn remote_control<'a>(label: Text, action: remote::Action) -> Element<'a, Message> {
-    button(text(strings::lookup(label)))
+    button(prose(strings::lookup(label).to_owned(), typeface::BODY))
         .on_press(Message::RemoteAction(action))
         .into()
 }
@@ -237,10 +245,13 @@ fn remote_transport<'a>(bound: &'a Bound) -> Element<'a, Message> {
         remote_control(Text::PlayerSkipForward, remote::Action::SkipForward),
         remote_control(Text::PlayerNext, remote::Action::Next),
         remote_control(Text::PlayerStop, remote::Action::Stop),
-        text(strings::format(
-            Text::PlayerPosition,
-            &[&clock(bound.shown()), &clock(bound.duration())],
-        )),
+        prose(
+            strings::format(
+                Text::PlayerPosition,
+                &[&clock(bound.shown()), &clock(bound.duration())],
+            ),
+            typeface::BODY
+        ),
         Space::new().width(Fill),
         remote_control(Text::QueueShuffle, remote::Action::ToggleShuffle),
         remote_control(
@@ -300,10 +311,13 @@ fn transport<'a>(
         ),
         control(Text::PlayerSkipForward, Action::SkipForward),
         control(Text::PlayerNext, Action::Next),
-        text(strings::format(
-            Text::PlayerPosition,
-            &[&clock(playing.shown()), &clock(playing.duration)],
-        )),
+        prose(
+            strings::format(
+                Text::PlayerPosition,
+                &[&clock(playing.shown()), &clock(playing.duration)],
+            ),
+            typeface::BODY
+        ),
         Space::new().width(Fill),
         control(Text::QueueShuffle, Action::ToggleShuffle),
         control(repeat_label(playing.queue.repeat()), Action::CycleRepeat),
@@ -321,13 +335,19 @@ fn transport<'a>(
     .align_y(iced::Center);
 
     controls = controls.push(
-        button(text(strings::lookup(Text::PlayerRemote)))
-            .on_press(Message::Navigated(Route::Remote)),
+        button(prose(
+            strings::lookup(Text::PlayerRemote).to_owned(),
+            typeface::BODY,
+        ))
+        .on_press(Message::Navigated(Route::Remote)),
     );
     if sync_play {
         controls = controls.push(
-            button(text(strings::lookup(Text::PlayerSyncPlay)))
-                .on_press(Message::Navigated(Route::SyncPlay)),
+            button(prose(
+                strings::lookup(Text::PlayerSyncPlay).to_owned(),
+                typeface::BODY,
+            ))
+            .on_press(Message::Navigated(Route::SyncPlay)),
         );
     }
 
@@ -368,8 +388,11 @@ fn transport<'a>(
 
     controls
         .push(
-            button(text(strings::lookup(Text::PlayerQueue)))
-                .on_press(Message::Navigated(Route::Queue)),
+            button(prose(
+                strings::lookup(Text::PlayerQueue).to_owned(),
+                typeface::BODY,
+            ))
+            .on_press(Message::Navigated(Route::Queue)),
         )
         .push(control(Text::PlayerLeave, Action::Leave))
         .into()
@@ -397,12 +420,18 @@ fn live_transport<'a>(
 ) -> Element<'a, Message> {
     let mut named = column![
         row![
-            container(text(strings::lookup(Text::PlayerLive)).size(12)).padding(2),
-            text(crate::text::format(
-                Text::PlayerChannel,
-                &[&live.channel.name, &live.channel.number]
+            container(prose(
+                strings::lookup(Text::PlayerLive).to_owned(),
+                typeface::SECONDARY
             ))
-            .size(20),
+            .padding(2),
+            prose(
+                crate::text::format(
+                    Text::PlayerChannel,
+                    &[&live.channel.name, &live.channel.number]
+                ),
+                typeface::HEADING_3
+            ),
         ]
         .spacing(8)
         .align_y(iced::Center),
@@ -410,19 +439,16 @@ fn live_transport<'a>(
     .spacing(4);
 
     if let Some(program) = &live.program {
-        named = named.push(text(program.title.clone()).size(15));
-        named = named.push(text(crate::livetv::airtime(program)).size(13));
+        named = named.push(prose(program.title.clone(), typeface::BODY));
+        named = named.push(prose(crate::livetv::airtime(program), typeface::SECONDARY));
         named = named.push(crate::widget::elapsed_bar(program.elapsed(now)));
     }
 
     if live.tuning {
-        named = named.push(
-            text(crate::text::format(
-                Text::PlayerTuning,
-                &[&live.channel.name],
-            ))
-            .size(13),
-        );
+        named = named.push(prose(
+            crate::text::format(Text::PlayerTuning, &[&live.channel.name]),
+            typeface::SECONDARY,
+        ));
     }
 
     let recording = live
@@ -431,11 +457,17 @@ fn live_transport<'a>(
         .is_some_and(|program| program.timer.is_some() || program.series_timer.is_some());
 
     let record: Element<'a, Message> = if recording {
-        text(strings::lookup(Text::PlayerRecording)).size(13).into()
+        prose(
+            strings::lookup(Text::PlayerRecording).to_owned(),
+            typeface::SECONDARY,
+        )
     } else {
-        button(text(strings::lookup(Text::PlayerRecord)))
-            .on_press(Message::PlayerAction(Action::Record))
-            .into()
+        button(prose(
+            strings::lookup(Text::PlayerRecord).to_owned(),
+            typeface::BODY,
+        ))
+        .on_press(Message::PlayerAction(Action::Record))
+        .into()
     };
 
     let controls = row![
@@ -482,19 +514,22 @@ pub fn view<'a>(
     }
 
     let mut body = column![
-        text(title(playing)).size(24),
-        text(method(playing)).size(13),
+        prose(title(playing), typeface::HEADING_2),
+        prose(method(playing).to_owned(), typeface::SECONDARY),
     ]
     .spacing(4);
 
     if let Some(trouble) = playing.trouble {
-        body = body.push(text(strings::lookup(trouble)));
+        body = body.push(prose(strings::lookup(trouble).to_owned(), typeface::BODY));
     }
     if let Some(next) = upcoming(playing) {
-        body = body.push(text(next).size(13));
+        body = body.push(prose(next, typeface::SECONDARY));
     }
     if group.is_some_and(Joined::waiting) {
-        body = body.push(text(strings::lookup(Text::SyncPlayWaiting)).size(13));
+        body = body.push(prose(
+            strings::lookup(Text::SyncPlayWaiting).to_owned(),
+            typeface::SECONDARY,
+        ));
     }
 
     let mut page = column![body, Space::new().height(Fill)].height(Fill);
@@ -502,7 +537,7 @@ pub fn view<'a>(
     if let Some(menu) = menu(playing, images) {
         page = page.push(menu);
     } else {
-        page = page.push(text(quality_label(quality)).size(13));
+        page = page.push(prose(quality_label(quality), typeface::SECONDARY));
     }
 
     page = match playing.live.as_ref() {
@@ -582,7 +617,7 @@ pub fn bar<'a>(
         None => Space::new().width(theme::BAR_ART_WIDTH).into(),
     };
 
-    let details = column![text(heading).size(15), scrubber]
+    let details = column![prose(heading, typeface::BODY), scrubber]
         .spacing(4)
         .width(Fill);
 

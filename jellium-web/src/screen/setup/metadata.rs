@@ -1,6 +1,6 @@
 //! The preferred metadata language and the metadata country.
 
-use iced::widget::{column, pick_list, text};
+use iced::widget::{column, pick_list};
 use iced::{Element, Fill};
 
 use crate::app::Message;
@@ -10,6 +10,8 @@ use crate::theme;
 use crate::widget::Choice;
 
 use super::{Action, Edit};
+use crate::style::typeface;
+use crate::widget::prose;
 
 #[derive(Debug, Clone)]
 pub struct State {
@@ -60,8 +62,14 @@ fn chosen(options: &[Choice], held: &str) -> Option<Choice> {
 
 pub fn view(state: &State) -> Element<'_, Message> {
     column![
-        text(strings::lookup(Text::SetupMetadata)).size(20),
-        text(strings::lookup(Text::SetupMetadataLanguage)),
+        prose(
+            strings::lookup(Text::SetupMetadata).to_owned(),
+            typeface::HEADING_3
+        ),
+        prose(
+            strings::lookup(Text::SetupMetadataLanguage).to_owned(),
+            typeface::BODY
+        ),
         pick_list(
             state.languages.clone(),
             chosen(
@@ -71,7 +79,10 @@ pub fn view(state: &State) -> Element<'_, Message> {
             |choice| Message::SetupAction(Action::Edited(Edit::MetadataLanguage(choice))),
         )
         .width(Fill),
-        text(strings::lookup(Text::SetupMetadataCountry)),
+        prose(
+            strings::lookup(Text::SetupMetadataCountry).to_owned(),
+            typeface::BODY
+        ),
         pick_list(
             state.countries.clone(),
             chosen(&state.countries, &state.configuration.metadata_country_code),

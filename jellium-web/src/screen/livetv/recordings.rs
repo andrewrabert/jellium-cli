@@ -1,7 +1,7 @@
 use std::collections::HashSet;
 use std::rc::Rc;
 
-use iced::widget::{Space, button, column, container, image, row, text};
+use iced::widget::{Space, button, column, container, image, row};
 use iced::{Element, Fill};
 use jellyfin_api::types::BaseItemDto;
 use uuid::Uuid;
@@ -12,9 +12,11 @@ use crate::app::Message;
 use crate::error::Answer;
 use crate::images::{self, Cache};
 use crate::style::Drawn;
+use crate::style::typeface;
 use crate::text::{self as strings, Text};
 use crate::theme;
 use crate::widget;
+use crate::widget::prose;
 use crate::window;
 
 #[derive(Debug, Clone)]
@@ -71,38 +73,57 @@ fn entry<'a>(
         return Space::new().into();
     };
 
-    let mut named = column![text(item.name.clone().unwrap_or_default()).size(15)]
+    let mut named = column![prose(item.name.clone().unwrap_or_default(), typeface::BODY)]
         .spacing(2)
         .width(Fill);
     if in_progress(item) {
-        named = named.push(text(strings::lookup(Text::RecordingsInProgress)).size(13));
+        named = named.push(prose(
+            strings::lookup(Text::RecordingsInProgress).to_owned(),
+            typeface::SECONDARY,
+        ));
     }
 
     let mut controls = row![
-        button(text(strings::lookup(Text::ProgramPlay)))
-            .on_press(Message::LiveTvAction(Action::PlayRecording(id))),
+        button(prose(
+            strings::lookup(Text::ProgramPlay).to_owned(),
+            typeface::BODY
+        ))
+        .on_press(Message::LiveTvAction(Action::PlayRecording(id))),
     ]
     .spacing(theme::CARD_SPACING);
 
     if let Some(timer) = writing(item) {
         controls = controls.push(
-            button(text(strings::lookup(Text::RecordingsStop))).on_press(Message::LiveTvAction(
-                Action::StopRecording(timer.to_string()),
-            )),
+            button(prose(
+                strings::lookup(Text::RecordingsStop).to_owned(),
+                typeface::BODY,
+            ))
+            .on_press(Message::LiveTvAction(Action::StopRecording(
+                timer.to_string(),
+            ))),
         );
     } else if confirming == Some(id) {
         controls = controls.push(
-            button(text(strings::lookup(Text::RecordingsDeleteConfirm)))
-                .on_press(Message::LiveTvAction(Action::ConfirmDelete(id))),
+            button(prose(
+                strings::lookup(Text::RecordingsDeleteConfirm).to_owned(),
+                typeface::BODY,
+            ))
+            .on_press(Message::LiveTvAction(Action::ConfirmDelete(id))),
         );
         controls = controls.push(
-            button(text(strings::lookup(Text::RecordingsDeleteCancel)))
-                .on_press(Message::LiveTvAction(Action::CloseDelete)),
+            button(prose(
+                strings::lookup(Text::RecordingsDeleteCancel).to_owned(),
+                typeface::BODY,
+            ))
+            .on_press(Message::LiveTvAction(Action::CloseDelete)),
         );
     } else {
         controls = controls.push(
-            button(text(strings::lookup(Text::RecordingsDelete)))
-                .on_press(Message::LiveTvAction(Action::Delete(id))),
+            button(prose(
+                strings::lookup(Text::RecordingsDelete).to_owned(),
+                typeface::BODY,
+            ))
+            .on_press(Message::LiveTvAction(Action::Delete(id))),
         );
     }
 

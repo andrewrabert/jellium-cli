@@ -2,20 +2,28 @@
 //! one table the player matches against.
 
 use iced::Element;
-use iced::widget::{column, row, text};
+use iced::widget::{column, row};
 
 use crate::app::Message;
 use crate::player::binding::BINDINGS;
+use crate::style::typeface;
 use crate::text::{self as strings, Text};
 use crate::theme;
+use crate::widget::prose;
 
 /// Every entry of `player::binding::BINDINGS`, each naming its key and what it
 /// does, and no control that changes one.
 pub fn view<'a>() -> Element<'a, Message> {
     let mut shown = column![
         row![
-            text(strings::lookup(Text::ControlsKey)),
-            text(strings::lookup(Text::ControlsDoes)),
+            prose(
+                strings::lookup(Text::ControlsKey).to_owned(),
+                typeface::BODY
+            ),
+            prose(
+                strings::lookup(Text::ControlsDoes).to_owned(),
+                typeface::BODY
+            ),
         ]
         .spacing(theme::CARD_SPACING)
     ]
@@ -24,8 +32,11 @@ pub fn view<'a>() -> Element<'a, Message> {
     for binding in BINDINGS {
         shown = shown.push(
             row![
-                text(strings::lookup(binding.named)),
-                text(strings::lookup(binding.does.text())),
+                prose(strings::lookup(binding.named).to_owned(), typeface::BODY),
+                prose(
+                    strings::lookup(binding.does.text()).to_owned(),
+                    typeface::BODY
+                ),
             ]
             .spacing(theme::CARD_SPACING),
         );

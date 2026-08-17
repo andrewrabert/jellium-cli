@@ -2,7 +2,7 @@ use std::collections::HashSet;
 use std::rc::Rc;
 
 use iced::Element;
-use iced::widget::{button, checkbox, column, row, scrollable, text};
+use iced::widget::{button, checkbox, column, row, scrollable};
 use jellium_model::facets::{SeriesState, VideoKind};
 use jellium_model::paged::Paged;
 use jellium_model::sort::Sort;
@@ -15,10 +15,12 @@ use crate::app::Message;
 use crate::error::Answer;
 use crate::images::{self, Cache};
 use crate::route::Listing;
+use crate::style::typeface;
 use crate::style::{Drawn, Viewport};
 use crate::text::{self as strings, Text};
 use crate::theme;
 use crate::widget;
+use crate::widget::prose;
 
 /// A windowed grid of items: the library grid, search results, a hub's filtered
 /// list, a collection's contents, and either top-level destination.
@@ -191,14 +193,20 @@ pub fn sort_label(sort: Sort) -> Text {
 
 fn sort_surface<'a>(listing: &Listing) -> Element<'a, Message> {
     let controls = Sort::ALL.into_iter().map(|sort| {
-        let mut control = button(text(strings::lookup(sort_label(sort))));
+        let mut control = button(prose(
+            strings::lookup(sort_label(sort)).to_owned(),
+            typeface::BODY,
+        ));
         if sort != listing.sort {
             control = control.on_press(Message::BrowseAction(Action::Sorted(sort)));
         }
         control.into()
     });
     row![
-        text(strings::lookup(Text::LibrarySort)),
+        prose(
+            strings::lookup(Text::LibrarySort).to_owned(),
+            typeface::BODY
+        ),
         row(controls).spacing(theme::CARD_SPACING),
     ]
     .spacing(theme::CARD_SPACING)
@@ -208,7 +216,7 @@ fn sort_surface<'a>(listing: &Listing) -> Element<'a, Message> {
 
 fn letter_jump<'a>() -> Element<'a, Message> {
     row(window::LETTERS.into_iter().map(|letter| {
-        button(text(letter.to_string()))
+        button(prose(letter.to_string(), typeface::BODY))
             .style(button::text)
             .on_press(Message::BrowseAction(Action::Jumped(letter)))
             .into()
@@ -238,7 +246,7 @@ fn narrowing<'a>(label: String, on: bool, narrow: Narrow) -> Element<'a, Message
             }
             Message::BrowseAction(Action::Narrowed(narrow))
         }),
-        text(label),
+        prose(label, typeface::BODY),
     ]
     .spacing(theme::CARD_SPACING)
     .align_y(iced::Alignment::Center)
@@ -251,10 +259,16 @@ fn filter_surface<'a>(browse: &'a Browse) -> Element<'a, Message> {
 
     let mut surface = column![
         row![
-            button(text(strings::lookup(Text::FilterClose)))
-                .on_press(Message::BrowseAction(Action::CloseFilters)),
-            button(text(strings::lookup(Text::FilterClear)))
-                .on_press(Message::BrowseAction(Action::ClearFilters)),
+            button(prose(
+                strings::lookup(Text::FilterClose).to_owned(),
+                typeface::BODY
+            ))
+            .on_press(Message::BrowseAction(Action::CloseFilters)),
+            button(prose(
+                strings::lookup(Text::FilterClear).to_owned(),
+                typeface::BODY
+            ))
+            .on_press(Message::BrowseAction(Action::ClearFilters)),
         ]
         .spacing(theme::CARD_SPACING),
         narrowing(
@@ -351,16 +365,16 @@ fn filter_surface<'a>(browse: &'a Browse) -> Element<'a, Message> {
 pub fn view<'a>(browse: &'a Browse, images: &'a Cache, read_only: bool) -> Element<'a, Message> {
     let active = browse.listing.facets.count();
     let mut page = column![
-        text(browse.heading.clone()).size(28),
-        text(strings::format(
-            Text::BrowseTotal,
-            &[&browse.items.len().to_string()],
-        )),
+        prose(browse.heading.clone(), typeface::HEADING_1),
+        prose(
+            strings::format(Text::BrowseTotal, &[&browse.items.len().to_string()],),
+            typeface::BODY
+        ),
         sort_surface(&browse.listing),
-        button(text(strings::format(
-            Text::FilterOpen,
-            &[&active.to_string()],
-        )))
+        button(prose(
+            strings::format(Text::FilterOpen, &[&active.to_string()],),
+            typeface::BODY
+        ))
         .on_press(Message::BrowseAction(Action::OpenFilters)),
     ]
     .spacing(theme::CARD_SPACING)

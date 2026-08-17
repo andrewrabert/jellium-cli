@@ -2,12 +2,14 @@
 //! settings region.
 
 use iced::Element;
-use iced::widget::{button, column, row, text, text_input};
+use iced::widget::{button, column, row, text_input};
 use uuid::Uuid;
 
 use crate::app::Message;
+use crate::style::typeface;
 use crate::text::{self as strings, Text};
 use crate::theme;
+use crate::widget::prose;
 
 /// Which region's action a confirmation's controls raise.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -252,7 +254,7 @@ impl Pending {
 /// field for `Tier::Typed`, and the two controls, each raising `region`'s own
 /// action.
 pub fn view<'a>(pending: &'a Pending, region: Region) -> Element<'a, Message> {
-    let mut shown = column![text(pending.sentence())].spacing(theme::CARD_SPACING);
+    let mut shown = column![prose(pending.sentence(), typeface::BODY)].spacing(theme::CARD_SPACING);
 
     if pending.tier == Tier::Typed {
         shown = shown.push(
@@ -261,7 +263,10 @@ pub fn view<'a>(pending: &'a Pending, region: Region) -> Element<'a, Message> {
         );
     }
 
-    let mut proceed = button(text(strings::lookup(Text::ConfirmProceed)));
+    let mut proceed = button(prose(
+        strings::lookup(Text::ConfirmProceed).to_owned(),
+        typeface::BODY,
+    ));
     if pending.ready() {
         proceed = proceed.on_press(region.confirm());
     }
@@ -270,7 +275,11 @@ pub fn view<'a>(pending: &'a Pending, region: Region) -> Element<'a, Message> {
         .push(
             row![
                 proceed,
-                button(text(strings::lookup(Text::ConfirmCancel))).on_press(region.close()),
+                button(prose(
+                    strings::lookup(Text::ConfirmCancel).to_owned(),
+                    typeface::BODY
+                ))
+                .on_press(region.close()),
             ]
             .spacing(theme::CARD_SPACING),
         )

@@ -4,7 +4,7 @@ use std::collections::HashSet;
 use std::rc::Rc;
 
 use iced::Element;
-use iced::widget::{button, column, text, text_input};
+use iced::widget::{button, column, text_input};
 use uuid::Uuid;
 
 use crate::api::Api;
@@ -15,6 +15,8 @@ use crate::text::{self as strings, Text};
 use crate::theme;
 
 use super::Action;
+use crate::style::typeface;
+use crate::widget::prose;
 
 /// The signed-in user as the profile screen shows them.
 #[derive(Debug, Clone)]
@@ -70,23 +72,30 @@ pub async fn load(api: Rc<Api>, id: Uuid) -> Answer<State> {
 /// earned; the three writing controls are absent under read-only.
 pub fn view<'a>(state: &'a State, read_only: bool, images: &'a Cache) -> Element<'a, Message> {
     let mut shown = column![
-        text(state.name.clone()).size(20),
-        text(strings::lookup(if state.administrator {
-            Text::ProfileAdministrator
-        } else {
-            Text::ProfileMember
-        })),
+        prose(state.name.clone(), typeface::HEADING_3),
+        prose(
+            strings::lookup(if state.administrator {
+                Text::ProfileAdministrator
+            } else {
+                Text::ProfileMember
+            })
+            .to_owned(),
+            typeface::BODY
+        ),
     ]
     .spacing(theme::CARD_SPACING);
 
     if let Some(at) = state.last_active {
-        shown = shown.push(text(strings::format(
-            Text::ProfileLastActive,
-            &[&at.to_rfc3339()],
-        )));
+        shown = shown.push(prose(
+            strings::format(Text::ProfileLastActive, &[&at.to_rfc3339()]),
+            typeface::BODY,
+        ));
     }
 
-    shown = shown.push(text(strings::lookup(Text::ProfileImage)));
+    shown = shown.push(prose(
+        strings::lookup(Text::ProfileImage).to_owned(),
+        typeface::BODY,
+    ));
     if let Some(handle) = images.handle(image_key(state)) {
         shown = shown.push(iced::widget::image(handle));
     }
@@ -94,21 +103,31 @@ pub fn view<'a>(state: &'a State, read_only: bool, images: &'a Cache) -> Element
     if !read_only {
         shown = shown
             .push(
-                button(text(strings::lookup(Text::ProfileImageChoose)))
-                    .on_press(Message::SettingsAction(Action::ChooseImage)),
+                button(prose(
+                    strings::lookup(Text::ProfileImageChoose).to_owned(),
+                    typeface::BODY,
+                ))
+                .on_press(Message::SettingsAction(Action::ChooseImage)),
             )
             .push(
-                button(text(strings::lookup(Text::UsersImageRemove))).on_press(
-                    Message::SettingsAction(Action::Ask(crate::screen::confirm::Pending::of(
+                button(prose(
+                    strings::lookup(Text::UsersImageRemove).to_owned(),
+                    typeface::BODY,
+                ))
+                .on_press(Message::SettingsAction(Action::Ask(
+                    crate::screen::confirm::Pending::of(
                         crate::screen::confirm::Destructive::RemoveUserImage { id: state.id },
                         state.name.clone(),
-                    ))),
-                ),
+                    ),
+                ))),
             );
     }
 
     shown = shown
-        .push(text(strings::lookup(Text::ProfileDisplayName)))
+        .push(prose(
+            strings::lookup(Text::ProfileDisplayName).to_owned(),
+            typeface::BODY,
+        ))
         .push(
             text_input("", &state.naming)
                 .on_input(|typed| Message::SettingsAction(Action::Typed(typed))),
@@ -116,8 +135,11 @@ pub fn view<'a>(state: &'a State, read_only: bool, images: &'a Cache) -> Element
 
     if !read_only {
         shown = shown.push(
-            button(text(strings::lookup(Text::ProfileSaveName)))
-                .on_press(Message::SettingsAction(Action::SaveName)),
+            button(prose(
+                strings::lookup(Text::ProfileSaveName).to_owned(),
+                typeface::BODY,
+            ))
+            .on_press(Message::SettingsAction(Action::SaveName)),
         );
     }
 

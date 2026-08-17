@@ -2,7 +2,7 @@ use std::collections::HashSet;
 use std::rc::Rc;
 
 use iced::Element;
-use iced::widget::{button, column, row, scrollable, text};
+use iced::widget::{button, column, row, scrollable};
 use jellyfin_api::types::{BaseItemDto, BaseItemKind};
 use uuid::Uuid;
 
@@ -11,9 +11,11 @@ use crate::app::Message;
 use crate::error::Answer;
 use crate::images::{self, Cache, Kind};
 use crate::player::Intent;
+use crate::style::typeface;
 use crate::text::{self as strings, Text};
 use crate::theme;
 use crate::widget;
+use crate::widget::prose;
 
 #[derive(Debug, Clone)]
 pub struct State {
@@ -96,7 +98,7 @@ fn resumable(item: &BaseItemDto) -> bool {
 }
 
 fn intent_button<'a>(label: Text, intent: Intent) -> Element<'a, Message> {
-    button(text(strings::lookup(label)))
+    button(prose(strings::lookup(label).to_owned(), typeface::BODY))
         .on_press(Message::PlayPressed(intent))
         .into()
 }
@@ -191,7 +193,7 @@ pub fn view<'a>(
         Some(handle) => iced::widget::image(handle)
             .width(theme::CARD_WIDTH * 1.5)
             .into(),
-        None => text("").into(),
+        None => prose(String::new(), typeface::BODY),
     };
 
     let mut actions = row![].spacing(theme::CARD_SPACING);
@@ -211,57 +213,66 @@ pub fn view<'a>(
         };
         actions = actions
             .push(
-                button(text(strings::lookup(mark)))
+                button(prose(strings::lookup(mark).to_owned(), typeface::BODY))
                     .on_press(Message::PlayedToggled(id, !played(item))),
             )
             .push(
-                button(text(strings::lookup(star)))
+                button(prose(strings::lookup(star).to_owned(), typeface::BODY))
                     .on_press(Message::FavoriteToggled(id, !favorite(item))),
             );
 
         if session.administrator && !session.read_only {
             actions = actions
                 .push(
-                    button(text(strings::lookup(Text::DetailRefreshMetadata))).on_press(
-                        Message::RefreshItem {
-                            item: id,
-                            replace: false,
-                            recursive: true,
-                        },
-                    ),
+                    button(prose(
+                        strings::lookup(Text::DetailRefreshMetadata).to_owned(),
+                        typeface::BODY,
+                    ))
+                    .on_press(Message::RefreshItem {
+                        item: id,
+                        replace: false,
+                        recursive: true,
+                    }),
                 )
                 .push(
-                    button(text(strings::lookup(Text::DetailRefreshReplace))).on_press(
-                        Message::RefreshItem {
-                            item: id,
-                            replace: true,
-                            recursive: true,
-                        },
-                    ),
+                    button(prose(
+                        strings::lookup(Text::DetailRefreshReplace).to_owned(),
+                        typeface::BODY,
+                    ))
+                    .on_press(Message::RefreshItem {
+                        item: id,
+                        replace: true,
+                        recursive: true,
+                    }),
                 )
                 .push(
-                    button(text(strings::lookup(Text::DetailRefreshScanMode))).on_press(
-                        Message::RefreshItem {
-                            item: id,
-                            replace: false,
-                            recursive: false,
-                        },
-                    ),
+                    button(prose(
+                        strings::lookup(Text::DetailRefreshScanMode).to_owned(),
+                        typeface::BODY,
+                    ))
+                    .on_press(Message::RefreshItem {
+                        item: id,
+                        replace: false,
+                        recursive: false,
+                    }),
                 );
         }
     }
 
     let mut summary = column![
-        text(item.name.clone().unwrap_or_default()).size(30),
-        text(heading(item)).size(16),
+        prose(item.name.clone().unwrap_or_default(), typeface::HEADING_1),
+        prose(heading(item), typeface::BODY),
         actions,
     ]
     .spacing(theme::CARD_SPACING);
 
     if let Some(overview) = &item.overview {
         summary = summary
-            .push(text(strings::lookup(Text::DetailOverview)).size(20))
-            .push(text(overview.as_str()));
+            .push(prose(
+                strings::lookup(Text::DetailOverview).to_owned(),
+                typeface::HEADING_3,
+            ))
+            .push(prose(overview.clone(), typeface::BODY));
     }
 
     let mut page = column![row![poster, summary].spacing(theme::CARD_SPACING)]
@@ -270,7 +281,10 @@ pub fn view<'a>(
 
     if !state.children.is_empty() {
         page = page
-            .push(text(strings::lookup(children_heading(item.type_))).size(22))
+            .push(prose(
+                strings::lookup(children_heading(item.type_)).to_owned(),
+                typeface::HEADING_2,
+            ))
             .push(widget::grid(&state.children, images, !session.read_only));
     }
 
@@ -278,12 +292,16 @@ pub fn view<'a>(
         && !session.read_only
         && let Some(id) = item.id
     {
-        page = page.push(button(text(strings::lookup(Text::MetadataOpen))).on_press(
-            Message::Navigated(crate::route::Route::Metadata {
+        page = page.push(
+            button(prose(
+                strings::lookup(Text::MetadataOpen).to_owned(),
+                typeface::BODY,
+            ))
+            .on_press(Message::Navigated(crate::route::Route::Metadata {
                 item: id,
                 part: crate::screen::metadata::Part::Fields,
-            }),
-        ));
+            })),
+        );
     }
 
     if !state.similar.is_empty() {
