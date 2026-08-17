@@ -98,6 +98,13 @@ pub fn page(_theme: &iced::Theme) -> iced::widget::container::Style {
         .color(color(scheme::TEXT))
 }
 
+/// The slot at the top of a page, which the reference leaves transparent over
+/// the page's own background.
+// reference: scheme-header-transparent
+pub fn header(_theme: &iced::Theme) -> iced::widget::container::Style {
+    iced::widget::container::Style::default().background(color(scheme::HEADER))
+}
+
 /// The surface a dialog stands on.
 // reference: dialog-fullscreen
 pub fn dialog(_theme: &iced::Theme) -> iced::widget::container::Style {

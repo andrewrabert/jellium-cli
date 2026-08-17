@@ -238,12 +238,33 @@ pub fn picker<'a>(
     .into()
 }
 
-/// The page a login screen is drawn on: the reference's own side padding, its
-/// top and bottom, and the body centered in what is left.
+/// The banner the reference draws where a page carries no logo of its own, in
+/// the slot its own rule gives it.
+// reference: scheme-logo
+pub fn logo<'a>() -> Element<'a, Message> {
+    const BANNER: &[u8] = include_bytes!("../branding/banner-light.png");
+    container(
+        image(image::Handle::from_bytes(BANNER)).height(style::drawn(space::LOGO.height.drawn())),
+    )
+    .width(style::drawn(space::LOGO.width.drawn()))
+    .height(style::drawn(space::LOGO.height.drawn()))
+    .into()
+}
+
+/// The page a login screen is drawn on: the header slot the reference's banner
+/// stands in, its own side padding, its top and bottom, and the body centered
+/// in what is left.
 // reference: page-centering
 // reference: page-padded
 pub fn page<'a>(viewport: Viewport, body: Element<'a, Message>) -> Element<'a, Message> {
     let side = style::drawn(space::page_side(viewport.canvas()));
+    let header = container(logo())
+        .padding(style::drawn(space::HEADER_PAD.drawn()))
+        .width(Fill)
+        .style(style::header);
+    let body: Element<'a, Message> = column![header, container(body).center_x(Fill)]
+        .spacing(style::drawn(space::SECTION_GAP.drawn()))
+        .into();
     container(body)
         .padding(iced::Padding {
             top: style::drawn(space::PAGE_TOP.drawn()),
