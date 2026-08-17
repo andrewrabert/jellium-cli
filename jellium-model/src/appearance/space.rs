@@ -392,6 +392,13 @@ pub const GUIDE_ROW: Length = Length::em(4.42);
 // reference: detail-backdrop — 40vh
 pub const BACKDROP: Share = Share::units(40.0);
 
+/// Its height on a short portrait page.
+// reference: detail-backdrop — 30vh
+pub const BACKDROP_PORTRAIT: Share = Share::units(30.0);
+
+// reference: detail-backdrop
+pub const BACKDROP_PORTRAIT_AT: Query = Query::MaxWidth(Breakpoint::em(40.0));
+
 /// What the stacked arrangement leaves above the backdrop.
 // reference: detail-backdrop
 pub const BACKDROP_TOP: Length = Length::em(3.0);
@@ -426,21 +433,26 @@ pub const DETAIL_SIDE: Share = Share::per_ten_thousand(500);
 pub const DETAIL_TRAIL: Share = Share::per_ten_thousand(200);
 
 /// The poster's width beside the ribbon.
-// reference: detail-poster — 25vw
+// reference: detail-poster-arms — 25vw
 pub const DETAIL_POSTER: Share = Share::units(25.0);
 
 /// Its width over the backdrop in the stacked arrangement.
-// reference: detail-poster — 30vw
+// reference: detail-poster-arms — 30vw
 pub const DETAIL_POSTER_STACKED: Share = Share::units(30.0);
 
 /// How far the poster rises over the ribbon, which is the ribbon's own height
 /// and four fifths again.
-// reference: detail-poster
+// reference: detail-poster-arms
 pub const DETAIL_POSTER_RISE: Length = RIBBON.times(Ratio::thousandths(1800));
 
 /// The poster's inset from the leading edge beside the ribbon.
-// reference: detail-poster
+// reference: detail-poster-arms
 pub const DETAIL_POSTER_INSET: Share = PAGE_SIDE;
+
+/// Where a page stops raising the poster over the ribbon, the raising and the
+/// reference's own lowering being alternatives that never compose.
+// reference: detail-narrow
+pub const DETAIL_POSTER_LOWERED_AT: Query = Query::MaxWidth(Breakpoint::em(62.5));
 
 /// The gap above and below the row of detail buttons.
 // reference: detail-buttons
@@ -683,6 +695,21 @@ pub fn preview(viewport: Viewport) -> Css {
         (Orientation::Landscape, true) => PREVIEW_SHORT_SIDE.of(viewport.height()),
         (Orientation::Landscape, false) => PREVIEW.of(viewport.height()),
     }
+}
+
+/// The backdrop's height at this page: two fifths of it, and three tenths on a
+/// portrait page no wider than 40em.
+// reference: detail-backdrop
+// reference: detail-narrow
+pub fn backdrop(viewport: Viewport) -> Drawn {
+    let share = match (
+        viewport.orientation(),
+        viewport.matches(BACKDROP_PORTRAIT_AT),
+    ) {
+        (Orientation::Portrait, true) => BACKDROP_PORTRAIT,
+        (Orientation::Portrait | Orientation::Landscape, _) => BACKDROP,
+    };
+    share.of(viewport.canvas().height())
 }
 
 /// The sides of that padding as the page widens.

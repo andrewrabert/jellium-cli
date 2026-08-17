@@ -339,6 +339,9 @@ fn spellings(initializer: &str) -> Vec<(String, Vec<String>)> {
         };
         let arguments = &tail[..end];
         match (name.as_str(), call) {
+            // a design length is root-relative, the canvas applying the root
+            // once for the whole surface, so a rule written in rem spells the
+            // same value a rule written in em does
             ("length", "em") | ("breakpoint", "em") => {
                 if let Ok(em) = arguments.parse::<f64>()
                     && em != 0.0
@@ -348,6 +351,7 @@ fn spellings(initializer: &str) -> Vec<(String, Vec<String>)> {
                         format!("{}em", trimmed(em)),
                         vec![
                             format!("{}em", trimmed(em)),
+                            format!("{}rem", trimmed(em)),
                             format!("{}%", trimmed(em * 100.0)),
                         ],
                     ));

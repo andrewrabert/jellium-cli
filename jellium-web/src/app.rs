@@ -324,12 +324,12 @@ pub enum Message {
     DashboardDiscovered(Answer<Vec<jellyfin_api::types::TunerHostInfo>>),
     /// The lineups a listing provider reported.
     DashboardLineups(Answer<Vec<jellyfin_api::types::NameIdPair>>),
-    /// Refreshes one item's metadata, which item detail offers an
+    /// Refreshes one item's metadata, which the overflow menu offers an
     /// administrator alone.
     RefreshItem {
         item: Uuid,
-        replace: bool,
-        recursive: bool,
+        replace: jellium_model::item::Replace,
+        scope: jellium_model::item::Scope,
     },
     /// A configuration page's grant, released when the screen closed.
     PageClosed,
@@ -2042,14 +2042,14 @@ impl Jellium {
             Message::RefreshItem {
                 item,
                 replace,
-                recursive,
+                scope,
             } => {
                 let Some(signed) = self.signed() else {
                     return Task::none();
                 };
                 let api = signed.api.clone();
                 Task::perform(
-                    async move { api.refresh_item(item, replace, recursive).await },
+                    async move { api.refresh_item(item, replace, scope).await },
                     move |outcome| {
                         Message::DashboardWrote(
                             crate::error::Wrote {
@@ -2931,6 +2931,7 @@ impl Jellium {
                         open,
                         &self.images,
                         crate::screen::overflow::enclosing(signed.route()),
+                        &signed.session,
                     )
                 });
                 let body: Element<'_, Message> = match &signed.view {

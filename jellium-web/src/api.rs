@@ -1819,8 +1819,16 @@ impl Api {
         .await
     }
 
-    pub async fn refresh_item(&self, item: Uuid, replace: bool, recursive: bool) -> Answer<()> {
+    // the query string is where a re-read's two choices become the words the
+    // server reads
+    pub async fn refresh_item(
+        &self,
+        item: Uuid,
+        replace: jellium_model::item::Replace,
+        scope: jellium_model::item::Scope,
+    ) -> Answer<()> {
         Answer::of(async {
+            let (replace, recursive) = (replace.all(), scope.recursive());
             Ok(self
                 .write_whole(
                     &format!(

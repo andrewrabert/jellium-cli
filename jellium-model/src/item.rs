@@ -311,6 +311,41 @@ impl Mark {
     }
 }
 
+/// What a metadata re-read overwrites.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Replace {
+    All,
+    Missing,
+}
+
+impl Replace {
+    /// What `replaceAllMetadata` carries, which is the one site this becomes a
+    /// scalar.
+    pub fn all(self) -> bool {
+        match self {
+            Replace::All => true,
+            Replace::Missing => false,
+        }
+    }
+}
+
+/// How far a metadata re-read reaches.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Scope {
+    Item,
+    Tree,
+}
+
+impl Scope {
+    /// What `recursive` carries, which is the one site this becomes a scalar.
+    pub fn recursive(self) -> bool {
+        match self {
+            Scope::Tree => true,
+            Scope::Item => false,
+        }
+    }
+}
+
 /// The mark the server's own field carries, absent where it holds nothing.
 fn mark(held: Option<bool>) -> Mark {
     match held {

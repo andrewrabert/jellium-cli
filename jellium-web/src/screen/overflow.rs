@@ -1,6 +1,6 @@
 use iced::widget::{button, column, row, text_input};
 use iced::{Element, Task};
-use jellium_model::item::Mark;
+use jellium_model::item::{Mark, Replace, Scope};
 use jellyfin_api::types::BaseItemDto;
 use uuid::Uuid;
 
@@ -76,6 +76,14 @@ pub enum Action {
         collection: Uuid,
         item: Uuid,
     },
+    /// Re-reads the item's metadata, offered to an administrator on a writable
+    /// server, in the menu the reference puts its own refresh command in.
+    // reference: detail-refresh
+    Refresh {
+        item: Uuid,
+        replace: Replace,
+        scope: Scope,
+    },
 }
 
 /// The menu drawn over the card or detail screen it was opened from, and the
@@ -86,6 +94,7 @@ pub fn view<'a>(
     open: &'a Open,
     images: &'a Cache,
     collection: Option<Uuid>,
+    session: &'a jellium_protocol::Session,
 ) -> Element<'a, Message> {
     let _ = images;
     let item = open.item;
@@ -151,6 +160,25 @@ pub fn view<'a>(
                     item,
                 })),
             );
+        }
+
+        // reference: detail-refresh
+        if session.administrator && !session.read_only {
+            for (label, replace, scope) in [
+                (Text::DetailRefreshMetadata, Replace::Missing, Scope::Tree),
+                (Text::DetailRefreshReplace, Replace::All, Scope::Tree),
+                (Text::DetailRefreshScanMode, Replace::Missing, Scope::Item),
+            ] {
+                menu = menu.push(
+                    button(prose(strings::lookup(label), typeface::BODY))
+                        .style(style::flat)
+                        .on_press(Message::OverflowAction(Action::Refresh {
+                            item,
+                            replace,
+                            scope,
+                        })),
+                );
+            }
         }
 
         return menu
@@ -320,6 +348,18 @@ pub fn act(signed: &mut Signed, action: Action) -> Task<Message> {
                     )
                 },
             )
+        }
+        Action::Refresh {
+            item,
+            replace,
+            scope,
+        } => {
+            signed.overflow = None;
+            Task::done(Message::RefreshItem {
+                item,
+                replace,
+                scope,
+            })
         }
         Action::RemoveFrom { collection, item } => {
             signed.overflow = None;

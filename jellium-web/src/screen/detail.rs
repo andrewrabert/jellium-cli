@@ -239,7 +239,7 @@ fn poster<'a>(item: &BaseItemDto, images: &'a Cache, width: Drawn) -> Element<'a
 /// A quarter of the page beside the ribbon and three tenths of it over the
 /// backdrop, which is the one measure the two arrangements disagree on before
 /// they are laid out.
-// reference: detail-poster
+// reference: detail-poster-arms
 fn poster_width(viewport: Viewport) -> Drawn {
     match viewport.band() {
         Band::Desktop => space::DETAIL_POSTER,
@@ -264,12 +264,7 @@ struct Head<'a> {
 // reference: detail-parent-name
 // reference: detail-name-container
 // reference: detail-misc
-fn head<'a>(
-    item: &'a BaseItemDto,
-    viewport: Viewport,
-    images: &'a Cache,
-    session: &'a jellium_protocol::Session,
-) -> Head<'a> {
+fn head<'a>(item: &'a BaseItemDto, viewport: Viewport, images: &'a Cache) -> Head<'a> {
     let mut actions = row![].spacing(style::drawn(space::GUTTER.drawn()));
     for control in play_controls(item, viewport) {
         actions = actions.push(control);
@@ -297,40 +292,6 @@ fn head<'a>(
                 Message::FavoriteToggled(id, item::favorited(item).flipped()),
                 viewport,
             ));
-
-        if session.administrator && !session.read_only {
-            actions = actions
-                .push(detail_button(
-                    Icon::Autorenew,
-                    Text::DetailRefreshMetadata,
-                    Message::RefreshItem {
-                        item: id,
-                        replace: false,
-                        recursive: true,
-                    },
-                    viewport,
-                ))
-                .push(detail_button(
-                    Icon::Autorenew,
-                    Text::DetailRefreshReplace,
-                    Message::RefreshItem {
-                        item: id,
-                        replace: true,
-                        recursive: true,
-                    },
-                    viewport,
-                ))
-                .push(detail_button(
-                    Icon::Autorenew,
-                    Text::DetailRefreshScanMode,
-                    Message::RefreshItem {
-                        item: id,
-                        replace: false,
-                        recursive: false,
-                    },
-                    viewport,
-                ));
-        }
     }
 
     let mut lines = column![].spacing(style::drawn(space::GUTTER.drawn()));
@@ -344,7 +305,7 @@ fn head<'a>(
     }
 
     Head {
-        backdrop: backdrop(item, images, space::BACKDROP.of(viewport.canvas().height())),
+        backdrop: backdrop(item, images, space::backdrop(viewport)),
         poster: poster(item, images, poster_width(viewport)),
         name: column![
             prose(heading(item), typeface::BODY),
@@ -364,9 +325,21 @@ fn head<'a>(
 // reference: detail-content
 fn ribboned<'a>(head: Head<'a>, viewport: Viewport) -> Element<'a, Message> {
     let canvas = viewport.canvas();
-    let tall = space::BACKDROP.of(canvas.height());
+    let tall = space::backdrop(viewport);
     let ribbon = space::RIBBON.drawn();
-    let rise = space::DETAIL_POSTER_RISE.drawn();
+    // the reference lowers the poster by a tenth of its containing block at
+    // this width rather than raising it over the ribbon, and this client
+    // constrains the poster in width alone, as the reference's own image is
+    // drawn, so no height exists here to take a tenth of
+    // this client leaves the poster unraised on such a page instead, which
+    // keeps the two offsets alternatives as the reference writes them
+    // the poster therefore stands a tenth of its own height above where the
+    // reference draws it on a page no wider than 62.5em
+    // reference: detail-narrow
+    let rise = match viewport.matches(space::DETAIL_POSTER_LOWERED_AT) {
+        true => Drawn::ZERO,
+        false => space::DETAIL_POSTER_RISE.drawn(),
+    };
     let lead = style::drawn(space::RIBBON_INSET.of(canvas.width()));
     let trail = style::drawn(space::DETAIL_TRAIL.of(canvas.width()));
 
@@ -468,7 +441,7 @@ pub fn view<'a>(
         false => widget::Overflow::Offered,
     };
 
-    let head = head(item, viewport, images, session);
+    let head = head(item, viewport, images);
     let drawn = match viewport.band() {
         Band::Desktop => ribboned(head, viewport),
         Band::Mobile => stacked(head, viewport),

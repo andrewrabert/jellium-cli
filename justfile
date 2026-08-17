@@ -42,7 +42,7 @@ pinned checkout: (reference checkout)
     git diff --exit-code jellium-web/reference
     JELLYFIN_WEB_REFERENCE="$1" \
     JELLYFIN_APICLIENT_REFERENCE="$1/node_modules/jellyfin-apiclient" \
-    cargo test -p jellium-reference --test provenance
+    cargo test -p jellium-reference
 
 # Build the Jellium Web bundle
 web-bundle:
