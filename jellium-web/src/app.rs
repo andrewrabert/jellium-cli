@@ -30,7 +30,6 @@ use crate::screen::program;
 use crate::screen::{dashboard, detail, home, library, login, search};
 use crate::style::{self, Drawn, Viewport, space, typeface};
 use crate::text::{self as strings, Text};
-use crate::theme;
 use crate::widget;
 use crate::widget::prose;
 use crate::window;
@@ -1023,7 +1022,8 @@ impl Jellium {
             return Task::none();
         };
         let api = signed.api.clone();
-        let url = api.image_url(key);
+        let fill = crate::images::card(key.kind).image_width(self.viewport, crate::page::screen());
+        let url = api.image_url(key, fill);
         Task::perform(async move { api.image(url).await }, move |result| {
             Message::ImageLoaded(key, result)
         })
@@ -1753,7 +1753,7 @@ impl Jellium {
                         live::send(&Report::Playing {
                             play_session: plan.play_session.clone(),
                         });
-                        let task = player::installed(signed, *plan);
+                        let task = player::installed(signed, *plan, viewport);
                         let reading = self.read_trickplay();
                         let settle = self.fetch_images();
                         Task::batch([task, reading, settle])
@@ -2594,7 +2594,6 @@ impl Jellium {
             item: playing.item.id?,
             kind: images::Kind::Chapter,
             index: numbered,
-            width: theme::IMAGE_WIDTH,
         })
     }
 
@@ -3022,7 +3021,7 @@ impl Jellium {
             crate::failure::reports().map(Message::Failed),
             crate::fonts::wants().map(Message::FontWanted),
             iced::window::resize_events()
-                .filter_map(|_| crate::viewport::read().map(Message::Resized)),
+                .filter_map(|_| crate::page::viewport().map(Message::Resized)),
         ]);
         let Stage::Signed(signed) = &self.stage else {
             if let Stage::Login(state) = &self.stage {

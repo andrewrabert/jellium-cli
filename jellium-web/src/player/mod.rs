@@ -45,7 +45,6 @@ use crate::route::Route;
 use crate::settings::{Account, Shared};
 use crate::style::Viewport;
 use crate::text::Text;
-use crate::theme;
 
 /// The display and the cursor hide after this long without input.
 pub const IDLE_HIDE: Duration = Duration::from_secs(3);
@@ -384,7 +383,7 @@ impl Playing {
         }
     }
 
-    fn metadata(&self) -> Metadata {
+    fn metadata(&self, viewport: Viewport) -> Metadata {
         Metadata {
             title: self.item.name.clone().unwrap_or_default(),
             subtitle: self
@@ -395,12 +394,14 @@ impl Playing {
                 .or_else(|| self.item.album.clone())
                 .unwrap_or_default(),
             artwork: self.item.id.map(|item| {
-                crate::images::url(images::Key {
+                let key = images::Key {
                     item,
                     kind: ImageKind::Primary,
                     index: None,
-                    width: theme::IMAGE_WIDTH,
-                })
+                };
+                let fill =
+                    crate::images::card(key.kind).image_width(viewport, crate::page::screen());
+                crate::images::url(key, fill)
             }),
         }
     }
@@ -732,7 +733,7 @@ fn change(signed: &mut Signed, request: PlayRequest) -> Task<Message> {
 /// Installs a plan: loads the element, applies the held volume, mute and
 /// subtitle selection, publishes the media session metadata and reports
 /// playback start.
-pub fn installed(signed: &mut Signed, plan: Plan) -> Task<Message> {
+pub fn installed(signed: &mut Signed, plan: Plan, viewport: Viewport) -> Task<Message> {
     // a change keeps its playback installed while it is in flight, so the
     // element and queue the plan loads into are that playback's own
     let mounted = match signed.pending.take() {
@@ -803,7 +804,7 @@ pub fn installed(signed: &mut Signed, plan: Plan) -> Task<Message> {
         cues: &signed.held.cues(),
     });
     playing.element.ask(&Asked::Metadata {
-        metadata: &playing.metadata(),
+        metadata: &playing.metadata(viewport),
     });
     playing
         .element

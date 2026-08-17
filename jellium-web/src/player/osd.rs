@@ -42,7 +42,6 @@ fn art_key(playing: &Playing) -> Option<images::Key> {
         item: playing.item.id?,
         kind: ImageKind::Primary,
         index: None,
-        width: theme::IMAGE_WIDTH,
     })
 }
 
@@ -112,7 +111,6 @@ pub fn chapters<'a>(playing: &'a Playing, images: &'a Cache) -> Vec<Element<'a, 
                     item,
                     kind: crate::images::Kind::Chapter,
                     index: numbered,
-                    width: theme::IMAGE_WIDTH,
                 })
             });
             let thumbnail: Element<'a, Message> = match handle {
@@ -632,7 +630,6 @@ fn remote_art_key(bound: &Bound) -> Option<images::Key> {
         item: bound.target.now_playing.as_ref()?.item,
         kind: ImageKind::Primary,
         index: None,
-        width: theme::IMAGE_WIDTH,
     })
 }
 

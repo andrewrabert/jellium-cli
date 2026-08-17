@@ -2,6 +2,8 @@ use std::collections::{HashMap, HashSet};
 
 use uuid::Uuid;
 
+use crate::style::card;
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Kind {
     Primary,
@@ -35,17 +37,25 @@ pub struct Key {
     pub kind: Kind,
     /// The index within the kind, and `None` for the first.
     pub index: Option<i32>,
-    pub width: u16,
 }
 
-/// The same-origin relay url an image key is fetched from: a `Kind::User` key
-/// from the user image route, and every other key from the item image route.
-pub fn url(key: Key) -> String {
-    let origin = web_sys::window()
-        .expect("a browser window")
-        .location()
-        .origin()
-        .expect("the page has an origin");
+/// The card a kind is drawn on, which is what decides how wide it is asked for.
+/// This client's own mapping, the reference resolving a shape from an item's
+/// type at each list it builds.
+pub fn card(kind: Kind) -> card::Card {
+    match kind {
+        Kind::Primary => card::Card::Wall(card::Shape::Portrait),
+        Kind::Thumb | Kind::Backdrop | Kind::Chapter => card::Card::Wall(card::Shape::Backdrop),
+        Kind::Logo | Kind::Banner => card::Card::Wall(card::Shape::Banner),
+        Kind::Art | Kind::User => card::Card::Wall(card::Shape::Square),
+    }
+}
+
+/// The same-origin relay url an image key is fetched from, at `fill` wide: a
+/// `Kind::User` key from the user image route, and every other key from the
+/// item image route.
+pub fn url(key: Key, fill: card::Fill) -> String {
+    let origin = crate::page::origin();
     let prefix = jellium_protocol::RELAY_PREFIX;
     let collection = if key.kind == Kind::User {
         "Users"
@@ -60,18 +70,17 @@ pub fn url(key: Key) -> String {
         "{origin}{prefix}/{collection}/{}/Images/{}{index}?fillWidth={}",
         key.item,
         key.kind.as_str(),
-        key.width,
+        fill.count(),
     )
 }
 
 /// The same-origin url a foreign image is fetched from.
 pub fn foreign_url(handle: &str) -> String {
-    let origin = web_sys::window()
-        .expect("a browser window")
-        .location()
-        .origin()
-        .expect("the page has an origin");
-    format!("{origin}{}/{handle}", jellium_protocol::FOREIGN_PREFIX)
+    format!(
+        "{}{}/{handle}",
+        crate::page::origin(),
+        jellium_protocol::FOREIGN_PREFIX
+    )
 }
 
 /// The images the local server minted handles for, held by handle.

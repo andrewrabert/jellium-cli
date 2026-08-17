@@ -253,7 +253,7 @@ fn every_request_asks_for_what_the_reference_asks_for() {
         let filling = Screen::new(Css::of(row.width));
         assert!(!filling.resizable(viewport), "{at}");
         assert_eq!(
-            card.image_width(viewport, filling).count(),
+            card.image_width(viewport, Some(filling)).count(),
             row.fill,
             "{at}"
         );
@@ -295,7 +295,9 @@ fn an_arm_becomes_a_count_only_where_its_digits_allow_it() {
 }
 
 /// A page inside a wider display rounds its width down to a hundred before the
-/// request, and one filling its display does not.
+/// request; one filling its display does not, and neither does one reporting no
+/// display at all, which is what the reference's own `if (screen)` guard
+/// answers.
 #[test]
 fn a_resizable_page_rounds_its_width_before_asking() {
     let viewport = Viewport::new(Css::of(1450.0), Css::of(900.0));
@@ -304,8 +306,9 @@ fn a_resizable_page_rounds_its_width_before_asking() {
     let filling = Screen::new(Css::of(1450.0));
     assert!(inside.resizable(viewport));
     assert!(!filling.resizable(viewport));
-    assert_eq!(card.image_width(viewport, inside).count(), 200);
-    assert_eq!(card.image_width(viewport, filling).count(), 207);
+    assert_eq!(card.image_width(viewport, Some(inside)).count(), 200);
+    assert_eq!(card.image_width(viewport, Some(filling)).count(), 207);
+    assert_eq!(card.image_width(viewport, None).count(), 207);
 }
 
 #[test]

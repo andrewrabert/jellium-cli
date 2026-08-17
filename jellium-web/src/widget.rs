@@ -61,7 +61,6 @@ pub fn poster_key(item: &BaseItemDto) -> Option<images::Key> {
         item: item.id?,
         kind: Kind::Primary,
         index: None,
-        width: theme::IMAGE_WIDTH,
     })
 }
 
@@ -348,7 +347,6 @@ pub fn on_now_row<'a>(
                     item: channel.id,
                     kind: Kind::Primary,
                     index: None,
-                    width: theme::IMAGE_WIDTH,
                 })
                 .clone();
             channel_card(channel, now, handle)

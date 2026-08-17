@@ -35,7 +35,6 @@ fn key(program: &Program) -> images::Key {
         item: program.item,
         kind: images::Kind::Primary,
         index: None,
-        width: theme::IMAGE_WIDTH,
     }
 }
 

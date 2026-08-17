@@ -8,16 +8,12 @@ use uuid::Uuid;
 use crate::error::{self, Answer, Trouble};
 use crate::text::Text;
 
-fn origin() -> String {
-    web_sys::window()
-        .expect("a browser window")
-        .location()
-        .origin()
-        .expect("the page has an origin")
-}
-
 fn endpoint() -> String {
-    format!("{}{}", origin(), jellium_protocol::IDENTITY_PATH)
+    format!(
+        "{}{}",
+        crate::page::origin(),
+        jellium_protocol::IDENTITY_PATH
+    )
 }
 
 /// A 2xx answers with the status document, a `Failure` body becomes
@@ -48,7 +44,7 @@ pub async fn announce(identity: &Identity) -> Answer<SessionStatus> {
 }
 
 fn at(path: &str) -> String {
-    format!("{}{path}", origin())
+    format!("{}{path}", crate::page::origin())
 }
 
 /// `{path}?target={target}`, which every login-stage request carries.
@@ -265,7 +261,7 @@ pub async fn logout() -> Answer<()> {
 }
 
 fn page_endpoint() -> String {
-    format!("{}{}", origin(), jellium_protocol::PLUGIN_PATH)
+    format!("{}{}", crate::page::origin(), jellium_protocol::PLUGIN_PATH)
 }
 
 /// Mints a grant and answers the frame's path.
@@ -301,7 +297,7 @@ pub async fn close_page(framed: Framed) -> Answer<()> {
 }
 
 fn setup_endpoint(path: &str) -> String {
-    format!("{}{path}", origin())
+    format!("{}{path}", crate::page::origin())
 }
 
 /// One `/setup/*` read.

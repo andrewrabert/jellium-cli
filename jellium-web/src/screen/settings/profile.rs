@@ -12,7 +12,6 @@ use crate::app::Message;
 use crate::error::Answer;
 use crate::images::Cache;
 use crate::text::{self as strings, Text};
-use crate::theme;
 
 use super::Action;
 use crate::style::{self, space, typeface};
@@ -149,7 +148,6 @@ fn image_key(state: &State) -> crate::images::Key {
         item: state.id,
         kind: crate::images::Kind::User,
         index: None,
-        width: theme::IMAGE_WIDTH,
     }
 }
 

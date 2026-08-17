@@ -161,7 +161,6 @@ pub fn view<'a>(
                 item,
                 kind: kind.cached(),
                 index,
-                width: theme::IMAGE_WIDTH,
             });
             let drawn: Element<'a, Message> = match handle {
                 Some(held) => iced::widget::image(held).width(theme::CARD_WIDTH).into(),
@@ -282,7 +281,6 @@ pub fn images(state: &State, item: Uuid) -> HashSet<images::Key> {
                 item,
                 kind: kind.cached(),
                 index: held.image_index,
-                width: theme::IMAGE_WIDTH,
             })
         })
         .collect()

@@ -11,7 +11,6 @@ use crate::player::group::{self, Joined};
 use crate::player::{Action, Playing};
 use crate::style::{self, space, typeface};
 use crate::text::{self as strings, Text};
-use crate::theme;
 use crate::widget::{line, prose};
 use crate::window;
 
@@ -20,7 +19,6 @@ fn key(item: &jellyfin_api::types::BaseItemDto) -> Option<images::Key> {
         item: item.id?,
         kind: ImageKind::Primary,
         index: None,
-        width: theme::IMAGE_WIDTH,
     })
 }
 

@@ -12,7 +12,6 @@ use crate::images::{self, Cache};
 use crate::livetv::Channel;
 use crate::style::{self, space, typeface};
 use crate::text::{self as strings, Text};
-use crate::theme;
 use crate::widget;
 use crate::widget::prose;
 
@@ -195,7 +194,6 @@ pub fn images(state: &State) -> HashSet<images::Key> {
             item: channel.id,
             kind: images::Kind::Primary,
             index: None,
-            width: theme::IMAGE_WIDTH,
         }));
     }
     keys

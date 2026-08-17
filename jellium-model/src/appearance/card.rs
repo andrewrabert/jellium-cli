@@ -372,10 +372,13 @@ impl Card {
 
     /// The width an image is asked for, which `getImageWidth` computes as the
     /// page width over the arm itself, rounded to nearest, after `setCardData`
-    /// has floored a resizable page's width to a hundred.
+    /// has floored a resizable page's width to a hundred. A page reporting no
+    /// display is not resizable and so is not rounded, which is what the
+    /// reference's own `if (screen)` guard answers.
     // reference: card-image-width
-    pub fn image_width(self, viewport: Viewport, screen: Screen) -> Fill {
-        let asked = match screen.resizable(viewport) {
+    pub fn image_width(self, viewport: Viewport, screen: Option<Screen>) -> Fill {
+        let resizable = screen.is_some_and(|screen| screen.resizable(viewport));
+        let asked = match resizable {
             true => Viewport::new(rounded(viewport.width()), viewport.height()),
             false => viewport,
         };

@@ -13,7 +13,6 @@ use crate::images::{self, Cache};
 use crate::livetv::Channel;
 use crate::style::{self, Drawn, space, typeface};
 use crate::text::{self as strings, Text};
-use crate::theme;
 use crate::widget;
 use crate::widget::{line, prose};
 use crate::window;
@@ -50,7 +49,6 @@ fn key(channel: &Channel) -> images::Key {
         item: channel.id,
         kind: images::Kind::Primary,
         index: None,
-        width: theme::IMAGE_WIDTH,
     }
 }
 

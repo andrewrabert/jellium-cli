@@ -187,7 +187,6 @@ pub fn view<'a>(
             item: id,
             kind: Kind::Primary,
             index: None,
-            width: theme::IMAGE_WIDTH,
         })
     }) {
         Some(handle) => iced::widget::image(handle)
@@ -322,7 +321,6 @@ pub fn images(state: &State) -> HashSet<images::Key> {
             item: id,
             kind: Kind::Primary,
             index: None,
-            width: theme::IMAGE_WIDTH,
         });
     }
     keys

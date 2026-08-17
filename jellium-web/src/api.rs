@@ -11,6 +11,7 @@ use crate::error::{Answer, Bubble, Trouble};
 use crate::images;
 use crate::livetv::{Channel, Program};
 use crate::route::Listing;
+use crate::style::card;
 use crate::text::Text;
 
 #[derive(Debug, Clone, Default)]
@@ -135,12 +136,11 @@ fn fields() -> Vec<ItemFields> {
 
 impl Api {
     pub fn new(user_id: Uuid) -> Api {
-        let origin = web_sys::window()
-            .expect("a browser window")
-            .location()
-            .origin()
-            .expect("the page has an origin");
-        let base = format!("{origin}{}", jellium_protocol::RELAY_PREFIX);
+        let base = format!(
+            "{}{}",
+            crate::page::origin(),
+            jellium_protocol::RELAY_PREFIX
+        );
         let http = reqwest::Client::new();
         Api {
             client: jellyfin_api::Client::new(&base, http.clone()),
@@ -915,13 +915,13 @@ impl Api {
         .await
     }
 
-    pub fn image_url(&self, key: images::Key) -> String {
+    pub fn image_url(&self, key: images::Key, fill: card::Fill) -> String {
         format!(
             "{}/Items/{}/Images/{}?fillWidth={}",
             self.base,
             key.item,
             key.kind.as_str(),
-            key.width,
+            fill.count(),
         )
     }
 

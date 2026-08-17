@@ -13,7 +13,6 @@ use crate::images::{self, Cache};
 use crate::livetv::Program;
 use crate::style::{self, Drawn, Viewport, space, typeface};
 use crate::text::{self as strings, Text};
-use crate::theme;
 use crate::widget::{line, prose};
 use crate::window;
 
@@ -251,7 +250,6 @@ pub fn images(state: &State) -> HashSet<images::Key> {
             item: channel.id,
             kind: images::Kind::Primary,
             index: None,
-            width: theme::IMAGE_WIDTH,
         })
         .collect()
 }

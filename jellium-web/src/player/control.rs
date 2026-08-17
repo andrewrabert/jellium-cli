@@ -13,12 +13,7 @@ pub enum Planned {
 }
 
 pub fn endpoint(path: &str) -> String {
-    let origin = web_sys::window()
-        .expect("a browser window")
-        .location()
-        .origin()
-        .expect("the page has an origin");
-    format!("{origin}{path}")
+    format!("{}{path}", crate::page::origin())
 }
 
 /// Asks the local server for a plan for a user-initiated play, which is the one

@@ -16,6 +16,7 @@ mod images;
 mod live;
 mod livetv;
 mod overlay;
+mod page;
 mod player;
 mod prefs;
 mod profile;
@@ -27,7 +28,6 @@ mod settings;
 mod style;
 mod text;
 mod theme;
-mod viewport;
 mod widget;
 mod window;
 

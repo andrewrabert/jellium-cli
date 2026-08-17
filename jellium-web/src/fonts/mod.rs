@@ -227,13 +227,8 @@ impl Stream for Wants {
 /// The face's woff2 bytes, read from the page's own origin.
 pub async fn fetched(face: Served) -> Answer<Vec<u8>> {
     Answer::of(async move {
-        let origin = web_sys::window()
-            .expect("a browser window")
-            .location()
-            .origin()
-            .expect("the page has an origin");
         let response = reqwest::Client::new()
-            .get(format!("{origin}{}", face.path()))
+            .get(format!("{}{}", crate::page::origin(), face.path()))
             .send()
             .await?;
         if !response.status().is_success() {
