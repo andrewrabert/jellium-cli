@@ -283,6 +283,15 @@ pub const SEARCH_ICON_GAP: Length = Length::em(0.25);
 // reference: search-icon
 pub const SEARCH_ICON_DROP: Length = Length::em(0.1);
 
+/// One suggestion's padding, which is what spaces the column.
+// reference: search-suggestions
+pub const SUGGESTION_PAD: Padding = Padding {
+    top: Length::em(0.5),
+    right: Length::em(1.0),
+    bottom: Length::em(0.5),
+    left: Length::em(1.0),
+};
+
 // reference: control-icon-button
 pub const ICON_MARGIN: Length = Length::em(0.29);
 

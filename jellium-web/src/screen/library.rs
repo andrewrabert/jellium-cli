@@ -207,13 +207,9 @@ pub async fn load(
             ))
         } else if kind == Kind::Suggestions {
             Body::Suggestions(Box::new(
-                crate::screen::suggestions::load(
-                    api.clone(),
-                    library,
-                    held.collection_type == Some(CollectionType::Movies),
-                )
-                .await
-                .bubbled()?,
+                crate::screen::suggestions::load(api.clone(), library, held.collection_type)
+                    .await
+                    .bubbled()?,
             ))
         } else if kind == Kind::Upcoming {
             let mut rows = Browse::new(

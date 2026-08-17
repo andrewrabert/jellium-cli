@@ -3,7 +3,7 @@ use std::rc::Rc;
 
 use iced::Element;
 use iced::widget::column;
-use jellyfin_api::types::BaseItemDto;
+use jellyfin_api::types::{BaseItemDto, CollectionType};
 use uuid::Uuid;
 
 use crate::api::Api;
@@ -35,13 +35,17 @@ pub struct Rail {
 /// The most items one suggestions rail shows.
 pub const LIMIT: i32 = 16;
 
-pub async fn load(api: Rc<Api>, library: Uuid, movies: bool) -> Answer<State> {
+pub async fn load(
+    api: Rc<Api>,
+    library: Uuid,
+    collection: Option<CollectionType>,
+) -> Answer<State> {
     Answer::of(async {
         let suggestions = api
             .suggestions(LIMIT)
             .await
             .or_default(Text::FailureSuggestionsUnread);
-        let recommendations = if movies {
+        let recommendations = if collection == Some(CollectionType::Movies) {
             api.recommendations(library)
                 .await
                 .or_default(Text::FailureRecommendationsUnread)

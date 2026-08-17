@@ -29,10 +29,16 @@ pub struct State {
     /// Each entry opens that studio's filtered list.
     pub studios: Vec<BaseItemDto>,
     pub programs: Vec<BaseItemDto>,
+    /// What the page offers while the term is empty.
+    pub suggestions: Vec<BaseItemDto>,
 }
 
 /// The most entries one search section shows.
 pub const SECTION: i32 = 12;
+
+/// The suggestions an empty term draws.
+// reference: search-suggestions-listed
+pub const SUGGESTIONS: i32 = 20;
 
 pub async fn load(
     api: Rc<Api>,
@@ -55,8 +61,14 @@ pub async fn load(
         let mut people = Vec::new();
         let mut studios = Vec::new();
         let mut programs = Vec::new();
+        let mut suggestions = Vec::new();
 
-        if !term.trim().is_empty() {
+        if term.trim().is_empty() {
+            suggestions = api
+                .suggestions(SUGGESTIONS)
+                .await
+                .or_default(Text::FailureSuggestionsUnread);
+        } else {
             let answered = api
                 .browse(
                     None,
@@ -111,6 +123,7 @@ pub async fn load(
             people,
             studios,
             programs,
+            suggestions,
         })
     })
     .await
@@ -165,10 +178,40 @@ fn narrowed(facet: jellium_model::facets::Facet, id: uuid::Uuid) -> crate::route
     }))
 }
 
+/// The column an empty term draws: the reference's heading over one centred
+/// link per suggestion, each padded as the reference pads it.
+// reference: search-suggestions
+fn suggesting(suggestions: &[BaseItemDto]) -> Element<'_, Message> {
+    let links = suggestions.iter().filter_map(|item| {
+        let id = item.id?;
+        Some(
+            iced::widget::button(prose(item.name.clone().unwrap_or_default(), typeface::BODY))
+                .style(style::link)
+                .padding(style::padding(space::SUGGESTION_PAD))
+                .on_press(Message::Navigated(crate::route::Route::Detail { id }))
+                .into(),
+        )
+    });
+    column![
+        prose(
+            strings::lookup(Text::SearchSuggestions),
+            typeface::HEADING_2
+        ),
+        column(links).align_x(iced::Alignment::Center),
+    ]
+    .align_x(iced::Alignment::Center)
+    .width(iced::Fill)
+    .into()
+}
+
 pub fn view<'a>(state: &'a State, viewport: Viewport, images: &'a Cache) -> Element<'a, Message> {
     let mut page = column![widget::searching(&state.term, viewport)]
         .spacing(style::drawn(space::GUTTER.drawn()))
         .padding(style::drawn(space::GUTTER.drawn()));
+
+    if state.term.trim().is_empty() {
+        return page.push(suggesting(&state.suggestions)).into();
+    }
 
     if state.browse.items.is_empty() {
         page = page.push(widget::banner(

@@ -42,6 +42,7 @@
   "libraryTabNetworks": "Networks",
   "searchPlaceholder": "Search",
   "searchEmpty": "Nothing matched that search.",
+  "searchSuggestions": "Suggestions",
   "detailOverview": "Overview",
   "detailSimilar": "More like this",
   "detailSeasons": "Seasons",

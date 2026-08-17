@@ -246,6 +246,7 @@ text! {
     LibraryTabNetworks => "libraryTabNetworks",
     SearchPlaceholder => "searchPlaceholder",
     SearchEmpty => "searchEmpty",
+    SearchSuggestions => "searchSuggestions",
     DetailOverview => "detailOverview",
     DetailSimilar => "detailSimilar",
     DetailSeasons => "detailSeasons",
