@@ -6,28 +6,53 @@
   align-items: center;
   justify-content: center;
   font-family: system-ui, sans-serif;
-  background: #12131a;
-  color: #e8e9ef;
+  line-height: 1.35;
+  background: #101010;
+  color: rgba(255, 255, 255, 0.8);
   z-index: 4;
 }
 
 #jellium-boot[data-state='failed'] {
-  color: #ffb4a8;
+  color: #c62828;
 }
 
 #jellium-boot[hidden] {
   display: none;
 }
 
+#jellium-boot-logo {
+  width: 30%;
+  height: 30%;
+  background-image: url('/branding/icon-transparent.png');
+  background-position: center center;
+  background-repeat: no-repeat;
+  background-size: contain;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+@media screen and (min-device-width: 992px) {
+  #jellium-boot-logo {
+    background-image: url('/branding/banner-light.png');
+  }
+}
+
 #jellium-boot-retry {
-  margin-top: 16px;
-  padding: 8px 16px;
+  margin-top: 0.5em;
+  padding: 0.9em 1em;
   font: inherit;
-  color: #e8e9ef;
-  background: #262838;
-  border: 1px solid #3b3e52;
-  border-radius: 4px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.87);
+  background: #303030;
+  border: 0;
+  border-radius: 0.2em;
   cursor: pointer;
+}
+
+#jellium-boot-retry:focus {
+  background: #383838;
 }
 
 #jellium-boot-retry[hidden] {

@@ -1,3 +1,4 @@
+pub mod appearance;
 pub mod bridge;
 pub mod facets;
 pub mod form;

@@ -15,6 +15,7 @@ use crate::app::Message;
 use crate::error::Answer;
 use crate::images::{self, Cache};
 use crate::route::{Filtered, Listing, Route};
+use crate::style::{Drawn, Viewport};
 use crate::theme;
 use crate::widget;
 
@@ -40,7 +41,7 @@ pub async fn load(
     facet: Facet,
     library: Uuid,
     sort: Sort,
-    viewport: iced::Size,
+    viewport: Viewport,
 ) -> Answer<State> {
     Answer::of(async {
         let answered = api
@@ -56,10 +57,9 @@ pub async fn load(
             sort,
             grid: window::Grid::new(
                 window::Id::Browse,
-                theme::CARD_WIDTH + theme::CARD_SPACING,
-                theme::CARD_HEIGHT,
-                viewport.width,
-                viewport.height,
+                Drawn::of(theme::CARD_WIDTH + theme::CARD_SPACING),
+                Drawn::of(theme::CARD_HEIGHT),
+                viewport.canvas(),
             ),
             entries,
         })

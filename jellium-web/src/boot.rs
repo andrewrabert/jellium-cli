@@ -232,8 +232,21 @@ pub async fn start() {
         "Jellium Web graphics backend: {backend}"
     )));
 
+    let Some(viewport) = crate::viewport::read() else {
+        STARTING.with(|held| held.set(false));
+        let failure = Failure::told(
+            Text::BootNoViewport,
+            Cause::Graphics {
+                detail: backend.to_string(),
+            },
+        );
+        failure::record(&failure);
+        refuse(&failure.sentence);
+        return;
+    };
+
     let run = iced::application(
-        crate::app::Jellium::boot,
+        move || crate::app::Jellium::boot(viewport),
         crate::app::Jellium::update,
         crate::app::Jellium::view,
     )

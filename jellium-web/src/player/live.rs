@@ -11,6 +11,7 @@ use crate::api::Api;
 use crate::app::{Message, Signed};
 use crate::error::{Answer, Operation, Trouble};
 use crate::livetv::Channel;
+use crate::style::Viewport;
 use crate::text::Text;
 use iced::Task;
 
@@ -127,7 +128,7 @@ pub fn record(signed: &mut Signed) -> Task<Message> {
 /// timer, stops playback and releases the tuner once it passes `PAUSED`, and
 /// refetches the watched channel's current program — and nothing else — once
 /// `Live::due` says the boundary owes one.
-pub fn ticked(signed: &mut Signed, now: DateTime<Utc>) -> Task<Message> {
+pub fn ticked(signed: &mut Signed, now: DateTime<Utc>, viewport: Viewport) -> Task<Message> {
     let api = signed.api.clone();
     let Some(playing) = signed.playing.as_mut() else {
         return Task::none();
@@ -143,7 +144,7 @@ pub fn ticked(signed: &mut Signed, now: DateTime<Utc>) -> Task<Message> {
             crate::failure::raise(crate::error::refused(
                 &jellium_protocol::PlaybackRefused::TunerReleased,
             ));
-            return super::leave(signed);
+            return super::leave(signed, viewport);
         }
         return Task::none();
     }

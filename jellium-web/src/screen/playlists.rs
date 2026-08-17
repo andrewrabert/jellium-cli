@@ -14,6 +14,7 @@ use crate::error::{Answer, Operation};
 use crate::images::{self, Cache};
 use crate::route::Listing;
 use crate::screen::browse::{self, Browse};
+use crate::style::{Drawn, Viewport};
 use crate::text::{self as strings, Text};
 use crate::theme;
 use crate::widget;
@@ -114,7 +115,7 @@ pub enum Action {
     },
 }
 
-pub async fn listed(api: Rc<Api>, viewport: iced::Size) -> Answer<Listed> {
+pub async fn listed(api: Rc<Api>, viewport: Viewport) -> Answer<Listed> {
     Answer::of(async {
         let heading = strings::lookup(Text::NavPlaylists).to_string();
         let mut browse = Browse::new(window::Id::Browse, heading, Listing::default(), viewport);
@@ -133,7 +134,7 @@ pub async fn listed(api: Rc<Api>, viewport: iced::Size) -> Answer<Listed> {
     .await
 }
 
-pub async fn load(api: Rc<Api>, playlist: Uuid, user: Uuid, viewport: iced::Size) -> Answer<State> {
+pub async fn load(api: Rc<Api>, playlist: Uuid, user: Uuid, viewport: Viewport) -> Answer<State> {
     Answer::of(async {
         let held = api.item(playlist).await.bubbled()?;
         let answered = api
@@ -156,7 +157,11 @@ pub async fn load(api: Rc<Api>, playlist: Uuid, user: Uuid, viewport: iced::Size
 
         Ok(State {
             playlist: held,
-            window: window::Window::new(window::Id::Entries, theme::ROW_HEIGHT, viewport.height),
+            window: window::Window::new(
+                window::Id::Entries,
+                Drawn::of(theme::ROW_HEIGHT),
+                viewport.canvas().height(),
+            ),
             entries,
             naming: String::new(),
             editable,

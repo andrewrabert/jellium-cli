@@ -8,10 +8,11 @@
 //
 //     node tools/reference/slice.mjs <jellyfin-web-checkout>
 
-import { execFileSync } from 'node:child_process';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+
+import { checkedOut, pinned } from './pinned.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const sliced = join(root, 'jellium-web', 'reference', 'jellyfin-web.mjs');
@@ -92,22 +93,6 @@ const SPANS = {
         rewrites: []
     }
 };
-
-function pinned() {
-    const line = readFileSync(join(root, 'reference', 'PINNED'), 'utf8').trim();
-    const [tag, commit] = line.split('\t');
-    if (!tag || !/^[0-9a-f]{40}$/.test(commit ?? '')) {
-        throw new Error(`reference/PINNED is not '<tag>\\t<40-hex-commit>': ${line}`);
-    }
-    return { tag, commit };
-}
-
-function checkedOut(checkout, commit) {
-    const head = execFileSync('git', ['-C', checkout, 'rev-parse', 'HEAD'], { encoding: 'utf8' }).trim();
-    if (head !== commit) {
-        throw new Error(`${checkout} is at ${head}, and reference/PINNED names ${commit}`);
-    }
-}
 
 function taken(checkout, name) {
     const span = SPANS[name];

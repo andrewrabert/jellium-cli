@@ -15,6 +15,7 @@ use crate::app::Message;
 use crate::error::Answer;
 use crate::images::{self, Cache};
 use crate::route::Listing;
+use crate::style::{Drawn, Viewport};
 use crate::text::{self as strings, Text};
 use crate::theme;
 use crate::widget;
@@ -34,7 +35,7 @@ pub struct Browse {
     pub filtering: bool,
     /// Where the grid rested under each sort visited, so returning to a sort
     /// returns to its place.
-    rested: Vec<(Sort, f32)>,
+    rested: Vec<(Sort, Drawn)>,
 }
 
 /// One facet value: the id every query carries and the name every control
@@ -97,16 +98,15 @@ fn toggled<T: PartialEq>(held: &mut Vec<T>, value: T, on: bool) {
 }
 
 impl Browse {
-    pub fn new(id: window::Id, heading: String, listing: Listing, viewport: iced::Size) -> Browse {
+    pub fn new(id: window::Id, heading: String, listing: Listing, viewport: Viewport) -> Browse {
         Browse {
             heading,
             listing,
             grid: window::Grid::new(
                 id,
-                theme::CARD_WIDTH + theme::CARD_SPACING,
-                theme::CARD_HEIGHT,
-                viewport.width,
-                viewport.height,
+                Drawn::of(theme::CARD_WIDTH + theme::CARD_SPACING),
+                Drawn::of(theme::CARD_HEIGHT),
+                viewport.canvas(),
             ),
             items: Paged::new(0),
             choices: Choices::default(),
@@ -138,13 +138,13 @@ impl Browse {
         self.grid.scrolled(scrolled);
     }
 
-    pub fn resized(&mut self, viewport: iced::Size) {
-        self.grid.resized(viewport.width, viewport.height);
+    pub fn resized(&mut self, viewport: Viewport) {
+        self.grid.resized(viewport.canvas());
     }
 
     /// Records where the grid rests under the sort shown and answers the offset
     /// `sort` last rested at, which is what a sort change restores.
-    pub fn resorting(&mut self, sort: Sort) -> Option<f32> {
+    pub fn resorting(&mut self, sort: Sort) -> Option<Drawn> {
         let leaving = self.listing.sort;
         let offset = self.grid.offset();
         toggled(&mut self.rested, (leaving, offset), true);

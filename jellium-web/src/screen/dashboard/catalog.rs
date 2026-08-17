@@ -6,6 +6,7 @@ use iced::{Element, Fill};
 
 use crate::app::Message;
 use crate::error::Answer;
+use crate::style::Drawn;
 use crate::text::{self as strings, Text};
 use crate::theme;
 use crate::window;
@@ -22,11 +23,11 @@ pub struct State {
     pub installing: std::collections::HashMap<String, Packaged>,
 }
 
-pub async fn load(api: std::rc::Rc<crate::api::Api>, height: f32) -> Answer<State> {
+pub async fn load(api: std::rc::Rc<crate::api::Api>, height: Drawn) -> Answer<State> {
     Answer::of(async {
         Ok(State {
             packages: api.packages().await.bubbled()?,
-            window: window::Window::new(window::Id::Catalog, theme::ROW_HEIGHT, height),
+            window: window::Window::new(window::Id::Catalog, Drawn::of(theme::ROW_HEIGHT), height),
             versions: std::collections::HashMap::new(),
             installing: std::collections::HashMap::new(),
         })

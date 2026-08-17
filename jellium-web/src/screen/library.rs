@@ -16,6 +16,7 @@ use crate::error::Answer;
 use crate::images::{self, Cache};
 use crate::route::{Listing, Route};
 use crate::screen::browse::{self, Browse};
+use crate::style::Viewport;
 use crate::text::{self as strings, Text};
 use crate::theme;
 
@@ -183,7 +184,7 @@ pub struct State {
     pub body: Body,
 }
 
-pub async fn load(api: Rc<Api>, library: Uuid, tab: Tab, viewport: iced::Size) -> Answer<State> {
+pub async fn load(api: Rc<Api>, library: Uuid, tab: Tab, viewport: Viewport) -> Answer<State> {
     Answer::of(async {
         let held = api.item(library).await.bubbled()?;
         let tabs = Kind::of(held.collection_type);

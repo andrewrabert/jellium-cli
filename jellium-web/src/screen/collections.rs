@@ -14,6 +14,7 @@ use crate::error::{Answer, Operation};
 use crate::images::{self, Cache};
 use crate::route::Listing;
 use crate::screen::browse::{self, Browse};
+use crate::style::Viewport;
 use crate::text::{self as strings, Text};
 use crate::theme;
 
@@ -47,7 +48,7 @@ pub enum Action {
     PlayAll { id: Uuid, shuffle: bool },
 }
 
-pub async fn listed(api: Rc<Api>, viewport: iced::Size) -> Answer<Listed> {
+pub async fn listed(api: Rc<Api>, viewport: Viewport) -> Answer<Listed> {
     Answer::of(async {
         let heading = strings::lookup(Text::NavCollections).to_string();
         let mut browse = Browse::new(window::Id::Browse, heading, Listing::default(), viewport);
@@ -70,7 +71,7 @@ pub async fn load(
     api: Rc<Api>,
     collection: Uuid,
     listing: Listing,
-    viewport: iced::Size,
+    viewport: Viewport,
 ) -> Answer<State> {
     Answer::of(async {
         let held = api.item(collection).await.bubbled()?;

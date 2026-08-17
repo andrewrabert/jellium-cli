@@ -14,6 +14,7 @@ use crate::error::Answer;
 use crate::live;
 use crate::player::element::GroupBeacon;
 use crate::player::{self, Asked, Playing};
+use crate::style::Viewport;
 
 /// Whether this tab holds the group's transport and queue.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -238,17 +239,17 @@ pub fn create(signed: &mut Signed) -> Task<Message> {
 
 /// Joins `group`: the group's queue and position are adopted and local
 /// playback stops, including when the group is idle and its queue is empty.
-pub fn join(signed: &mut Signed, group: Uuid) -> Task<Message> {
+pub fn join(signed: &mut Signed, group: Uuid, viewport: Viewport) -> Task<Message> {
     live::send(&Report::JoinGroup { group });
-    player::leave(signed)
+    player::leave(signed, viewport)
 }
 
 /// Applies a control.
-pub fn act(signed: &mut Signed, action: Action) -> Task<Message> {
+pub fn act(signed: &mut Signed, action: Action, viewport: Viewport) -> Task<Message> {
     match action {
         Action::Create => create(signed),
-        Action::Join(group) => join(signed, group),
-        Action::Leave => leave(signed),
+        Action::Join(group) => join(signed, group, viewport),
+        Action::Leave => leave(signed, viewport),
         Action::Stop => issue(GroupVerb::Stop),
         Action::Play(playlist_item) => issue(GroupVerb::SetPlaylistItem { playlist_item }),
         Action::Remove(playlist_item) => issue(GroupVerb::RemoveFromPlaylist {
@@ -259,13 +260,13 @@ pub fn act(signed: &mut Signed, action: Action) -> Task<Message> {
 
 /// Leaves the group, returning the transport and the queue to local ownership
 /// carrying whatever the group was playing, and resuming nothing.
-pub fn leave(signed: &mut Signed) -> Task<Message> {
+pub fn leave(signed: &mut Signed, viewport: Viewport) -> Task<Message> {
     if signed.group.take().is_none() {
         return Task::none();
     }
     live::send(&Report::LeaveGroup);
     player::element::set_group_beacon(GroupBeacon::Disarmed);
-    player::leave(signed)
+    player::leave(signed, viewport)
 }
 
 /// Applies a group listing.
@@ -276,7 +277,12 @@ pub fn listed(signed: &mut Signed, groups: Vec<Group>) {
 /// Applies the group this installation is in; membership beginning stops local
 /// playback, and the leave beacon is armed in the holding tab alone and
 /// disarmed in every other.
-pub fn joined(signed: &mut Signed, group: Group, membership: Membership) -> Task<Message> {
+pub fn joined(
+    signed: &mut Signed,
+    group: Group,
+    membership: Membership,
+    viewport: Viewport,
+) -> Task<Message> {
     match signed.group.as_mut() {
         Some(joined) if joined.group.id == group.id => {
             joined.group = group;
@@ -286,7 +292,7 @@ pub fn joined(signed: &mut Signed, group: Group, membership: Membership) -> Task
         }
         _ => {}
     }
-    let leaving = player::leave(signed);
+    let leaving = player::leave(signed, viewport);
     signed.group = Some(Joined::new(group, membership));
     player::element::set_group_beacon(membership.beacon());
     leaving
@@ -302,8 +308,8 @@ pub fn displaced(signed: &mut Signed) {
 }
 
 /// Leaves the group naming what this browser cannot play.
-pub fn unplayable(signed: &mut Signed) -> Task<Message> {
-    let leaving = leave(signed);
+pub fn unplayable(signed: &mut Signed, viewport: Viewport) -> Task<Message> {
+    let leaving = leave(signed, viewport);
     crate::failure::raise(crate::error::told(
         crate::text::Text::FailureGroupUnplayable,
     ));
@@ -320,7 +326,7 @@ fn wanted(joined: &Joined) -> Option<Queued> {
 /// it begins.
 /// A queue equal to the one held leaves the schedule and the started item
 /// standing and fetches only the items this tab has not seen.
-pub fn queued(signed: &mut Signed, queue: GroupQueue) -> Task<Message> {
+pub fn queued(signed: &mut Signed, queue: GroupQueue, viewport: Viewport) -> Task<Message> {
     let Some(joined) = signed.group.as_mut() else {
         return Task::none();
     };
@@ -353,7 +359,7 @@ pub fn queued(signed: &mut Signed, queue: GroupQueue) -> Task<Message> {
 
     let Some(entry) = wanted else {
         joined.started = None;
-        return Task::batch([fetching, player::leave(signed)]);
+        return Task::batch([fetching, player::leave(signed, viewport)]);
     };
 
     if joined.started == Some(entry.playlist_item) {
@@ -398,12 +404,12 @@ pub fn queued(signed: &mut Signed, queue: GroupQueue) -> Task<Message> {
 
 /// Holds a scheduled command until its deadline; a command whose instant has
 /// already passed is executed at once.
-pub fn scheduled(signed: &mut Signed, scheduled: Scheduled) -> Task<Message> {
+pub fn scheduled(signed: &mut Signed, scheduled: Scheduled, viewport: Viewport) -> Task<Message> {
     let Some(joined) = signed.group.as_mut() else {
         return Task::none();
     };
     joined.pending = Some(scheduled);
-    ticked(signed)
+    ticked(signed, viewport)
 }
 
 /// Ends membership the local server ended, naming the cause on screen, and
@@ -598,7 +604,7 @@ pub fn clocked(signed: &mut Signed, exchange: Exchange) {
 }
 
 /// Executes `command` here, taking the schedule it declares.
-fn execute(signed: &mut Signed, command: Scheduled) -> Task<Message> {
+fn execute(signed: &mut Signed, command: Scheduled, viewport: Viewport) -> Task<Message> {
     let Some(joined) = signed.group.as_mut() else {
         return Task::none();
     };
@@ -612,7 +618,7 @@ fn execute(signed: &mut Signed, command: Scheduled) -> Task<Message> {
     match command.command {
         GroupCommand::Stop => {
             joined.started = None;
-            return player::leave(signed);
+            return player::leave(signed, viewport);
         }
         GroupCommand::Unpause => {
             if let Some(playing) = signed.playing.as_mut() {
@@ -690,7 +696,7 @@ fn corrected(signed: &mut Signed) {
 /// One 50 ms pass: it fires a command that has come due, times the hop when
 /// the cadence calls for it, and applies the correction the drift from the
 /// schedule calls for.
-pub fn ticked(signed: &mut Signed) -> Task<Message> {
+pub fn ticked(signed: &mut Signed, viewport: Viewport) -> Task<Message> {
     let now = now();
     let Some(joined) = signed.group.as_mut() else {
         return Task::none();
@@ -704,7 +710,7 @@ pub fn ticked(signed: &mut Signed) -> Task<Message> {
             joined.pending = None;
             let mut command = command;
             command.at = joined.hop.locally(command.at);
-            execute(signed, command)
+            execute(signed, command, viewport)
         }
         None => Task::none(),
     };

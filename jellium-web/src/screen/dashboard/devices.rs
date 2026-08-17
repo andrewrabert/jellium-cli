@@ -5,6 +5,7 @@ use iced::{Element, Fill};
 
 use crate::app::Message;
 use crate::error::Answer;
+use crate::style::Drawn;
 use crate::text::{self as strings, Text};
 use crate::theme;
 use crate::window;
@@ -20,11 +21,11 @@ pub struct State {
     pub own: String,
 }
 
-pub async fn load(api: std::rc::Rc<crate::api::Api>, own: String, height: f32) -> Answer<State> {
+pub async fn load(api: std::rc::Rc<crate::api::Api>, own: String, height: Drawn) -> Answer<State> {
     Answer::of(async {
         Ok(State {
             devices: api.devices().await.bubbled()?,
-            window: window::Window::new(window::Id::Devices, theme::ROW_HEIGHT, height),
+            window: window::Window::new(window::Id::Devices, Drawn::of(theme::ROW_HEIGHT), height),
             renaming: String::new(),
             own,
         })

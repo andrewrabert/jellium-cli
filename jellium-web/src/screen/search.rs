@@ -13,6 +13,7 @@ use crate::error::Answer;
 use crate::images::{self, Cache};
 use crate::route::Listing;
 use crate::screen::browse::{self, Browse};
+use crate::style::Viewport;
 use crate::text::{self as strings, Text};
 use crate::theme;
 use crate::widget;
@@ -36,7 +37,7 @@ pub async fn load(
     api: Rc<Api>,
     term: String,
     listing: Listing,
-    viewport: iced::Size,
+    viewport: Viewport,
 ) -> Answer<State> {
     Answer::of(async {
         let heading = strings::lookup(Text::NavSearch).to_string();

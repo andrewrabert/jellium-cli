@@ -6,7 +6,7 @@ list:
 
 # Fail on any lint suppression or strictness-lowering configuration
 suppressions:
-    cargo test -p jellium-cli --test suppressions
+    cargo test -p jellium-reference --test suppressions
 
 # Build the debug release
 build: suppressions
@@ -28,13 +28,21 @@ test: fmt suppressions
 reference checkout:
     node tools/reference/slice.mjs "$1"
 
+# Rewrite jellium-web/fonts, jellium-web/icons and jellium-web/branding from a checkout of the pinned revision
+assets checkout:
+    node tools/reference/assets.mjs "$1"
+
+# Rewrite jellium-web/boot.css from the ported appearance values
+boot-css:
+    cargo run -p jellium-model --example boot-css > jellium-web/boot.css
+
 # Fail when the tree has drifted from a checkout of the pinned revision
 pinned checkout: (reference checkout)
     git ls-files --error-unmatch jellium-web/reference/jellyfin-web.mjs
     git diff --exit-code jellium-web/reference
     JELLYFIN_WEB_REFERENCE="$1" \
     JELLYFIN_APICLIENT_REFERENCE="$1/node_modules/jellyfin-apiclient" \
-    cargo test -p jellium-cli --test provenance
+    cargo test -p jellium-reference --test provenance
 
 # Build the Jellium Web bundle
 web-bundle:

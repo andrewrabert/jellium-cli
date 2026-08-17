@@ -8,6 +8,7 @@ use crate::app::{Message, Signed};
 use crate::error;
 use crate::live;
 use crate::player;
+use crate::style::Viewport;
 
 /// A tick is a hundred nanoseconds, which is what Jellyfin counts positions in.
 const TICKS_PER_SECOND: i64 = 10_000_000;
@@ -89,7 +90,7 @@ fn handed(playing: &player::Playing) -> (Vec<Uuid>, i64) {
 /// Takes `target`: sends it the current item, the remaining queue's item ids
 /// and the current position and stops local playback when something is
 /// playing here, and binds without sending anything when nothing is.
-pub fn take(signed: &mut Signed, target: String) -> Task<Message> {
+pub fn take(signed: &mut Signed, target: String, viewport: Viewport) -> Task<Message> {
     live::send(&Report::TakeRemote {
         target: target.clone(),
     });
@@ -122,14 +123,14 @@ pub fn take(signed: &mut Signed, target: String) -> Task<Message> {
         start_ticks,
         mode: PlayMode::Now,
     });
-    let leaving = player::leave(signed);
+    let leaving = player::leave(signed, viewport);
     Task::batch([sending, leaving])
 }
 
 /// Applies a control against the bound target.
-pub fn act(signed: &mut Signed, action: Action) -> Task<Message> {
+pub fn act(signed: &mut Signed, action: Action, viewport: Viewport) -> Task<Message> {
     match action {
-        Action::Take(target) => return take(signed, target),
+        Action::Take(target) => return take(signed, target, viewport),
         Action::Leave => return leave(signed),
         _ => {}
     }
@@ -154,7 +155,7 @@ pub fn act(signed: &mut Signed, action: Action) -> Task<Message> {
             Task::none()
         }
         Action::ScrubReleased => match bound.scrubbing.take() {
-            Some(position) => act(signed, Action::Seek(position)),
+            Some(position) => act(signed, Action::Seek(position), viewport),
             None => Task::none(),
         },
         Action::SkipBack => drive(Drive::SkipBack),

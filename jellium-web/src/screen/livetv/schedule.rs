@@ -8,6 +8,7 @@ use super::Action;
 use crate::api::Api;
 use crate::app::Message;
 use crate::error::Answer;
+use crate::style::Drawn;
 use crate::text::{self as strings, Text};
 use crate::theme;
 use crate::widget;
@@ -20,11 +21,11 @@ pub struct State {
     pub window: window::Window,
 }
 
-pub async fn load(api: Rc<Api>, height: f32) -> Answer<State> {
+pub async fn load(api: Rc<Api>, height: Drawn) -> Answer<State> {
     Answer::of(async {
         Ok(State {
             timers: api.timers().await.bubbled()?,
-            window: window::Window::new(window::Id::Schedule, theme::ROW_HEIGHT, height),
+            window: window::Window::new(window::Id::Schedule, Drawn::of(theme::ROW_HEIGHT), height),
         })
     })
     .await

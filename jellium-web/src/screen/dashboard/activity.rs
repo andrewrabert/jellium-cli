@@ -5,6 +5,7 @@ use iced::{Element, Fill};
 
 use crate::app::Message;
 use crate::error::Answer;
+use crate::style::Drawn;
 use crate::text::{self as strings, Text};
 use crate::theme;
 use crate::window;
@@ -24,7 +25,7 @@ pub struct State {
 pub async fn load(
     api: std::rc::Rc<crate::api::Api>,
     with_user: Option<bool>,
-    height: f32,
+    height: Drawn,
 ) -> Answer<State> {
     Answer::of(async {
         let (rows, total) = api
@@ -35,7 +36,11 @@ pub async fn load(
         entries.filled(0..rows.len(), rows);
         Ok(State {
             entries,
-            window: window::Window::new(window::Id::Activity, theme::ENTRY_HEIGHT, height),
+            window: window::Window::new(
+                window::Id::Activity,
+                Drawn::of(theme::ENTRY_HEIGHT),
+                height,
+            ),
             with_user,
         })
     })

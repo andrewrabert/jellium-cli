@@ -27,6 +27,7 @@ use crate::route::Route;
 use crate::screen::livetv::{self, guide};
 use crate::screen::program;
 use crate::screen::{dashboard, detail, home, library, login, search};
+use crate::style::{Drawn, Viewport};
 use crate::text::{self as strings, Text};
 use crate::theme;
 use crate::widget;
@@ -35,9 +36,8 @@ use crate::window;
 pub struct Jellium {
     pub stage: Stage,
     pub images: Cache,
-    /// The page's size, taken from the window at boot and carried into every
-    /// session.
-    pub viewport: iced::Size,
+    /// The page's own size, as the page reports it.
+    pub viewport: Viewport,
     /// Every failure raised this session and the one shown above the view.
     pub failures: crate::failure::Log,
     /// True while the session's failure list is open.
@@ -114,8 +114,6 @@ pub struct Signed {
     pub groups: Vec<Group>,
     /// The group this installation is in.
     pub group: Option<group::Joined>,
-    /// The page's size, which is what a window is measured against.
-    pub viewport: iced::Size,
     /// The queue view's window, held across navigation.
     pub queue: window::Window,
 }
@@ -342,7 +340,7 @@ pub enum Message {
     GroupAction(group::Action),
     GroupTicked,
     GroupItemsLoaded(Answer<Vec<jellyfin_api::types::BaseItemDto>>),
-    Resized(iced::Size),
+    Resized(Viewport),
     Scrolled(window::Scrolled),
     OnNowLoaded(Answer<Vec<Channel>>),
     LiveTvLoaded(Answer<livetv::State>),
@@ -466,7 +464,7 @@ pub fn staged(route: &Route, live_tv: jellium_protocol::LiveTvAccess) -> View {
 async fn filtered_load(
     api: Rc<Api>,
     filtered: crate::route::Filtered,
-    viewport: iced::Size,
+    viewport: Viewport,
 ) -> Answer<Box<crate::screen::browse::Browse>> {
     Answer::of(async {
         let heading = match filtered.header {
@@ -505,56 +503,46 @@ async fn filtered_load(
 /// Loads the screen `route` names, against the page `signed` is drawn in.
 /// A Live TV route a session cannot reach issues no request, and a settings
 /// route a session's policy does not admit issues none either.
-pub fn load(signed: &Signed, route: &Route) -> Task<Message> {
+pub fn load(signed: &Signed, route: &Route, viewport: Viewport) -> Task<Message> {
     let api: Rc<Api> = signed.api.clone();
-    let height = signed.viewport.height;
+    let height = viewport.canvas().height();
     let reachable = signed.session.live_tv.allowed();
     match route.clone() {
         Route::Home => Task::perform(home::load(api), Message::HomeLoaded),
         Route::Library { id, tab } => Task::perform(
-            library::load(api, id, *tab, signed.viewport),
+            library::load(api, id, *tab, viewport),
             Message::LibraryLoaded,
         ),
         Route::Filtered(filtered) => Task::perform(
-            filtered_load(api, *filtered, signed.viewport),
+            filtered_load(api, *filtered, viewport),
             Message::FilteredLoaded,
         ),
-        Route::Collections => {
-            let viewport = signed.viewport;
-            Task::perform(
-                async move {
-                    crate::screen::collections::listed(api, viewport)
-                        .await
-                        .map(Box::new)
-                },
-                Message::CollectionsLoaded,
-            )
-        }
-        Route::Collection { id, listing } => {
-            let viewport = signed.viewport;
-            Task::perform(
-                async move {
-                    crate::screen::collections::load(api, id, *listing, viewport)
-                        .await
-                        .map(Box::new)
-                },
-                Message::CollectionLoaded,
-            )
-        }
-        Route::Playlists => {
-            let viewport = signed.viewport;
-            Task::perform(
-                async move {
-                    crate::screen::playlists::listed(api, viewport)
-                        .await
-                        .map(Box::new)
-                },
-                Message::PlaylistsLoaded,
-            )
-        }
+        Route::Collections => Task::perform(
+            async move {
+                crate::screen::collections::listed(api, viewport)
+                    .await
+                    .map(Box::new)
+            },
+            Message::CollectionsLoaded,
+        ),
+        Route::Collection { id, listing } => Task::perform(
+            async move {
+                crate::screen::collections::load(api, id, *listing, viewport)
+                    .await
+                    .map(Box::new)
+            },
+            Message::CollectionLoaded,
+        ),
+        Route::Playlists => Task::perform(
+            async move {
+                crate::screen::playlists::listed(api, viewport)
+                    .await
+                    .map(Box::new)
+            },
+            Message::PlaylistsLoaded,
+        ),
         Route::Playlist { id } => {
             let user = signed.session.user_id;
-            let viewport = signed.viewport;
             Task::perform(
                 async move {
                     crate::screen::playlists::load(api, id, user, viewport)
@@ -574,7 +562,7 @@ pub fn load(signed: &Signed, route: &Route) -> Task<Message> {
         ),
         Route::Detail { id } => Task::perform(detail::load(api, id), Message::DetailLoaded),
         Route::Search { term, listing } => Task::perform(
-            search::load(api, term, *listing, signed.viewport),
+            search::load(api, term, *listing, viewport),
             Message::SearchLoaded,
         ),
         Route::Queue | Route::Remote | Route::SyncPlay => Task::none(),
@@ -692,20 +680,17 @@ fn announcing(message: fn(Answer<jellium_protocol::SessionStatus>) -> Message) -
 }
 
 impl Jellium {
-    pub fn boot() -> (Jellium, Task<Message>) {
+    pub fn boot(viewport: Viewport) -> (Jellium, Task<Message>) {
         (
             Jellium {
                 stage: Stage::Booting { stalled: false },
                 images: Cache::new(),
-                viewport: iced::Size::new(0.0, 0.0),
+                viewport,
                 failures: crate::failure::Log::default(),
                 listing: false,
             },
             Task::batch([
                 Task::done(Message::Ready),
-                iced::window::latest()
-                    .and_then(iced::window::size)
-                    .map(Message::Resized),
                 announcing(Message::SessionChecked),
             ]),
         )
@@ -728,6 +713,7 @@ impl Jellium {
     /// A rejected sign-in keeps the screen that raised it with its typed
     /// fields, clears `working`, and shows the reason under the form.
     fn enter(&mut self, status: SessionStatus) -> Task<Message> {
+        let viewport = self.viewport;
         match status {
             SessionStatus::Anonymous { servers, read_only } => {
                 let (state, task) = login::enter(servers, read_only);
@@ -781,11 +767,10 @@ impl Jellium {
                     own_device_deleted: false,
                     groups: Vec::new(),
                     group: None,
-                    viewport: self.viewport,
                     queue: window::Window::new(
                         window::Id::Queue,
-                        theme::ROW_HEIGHT,
-                        self.viewport.height,
+                        Drawn::of(theme::ROW_HEIGHT),
+                        self.viewport.canvas().height(),
                     ),
                 }));
                 live::connect();
@@ -807,7 +792,7 @@ impl Jellium {
                         },
                         Message::PreferencesLoaded,
                     ),
-                    load(signed, &Route::Home),
+                    load(signed, &Route::Home, viewport),
                 ])
             }
         }
@@ -1046,6 +1031,7 @@ impl Jellium {
     }
 
     fn navigate(&mut self, route: Route) -> Task<Message> {
+        let viewport = self.viewport;
         let Some(signed) = self.signed() else {
             return Task::none();
         };
@@ -1058,10 +1044,11 @@ impl Jellium {
         signed.history.push(route.clone());
         signed.view = staged(&route, signed.session.live_tv);
         let telling = watching(signed, &route);
-        Task::batch([telling, load(signed, &route)])
+        Task::batch([telling, load(signed, &route, viewport)])
     }
 
     fn replace(&mut self, route: Route) -> Task<Message> {
+        let viewport = self.viewport;
         let Some(signed) = self.signed() else {
             return Task::none();
         };
@@ -1069,7 +1056,7 @@ impl Jellium {
         signed.history.push(route.clone());
         signed.view = staged(&route, signed.session.live_tv);
         let telling = watching(signed, &route);
-        Task::batch([telling, load(signed, &route)])
+        Task::batch([telling, load(signed, &route, viewport)])
     }
 
     fn settle(&mut self) {
@@ -1156,6 +1143,7 @@ impl Jellium {
     }
 
     fn updating(&mut self, message: Message) -> Task<Message> {
+        let viewport = self.viewport;
         match message {
             Message::Failed(failure) => {
                 self.failures.took(failure.clone());
@@ -1416,7 +1404,7 @@ impl Jellium {
                 let route = signed.route().cloned().unwrap_or(Route::Home);
                 signed.view = staged(&route, signed.session.live_tv);
                 let telling = watching(signed, &route);
-                Task::batch([telling, load(signed, &route)])
+                Task::batch([telling, load(signed, &route, viewport)])
             }
             Message::HomeLoaded(answered) => {
                 let Some(state) = answered.or_none(Text::FailureHomeUnread) else {
@@ -1547,7 +1535,7 @@ impl Jellium {
                 {
                     preview.frame = chapter;
                 }
-                player::act(signed, player::Action::Settled)
+                player::act(signed, player::Action::Settled, viewport)
             }
             Message::OverflowAction(action) => {
                 let Some(signed) = self.signed() else {
@@ -1729,7 +1717,7 @@ impl Jellium {
                 let Some(signed) = self.signed() else {
                     return Task::none();
                 };
-                player::started(signed, start)
+                player::started(signed, start, viewport)
             }
             Message::GroupResolved(resolved) => {
                 let start = resolved.or_none(Text::FailureGroupUnresolved);
@@ -1737,8 +1725,8 @@ impl Jellium {
                     return Task::none();
                 };
                 match start {
-                    Some(start) => player::begin(signed, start),
-                    None => group::unplayable(signed),
+                    Some(start) => player::begin(signed, start, viewport),
+                    None => group::unplayable(signed, viewport),
                 }
             }
             Message::Planned(answered) => {
@@ -1757,7 +1745,7 @@ impl Jellium {
                         Task::batch([task, reading, settle])
                     }
                     player::Outcome::Unchanged => player::unchanged(signed),
-                    player::Outcome::Unplanned => player::unplanned(signed),
+                    player::Outcome::Unplanned => player::unplanned(signed, viewport),
                 }
             }
             Message::Overlaid(raised) => {
@@ -1776,10 +1764,11 @@ impl Jellium {
                     return dashboard::act(
                         signed,
                         crate::screen::dashboard::Action::Bridged(raised.payload),
+                        viewport,
                     );
                 }
                 match crate::player::element::read(&raised) {
-                    Some(event) => player::event(signed, event),
+                    Some(event) => player::event(signed, event, viewport),
                     None => Task::none(),
                 }
             }
@@ -1827,7 +1816,7 @@ impl Jellium {
                 let Some(signed) = self.signed() else {
                     return migrated;
                 };
-                Task::batch([migrated, load(signed, &route)])
+                Task::batch([migrated, load(signed, &route, viewport)])
             }
             Message::Migrated(quality, answered) => {
                 let Some(()) = answered.or_none(Text::FailurePreferencesUnmigrated) else {
@@ -1867,7 +1856,7 @@ impl Jellium {
                 let Some(route) = signed.history.last().cloned() else {
                     return Task::none();
                 };
-                load(signed, &route)
+                load(signed, &route, viewport)
             }
             Message::SettingsSaved(wrote, answered) => {
                 if answered.or_refused(&wrote).is_none() {
@@ -1880,7 +1869,7 @@ impl Jellium {
                 let Some(route) = signed.history.last().cloned() else {
                     return Task::none();
                 };
-                load(signed, &route)
+                load(signed, &route, viewport)
             }
             Message::QuickConnected(answered) => {
                 let wrote = crate::error::Wrote {
@@ -1935,7 +1924,7 @@ impl Jellium {
                 let Some(signed) = self.signed() else {
                     return Task::none();
                 };
-                dashboard::act(signed, action)
+                dashboard::act(signed, action, viewport)
             }
             Message::DashboardSaved(wrote, answered) => {
                 if answered.or_refused(&wrote).is_none() {
@@ -2070,7 +2059,7 @@ impl Jellium {
                 let Some(signed) = self.signed() else {
                     return Task::none();
                 };
-                player::act(signed, action)
+                player::act(signed, action, viewport)
             }
             Message::Reported(answered) => {
                 let Some(standing) = answered.or_none(Text::FailurePlaybackReport) else {
@@ -2079,13 +2068,13 @@ impl Jellium {
                 let Some(signed) = self.signed() else {
                     return Task::none();
                 };
-                player::reported(signed, standing)
+                player::reported(signed, standing, viewport)
             }
             Message::GroupAction(action) => {
                 let Some(signed) = self.signed() else {
                     return Task::none();
                 };
-                let task = group::act(signed, action);
+                let task = group::act(signed, action, viewport);
                 let settle = self.fetch_images();
                 Task::batch([task, settle])
             }
@@ -2093,30 +2082,30 @@ impl Jellium {
                 let Some(signed) = self.signed() else {
                     return Task::none();
                 };
-                group::ticked(signed)
+                group::ticked(signed, viewport)
             }
-            Message::Resized(size) => {
-                self.viewport = size;
+            Message::Resized(page) => {
+                self.viewport = page;
+                let canvas = page.canvas();
                 if let Some(signed) = self.signed() {
-                    signed.viewport = size;
-                    signed.queue.resized(size.height);
+                    signed.queue.resized(canvas.height());
                 }
                 if let Some(browse) = self.browsing() {
-                    browse.resized(size);
+                    browse.resized(page);
                 }
                 if let Some(hub) = self.hubbing() {
-                    hub.grid.resized(size.width, size.height);
+                    hub.grid.resized(canvas);
                 }
                 let Some(signed) = self.signed() else {
                     return Task::none();
                 };
                 if let View::LiveTv(state) = &mut signed.view {
                     match &mut state.body {
-                        livetv::Body::Guide(held) => held.window.resized(size.height),
-                        livetv::Body::Channels(held) => held.window.resized(size.height),
-                        livetv::Body::Recordings(held) => held.window.resized(size.height),
-                        livetv::Body::Schedule(held) => held.window.resized(size.height),
-                        livetv::Body::Series(held) => held.window.resized(size.height),
+                        livetv::Body::Guide(held) => held.window.resized(canvas.height()),
+                        livetv::Body::Channels(held) => held.window.resized(canvas.height()),
+                        livetv::Body::Recordings(held) => held.window.resized(canvas.height()),
+                        livetv::Body::Schedule(held) => held.window.resized(canvas.height()),
+                        livetv::Body::Series(held) => held.window.resized(canvas.height()),
                     }
                 }
                 self.settle();
@@ -2198,7 +2187,7 @@ impl Jellium {
                 let Some(signed) = self.signed() else {
                     return Task::none();
                 };
-                let acting = livetv::act(signed, action);
+                let acting = livetv::act(signed, action, viewport);
                 self.settle();
                 Task::batch([acting, self.fetch_images()])
             }
@@ -2252,7 +2241,7 @@ impl Jellium {
                 let Some(signed) = self.signed() else {
                     return Task::none();
                 };
-                player::live::ticked(signed, chrono::Utc::now())
+                player::live::ticked(signed, chrono::Utc::now(), viewport)
             }
             Message::GroupItemsLoaded(answered) => {
                 let Some(items) = answered.or_none(Text::FailureGroupItemsUnread) else {
@@ -2290,7 +2279,7 @@ impl Jellium {
                 let Some(signed) = self.signed() else {
                     return Task::none();
                 };
-                let task = remote::act(signed, action);
+                let task = remote::act(signed, action, viewport);
                 let settle = self.fetch_images();
                 Task::batch([task, settle])
             }
@@ -2306,7 +2295,7 @@ impl Jellium {
                 }
                 let route = signed.route().cloned().unwrap_or(Route::Home);
                 let watching = watching(signed, &route);
-                let loading = load(signed, &route);
+                let loading = load(signed, &route, viewport);
                 if signed.group.is_some() {
                     return Task::batch([watching, loading, group::reconnected(signed)]);
                 }
@@ -2335,6 +2324,7 @@ impl Jellium {
 
     /// Applies one event the local server sent.
     fn received(&mut self, event: Event) -> Task<Message> {
+        let viewport = self.viewport;
         let Some(signed) = self.signed() else {
             return Task::none();
         };
@@ -2352,11 +2342,11 @@ impl Jellium {
                         live.timed(changed);
                     }
                 }
-                let applying = livetv::timed(signed, &changes);
+                let applying = livetv::timed(signed, &changes, viewport);
                 self.settle();
                 Task::batch([applying, self.fetch_images()])
             }
-            Event::Control(control) => player::controlled(signed, control),
+            Event::Control(control) => player::controlled(signed, control, viewport),
             Event::Targets { targets } => {
                 remote::listed(signed, targets);
                 self.fetch_images()
@@ -2369,7 +2359,7 @@ impl Jellium {
                         crate::failure::raise(crate::error::refused(&PlaybackRefused::Superseded));
                     }
                 }
-                player::leave(signed)
+                player::leave(signed, viewport)
             }
             Event::Groups { groups } => {
                 group::listed(signed, groups);
@@ -2383,6 +2373,7 @@ impl Jellium {
                 } else {
                     group::Membership::Watching
                 },
+                viewport,
             ),
             Event::LibraryChanged {
                 added,
@@ -2392,8 +2383,8 @@ impl Jellium {
                 let task = library_changed(signed, &added, &removed, &updated);
                 Task::batch([task, self.browse_fetch()])
             }
-            Event::GroupQueue(queue) => group::queued(signed, queue),
-            Event::Scheduled(scheduled) => group::scheduled(signed, scheduled),
+            Event::GroupQueue(queue) => group::queued(signed, queue, viewport),
+            Event::Scheduled(scheduled) => group::scheduled(signed, scheduled, viewport),
             Event::GroupEnded { cause } => {
                 group::ended(signed, cause);
                 Task::none()
@@ -2453,7 +2444,7 @@ impl Jellium {
                     let route = signed.route().cloned().unwrap_or(Route::Home);
                     signed.view = staged(&route, signed.session.live_tv);
                     let telling = watching(signed, &route);
-                    return Task::batch([refreshed, telling, load(signed, &route)]);
+                    return Task::batch([refreshed, telling, load(signed, &route, viewport)]);
                 }
 
                 if administrator {
@@ -2482,7 +2473,7 @@ impl Jellium {
                 let route = signed.route().cloned().unwrap_or(Route::Home);
                 signed.view = staged(&route, signed.session.live_tv);
                 let telling = watching(signed, &route);
-                Task::batch([refreshed, telling, load(signed, &route)])
+                Task::batch([refreshed, telling, load(signed, &route, viewport)])
             }
             Event::Sessions { .. } => {
                 let taken = event.clone();
@@ -2739,7 +2730,7 @@ impl Jellium {
                 let resting = browse.resorting(sort);
                 browse.listing.sort = sort;
                 let listing = browse.listing.clone();
-                let restored = resting.unwrap_or(0.0);
+                let restored = resting.unwrap_or(Drawn::ZERO);
                 let id = browse.grid.id();
                 browse.grid.moved(restored);
                 browse.items = jellium_model::paged::Paged::new(0);
@@ -2748,14 +2739,14 @@ impl Jellium {
             Action::Narrowed(narrow) => {
                 browse.narrow(narrow);
                 let listing = browse.listing.clone();
-                browse.grid.moved(0.0);
+                browse.grid.moved(Drawn::ZERO);
                 browse.items = jellium_model::paged::Paged::new(0);
                 self.relisted(listing)
             }
             Action::ClearFilters => {
                 browse.listing.facets = jellium_model::facets::Facets::default();
                 let listing = browse.listing.clone();
-                browse.grid.moved(0.0);
+                browse.grid.moved(Drawn::ZERO);
                 browse.items = jellium_model::paged::Paged::new(0);
                 self.relisted(listing)
             }
@@ -3019,7 +3010,10 @@ impl Jellium {
         {
             running.push(iced::time::every(theme::LIVE_TICK).map(|_| Message::LiveTicked));
         }
-        running.push(iced::window::resize_events().map(|(_, size)| Message::Resized(size)));
+        running.push(
+            iced::window::resize_events()
+                .filter_map(|_| crate::viewport::read().map(Message::Resized)),
+        );
         Subscription::batch(running)
     }
 

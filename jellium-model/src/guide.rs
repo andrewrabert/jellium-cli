@@ -4,8 +4,14 @@ use chrono::{DateTime, NaiveDate, TimeDelta, Utc};
 use jellium_protocol::TimerChanged;
 use uuid::Uuid;
 
+use crate::appearance::Drawn;
 use crate::livetv::{Channel, Program};
 use crate::window;
+
+/// The height `count` rows of `row` occupy.
+fn rows(count: usize, row: Drawn) -> Drawn {
+    Drawn::of(count as f32 * row.count())
+}
 
 /// How much time the guide shows at once.
 pub const SPAN: TimeDelta = TimeDelta::hours(2);
@@ -176,8 +182,8 @@ impl State {
                 if self.focus.channel < shown.start {
                     self.window.scrolled(window::Scrolled {
                         id: self.window.id(),
-                        offset: self.focus.channel as f32 * self.window.row(),
-                        height: shown.len() as f32 * self.window.row(),
+                        offset: rows(self.focus.channel, self.window.row()),
+                        height: rows(shown.len(), self.window.row()),
                     });
                 }
             }
@@ -192,8 +198,8 @@ impl State {
                         .saturating_sub(shown.len().saturating_sub(1));
                     self.window.scrolled(window::Scrolled {
                         id: self.window.id(),
-                        offset: first as f32 * self.window.row(),
-                        height: shown.len() as f32 * self.window.row(),
+                        offset: rows(first, self.window.row()),
+                        height: rows(shown.len(), self.window.row()),
                     });
                 }
             }
@@ -249,7 +255,7 @@ mod tests {
     use super::*;
     use jellium_protocol::TimerChange;
 
-    const ROW_HEIGHT: f32 = 64.0;
+    const ROW_HEIGHT: Drawn = Drawn::of(64.0);
 
     fn channel(index: usize) -> Channel {
         Channel {
@@ -272,7 +278,7 @@ mod tests {
             channels: (0..channels).map(channel).collect(),
             range: opens()..opens() + TimeDelta::days(14),
             start,
-            window: window::Window::new(window::Id::Guide, ROW_HEIGHT, 10.0 * ROW_HEIGHT),
+            window: window::Window::new(window::Id::Guide, ROW_HEIGHT, rows(10, ROW_HEIGHT)),
             programs: HashMap::new(),
             held: None,
             focus: Focus {

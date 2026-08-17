@@ -17,6 +17,7 @@ use crate::api::Api;
 use crate::app::{Message, Signed};
 use crate::error::{Answer, Operation};
 use crate::images::{self, Cache};
+use crate::style::{Drawn, Viewport};
 use crate::text::{self as strings, Text};
 use crate::theme;
 use crate::window;
@@ -116,7 +117,7 @@ pub enum Action {
 }
 
 /// Loads the tab `tab` names, against a page `height` pixels tall.
-pub async fn load(api: Rc<Api>, tab: Tab, height: f32) -> Answer<State> {
+pub async fn load(api: Rc<Api>, tab: Tab, height: Drawn) -> Answer<State> {
     Answer::of(async {
         let body = match tab {
             Tab::Guide => Body::Guide(guide::load(api, height).await?),
@@ -203,9 +204,9 @@ fn showing(signed: &mut Signed) -> Option<&mut State> {
 
 /// Reloads the tab shown, which is how a write's effect is taken up without
 /// moving the scroll position or the order.
-fn reload(signed: &Signed, tab: Tab) -> Task<Message> {
+fn reload(signed: &Signed, tab: Tab, viewport: Viewport) -> Task<Message> {
     Task::perform(
-        load(signed.api.clone(), tab, signed.viewport.height),
+        load(signed.api.clone(), tab, viewport.canvas().height()),
         Message::LiveTvLoaded,
     )
 }
@@ -213,7 +214,7 @@ fn reload(signed: &Signed, tab: Tab) -> Task<Message> {
 /// Applies a control.
 /// A `PlayChannel` while this tab holds group membership plays nothing and
 /// states why.
-pub fn act(signed: &mut Signed, action: Action) -> Task<Message> {
+pub fn act(signed: &mut Signed, action: Action, viewport: Viewport) -> Task<Message> {
     let api = signed.api.clone();
     match action {
         Action::Selected(tab) => {
@@ -231,7 +232,7 @@ pub fn act(signed: &mut Signed, action: Action) -> Task<Message> {
             move |outcome| Message::Wrote(Operation::Timer, outcome),
         ),
         Action::Kind(kind) => {
-            let height = signed.viewport.height;
+            let height = viewport.canvas().height();
             Task::perform(
                 async move { channels::load(api, kind, height).await },
                 |loaded| {
@@ -401,11 +402,11 @@ pub fn act(signed: &mut Signed, action: Action) -> Task<Message> {
             match guide.focused() {
                 Some(program) if program.airing(now) => {
                     let channel = program.channel;
-                    act(signed, Action::PlayChannel(channel))
+                    act(signed, Action::PlayChannel(channel), viewport)
                 }
                 Some(program) => {
                     let id = program.id.clone();
-                    act(signed, Action::Show(id))
+                    act(signed, Action::Show(id), viewport)
                 }
                 None => Task::none(),
             }
@@ -438,7 +439,7 @@ pub fn fetch_if_stale(signed: &mut Signed) -> Task<Message> {
 /// patched in place without refetching program data, and the Schedule and
 /// Series tabs re-read their own list, so neither the scroll position nor the
 /// order moves.
-pub fn timed(signed: &mut Signed, changes: &[TimerChanged]) -> Task<Message> {
+pub fn timed(signed: &mut Signed, changes: &[TimerChanged], viewport: Viewport) -> Task<Message> {
     let tab = match showing(signed) {
         Some(state) => match &mut state.body {
             Body::Guide(guide) => {
@@ -454,5 +455,5 @@ pub fn timed(signed: &mut Signed, changes: &[TimerChanged]) -> Task<Message> {
         },
         None => return Task::none(),
     };
-    reload(signed, tab)
+    reload(signed, tab, viewport)
 }

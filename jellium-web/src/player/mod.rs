@@ -43,6 +43,7 @@ use crate::profile::probe::{Engine, Media};
 use crate::profile::{self, Options};
 use crate::route::Route;
 use crate::settings::{Account, Shared};
+use crate::style::Viewport;
 use crate::text::Text;
 use crate::theme;
 
@@ -629,7 +630,7 @@ fn grants(browser: &Browser) -> HostGrants {
 /// item, or at the end, when something of the same kind plays here, and
 /// disturbs neither that playback nor its position; with nothing playing here,
 /// or with the other kind playing, it starts playback with its items.
-pub fn begin(signed: &mut Signed, start: Start) -> Task<Message> {
+pub fn begin(signed: &mut Signed, start: Start, viewport: Viewport) -> Task<Message> {
     if matches!(start.mode, PlayMode::Next | PlayMode::Last)
         && let Some(playing) = signed.playing.as_mut()
         && playing.element.kind() == start.kind
@@ -641,7 +642,7 @@ pub fn begin(signed: &mut Signed, start: Start) -> Task<Message> {
         return Task::none();
     }
 
-    let leaving = leave(signed);
+    let leaving = leave(signed, viewport);
 
     let queue = Queue::new(start.items, start.position, start.mode.shuffles());
     let Some(item) = queue.current().cloned() else {
@@ -811,12 +812,12 @@ pub fn installed(signed: &mut Signed, plan: Plan) -> Task<Message> {
 /// joined group's queue, or here.
 /// A channel goes to a bound target and plays here otherwise; it never becomes
 /// a group queue.
-pub fn started(signed: &mut Signed, start: Start) -> Task<Message> {
+pub fn started(signed: &mut Signed, start: Start, viewport: Viewport) -> Task<Message> {
     if start.live.is_some() {
         if signed.remote.is_some() {
             return remote::play(signed, start);
         }
-        return begin(signed, start);
+        return begin(signed, start, viewport);
     }
     if signed.group.is_some() {
         return group::play(signed, start);
@@ -824,7 +825,7 @@ pub fn started(signed: &mut Signed, start: Start) -> Task<Message> {
     if signed.remote.is_some() {
         return remote::play(signed, start);
     }
-    begin(signed, start)
+    begin(signed, start, viewport)
 }
 
 /// What the application acts on once a play request's answer has been
@@ -867,7 +868,7 @@ pub fn unchanged(signed: &mut Signed) -> Task<Message> {
 /// Applies a play request that yielded no plan, already reported: the pending
 /// request and the playback are dropped, and a held group is left under
 /// `failureGroupUnplayable`, which names no refusal and so takes none.
-pub fn unplanned(signed: &mut Signed) -> Task<Message> {
+pub fn unplanned(signed: &mut Signed, viewport: Viewport) -> Task<Message> {
     signed.pending = None;
     signed.playing = None;
     if signed
@@ -875,18 +876,18 @@ pub fn unplanned(signed: &mut Signed) -> Task<Message> {
         .as_ref()
         .is_some_and(|joined| joined.membership == group::Membership::Holding)
     {
-        return crate::player::group::unplayable(signed);
+        return crate::player::group::unplayable(signed, viewport);
     }
     Task::none()
 }
 
 /// Plays the queue's current item from `start_ticks`, reusing the element.
-fn play_current(signed: &mut Signed, start_ticks: i64) -> Task<Message> {
+fn play_current(signed: &mut Signed, start_ticks: i64, viewport: Viewport) -> Task<Message> {
     let Some(playing) = signed.playing.as_ref() else {
         return Task::none();
     };
     let Some(item) = playing.queue.current().cloned() else {
-        return leave(signed);
+        return leave(signed, viewport);
     };
     let request = request(signed, &item, start_ticks, &Selection::default());
     replan(signed, request)
@@ -901,7 +902,7 @@ fn play_current(signed: &mut Signed, start_ticks: i64) -> Task<Message> {
 /// dropped stream resumes once at the last reported position; a second failure
 /// of either kind is shown.
 /// An ended item advances the queue, and an exhausted queue leaves the player.
-pub fn event(signed: &mut Signed, raised: Raised) -> Task<Message> {
+pub fn event(signed: &mut Signed, raised: Raised, viewport: Viewport) -> Task<Message> {
     let Some(generation) = signed
         .playing
         .as_ref()
@@ -983,12 +984,12 @@ pub fn event(signed: &mut Signed, raised: Raised) -> Task<Message> {
                         async move { control::stopped(stopped).await.map(|()| Standing::Current) },
                         Message::Reported,
                     );
-                    Task::batch([reported, play_current(signed, start)])
+                    Task::batch([reported, play_current(signed, start, viewport)])
                 }
-                None => leave(signed),
+                None => leave(signed, viewport),
             }
         }
-        Event::Failed { fault } => failed(signed, fault),
+        Event::Failed { fault } => failed(signed, fault, viewport),
         Event::Command { command } => {
             let action = match command {
                 element::Command::Play | element::Command::Pause => Action::TogglePlay,
@@ -996,7 +997,7 @@ pub fn event(signed: &mut Signed, raised: Raised) -> Task<Message> {
                 element::Command::Next => Action::Next,
                 element::Command::SeekTo { position } => Action::Seek(position),
             };
-            act(signed, action)
+            act(signed, action, viewport)
         }
     }
 }
@@ -1121,7 +1122,7 @@ fn switched(signed: &Signed, playing: &Playing, wanted: Subtitles) -> Switch {
     }
 }
 
-fn failed(signed: &mut Signed, fault: Fault) -> Task<Message> {
+fn failed(signed: &mut Signed, fault: Fault, viewport: Viewport) -> Task<Message> {
     let Some(playing) = signed.playing.as_ref() else {
         return Task::none();
     };
@@ -1142,12 +1143,12 @@ fn failed(signed: &mut Signed, fault: Fault) -> Task<Message> {
                 live.resumed = true;
             }
             playing.element.ask(&Asked::SeekToLive);
-            play_current(signed, 0)
+            play_current(signed, 0, viewport)
         }
         Fault::Network if !playing.resumed => {
             playing.resumed = true;
             let position = to_ticks(playing.position);
-            play_current(signed, position)
+            play_current(signed, position, viewport)
         }
         Fault::Network => {
             playing.trouble = Some(Text::FailureStreamDropped);
@@ -1172,7 +1173,7 @@ fn failed(signed: &mut Signed, fault: Fault) -> Task<Message> {
 /// track, quality or version choice needs.
 /// While this tab holds group membership, a control the group owns issues the
 /// group's equivalent instead of acting here.
-pub fn act(signed: &mut Signed, action: Action) -> Task<Message> {
+pub fn act(signed: &mut Signed, action: Action, viewport: Viewport) -> Task<Message> {
     if let Some(joined) = signed.group.as_ref()
         && let Some(verb) = group::rebound(joined, signed.playing.as_ref(), &action, &signed.held)
     {
@@ -1242,18 +1243,18 @@ pub fn act(signed: &mut Signed, action: Action) -> Task<Message> {
             Task::none()
         }
         Action::ScrubReleased => match playing.scrubbing.take() {
-            Some(position) => act(signed, Action::Seek(position)),
+            Some(position) => act(signed, Action::Seek(position), viewport),
             None => Task::none(),
         },
         Action::SkipBack => {
             let position = playing
                 .position
                 .saturating_sub(skip(signed.held.skip_back_seconds));
-            act(signed, Action::Seek(position))
+            act(signed, Action::Seek(position), viewport)
         }
         Action::SkipForward => {
             let position = playing.position + skip(signed.held.skip_forward_seconds);
-            act(signed, Action::Seek(position))
+            act(signed, Action::Seek(position), viewport)
         }
         Action::SetVolume(volume) => {
             signed.device.volume = volume.clamp(0.0, 1.0);
@@ -1323,7 +1324,7 @@ pub fn act(signed: &mut Signed, action: Action) -> Task<Message> {
         }
         Action::SelectChapter(start) => {
             playing.menu = None;
-            act(signed, Action::Seek(span(start)))
+            act(signed, Action::Seek(span(start)), viewport)
         }
         Action::Hovered(at) => {
             match playing.preview.as_mut() {
@@ -1361,7 +1362,7 @@ pub fn act(signed: &mut Signed, action: Action) -> Task<Message> {
         }
         Action::CycleRepeat => {
             let next = playing.queue.repeat().cycled();
-            act(signed, Action::SetRepeat(next))
+            act(signed, Action::SetRepeat(next), viewport)
         }
         Action::SetRepeat(repeat) => {
             playing.queue.set_repeat(repeat);
@@ -1374,25 +1375,25 @@ pub fn act(signed: &mut Signed, action: Action) -> Task<Message> {
         }
         Action::Next => {
             if playing.queue.advance().is_none() {
-                return leave(signed);
+                return leave(signed, viewport);
             }
             let start = playing
                 .queue
                 .current()
                 .map(resume_ticks)
                 .unwrap_or_default();
-            play_current(signed, start)
+            play_current(signed, start, viewport)
         }
         Action::Previous => {
             if playing.queue.back().is_none() {
-                return act(signed, Action::Seek(Duration::ZERO));
+                return act(signed, Action::Seek(Duration::ZERO), viewport);
             }
             let start = playing
                 .queue
                 .current()
                 .map(resume_ticks)
                 .unwrap_or_default();
-            play_current(signed, start)
+            play_current(signed, start, viewport)
         }
         Action::ToggleFullscreen => {
             playing.fullscreen = !playing.fullscreen;
@@ -1403,7 +1404,7 @@ pub fn act(signed: &mut Signed, action: Action) -> Task<Message> {
             });
             Task::none()
         }
-        Action::Leave => leave(signed),
+        Action::Leave => leave(signed, viewport),
         Action::ToggleDisplay => {
             playing.idle = if playing.idle >= crate::theme::IDLE_HIDE {
                 Duration::ZERO
@@ -1425,7 +1426,7 @@ pub fn act(signed: &mut Signed, action: Action) -> Task<Message> {
 /// equivalent takes effect locally, unchanged.
 /// A command this tab cannot honour right now changes nothing and shows
 /// nothing; only `Notify` renders.
-pub fn controlled(signed: &mut Signed, control: Control) -> Task<Message> {
+pub fn controlled(signed: &mut Signed, control: Control, viewport: Viewport) -> Task<Message> {
     if let Control::Notify(notice) = control {
         signed.message = Some((notice, Duration::ZERO));
         return Task::none();
@@ -1484,7 +1485,7 @@ pub fn controlled(signed: &mut Signed, control: Control) -> Task<Message> {
     let Some(action) = honoured(signed, control) else {
         return Task::none();
     };
-    act(signed, action)
+    act(signed, action, viewport)
 }
 
 /// The local control a command has here, or nothing when this tab cannot
@@ -1539,7 +1540,7 @@ fn honoured(signed: &Signed, control: Control) -> Option<Action> {
     }
 }
 
-pub fn leave(signed: &mut Signed) -> Task<Message> {
+pub fn leave(signed: &mut Signed, viewport: Viewport) -> Task<Message> {
     signed.pending = None;
     let Some(playing) = signed.playing.take() else {
         return Task::none();
@@ -1561,7 +1562,7 @@ pub fn leave(signed: &mut Signed) -> Task<Message> {
             async move { control::stopped(stopped).await.map(|()| Standing::Current) },
             Message::Reported,
         ),
-        crate::app::load(signed, &route),
+        crate::app::load(signed, &route, viewport),
     ])
 }
 
@@ -1570,7 +1571,7 @@ pub fn leave(signed: &mut Signed) -> Task<Message> {
 /// A `Lapsed` standing plays the current item again from the position it last
 /// reported, once; a second lapse leaves the player showing that the session
 /// timed out.
-pub fn reported(signed: &mut Signed, standing: Standing) -> Task<Message> {
+pub fn reported(signed: &mut Signed, standing: Standing, viewport: Viewport) -> Task<Message> {
     match standing {
         Standing::Current => Task::none(),
         Standing::Superseded => {
@@ -1597,7 +1598,7 @@ pub fn reported(signed: &mut Signed, standing: Standing) -> Task<Message> {
             }
             playing.resumed = true;
             let position = to_ticks(playing.position);
-            play_current(signed, position)
+            play_current(signed, position, viewport)
         }
     }
 }

@@ -3,6 +3,8 @@ use jellium_protocol::{TimerChange, TimerChanged};
 use jellyfin_api::types::{BaseItemDto, BaseItemKind, ChannelType};
 use uuid::Uuid;
 
+use crate::appearance::Share;
+
 /// One scheduled airing, as a guide cell, a channel row and program detail
 /// draw it.
 #[derive(Debug, Clone, PartialEq)]
@@ -61,14 +63,12 @@ impl Program {
         self.start <= now && now < self.end
     }
 
-    /// How far through it `now` is, from 0.0 to 1.0.
-    pub fn elapsed(&self, now: DateTime<Utc>) -> f32 {
-        let whole = (self.end - self.start).num_seconds();
-        if whole <= 0 {
-            return 0.0;
-        }
-        let through = (now - self.start).num_seconds() as f32 / whole as f32;
-        through.clamp(0.0, 1.0)
+    /// How far through it `now` is.
+    pub fn elapsed(&self, now: DateTime<Utc>) -> Share {
+        Share::part(
+            (now - self.start).num_seconds(),
+            (self.end - self.start).num_seconds(),
+        )
     }
 
     /// Applies one timer change: a created timer or series timer is recorded
@@ -266,9 +266,9 @@ mod tests {
     #[test]
     fn an_elapsed_fraction_is_clamped_to_the_program() {
         let program = Program::read(&program_item()).expect("a programme");
-        assert_eq!(program.elapsed(at(-10)), 0.0);
-        assert_eq!(program.elapsed(at(15)), 0.5);
-        assert_eq!(program.elapsed(at(90)), 1.0);
+        assert_eq!(program.elapsed(at(-10)), Share::per_ten_thousand(0));
+        assert_eq!(program.elapsed(at(15)), Share::per_ten_thousand(5000));
+        assert_eq!(program.elapsed(at(90)), Share::WHOLE);
         assert!(program.airing(at(15)));
         assert!(!program.airing(at(30)));
     }

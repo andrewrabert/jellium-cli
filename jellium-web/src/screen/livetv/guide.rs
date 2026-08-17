@@ -11,6 +11,7 @@ use crate::api::Api;
 use crate::app::Message;
 use crate::images::{self, Cache};
 use crate::livetv::Program;
+use crate::style::Drawn;
 use crate::text::{self as strings, Text};
 use crate::theme;
 use crate::window;
@@ -19,7 +20,7 @@ pub use jellium_model::guide::{Fetched, Focus, Move, SPAN, STEP, State, Step, Tr
 
 /// Loads the TV channels and the guide range, opening at the current half hour
 /// with `SPAN` shown.
-pub async fn load(api: Rc<Api>, height: f32) -> Result<State, crate::error::Bubble> {
+pub async fn load(api: Rc<Api>, height: Drawn) -> Result<State, crate::error::Bubble> {
     let range = api.guide_range().await.bubbled()?;
     let channels = api
         .channels(jellyfin_api::types::ChannelType::Tv, None)
@@ -30,7 +31,7 @@ pub async fn load(api: Rc<Api>, height: f32) -> Result<State, crate::error::Bubb
         channels,
         range,
         start,
-        window: window::Window::new(window::Id::Guide, theme::ROW_HEIGHT, height),
+        window: window::Window::new(window::Id::Guide, Drawn::of(theme::ROW_HEIGHT), height),
         programs: HashMap::new(),
         held: None,
         focus: Focus {

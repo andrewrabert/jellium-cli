@@ -5,6 +5,7 @@ use iced::{Element, Fill};
 
 use crate::app::Message;
 use crate::error::Answer;
+use crate::style::Drawn;
 use crate::text::{self as strings, Text};
 use crate::theme;
 use crate::window;
@@ -34,13 +35,17 @@ pub async fn load(api: std::rc::Rc<crate::api::Api>) -> Answer<State> {
 
 /// The last `route::TAIL_LIMIT` bytes of `name`, and the file's full length.
 /// A file the server does not hold reads as `Trouble::LogMissing`.
-pub async fn open(api: std::rc::Rc<crate::api::Api>, name: String, height: f32) -> Answer<Viewer> {
+pub async fn open(
+    api: std::rc::Rc<crate::api::Api>,
+    name: String,
+    height: Drawn,
+) -> Answer<Viewer> {
     Answer::of(async {
         let tail = api.log_tail(&name).await.bubbled()?;
         Ok(Viewer {
             name,
             tail,
-            window: window::Window::new(window::Id::Log, theme::LOG_LINE, height),
+            window: window::Window::new(window::Id::Log, Drawn::of(theme::LOG_LINE), height),
         })
     })
     .await

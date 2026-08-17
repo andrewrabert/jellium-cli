@@ -11,6 +11,7 @@ use crate::api::Api;
 use crate::app::Message;
 use crate::error::Answer;
 use crate::images::{self, Cache};
+use crate::style::Drawn;
 use crate::text::{self as strings, Text};
 use crate::theme;
 use crate::widget;
@@ -33,11 +34,15 @@ pub fn writing(item: &BaseItemDto) -> Option<&str> {
     in_progress(item).then_some(item.timer_id.as_deref())?
 }
 
-pub async fn load(api: Rc<Api>, height: f32) -> Answer<State> {
+pub async fn load(api: Rc<Api>, height: Drawn) -> Answer<State> {
     Answer::of(async {
         Ok(State {
             recordings: api.recordings().await.bubbled()?,
-            window: window::Window::new(window::Id::Recordings, theme::ROW_HEIGHT, height),
+            window: window::Window::new(
+                window::Id::Recordings,
+                Drawn::of(theme::ROW_HEIGHT),
+                height,
+            ),
         })
     })
     .await

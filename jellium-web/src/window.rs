@@ -5,6 +5,7 @@ use iced::widget::{Space, column, scrollable};
 use iced::{Element, Fill, Task};
 
 use crate::app::Message;
+use crate::style::{self, Drawn};
 use crate::theme;
 
 pub use jellium_model::window::{Grid, Id, Scrolled, Window};
@@ -37,19 +38,19 @@ pub fn showing(window: Window, index: usize) -> Task<Message> {
         scrollable_id(window.id()),
         AbsoluteOffset {
             x: Some(0.0),
-            y: Some(index as f32 * window.row()),
+            y: Some(index as f32 * style::drawn(window.row())),
         },
     )
 }
 
 /// Scrolls the surface `id` names to `offset`, which is what a sort change and
 /// a letter jump restore.
-pub fn resting(id: Id, offset: f32) -> Task<Message> {
+pub fn resting(id: Id, offset: Drawn) -> Task<Message> {
     scroll_to(
         scrollable_id(id),
         AbsoluteOffset {
             x: Some(0.0),
-            y: Some(offset),
+            y: Some(style::drawn(offset)),
         },
     )
 }
@@ -63,8 +64,9 @@ pub fn grid<'a>(
 ) -> Element<'a, Message> {
     let built = grid.built(count);
     let columns = grid.columns();
-    let above = (built.start / columns) as f32 * grid.row();
-    let below = grid.rows(count).saturating_sub(built.end.div_ceil(columns)) as f32 * grid.row();
+    let above = (built.start / columns) as f32 * style::drawn(grid.row());
+    let below = grid.rows(count).saturating_sub(built.end.div_ceil(columns)) as f32
+        * style::drawn(grid.row());
 
     let cells = built.collect::<Vec<_>>();
     let rows = cells
@@ -89,8 +91,8 @@ pub fn grid<'a>(
         .on_scroll(move |viewport| {
             Message::Scrolled(Scrolled {
                 id,
-                offset: viewport.absolute_offset().y,
-                height: viewport.bounds().height,
+                offset: Drawn::of(viewport.absolute_offset().y),
+                height: Drawn::of(viewport.bounds().height),
             })
         })
         .height(Fill)
@@ -108,8 +110,8 @@ pub fn list<'a>(
     build: impl Fn(usize) -> Element<'a, Message> + 'a,
 ) -> Element<'a, Message> {
     let built = window.built(count);
-    let above = built.start as f32 * window.row();
-    let below = count.saturating_sub(built.end) as f32 * window.row();
+    let above = built.start as f32 * style::drawn(window.row());
+    let below = count.saturating_sub(built.end) as f32 * style::drawn(window.row());
 
     let rows = built.map(build).collect::<Vec<_>>();
     let content = column![
@@ -125,8 +127,8 @@ pub fn list<'a>(
         .on_scroll(move |viewport| {
             Message::Scrolled(Scrolled {
                 id,
-                offset: viewport.absolute_offset().y,
-                height: viewport.bounds().height,
+                offset: Drawn::of(viewport.absolute_offset().y),
+                height: Drawn::of(viewport.bounds().height),
             })
         })
         .height(Fill)

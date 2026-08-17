@@ -16,7 +16,6 @@ iced = { version = "0.14", default-features = false, features = [
     "web-colors",
     "crisp",
     "image",
-    "fira-sans",
     "advanced",
     "lazy",
 ] }
@@ -62,6 +61,7 @@ web-sys = { version = "0.3", features = [
     "console",
 ] }
 image = { version = "0.25.10", default-features = false, features = ["jpeg"] }
+woff2-patched = "0.4"
 
 [dev-dependencies]
 wasm-bindgen-test = "0.3"

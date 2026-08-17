@@ -13,6 +13,7 @@ use crate::live;
 use crate::livetv::Channel;
 use crate::player::group::Joined;
 use crate::route::Route;
+use crate::style::{self, Drawn, Share};
 use crate::text::{self as strings, Text};
 use crate::theme;
 
@@ -237,18 +238,22 @@ pub fn library_row<'a>(
     .into()
 }
 
-/// A bar filled to `fraction`, which is how far through a program `now` is.
-pub fn elapsed_bar<'a>(fraction: f32) -> Element<'a, Message> {
-    let filled = fraction.clamp(0.0, 1.0);
+/// The portions a bar is divided into, which is the resolution a share the
+/// reference writes is exact to.
+const PORTIONS: u16 = 10_000;
+
+/// A bar filled to `elapsed`, which is how far through a program `now` is.
+pub fn elapsed_bar<'a>(elapsed: Share) -> Element<'a, Message> {
+    let filled = style::drawn(elapsed.of(Drawn::of(f32::from(PORTIONS)))) as u16;
     container(
         row![
             container(Space::new())
-                .width(Length::FillPortion((filled * 1000.0) as u16))
+                .width(Length::FillPortion(filled))
                 .height(theme::ELAPSED_HEIGHT)
                 .style(|theme: &iced::Theme| container::Style::default()
                     .background(theme.palette().primary)),
             container(Space::new())
-                .width(Length::FillPortion(((1.0 - filled) * 1000.0) as u16))
+                .width(Length::FillPortion(PORTIONS - filled))
                 .height(theme::ELAPSED_HEIGHT),
         ]
         .height(theme::ELAPSED_HEIGHT),

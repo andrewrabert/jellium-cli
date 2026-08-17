@@ -1,3 +1,5 @@
+use crate::appearance::{Canvas, Drawn};
+
 /// Which windowed surface a scroll belongs to.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Id {
@@ -38,9 +40,9 @@ pub fn letter_bound(letter: char) -> Option<String> {
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Window {
     id: Id,
-    row: f32,
-    offset: f32,
-    height: f32,
+    row: Drawn,
+    offset: Drawn,
+    height: Drawn,
 }
 
 impl Window {
@@ -48,14 +50,14 @@ impl Window {
     /// scroll from showing an empty band.
     pub const MARGIN: usize = 4;
 
-    /// A window over rows `row` pixels tall inside a page `height` pixels
-    /// tall, scrolled to the top.
-    pub fn new(id: Id, row: f32, height: f32) -> Window {
+    /// A window over rows `row` tall inside a page `height` tall, scrolled to
+    /// the top.
+    pub fn new(id: Id, row: Drawn, height: Drawn) -> Window {
         Window {
             id,
-            row: row.max(1.0),
-            offset: 0.0,
-            height: height.max(0.0),
+            row: Drawn::of(row.count().max(1.0)),
+            offset: Drawn::ZERO,
+            height: Drawn::of(height.count().max(0.0)),
         }
     }
 
@@ -63,29 +65,29 @@ impl Window {
         self.id
     }
 
-    pub fn row(self) -> f32 {
+    pub fn row(self) -> Drawn {
         self.row
     }
 
     /// Where the window is scrolled to.
-    pub fn offset(self) -> f32 {
+    pub fn offset(self) -> Drawn {
         self.offset
     }
 
     /// Takes an offset a caller remembered.
-    pub fn moved(&mut self, offset: f32) {
-        self.offset = offset.max(0.0);
+    pub fn moved(&mut self, offset: Drawn) {
+        self.offset = Drawn::of(offset.count().max(0.0));
     }
 
     /// Applies a scroll and the viewport height it reported.
     pub fn scrolled(&mut self, scrolled: Scrolled) {
-        self.offset = scrolled.offset.max(0.0);
-        self.height = scrolled.height.max(0.0);
+        self.moved(scrolled.offset);
+        self.resized(scrolled.height);
     }
 
     /// Applies a page resize.
-    pub fn resized(&mut self, height: f32) {
-        self.height = height.max(0.0);
+    pub fn resized(&mut self, height: Drawn) {
+        self.height = Drawn::of(height.count().max(0.0));
     }
 
     /// The rows of `count` the viewport shows, without the margin; it is what
@@ -94,8 +96,8 @@ impl Window {
         if count == 0 {
             return 0..0;
         }
-        let first = (self.offset / self.row).floor().max(0.0) as usize;
-        let across = (self.height / self.row).ceil().max(1.0) as usize;
+        let first = (self.offset.count() / self.row.count()).floor().max(0.0) as usize;
+        let across = (self.height.count() / self.row.count()).ceil().max(1.0) as usize;
         let first = first.min(count);
         let last = first.saturating_add(across).min(count);
         first..last
@@ -118,18 +120,18 @@ impl Window {
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Grid {
     window: Window,
-    cell: f32,
-    width: f32,
+    cell: Drawn,
+    width: Drawn,
 }
 
 impl Grid {
-    /// A grid of cells `cell` wide in rows `row` tall, inside a viewport
-    /// `width` by `height`, scrolled to the top.
-    pub fn new(id: Id, cell: f32, row: f32, width: f32, height: f32) -> Grid {
+    /// A grid of cells `cell` wide in rows `row` tall, inside `canvas`,
+    /// scrolled to the top.
+    pub fn new(id: Id, cell: Drawn, row: Drawn, canvas: Canvas) -> Grid {
         Grid {
-            window: Window::new(id, row, height),
-            cell: cell.max(1.0),
-            width: width.max(0.0),
+            window: Window::new(id, row, canvas.height()),
+            cell: Drawn::of(cell.count().max(1.0)),
+            width: Drawn::of(canvas.width().count().max(0.0)),
         }
     }
 
@@ -137,13 +139,13 @@ impl Grid {
         self.window.id()
     }
 
-    pub fn row(self) -> f32 {
+    pub fn row(self) -> Drawn {
         self.window.row()
     }
 
     /// Cells across, never fewer than one.
     pub fn columns(self) -> usize {
-        ((self.width / self.cell).floor().max(1.0)) as usize
+        ((self.width.count() / self.cell.count()).floor().max(1.0)) as usize
     }
 
     /// The rows `count` cells occupy.
@@ -155,9 +157,9 @@ impl Grid {
         self.window.scrolled(scrolled);
     }
 
-    pub fn resized(&mut self, width: f32, height: f32) {
-        self.width = width.max(0.0);
-        self.window.resized(height);
+    pub fn resized(&mut self, canvas: Canvas) {
+        self.width = Drawn::of(canvas.width().count().max(0.0));
+        self.window.resized(canvas.height());
     }
 
     /// The cells of `count` the viewport shows, without the margin.
@@ -180,18 +182,18 @@ impl Grid {
     }
 
     /// Where the grid is scrolled to, which is what a sort change remembers.
-    pub fn offset(self) -> f32 {
+    pub fn offset(self) -> Drawn {
         self.window.offset()
     }
 
     /// Takes an offset a sort change remembered.
-    pub fn moved(&mut self, offset: f32) {
+    pub fn moved(&mut self, offset: Drawn) {
         self.window.moved(offset);
     }
 
     /// The offset that puts the row holding cell `index` at the top.
-    pub fn resting(self, index: usize) -> f32 {
-        (index / self.columns()) as f32 * self.row()
+    pub fn resting(self, index: usize) -> Drawn {
+        Drawn::of((index / self.columns()) as f32 * self.row().count())
     }
 }
 
@@ -199,24 +201,30 @@ impl Grid {
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Scrolled {
     pub id: Id,
-    pub offset: f32,
-    pub height: f32,
+    pub offset: Drawn,
+    pub height: Drawn,
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::appearance::{Css, Viewport};
 
-    const ROW_HEIGHT: f32 = 64.0;
+    const ROW_HEIGHT: Drawn = Drawn::of(64.0);
+
+    /// The canvas a page `width` css pixels wide draws on.
+    fn page(width: f32) -> Canvas {
+        Viewport::new(Css::of(width), Css::of(1000.0)).canvas()
+    }
 
     /// A window over `ROW_HEIGHT` rows in a viewport `rows` rows tall,
     /// scrolled `scrolled` rows down.
     fn window(rows: f32, scrolled: f32) -> Window {
-        let mut window = Window::new(Id::Guide, ROW_HEIGHT, rows * ROW_HEIGHT);
+        let mut window = Window::new(Id::Guide, ROW_HEIGHT, Drawn::of(rows * ROW_HEIGHT.count()));
         window.scrolled(Scrolled {
             id: Id::Guide,
-            offset: scrolled * ROW_HEIGHT,
-            height: rows * ROW_HEIGHT,
+            offset: Drawn::of(scrolled * ROW_HEIGHT.count()),
+            height: Drawn::of(rows * ROW_HEIGHT.count()),
         });
         window
     }
@@ -247,16 +255,22 @@ mod tests {
         assert_eq!(window(10.0, 0.0).built(0), 0..0);
     }
 
-    const CELL: f32 = 150.0;
+    /// A cell five and a half of which span the canvas `page` draws, so the
+    /// grid lays out five columns with the width to spare that keeps the count
+    /// off a rounding boundary.
+    fn cell(canvas: Canvas) -> Drawn {
+        Drawn::of(canvas.width().count() / 5.5)
+    }
 
     /// A grid five cells across in a viewport `rows` rows tall, scrolled
     /// `scrolled` rows down.
     fn grid(rows: f32, scrolled: f32) -> Grid {
-        let mut grid = Grid::new(Id::Browse, CELL, ROW_HEIGHT, CELL * 5.0, rows * ROW_HEIGHT);
+        let canvas = page(1440.0);
+        let mut grid = Grid::new(Id::Browse, cell(canvas), ROW_HEIGHT, canvas);
         grid.scrolled(Scrolled {
             id: Id::Browse,
-            offset: scrolled * ROW_HEIGHT,
-            height: rows * ROW_HEIGHT,
+            offset: Drawn::of(scrolled * ROW_HEIGHT.count()),
+            height: Drawn::of(rows * ROW_HEIGHT.count()),
         });
         grid
     }
@@ -273,7 +287,8 @@ mod tests {
 
     #[test]
     fn a_grid_narrower_than_one_cell_still_lays_out_one_column() {
-        let grid = Grid::new(Id::Browse, CELL, ROW_HEIGHT, 10.0, 640.0);
+        let wide = page(1440.0);
+        let grid = Grid::new(Id::Browse, cell(wide), ROW_HEIGHT, page(10.0));
         assert_eq!(grid.columns(), 1);
     }
 
@@ -298,18 +313,18 @@ mod tests {
     #[test]
     fn a_grid_rests_a_cell_at_the_top_of_its_own_row() {
         let grid = grid(10.0, 0.0);
-        assert_eq!(grid.resting(0), 0.0);
-        assert_eq!(grid.resting(4), 0.0);
+        assert_eq!(grid.resting(0), Drawn::ZERO);
+        assert_eq!(grid.resting(4), Drawn::ZERO);
         assert_eq!(grid.resting(5), ROW_HEIGHT);
-        assert_eq!(grid.resting(12), 2.0 * ROW_HEIGHT);
+        assert_eq!(grid.resting(12), Drawn::of(2.0 * ROW_HEIGHT.count()));
     }
 
     #[test]
     fn a_grid_takes_an_offset_a_sort_change_remembered() {
         let mut grid = grid(10.0, 100.0);
         let offset = grid.offset();
-        grid.moved(0.0);
-        assert_eq!(grid.offset(), 0.0);
+        grid.moved(Drawn::ZERO);
+        assert_eq!(grid.offset(), Drawn::ZERO);
         grid.moved(offset);
         assert_eq!(grid.offset(), offset);
         assert_eq!(grid.shown(5_000), 500..550);
@@ -318,7 +333,7 @@ mod tests {
     #[test]
     fn a_resize_relays_the_grid_across_the_new_width() {
         let mut grid = grid(10.0, 0.0);
-        grid.resized(CELL * 3.0, 10.0 * ROW_HEIGHT);
+        grid.resized(page(1440.0 * 3.5 / 5.5));
         assert_eq!(grid.columns(), 3);
         assert_eq!(grid.rows(7), 3);
     }

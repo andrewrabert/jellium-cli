@@ -25,6 +25,7 @@ use uuid::Uuid;
 use crate::api::Api;
 use crate::app::{Message, Signed};
 use crate::error::{Answer, Operation, Wrote};
+use crate::style::{Drawn, Viewport};
 use crate::text::{self as strings, Text};
 use crate::theme;
 
@@ -589,7 +590,7 @@ pub enum Action {
 pub async fn load(
     api: Rc<Api>,
     screen: Screen,
-    height: f32,
+    height: Drawn,
     device: String,
 ) -> Answer<(Screen, Loaded)> {
     Answer::of(async {
@@ -721,7 +722,7 @@ pub fn images(state: &State) -> std::collections::HashSet<crate::images::Key> {
 /// Applies a control.
 /// A write the mode forecloses is never reachable, because `--read-only` leaves
 /// its control out of the view.
-pub fn act(signed: &mut Signed, action: Action) -> Task<Message> {
+pub fn act(signed: &mut Signed, action: Action, viewport: Viewport) -> Task<Message> {
     match action {
         Action::Open(screen) => Task::done(Message::Navigated(crate::route::Route::Dashboard {
             screen,
@@ -761,7 +762,7 @@ pub fn act(signed: &mut Signed, action: Action) -> Task<Message> {
         }
         Action::Filtered(with_user) => {
             let api = signed.api.clone();
-            let height = signed.viewport.height;
+            let height = viewport.canvas().height();
             Task::perform(
                 async move {
                     activity::load(api, with_user, height)

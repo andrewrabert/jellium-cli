@@ -46,6 +46,8 @@ pub enum Call {
     WebSocketNew,
     WebSocketSend,
     WindowBtoa,
+    WindowInnerHeight,
+    WindowInnerWidth,
     WindowScreen,
 }
 
@@ -87,6 +89,8 @@ impl std::fmt::Display for Call {
             Call::WebSocketNew => "WebSocket.new",
             Call::WebSocketSend => "WebSocket.send",
             Call::WindowBtoa => "window.btoa",
+            Call::WindowInnerHeight => "window.innerHeight",
+            Call::WindowInnerWidth => "window.innerWidth",
             Call::WindowScreen => "window.screen",
         })
     }
@@ -369,6 +373,24 @@ impl Stream for Reports {
 pub fn decoded_image(sentence: Text, bytes: &[u8]) -> Option<image::DynamicImage> {
     match image::load_from_memory_with_format(bytes, image::ImageFormat::Jpeg) {
         Ok(decoded) => Some(decoded),
+        Err(error) => {
+            raise(Failure::told(
+                sentence,
+                Cause::Malformed {
+                    detail: error.to_string(),
+                },
+            ));
+            None
+        }
+    }
+}
+
+/// The sfnt bytes inside a woff2; a file that will not unpack is raised as a
+/// failure carrying `sentence` and answers `None`.
+/// This is the only site that decodes a woff2.
+pub fn unpacked(sentence: Text, bytes: &[u8]) -> Option<Vec<u8>> {
+    match woff2_patched::decode::convert_woff2_to_ttf(&mut std::io::Cursor::new(bytes)) {
+        Ok(unpacked) => Some(unpacked),
         Err(error) => {
             raise(Failure::told(
                 sentence,

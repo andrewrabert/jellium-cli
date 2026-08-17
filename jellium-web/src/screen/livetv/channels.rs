@@ -11,6 +11,7 @@ use crate::app::Message;
 use crate::error::Answer;
 use crate::images::{self, Cache};
 use crate::livetv::Channel;
+use crate::style::Drawn;
 use crate::text::{self as strings, Text};
 use crate::theme;
 use crate::widget;
@@ -27,13 +28,13 @@ pub struct State {
 pub async fn load(
     api: Rc<Api>,
     kind: jellyfin_api::types::ChannelType,
-    height: f32,
+    height: Drawn,
 ) -> Answer<State> {
     Answer::of(async {
         Ok(State {
             channels: api.channels(kind, None).await.bubbled()?,
             kind,
-            window: window::Window::new(window::Id::Channels, theme::ROW_HEIGHT, height),
+            window: window::Window::new(window::Id::Channels, Drawn::of(theme::ROW_HEIGHT), height),
         })
     })
     .await
