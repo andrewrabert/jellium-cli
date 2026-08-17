@@ -1,12 +1,12 @@
-use iced::Element;
-use iced::widget::{button, column, container};
+use iced::widget::container;
+use iced::{Element, Fill};
 
 use crate::app::Message;
+use crate::style::{self, Dialog, Viewport, space, typeface};
 use crate::text::{self as strings, Text};
+use crate::widget::{self, Emphasis};
 
 use super::Action;
-use crate::style::{self, space, typeface};
-use crate::widget::prose;
 
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct State {
@@ -17,45 +17,40 @@ pub struct State {
     pub standing: Option<jellium_model::quickconnect::SignIn>,
 }
 
-pub fn view<'a>(state: &'a super::State) -> Element<'a, Message> {
-    let mut shown = column![
-        prose(
-            strings::lookup(Text::LoginQuickConnectTitle),
-            typeface::HEADING_1
-        ),
-        prose(
+/// The reference's alert dialog: the code under its title on the dialog's own
+/// surface, over the backdrop, and filling the page where the page is too
+/// narrow or too short to hold a dialog.
+// reference: dialog-fullscreen
+pub fn view<'a>(state: &'a super::State, viewport: Viewport) -> Element<'a, Message> {
+    let mut rows = vec![
+        widget::heading(strings::lookup(Text::LoginQuickConnectTitle)),
+        widget::prose(
             strings::lookup(Text::LoginQuickConnectInstruction),
-            typeface::BODY
+            typeface::BODY,
         ),
-    ]
-    .spacing(style::drawn(space::GUTTER.drawn()))
-    .max_width(480);
+    ];
 
     if let Some(code) = &state.quick_connect.code {
-        shown = shown
-            .push(prose(
-                strings::lookup(Text::LoginQuickConnectCode),
-                typeface::BODY,
-            ))
-            .push(prose(code.clone(), typeface::HEADING_1));
+        rows.push(widget::prose(
+            strings::lookup(Text::LoginQuickConnectCode),
+            typeface::BODY,
+        ));
+        rows.push(widget::prose(code.clone(), typeface::HEADING_1));
     }
 
     match state.quick_connect.standing {
         None | Some(jellium_model::quickconnect::SignIn::Pending) => {
-            shown = shown.push(prose(
+            rows.push(widget::prose(
                 strings::lookup(Text::LoginQuickConnectWaiting),
                 typeface::BODY,
             ));
         }
         Some(jellium_model::quickconnect::SignIn::Expired) => {
-            shown = shown.push(
-                button(prose(
-                    strings::lookup(Text::LoginQuickConnectRetry),
-                    typeface::BODY,
-                ))
-                .style(style::raised)
-                .on_press(Message::LoginAction(Action::QuickConnectRetry)),
-            );
+            rows.push(widget::block(
+                strings::lookup(Text::LoginQuickConnectRetry),
+                Some(Message::LoginAction(Action::QuickConnectRetry)),
+                Emphasis::Raised,
+            ));
         }
         Some(
             jellium_model::quickconnect::SignIn::Disabled
@@ -63,14 +58,23 @@ pub fn view<'a>(state: &'a super::State) -> Element<'a, Message> {
         ) => {}
     }
 
-    shown = shown.push(
-        button(prose(strings::lookup(Text::LoginBack), typeface::BODY))
-            .style(style::raised)
-            .on_press(Message::LoginAction(Action::Back)),
-    );
+    rows.push(widget::block(
+        strings::lookup(Text::LoginBack),
+        Some(Message::LoginAction(Action::Back)),
+        Emphasis::Raised,
+    ));
 
-    container(shown)
-        .center_x(iced::Fill)
-        .center_y(iced::Fill)
+    let panel = container(widget::form(viewport, rows))
+        .padding(style::drawn(space::PAD.drawn()))
+        .style(style::dialog);
+    let held = match viewport.dialog() {
+        Dialog::Fullscreen => panel.width(Fill).height(Fill),
+        Dialog::Fixed => panel,
+    };
+
+    container(held)
+        .center_x(Fill)
+        .center_y(Fill)
+        .style(style::scrim)
         .into()
 }

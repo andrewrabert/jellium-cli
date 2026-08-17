@@ -4,7 +4,7 @@
 //! root size as its scale and so resolves every em once for the whole surface.
 
 pub use jellium_model::appearance::{
-    Band, Css, Drawn, Length, Screen, Share, Viewport, card, scheme, space, typeface,
+    Band, Css, Dialog, Drawn, Length, Screen, Share, Viewport, card, scheme, space, typeface,
 };
 
 /// The one site a ported length becomes a number iced takes.
@@ -96,6 +96,26 @@ pub fn page(_theme: &iced::Theme) -> iced::widget::container::Style {
     iced::widget::container::Style::default()
         .background(color(scheme::BACKGROUND))
         .color(color(scheme::TEXT))
+}
+
+/// The surface a dialog stands on.
+// reference: dialog-fullscreen
+pub fn dialog(_theme: &iced::Theme) -> iced::widget::container::Style {
+    iced::widget::container::Style::default()
+        .background(color(scheme::SURFACE))
+        .color(color(scheme::TEXT))
+        .border(iced::Border {
+            radius: radius(),
+            ..iced::Border::default()
+        })
+        .shadow(shadow(space::CARD_SHADOW))
+}
+
+/// What a dialog is drawn over, which the reference paints black behind its
+/// own backdrop.
+// reference: scheme-dialog-backdrop
+pub fn scrim(_theme: &iced::Theme) -> iced::widget::container::Style {
+    iced::widget::container::Style::default().background(color(scheme::DIALOG_BACKDROP))
 }
 
 /// The background a screen drawn over the video element carries.
