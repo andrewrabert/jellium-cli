@@ -11,6 +11,7 @@ use jellium_protocol::{Notice, Session, SyncAccess};
 use jellyfin_api::types::BaseItemDto;
 
 use crate::app::Message;
+use crate::icon::Icon;
 use crate::images::{self, Cache, Kind};
 use crate::live;
 use crate::livetv::Channel;
@@ -100,6 +101,14 @@ fn inside(card: card::Card, viewport: Viewport) -> Drawn {
     Drawn::of(card.width(viewport).count() - space::GUTTER.drawn().count())
 }
 
+/// What a card draws where its image goes: the image itself, or the glyph the
+/// reference's own `.cardImageIcon` stands in with.
+#[derive(Debug, Clone)]
+pub enum Face {
+    Image(image::Handle),
+    Icon(Icon),
+}
+
 /// A card as the reference draws one: its face in the shape's own aspect over
 /// its centered footer, both held to the card's width inside its pitch.
 // reference: card-container
@@ -107,23 +116,29 @@ fn inside(card: card::Card, viewport: Viewport) -> Drawn {
 fn boxed<'a>(
     card: card::Card,
     viewport: Viewport,
-    face: Option<image::Handle>,
+    face: Option<Face>,
     name: String,
     subtitle: Option<String>,
 ) -> Element<'a, Message> {
     let width = style::drawn(inside(card, viewport));
     let height = style::drawn(card.shape().aspect().of(inside(card, viewport)));
     let background = scheme::card_background(&name);
+    let painted = move |theme: &iced::Theme| style::card_face(theme, background);
     let drawn_face: Element<'a, Message> = match face {
-        Some(handle) => container(image(handle).width(width))
+        Some(Face::Image(handle)) => container(image(handle).width(width))
             .width(width)
             .height(height)
             .style(style::card_padder)
             .into(),
+        Some(Face::Icon(drawn)) => container(crate::icon::icon(drawn, typeface::CARD_ICON))
+            .center_x(width)
+            .center_y(height)
+            .style(painted)
+            .into(),
         None => container(Space::new())
             .width(width)
             .height(height)
-            .style(move |theme: &iced::Theme| style::card_face(theme, background))
+            .style(painted)
             .into(),
     };
 
@@ -168,6 +183,80 @@ pub fn tile<'a>(
     }
 }
 
+/// A card sized for `viewport`: its face over its centered, elided name, drawn
+/// inside its own pitch. `bottom` is what the login picker's cards and the
+/// select-server page's differ by, the reference setting
+/// `.cardBox-bottompadded` on the first and not the second.
+// reference: card-box-bottom
+pub fn card<'a>(
+    card: card::Card,
+    viewport: Viewport,
+    face: Face,
+    name: impl Into<Cow<'a, str>>,
+    bottom: card::Bottom,
+    press: Message,
+) -> Element<'a, Message> {
+    let body = boxed(card, viewport, Some(face), name.into().into_owned(), None);
+    let held: Element<'a, Message> = match bottom {
+        card::Bottom::Flush => body,
+        card::Bottom::Padded => {
+            let reserved = match viewport.matches(space::CARD_BOTTOM_AT) {
+                true => space::CARD_BOTTOM_NARROW,
+                false => space::CARD_BOTTOM,
+            };
+            column![body, Space::new().height(style::drawn(reserved.drawn()))].into()
+        }
+    };
+    button(held).style(style::flat).on_press(press).into()
+}
+
+/// Cards laid out the way the reference's `.vertical-wrap.centered` lays them
+/// out: broken into rows of `card.across(viewport)` and each row centered, so a
+/// short last row sits under the middle of the one above it.
+// reference: page-centering
+pub fn picker<'a>(
+    card: card::Card,
+    viewport: Viewport,
+    cards: Vec<Element<'a, Message>>,
+) -> Element<'a, Message> {
+    let across = card.across(viewport).count();
+    let mut rows: Vec<Vec<Element<'a, Message>>> = Vec::new();
+    for held in cards {
+        if rows.last().is_none_or(|last| last.len() == across) {
+            rows.push(Vec::new());
+        }
+        rows.last_mut()
+            .expect("a row stands open once one is pushed")
+            .push(held);
+    }
+    let gutter = style::drawn(space::GUTTER.drawn());
+    column(
+        rows.into_iter()
+            .map(|held| container(row(held).spacing(gutter)).center_x(Fill).into()),
+    )
+    .spacing(gutter)
+    .into()
+}
+
+/// The page a login screen is drawn on: the reference's own side padding, its
+/// top and bottom, and the body centered in what is left.
+// reference: page-centering
+// reference: page-padded
+pub fn page<'a>(viewport: Viewport, body: Element<'a, Message>) -> Element<'a, Message> {
+    let side = style::drawn(space::page_side(viewport.canvas()));
+    container(body)
+        .padding(iced::Padding {
+            top: style::drawn(space::PAGE_TOP.drawn()),
+            right: side,
+            bottom: style::drawn(space::PAGE_BOTTOM.drawn()),
+            left: side,
+        })
+        .center_x(Fill)
+        .height(Fill)
+        .style(style::page)
+        .into()
+}
+
 /// A library item's card: its poster, its name and its subtitle, which is
 /// `Footer::NameAndSubtitle` and `Bottom::Padded` always, so neither is a
 /// parameter.
@@ -180,7 +269,7 @@ pub fn poster<'a>(
     let body = boxed(
         card::Card::Wall(card::Shape::Portrait),
         viewport,
-        image,
+        image.map(Face::Image),
         item.name.clone().unwrap_or_default(),
         Some(subtitle(item)),
     );
@@ -422,7 +511,7 @@ pub fn channel_card<'a>(
     let mut body = column![boxed(
         on_now,
         viewport,
-        image,
+        image.map(Face::Image),
         format!("{} {}", channel.number, channel.name),
         channel
             .current

@@ -160,3 +160,6 @@ dialog-fullscreen	src/components/dialogHelper/dialoghelper.scss	115	135	76dcde05
 scheme-dialog-backdrop	src/components/dialogHelper/dialoghelper.scss	142	158	67962f638bb5c0dd9fa64b250c305c105b72302b08fb3a00cf990ad90700cca5	ported
 face-base-bold-cyrillic	src/styles/noto-sans/base-700-normal.scss	10	15	ac3cedbce70cabd48e4275ac18c47062c5ec84d4b27795e8f4f8f2fef19e44e0	ported
 add-server-page	src/controllers/session/addServer/index.html	1	18	ae14072044affa8d7d87b47a3050bd384fd25309c2b74acaaa25fd19fd39a42d	ported
+select-server-page	src/controllers/session/selectServer/index.html	1	17	f6580d00ff265ccd52ab4b44f030a78b633fc198421c8dce0526ead690400aa1	ported
+select-server-card	src/controllers/session/selectServer/index.js	36	68	dccf5021b3c96fe3841c7d760c823495730c231e092c81f8e9589486c90f480c	ported
+icon-family	src/styles/site.scss	64	67	7e39ca2406521f04d0e594c227ff69bcd151652b38c3bd9d7990472038a01971	ported

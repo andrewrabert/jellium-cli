@@ -76,9 +76,26 @@ pub fn font(weight: typeface::Weight) -> iced::Font {
     }
 }
 
+/// The family the reference's own icon face registers under. Private for the
+/// reason `FAMILY` is: `ICONS` is the one site that crosses into iced with it.
+// reference: icon-family
+const ICON_FAMILY: &str = "Material Icons";
+
+/// The face a glyph is drawn in.
+pub const ICONS: iced::Font = iced::Font::with_name(ICON_FAMILY);
+
 /// The canvas scale the band draws at, which is what resolves every em.
 pub fn scale(band: Band) -> f32 {
     band.root().factor()
+}
+
+/// The page itself, which the reference paints in the scheme's background and
+/// draws every screen inside.
+// reference: page-standalone
+pub fn page(_theme: &iced::Theme) -> iced::widget::container::Style {
+    iced::widget::container::Style::default()
+        .background(color(scheme::BACKGROUND))
+        .color(color(scheme::TEXT))
 }
 
 /// The background a screen drawn over the video element carries.

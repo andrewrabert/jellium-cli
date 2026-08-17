@@ -11,6 +11,7 @@ mod control;
 mod error;
 mod failure;
 mod fonts;
+mod icon;
 mod identity;
 mod images;
 mod live;

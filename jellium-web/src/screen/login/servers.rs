@@ -1,94 +1,89 @@
 use iced::Element;
-use iced::widget::{button, column, container, row, scrollable};
+use iced::widget::column;
 
 use crate::app::Message;
+use crate::icon::Icon;
+use crate::style::{self, Viewport, card, space, typeface};
 use crate::text::{self as strings, Text};
+use crate::widget::{self, Emphasis, Face};
 
 use super::Action;
-use crate::style::{self, space, typeface};
-use crate::widget::prose;
 
-/// One saved server's row: its stored name over its url, its url alone when no
-/// probe has ever succeeded, whether it holds a credential, and whether it is
-/// the active one.
-fn entry<'a>(saved: &'a jellium_protocol::SavedServer, read_only: bool) -> Element<'a, Message> {
-    let mut named = column![].spacing(style::drawn(space::BLOCK_GAP.drawn()));
-    if !saved.name.is_empty() {
-        named = named.push(prose(saved.name.clone(), typeface::HEADING_3));
-    }
-    named = named.push(prose(saved.server.clone(), typeface::BODY));
+/// One saved server's card: the reference's own square server card, with what
+/// this client knows about the server written under it and the control that
+/// forgets it.
+// reference: select-server-card
+fn saved<'a>(
+    saved: &'a jellium_protocol::SavedServer,
+    viewport: Viewport,
+    read_only: bool,
+) -> Element<'a, Message> {
+    let named = match saved.name.is_empty() {
+        true => saved.server.clone(),
+        false => saved.name.clone(),
+    };
+    let mut entry = column![widget::card(
+        card::Card::Rail(card::Rail::Square),
+        viewport,
+        Face::Icon(Icon::Storage),
+        named,
+        card::Bottom::Flush,
+        Message::LoginAction(Action::Select {
+            server: saved.server.clone(),
+        }),
+    )]
+    .spacing(style::drawn(space::BLOCK_GAP.drawn()));
+
     if saved.active {
-        named = named.push(prose(
+        entry = entry.push(widget::line(
             strings::lookup(Text::LoginServersActive),
             typeface::SECONDARY,
+            typeface::Weight::Regular,
         ));
     }
     if saved.credentialed {
-        named = named.push(prose(
+        entry = entry.push(widget::line(
             strings::lookup(Text::LoginServersSignedIn),
             typeface::SECONDARY,
+            typeface::Weight::Regular,
         ));
     }
-
-    let mut controls = row![
-        button(prose(
-            strings::lookup(Text::LoginServersSelect),
-            typeface::BODY
-        ))
-        .style(style::raised)
-        .on_press(Message::LoginAction(Action::Select {
-            server: saved.server.clone(),
-        })),
-    ]
-    .spacing(style::drawn(space::GUTTER.drawn()));
-
     if !(read_only && saved.credentialed) {
-        controls = controls.push(
-            button(prose(
-                strings::lookup(Text::LoginServersRemove),
-                typeface::BODY,
-            ))
-            .style(style::raised)
-            .on_press(Message::LoginAction(Action::Remove {
+        entry = entry.push(widget::block(
+            strings::lookup(Text::LoginServersRemove),
+            Some(Message::LoginAction(Action::Remove {
                 server: saved.server.clone(),
             })),
-        );
+            Emphasis::Raised,
+        ));
     }
-
-    container(column![named, controls].spacing(style::drawn(space::GUTTER.drawn())))
-        .padding(style::drawn(space::GUTTER.drawn()))
-        .width(iced::Fill)
-        .into()
+    entry.into()
 }
 
-/// The list, drawn from the records the last read answered.
-pub fn view<'a>(state: &'a super::State) -> Element<'a, Message> {
-    let entries = column(
-        state
-            .servers
-            .iter()
-            .map(|saved| entry(saved, state.read_only)),
+/// The reference's select-server page: its title over the saved servers as
+/// cards, with the control that adds one beneath them.
+// reference: select-server-page
+pub fn view<'a>(state: &'a super::State, viewport: Viewport) -> Element<'a, Message> {
+    widget::page(
+        viewport,
+        column![
+            widget::heading(strings::lookup(Text::LoginServersTitle)),
+            widget::picker(
+                card::Card::Rail(card::Rail::Square),
+                viewport,
+                state
+                    .servers
+                    .iter()
+                    .map(|entry| saved(entry, viewport, state.read_only))
+                    .collect(),
+            ),
+            widget::block(
+                strings::lookup(Text::LoginServersAdd),
+                Some(Message::LoginAction(Action::Add)),
+                Emphasis::Raised,
+            ),
+        ]
+        .spacing(style::drawn(space::SECTION_GAP.drawn()))
+        .into(),
     )
-    .spacing(style::drawn(space::GUTTER.drawn()));
-
-    let listed = column![
-        prose(
-            strings::lookup(Text::LoginServersTitle),
-            typeface::HEADING_1
-        ),
-        scrollable(entries),
-        button(prose(
-            strings::lookup(Text::LoginServersAdd),
-            typeface::BODY
-        ))
-        .style(style::raised)
-        .on_press(Message::LoginAction(Action::Add)),
-    ]
-    .spacing(style::drawn(space::GUTTER.drawn()))
-    .max_width(560);
-
-    container(listed)
-        .center_x(iced::Fill)
-        .center_y(iced::Fill)
-        .into()
 }

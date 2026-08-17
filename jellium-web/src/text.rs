@@ -81,7 +81,6 @@ text! {
     LoginServersTitle => "loginServersTitle",
     LoginServersActive => "loginServersActive",
     LoginServersSignedIn => "loginServersSignedIn",
-    LoginServersSelect => "loginServersSelect",
     LoginServersRemove => "loginServersRemove",
     LoginServersAdd => "loginServersAdd",
     LoginAddTitle => "loginAddTitle",

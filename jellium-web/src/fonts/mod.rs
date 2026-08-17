@@ -31,6 +31,11 @@ impl Codepoint {
         }
     }
 
+    /// The character this addresses, and None where no scalar answers to it.
+    pub fn character(self) -> Option<char> {
+        char::from_u32(self.scalar)
+    }
+
     /// The codepoint just past this one, and this one at the top of the space.
     fn after(self) -> Codepoint {
         Codepoint {
