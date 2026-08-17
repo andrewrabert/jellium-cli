@@ -169,6 +169,10 @@ login-user-card	src/controllers/session/login/index.js	139	185	b73a8431b5723a802
 reset-password-page	src/controllers/session/resetPassword/index.html	1	23	2adf514e73b914e4ec38812395fa385e4685471802ddc500c1c47154308f010e	ported
 forgot-password-page	src/apps/stable/routes/session/forgotPassword/index.tsx	78	127	d6f85c91f538e0a4ab6dd925181b6f325f5366f1e9be1d0729cf0228f7b97431	ported
 scheme-logo	src/themes/dark/theme.scss	36	38	3a6ac2d126e23451c5f410af79fb85dfbfeaf9d82a7f1ee8d9ec85ffe83fd8c3	ported
+home-sections	src/types/homeSectionType.ts	16	27	de9cf89b4d6bfc1310265bfe610793e49eb4adced8998c96c6a56500ff6dddaa	ported
+home-live-tv	src/components/homesections/sections/liveTv.ts	69	80	19b00f07ceecb5fc4f8546203323397990754b8e181114cd779b27f27f54405f	ported
+home-live-tv-programs	src/components/homesections/sections/liveTv.ts	81	84	c48d47c7171e9beba71f1b0f881e59eb4297413854c51403977aa84d63c43f9b	dead
+home-live-tv-sections	src/components/homesections/sections/liveTv.ts	86	114	8e9557ec944c03c151501469a35e1dac4dfd0d25bd8208115eda873245bd2c01	ported
 home-resume	src/components/homesections/sections/resume.ts	49	56	b9ddd7ee057de70cf1745f143ae0285d56fa8702abc569eb3a72ccfa1042ea07	ported
 home-next-up	src/components/homesections/sections/nextUp.ts	44	48	09591e4f49a230ea8201fe4f5d56f6e463a2c88231182978561aac8bda23a1b6	ported
 home-latest	src/components/homesections/sections/recentlyAdded.ts	57	65	e5d138a3f6da64314ace4e12c146e45d64934ddb9074e8c8b498cc5da7e5910f	ported

@@ -522,7 +522,8 @@ pub fn channel_card<'a>(
         .into()
 }
 
-/// The on-now row, capped at `home::ON_NOW`.
+/// The channels on now, capped at `home::ON_NOW`, the section that holds them
+/// drawing their title.
 pub fn on_now_row<'a>(
     channels: &'a [Channel],
     viewport: Viewport,
@@ -543,14 +544,11 @@ pub fn on_now_row<'a>(
             channel_card(channel, viewport, now, handle)
         });
 
-    column![
-        prose(strings::lookup(Text::HomeOnNow), typeface::HEADING_2),
-        scrollable(row(cards).spacing(style::drawn(space::GUTTER.drawn()))).direction(
-            scrollable::Direction::Horizontal(scrollable::Scrollbar::default(),)
-        ),
-    ]
-    .spacing(style::drawn(space::CONTROL_GAP.drawn()))
-    .into()
+    scrollable(row(cards).spacing(style::drawn(space::GUTTER.drawn())))
+        .direction(scrollable::Direction::Horizontal(
+            scrollable::Scrollbar::default(),
+        ))
+        .into()
 }
 
 /// One failure report as it is shown: its sentence, the Jellyfin server's own

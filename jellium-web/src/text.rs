@@ -212,6 +212,7 @@ text! {
     FailureLoginMoved => "failureLoginMoved",
     FailureStageLoginOnly => "failureStageLoginOnly",
     HomeMyMedia => "homeMyMedia",
+    HomeLiveTv => "homeLiveTv",
     HomeContinueWatching => "homeContinueWatching",
     HomeNextUp => "homeNextUp",
     HomeEmpty => "homeEmpty",

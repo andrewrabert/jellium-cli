@@ -153,7 +153,6 @@ pub enum View {
     Settings(crate::screen::settings::State),
     /// A Live TV screen that cannot be shown, drawn as the sentence naming
     /// why in the screen's place.
-    /// The screen cannot be shown; the reason stands in the failure log.
     Unavailable,
 }
 

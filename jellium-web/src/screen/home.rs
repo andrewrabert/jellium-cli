@@ -2,7 +2,7 @@ use std::collections::HashSet;
 use std::rc::Rc;
 
 use iced::Element;
-use iced::widget::{column, scrollable};
+use iced::widget::{column, row, scrollable};
 use jellyfin_api::types::{BaseItemDto, CollectionType, MediaType};
 
 use crate::api::Api;
@@ -11,7 +11,7 @@ use crate::error::Answer;
 use crate::images::{self, Cache};
 use crate::livetv::Channel;
 use crate::route::Route;
-use crate::style::{self, Viewport, card, space};
+use crate::style::{Viewport, card};
 use crate::text::{self as strings, Text};
 use crate::widget;
 
@@ -153,9 +153,12 @@ fn opens(library: &BaseItemDto) -> Option<Route> {
     }
 }
 
-/// The on-now row above the existing rows, the library list in the arrangement's
-/// order carrying a Live TV entry when `live_tv`, and a row the arrangement
-/// turns off absent rather than empty.
+// reference: home-sections
+/// The sections a default user sees, in the order the server's own defaults put
+/// them: the library tiles in the arrangement's order, what is resumed, what
+/// Live TV offers and what is on now, what is next up, and what is latest in
+/// each library. A section the arrangement turns off is absent rather than
+/// empty.
 pub fn view<'a>(
     state: &'a State,
     arrangement: &'a Arrangement,
@@ -170,54 +173,8 @@ pub fn view<'a>(
         return widget::banner(strings::lookup(Text::HomeEmpty).to_string());
     }
 
-    let mut page = column![].spacing(style::drawn(space::GUTTER.drawn()));
+    let mut page = column![];
 
-    if live_tv {
-        page = page.push(if state.on_now.is_empty() {
-            widget::banner(strings::lookup(Text::ChannelsEmpty).to_string())
-        } else {
-            widget::on_now_row(&state.on_now, viewport, now, images)
-        });
-    }
-
-    if arrangement.continue_watching {
-        for (media, items) in resumed(&state.continue_watching) {
-            page = page.push(widget::section(
-                strings::lookup(Text::HomeContinueWatching),
-                widget::rail(
-                    card::Card::resumed(media),
-                    items,
-                    viewport,
-                    images,
-                    overflow,
-                ),
-            ));
-        }
-    }
-    if arrangement.next_up && !state.next_up.is_empty() {
-        page = page.push(widget::section(
-            strings::lookup(Text::HomeNextUp),
-            widget::rail(
-                card::Card::NEXT_UP,
-                state.next_up.iter(),
-                viewport,
-                images,
-                overflow,
-            ),
-        ));
-    }
-    for row in &state.latest {
-        page = page.push(widget::section(
-            row.library.name.as_deref().unwrap_or_default(),
-            widget::rail(
-                card::Card::latest(row.library.collection_type),
-                row.items.iter(),
-                viewport,
-                images,
-                overflow,
-            ),
-        ));
-    }
     let ids: Vec<uuid::Uuid> = state.libraries.iter().filter_map(|it| it.id).collect();
     let shown = jellium_model::user::arranged(&ids, &arrangement.order, &arrangement.hidden);
     let libraries: Vec<&BaseItemDto> = shown
@@ -244,6 +201,64 @@ pub fn view<'a>(
         ));
     }
 
+    if arrangement.continue_watching {
+        for (media, items) in resumed(&state.continue_watching) {
+            page = page.push(widget::section(
+                strings::lookup(Text::HomeContinueWatching),
+                widget::rail(
+                    card::Card::resumed(media),
+                    items,
+                    viewport,
+                    images,
+                    overflow,
+                ),
+            ));
+        }
+    }
+    if live_tv {
+        // reference: home-live-tv
+        page = page.push(widget::section(
+            strings::lookup(Text::HomeLiveTv),
+            // reference: home-live-tv-sections
+            row(crate::screen::livetv::Tab::ALL.iter().map(|tab| {
+                widget::block(
+                    strings::lookup(tab.label()),
+                    Some(Message::Navigated(Route::LiveTv { tab: *tab })),
+                    widget::Emphasis::Raised,
+                )
+            }))
+            .into(),
+        ));
+        page = page.push(widget::section(
+            strings::lookup(Text::HomeOnNow),
+            widget::on_now_row(&state.on_now, viewport, now, images),
+        ));
+    }
+
+    if arrangement.next_up && !state.next_up.is_empty() {
+        page = page.push(widget::section(
+            strings::lookup(Text::HomeNextUp),
+            widget::rail(
+                card::Card::NEXT_UP,
+                state.next_up.iter(),
+                viewport,
+                images,
+                overflow,
+            ),
+        ));
+    }
+    for row in &state.latest {
+        page = page.push(widget::section(
+            row.library.name.as_deref().unwrap_or_default(),
+            widget::rail(
+                card::Card::latest(row.library.collection_type),
+                row.items.iter(),
+                viewport,
+                images,
+                overflow,
+            ),
+        ));
+    }
     scrollable(page).into()
 }
 
