@@ -24,9 +24,22 @@ use crate::text::{self as strings, Text};
 /// client draws passes here, so the coverage it needs is observed once. A
 /// sentence out of the string table arrives borrowed and is drawn as it lies.
 pub fn prose<'a>(content: impl Into<Cow<'a, str>>, size: style::Length) -> Element<'a, Message> {
+    tinted(content, size, iced::widget::text::default)
+}
+
+/// Wrapping text in one of the scheme's own colors, which is what a field's
+/// label and its description are drawn in.
+fn tinted<'a>(
+    content: impl Into<Cow<'a, str>>,
+    size: style::Length,
+    color: fn(&iced::Theme) -> iced::widget::text::Style,
+) -> Element<'a, Message> {
     let content = content.into();
     crate::fonts::observed(&content, typeface::Weight::Regular);
-    text(content).size(style::drawn(size.drawn())).into()
+    text(content)
+        .size(style::drawn(size.drawn()))
+        .style(color)
+        .into()
 }
 
 /// One line of text, cut with an ellipsis at the width it is given, which is
@@ -865,10 +878,17 @@ pub fn field<'a>(
         .on_input(edited)
         .on_submit(submitted);
 
-    let mut held = column![prose(strings::lookup(label), typeface::BODY), typed]
-        .spacing(style::drawn(space::BLOCK_GAP.drawn()));
+    let mut held = column![
+        tinted(strings::lookup(label), typeface::BODY, style::label),
+        typed
+    ]
+    .spacing(style::drawn(space::BLOCK_GAP.drawn()));
     if let Some(description) = description {
-        held = held.push(prose(strings::lookup(description), typeface::SECONDARY));
+        held = held.push(tinted(
+            strings::lookup(description),
+            typeface::SECONDARY,
+            style::description,
+        ));
     }
     held.into()
 }

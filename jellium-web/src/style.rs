@@ -245,6 +245,22 @@ pub fn card_footer(_theme: &iced::Theme) -> iced::widget::container::Style {
     iced::widget::container::Style::default().color(color(scheme::TEXT))
 }
 
+/// The label written above a field.
+// reference: scheme-label
+pub fn label(_theme: &iced::Theme) -> iced::widget::text::Style {
+    iced::widget::text::Style {
+        color: Some(color(scheme::LABEL)),
+    }
+}
+
+/// The description written under a field.
+// reference: scheme-secondary-text
+pub fn description(_theme: &iced::Theme) -> iced::widget::text::Style {
+    iced::widget::text::Style {
+        color: Some(color(scheme::TEXT_SECONDARY)),
+    }
+}
+
 // reference: scheme-input
 pub fn input(
     _theme: &iced::Theme,
