@@ -795,3 +795,14 @@ Run against a real browser at 360x800, 800x360, 768x1024 and 1920x1080.
   inverted `U+0700-045F` range denies a browser, and fetches nothing.
 - With the network panel open, loading a page of Latin titles fetches no font
   file.
+- The home screen's sections stand in the reference's order: My Media, then
+  what is resumed, then Live TV and On Now, then Next Up, then the latest in
+  each library.
+- A library tile draws its own icon — a reel for movies, a set for shows, a
+  note for music — and its name on one line under it.
+- A resumed episode draws on a backdrop card and a resumed book on a portrait
+  one.
+- The latest row of a movie library draws portrait cards and of a music library
+  square ones.
+- Each rail scrolls sideways with a partial card at its edge rather than
+  shrinking its cards.
