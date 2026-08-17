@@ -534,17 +534,17 @@ pub fn view<'a>(
         ));
     }
 
-    let mut page = column![body, Space::new().height(Fill)].height(Fill);
+    let mut panel = body;
 
     if let Some(menu) = menu(playing, images, viewport) {
-        page = page.push(menu);
+        panel = panel.push(menu);
     } else {
-        page = page.push(prose(quality_label(quality), typeface::SECONDARY));
+        panel = panel.push(prose(quality_label(quality), typeface::SECONDARY));
     }
 
-    page = match playing.live.as_ref() {
-        Some(live) => page.push(live_transport(playing, live, chrono::Utc::now())),
-        None => page
+    panel = match playing.live.as_ref() {
+        Some(live) => panel.push(live_transport(playing, live, chrono::Utc::now())),
+        None => panel
             .push(scrub(
                 playing.shown(),
                 playing.duration,
@@ -556,11 +556,36 @@ pub fn view<'a>(
             .push(transport(playing, true, sync_play, device)),
     };
 
-    container(page.spacing(style::drawn(space::ICON_GAP.drawn())))
-        .padding(style::drawn(space::ICON_GAP.drawn()))
-        .width(Fill)
-        .height(Fill)
-        .into()
+    column![
+        crate::widget::osd_header(sync_play),
+        Space::new().height(Fill),
+        bottom(panel.spacing(style::drawn(space::ICON_GAP.drawn())).into()),
+    ]
+    .height(Fill)
+    .into()
+}
+
+/// `.videoOsdBottom`: the panel along the foot of the page, under the scrim
+/// that stands above its own controls, with `.osdControls`' inset inside it.
+// reference: osd-bottom
+// reference: osd-controls
+fn bottom<'a>(controls: Element<'a, Message>) -> Element<'a, Message> {
+    let inset = style::drawn(space::OSD_CONTROLS.drawn());
+    container(container(controls).padding(iced::Padding {
+        top: 0.0,
+        right: inset,
+        bottom: 0.0,
+        left: inset,
+    }))
+    .padding(iced::Padding {
+        top: style::drawn(space::OSD_SCRIM.drawn()),
+        right: 0.0,
+        bottom: style::drawn(space::OSD_BOTTOM.drawn()),
+        left: 0.0,
+    })
+    .width(Fill)
+    .style(style::osd_bottom)
+    .into()
 }
 
 /// The bar drawn under every screen while audio plays here, while a radio

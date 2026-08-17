@@ -400,6 +400,26 @@ pub fn filter_surface(viewport: Viewport) -> Drawn {
     Drawn::of(height.count() - top.of(height).count() - bottom.of(height).count())
 }
 
+/// The scrim standing above the bottom panel's own controls.
+// reference: osd-bottom
+pub const OSD_SCRIM: Length = Length::em(7.5);
+
+/// The panel's own footing.
+// reference: osd-bottom
+pub const OSD_BOTTOM: Length = Length::em(1.75);
+
+/// `.osdHeader`, the scrim standing over the top of the video.
+// reference: osd-header
+pub const OSD_HEADER: Length = Length::em(7.5);
+
+/// The controls inside that header.
+// reference: osd-header-buttons
+pub const OSD_HEADER_TOP: Length = Length::em(3.5);
+
+/// `.osdControls`' inset from the edges of the panel.
+// reference: osd-controls
+pub const OSD_CONTROLS: Length = Length::em(0.8);
+
 /// The frame the scrub preview draws in, as tall as the page allows it.
 // reference: osd-preview
 const PREVIEW: Share = Share::units(20.0);

@@ -119,7 +119,14 @@ letter-jump	src/components/alphaPicker/style.scss	134	138	5c9e90ff86d87781bef8b9
 bar-top	src/components/nowPlayingBar/nowPlayingBar.scss	23	30	eb8108dabe17a20da96abfe75dcf2b4d69d6677f4709c149b0390b3be15e893e	ported
 bar-image	src/components/nowPlayingBar/nowPlayingBar.scss	43	50	a42d8f610f3a0f8043e4ae076ab22bc25b0f4479f0f7404746645e250ba70ce7	ported
 progress-bar	src/components/indicators/indicators.scss	1	6	e2a74c1ecb8688c618e0153c894aaa46aacf1141250e65f73621ab39de5c6989	ported
+osd-bottom	src/styles/videoosd.scss	8	28	1d6f48ab522a0da1e75f9b5bc4f2ab221bb777b85dbf31a46deb96b83473a5a7	ported
+osd-header	src/styles/videoosd.scss	30	39	b908d8b3fd974021497db2d8ae3c64ddd9b14ab5e8358d53d14c405a1c338f49	ported
+osd-header-buttons	src/styles/videoosd.scss	45	52	051f92316b2e189c5dca5db4fd01907ffbf602b89547eb988df92b540841f0c5	ported
+osd-controls	src/styles/videoosd.scss	109	124	1f73f6e27dcc64aa1bd3520c4b7a45d58eae6261ae5d619b72d79653f9c37173	ported
 osd-preview	src/styles/videoosd.scss	60	81	2b4495a7ee6e2ec7b6cbd6b868f39f153b74974d9d16ba7c053cb7011a86024d	ported
+header-back	src/scripts/libraryMenu.js	43	43	bb8ee9c6d41abe7c1572291244f8fbc8afdf82871d66b0a086d034ac04b25e8f	ported
+header-sync	src/scripts/libraryMenu.js	49	49	822bdc371d3e3525ef001d3311868d40bac561fd15441717334a91c5810a3feb	ported
+header-cast	src/scripts/libraryMenu.js	52	52	3e9928e12e1321120f590512a4ddf135e2a3849f21668db39cd5cfaf91c546ee	ported
 filter-dialog	src/components/filterdialog/style.scss	1	18	3386199b96d52a29065f5135c6193f0bf0b3465dbd6f20105ab8dede5e8a2acf	ported
 guide-row	src/components/guide/guide.scss	77	87	58d9ac30dc487b057b4263e2f143287c53b2df9893c574cea61a03a40cbcc1eb	ported
 guide-strip	src/components/guide/guide.scss	98	122	9b1fd214d27b47e858d9afe46942adfdfd646465e4f8195b974150064a055c2c	ported

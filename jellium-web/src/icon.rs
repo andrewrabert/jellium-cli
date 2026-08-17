@@ -39,9 +39,12 @@ macro_rules! icons {
 }
 
 icons! {
+    ArrowBack => "arrow_back",
     Book => "book",
+    Cast => "cast",
     FilterAlt => "filter_alt",
     Folder => "folder",
+    Groups => "groups",
     LiveTv => "live_tv",
     Movie => "movie",
     MusicNote => "music_note",

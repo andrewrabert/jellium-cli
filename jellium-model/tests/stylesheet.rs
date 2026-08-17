@@ -42,6 +42,9 @@ const COLORS: &[(&str, Color)] = &[
     ("SCROLLBAR_THUMB", scheme::SCROLLBAR_THUMB),
     ("SCROLLBAR_TRACK", scheme::SCROLLBAR_TRACK),
     ("INDICATOR", scheme::INDICATOR),
+    ("SCRIM", scheme::SCRIM),
+    ("ON_OSD", scheme::ON_OSD),
+    ("ON_OSD_HEADER", scheme::ON_OSD_HEADER),
 ];
 
 /// The channels and alpha a rendered color denotes, and None where the text is

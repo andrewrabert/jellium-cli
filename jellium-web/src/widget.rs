@@ -855,6 +855,42 @@ pub fn icon_button<'a>(
     .into()
 }
 
+/// The header standing over the top of the video: the control that leaves, and
+/// the two the reference keeps beside it.
+// reference: osd-header
+// reference: osd-header-buttons
+// reference: header-back
+// reference: header-cast
+// reference: header-sync
+pub fn osd_header<'a>(sync_play: SyncAccess) -> Element<'a, Message> {
+    let mut controls = row![
+        icon_button(
+            Icon::ArrowBack,
+            Text::PlayerLeave,
+            Message::PlayerAction(crate::player::Action::Leave),
+        ),
+        icon_button(
+            Icon::Cast,
+            Text::PlayerRemote,
+            Message::Navigated(crate::route::Route::Remote),
+        ),
+    ]
+    .align_y(iced::Center)
+    .height(style::drawn(space::OSD_HEADER_TOP.drawn()));
+    if sync_play != SyncAccess::None {
+        controls = controls.push(icon_button(
+            Icon::Groups,
+            Text::PlayerSyncPlay,
+            Message::Navigated(crate::route::Route::SyncPlay),
+        ));
+    }
+    container(controls)
+        .width(Fill)
+        .height(style::drawn(space::OSD_HEADER.drawn()))
+        .style(style::osd_header)
+        .into()
+}
+
 /// `control` under `.filterIndicator`: the reference's own mark that a control
 /// is narrowing what is shown, laid on its top trailing corner.
 /// `band` is what the inset, written in css pixels, crosses to the canvas

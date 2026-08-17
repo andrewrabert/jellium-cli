@@ -44,6 +44,11 @@ impl Color {
         }
     }
 
+    /// The same color at no opacity, which is where a scrim's gradient ends.
+    pub const fn clear(self) -> Color {
+        Color::rgba(self.red, self.green, self.blue, Alpha::thousandths(0))
+    }
+
     pub fn red(self) -> u8 {
         self.red
     }
@@ -151,6 +156,19 @@ pub const LIST_FOCUS: Color = Color::rgb(0x33, 0x33, 0x33);
 
 // reference: scheme-toast
 pub const TOAST: Color = Color::rgb(0x30, 0x30, 0x30);
+
+/// The near end of a scrim's gradient, which is the page's own background at
+/// three quarters.
+// reference: osd-bottom
+pub const SCRIM: Color = Color::rgba(0x10, 0x10, 0x10, Alpha::thousandths(750));
+
+/// `.videoOsdBottom`'s lettering.
+// reference: osd-bottom
+pub const ON_OSD: Color = Color::rgb(0xff, 0xff, 0xff);
+
+/// `.osdHeader`'s lettering, which is dimmer than the panel's.
+// reference: osd-header
+pub const ON_OSD_HEADER: Color = Color::rgb(0xee, 0xee, 0xee);
 
 // reference: scheme-dialog-backdrop
 pub const DIALOG_BACKDROP: Color = Color::rgb(0x00, 0x00, 0x00);

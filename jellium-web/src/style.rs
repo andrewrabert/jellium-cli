@@ -131,6 +131,34 @@ pub fn over_video(_theme: &iced::Theme) -> iced::widget::container::Style {
     iced::widget::container::Style::default().background(color(scheme::BACKGROUND))
 }
 
+/// `.videoOsdBottom`'s scrim, which fades upward from the page's own
+/// background into nothing.
+// reference: osd-bottom
+pub fn osd_bottom(_theme: &iced::Theme) -> iced::widget::container::Style {
+    iced::widget::container::Style::default()
+        .background(fading(iced::Degrees(0.0)))
+        .color(color(scheme::ON_OSD))
+}
+
+/// `.osdHeader`'s scrim, the same gradient the other way up.
+// reference: osd-header
+pub fn osd_header(_theme: &iced::Theme) -> iced::widget::container::Style {
+    iced::widget::container::Style::default()
+        .background(fading(iced::Degrees(180.0)))
+        .color(color(scheme::ON_OSD_HEADER))
+}
+
+/// A scrim's own gradient: the near end at the angle given, fading into the
+/// same color at no opacity.
+// reference: osd-bottom
+fn fading(angle: iced::Degrees) -> iced::Background {
+    iced::Background::Gradient(iced::Gradient::Linear(
+        iced::gradient::Linear::new(angle)
+            .add_stop(0.0, color(scheme::SCRIM))
+            .add_stop(1.0, color(scheme::SCRIM.clear())),
+    ))
+}
+
 /// Whether a control is drawing its resting face or the one the reference gives
 /// it under the pointer, under the keyboard focus ring, or pressed.
 fn lit(status: iced::widget::button::Status) -> bool {
