@@ -128,6 +128,7 @@ slider-track	src/elements/emby-slider/emby-slider.scss	151	169	7933c56b253f7a73c
 slider-thumb	src/elements/emby-slider/emby-slider.scss	55	93	a112a5b8192e9ad7850447d0a4fdc1bc99630e863eced0170e216edbf3ffa371	ported
 slider-marker	src/elements/emby-slider/emby-slider.scss	263	268	5030551f65a270142c07c2df7ba9d9a5d325192623c9898453beb5ae00e0682c	ported
 control-icon-button	src/elements/emby-button/emby-button.scss	86	118	45503b025e4f98b1d3cafcb0f20d4f66a635a6c8e9e1305d55cc88020ad4a72e	ported
+control-icon-glyph	src/elements/emby-button/emby-button.scss	134	141	e69773fcafd0289d076a61e154221e89b8b5acd0dffbf0f9412bbb19a74ed442	ported
 card-image-width	src/components/cardbuilder/cardBuilder.js	61	71	1b75af04297a403eb03715d76486733bf745687cb041e024f896efbd756723cd	ported
 card-screen-rounding	src/components/cardbuilder/cardBuilder.js	118	131	96a43c3d5bb7a052b97c1e67e4a679b39e44e4b4cd10dd51b7896fa530453851	ported
 card-resizable	src/components/cardbuilder/cardBuilderUtils.ts	39	50	3d5781719905a5eee3cb3723e9e60ed9a466517ba4189e3d67dd949df71cff66	ported

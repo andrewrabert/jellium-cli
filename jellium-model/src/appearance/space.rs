@@ -305,6 +305,10 @@ pub const ICON_MARGIN: Length = Length::em(0.29);
 
 pub const ICON_GAP: Length = ICON_MARGIN.plus(ICON_MARGIN);
 
+/// `.paper-icon-button-light`'s padding, which is what rounds it into a disc.
+// reference: control-icon-button
+pub const ICON_BUTTON_PAD: Length = Length::em(0.556);
+
 // reference: progress-bar
 pub const PROGRESS: Length = Length::em(0.28);
 

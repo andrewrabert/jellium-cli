@@ -40,6 +40,11 @@ pub const FIELD: Length = Length::em(1.1);
 // reference: type-button-icon
 pub const BUTTON_ICON: Length = Length::em(1.36);
 
+/// The glyph an icon control draws, which is larger than the one a labelled
+/// button carries.
+// reference: control-icon-glyph
+pub const ICON_BUTTON: Length = Length::em(1.669_565_2);
+
 // reference: card-icon
 pub const CARD_ICON: Length = Length::em(5.0);
 

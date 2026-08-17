@@ -339,11 +339,15 @@ fn paging<'a>(browse: &Browse) -> Element<'a, Message> {
             false => Action::Open(surface),
         })
     };
-    let filters = widget::icon_button(Icon::FilterAlt, pressing(Opened::Filters));
+    let filters = widget::icon_button(
+        Icon::FilterAlt,
+        Text::FilterIndicator,
+        pressing(Opened::Filters),
+    );
 
     row![
         prose(sentence, typeface::BODY),
-        widget::icon_button(Icon::SortByAlpha, pressing(Opened::Sort)),
+        widget::icon_button(Icon::SortByAlpha, Text::LibrarySort, pressing(Opened::Sort)),
         match browse.listing.facets.is_empty() {
             true => filters,
             false => widget::indicated(filters, browse.viewport.band()),

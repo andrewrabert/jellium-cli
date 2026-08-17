@@ -833,16 +833,26 @@ pub fn form<'a>(viewport: Viewport, rows: Vec<Element<'a, Message>>) -> Element<
     container(capped).center_x(Fill).into()
 }
 
-/// The reference's `.paper-icon-button-light`: a glyph on no face of its own,
-/// brightening where it is reached.
+/// The reference's `.paper-icon-button-light`: a disc carrying a glyph and no
+/// face of its own, naming itself where the reference writes a title.
 // reference: control-icon-button
-// reference: type-button-icon
-pub fn icon_button<'a>(glyph: crate::icon::Icon, press: Message) -> Element<'a, Message> {
-    button(crate::icon::icon(glyph, typeface::BUTTON_ICON))
-        .style(style::flat)
-        .padding(style::drawn(space::ICON_MARGIN.drawn()))
-        .on_press(press)
-        .into()
+// reference: control-icon-glyph
+pub fn icon_button<'a>(
+    glyph: crate::icon::Icon,
+    label: Text,
+    press: Message,
+) -> Element<'a, Message> {
+    let control = button(crate::icon::icon(glyph, typeface::ICON_BUTTON))
+        .style(style::icon_control)
+        .padding(style::drawn(space::ICON_BUTTON_PAD.drawn()))
+        .on_press(press);
+    iced::widget::tooltip(
+        control,
+        prose(strings::lookup(label), typeface::BODY),
+        iced::widget::tooltip::Position::Top,
+    )
+    .style(style::dialog)
+    .into()
 }
 
 /// `control` under `.filterIndicator`: the reference's own mark that a control

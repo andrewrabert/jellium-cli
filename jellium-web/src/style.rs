@@ -4,7 +4,7 @@
 //! root size as its scale and so resolves every em once for the whole surface.
 
 pub use jellium_model::appearance::{
-    Band, Css, Dialog, Drawn, Length, Letters, Screen, Share, Viewport, card, scheme, space,
+    Band, Css, Dialog, Drawn, Length, Letters, Ratio, Screen, Share, Viewport, card, scheme, space,
     typeface,
 };
 
@@ -191,6 +191,38 @@ pub fn flat(
     iced::widget::button::Style {
         text_color: color(scheme::TEXT),
         ..iced::widget::button::Style::default()
+    }
+}
+
+/// The reference's `.paper-icon-button-light`: a disc carrying a glyph and no
+/// face of its own until it is reached.
+// reference: control-icon-button
+// reference: control-icon-glyph
+// reference: scheme-list-state
+pub fn icon_control(
+    _theme: &iced::Theme,
+    status: iced::widget::button::Status,
+) -> iced::widget::button::Style {
+    let disc = iced::border::Radius::new(drawn(
+        typeface::ICON_BUTTON
+            .plus(space::ICON_BUTTON_PAD)
+            .plus(space::ICON_BUTTON_PAD)
+            .times(Ratio::thousandths(500))
+            .drawn(),
+    ));
+    let face = match lit(status) {
+        true => faced(scheme::LIST_HOVER, scheme::TEXT),
+        false => iced::widget::button::Style {
+            text_color: color(scheme::TEXT),
+            ..iced::widget::button::Style::default()
+        },
+    };
+    iced::widget::button::Style {
+        border: iced::Border {
+            radius: disc,
+            ..face.border
+        },
+        ..face
     }
 }
 
