@@ -474,6 +474,26 @@ pub const OSD_VOLUME_MARGIN: Padding = Padding {
 // reference: osd-volume
 pub const OSD_VOLUME_SLIDER: Length = Length::em(9.0);
 
+/// Where the panel drops the secondary media line.
+// reference: osd-shed-rating
+pub const OSD_INFO_AT: Query = Query::MaxWidth(Breakpoint::em(30.0));
+
+/// Where its controls stand shoulder to shoulder.
+// reference: osd-shed-margin
+pub const OSD_MARGINS_AT: Query = Query::MaxWidth(Breakpoint::em(33.75));
+
+/// Where the volume control and the status word go.
+// reference: osd-shed-volume
+pub const OSD_VOLUME_AT: Query = Query::MaxWidth(Breakpoint::em(43.0));
+
+/// Where the two seek controls go.
+// reference: osd-shed-seek
+pub const OSD_SEEK_AT: Query = Query::MaxWidth(Breakpoint::em(50.0));
+
+/// Where the ending time goes.
+// reference: osd-shed-ends
+pub const OSD_ENDS_AT: Query = Query::MaxWidth(Breakpoint::em(75.0));
+
 /// The frame the scrub preview draws in, as tall as the page allows it.
 // reference: osd-preview
 const PREVIEW: Share = Share::units(20.0);

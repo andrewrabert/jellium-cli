@@ -374,21 +374,36 @@ fn transport<'a>(
         true => Icon::PlayArrow,
         false => Icon::Pause,
     };
-    let mut controls = row![
-        acting(Icon::SkipPrevious, Text::PlayerPrevious, Action::Previous),
-        acting(Icon::FastRewind, Text::PlayerSkipBack, Action::SkipBack),
-        acting(paused, Text::PlayerPlay, Action::TogglePlay),
-        acting(
-            Icon::FastForward,
-            Text::PlayerSkipForward,
-            Action::SkipForward
-        ),
-        acting(Icon::SkipNext, Text::PlayerNext, Action::Next),
-    ]
-    .spacing(style::drawn(space::ICON_GAP.drawn()))
+    let shoulders = match viewport.matches(space::OSD_MARGINS_AT) {
+        true => 0.0,
+        false => style::drawn(space::ICON_GAP.drawn()),
+    };
+    let mut controls = row![acting(
+        Icon::SkipPrevious,
+        Text::PlayerPrevious,
+        Action::Previous
+    )]
+    .spacing(shoulders)
     .align_y(iced::Center);
 
-    if surface == Surface::Osd {
+    if !viewport.matches(space::OSD_SEEK_AT) {
+        controls = controls.push(acting(
+            Icon::FastRewind,
+            Text::PlayerSkipBack,
+            Action::SkipBack,
+        ));
+    }
+    controls = controls.push(acting(paused, Text::PlayerPlay, Action::TogglePlay));
+    if !viewport.matches(space::OSD_SEEK_AT) {
+        controls = controls.push(acting(
+            Icon::FastForward,
+            Text::PlayerSkipForward,
+            Action::SkipForward,
+        ));
+    }
+    controls = controls.push(acting(Icon::SkipNext, Text::PlayerNext, Action::Next));
+
+    if surface == Surface::Osd && !viewport.matches(space::OSD_ENDS_AT) {
         controls = controls.push(
             container(prose(
                 strings::format(Text::PlayerEndsAt, &[&clock(ends_at(playing))]),
@@ -415,8 +430,10 @@ fn transport<'a>(
     if !playing.plan.audio_streams.is_empty() {
         controls = controls.push(opening(Icon::Audiotrack, Text::PlayerAudio, Menu::Audio));
     }
+    if !viewport.matches(space::OSD_VOLUME_AT) {
+        controls = controls.push(volume(device, viewport));
+    }
     controls = controls
-        .push(volume(device, viewport))
         .push(opening(Icon::Settings, Text::PlayerSettings, Menu::Settings))
         .push(acting(
             Icon::Shuffle,
@@ -580,7 +597,7 @@ fn live_transport<'a>(
 // reference: osd-text
 // reference: osd-title
 // reference: osd-status
-fn heading<'a>(playing: &'a Playing, _viewport: Viewport) -> Element<'a, Message> {
+fn heading<'a>(playing: &'a Playing, viewport: Viewport) -> Element<'a, Message> {
     let mut line = row![
         container(prose(title(playing), typeface::HEADING_3)).padding(iced::Padding {
             top: 0.0,
@@ -592,14 +609,13 @@ fn heading<'a>(playing: &'a Playing, _viewport: Viewport) -> Element<'a, Message
     .align_y(iced::Center);
 
     if playing.changing {
-        line = line.push(Space::new().width(Fill)).push(
-            row![
-                crate::icon::icon(Icon::Autorenew, typeface::BODY),
-                prose(strings::lookup(Text::PlayerFetching), typeface::BODY),
-            ]
+        let mut status = row![crate::icon::icon(Icon::Autorenew, typeface::BODY)]
             .spacing(style::drawn(space::OSD_STATUS_GAP.drawn()))
-            .align_y(iced::Center),
-        );
+            .align_y(iced::Center);
+        if !viewport.matches(space::OSD_VOLUME_AT) {
+            status = status.push(prose(strings::lookup(Text::PlayerFetching), typeface::BODY));
+        }
+        line = line.push(Space::new().width(Fill)).push(status);
     }
 
     osd_text(line.into(), space::OSD_TEXT_INSET)
@@ -657,13 +673,14 @@ pub fn view<'a>(
             .into();
     }
 
-    let mut body = column![
-        heading(playing, viewport),
-        osd_text(
+    let mut body = column![heading(playing, viewport)];
+
+    if !viewport.matches(space::OSD_INFO_AT) {
+        body = body.push(osd_text(
             prose(method(playing).to_owned(), typeface::SECONDARY),
             space::OSD_SECONDARY_INSET,
-        ),
-    ];
+        ));
+    }
 
     if let Some(trouble) = playing.trouble {
         body = body.push(prose(strings::lookup(trouble), typeface::BODY));

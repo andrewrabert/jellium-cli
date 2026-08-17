@@ -130,6 +130,11 @@ osd-secondary	src/styles/videoosd.scss	159	161	da23c32e6e8341268d6a75ac8eb4b83d3
 osd-text	src/styles/videoosd.scss	163	173	013e66778a0f6ee757f5a926491d9da58f639ab12b2bd687a0fee02ead359d6e	ported
 osd-status	src/styles/videoosd.scss	175	183	6aadd0cf49cbba422370a95e7a23d295774cbff10cf66e491585beda808d4748	ported
 osd-status-spin	src/styles/videoosd.scss	185	187	81b4051530b54947b6420b0324874375b96d659f789d7d799510cbe3fc4a11dc	dead
+osd-shed-rating	src/styles/videoosd.scss	189	195	801127e06adae5d4217cd8d82287ea45374e189b32fa80af87887c2c1f073d6f	ported
+osd-shed-margin	src/styles/videoosd.scss	197	201	abbd3f23d2412181ee01492a241b76c2e4090c4ef792b7c464385db714681876	ported
+osd-shed-volume	src/styles/videoosd.scss	203	208	177b76532eb029857ada19ee33ca2695e4729f88627e8d715428664dd391ba64	ported
+osd-shed-seek	src/styles/videoosd.scss	210	215	9d97e9173faf8bb8f402757f4e741488b82e0ac46a2639837d0d41bbe8c81e6a	ported
+osd-shed-ends	src/styles/videoosd.scss	217	221	3af2fa0e9ad34cd87cbf33775a9c7b5b2815e287089b8fcc6a270d2035c14b86	ported
 osd-markup	src/controllers/playback/video/index.html	9	31	415a9b5a7452ecd247e08bb3a0435f6a2d5206804eabbc45f2d24b7c6a44f5ff	ported
 osd-record	src/controllers/playback/video/index.html	32	34	ffcce698124ff1a753016960e6cb5315b6d2a22451aa7912614cb2df697a6fbe	dead
 osd-previous	src/controllers/playback/video/index.html	36	38	1fe9b405ce4f961ad484d5a5ee317d8471356dc334aea879da7c6e8b6bdea040	ported
