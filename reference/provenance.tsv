@@ -186,3 +186,11 @@ grid-card-album	src/controllers/music/musicalbums.js	144	155	6dfd4714afdcf507a54
 grid-card-auto	src/controllers/list.js	552	554	404b56d2c92d9e4a1d2ea07dc6b0d9d9b645f5bc5b18b8d252e2860e19a86a18	ported
 card-auto-shape	src/components/cardbuilder/cardBuilder.js	83	103	bd180854586aa0cb21ea5de3b4eea1a6881a6c68079906eb0b516df56416e8ce	ported
 primary-aspect	src/components/images/imageLoader.js	178	234	b50fd3873b67e23dadc07cfd384cb1e5eb139529e171004583ee7d1af262b920	ported
+grid-paging	src/scripts/libraryBrowser.js	41	57	e0cedb96304236517a998cc7579f61049144ca9da535acd7e729c8812292c52e	ported
+grid-paging-steps	src/scripts/libraryBrowser.js	59	62	ccb621534df118cc94ebd6d22b65e7cbba3bbbad16782041e71a0e5946d712c9	dead
+grid-paging-layout	src/scripts/libraryBrowser.js	64	66	95513bf7fc763095cb69ebf5802525d29fbb2b64ebe3b62d1219e63f74cc3005	dead
+grid-paging-sort	src/scripts/libraryBrowser.js	68	70	6024c171b08d971603871b821a9a5fb2d017b1bd057a0cdaa9f0371ffffae1eb	ported
+grid-paging-filter	src/scripts/libraryBrowser.js	72	74	78271fcaccfcfdb9328558f859d327f4ef042f441845ad46406c73d86f4e463f	ported
+filter-indicator	src/components/filterdialog/filterIndicator.scss	5	17	c1f0bd400cea9ec8b849fadc5ea704723cfe72e71b588d5f6909f7333293b39e	ported
+filter-indicator-shadow	src/components/filterdialog/filterIndicator.scss	18	18	a9155880daa403542c49f7e687cf57ab7f4789201027a2c2066386d551986c0d	dead
+filter-indicator-face	src/components/filterdialog/filterIndicator.scss	19	21	8737fc0b3b6e52780f1baa907ae62e207d5eb368f43acb85b4026006794e24d3	ported

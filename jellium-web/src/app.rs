@@ -2773,15 +2773,16 @@ impl Jellium {
             return Task::none();
         };
         match action {
-            Action::OpenFilters => {
-                browse.filtering = true;
+            Action::Open(opened) => {
+                browse.opened = Some(opened);
                 Task::none()
             }
-            Action::CloseFilters => {
-                browse.filtering = false;
+            Action::Close => {
+                browse.opened = None;
                 Task::none()
             }
             Action::Sorted(sort) => {
+                browse.opened = None;
                 let resting = browse.resorting(sort);
                 browse.listing.sort = sort;
                 let listing = browse.listing.clone();

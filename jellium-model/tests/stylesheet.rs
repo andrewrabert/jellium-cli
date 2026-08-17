@@ -41,6 +41,7 @@ const COLORS: &[(&str, Color)] = &[
     ("DIALOG_BACKDROP", scheme::DIALOG_BACKDROP),
     ("SCROLLBAR_THUMB", scheme::SCROLLBAR_THUMB),
     ("SCROLLBAR_TRACK", scheme::SCROLLBAR_TRACK),
+    ("INDICATOR", scheme::INDICATOR),
 ];
 
 /// The channels and alpha a rendered color denotes, and None where the text is

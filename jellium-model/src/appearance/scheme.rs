@@ -161,6 +161,10 @@ pub const SCROLLBAR_THUMB: Color = Color::rgb(0x3b, 0x3b, 0x3b);
 // reference: scheme-scrollbar
 pub const SCROLLBAR_TRACK: Color = Color::rgb(0x20, 0x20, 0x20);
 
+/// `.filterIndicator`'s face.
+// reference: filter-indicator-face
+pub const INDICATOR: Color = Color::rgb(0x03, 0xa9, 0xf4);
+
 // reference: scheme-card-background
 pub const CARD_BACKGROUNDS: [Color; 5] = [
     Color::rgb(0x00, 0x45, 0x5c),

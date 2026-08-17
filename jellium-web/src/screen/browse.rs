@@ -13,6 +13,7 @@ use uuid::Uuid;
 use crate::api::Api;
 use crate::app::Message;
 use crate::error::Answer;
+use crate::icon::Icon;
 use crate::images::{self, Cache};
 use crate::route::Listing;
 use crate::style::card::{Aspect, Card};
@@ -33,8 +34,8 @@ pub struct Browse {
     pub items: Paged<BaseItemDto>,
     /// The filter choices the server offered for this parent.
     pub choices: Choices,
-    /// True while the filter surface is open.
-    pub filtering: bool,
+    /// The surface the bar has open, and `None` while it has none.
+    pub opened: Option<Opened>,
     /// The library this grid is of, which decides the card it draws.
     collection: Option<CollectionType>,
     /// The card every cell draws, which the items' own aspect settles for a
@@ -70,14 +71,21 @@ pub struct Choices {
     pub series: bool,
 }
 
+/// Which surface the bar has open.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Opened {
+    Sort,
+    Filters,
+}
+
 /// One control on the shared sort and filter surfaces.
 #[derive(Debug, Clone, PartialEq)]
 pub enum Action {
     Sorted(Sort),
     Narrowed(Narrow),
     ClearFilters,
-    OpenFilters,
-    CloseFilters,
+    Open(Opened),
+    Close,
     /// One initial of the letter jump.
     Jumped(char),
 }
@@ -137,7 +145,7 @@ impl Browse {
             ),
             items: Paged::new(0),
             choices: Choices::default(),
-            filtering: false,
+            opened: None,
             collection,
             card: drawn,
             viewport,
@@ -149,6 +157,14 @@ impl Browse {
     /// The card every cell of this grid draws.
     pub fn card(&self) -> Card {
         self.card
+    }
+
+    /// The rows the window shows, counted from one as the paging sentence
+    /// writes them, and `None` while the surface holds no rows.
+    // reference: grid-paging
+    pub fn showing(&self) -> Option<std::ops::RangeInclusive<usize>> {
+        let shown = self.grid.shown(self.items.len());
+        (!shown.is_empty()).then(|| shown.start + 1..=shown.end)
     }
 
     /// Relays the grid at the card and the page standing now.
@@ -280,6 +296,48 @@ fn sort_surface<'a>(listing: &Listing) -> Element<'a, Message> {
     .into()
 }
 
+/// The reference's own paging bar: the sentence naming the first row shown, the
+/// last and the total, then the two controls opening the sort surface and the
+/// filter surface, the filter control carrying the indicator while filters
+/// narrow the grid.
+// reference: grid-paging
+// reference: grid-paging-sort
+// reference: grid-paging-filter
+fn paging<'a>(browse: &Browse) -> Element<'a, Message> {
+    let (first, last) = match browse.showing() {
+        Some(rows) => (*rows.start(), *rows.end()),
+        None => (0, 0),
+    };
+    let sentence = strings::format(
+        Text::GridPaging,
+        &[
+            &first.to_string(),
+            &last.to_string(),
+            &browse.items.len().to_string(),
+        ],
+    );
+
+    let pressing = |surface: Opened| {
+        Message::BrowseAction(match browse.opened == Some(surface) {
+            true => Action::Close,
+            false => Action::Open(surface),
+        })
+    };
+    let filters = widget::icon_button(Icon::FilterAlt, pressing(Opened::Filters));
+
+    row![
+        prose(sentence, typeface::BODY),
+        widget::icon_button(Icon::SortByAlpha, pressing(Opened::Sort)),
+        match browse.listing.facets.is_empty() {
+            true => filters,
+            false => widget::indicated(filters, browse.viewport.band()),
+        },
+    ]
+    .spacing(style::drawn(space::CONTROL_GAP.drawn()))
+    .align_y(iced::Alignment::Center)
+    .into()
+}
+
 fn letter_jump<'a>() -> Element<'a, Message> {
     row(window::LETTERS.into_iter().map(|letter| {
         button(prose(letter.to_string(), typeface::BODY))
@@ -327,7 +385,7 @@ fn filter_surface<'a>(browse: &'a Browse, viewport: Viewport) -> Element<'a, Mes
         row![
             button(prose(strings::lookup(Text::FilterClose), typeface::BODY))
                 .style(style::raised)
-                .on_press(Message::BrowseAction(Action::CloseFilters)),
+                .on_press(Message::BrowseAction(Action::Close)),
             button(prose(strings::lookup(Text::FilterClear), typeface::BODY))
                 .style(style::raised)
                 .on_press(Message::BrowseAction(Action::ClearFilters)),
@@ -423,31 +481,21 @@ fn filter_surface<'a>(browse: &'a Browse, viewport: Viewport) -> Element<'a, Mes
         .into()
 }
 
-/// The heading with the total item count, the sort surface, the filter surface
-/// with its active count and its one clear, the letter jump on a name sort
-/// alone, and the windowed grid.
+/// The heading, the paging bar, the surface the bar has open, the letter jump
+/// on a name sort alone, and the windowed grid.
 pub fn view<'a>(browse: &'a Browse, viewport: Viewport, images: &'a Cache) -> Element<'a, Message> {
     let wall = browse.card();
-    let active = browse.listing.facets.count();
     let mut page = column![
         prose(browse.heading.clone(), typeface::HEADING_1),
-        prose(
-            strings::format(Text::BrowseTotal, &[&browse.items.len().to_string()],),
-            typeface::BODY
-        ),
-        sort_surface(&browse.listing),
-        button(prose(
-            strings::format(Text::FilterOpen, &[&active.to_string()],),
-            typeface::BODY
-        ))
-        .style(style::raised)
-        .on_press(Message::BrowseAction(Action::OpenFilters)),
+        paging(browse),
     ]
     .spacing(style::drawn(space::GUTTER.drawn()))
     .padding(style::drawn(space::GUTTER.drawn()));
 
-    if browse.filtering {
-        page = page.push(filter_surface(browse, viewport));
+    match browse.opened {
+        Some(Opened::Sort) => page = page.push(sort_surface(&browse.listing)),
+        Some(Opened::Filters) => page = page.push(filter_surface(browse, viewport)),
+        None => {}
     }
     if browse.listing.sort.by_name() {
         page = page.push(letter_jump());

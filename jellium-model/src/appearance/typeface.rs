@@ -42,3 +42,7 @@ pub const BUTTON_ICON: Length = Length::em(1.36);
 
 // reference: card-icon
 pub const CARD_ICON: Length = Length::em(5.0);
+
+/// `.filterIndicator`'s lettering, 60% of the control it sits on.
+// reference: filter-indicator
+pub const INDICATOR: Length = BODY.times(Ratio::thousandths(600));

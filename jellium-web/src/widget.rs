@@ -18,7 +18,7 @@ use crate::livetv::Channel;
 use crate::player::group::Joined;
 use crate::route::Route;
 use crate::style::space::Room;
-use crate::style::{self, Drawn, Share, Viewport, card, scheme, space, typeface};
+use crate::style::{self, Band, Drawn, Share, Viewport, card, scheme, space, typeface};
 use crate::text::{self as strings, Text};
 
 /// Wrapping text, which is what a server's own disclaimer is. Every string the
@@ -800,6 +800,42 @@ pub fn form<'a>(viewport: Viewport, rows: Vec<Element<'a, Message>>) -> Element<
         false => held,
     };
     container(capped).center_x(Fill).into()
+}
+
+/// The reference's `.paper-icon-button-light`: a glyph on no face of its own,
+/// brightening where it is reached.
+// reference: control-icon-button
+// reference: type-button-icon
+pub fn icon_button<'a>(glyph: crate::icon::Icon, press: Message) -> Element<'a, Message> {
+    button(crate::icon::icon(glyph, typeface::BUTTON_ICON))
+        .style(style::flat)
+        .padding(style::drawn(space::ICON_MARGIN.drawn()))
+        .on_press(press)
+        .into()
+}
+
+/// `control` under `.filterIndicator`: the reference's own mark that a control
+/// is narrowing what is shown, laid on its top trailing corner.
+/// `band` is what the inset, written in css pixels, crosses to the canvas
+/// through.
+// reference: filter-indicator
+// reference: filter-indicator-face
+pub fn indicated<'a>(control: Element<'a, Message>, band: Band) -> Element<'a, Message> {
+    let circle = style::drawn(space::INDICATOR.drawn());
+    let inset = style::drawn(space::INDICATOR_INSET.drawn(band));
+    let mark = container(
+        container(line(
+            strings::lookup(Text::FilterIndicator),
+            typeface::INDICATOR,
+            typeface::Weight::Bold,
+        ))
+        .center_x(circle)
+        .center_y(circle)
+        .style(style::indicator),
+    )
+    .padding(iced::Padding::ZERO.top(inset).right(inset))
+    .align_right(Fill);
+    iced::widget::stack![control, mark].into()
 }
 
 /// A page's own title, which the reference writes as the `h1` at the head of

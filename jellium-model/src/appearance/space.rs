@@ -5,7 +5,7 @@ use chrono::TimeDelta;
 
 use super::scheme::{self, Color};
 use super::typeface;
-use super::{Breakpoint, Canvas, Css, Drawn, Length, Orientation, Query, Share, Viewport};
+use super::{Breakpoint, Canvas, Css, Drawn, Length, Orientation, Query, Ratio, Share, Viewport};
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Padding {
@@ -208,13 +208,22 @@ pub const SLIDER_TRACK: Length = Length::em(0.2);
 // reference: slider-thumb
 pub const SLIDER_THUMB: Length = Length::em(1.08);
 
-/// The one appearance value the reference writes in css pixels, which do not
-/// scale with the root and so cross to the canvas through `Css::drawn`.
+/// Written in css pixels, which do not scale with the root and so cross to the
+/// canvas through `Css::drawn`.
 // reference: slider-marker
 pub const SLIDER_MARKER_WIDTH: Css = Css::of(2.0);
 
 // reference: slider-marker
 pub const SLIDER_MARKER_HEIGHT: Css = Css::of(12.0);
+
+/// `.filterIndicator`'s circle, 1.8 of its own lettering.
+// reference: filter-indicator
+pub const INDICATOR: Length = typeface::INDICATOR.times(Ratio::thousandths(1800));
+
+/// The indicator's inset from the top and the trailing edge of the control it
+/// sits on, which the reference writes in css pixels and no type scale moves.
+// reference: filter-indicator
+pub const INDICATOR_INSET: Css = Css::of(2.0);
 
 // reference: control-icon-button
 pub const ICON_MARGIN: Length = Length::em(0.29);

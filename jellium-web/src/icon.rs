@@ -40,6 +40,7 @@ macro_rules! icons {
 
 icons! {
     Book => "book",
+    FilterAlt => "filter_alt",
     Folder => "folder",
     LiveTv => "live_tv",
     Movie => "movie",
@@ -49,6 +50,7 @@ icons! {
     Photo => "photo",
     Queue => "queue",
     Quiz => "quiz",
+    SortByAlpha => "sort_by_alpha",
     Storage => "storage",
     Theaters => "theaters",
     Tv => "tv",

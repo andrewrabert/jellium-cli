@@ -245,6 +245,21 @@ pub fn card_footer(_theme: &iced::Theme) -> iced::widget::container::Style {
     iced::widget::container::Style::default().color(color(scheme::TEXT))
 }
 
+/// The mark laid on a control that is narrowing what is shown: the reference's
+/// own face under a radius of the mark's own diameter, which is the circle its
+/// `border-radius: 100em` draws.
+// reference: filter-indicator
+// reference: filter-indicator-face
+pub fn indicator(_theme: &iced::Theme) -> iced::widget::container::Style {
+    iced::widget::container::Style::default()
+        .background(color(scheme::INDICATOR))
+        .color(color(scheme::ON_ACCENT))
+        .border(iced::Border {
+            radius: iced::border::Radius::new(drawn(space::INDICATOR.drawn())),
+            ..iced::Border::default()
+        })
+}
+
 /// The label written above a field.
 // reference: scheme-label
 pub fn label(_theme: &iced::Theme) -> iced::widget::text::Style {
