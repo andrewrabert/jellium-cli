@@ -16,9 +16,8 @@ use crate::api::Api;
 use crate::app::{Message, Signed};
 use crate::error::{Answer, Operation};
 use crate::images::{self, Cache, Foreign};
-use crate::style::typeface;
+use crate::style::{self, space, typeface};
 use crate::text::{self as strings, Text};
-use crate::theme;
 use crate::widget::prose;
 
 /// One part of the metadata manager.
@@ -176,7 +175,7 @@ pub fn view<'a>(
         }
         Some(control.into())
     }))
-    .spacing(8);
+    .spacing(style::drawn(space::CONTROL_GAP.drawn()));
 
     let body: Element<'a, Message> = match state.part {
         Part::Fields => column![
@@ -184,7 +183,7 @@ pub fn view<'a>(
             fields::people(state, read_only),
             fields::providers(state, read_only),
         ]
-        .spacing(theme::CARD_SPACING)
+        .spacing(style::drawn(space::GUTTER.drawn()))
         .into(),
         Part::Identify => identify::view(&state.identify, foreign, read_only),
         Part::Images => artwork::view(&state.artwork, images, foreign, id, read_only),
@@ -197,7 +196,7 @@ pub fn view<'a>(
         state.item.name.clone().unwrap_or_default(),
         typeface::HEADING_1
     )]
-    .spacing(theme::CARD_SPACING);
+    .spacing(style::drawn(space::GUTTER.drawn()));
 
     if !read_only && state.part == Part::Fields {
         page = page.push(
@@ -212,15 +211,15 @@ pub fn view<'a>(
     scrollable(
         column![
             page,
-            row![parts, body].spacing(theme::CARD_SPACING),
+            row![parts, body].spacing(style::drawn(space::GUTTER.drawn())),
             button(prose(
                 strings::lookup(Text::MetadataClose).to_owned(),
                 typeface::BODY
             ))
             .on_press(Message::MetadataAction(Action::Close)),
         ]
-        .spacing(theme::CARD_SPACING)
-        .padding(theme::CARD_SPACING),
+        .spacing(style::drawn(space::GUTTER.drawn()))
+        .padding(style::drawn(space::GUTTER.drawn())),
     )
     .into()
 }
@@ -243,7 +242,7 @@ fn locks<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
                     typeface::BODY
                 ),
             ]
-            .spacing(theme::CARD_SPACING)
+            .spacing(style::drawn(space::GUTTER.drawn()))
             .into();
         }
         row![
@@ -251,11 +250,13 @@ fn locks<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
                 .on_toggle(move |on| Message::MetadataAction(Action::Locked(lock, on))),
             shown,
         ]
-        .spacing(theme::CARD_SPACING)
+        .spacing(style::drawn(space::GUTTER.drawn()))
         .align_y(iced::Alignment::Center)
         .into()
     });
-    column(held).spacing(8).into()
+    column(held)
+        .spacing(style::drawn(space::CONTROL_GAP.drawn()))
+        .into()
 }
 
 fn content_type<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
@@ -276,7 +277,9 @@ fn content_type<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
             .into(),
         )
     });
-    column(offered).spacing(8).into()
+    column(offered)
+        .spacing(style::drawn(space::CONTROL_GAP.drawn()))
+        .into()
 }
 
 /// The deletion part: what is lost, and the control that raises the
@@ -315,7 +318,7 @@ fn deletion<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
             )
         ))),
     ]
-    .spacing(theme::CARD_SPACING)
+    .spacing(style::drawn(space::GUTTER.drawn()))
     .into()
 }
 

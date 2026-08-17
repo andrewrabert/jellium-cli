@@ -5,9 +5,8 @@ use iced::{Element, Fill};
 
 use crate::app::Message;
 use crate::error::Answer;
-use crate::style::typeface;
+use crate::style::{self, space, typeface};
 use crate::text::{self as strings, Text};
-use crate::theme;
 use crate::widget::prose;
 use jellium_model::form::{Field, Form};
 
@@ -174,13 +173,14 @@ pub fn view<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
         strings::lookup(Text::LibrariesTitle).to_owned(),
         typeface::HEADING_2
     )]
-    .spacing(theme::CARD_SPACING)
-    .padding(theme::CARD_SPACING);
+    .spacing(style::drawn(space::GUTTER.drawn()))
+    .padding(style::drawn(space::GUTTER.drawn()));
 
     if !read_only {
         page = page.push(
             row![
                 text_input(strings::lookup(Text::LibrariesCreate), &state.naming)
+                    .style(style::input)
                     .on_input(|typed| Message::DashboardAction(super::Action::Typed(typed))),
                 iced::widget::pick_list(
                     content_choices(),
@@ -198,7 +198,7 @@ pub fn view<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
                     }
                 ))),
             ]
-            .spacing(theme::CARD_SPACING),
+            .spacing(style::drawn(space::GUTTER.drawn())),
         );
     }
 
@@ -210,7 +210,7 @@ pub fn view<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
                     super::Action::Open(super::Screen::Library { name: name.clone() })
                 )),
             ]
-            .spacing(theme::CARD_SPACING);
+            .spacing(style::drawn(space::GUTTER.drawn()));
 
         let named = folder
             .item_id
@@ -258,13 +258,14 @@ pub fn view<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
 /// One library: its paths, the browser a path is chosen from, and its options.
 pub fn one<'a>(state: &'a One, read_only: bool) -> Element<'a, Message> {
     let mut page = column![prose(state.name.clone(), typeface::HEADING_2)]
-        .spacing(theme::CARD_SPACING)
-        .padding(theme::CARD_SPACING);
+        .spacing(style::drawn(space::GUTTER.drawn()))
+        .padding(style::drawn(space::GUTTER.drawn()));
 
     if !read_only {
         page = page.push(
             row![
                 text_input(strings::lookup(Text::LibrariesRename), &state.renaming)
+                    .style(style::input)
                     .on_input(|typed| Message::DashboardAction(super::Action::Typed(typed))),
                 button(prose(
                     strings::lookup(Text::LibrariesRename).to_owned(),
@@ -277,7 +278,7 @@ pub fn one<'a>(state: &'a One, read_only: bool) -> Element<'a, Message> {
                     }
                 ))),
             ]
-            .spacing(theme::CARD_SPACING),
+            .spacing(style::drawn(space::GUTTER.drawn())),
         );
     }
 
@@ -286,7 +287,8 @@ pub fn one<'a>(state: &'a One, read_only: bool) -> Element<'a, Message> {
         typeface::BODY,
     ));
     for path in &state.paths {
-        let mut held = row![prose(path.clone(), typeface::BODY)].spacing(theme::CARD_SPACING);
+        let mut held =
+            row![prose(path.clone(), typeface::BODY)].spacing(style::drawn(space::GUTTER.drawn()));
         if !read_only {
             held = held.push(
                 button(prose(
@@ -341,7 +343,7 @@ pub fn one<'a>(state: &'a One, read_only: bool) -> Element<'a, Message> {
                         }
                     ))),
                 ]
-                .spacing(theme::CARD_SPACING),
+                .spacing(style::drawn(space::GUTTER.drawn())),
             );
         }
     }

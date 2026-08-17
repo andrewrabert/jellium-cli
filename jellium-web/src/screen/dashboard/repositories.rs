@@ -5,9 +5,8 @@ use iced::{Element, Fill};
 
 use crate::app::Message;
 use crate::error::Answer;
-use crate::style::typeface;
+use crate::style::{self, space, typeface};
 use crate::text::{self as strings, Text};
-use crate::theme;
 use crate::widget::prose;
 
 /// Every repository, and what a new one is being named.
@@ -36,8 +35,8 @@ pub fn view<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
         strings::lookup(Text::RepositoriesTitle).to_owned(),
         typeface::HEADING_2
     )]
-    .spacing(theme::CARD_SPACING)
-    .padding(theme::CARD_SPACING);
+    .spacing(style::drawn(space::GUTTER.drawn()))
+    .padding(style::drawn(space::GUTTER.drawn()));
 
     for repository in &state.repositories {
         let url = repository.url.clone().unwrap_or_default();
@@ -45,7 +44,7 @@ pub fn view<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
             prose(repository.name.clone().unwrap_or_default(), typeface::BODY),
             prose(url.clone(), typeface::BODY),
         ]
-        .spacing(theme::CARD_SPACING);
+        .spacing(style::drawn(space::GUTTER.drawn()));
         if !read_only {
             held = held.push(
                 button(prose(
@@ -67,10 +66,13 @@ pub fn view<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
         page = page.push(
             row![
                 text_input(strings::lookup(Text::UsersName), &state.naming)
+                    .style(style::input)
                     .on_input(|typed| Message::DashboardAction(super::Action::Typed(typed))),
-                text_input(strings::lookup(Text::RepositoriesUrl), &state.url).on_input(|typed| {
-                    Message::DashboardAction(super::Action::TypedPassword(typed))
-                }),
+                text_input(strings::lookup(Text::RepositoriesUrl), &state.url)
+                    .style(style::input)
+                    .on_input(|typed| {
+                        Message::DashboardAction(super::Action::TypedPassword(typed))
+                    }),
                 button(prose(
                     strings::lookup(Text::RepositoriesAdd).to_owned(),
                     typeface::BODY
@@ -85,7 +87,7 @@ pub fn view<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
                     )
                 ))),
             ]
-            .spacing(theme::CARD_SPACING),
+            .spacing(style::drawn(space::GUTTER.drawn())),
         );
     }
 

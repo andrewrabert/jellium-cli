@@ -11,7 +11,7 @@ use crate::text::{self as strings, Text};
 use crate::theme;
 
 use super::Action as Outer;
-use crate::style::typeface;
+use crate::style::{self, space, typeface};
 use crate::widget::prose;
 
 /// The image kinds the metadata manager uploads, replaces and removes; no other
@@ -145,9 +145,9 @@ pub fn view<'a>(
         }
         control.into()
     }))
-    .spacing(theme::CARD_SPACING);
+    .spacing(style::drawn(space::GUTTER.drawn()));
 
-    let mut page = column![strip].spacing(theme::CARD_SPACING);
+    let mut page = column![strip].spacing(style::drawn(space::GUTTER.drawn()));
 
     for kind in Kind::ALL {
         let held = held_of(state, kind);
@@ -159,7 +159,7 @@ pub fn view<'a>(
             strings::lookup(kind.label()).to_owned(),
             typeface::BODY
         )]
-        .spacing(theme::CARD_SPACING)
+        .spacing(style::drawn(space::GUTTER.drawn()))
         .align_y(iced::Alignment::Center);
 
         for (position, (index, _)) in held.into_iter().enumerate() {
@@ -177,7 +177,7 @@ pub fn view<'a>(
                     .into(),
             };
 
-            let mut cell = column![drawn].spacing(4);
+            let mut cell = column![drawn].spacing(style::drawn(space::BLOCK_GAP.drawn()));
             if !read_only {
                 cell = cell.push(
                     button(prose(
@@ -241,13 +241,13 @@ pub fn view<'a>(
     let providers = row(state.providers.iter().map(|provider| {
         let named = provider.clone();
         button(prose(provider.clone(), typeface::BODY))
-            .style(button::text)
+            .style(style::flat)
             .on_press(Message::MetadataAction(Outer::Artwork(
                 Action::SelectProvider(Some(named)),
             )))
             .into()
     }))
-    .spacing(theme::CARD_SPACING);
+    .spacing(style::drawn(space::GUTTER.drawn()));
 
     page = page.push(providers).push(
         button(prose(
@@ -280,10 +280,10 @@ pub fn view<'a>(
                 at
             }))),
         ]
-        .spacing(4)
+        .spacing(style::drawn(space::BLOCK_GAP.drawn()))
         .into()
     }))
-    .spacing(theme::CARD_SPACING);
+    .spacing(style::drawn(space::GUTTER.drawn()));
 
     page.push(found).into()
 }

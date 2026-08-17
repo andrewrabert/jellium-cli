@@ -102,6 +102,7 @@ scheme-secondary-text	src/themes/dark/theme.scss	153	162	352c869debe4bae9cab747b
 scheme-toast	src/themes/dark/theme.scss	174	178	666172c5b82f3ec7c4b9303fc3cdf0db6605e3c9e1444e7593504f866fcfd7b5	ported
 scheme-list-state	src/themes/dark/theme.scss	237	243	73962c185b146b791f35f1f2f2691801e0feb6cf92aadf7cae12dbb1bc1e6955	ported
 scheme-input	src/themes/dark/theme.scss	262	273	62181a81670015b3cd98e87f5d1829cac2b183bc680d36439d39510cd3027870	ported
+scheme-focus	src/themes/dark/theme.scss	341	344	e8a867bb85cb6ad677a355415b4f73cec8aec97b55de9e454f9588ca3d9248bb	ported
 scheme-anchors	src/themes/defaults.ts	7	30	d73689c6be39372715f73e4c877277b438695556008ed427091db30767c9a549	ported
 type-root	src/styles/fonts.scss	6	23	4d75d6108496fa6acd3bbc05f9754a6f4c0b9785a0dd5de25dbe114c03c7bde3	ported
 type-mobile-root	src/styles/fonts.scss	49	51	7ef46ab7183a574d30215b2fa6fe4e2b690cfa1e72170527d99f15a910698200	ported
@@ -113,6 +114,7 @@ list-body	src/components/listview/listview.scss	107	115	22e122f7b97f593b37b66e9b
 control-input	src/elements/emby-input/emby-input.scss	1	17	7022eb16a031ba2f9aa38805639254d7227ddef7ee446eadebc8a2adb224ca77	ported
 control-field	src/elements/emby-input/emby-input.scss	32	34	46985652945c8e10f138fe996796996c337be7497536f9b1f3be7453d4faa882	ported
 page-side	src/styles/librarybrowser.scss	1380	1398	50a1e25cc1a977f4481c7e7f18db1a79bf14d7f59336006cf19d8a95bc196fde	ported
+page-padded	src/styles/librarybrowser.scss	1400	1406	cb93b17d92c8d78cec48b6012c6312519be7654e86ed89ca12a360c97c39612e	ported
 letter-jump	src/components/alphaPicker/style.scss	134	138	5c9e90ff86d87781bef8b9cb0d3145f1b9949eea166797bfe21a05f5e91a86d9	ported
 bar-top	src/components/nowPlayingBar/nowPlayingBar.scss	23	30	eb8108dabe17a20da96abfe75dcf2b4d69d6677f4709c149b0390b3be15e893e	ported
 bar-image	src/components/nowPlayingBar/nowPlayingBar.scss	43	50	a42d8f610f3a0f8043e4ae076ab22bc25b0f4479f0f7404746645e250ba70ce7	ported
@@ -133,6 +135,7 @@ header-title	src/styles/librarybrowser.scss	172	189	2f8c8fad8dbde9525ed97704fc93
 header-logo	src/styles/librarybrowser.scss	201	210	9363e8c1db0cd7207606840262e74a44de533a1bfb06a6af1eaf8d81978b7ecd	ported
 header-top	src/styles/librarybrowser.scss	238	240	e4b5ad9d413fdba0d4208e8dd7c6b6c488ff399f4a1a063ff0ae99cabaf9181b	ported
 section-title	src/styles/librarybrowser.scss	1292	1300	f42cb439ecb9fe44f615faa2c1706cc0b6c2de46d5860ebbab6aa90b14332ec9	ported
+splash-logo	src/styles/site.scss	17	36	0720b5fbb0e0b0b28991354f80bd085277fcf51d1501e1f2fcb3eb12628052fd	ported
 band-threshold	src/styles/librarybrowser.scss	422	426	97b6d00bf260b8803f27b275fdc3f81792e87b73e1d2e49968aa6b6321cd2726	ported
 card-aspect	src/components/cardbuilder/card.scss	58	86	2f24399449711db454e202f61f52aa44006d7e0a1426499eb582632a472db75e	ported
 card-box	src/components/cardbuilder/card.scss	88	99	ced046c031cf3e217e29d8c1335e74665df2594b235a3e7962896192bb885419	ported

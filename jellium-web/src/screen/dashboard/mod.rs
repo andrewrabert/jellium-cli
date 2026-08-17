@@ -25,10 +25,8 @@ use uuid::Uuid;
 use crate::api::Api;
 use crate::app::{Message, Signed};
 use crate::error::{Answer, Operation, Wrote};
-use crate::style::typeface;
-use crate::style::{Drawn, Viewport};
+use crate::style::{self, Drawn, Viewport, space, typeface};
 use crate::text::{self as strings, Text};
-use crate::theme;
 use crate::widget::prose;
 
 /// Which configuration section a settings screen edits.
@@ -277,17 +275,19 @@ pub fn control<'a>(
                 }),
                 prose(key.to_owned(), typeface::BODY),
             ]
-            .spacing(theme::CARD_SPACING)
+            .spacing(style::drawn(space::GUTTER.drawn()))
             .align_y(iced::Center),
         ),
         _ => Element::from(
             column![
                 prose(field.key().to_owned(), typeface::BODY),
-                iced::widget::text_input(field.key(), &held).on_input(move |held| {
-                    Message::DashboardAction(Action::Edited(field, held))
-                }),
+                iced::widget::text_input(field.key(), &held)
+                    .style(style::input)
+                    .on_input(move |held| {
+                        Message::DashboardAction(Action::Edited(field, held))
+                    }),
             ]
-            .spacing(theme::CARD_SPACING),
+            .spacing(style::drawn(space::GUTTER.drawn())),
         ),
     }
 }
@@ -646,7 +646,7 @@ pub async fn load(
 /// The navigation column beside the screen shown, and the read-only indicator
 /// above both.
 pub fn view<'a>(state: &'a State, session: &'a jellium_protocol::Session) -> Element<'a, Message> {
-    let mut column_of = column![].spacing(theme::CARD_SPACING);
+    let mut column_of = column![].spacing(style::drawn(space::GUTTER.drawn()));
     for entry in Screen::COLUMN {
         let shown = state.screen == entry;
         let control = button(prose(
@@ -689,7 +689,7 @@ pub fn view<'a>(state: &'a State, session: &'a jellium_protocol::Session) -> Ele
         },
     };
 
-    let mut page = column![].spacing(theme::CARD_SPACING);
+    let mut page = column![].spacing(style::drawn(space::GUTTER.drawn()));
     if session.read_only {
         page = page.push(crate::widget::banner(
             strings::lookup(Text::DashboardReadOnly).to_string(),
@@ -697,7 +697,7 @@ pub fn view<'a>(state: &'a State, session: &'a jellium_protocol::Session) -> Ele
     }
     page = page.push(
         row![column_of, body]
-            .spacing(theme::CARD_SPACING)
+            .spacing(style::drawn(space::GUTTER.drawn()))
             .width(Fill)
             .height(Fill),
     );
@@ -707,7 +707,8 @@ pub fn view<'a>(state: &'a State, session: &'a jellium_protocol::Session) -> Ele
 /// What stands beside a configuration page: the frame occupies the viewport
 /// itself, so only the page's name, its busy state and its notice are drawn.
 fn shown_page<'a>(held: &'a page::State) -> Element<'a, Message> {
-    let mut shown = column![prose(held.name.clone(), typeface::BODY)].spacing(theme::CARD_SPACING);
+    let mut shown = column![prose(held.name.clone(), typeface::BODY)]
+        .spacing(style::drawn(space::GUTTER.drawn()));
     if held.busy {
         shown = shown.push(prose(
             strings::lookup(Text::StatusLoading).to_owned(),

@@ -13,10 +13,8 @@ use crate::error::Answer;
 use crate::images::{self, Cache};
 use crate::route::Listing;
 use crate::screen::browse::{self, Browse};
-use crate::style::Viewport;
-use crate::style::typeface;
+use crate::style::{self, Viewport, space, typeface};
 use crate::text::{self as strings, Text};
-use crate::theme;
 use crate::widget;
 use crate::widget::prose;
 
@@ -125,20 +123,21 @@ fn section<'a>(
                 widget::poster_key(item).and_then(|key| images.handle(key)),
                 false,
             ))
-            .style(iced::widget::button::text)
+            .style(style::flat)
             .on_press(Message::Navigated(opens(id)))
             .into(),
         )
     });
     column![
         prose(strings::lookup(title).to_owned(), typeface::HEADING_2),
-        iced::widget::scrollable(iced::widget::row(cards).spacing(theme::CARD_SPACING)).direction(
-            iced::widget::scrollable::Direction::Horizontal(
-                iced::widget::scrollable::Scrollbar::default()
-            )
-        ),
+        iced::widget::scrollable(
+            iced::widget::row(cards).spacing(style::drawn(space::GUTTER.drawn()))
+        )
+        .direction(iced::widget::scrollable::Direction::Horizontal(
+            iced::widget::scrollable::Scrollbar::default()
+        )),
     ]
-    .spacing(8)
+    .spacing(style::drawn(space::CONTROL_GAP.drawn()))
     .into()
 }
 
@@ -157,21 +156,22 @@ fn narrowed(facet: jellium_model::facets::Facet, id: uuid::Uuid) -> crate::route
 pub fn view<'a>(state: &'a State, images: &'a Cache, read_only: bool) -> Element<'a, Message> {
     let bar = row![
         text_input(strings::lookup(Text::SearchPlaceholder), &state.term)
+            .style(style::input)
             .on_input(Message::SearchEdited)
             .on_submit(Message::SearchSubmitted)
-            .padding(8),
+            .padding(style::drawn(space::CONTROL_GAP.drawn())),
         button(prose(
             strings::lookup(Text::SearchSubmit).to_owned(),
             typeface::BODY
         ))
         .on_press(Message::SearchSubmitted),
     ]
-    .spacing(theme::CARD_SPACING)
+    .spacing(style::drawn(space::GUTTER.drawn()))
     .align_y(iced::Alignment::Center);
 
     let mut page = column![bar]
-        .spacing(theme::CARD_SPACING)
-        .padding(theme::CARD_SPACING);
+        .spacing(style::drawn(space::GUTTER.drawn()))
+        .padding(style::drawn(space::GUTTER.drawn()));
 
     if state.browse.items.is_empty() {
         page = page.push(widget::banner(

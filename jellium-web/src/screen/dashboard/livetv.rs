@@ -6,9 +6,8 @@ use iced::{Element, Fill};
 
 use crate::app::Message;
 use crate::error::Answer;
-use crate::style::typeface;
+use crate::style::{self, space, typeface};
 use crate::text::{self as strings, Text};
-use crate::theme;
 use crate::widget::prose;
 use jellium_model::form::{Field, Form};
 
@@ -137,7 +136,7 @@ pub async fn load(api: std::rc::Rc<crate::api::Api>, tab: super::LiveTvTab) -> A
 
 /// The four tabs, and whichever one is shown.
 pub fn view<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
-    let mut tabs = row![].spacing(theme::CARD_SPACING);
+    let mut tabs = row![].spacing(style::drawn(space::GUTTER.drawn()));
     for tab in super::LiveTvTab::ALL {
         let control = button(prose(
             strings::lookup(tab.label()).to_owned(),
@@ -153,8 +152,8 @@ pub fn view<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
     }
 
     let mut page = column![tabs]
-        .spacing(theme::CARD_SPACING)
-        .padding(theme::CARD_SPACING);
+        .spacing(style::drawn(space::GUTTER.drawn()))
+        .padding(style::drawn(space::GUTTER.drawn()));
 
     page = match state.tab {
         super::LiveTvTab::Tuners => tuners(page, state, read_only),
@@ -186,7 +185,7 @@ fn tuners<'a>(mut page: Page<'a>, state: &'a State, read_only: bool) -> Page<'a>
             prose(url.clone(), typeface::BODY),
             prose(tuner.type_.clone().unwrap_or_default(), typeface::BODY),
         ]
-        .spacing(theme::CARD_SPACING);
+        .spacing(style::drawn(space::GUTTER.drawn()));
         if !read_only {
             held = held.push(
                 button(prose(
@@ -244,6 +243,7 @@ fn tuners<'a>(mut page: Page<'a>, state: &'a State, read_only: bool) -> Page<'a>
                 Message::DashboardAction(super::Action::TypedPassword(chosen))
             }),
             text_input(strings::lookup(Text::TunersUrl), &state.tuner_url)
+                .style(style::input)
                 .on_input(|typed| Message::DashboardAction(super::Action::Typed(typed))),
             button(prose(
                 strings::lookup(Text::TunersAdd).to_owned(),
@@ -256,7 +256,7 @@ fn tuners<'a>(mut page: Page<'a>, state: &'a State, read_only: bool) -> Page<'a>
                 }
             ))),
         ]
-        .spacing(theme::CARD_SPACING),
+        .spacing(style::drawn(space::GUTTER.drawn())),
     )
 }
 
@@ -271,7 +271,8 @@ fn providers<'a>(mut page: Page<'a>, state: &'a State, read_only: bool) -> Page<
             continue;
         };
         let named = provider.type_.clone().unwrap_or_default();
-        let mut held = row![prose(named.clone(), typeface::BODY)].spacing(theme::CARD_SPACING);
+        let mut held =
+            row![prose(named.clone(), typeface::BODY)].spacing(style::drawn(space::GUTTER.drawn()));
         if !read_only {
             held = held.push(
                 button(prose(
@@ -306,7 +307,7 @@ fn providers<'a>(mut page: Page<'a>, state: &'a State, read_only: bool) -> Page<
             ))
             .on_press(Message::DashboardAction(super::Action::ProviderKind(false))),
         ]
-        .spacing(theme::CARD_SPACING),
+        .spacing(style::drawn(space::GUTTER.drawn())),
     );
 
     if state.provider.schedules_direct {
@@ -316,6 +317,7 @@ fn providers<'a>(mut page: Page<'a>, state: &'a State, read_only: bool) -> Page<
                     strings::lookup(Text::ProvidersUsername),
                     &state.provider.username,
                 )
+                .style(style::input)
                 .on_input(|typed| Message::DashboardAction(super::Action::Typed(typed))),
             )
             .push(
@@ -323,6 +325,7 @@ fn providers<'a>(mut page: Page<'a>, state: &'a State, read_only: bool) -> Page<
                     strings::lookup(Text::ProvidersPassword),
                     &state.provider.password,
                 )
+                .style(style::input)
                 .secure(true)
                 .on_input(|typed| Message::DashboardAction(super::Action::TypedPassword(typed))),
             )
@@ -336,6 +339,7 @@ fn providers<'a>(mut page: Page<'a>, state: &'a State, read_only: bool) -> Page<
                     strings::lookup(Text::ProvidersPostcode),
                     &state.provider.postcode,
                 )
+                .style(style::input)
                 .on_input(|typed| Message::DashboardAction(super::Action::ProviderPostcode(typed))),
             )
             .push(
@@ -361,6 +365,7 @@ fn providers<'a>(mut page: Page<'a>, state: &'a State, read_only: bool) -> Page<
     } else {
         page = page.push(
             text_input(strings::lookup(Text::ProvidersPath), &state.provider.path)
+                .style(style::input)
                 .on_input(|typed| Message::DashboardAction(super::Action::Typed(typed))),
         );
     }
@@ -399,7 +404,7 @@ fn mapping<'a>(mut page: Page<'a>, state: &'a State, read_only: bool) -> Page<'a
             channel.name.clone().unwrap_or_default(),
             typeface::BODY
         )]
-        .spacing(theme::CARD_SPACING);
+        .spacing(style::drawn(space::GUTTER.drawn()));
         if !read_only {
             let tuner = id.clone();
             held = held.push(pick_list(

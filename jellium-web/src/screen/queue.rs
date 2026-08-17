@@ -9,7 +9,7 @@ use crate::app::Message;
 use crate::images::{self, Cache, Kind as ImageKind};
 use crate::player::group::{self, Joined};
 use crate::player::{Action, Playing};
-use crate::style::typeface;
+use crate::style::{self, space, typeface};
 use crate::text::{self as strings, Text};
 use crate::theme;
 use crate::widget::prose;
@@ -66,7 +66,7 @@ fn entry<'a>(
 ) -> Element<'a, Message> {
     let title: Element<'a, Message> = match play {
         Some(play) => button(prose(name, typeface::BODY))
-            .style(button::text)
+            .style(style::flat)
             .on_press(play)
             .into(),
         None => prose(name, typeface::BODY),
@@ -81,15 +81,19 @@ fn entry<'a>(
         ))
         .on_press(remove),
     ]
-    .spacing(theme::CARD_SPACING)
+    .spacing(style::drawn(space::GUTTER.drawn()))
     .align_y(iced::Center)
     .into()
 }
 
 fn art<'a>(item: &jellyfin_api::types::BaseItemDto, cache: &'a Cache) -> Element<'a, Message> {
     match key(item).and_then(|key| cache.handle(key)) {
-        Some(handle) => image(handle).width(theme::BAR_ART_WIDTH).into(),
-        None => Space::new().width(theme::BAR_ART_WIDTH).into(),
+        Some(handle) => image(handle)
+            .width(style::drawn(space::BAR_ART.drawn()))
+            .into(),
+        None => Space::new()
+            .width(style::drawn(space::BAR_ART.drawn()))
+            .into(),
     }
 }
 
@@ -162,7 +166,7 @@ pub fn view<'a>(
         ))
         .on_press(Message::PlayerAction(Action::CycleRepeat)),
     ]
-    .spacing(theme::CARD_SPACING);
+    .spacing(style::drawn(space::GUTTER.drawn()));
 
     let body: Element<'a, Message> = if rows.is_empty() {
         prose(strings::lookup(Text::QueueEmpty).to_owned(), typeface::BODY)
@@ -175,7 +179,7 @@ pub fn view<'a>(
                 row.play.clone(),
                 row.remove.clone(),
             ))
-            .height(theme::ROW_HEIGHT)
+            .height(style::drawn(space::LIST_ROW.drawn()))
             .into()
         })
     };
@@ -189,10 +193,10 @@ pub fn view<'a>(
             controls,
             body,
         ]
-        .spacing(theme::CARD_SPACING),
+        .spacing(style::drawn(space::GUTTER.drawn())),
     )
-    .style(theme::over_video)
-    .padding(theme::CARD_SPACING)
+    .style(style::over_video)
+    .padding(style::drawn(space::GUTTER.drawn()))
     .width(Fill)
     .height(Fill)
     .into()

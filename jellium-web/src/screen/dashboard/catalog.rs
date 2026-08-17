@@ -6,10 +6,8 @@ use iced::{Element, Fill};
 
 use crate::app::Message;
 use crate::error::Answer;
-use crate::style::Drawn;
-use crate::style::typeface;
+use crate::style::{self, Drawn, space, typeface};
 use crate::text::{self as strings, Text};
-use crate::theme;
 use crate::widget::prose;
 use crate::window;
 use jellium_protocol::{Event, Packaged};
@@ -29,7 +27,11 @@ pub async fn load(api: std::rc::Rc<crate::api::Api>, height: Drawn) -> Answer<St
     Answer::of(async {
         Ok(State {
             packages: api.packages().await.bubbled()?,
-            window: window::Window::new(window::Id::Catalog, Drawn::of(theme::ROW_HEIGHT), height),
+            window: window::Window::new(
+                window::Id::Catalog,
+                Drawn::of(style::drawn(space::LIST_ROW.drawn())),
+                height,
+            ),
             versions: std::collections::HashMap::new(),
             installing: std::collections::HashMap::new(),
         })
@@ -103,14 +105,14 @@ pub fn view<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
                     typeface::BODY
                 ),
             ]
-            .spacing(theme::CARD_SPACING);
+            .spacing(style::drawn(space::GUTTER.drawn()));
 
             if state.installing.contains_key(&name) {
                 let mut running = row![prose(
                     strings::lookup(Text::CatalogInstalling).to_owned(),
                     typeface::BODY
                 )]
-                .spacing(theme::CARD_SPACING);
+                .spacing(style::drawn(space::GUTTER.drawn()));
                 if !read_only && let Some(plugin) = state.installing[&name].plugin {
                     running = running.push(
                         button(prose(
@@ -147,8 +149,8 @@ pub fn view<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
             held.into()
         }),
     ]
-    .spacing(theme::CARD_SPACING)
-    .padding(theme::CARD_SPACING)
+    .spacing(style::drawn(space::GUTTER.drawn()))
+    .padding(style::drawn(space::GUTTER.drawn()))
     .width(Fill)
     .height(Fill)
     .into()

@@ -4,9 +4,8 @@ use jellium_protocol::{Group, GroupState, SyncAccess};
 
 use crate::app::Message;
 use crate::player::group::{self, Joined};
-use crate::style::typeface;
+use crate::style::{self, space, typeface};
 use crate::text::{self as strings, Text};
-use crate::theme;
 use crate::widget::prose;
 
 fn state_label(state: GroupState) -> Text {
@@ -36,7 +35,7 @@ fn offered(group: &Group) -> Element<'_, Message> {
                 typeface::SECONDARY
             ),
         ]
-        .spacing(2),
+        .spacing(style::drawn(space::BLOCK_GAP.drawn())),
         iced::widget::Space::new().width(Fill),
         button(prose(
             strings::lookup(Text::SyncPlayJoin).to_owned(),
@@ -44,13 +43,13 @@ fn offered(group: &Group) -> Element<'_, Message> {
         ))
         .on_press(Message::GroupAction(group::Action::Join(group.id))),
     ]
-    .spacing(theme::CARD_SPACING)
+    .spacing(style::drawn(space::GUTTER.drawn()))
     .align_y(iced::Center)
     .into()
 }
 
 fn picker<'a>(groups: &'a [Group], access: SyncAccess) -> Element<'a, Message> {
-    let mut body = column![].spacing(theme::CARD_SPACING);
+    let mut body = column![].spacing(style::drawn(space::GUTTER.drawn()));
     if access == SyncAccess::CreateAndJoin {
         body = body.push(
             button(prose(
@@ -68,11 +67,10 @@ fn picker<'a>(groups: &'a [Group], access: SyncAccess) -> Element<'a, Message> {
             ))
             .into();
     }
-    let listed = groups
-        .iter()
-        .fold(column![].spacing(theme::CARD_SPACING), |listed, group| {
-            listed.push(offered(group))
-        });
+    let listed = groups.iter().fold(
+        column![].spacing(style::drawn(space::GUTTER.drawn())),
+        |listed, group| listed.push(offered(group)),
+    );
     body.push(scrollable(listed).height(Fill)).into()
 }
 
@@ -85,7 +83,7 @@ fn active<'a>(joined: &'a Joined) -> Element<'a, Message> {
             typeface::SECONDARY
         ),
     ]
-    .spacing(2);
+    .spacing(style::drawn(space::BLOCK_GAP.drawn()));
 
     if joined.waiting() {
         body = body.push(prose(
@@ -101,7 +99,7 @@ fn active<'a>(joined: &'a Joined) -> Element<'a, Message> {
         ))
         .on_press(Message::GroupAction(group::Action::Stop)),
     )
-    .push(iced::widget::Space::new().height(theme::CARD_SPACING))
+    .push(iced::widget::Space::new().height(style::drawn(space::GUTTER.drawn())))
     .push(
         button(prose(
             strings::lookup(Text::SyncPlayLeave).to_owned(),
@@ -109,7 +107,7 @@ fn active<'a>(joined: &'a Joined) -> Element<'a, Message> {
         ))
         .on_press(Message::GroupAction(group::Action::Leave)),
     )
-    .spacing(theme::CARD_SPACING)
+    .spacing(style::drawn(space::GUTTER.drawn()))
     .into()
 }
 
@@ -136,8 +134,8 @@ pub fn view<'a>(
             ),
             body
         ]
-        .spacing(theme::CARD_SPACING),
+        .spacing(style::drawn(space::GUTTER.drawn())),
     )
-    .padding(theme::CARD_SPACING)
+    .padding(style::drawn(space::GUTTER.drawn()))
     .into()
 }

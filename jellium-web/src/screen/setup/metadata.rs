@@ -6,11 +6,10 @@ use iced::{Element, Fill};
 use crate::app::Message;
 use crate::error::Answer;
 use crate::text::{self as strings, Text};
-use crate::theme;
 use crate::widget::Choice;
 
 use super::{Action, Edit};
-use crate::style::typeface;
+use crate::style::{self, space, typeface};
 use crate::widget::prose;
 
 #[derive(Debug, Clone)]
@@ -90,6 +89,6 @@ pub fn view(state: &State) -> Element<'_, Message> {
         )
         .width(Fill),
     ]
-    .spacing(theme::CARD_SPACING)
+    .spacing(style::drawn(space::GUTTER.drawn()))
     .into()
 }

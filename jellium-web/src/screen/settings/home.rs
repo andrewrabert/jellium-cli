@@ -11,10 +11,9 @@ use crate::api::Api;
 use crate::app::Message;
 use crate::error::Answer;
 use crate::text::{self as strings, Text};
-use crate::theme;
 
 use super::{Action, Setting, toggle};
-use crate::style::typeface;
+use crate::style::{self, space, typeface};
 use crate::widget::prose;
 
 /// The libraries the server offers, so the order and the exclusions are edited
@@ -60,12 +59,12 @@ pub fn view<'a>(
         strings::lookup(Text::HomeOrder).to_owned(),
         typeface::BODY
     )]
-    .spacing(theme::CARD_SPACING);
+    .spacing(style::drawn(space::GUTTER.drawn()));
 
     for id in arranged {
         let is_hidden = hidden.contains(&id);
-        let mut controls =
-            row![prose(named(state, id), typeface::BODY)].spacing(theme::CARD_SPACING);
+        let mut controls = row![prose(named(state, id), typeface::BODY)]
+            .spacing(style::drawn(space::GUTTER.drawn()));
         if !read_only {
             controls = controls
                 .push(

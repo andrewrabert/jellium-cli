@@ -13,8 +13,7 @@ use crate::live;
 use crate::livetv::Channel;
 use crate::player::group::Joined;
 use crate::route::Route;
-use crate::style::typeface;
-use crate::style::{self, Drawn, Share};
+use crate::style::{self, Drawn, Share, space, typeface};
 use crate::text::{self as strings, Text};
 use crate::theme;
 
@@ -92,11 +91,11 @@ pub fn card<'a>(
         prose(item.name.clone().unwrap_or_default(), typeface::BODY),
         prose(subtitle(item), typeface::SECONDARY),
     ]
-    .spacing(4)
+    .spacing(style::drawn(space::BLOCK_GAP.drawn()))
     .width(theme::CARD_WIDTH);
 
     let pressed = item.id.map(|id| Message::Navigated(opens(item, id)));
-    let mut control = button(body).style(button::text);
+    let mut control = button(body).style(style::flat);
     if let Some(message) = pressed {
         control = control.on_press(message);
     }
@@ -111,7 +110,7 @@ pub fn card<'a>(
             strings::lookup(Text::OverflowOpen).to_owned(),
             typeface::BODY
         ))
-        .style(button::text)
+        .style(style::flat)
         .on_press(Message::OverflowAction(
             crate::screen::overflow::Action::Open {
                 item: id,
@@ -177,13 +176,15 @@ fn strip<'a>(
 ) -> Element<'a, Message> {
     column![
         title,
-        scrollable(row(cards(items, images, overflow)).spacing(theme::CARD_SPACING))
-            .direction(scrollable::Direction::Horizontal(
-                scrollable::Scrollbar::default(),
-            ))
-            .height(theme::RAIL_HEIGHT),
+        scrollable(
+            row(cards(items, images, overflow)).spacing(style::drawn(space::GUTTER.drawn()))
+        )
+        .direction(scrollable::Direction::Horizontal(
+            scrollable::Scrollbar::default(),
+        ))
+        .height(theme::RAIL_HEIGHT),
     ]
-    .spacing(8)
+    .spacing(style::drawn(space::CONTROL_GAP.drawn()))
     .into()
 }
 
@@ -195,7 +196,7 @@ pub fn grid<'a>(
     scrollable(
         grid_widget(cards(items, images, overflow))
             .fluid(theme::CARD_WIDTH)
-            .spacing(theme::CARD_SPACING),
+            .spacing(style::drawn(space::GUTTER.drawn())),
     )
     .height(Fill)
     .into()
@@ -258,7 +259,8 @@ pub fn library_row<'a>(
     );
 
     scrollable(
-        row(live_entry.into_iter().chain(entries).chain(destinations)).spacing(theme::CARD_SPACING),
+        row(live_entry.into_iter().chain(entries).chain(destinations))
+            .spacing(style::drawn(space::GUTTER.drawn())),
     )
     .direction(scrollable::Direction::Horizontal(
         scrollable::Scrollbar::default(),
@@ -277,17 +279,17 @@ pub fn elapsed_bar<'a>(elapsed: Share) -> Element<'a, Message> {
         row![
             container(Space::new())
                 .width(Length::FillPortion(filled))
-                .height(theme::ELAPSED_HEIGHT)
+                .height(style::drawn(space::PROGRESS.drawn()))
                 .style(|theme: &iced::Theme| container::Style::default()
                     .background(theme.palette().primary)),
             container(Space::new())
                 .width(Length::FillPortion(PORTIONS - filled))
-                .height(theme::ELAPSED_HEIGHT),
+                .height(style::drawn(space::PROGRESS.drawn())),
         ]
-        .height(theme::ELAPSED_HEIGHT),
+        .height(style::drawn(space::PROGRESS.drawn())),
     )
     .width(Length::Fill)
-    .height(theme::ELAPSED_HEIGHT)
+    .height(style::drawn(space::PROGRESS.drawn()))
     .into()
 }
 
@@ -313,7 +315,7 @@ pub fn channel_card<'a>(
             typeface::BODY
         ),
     ]
-    .spacing(4)
+    .spacing(style::drawn(space::BLOCK_GAP.drawn()))
     .width(theme::CARD_WIDTH);
 
     if let Some(program) = &channel.current {
@@ -322,7 +324,7 @@ pub fn channel_card<'a>(
     }
 
     button(body)
-        .style(button::text)
+        .style(style::flat)
         .on_press(Message::LiveTvAction(
             crate::screen::livetv::Action::PlayChannel(channel.id),
         ))
@@ -355,11 +357,11 @@ pub fn on_now_row<'a>(
             strings::lookup(Text::HomeOnNow).to_owned(),
             typeface::HEADING_2
         ),
-        scrollable(row(cards).spacing(theme::CARD_SPACING)).direction(
+        scrollable(row(cards).spacing(style::drawn(space::GUTTER.drawn()))).direction(
             scrollable::Direction::Horizontal(scrollable::Scrollbar::default(),)
         ),
     ]
-    .spacing(8)
+    .spacing(style::drawn(space::CONTROL_GAP.drawn()))
     .into()
 }
 
@@ -368,8 +370,8 @@ pub fn on_now_row<'a>(
 /// and the control that dismisses it.
 /// Private, so the only failure text any screen can render is the log's.
 fn failure<'a>(failure: &'a crate::failure::Failure) -> Element<'a, Message> {
-    let mut shown =
-        column![prose(failure.sentence.clone(), typeface::BODY)].spacing(theme::CARD_SPACING);
+    let mut shown = column![prose(failure.sentence.clone(), typeface::BODY)]
+        .spacing(style::drawn(space::GUTTER.drawn()));
     if let Some(server) = &failure.server {
         shown = shown
             .push(prose(
@@ -386,7 +388,7 @@ fn failure<'a>(failure: &'a crate::failure::Failure) -> Element<'a, Message> {
         .on_press(Message::FailureDismissed),
     );
     container(shown)
-        .padding(theme::CARD_SPACING)
+        .padding(style::drawn(space::GUTTER.drawn()))
         .width(Length::Fill)
         .into()
 }
@@ -394,8 +396,8 @@ fn failure<'a>(failure: &'a crate::failure::Failure) -> Element<'a, Message> {
 /// The terminal stage's screen: the failure that ended the session, over the
 /// control that returns to a fresh login screen.
 pub fn lost<'a>(failure: &'a crate::failure::Failure) -> Element<'a, Message> {
-    let mut shown =
-        column![prose(failure.sentence.clone(), typeface::BODY)].spacing(theme::CARD_SPACING);
+    let mut shown = column![prose(failure.sentence.clone(), typeface::BODY)]
+        .spacing(style::drawn(space::GUTTER.drawn()));
     if let Some(server) = &failure.server {
         shown = shown
             .push(prose(
@@ -412,7 +414,7 @@ pub fn lost<'a>(failure: &'a crate::failure::Failure) -> Element<'a, Message> {
         .on_press(Message::SignInAgain),
     );
     container(shown)
-        .padding(theme::CARD_SPACING)
+        .padding(style::drawn(space::GUTTER.drawn()))
         .width(Length::Fill)
         .into()
 }
@@ -425,7 +427,7 @@ pub fn shell<'a>(
     listing: bool,
     body: Element<'a, Message>,
 ) -> Element<'a, Message> {
-    let mut page = column![].spacing(theme::CARD_SPACING);
+    let mut page = column![].spacing(style::drawn(space::GUTTER.drawn()));
     if let Some(showing) = failures.showing() {
         page = page.push(self::failure(showing));
     }
@@ -445,8 +447,8 @@ pub fn shell<'a>(
             strings::lookup(Text::FailuresTitle).to_owned(),
             typeface::BODY
         )]
-        .spacing(theme::CARD_SPACING)
-        .padding(theme::CARD_SPACING);
+        .spacing(style::drawn(space::GUTTER.drawn()))
+        .padding(style::drawn(space::GUTTER.drawn()));
         if failures.raised().is_empty() {
             listed = listed.push(prose(
                 strings::lookup(Text::FailuresEmpty).to_owned(),
@@ -458,7 +460,7 @@ pub fn shell<'a>(
             if let Some(server) = &raised.server {
                 one = one.push(prose(format!("> {server}"), typeface::SECONDARY));
             }
-            listed = listed.push(one.spacing(4));
+            listed = listed.push(one.spacing(style::drawn(space::BLOCK_GAP.drawn())));
         }
         page = page.push(scrollable(listed));
     }
@@ -479,7 +481,7 @@ pub fn chrome<'a>(
     group: Option<&'a Joined>,
     body: Element<'a, Message>,
 ) -> Element<'a, Message> {
-    let mut nav = row![].spacing(theme::CARD_SPACING);
+    let mut nav = row![].spacing(style::drawn(space::GUTTER.drawn()));
 
     if back {
         nav = nav.push(
@@ -565,8 +567,8 @@ pub fn chrome<'a>(
     }
 
     let mut page = column![nav]
-        .spacing(theme::CARD_SPACING)
-        .padding(theme::CARD_SPACING);
+        .spacing(style::drawn(space::GUTTER.drawn()))
+        .padding(style::drawn(space::GUTTER.drawn()));
 
     if session.read_only {
         page = page.push(self::banner(
@@ -604,7 +606,7 @@ pub fn chrome<'a>(
 /// One sentence shown above a screen.
 pub fn banner<'a>(message: String) -> Element<'a, Message> {
     container(prose(message, typeface::BODY))
-        .padding(theme::CARD_SPACING)
+        .padding(style::drawn(space::GUTTER.drawn()))
         .width(Length::Fill)
         .into()
 }
@@ -615,8 +617,8 @@ pub fn message<'a>(notice: &'a Notice) -> Element<'a, Message> {
         prose(notice.header.clone(), typeface::BODY),
         prose(notice.text.clone(), typeface::BODY)
     ]
-    .spacing(theme::CARD_SPACING)
-    .padding(theme::CARD_SPACING)
+    .spacing(style::drawn(space::GUTTER.drawn()))
+    .padding(style::drawn(space::GUTTER.drawn()))
     .into()
 }
 
@@ -640,9 +642,9 @@ pub fn leaving<'a>() -> Element<'a, Message> {
             ))
             .on_press(Message::StayHere),
         ]
-        .spacing(theme::CARD_SPACING),
+        .spacing(style::drawn(space::GUTTER.drawn())),
     ]
-    .spacing(theme::CARD_SPACING)
-    .padding(theme::CARD_SPACING)
+    .spacing(style::drawn(space::GUTTER.drawn()))
+    .padding(style::drawn(space::GUTTER.drawn()))
     .into()
 }

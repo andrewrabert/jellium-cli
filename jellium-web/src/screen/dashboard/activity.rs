@@ -5,10 +5,8 @@ use iced::{Element, Fill};
 
 use crate::app::Message;
 use crate::error::Answer;
-use crate::style::Drawn;
-use crate::style::typeface;
+use crate::style::{self, Drawn, space, typeface};
 use crate::text::{self as strings, Text};
-use crate::theme;
 use crate::widget::prose;
 use crate::window;
 use jellium_model::paged::Paged;
@@ -40,7 +38,7 @@ pub async fn load(
             entries,
             window: window::Window::new(
                 window::Id::Activity,
-                Drawn::of(theme::ENTRY_HEIGHT),
+                Drawn::of(style::drawn(space::LIST_ROW.drawn())),
                 height,
             ),
             with_user,
@@ -74,7 +72,7 @@ pub fn filled(state: &mut State, page: std::ops::Range<usize>, rows: Vec<Activit
 
 /// Each entry's time, name, short overview, type and user, and the filter.
 pub fn view<'a>(state: &'a State) -> Element<'a, Message> {
-    let mut filters = row![].spacing(theme::CARD_SPACING);
+    let mut filters = row![].spacing(style::drawn(space::GUTTER.drawn()));
     for (label, wanted) in [
         (Text::ActivityAll, None),
         (Text::ActivityWithUser, Some(true)),
@@ -111,8 +109,8 @@ pub fn view<'a>(state: &'a State) -> Element<'a, Message> {
             }
         }),
     ]
-    .spacing(theme::CARD_SPACING)
-    .padding(theme::CARD_SPACING)
+    .spacing(style::drawn(space::GUTTER.drawn()))
+    .padding(style::drawn(space::GUTTER.drawn()))
     .width(Fill)
     .height(Fill)
     .into()

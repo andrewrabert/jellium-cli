@@ -7,10 +7,9 @@ use jellium_model::prefs::{Held, OPACITIES, SubtitleColour, SubtitleShadow, Subt
 
 use crate::app::Message;
 use crate::text::{self as strings, Text};
-use crate::theme;
 
 use super::{Setting, choices};
-use crate::style::typeface;
+use crate::style::{self, space, typeface};
 use crate::widget::prose;
 
 fn size_label(size: SubtitleSize) -> String {
@@ -95,7 +94,7 @@ pub fn view<'a>(held: Held, read_only: bool) -> Element<'a, Message> {
             Setting::SubtitleShadow,
         ),
     ]
-    .spacing(theme::CARD_SPACING);
+    .spacing(style::drawn(space::GUTTER.drawn()));
 
     if !read_only {
         shown = shown.push(super::save());

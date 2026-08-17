@@ -6,9 +6,8 @@ use uuid::Uuid;
 
 use crate::app::Message;
 use crate::error::Answer;
-use crate::style::typeface;
+use crate::style::{self, space, typeface};
 use crate::text::{self as strings, Text};
-use crate::theme;
 use crate::widget::prose;
 use jellium_model::form::{Field, Form};
 
@@ -165,8 +164,10 @@ pub fn new<'a>(state: &'a State) -> Element<'a, Message> {
             typeface::HEADING_2
         ),
         text_input(strings::lookup(Text::UsersName), &state.naming)
+            .style(style::input)
             .on_input(|typed| Message::DashboardAction(super::Action::Typed(typed))),
         text_input(strings::lookup(Text::UsersPassword), &state.password)
+            .style(style::input)
             .secure(true)
             .on_input(|typed| Message::DashboardAction(super::Action::TypedPassword(typed))),
         button(prose(
@@ -180,8 +181,8 @@ pub fn new<'a>(state: &'a State) -> Element<'a, Message> {
             }
         ))),
     ]
-    .spacing(theme::CARD_SPACING)
-    .padding(theme::CARD_SPACING)
+    .spacing(style::drawn(space::GUTTER.drawn()))
+    .padding(style::drawn(space::GUTTER.drawn()))
     .into()
 }
 
@@ -191,8 +192,8 @@ pub fn view<'a>(state: &'a State, read_only: bool, own: Uuid) -> Element<'a, Mes
         strings::lookup(Text::UsersTitle).to_owned(),
         typeface::HEADING_2
     )]
-    .spacing(theme::CARD_SPACING)
-    .padding(theme::CARD_SPACING);
+    .spacing(style::drawn(space::GUTTER.drawn()))
+    .padding(style::drawn(space::GUTTER.drawn()));
 
     if !read_only {
         page = page.push(
@@ -220,7 +221,7 @@ pub fn view<'a>(state: &'a State, read_only: bool, own: Uuid) -> Element<'a, Mes
                     })
                 )),
             ]
-            .spacing(theme::CARD_SPACING);
+            .spacing(style::drawn(space::GUTTER.drawn()));
 
         if id == own {
             held = held.push(prose(
@@ -253,7 +254,7 @@ pub fn view<'a>(state: &'a State, read_only: bool, own: Uuid) -> Element<'a, Mes
 /// One user's four panels: profile, library and device access, parental
 /// control, and password.
 pub fn one<'a>(state: &'a One, read_only: bool, own: Uuid) -> Element<'a, Message> {
-    let mut tabs = row![].spacing(theme::CARD_SPACING);
+    let mut tabs = row![].spacing(style::drawn(space::GUTTER.drawn()));
     for tab in super::UserTab::ALL {
         let control = button(prose(
             strings::lookup(tab.label()).to_owned(),
@@ -269,13 +270,14 @@ pub fn one<'a>(state: &'a One, read_only: bool, own: Uuid) -> Element<'a, Messag
     }
 
     let mut page = column![tabs, prose(state.name.clone(), typeface::HEADING_2)]
-        .spacing(theme::CARD_SPACING)
-        .padding(theme::CARD_SPACING);
+        .spacing(style::drawn(space::GUTTER.drawn()))
+        .padding(style::drawn(space::GUTTER.drawn()));
 
     match state.tab {
         super::UserTab::Password => {
             page = page.push(
                 text_input(strings::lookup(Text::UsersPassword), &state.current)
+                    .style(style::input)
                     .secure(true)
                     .on_input(|typed| {
                         Message::DashboardAction(super::Action::TypedCurrentPassword(typed))
@@ -283,6 +285,7 @@ pub fn one<'a>(state: &'a One, read_only: bool, own: Uuid) -> Element<'a, Messag
             );
             page = page.push(
                 text_input(strings::lookup(Text::UsersPassword), &state.replacement)
+                    .style(style::input)
                     .secure(true)
                     .on_input(|typed| {
                         Message::DashboardAction(super::Action::TypedPassword(typed))

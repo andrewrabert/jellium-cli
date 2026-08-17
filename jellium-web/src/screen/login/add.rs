@@ -3,10 +3,9 @@ use iced::widget::{button, column, container, text_input};
 
 use crate::app::Message;
 use crate::text::{self as strings, Text};
-use crate::theme;
 
 use super::{Action, Edit};
-use crate::style::typeface;
+use crate::style::{self, space, typeface};
 use crate::widget::prose;
 
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
@@ -17,9 +16,10 @@ pub struct State {
 
 pub fn view<'a>(state: &'a super::State) -> Element<'a, Message> {
     let typed = text_input(strings::lookup(Text::LoginAddTitle), &state.add.url)
+        .style(style::input)
         .on_input(|value| Message::LoginAction(Action::Edited(Edit::Url(value))))
         .on_submit(Message::LoginAction(Action::AddSubmit))
-        .padding(8);
+        .padding(style::drawn(space::CONTROL_GAP.drawn()));
 
     let submit = if state.working {
         button(prose(
@@ -42,7 +42,7 @@ pub fn view<'a>(state: &'a super::State) -> Element<'a, Message> {
         typed,
         submit,
     ]
-    .spacing(theme::CARD_SPACING)
+    .spacing(style::drawn(space::GUTTER.drawn()))
     .max_width(420);
 
     if !state.servers.is_empty() {

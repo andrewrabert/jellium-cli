@@ -16,10 +16,8 @@ use crate::error::Answer;
 use crate::images::{self, Cache};
 use crate::route::{Listing, Route};
 use crate::screen::browse::{self, Browse};
-use crate::style::Viewport;
-use crate::style::typeface;
+use crate::style::{self, Viewport, space, typeface};
 use crate::text::{self as strings, Text};
-use crate::theme;
 use crate::widget::prose;
 
 /// A library tab named without what its list carries, which is what the strip
@@ -307,7 +305,7 @@ pub fn view<'a>(state: &'a State, images: &'a Cache, read_only: bool) -> Element
         }
         control.into()
     }))
-    .spacing(theme::CARD_SPACING);
+    .spacing(style::drawn(space::GUTTER.drawn()));
 
     let body = match &state.body {
         Body::Browse(browse) | Body::Rows(browse) => browse::view(browse, images, read_only),
@@ -316,8 +314,8 @@ pub fn view<'a>(state: &'a State, images: &'a Cache, read_only: bool) -> Element
     };
 
     column![strip, body]
-        .spacing(theme::CARD_SPACING)
-        .padding(theme::CARD_SPACING)
+        .spacing(style::drawn(space::GUTTER.drawn()))
+        .padding(style::drawn(space::GUTTER.drawn()))
         .into()
 }
 

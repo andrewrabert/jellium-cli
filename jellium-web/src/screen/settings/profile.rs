@@ -15,7 +15,7 @@ use crate::text::{self as strings, Text};
 use crate::theme;
 
 use super::Action;
-use crate::style::typeface;
+use crate::style::{self, space, typeface};
 use crate::widget::prose;
 
 /// The signed-in user as the profile screen shows them.
@@ -83,7 +83,7 @@ pub fn view<'a>(state: &'a State, read_only: bool, images: &'a Cache) -> Element
             typeface::BODY
         ),
     ]
-    .spacing(theme::CARD_SPACING);
+    .spacing(style::drawn(space::GUTTER.drawn()));
 
     if let Some(at) = state.last_active {
         shown = shown.push(prose(
@@ -130,6 +130,7 @@ pub fn view<'a>(state: &'a State, read_only: bool, images: &'a Cache) -> Element
         ))
         .push(
             text_input("", &state.naming)
+                .style(style::input)
                 .on_input(|typed| Message::SettingsAction(Action::Typed(typed))),
         );
 

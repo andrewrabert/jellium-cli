@@ -3,10 +3,9 @@ use iced::widget::{button, column, container};
 
 use crate::app::Message;
 use crate::text::{self as strings, Text};
-use crate::theme;
 
 use super::Action;
-use crate::style::typeface;
+use crate::style::{self, space, typeface};
 use crate::widget::prose;
 
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
@@ -29,7 +28,7 @@ pub fn view<'a>(state: &'a super::State) -> Element<'a, Message> {
             typeface::BODY
         ),
     ]
-    .spacing(theme::CARD_SPACING)
+    .spacing(style::drawn(space::GUTTER.drawn()))
     .max_width(480);
 
     if let Some(code) = &state.quick_connect.code {

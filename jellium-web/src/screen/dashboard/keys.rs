@@ -5,9 +5,8 @@ use iced::{Element, Fill};
 
 use crate::app::Message;
 use crate::error::Answer;
-use crate::style::typeface;
+use crate::style::{self, space, typeface};
 use crate::text::{self as strings, Text};
-use crate::theme;
 use crate::widget::prose;
 
 /// Every API key, and the application a new one is being named for.
@@ -34,13 +33,14 @@ pub fn view<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
         strings::lookup(Text::KeysTitle).to_owned(),
         typeface::HEADING_2
     )]
-    .spacing(theme::CARD_SPACING)
-    .padding(theme::CARD_SPACING);
+    .spacing(style::drawn(space::GUTTER.drawn()))
+    .padding(style::drawn(space::GUTTER.drawn()));
 
     if !read_only {
         page = page.push(
             row![
                 text_input(strings::lookup(Text::KeysApp), &state.naming)
+                    .style(style::input)
                     .on_input(|typed| Message::DashboardAction(super::Action::Typed(typed))),
                 button(prose(
                     strings::lookup(Text::KeysCreate).to_owned(),
@@ -52,7 +52,7 @@ pub fn view<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
                     }
                 ))),
             ]
-            .spacing(theme::CARD_SPACING),
+            .spacing(style::drawn(space::GUTTER.drawn())),
         );
     }
 
@@ -70,7 +70,7 @@ pub fn view<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
                 typeface::BODY
             ),
         ]
-        .spacing(theme::CARD_SPACING);
+        .spacing(style::drawn(space::GUTTER.drawn()));
         if !read_only {
             held = held.push(
                 button(prose(

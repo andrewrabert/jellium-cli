@@ -7,11 +7,10 @@ use iced::{Element, Fill};
 use crate::app::Message;
 use crate::error::Answer;
 use crate::text::{self as strings, Text};
-use crate::theme;
 use crate::widget::Choice;
 
 use super::{Action, Edit};
-use crate::style::typeface;
+use crate::style::{self, space, typeface};
 use crate::widget::prose;
 
 #[derive(Debug, Clone)]
@@ -76,9 +75,9 @@ fn browser(adding: &Adding) -> Element<'_, Message> {
             .on_press(Message::SetupAction(Action::BrowseUp)),
             prose(adding.browsing.clone().unwrap_or_default(), typeface::BODY),
         ]
-        .spacing(theme::CARD_SPACING),
+        .spacing(style::drawn(space::GUTTER.drawn())),
     ]
-    .spacing(4);
+    .spacing(style::drawn(space::BLOCK_GAP.drawn()));
 
     for entry in &adding.entries {
         let path = entry.path.clone().unwrap_or_default();
@@ -88,12 +87,12 @@ fn browser(adding: &Adding) -> Element<'_, Message> {
                     entry.name.clone().unwrap_or_default(),
                     typeface::BODY
                 ))
-                .style(button::text)
+                .style(style::flat)
                 .on_press(Message::SetupAction(Action::Browse(path.clone()))),
                 button(prose("+".to_owned(), typeface::BODY))
                     .on_press(Message::SetupAction(Action::AddPath(path))),
             ]
-            .spacing(theme::CARD_SPACING),
+            .spacing(style::drawn(space::GUTTER.drawn())),
         );
     }
     container(listing).width(Fill).into()
@@ -102,6 +101,7 @@ fn browser(adding: &Adding) -> Element<'_, Message> {
 fn dialog(adding: &Adding) -> Element<'_, Message> {
     let mut page = column![
         text_input(strings::lookup(Text::LibrariesCreate), &adding.name)
+            .style(style::input)
             .on_input(|typed| Message::SetupAction(Action::Edited(Edit::LibraryName(typed)))),
         iced::widget::pick_list(
             crate::screen::dashboard::libraries::content_choices(),
@@ -110,7 +110,7 @@ fn dialog(adding: &Adding) -> Element<'_, Message> {
         )
         .width(Fill),
     ]
-    .spacing(theme::CARD_SPACING);
+    .spacing(style::drawn(space::GUTTER.drawn()));
 
     for (index, path) in adding.paths.iter().enumerate() {
         page = page.push(
@@ -119,7 +119,7 @@ fn dialog(adding: &Adding) -> Element<'_, Message> {
                 button(prose("-".to_owned(), typeface::BODY))
                     .on_press(Message::SetupAction(Action::RemovePath(index))),
             ]
-            .spacing(theme::CARD_SPACING),
+            .spacing(style::drawn(space::GUTTER.drawn())),
         );
     }
 
@@ -146,7 +146,7 @@ fn dialog(adding: &Adding) -> Element<'_, Message> {
             ))
             .on_press(Message::SetupAction(Action::Adding(false))),
         ]
-        .spacing(theme::CARD_SPACING),
+        .spacing(style::drawn(space::GUTTER.drawn())),
     );
     container(page).width(Fill).into()
 }
@@ -164,7 +164,7 @@ pub fn view(state: &State) -> Element<'_, Message> {
             typeface::SECONDARY
         ),
     ]
-    .spacing(theme::CARD_SPACING);
+    .spacing(style::drawn(space::GUTTER.drawn()));
 
     for folder in &state.folders {
         let name = folder.name.clone().unwrap_or_default();
@@ -175,16 +175,18 @@ pub fn view(state: &State) -> Element<'_, Message> {
             .map(|(_, typed)| typed.clone());
         let shown: Element<'_, Message> = match renaming {
             Some(typed) => row![
-                text_input(strings::lookup(Text::LibrariesRename), &typed).on_input(|typed| {
-                    Message::SetupAction(Action::Edited(Edit::Renaming(typed)))
-                }),
+                text_input(strings::lookup(Text::LibrariesRename), &typed)
+                    .style(style::input)
+                    .on_input(|typed| {
+                        Message::SetupAction(Action::Edited(Edit::Renaming(typed)))
+                    }),
                 button(prose(
                     strings::lookup(Text::LibrariesRename).to_owned(),
                     typeface::BODY
                 ))
                 .on_press(Message::SetupAction(Action::RenameLibrary { name: typed })),
             ]
-            .spacing(theme::CARD_SPACING)
+            .spacing(style::drawn(space::GUTTER.drawn()))
             .into(),
             None => row![
                 container(prose(name.clone(), typeface::BODY)).width(Fill),
@@ -203,7 +205,7 @@ pub fn view(state: &State) -> Element<'_, Message> {
                     name: name.clone()
                 })),
             ]
-            .spacing(theme::CARD_SPACING)
+            .spacing(style::drawn(space::GUTTER.drawn()))
             .into(),
         };
         page = page.push(shown);

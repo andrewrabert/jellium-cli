@@ -16,6 +16,9 @@ use crate::player::element::GroupBeacon;
 use crate::player::{self, Asked, Playing};
 use crate::style::Viewport;
 
+/// The pass that fires a due group command and corrects drift.
+pub const GROUP_TICK: Duration = Duration::from_millis(50);
+
 /// Whether this tab holds the group's transport and queue.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Membership {

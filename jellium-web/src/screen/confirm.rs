@@ -6,9 +6,8 @@ use iced::widget::{button, column, row, text_input};
 use uuid::Uuid;
 
 use crate::app::Message;
-use crate::style::typeface;
+use crate::style::{self, space, typeface};
 use crate::text::{self as strings, Text};
-use crate::theme;
 use crate::widget::prose;
 
 /// Which region's action a confirmation's controls raise.
@@ -254,11 +253,13 @@ impl Pending {
 /// field for `Tier::Typed`, and the two controls, each raising `region`'s own
 /// action.
 pub fn view<'a>(pending: &'a Pending, region: Region) -> Element<'a, Message> {
-    let mut shown = column![prose(pending.sentence(), typeface::BODY)].spacing(theme::CARD_SPACING);
+    let mut shown = column![prose(pending.sentence(), typeface::BODY)]
+        .spacing(style::drawn(space::GUTTER.drawn()));
 
     if pending.tier == Tier::Typed {
         shown = shown.push(
             text_input(strings::lookup(Text::ConfirmTypeName), &pending.typed)
+                .style(style::input)
                 .on_input(move |typed| region.typed(typed)),
         );
     }
@@ -281,7 +282,7 @@ pub fn view<'a>(pending: &'a Pending, region: Region) -> Element<'a, Message> {
                 ))
                 .on_press(region.close()),
             ]
-            .spacing(theme::CARD_SPACING),
+            .spacing(style::drawn(space::GUTTER.drawn())),
         )
         .into()
 }

@@ -28,13 +28,15 @@ use crate::route::Route;
 use crate::screen::livetv::{self, guide};
 use crate::screen::program;
 use crate::screen::{dashboard, detail, home, library, login, search};
-use crate::style::typeface;
-use crate::style::{Drawn, Viewport};
+use crate::style::{self, Drawn, Viewport, space, typeface};
 use crate::text::{self as strings, Text};
 use crate::theme;
 use crate::widget;
 use crate::widget::prose;
 use crate::window;
+
+/// A message another client sent stops showing after this long.
+pub const NOTICE_HIDE: Duration = Duration::from_secs(6);
 
 pub struct Jellium {
     pub stage: Stage,
@@ -778,7 +780,7 @@ impl Jellium {
                     group: None,
                     queue: window::Window::new(
                         window::Id::Queue,
-                        Drawn::of(theme::ROW_HEIGHT),
+                        Drawn::of(style::drawn(space::LIST_ROW.drawn())),
                         self.viewport.canvas().height(),
                     ),
                 }));
@@ -2294,12 +2296,12 @@ impl Jellium {
                 if let Some(signed) = self.signed() {
                     settled = player::tick(signed);
                     if let Some((_, shown)) = signed.message.as_mut() {
-                        *shown += theme::TICK;
+                        *shown += crate::player::TICK;
                     }
                     if signed
                         .message
                         .as_ref()
-                        .is_some_and(|(_, shown)| *shown >= theme::NOTICE_HIDE)
+                        .is_some_and(|(_, shown)| *shown >= NOTICE_HIDE)
                     {
                         signed.message = None;
                     }
@@ -2839,7 +2841,7 @@ impl Jellium {
                     ))
                     .on_press(Message::SessionRechecked),
                 ]
-                .spacing(theme::CARD_SPACING),
+                .spacing(style::drawn(space::GUTTER.drawn())),
             )
             .into(),
             Stage::Login(state) => login::view(state),
@@ -2863,6 +2865,7 @@ impl Jellium {
                             signed.device,
                             signed.held.quality,
                             &self.images,
+                            self.viewport,
                         ),
                         View::SyncPlay => crate::screen::syncplay::view(
                             signed.group.as_ref(),
@@ -2875,8 +2878,8 @@ impl Jellium {
                             signed.session.sync_play != jellium_protocol::SyncAccess::None,
                             signed.device,
                             signed.held.quality,
-                            chrono::Utc::now(),
                             &self.images,
+                            self.viewport,
                         ),
                     };
                 }
@@ -2938,13 +2941,16 @@ impl Jellium {
                         signed.device,
                         signed.held.quality,
                         &self.images,
+                        self.viewport,
                     ),
                     View::SyncPlay => crate::screen::syncplay::view(
                         signed.group.as_ref(),
                         &signed.groups,
                         signed.session.sync_play,
                     ),
-                    View::LiveTv(state) => livetv::view(state, chrono::Utc::now(), &self.images),
+                    View::LiveTv(state) => {
+                        livetv::view(state, chrono::Utc::now(), &self.images, self.viewport)
+                    }
                     View::Dashboard(state) => dashboard::view(state, &signed.session),
                     View::Settings(state) => {
                         crate::screen::settings::view(state, signed, &self.images)
@@ -3000,6 +3006,7 @@ impl Jellium {
                         signed.held.quality,
                         chrono::Utc::now(),
                         &self.images,
+                        self.viewport,
                     ));
                 } else if let Some(bound) = signed.remote.as_ref() {
                     page = page.push(player::osd::bar(
@@ -3009,6 +3016,7 @@ impl Jellium {
                         signed.held.quality,
                         chrono::Utc::now(),
                         &self.images,
+                        self.viewport,
                     ));
                 }
                 page.into()
@@ -3049,7 +3057,9 @@ impl Jellium {
             running.push(player::ticks().map(|()| Message::Ticked));
         }
         if signed.group.is_some() {
-            running.push(iced::time::every(theme::GROUP_TICK).map(|_| Message::GroupTicked));
+            running.push(
+                iced::time::every(crate::player::group::GROUP_TICK).map(|_| Message::GroupTicked),
+            );
         }
         if let View::LiveTv(state) = &signed.view {
             running.push(livetv::keys(state).map(Message::LiveTvAction));
@@ -3059,7 +3069,9 @@ impl Jellium {
             .as_ref()
             .is_some_and(|playing| playing.live.is_some())
         {
-            running.push(iced::time::every(theme::LIVE_TICK).map(|_| Message::LiveTicked));
+            running.push(
+                iced::time::every(crate::player::live::LIVE_TICK).map(|_| Message::LiveTicked),
+            );
         }
         Subscription::batch(running)
     }
@@ -3086,7 +3098,7 @@ impl Jellium {
     }
 
     pub fn theme(&self) -> Theme {
-        theme::theme()
+        style::theme()
     }
 
     /// The band's root size, which is what resolves every design length.

@@ -4,10 +4,9 @@ use jellium_model::item;
 
 use crate::app::Message;
 use crate::text::{self as strings, Text};
-use crate::theme;
 
 use super::{Action, State};
-use crate::style::typeface;
+use crate::style::{self, space, typeface};
 use crate::widget::prose;
 
 /// The label one field is shown under; every spelling is this client's own.
@@ -27,20 +26,21 @@ fn label(field: jellium_model::form::Field) -> String {
 /// text, with a lock control beside the nine Jellyfin models and none beside
 /// the rest.
 pub fn view<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
-    let mut page = column![].spacing(theme::CARD_SPACING);
+    let mut page = column![].spacing(style::drawn(space::GUTTER.drawn()));
 
     for field in item::fields_of(state.item.type_) {
         let held = state.form.value(field);
         let mut line = row![prose(label(field), typeface::BODY)]
-            .spacing(theme::CARD_SPACING)
+            .spacing(style::drawn(space::GUTTER.drawn()))
             .align_y(iced::Alignment::Center);
 
         line = line.push(if read_only {
             Element::from(prose(held, typeface::BODY))
         } else {
             text_input("", &held)
+                .style(style::input)
                 .on_input(move |value| Message::MetadataAction(Action::Edited(field, value)))
-                .padding(8)
+                .padding(style::drawn(space::CONTROL_GAP.drawn()))
                 .into()
         });
 
@@ -76,7 +76,7 @@ pub fn people<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
         strings::lookup(Text::MetadataPeople).to_owned(),
         typeface::HEADING_3
     )]
-    .spacing(theme::CARD_SPACING);
+    .spacing(style::drawn(space::GUTTER.drawn()));
 
     for (at, person) in state.people.iter().enumerate() {
         if read_only {
@@ -95,33 +95,36 @@ pub fn people<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
         page = page.push(
             row![
                 text_input("", &person.name)
+                    .style(style::input)
                     .on_input(move |value| {
                         let mut edited = by_name.clone();
                         edited.name = value;
                         Message::MetadataAction(Action::PersonEdited { at, person: edited })
                     })
-                    .padding(8),
+                    .padding(style::drawn(space::CONTROL_GAP.drawn())),
                 text_input("", &person.kind)
+                    .style(style::input)
                     .on_input(move |value| {
                         let mut edited = by_kind.clone();
                         edited.kind = value;
                         Message::MetadataAction(Action::PersonEdited { at, person: edited })
                     })
-                    .padding(8),
+                    .padding(style::drawn(space::CONTROL_GAP.drawn())),
                 text_input("", &person.role)
+                    .style(style::input)
                     .on_input(move |value| {
                         let mut edited = by_role.clone();
                         edited.role = value;
                         Message::MetadataAction(Action::PersonEdited { at, person: edited })
                     })
-                    .padding(8),
+                    .padding(style::drawn(space::CONTROL_GAP.drawn())),
                 button(prose(
                     strings::lookup(Text::MetadataPersonRemove).to_owned(),
                     typeface::BODY
                 ))
                 .on_press(Message::MetadataAction(Action::PersonRemoved { at })),
             ]
-            .spacing(theme::CARD_SPACING)
+            .spacing(style::drawn(space::GUTTER.drawn()))
             .align_y(iced::Alignment::Center),
         );
     }
@@ -145,20 +148,21 @@ pub fn providers<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> 
         strings::lookup(Text::MetadataProviders).to_owned(),
         typeface::HEADING_3
     )]
-    .spacing(theme::CARD_SPACING);
+    .spacing(style::drawn(space::GUTTER.drawn()));
 
     for (at, (provider, id)) in state.providers.iter().enumerate() {
         let mut line = row![prose(provider.clone(), typeface::BODY)]
-            .spacing(theme::CARD_SPACING)
+            .spacing(style::drawn(space::GUTTER.drawn()))
             .align_y(iced::Alignment::Center);
         line = line.push(if read_only {
             Element::from(prose(id.clone(), typeface::BODY))
         } else {
             text_input("", id)
+                .style(style::input)
                 .on_input(move |value| {
                     Message::MetadataAction(Action::ProviderEdited { at, id: value })
                 })
-                .padding(8)
+                .padding(style::drawn(space::CONTROL_GAP.drawn()))
                 .into()
         });
         page = page.push(line);

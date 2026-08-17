@@ -47,6 +47,12 @@ use crate::style::Viewport;
 use crate::text::Text;
 use crate::theme;
 
+/// The display and the cursor hide after this long without input.
+pub const IDLE_HIDE: Duration = Duration::from_secs(3);
+
+/// How often the idle timer ages.
+pub const TICK: Duration = Duration::from_millis(250);
+
 pub const TICKS_PER_SECOND: i64 = 10_000_000;
 
 /// How far one arrow key moves the volume.
@@ -231,7 +237,7 @@ pub struct Playing {
     pub fullscreen: bool,
     pub menu: Option<Menu>,
     /// Time since the last input, which hides the display and the cursor at
-    /// `theme::IDLE_HIDE`.
+    /// `IDLE_HIDE`.
     pub idle: Duration,
     /// True once this item has been resumed after an interruption: a dropped
     /// stream or a lapsed session.
@@ -272,7 +278,7 @@ impl Playing {
     }
 
     fn hidden(&self) -> bool {
-        !self.paused && self.menu.is_none() && self.idle >= theme::IDLE_HIDE
+        !self.paused && self.menu.is_none() && self.idle >= IDLE_HIDE
     }
 
     /// The ask that matches whether the pointer is hidden over the canvas.
@@ -1406,10 +1412,10 @@ pub fn act(signed: &mut Signed, action: Action, viewport: Viewport) -> Task<Mess
         }
         Action::Leave => leave(signed, viewport),
         Action::ToggleDisplay => {
-            playing.idle = if playing.idle >= crate::theme::IDLE_HIDE {
+            playing.idle = if playing.idle >= IDLE_HIDE {
                 Duration::ZERO
             } else {
-                crate::theme::IDLE_HIDE
+                IDLE_HIDE
             };
             playing.element.ask(&playing.idling());
             Task::none()
@@ -1630,11 +1636,11 @@ pub fn stirs() -> Subscription<Action> {
 
 /// A 250 ms tick that ages the idle timer; it drives no reporting.
 pub fn ticks() -> Subscription<()> {
-    iced::time::every(theme::TICK).map(|_| ())
+    iced::time::every(TICK).map(|_| ())
 }
 
 /// Ages the idle timer and hides the display and the cursor once it passes
-/// `theme::IDLE_HIDE`.
+/// `IDLE_HIDE`.
 /// Ages the scrub preview's settle timer too, and answers true the once it
 /// crosses `trickplay::SETTLE`, which is when a preview is asked for.
 pub fn tick(signed: &mut Signed) -> bool {
@@ -1645,13 +1651,13 @@ pub fn tick(signed: &mut Signed) -> bool {
     if let Some(preview) = playing.preview.as_mut()
         && preview.settled < trickplay::SETTLE
     {
-        preview.settled += theme::TICK;
+        preview.settled += TICK;
         settled = preview.settled >= trickplay::SETTLE;
     }
     if playing.paused || playing.menu.is_some() {
         playing.idle = Duration::ZERO;
     } else {
-        playing.idle += theme::TICK;
+        playing.idle += TICK;
     }
     playing.element.ask(&playing.idling());
     settled

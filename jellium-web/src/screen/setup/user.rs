@@ -6,10 +6,9 @@ use iced::widget::{column, text_input};
 use crate::app::Message;
 use crate::error::Answer;
 use crate::text::{self as strings, Text};
-use crate::theme;
 
 use super::{Action, Edit};
-use crate::style::typeface;
+use crate::style::{self, space, typeface};
 use crate::widget::prose;
 
 #[derive(Debug, Clone)]
@@ -42,6 +41,7 @@ pub fn view(state: &State) -> Element<'_, Message> {
             typeface::BODY
         ),
         text_input(strings::lookup(Text::SetupUserName), &state.user.name)
+            .style(style::input)
             .on_input(|typed| Message::SetupAction(Action::Edited(Edit::UserName(typed)))),
         prose(
             strings::lookup(Text::SetupUserPassword).to_owned(),
@@ -51,6 +51,7 @@ pub fn view(state: &State) -> Element<'_, Message> {
             strings::lookup(Text::SetupUserPassword),
             &state.user.password
         )
+        .style(style::input)
         .secure(true)
         .on_input(|typed| Message::SetupAction(Action::Edited(Edit::Password(typed)))),
         prose(
@@ -58,10 +59,11 @@ pub fn view(state: &State) -> Element<'_, Message> {
             typeface::BODY
         ),
         text_input(strings::lookup(Text::SetupUserConfirm), &state.confirmation)
+            .style(style::input)
             .secure(true)
             .on_input(|typed| Message::SetupAction(Action::Edited(Edit::Confirmation(typed)))),
     ]
-    .spacing(theme::CARD_SPACING);
+    .spacing(style::drawn(space::GUTTER.drawn()));
 
     if state.user.password != state.confirmation {
         page = page.push(prose(

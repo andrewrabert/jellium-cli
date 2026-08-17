@@ -6,9 +6,8 @@ use iced::{Element, Fill};
 
 use crate::app::Message;
 use crate::error::Answer;
-use crate::style::typeface;
+use crate::style::{self, space, typeface};
 use crate::text::{self as strings, Text};
-use crate::theme;
 use crate::widget::prose;
 use jellium_model::form::{Field, Form};
 
@@ -39,7 +38,7 @@ pub async fn load(api: std::rc::Rc<crate::api::Api>, section: super::Section) ->
 
 /// One control per field, an explicit save, and the unsaved-edit indicator.
 pub fn view<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
-    let mut tabs = iced::widget::row![].spacing(theme::CARD_SPACING);
+    let mut tabs = iced::widget::row![].spacing(style::drawn(space::GUTTER.drawn()));
     for section in super::Section::ALL {
         let control = button(prose(
             strings::lookup(section.label()).to_owned(),
@@ -61,8 +60,8 @@ pub fn view<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
             typeface::HEADING_2
         )
     ]
-    .spacing(theme::CARD_SPACING)
-    .padding(theme::CARD_SPACING);
+    .spacing(style::drawn(space::GUTTER.drawn()))
+    .padding(style::drawn(space::GUTTER.drawn()));
 
     for field in state.section.fields() {
         let field = *field;
@@ -75,17 +74,19 @@ pub fn view<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
                     }),
                     prose(key.to_owned(), typeface::BODY),
                 ]
-                .spacing(theme::CARD_SPACING)
+                .spacing(style::drawn(space::GUTTER.drawn()))
                 .align_y(iced::Center),
             ),
             _ => Element::from(
                 column![
                     prose(field.key().to_owned(), typeface::BODY),
-                    text_input(field.key(), &held).on_input(move |held| {
-                        Message::DashboardAction(super::Action::Edited(field, held))
-                    }),
+                    text_input(field.key(), &held)
+                        .style(style::input)
+                        .on_input(move |held| {
+                            Message::DashboardAction(super::Action::Edited(field, held))
+                        }),
                 ]
-                .spacing(theme::CARD_SPACING),
+                .spacing(style::drawn(space::GUTTER.drawn())),
             ),
         });
     }

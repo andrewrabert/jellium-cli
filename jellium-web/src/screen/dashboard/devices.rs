@@ -5,10 +5,8 @@ use iced::{Element, Fill};
 
 use crate::app::Message;
 use crate::error::Answer;
-use crate::style::Drawn;
-use crate::style::typeface;
+use crate::style::{self, Drawn, space, typeface};
 use crate::text::{self as strings, Text};
-use crate::theme;
 use crate::widget::prose;
 use crate::window;
 
@@ -27,7 +25,11 @@ pub async fn load(api: std::rc::Rc<crate::api::Api>, own: String, height: Drawn)
     Answer::of(async {
         Ok(State {
             devices: api.devices().await.bubbled()?,
-            window: window::Window::new(window::Id::Devices, Drawn::of(theme::ROW_HEIGHT), height),
+            window: window::Window::new(
+                window::Id::Devices,
+                Drawn::of(style::drawn(space::LIST_ROW.drawn())),
+                height,
+            ),
             renaming: String::new(),
             own,
         })
@@ -42,12 +44,13 @@ pub fn view<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
         strings::lookup(Text::DevicesTitle).to_owned(),
         typeface::HEADING_2
     )]
-    .spacing(theme::CARD_SPACING)
-    .padding(theme::CARD_SPACING);
+    .spacing(style::drawn(space::GUTTER.drawn()))
+    .padding(style::drawn(space::GUTTER.drawn()));
 
     if !read_only {
         page = page.push(
             text_input(strings::lookup(Text::DevicesRename), &state.renaming)
+                .style(style::input)
                 .on_input(|typed| Message::DashboardAction(super::Action::Typed(typed))),
         );
     }
@@ -75,7 +78,7 @@ pub fn view<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
                 typeface::BODY
             ),
         ]
-        .spacing(theme::CARD_SPACING);
+        .spacing(style::drawn(space::GUTTER.drawn()));
 
         if !read_only {
             held = held.push(

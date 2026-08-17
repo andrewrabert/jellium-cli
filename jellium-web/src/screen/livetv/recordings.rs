@@ -11,8 +11,7 @@ use crate::api::Api;
 use crate::app::Message;
 use crate::error::Answer;
 use crate::images::{self, Cache};
-use crate::style::Drawn;
-use crate::style::typeface;
+use crate::style::{self, Drawn, space, typeface};
 use crate::text::{self as strings, Text};
 use crate::theme;
 use crate::widget;
@@ -42,7 +41,7 @@ pub async fn load(api: Rc<Api>, height: Drawn) -> Answer<State> {
             recordings: api.recordings().await.bubbled()?,
             window: window::Window::new(
                 window::Id::Recordings,
-                Drawn::of(theme::ROW_HEIGHT),
+                Drawn::of(style::drawn(space::LIST_ROW.drawn())),
                 height,
             ),
         })
@@ -65,8 +64,12 @@ fn entry<'a>(
     art: Option<iced::widget::image::Handle>,
 ) -> Element<'a, Message> {
     let poster: Element<'a, Message> = match art {
-        Some(handle) => image(handle).width(theme::BAR_ART_WIDTH).into(),
-        None => Space::new().width(theme::BAR_ART_WIDTH).into(),
+        Some(handle) => image(handle)
+            .width(style::drawn(space::BAR_ART.drawn()))
+            .into(),
+        None => Space::new()
+            .width(style::drawn(space::BAR_ART.drawn()))
+            .into(),
     };
 
     let Some(id) = item.id else {
@@ -74,7 +77,7 @@ fn entry<'a>(
     };
 
     let mut named = column![prose(item.name.clone().unwrap_or_default(), typeface::BODY)]
-        .spacing(2)
+        .spacing(style::drawn(space::BLOCK_GAP.drawn()))
         .width(Fill);
     if in_progress(item) {
         named = named.push(prose(
@@ -90,7 +93,7 @@ fn entry<'a>(
         ))
         .on_press(Message::LiveTvAction(Action::PlayRecording(id))),
     ]
-    .spacing(theme::CARD_SPACING);
+    .spacing(style::drawn(space::GUTTER.drawn()));
 
     if let Some(timer) = writing(item) {
         controls = controls.push(
@@ -129,10 +132,10 @@ fn entry<'a>(
 
     container(
         row![poster, named, controls]
-            .spacing(theme::CARD_SPACING)
+            .spacing(style::drawn(space::GUTTER.drawn()))
             .align_y(iced::Center),
     )
-    .height(theme::ROW_HEIGHT)
+    .height(style::drawn(space::LIST_ROW.drawn()))
     .into()
 }
 

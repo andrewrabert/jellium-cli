@@ -4,8 +4,8 @@ use iced::Element;
 use iced::widget::column;
 
 use crate::app::Message;
+use crate::style::{self, space};
 use crate::text::Text;
-use crate::theme;
 
 use super::flag;
 
@@ -19,7 +19,7 @@ pub fn view<'a>(
         jellium_model::user::MISSING_EPISODES,
         configuration,
     ),]
-    .spacing(theme::CARD_SPACING);
+    .spacing(style::drawn(space::GUTTER.drawn()));
 
     if !read_only {
         shown = shown.push(super::save());

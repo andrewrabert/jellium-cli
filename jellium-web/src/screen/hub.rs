@@ -15,7 +15,7 @@ use crate::app::Message;
 use crate::error::Answer;
 use crate::images::{self, Cache};
 use crate::route::{Filtered, Listing, Route};
-use crate::style::{Drawn, Viewport};
+use crate::style::{self, Drawn, Viewport, space};
 use crate::theme;
 use crate::widget;
 
@@ -57,8 +57,8 @@ pub async fn load(
             sort,
             grid: window::Grid::new(
                 window::Id::Browse,
-                Drawn::of(theme::CARD_WIDTH + theme::CARD_SPACING),
-                Drawn::of(theme::CARD_HEIGHT),
+                Drawn::of(theme::CARD_WIDTH + style::drawn(space::GUTTER.drawn())),
+                Drawn::of(theme::CARD_HEIGHT + style::drawn(space::GUTTER.drawn())),
                 viewport.canvas(),
             ),
             entries,
@@ -111,7 +111,7 @@ pub fn view<'a>(state: &'a State, images: &'a Cache) -> Element<'a, Message> {
                 );
                 match opens(state, entry) {
                     Some(route) => button(card)
-                        .style(button::text)
+                        .style(style::flat)
                         .on_press(Message::Navigated(route))
                         .into(),
                     None => card,
@@ -119,7 +119,7 @@ pub fn view<'a>(state: &'a State, images: &'a Cache) -> Element<'a, Message> {
             }
             None => iced::widget::Space::new()
                 .width(theme::CARD_WIDTH)
-                .height(theme::CARD_HEIGHT)
+                .height(theme::CARD_HEIGHT + style::drawn(space::GUTTER.drawn()))
                 .into(),
         }
     })]

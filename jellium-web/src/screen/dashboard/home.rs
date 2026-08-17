@@ -5,9 +5,8 @@ use iced::{Element, Fill};
 
 use crate::app::Message;
 use crate::error::Answer;
-use crate::style::typeface;
+use crate::style::{self, space, typeface};
 use crate::text::{self as strings, Text};
-use crate::theme;
 use crate::widget::prose;
 
 /// What dashboard home shows, all of it updating without the user acting.
@@ -80,8 +79,8 @@ pub fn view<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
             typeface::BODY
         ),
     ]
-    .spacing(theme::CARD_SPACING)
-    .padding(theme::CARD_SPACING);
+    .spacing(style::drawn(space::GUTTER.drawn()))
+    .padding(style::drawn(space::GUTTER.drawn()));
 
     if let Some(progress) = state.scanning {
         page = page.push(prose(
@@ -151,7 +150,7 @@ pub fn view<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
                     )
                 ))),
             ]
-            .spacing(theme::CARD_SPACING),
+            .spacing(style::drawn(space::GUTTER.drawn())),
         );
     }
 

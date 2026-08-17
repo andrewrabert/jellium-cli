@@ -11,8 +11,7 @@ use crate::api::Api;
 use crate::app::Message;
 use crate::images::{self, Cache};
 use crate::livetv::Program;
-use crate::style::Drawn;
-use crate::style::typeface;
+use crate::style::{self, Drawn, Viewport, space, typeface};
 use crate::text::{self as strings, Text};
 use crate::theme;
 use crate::widget::prose;
@@ -33,7 +32,11 @@ pub async fn load(api: Rc<Api>, height: Drawn) -> Result<State, crate::error::Bu
         channels,
         range,
         start,
-        window: window::Window::new(window::Id::Guide, Drawn::of(theme::ROW_HEIGHT), height),
+        window: window::Window::new(
+            window::Id::Guide,
+            Drawn::of(style::drawn(space::LIST_ROW.drawn())),
+            height,
+        ),
         programs: HashMap::new(),
         held: None,
         focus: Focus {
@@ -65,13 +68,13 @@ fn badge<'a>(label: Text) -> Element<'a, Message> {
         strings::lookup(label).to_owned(),
         typeface::SECONDARY,
     ))
-    .padding(2)
+    .padding(style::drawn(space::BLOCK_GAP.drawn()))
     .into()
 }
 
 /// One cell: its title, its airtime, its badges and its record marker.
-fn cell<'a>(program: &'a Program, focused: bool) -> Element<'a, Message> {
-    let mut marks = row![].spacing(4);
+fn cell<'a>(program: &'a Program, focused: bool, viewport: Viewport) -> Element<'a, Message> {
+    let mut marks = row![].spacing(style::drawn(space::BLOCK_GAP.drawn()));
     if program.live {
         marks = marks.push(badge(Text::GuideBadgeLive));
     }
@@ -96,22 +99,24 @@ fn cell<'a>(program: &'a Program, focused: bool) -> Element<'a, Message> {
         prose(crate::livetv::airtime(program), typeface::SECONDARY),
         marks,
     ]
-    .spacing(2);
+    .spacing(style::drawn(space::BLOCK_GAP.drawn()));
 
     button(body)
         .style(if focused {
-            button::primary
+            style::submit
         } else {
-            button::secondary
+            style::raised
         })
-        .width(minutes * theme::GUIDE_MINUTE)
-        .height(theme::ROW_HEIGHT)
+        .width(minutes * style::drawn(space::guide_minute(viewport)))
+        .height(style::drawn(space::LIST_ROW.drawn()))
         .on_press(Message::LiveTvAction(Action::Show(program.id.clone())))
         .into()
 }
 
 /// The time axis, ruled every `STEP`, with a marker at `now`.
-fn axis<'a>(state: &'a State, now: DateTime<Utc>) -> Element<'a, Message> {
+fn axis<'a>(state: &'a State, now: DateTime<Utc>, viewport: Viewport) -> Element<'a, Message> {
+    let minute = style::drawn(space::guide_minute(viewport));
+    let channel = style::drawn(space::guide_channel(viewport));
     let steps = (SPAN.num_minutes() / STEP.num_minutes()).max(1);
     let ruled = (0..steps).map(|index| {
         let at = state.start + STEP * index as i32;
@@ -121,16 +126,18 @@ fn axis<'a>(state: &'a State, now: DateTime<Utc>) -> Element<'a, Message> {
                 .to_string(),
             typeface::SECONDARY,
         ))
-        .width(STEP.num_minutes() as f32 * theme::GUIDE_MINUTE)
+        .width(STEP.num_minutes() as f32 * minute)
         .into()
     });
 
     let marker: Element<'a, Message> = if now >= state.start && now < state.start + SPAN {
-        let across = (now - state.start).num_minutes() as f32 * theme::GUIDE_MINUTE;
+        let across = (now - state.start).num_minutes() as f32 * minute;
         row![
             Space::new().width(across),
             container(Space::new())
-                .width(theme::GUIDE_MARKER_WIDTH)
+                .width(style::drawn(
+                    space::SLIDER_MARKER_WIDTH.drawn(viewport.band())
+                ))
                 .style(|theme: &iced::Theme| container::Style::default()
                     .background(theme.palette().danger)),
         ]
@@ -140,8 +147,8 @@ fn axis<'a>(state: &'a State, now: DateTime<Utc>) -> Element<'a, Message> {
     };
 
     column![
-        row![Space::new().width(theme::GUIDE_CHANNEL_WIDTH), row(ruled),],
-        row![Space::new().width(theme::GUIDE_CHANNEL_WIDTH), marker],
+        row![Space::new().width(channel), row(ruled),],
+        row![Space::new().width(channel), marker],
     ]
     .into()
 }
@@ -151,7 +158,12 @@ fn axis<'a>(state: &'a State, now: DateTime<Utc>) -> Element<'a, Message> {
 /// A cell carries its title, its start and end, its live, new, premiere and
 /// repeat badges, and a record marker that tells a single timer from a series
 /// timer.
-pub fn view<'a>(state: &'a State, now: DateTime<Utc>, images: &'a Cache) -> Element<'a, Message> {
+pub fn view<'a>(
+    state: &'a State,
+    now: DateTime<Utc>,
+    images: &'a Cache,
+    viewport: Viewport,
+) -> Element<'a, Message> {
     let _ = images;
 
     let controls = row![
@@ -179,7 +191,7 @@ pub fn view<'a>(state: &'a State, now: DateTime<Utc>, images: &'a Cache) -> Elem
             chrono::Local::now().date_naive()
         ))),
     ]
-    .spacing(theme::CARD_SPACING)
+    .spacing(style::drawn(space::GUTTER.drawn()))
     .align_y(iced::Center);
 
     if let Some(Trouble::OutOfRange) = state.trouble {
@@ -187,7 +199,7 @@ pub fn view<'a>(state: &'a State, now: DateTime<Utc>, images: &'a Cache) -> Elem
             controls,
             crate::widget::banner(strings::lookup(Text::FailureGuideOutOfRange).to_string()),
         ]
-        .spacing(theme::CARD_SPACING)
+        .spacing(style::drawn(space::GUTTER.drawn()))
         .into();
     }
 
@@ -196,7 +208,7 @@ pub fn view<'a>(state: &'a State, now: DateTime<Utc>, images: &'a Cache) -> Elem
             controls,
             crate::widget::banner(strings::lookup(Text::GuideEmpty).to_string()),
         ]
-        .spacing(theme::CARD_SPACING)
+        .spacing(style::drawn(space::GUTTER.drawn()))
         .into();
     }
 
@@ -210,6 +222,7 @@ pub fn view<'a>(state: &'a State, now: DateTime<Utc>, images: &'a Cache) -> Elem
                 cell(
                     program,
                     index == focus.channel && program.start <= focus.at && focus.at < program.end,
+                    viewport,
                 )
             })
             .collect::<Vec<_>>();
@@ -218,16 +231,16 @@ pub fn view<'a>(state: &'a State, now: DateTime<Utc>, images: &'a Cache) -> Elem
                 format!("{} {}", channel.number, channel.name),
                 typeface::BODY
             ))
-            .width(theme::GUIDE_CHANNEL_WIDTH)
-            .height(theme::ROW_HEIGHT),
-            row(cells).spacing(2),
+            .width(style::drawn(space::guide_channel(viewport)))
+            .height(style::drawn(space::LIST_ROW.drawn())),
+            row(cells).spacing(style::drawn(space::BLOCK_GAP.drawn())),
         ]
-        .height(theme::ROW_HEIGHT)
+        .height(style::drawn(space::LIST_ROW.drawn()))
         .into()
     });
 
-    column![controls, axis(state, now), grid]
-        .spacing(theme::CARD_SPACING)
+    column![controls, axis(state, now, viewport), grid]
+        .spacing(style::drawn(space::GUTTER.drawn()))
         .width(Fill)
         .height(Fill)
         .into()

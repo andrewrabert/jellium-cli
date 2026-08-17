@@ -10,8 +10,8 @@ use crate::api::Api;
 use crate::app::Message;
 use crate::error::Answer;
 use crate::images::{self, Cache};
+use crate::style::{self, space};
 use crate::text::Text;
-use crate::theme;
 use crate::widget;
 
 /// The rails a Suggestions tab shows: the server's suggestions, and on a movie
@@ -71,7 +71,7 @@ pub fn view<'a>(state: &'a State, images: &'a Cache, read_only: bool) -> Element
         images,
         overflow,
     )]
-    .spacing(theme::CARD_SPACING);
+    .spacing(style::drawn(space::GUTTER.drawn()));
 
     for rail in &state.recommendations {
         page = page.push(widget::named_rail(

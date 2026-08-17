@@ -5,8 +5,7 @@ use iced::widget::{Space, column, scrollable};
 use iced::{Element, Fill, Task};
 
 use crate::app::Message;
-use crate::style::{self, Drawn};
-use crate::theme;
+use crate::style::{self, Drawn, space};
 
 pub use jellium_model::window::{Grid, Id, Scrolled, Window};
 
@@ -73,14 +72,14 @@ pub fn grid<'a>(
         .chunks(columns)
         .map(|row| {
             iced::widget::row(row.iter().map(|index| build(*index)))
-                .spacing(theme::CARD_SPACING)
+                .spacing(style::drawn(space::GUTTER.drawn()))
                 .into()
         })
         .collect::<Vec<Element<'a, Message>>>();
 
     let content = column![
         Space::new().height(above),
-        column(rows).spacing(theme::CARD_SPACING),
+        column(rows).spacing(style::drawn(space::GUTTER.drawn())),
         Space::new().height(below),
     ]
     .width(Fill);

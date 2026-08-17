@@ -14,9 +14,8 @@ use jellium_model::setup::Step;
 
 use crate::app::Message;
 use crate::error::{Answer, Operation};
-use crate::style::typeface;
+use crate::style::{self, space, typeface};
 use crate::text::{self as strings, Text};
-use crate::theme;
 use crate::widget::Choice;
 use crate::widget::prose;
 
@@ -477,8 +476,8 @@ pub fn view(state: &State) -> Element<'_, Message> {
             typeface::SECONDARY
         ),
     ]
-    .spacing(theme::CARD_SPACING)
-    .padding(theme::CARD_SPACING)
+    .spacing(style::drawn(space::GUTTER.drawn()))
+    .padding(style::drawn(space::GUTTER.drawn()))
     .max_width(560);
 
     if state.startup.off_snapshot() {
@@ -509,7 +508,7 @@ pub fn view(state: &State) -> Element<'_, Message> {
         ))
         .on_press(Message::SetupAction(Action::Back)),
     ]
-    .spacing(theme::CARD_SPACING);
+    .spacing(style::drawn(space::GUTTER.drawn()));
     if ready(state) && !state.working {
         controls = controls.push(
             button(prose(

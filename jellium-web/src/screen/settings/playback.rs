@@ -11,8 +11,8 @@ use jellium_protocol::{Quality, SyncAccess, sync::SyncMethod};
 use crate::api::Api;
 use crate::app::Message;
 use crate::error::Answer;
+use crate::style::{self, space};
 use crate::text::{self as strings, Text};
-use crate::theme;
 
 use super::{Setting, choice, choices, flag, listed, save};
 
@@ -114,7 +114,7 @@ pub fn view<'a>(
             Setting::SkipForward,
         ),
     ]
-    .spacing(theme::CARD_SPACING);
+    .spacing(style::drawn(space::GUTTER.drawn()));
 
     if sync_play != SyncAccess::None {
         shown = shown

@@ -10,7 +10,7 @@ use crate::text::{self as strings, Text};
 use crate::theme;
 
 use super::Action as Outer;
-use crate::style::typeface;
+use crate::style::{self, space, typeface};
 use crate::widget::prose;
 
 /// The item kinds the Jellyfin server offers a remote search for.
@@ -124,12 +124,13 @@ fn typed<'a>(label: Text, field: Field, held: &'a str) -> Element<'a, Message> {
     row![
         prose(strings::lookup(label).to_owned(), typeface::BODY),
         text_input("", held)
+            .style(style::input)
             .on_input(
                 move |value| Message::MetadataAction(Outer::Identify(Action::Typed(field, value)))
             )
-            .padding(8),
+            .padding(style::drawn(space::CONTROL_GAP.drawn())),
     ]
-    .spacing(theme::CARD_SPACING)
+    .spacing(style::drawn(space::GUTTER.drawn()))
     .align_y(iced::Alignment::Center)
     .into()
 }
@@ -151,7 +152,7 @@ pub fn view<'a>(state: &'a State, foreign: &'a Foreign, read_only: bool) -> Elem
             &state.provider_id
         ),
     ]
-    .spacing(theme::CARD_SPACING);
+    .spacing(style::drawn(space::GUTTER.drawn()));
 
     if !read_only {
         page = page.push(
@@ -184,7 +185,7 @@ pub fn view<'a>(state: &'a State, foreign: &'a Foreign, read_only: bool) -> Elem
                         typeface::BODY
                     ),
                 ]
-                .spacing(theme::CARD_SPACING)
+                .spacing(style::drawn(space::GUTTER.drawn()))
                 .align_y(iced::Alignment::Center),
                 row![
                     button(prose(
@@ -198,9 +199,9 @@ pub fn view<'a>(state: &'a State, foreign: &'a Foreign, read_only: bool) -> Elem
                     ))
                     .on_press(Message::MetadataAction(Outer::Identify(Action::Cancel))),
                 ]
-                .spacing(theme::CARD_SPACING),
+                .spacing(style::drawn(space::GUTTER.drawn())),
             ]
-            .spacing(theme::CARD_SPACING),
+            .spacing(style::drawn(space::GUTTER.drawn())),
         );
         return page.into();
     }
@@ -235,7 +236,7 @@ pub fn view<'a>(state: &'a State, foreign: &'a Foreign, read_only: bool) -> Elem
                 typeface::SECONDARY
             ),
         ]
-        .spacing(4);
+        .spacing(style::drawn(space::BLOCK_GAP.drawn()));
 
         if let Some(overview) = &candidate.overview {
             summary = summary.push(prose(overview.clone(), typeface::SECONDARY));
@@ -252,7 +253,7 @@ pub fn view<'a>(state: &'a State, foreign: &'a Foreign, read_only: bool) -> Elem
             );
         }
 
-        page = page.push(row![poster, summary].spacing(theme::CARD_SPACING));
+        page = page.push(row![poster, summary].spacing(style::drawn(space::GUTTER.drawn())));
     }
 
     page.into()

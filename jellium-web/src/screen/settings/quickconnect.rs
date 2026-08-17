@@ -6,10 +6,9 @@ use jellium_model::quickconnect::Outcome;
 
 use crate::app::Message;
 use crate::text::{self as strings, Text};
-use crate::theme;
 
 use super::Action;
-use crate::style::typeface;
+use crate::style::{self, space, typeface};
 use crate::widget::prose;
 
 /// The code being typed, the codes this run authorized, and what the last
@@ -35,9 +34,11 @@ pub fn view<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
             strings::lookup(Text::QuickConnectCode).to_owned(),
             typeface::BODY
         ),
-        text_input("", &state.code).on_input(|typed| Message::SettingsAction(Action::Typed(typed))),
+        text_input("", &state.code)
+            .style(style::input)
+            .on_input(|typed| Message::SettingsAction(Action::Typed(typed))),
     ]
-    .spacing(theme::CARD_SPACING);
+    .spacing(style::drawn(space::GUTTER.drawn()));
 
     if !read_only {
         shown = shown.push(

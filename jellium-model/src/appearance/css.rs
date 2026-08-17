@@ -9,7 +9,9 @@ fn em(length: Length) -> String {
     format!("{}em", super::trimmed(length.drawn().count() / super::BASE))
 }
 
-/// The whole text of `jellium-web/boot.css`.
+/// The whole text of `jellium-web/boot.css`. The boot logo's slot is the
+/// reference's own `.splashLogo`, its 30% and its 992px included.
+// reference: splash-logo
 pub fn boot() -> String {
     format!(
         "#jellium-boot {{

@@ -5,10 +5,8 @@ use iced::{Element, Fill};
 
 use crate::app::Message;
 use crate::error::Answer;
-use crate::style::Drawn;
-use crate::style::typeface;
+use crate::style::{self, Drawn, space, typeface};
 use crate::text::{self as strings, Text};
-use crate::theme;
 use crate::widget::prose;
 use crate::window;
 
@@ -47,7 +45,13 @@ pub async fn open(
         Ok(Viewer {
             name,
             tail,
-            window: window::Window::new(window::Id::Log, Drawn::of(theme::LOG_LINE), height),
+            window: window::Window::new(
+                window::Id::Log,
+                Drawn::of(style::drawn(
+                    typeface::BODY.times(typeface::LINE_HEIGHT).drawn(),
+                )),
+                height,
+            ),
         })
     })
     .await
@@ -65,8 +69,8 @@ pub fn view<'a>(state: &'a State) -> Element<'a, Message> {
         strings::lookup(Text::LogsTitle).to_owned(),
         typeface::HEADING_2
     )]
-    .spacing(theme::CARD_SPACING)
-    .padding(theme::CARD_SPACING);
+    .spacing(style::drawn(space::GUTTER.drawn()))
+    .padding(style::drawn(space::GUTTER.drawn()));
 
     for file in &state.files {
         let name = file.name.clone().unwrap_or_default();
@@ -80,7 +84,7 @@ pub fn view<'a>(state: &'a State) -> Element<'a, Message> {
                     typeface::BODY
                 ),
             ]
-            .spacing(theme::CARD_SPACING),
+            .spacing(style::drawn(space::GUTTER.drawn())),
         );
     }
 
@@ -98,8 +102,8 @@ const TAIL_LIMIT: u64 = 2 * 1024 * 1024;
 /// the window shows.
 pub fn viewer<'a>(held: &'a Viewer) -> Element<'a, Message> {
     let mut page = column![prose(held.name.clone(), typeface::HEADING_2)]
-        .spacing(theme::CARD_SPACING)
-        .padding(theme::CARD_SPACING);
+        .spacing(style::drawn(space::GUTTER.drawn()))
+        .padding(style::drawn(space::GUTTER.drawn()));
 
     if held.tail.truncated() {
         page = page.push(prose(

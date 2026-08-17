@@ -3,17 +3,16 @@ use iced::widget::{button, column, container, row, scrollable};
 
 use crate::app::Message;
 use crate::text::{self as strings, Text};
-use crate::theme;
 
 use super::Action;
-use crate::style::typeface;
+use crate::style::{self, space, typeface};
 use crate::widget::prose;
 
 /// One saved server's row: its stored name over its url, its url alone when no
 /// probe has ever succeeded, whether it holds a credential, and whether it is
 /// the active one.
 fn entry<'a>(saved: &'a jellium_protocol::SavedServer, read_only: bool) -> Element<'a, Message> {
-    let mut named = column![].spacing(4);
+    let mut named = column![].spacing(style::drawn(space::BLOCK_GAP.drawn()));
     if !saved.name.is_empty() {
         named = named.push(prose(saved.name.clone(), typeface::HEADING_3));
     }
@@ -40,7 +39,7 @@ fn entry<'a>(saved: &'a jellium_protocol::SavedServer, read_only: bool) -> Eleme
             server: saved.server.clone(),
         })),
     ]
-    .spacing(theme::CARD_SPACING);
+    .spacing(style::drawn(space::GUTTER.drawn()));
 
     if !(read_only && saved.credentialed) {
         controls = controls.push(
@@ -54,8 +53,8 @@ fn entry<'a>(saved: &'a jellium_protocol::SavedServer, read_only: bool) -> Eleme
         );
     }
 
-    container(column![named, controls].spacing(theme::CARD_SPACING))
-        .padding(theme::CARD_SPACING)
+    container(column![named, controls].spacing(style::drawn(space::GUTTER.drawn())))
+        .padding(style::drawn(space::GUTTER.drawn()))
         .width(iced::Fill)
         .into()
 }
@@ -68,7 +67,7 @@ pub fn view<'a>(state: &'a super::State) -> Element<'a, Message> {
             .iter()
             .map(|saved| entry(saved, state.read_only)),
     )
-    .spacing(theme::CARD_SPACING);
+    .spacing(style::drawn(space::GUTTER.drawn()));
 
     let listed = column![
         prose(
@@ -82,7 +81,7 @@ pub fn view<'a>(state: &'a super::State) -> Element<'a, Message> {
         ))
         .on_press(Message::LoginAction(Action::Add)),
     ]
-    .spacing(theme::CARD_SPACING)
+    .spacing(style::drawn(space::GUTTER.drawn()))
     .max_width(560);
 
     container(listed)

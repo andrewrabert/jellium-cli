@@ -14,7 +14,7 @@ use crate::player::remote::{self, Bound};
 use crate::player::scrub::scrub;
 use crate::player::{Action, Menu, Playing};
 use crate::route::Route;
-use crate::style::typeface;
+use crate::style::{self, Viewport, space, typeface};
 use crate::text::{self as strings, Text};
 use crate::theme;
 use crate::widget::prose;
@@ -124,9 +124,9 @@ pub fn chapters<'a>(playing: &'a Playing, images: &'a Cache) -> Vec<Element<'a, 
             };
             button(
                 iced::widget::column![thumbnail, prose(chapter.name.clone(), typeface::BODY)]
-                    .spacing(4),
+                    .spacing(style::drawn(space::BLOCK_GAP.drawn())),
             )
-            .style(button::text)
+            .style(style::flat)
             .on_press(Message::PlayerAction(Action::SelectChapter(
                 chapter.start_ticks,
             )))
@@ -193,12 +193,12 @@ fn menu<'a>(playing: &'a Playing, images: &'a Cache) -> Option<Element<'a, Messa
     Some(
         container(
             column![
-                scrollable(column(entries).spacing(4)),
+                scrollable(column(entries).spacing(style::drawn(space::BLOCK_GAP.drawn()))),
                 control(Text::PlayerLeave, Action::CloseMenu),
             ]
-            .spacing(4),
+            .spacing(style::drawn(space::BLOCK_GAP.drawn())),
         )
-        .padding(theme::OSD_SPACING)
+        .padding(style::drawn(space::ICON_GAP.drawn()))
         .into(),
     )
 }
@@ -275,7 +275,7 @@ fn remote_transport<'a>(bound: &'a Bound) -> Element<'a, Message> {
         ),
         remote_control(Text::RemoteLeave, remote::Action::Leave),
     ]
-    .spacing(theme::OSD_SPACING)
+    .spacing(style::drawn(space::ICON_GAP.drawn()))
     .align_y(iced::Center)
     .into()
 }
@@ -331,7 +331,7 @@ fn transport<'a>(
             Action::ToggleMute
         ),
     ]
-    .spacing(theme::OSD_SPACING)
+    .spacing(style::drawn(space::ICON_GAP.drawn()))
     .align_y(iced::Center);
 
     controls = controls.push(
@@ -424,7 +424,7 @@ fn live_transport<'a>(
                 strings::lookup(Text::PlayerLive).to_owned(),
                 typeface::SECONDARY
             ))
-            .padding(2),
+            .padding(style::drawn(space::BLOCK_GAP.drawn())),
             prose(
                 crate::text::format(
                     Text::PlayerChannel,
@@ -433,10 +433,10 @@ fn live_transport<'a>(
                 typeface::HEADING_3
             ),
         ]
-        .spacing(8)
+        .spacing(style::drawn(space::CONTROL_GAP.drawn()))
         .align_y(iced::Center),
     ]
-    .spacing(4);
+    .spacing(style::drawn(space::BLOCK_GAP.drawn()));
 
     if let Some(program) = &live.program {
         named = named.push(prose(program.title.clone(), typeface::BODY));
@@ -487,10 +487,12 @@ fn live_transport<'a>(
         Space::new().width(Fill),
         control(Text::PlayerLeave, Action::Leave),
     ]
-    .spacing(theme::OSD_SPACING)
+    .spacing(style::drawn(space::ICON_GAP.drawn()))
     .align_y(iced::Center);
 
-    column![named, controls].spacing(theme::OSD_SPACING).into()
+    column![named, controls]
+        .spacing(style::drawn(space::ICON_GAP.drawn()))
+        .into()
 }
 
 /// The full-viewport on-screen display drawn over the video element; `group`
@@ -503,10 +505,10 @@ pub fn view<'a>(
     sync_play: bool,
     device: crate::prefs::Device,
     quality: Quality,
-    now: chrono::DateTime<chrono::Utc>,
     images: &'a Cache,
+    viewport: Viewport,
 ) -> Element<'a, Message> {
-    if playing.idle >= theme::IDLE_HIDE && !playing.paused && playing.menu.is_none() {
+    if playing.idle >= crate::player::IDLE_HIDE && !playing.paused && playing.menu.is_none() {
         return container(Space::new().width(Fill))
             .width(Fill)
             .height(Fill)
@@ -517,7 +519,7 @@ pub fn view<'a>(
         prose(title(playing), typeface::HEADING_2),
         prose(method(playing).to_owned(), typeface::SECONDARY),
     ]
-    .spacing(4);
+    .spacing(style::drawn(space::BLOCK_GAP.drawn()));
 
     if let Some(trouble) = playing.trouble {
         body = body.push(prose(strings::lookup(trouble).to_owned(), typeface::BODY));
@@ -541,7 +543,7 @@ pub fn view<'a>(
     }
 
     page = match playing.live.as_ref() {
-        Some(live) => page.push(live_transport(playing, live, now)),
+        Some(live) => page.push(live_transport(playing, live, chrono::Utc::now())),
         None => page
             .push(scrub(
                 playing.shown(),
@@ -549,12 +551,13 @@ pub fn view<'a>(
                 playing.buffered,
                 &playing.plan.chapters,
                 playing.preview.as_ref(),
+                viewport,
             ))
             .push(transport(playing, true, sync_play, device)),
     };
 
-    container(page.spacing(theme::OSD_SPACING))
-        .padding(theme::OSD_SPACING)
+    container(page.spacing(style::drawn(space::ICON_GAP.drawn())))
+        .padding(style::drawn(space::ICON_GAP.drawn()))
         .width(Fill)
         .height(Fill)
         .into()
@@ -572,6 +575,7 @@ pub fn bar<'a>(
     quality: Quality,
     now: chrono::DateTime<chrono::Utc>,
     images: &'a Cache,
+    viewport: Viewport,
 ) -> Element<'a, Message> {
     let _ = now;
     let _ = quality;
@@ -585,6 +589,7 @@ pub fn bar<'a>(
                 playing.buffered,
                 &playing.plan.chapters,
                 None,
+                viewport,
             ),
             self::transport(playing, false, sync_play, device),
         ),
@@ -607,28 +612,33 @@ pub fn bar<'a>(
                 playing.buffered,
                 &playing.plan.chapters,
                 None,
+                viewport,
             ),
             self::transport(playing, false, sync_play, device),
         ),
     };
 
     let art: Element<'a, Message> = match art_key.and_then(|key| images.handle(key)) {
-        Some(handle) => image(handle).width(theme::BAR_ART_WIDTH).into(),
-        None => Space::new().width(theme::BAR_ART_WIDTH).into(),
+        Some(handle) => image(handle)
+            .width(style::drawn(space::BAR_ART.drawn()))
+            .into(),
+        None => Space::new()
+            .width(style::drawn(space::BAR_ART.drawn()))
+            .into(),
     };
 
     let details = column![prose(heading, typeface::BODY), scrubber]
-        .spacing(4)
+        .spacing(style::drawn(space::BLOCK_GAP.drawn()))
         .width(Fill);
 
     container(
         row![art, details, controls]
-            .spacing(theme::OSD_SPACING)
+            .spacing(style::drawn(space::ICON_GAP.drawn()))
             .align_y(iced::Center),
     )
-    .padding(theme::OSD_SPACING)
+    .padding(style::drawn(space::ICON_GAP.drawn()))
     .width(Length::Fill)
-    .height(theme::BAR_HEIGHT)
+    .height(style::drawn(space::BAR.drawn()))
     .into()
 }
 

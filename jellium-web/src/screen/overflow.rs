@@ -7,9 +7,8 @@ use crate::app::{Message, Signed};
 use crate::error::Operation;
 use crate::images::Cache;
 use crate::route::Route;
-use crate::style::typeface;
+use crate::style::{self, space, typeface};
 use crate::text::{self as strings, Text};
-use crate::theme;
 use crate::widget::prose;
 
 /// The overflow menu open now; at most one is open, and none is reachable under
@@ -135,7 +134,7 @@ pub fn view<'a>(
                 into: Into::Playlist,
             })),
         ]
-        .spacing(8);
+        .spacing(style::drawn(space::CONTROL_GAP.drawn()));
 
         if let Some(collection) = collection {
             menu = menu.push(
@@ -158,7 +157,7 @@ pub fn view<'a>(
                 ))
                 .on_press(Message::OverflowAction(Action::Close)),
             )
-            .padding(theme::CARD_SPACING)
+            .padding(style::drawn(space::GUTTER.drawn()))
             .into();
     };
 
@@ -166,7 +165,7 @@ pub fn view<'a>(
         let target = held.id?;
         Some(
             button(prose(held.name.clone().unwrap_or_default(), typeface::BODY))
-                .style(button::text)
+                .style(style::flat)
                 .on_press(Message::OverflowAction(Action::File { target }))
                 .into(),
         )
@@ -175,25 +174,26 @@ pub fn view<'a>(
     column![
         row![
             text_input("", &filing.naming)
+                .style(style::input)
                 .on_input(|typed| Message::OverflowAction(Action::Typed(typed)))
-                .padding(8),
+                .padding(style::drawn(space::CONTROL_GAP.drawn())),
             button(prose(
                 strings::lookup(Text::OverflowCreateAndFile).to_owned(),
                 typeface::BODY
             ))
             .on_press(Message::OverflowAction(Action::CreateAndFile)),
         ]
-        .spacing(theme::CARD_SPACING)
+        .spacing(style::drawn(space::GUTTER.drawn()))
         .align_y(iced::Alignment::Center),
-        column(offered).spacing(4),
+        column(offered).spacing(style::drawn(space::BLOCK_GAP.drawn())),
         button(prose(
             strings::lookup(Text::OverflowClose).to_owned(),
             typeface::BODY
         ))
         .on_press(Message::OverflowAction(Action::Close)),
     ]
-    .spacing(theme::CARD_SPACING)
-    .padding(theme::CARD_SPACING)
+    .spacing(style::drawn(space::GUTTER.drawn()))
+    .padding(style::drawn(space::GUTTER.drawn()))
     .into()
 }
 

@@ -60,7 +60,9 @@ pub const FIELD_GAP: Length = Length::em(1.8);
 // reference: section-title
 pub const SECTION_GAP: Length = Length::em(1.25);
 
-// reference: control-button
+/// The page's own padding, `.padded-top` and `.padded-bottom`, rather than the
+/// `1em` standing inside a button's `padding: 0.9em 1em`.
+// reference: page-padded
 pub const PAD: Length = Length::em(1.0);
 
 // reference: login-disclaimer

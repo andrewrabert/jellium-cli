@@ -17,6 +17,10 @@ use iced::Task;
 
 pub use jellium_model::live::Live;
 
+/// The pass that advances the guide's present-instant marker, the elapsed
+/// bars, and a paused live playback's timer.
+pub const LIVE_TICK: Duration = Duration::from_secs(1);
+
 /// The start `item` plays as a channel: the channel alone, from the live edge
 /// and never resumed, carrying the channel list the display moves through and
 /// the program airing on it.
@@ -124,7 +128,7 @@ pub fn record(signed: &mut Signed) -> Task<Message> {
     })
 }
 
-/// One `theme::LIVE_TICK` pass while a channel plays: it ages the paused
+/// One `LIVE_TICK` pass while a channel plays: it ages the paused
 /// timer, stops playback and releases the tuner once it passes `PAUSED`, and
 /// refetches the watched channel's current program — and nothing else — once
 /// `Live::due` says the boundary owes one.
@@ -139,7 +143,7 @@ pub fn ticked(signed: &mut Signed, now: DateTime<Utc>, viewport: Viewport) -> Ta
     };
 
     if paused {
-        live.paused += crate::theme::LIVE_TICK;
+        live.paused += LIVE_TICK;
         if live.paused >= Live::PAUSED {
             crate::failure::raise(crate::error::refused(
                 &jellium_protocol::PlaybackRefused::TunerReleased,

@@ -11,8 +11,7 @@ use crate::app::Message;
 use crate::error::Answer;
 use crate::images::{self, Cache};
 use crate::livetv::Channel;
-use crate::style::Drawn;
-use crate::style::typeface;
+use crate::style::{self, Drawn, space, typeface};
 use crate::text::{self as strings, Text};
 use crate::theme;
 use crate::widget;
@@ -36,7 +35,11 @@ pub async fn load(
         Ok(State {
             channels: api.channels(kind, None).await.bubbled()?,
             kind,
-            window: window::Window::new(window::Id::Channels, Drawn::of(theme::ROW_HEIGHT), height),
+            window: window::Window::new(
+                window::Id::Channels,
+                Drawn::of(style::drawn(space::LIST_ROW.drawn())),
+                height,
+            ),
         })
     })
     .await
@@ -57,15 +60,19 @@ fn entry<'a>(
     logo: Option<iced::widget::image::Handle>,
 ) -> Element<'a, Message> {
     let art: Element<'a, Message> = match logo {
-        Some(handle) => image(handle).width(theme::BAR_ART_WIDTH).into(),
-        None => Space::new().width(theme::BAR_ART_WIDTH).into(),
+        Some(handle) => image(handle)
+            .width(style::drawn(space::BAR_ART.drawn()))
+            .into(),
+        None => Space::new()
+            .width(style::drawn(space::BAR_ART.drawn()))
+            .into(),
     };
 
     let mut named = column![prose(
         format!("{} {}", channel.number, channel.name),
         typeface::BODY
     )]
-    .spacing(2)
+    .spacing(style::drawn(space::BLOCK_GAP.drawn()))
     .width(Fill);
     if let Some(program) = &channel.current {
         named = named.push(prose(program.title.clone(), typeface::SECONDARY));
@@ -82,16 +89,16 @@ fn entry<'a>(
         row![
             art,
             button(named)
-                .style(button::text)
+                .style(style::flat)
                 .on_press(Message::LiveTvAction(Action::PlayChannel(channel.id))),
             button(prose(strings::lookup(favourite).to_owned(), typeface::BODY)).on_press(
                 Message::LiveTvAction(Action::Favorited(channel.id, !channel.favorite))
             ),
         ]
-        .spacing(theme::CARD_SPACING)
+        .spacing(style::drawn(space::GUTTER.drawn()))
         .align_y(iced::Center),
     )
-    .height(theme::ROW_HEIGHT)
+    .height(style::drawn(space::LIST_ROW.drawn()))
     .into()
 }
 
@@ -107,9 +114,9 @@ pub fn view<'a>(state: &'a State, now: DateTime<Utc>, images: &'a Cache) -> Elem
             typeface::BODY
         ))
         .style(if state.kind == ChannelType::Tv {
-            button::primary
+            style::submit
         } else {
-            button::secondary
+            style::raised
         })
         .on_press(Message::LiveTvAction(Action::Kind(ChannelType::Tv))),
         button(prose(
@@ -117,20 +124,20 @@ pub fn view<'a>(state: &'a State, now: DateTime<Utc>, images: &'a Cache) -> Elem
             typeface::BODY
         ))
         .style(if state.kind == ChannelType::Radio {
-            button::primary
+            style::submit
         } else {
-            button::secondary
+            style::raised
         })
         .on_press(Message::LiveTvAction(Action::Kind(ChannelType::Radio))),
     ]
-    .spacing(theme::CARD_SPACING);
+    .spacing(style::drawn(space::GUTTER.drawn()));
 
     if state.channels.is_empty() {
         return column![
             filter,
             widget::banner(strings::lookup(Text::ChannelsEmpty).to_string()),
         ]
-        .spacing(theme::CARD_SPACING)
+        .spacing(style::drawn(space::GUTTER.drawn()))
         .into();
     }
 
@@ -140,7 +147,7 @@ pub fn view<'a>(state: &'a State, now: DateTime<Utc>, images: &'a Cache) -> Elem
     });
 
     column![filter, rows]
-        .spacing(theme::CARD_SPACING)
+        .spacing(style::drawn(space::GUTTER.drawn()))
         .width(Fill)
         .height(Fill)
         .into()

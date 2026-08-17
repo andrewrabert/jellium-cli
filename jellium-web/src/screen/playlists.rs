@@ -14,10 +14,8 @@ use crate::error::{Answer, Operation};
 use crate::images::{self, Cache};
 use crate::route::Listing;
 use crate::screen::browse::{self, Browse};
-use crate::style::typeface;
-use crate::style::{Drawn, Viewport};
+use crate::style::{self, Drawn, Viewport, space, typeface};
 use crate::text::{self as strings, Text};
-use crate::theme;
 use crate::widget;
 use crate::widget::prose;
 
@@ -161,7 +159,7 @@ pub async fn load(api: Rc<Api>, playlist: Uuid, user: Uuid, viewport: Viewport) 
             playlist: held,
             window: window::Window::new(
                 window::Id::Entries,
-                Drawn::of(theme::ROW_HEIGHT),
+                Drawn::of(style::drawn(space::LIST_ROW.drawn())),
                 viewport.canvas().height(),
             ),
             entries,
@@ -195,11 +193,12 @@ pub async fn page(
 fn naming<'a>(held: &'a str, label: Text, apply: Message) -> Element<'a, Message> {
     row![
         text_input("", held)
+            .style(style::input)
             .on_input(|typed| Message::PlaylistAction(Action::Typed(typed)))
-            .padding(8),
+            .padding(style::drawn(space::CONTROL_GAP.drawn())),
         button(prose(strings::lookup(label).to_owned(), typeface::BODY)).on_press(apply),
     ]
-    .spacing(theme::CARD_SPACING)
+    .spacing(style::drawn(space::GUTTER.drawn()))
     .align_y(iced::Alignment::Center)
     .into()
 }
@@ -209,7 +208,7 @@ pub fn view_listed<'a>(
     images: &'a Cache,
     read_only: bool,
 ) -> Element<'a, Message> {
-    let mut page = column![].spacing(theme::CARD_SPACING);
+    let mut page = column![].spacing(style::drawn(space::GUTTER.drawn()));
     if !read_only {
         page = page.push(naming(
             &state.naming,
@@ -230,7 +229,9 @@ fn entry_row<'a>(
     editable: bool,
 ) -> Element<'a, Message> {
     let Some(entry) = state.entries.row(index) else {
-        return iced::widget::Space::new().height(theme::ROW_HEIGHT).into();
+        return iced::widget::Space::new()
+            .height(style::drawn(space::LIST_ROW.drawn()))
+            .into();
     };
 
     let mut held = row![
@@ -239,13 +240,13 @@ fn entry_row<'a>(
             entry.item.name.clone().unwrap_or_default(),
             typeface::BODY
         ))
-        .style(button::text)
+        .style(style::flat)
         .on_press(Message::PlaylistAction(Action::PlayFrom {
             playlist,
             index
         })),
     ]
-    .spacing(theme::CARD_SPACING)
+    .spacing(style::drawn(space::GUTTER.drawn()))
     .align_y(iced::Alignment::Center);
 
     if editable {
@@ -320,10 +321,10 @@ pub fn view<'a>(state: &'a State, images: &'a Cache, read_only: bool) -> Element
                 shuffle: true
             })),
         ]
-        .spacing(theme::CARD_SPACING),
+        .spacing(style::drawn(space::GUTTER.drawn())),
     ]
-    .spacing(theme::CARD_SPACING)
-    .padding(theme::CARD_SPACING);
+    .spacing(style::drawn(space::GUTTER.drawn()))
+    .padding(style::drawn(space::GUTTER.drawn()));
 
     if editable {
         page = page
@@ -349,7 +350,7 @@ pub fn view<'a>(state: &'a State, images: &'a Cache, read_only: bool) -> Element
                         typeface::BODY
                     ),
                 ]
-                .spacing(theme::CARD_SPACING)
+                .spacing(style::drawn(space::GUTTER.drawn()))
                 .align_y(iced::Alignment::Center),
             );
 
@@ -374,7 +375,7 @@ pub fn view<'a>(state: &'a State, images: &'a Cache, read_only: bool) -> Element
                         user
                     })),
                 ]
-                .spacing(theme::CARD_SPACING)
+                .spacing(style::drawn(space::GUTTER.drawn()))
                 .align_y(iced::Alignment::Center),
             );
         }

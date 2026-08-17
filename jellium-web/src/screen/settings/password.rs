@@ -6,10 +6,9 @@ use iced::widget::{button, column, text_input};
 
 use crate::app::Message;
 use crate::text::{self as strings, Text};
-use crate::theme;
 
 use super::Action;
-use crate::style::typeface;
+use crate::style::{self, space, typeface};
 use crate::widget::prose;
 
 /// What has been typed into the two password fields.
@@ -33,6 +32,7 @@ pub fn view<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
             typeface::BODY
         ),
         text_input("", &state.current)
+            .style(style::input)
             .secure(true)
             .on_input(|typed| Message::SettingsAction(Action::TypedCurrentPassword(typed))),
         prose(
@@ -40,10 +40,11 @@ pub fn view<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
             typeface::BODY
         ),
         text_input("", &state.replacement)
+            .style(style::input)
             .secure(true)
             .on_input(|typed| Message::SettingsAction(Action::TypedNewPassword(typed))),
     ]
-    .spacing(theme::CARD_SPACING);
+    .spacing(style::drawn(space::GUTTER.drawn()));
 
     if !read_only {
         shown = shown.push(

@@ -10,7 +10,7 @@ use crate::app::Message;
 use crate::error::Answer;
 use crate::images::{self, Cache};
 use crate::livetv::Channel;
-use crate::style::typeface;
+use crate::style::{self, space, typeface};
 use crate::text::{self as strings, Text};
 use crate::theme;
 use crate::widget;
@@ -129,7 +129,7 @@ pub fn view<'a>(
         return widget::banner(strings::lookup(Text::HomeEmpty).to_string());
     }
 
-    let mut page = column![].spacing(theme::CARD_SPACING);
+    let mut page = column![].spacing(style::drawn(space::GUTTER.drawn()));
 
     if live_tv {
         page = page.push(if state.on_now.is_empty() {

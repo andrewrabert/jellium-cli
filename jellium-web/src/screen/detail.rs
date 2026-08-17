@@ -11,7 +11,7 @@ use crate::app::Message;
 use crate::error::Answer;
 use crate::images::{self, Cache, Kind};
 use crate::player::Intent;
-use crate::style::typeface;
+use crate::style::{self, space, typeface};
 use crate::text::{self as strings, Text};
 use crate::theme;
 use crate::widget;
@@ -196,7 +196,7 @@ pub fn view<'a>(
         None => prose(String::new(), typeface::BODY),
     };
 
-    let mut actions = row![].spacing(theme::CARD_SPACING);
+    let mut actions = row![].spacing(style::drawn(space::GUTTER.drawn()));
     for control in play_controls(item) {
         actions = actions.push(control);
     }
@@ -264,7 +264,7 @@ pub fn view<'a>(
         prose(heading(item), typeface::BODY),
         actions,
     ]
-    .spacing(theme::CARD_SPACING);
+    .spacing(style::drawn(space::GUTTER.drawn()));
 
     if let Some(overview) = &item.overview {
         summary = summary
@@ -275,9 +275,9 @@ pub fn view<'a>(
             .push(prose(overview.clone(), typeface::BODY));
     }
 
-    let mut page = column![row![poster, summary].spacing(theme::CARD_SPACING)]
-        .spacing(theme::CARD_SPACING)
-        .padding(theme::CARD_SPACING);
+    let mut page = column![row![poster, summary].spacing(style::drawn(space::GUTTER.drawn()))]
+        .spacing(style::drawn(space::GUTTER.drawn()))
+        .padding(style::drawn(space::GUTTER.drawn()));
 
     if !state.children.is_empty() {
         page = page

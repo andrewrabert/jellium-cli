@@ -11,7 +11,7 @@ use crate::error::Answer;
 use crate::images::{self, Cache};
 use crate::livetv::Program;
 use crate::screen::livetv::Action;
-use crate::style::typeface;
+use crate::style::{self, space, typeface};
 use crate::text::{self as strings, Text};
 use crate::theme;
 use crate::widget::prose;
@@ -44,7 +44,7 @@ fn badge<'a>(label: Text) -> Element<'a, Message> {
         strings::lookup(label).to_owned(),
         typeface::SECONDARY,
     ))
-    .padding(2)
+    .padding(style::drawn(space::BLOCK_GAP.drawn()))
     .into()
 }
 
@@ -60,7 +60,7 @@ pub fn view<'a>(state: &'a State, now: DateTime<Utc>, images: &'a Cache) -> Elem
         None => Space::new().width(theme::CARD_WIDTH).into(),
     };
 
-    let mut flags = row![].spacing(8);
+    let mut flags = row![].spacing(style::drawn(space::CONTROL_GAP.drawn()));
     if program.live {
         flags = flags.push(badge(Text::GuideBadgeLive));
     }
@@ -74,7 +74,7 @@ pub fn view<'a>(state: &'a State, now: DateTime<Utc>, images: &'a Cache) -> Elem
         flags = flags.push(badge(Text::GuideBadgeRepeat));
     }
 
-    let mut controls = row![].spacing(theme::CARD_SPACING);
+    let mut controls = row![].spacing(style::drawn(space::GUTTER.drawn()));
     if program.airing(now) {
         controls = controls.push(
             button(prose(
@@ -148,11 +148,11 @@ pub fn view<'a>(state: &'a State, now: DateTime<Utc>, images: &'a Cache) -> Elem
         ),
         controls,
     ]
-    .spacing(theme::CARD_SPACING)
+    .spacing(style::drawn(space::GUTTER.drawn()))
     .width(Fill);
 
-    container(row![art, described].spacing(theme::CARD_SPACING))
-        .padding(theme::CARD_SPACING)
+    container(row![art, described].spacing(style::drawn(space::GUTTER.drawn())))
+        .padding(style::drawn(space::GUTTER.drawn()))
         .width(Fill)
         .into()
 }

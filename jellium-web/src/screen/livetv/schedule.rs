@@ -8,10 +8,8 @@ use super::Action;
 use crate::api::Api;
 use crate::app::Message;
 use crate::error::Answer;
-use crate::style::Drawn;
-use crate::style::typeface;
+use crate::style::{self, Drawn, space, typeface};
 use crate::text::{self as strings, Text};
-use crate::theme;
 use crate::widget;
 use crate::widget::prose;
 use crate::window;
@@ -27,7 +25,11 @@ pub async fn load(api: Rc<Api>, height: Drawn) -> Answer<State> {
     Answer::of(async {
         Ok(State {
             timers: api.timers().await.bubbled()?,
-            window: window::Window::new(window::Id::Schedule, Drawn::of(theme::ROW_HEIGHT), height),
+            window: window::Window::new(
+                window::Id::Schedule,
+                Drawn::of(style::drawn(space::LIST_ROW.drawn())),
+                height,
+            ),
         })
     })
     .await
@@ -96,7 +98,7 @@ fn entry<'a>(timers: &'a [TimerInfoDto], index: usize) -> Element<'a, Message> {
             typeface::SECONDARY
         ),
     ]
-    .spacing(2)
+    .spacing(style::drawn(space::BLOCK_GAP.drawn()))
     .width(Fill);
     if conflicted(timer) {
         named = named.push(prose(
@@ -119,12 +121,12 @@ fn entry<'a>(timers: &'a [TimerInfoDto], index: usize) -> Element<'a, Message> {
         column![
             heading,
             row![named, cancel]
-                .spacing(theme::CARD_SPACING)
+                .spacing(style::drawn(space::GUTTER.drawn()))
                 .align_y(iced::Center),
         ]
-        .spacing(2),
+        .spacing(style::drawn(space::BLOCK_GAP.drawn())),
     )
-    .height(theme::ROW_HEIGHT)
+    .height(style::drawn(space::LIST_ROW.drawn()))
     .into()
 }
 

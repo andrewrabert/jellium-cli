@@ -17,10 +17,8 @@ use crate::api::Api;
 use crate::app::{Message, Signed};
 use crate::error::{Answer, Operation};
 use crate::images::{self, Cache};
-use crate::style::typeface;
-use crate::style::{Drawn, Viewport};
+use crate::style::{self, Drawn, Viewport, space, typeface};
 use crate::text::{self as strings, Text};
-use crate::theme;
 use crate::widget::prose;
 use crate::window;
 
@@ -143,9 +141,14 @@ pub async fn load(api: Rc<Api>, tab: Tab, height: Drawn) -> Answer<State> {
 }
 
 /// The five tab controls above the tab shown.
-pub fn view<'a>(state: &'a State, now: DateTime<Utc>, images: &'a Cache) -> Element<'a, Message> {
+pub fn view<'a>(
+    state: &'a State,
+    now: DateTime<Utc>,
+    images: &'a Cache,
+    viewport: Viewport,
+) -> Element<'a, Message> {
     if let Some(editing) = &state.editing {
-        return series::options(editing);
+        return series::options(editing, viewport);
     }
 
     let tabs = row(Tab::ALL.iter().map(|tab| {
@@ -154,17 +157,17 @@ pub fn view<'a>(state: &'a State, now: DateTime<Utc>, images: &'a Cache) -> Elem
             typeface::BODY,
         ))
         .style(if *tab == state.tab {
-            button::primary
+            style::submit
         } else {
-            button::secondary
+            style::raised
         })
         .on_press(Message::LiveTvAction(Action::Selected(*tab)))
         .into()
     }))
-    .spacing(theme::CARD_SPACING);
+    .spacing(style::drawn(space::GUTTER.drawn()));
 
     let body = match &state.body {
-        Body::Guide(guide) => guide::view(guide, now, images),
+        Body::Guide(guide) => guide::view(guide, now, images, viewport),
         Body::Channels(channels) => channels::view(channels, now, images),
         Body::Recordings(held) => recordings::view(held, state.confirming, images),
         Body::Schedule(schedule) => schedule::view(schedule),
@@ -179,7 +182,7 @@ pub fn view<'a>(state: &'a State, now: DateTime<Utc>, images: &'a Cache) -> Elem
         tabs,
         body,
     ]
-    .spacing(theme::CARD_SPACING)
+    .spacing(style::drawn(space::GUTTER.drawn()))
     .width(Fill)
     .height(Fill)
     .into()

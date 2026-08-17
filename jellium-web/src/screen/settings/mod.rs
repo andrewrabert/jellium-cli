@@ -11,9 +11,8 @@ use uuid::Uuid;
 use crate::api::Api;
 use crate::app::{Message, Signed};
 use crate::error::Answer;
-use crate::style::typeface;
+use crate::style::{self, space, typeface};
 use crate::text::{self as strings, Text};
-use crate::theme;
 use crate::widget::prose;
 
 pub mod controls;
@@ -268,7 +267,7 @@ pub fn choices<'a, T: Copy + PartialEq + 'static>(
     naming: impl Fn(T) -> String,
     setting: impl Fn(T) -> Setting,
 ) -> Element<'a, Message> {
-    let mut controls = row![].spacing(theme::CARD_SPACING);
+    let mut controls = row![].spacing(style::drawn(space::GUTTER.drawn()));
     for offer in offered.iter().copied() {
         let mut control = button(prose(naming(offer), typeface::BODY));
         if offer != held {
@@ -280,7 +279,7 @@ pub fn choices<'a, T: Copy + PartialEq + 'static>(
         prose(strings::lookup(label).to_owned(), typeface::BODY),
         controls
     ]
-    .spacing(theme::CARD_SPACING)
+    .spacing(style::drawn(space::GUTTER.drawn()))
     .into()
 }
 
@@ -297,7 +296,7 @@ pub fn flag<'a>(
         }),
         prose(strings::lookup(label).to_owned(), typeface::BODY),
     ]
-    .spacing(theme::CARD_SPACING)
+    .spacing(style::drawn(space::GUTTER.drawn()))
     .align_y(iced::Center)
     .into()
 }
@@ -312,7 +311,7 @@ pub fn toggle<'a>(
         checkbox(held).on_toggle(move |on| Message::SettingsAction(Action::Set(setting(on)))),
         prose(strings::lookup(label).to_owned(), typeface::BODY),
     ]
-    .spacing(theme::CARD_SPACING)
+    .spacing(style::drawn(space::GUTTER.drawn()))
     .align_y(iced::Center)
     .into()
 }
@@ -338,7 +337,7 @@ pub fn choice<'a>(
         return prose(strings::lookup(label).to_owned(), typeface::BODY);
     };
     let held = configuration.value(field);
-    let mut controls = row![].spacing(theme::CARD_SPACING);
+    let mut controls = row![].spacing(style::drawn(space::GUTTER.drawn()));
     for option in options {
         let mut control = button(prose(
             strings::lookup(mode_label(option)).to_owned(),
@@ -356,7 +355,7 @@ pub fn choice<'a>(
         prose(strings::lookup(label).to_owned(), typeface::BODY),
         controls
     ]
-    .spacing(theme::CARD_SPACING)
+    .spacing(style::drawn(space::GUTTER.drawn()))
     .into()
 }
 
@@ -369,7 +368,7 @@ pub fn listed<'a>(
     cultures: &[jellyfin_api::types::CultureDto],
 ) -> Element<'a, Message> {
     let held = configuration.value(field);
-    let mut controls = row![].spacing(theme::CARD_SPACING);
+    let mut controls = row![].spacing(style::drawn(space::GUTTER.drawn()));
     let mut any = button(prose(
         strings::lookup(Text::PlaybackLanguageAny).to_owned(),
         typeface::BODY,
@@ -398,7 +397,7 @@ pub fn listed<'a>(
         prose(strings::lookup(label).to_owned(), typeface::BODY),
         controls
     ]
-    .spacing(theme::CARD_SPACING)
+    .spacing(style::drawn(space::GUTTER.drawn()))
     .into()
 }
 
@@ -415,7 +414,7 @@ pub fn view<'a>(
         strings::lookup(Text::SettingsTitle).to_owned(),
         typeface::HEADING_3
     )]
-    .spacing(theme::CARD_SPACING);
+    .spacing(style::drawn(space::GUTTER.drawn()));
     for screen in column_of(&signed.session) {
         let mut control = button(prose(
             strings::lookup(screen.label()).to_owned(),
@@ -451,17 +450,17 @@ pub fn view<'a>(
         None => body,
     };
 
-    let mut page = column![].spacing(theme::CARD_SPACING);
+    let mut page = column![].spacing(style::drawn(space::GUTTER.drawn()));
     if signed.server_changed {
         page = page.push(prose(
             strings::lookup(Text::SettingsServerChanged).to_owned(),
             typeface::BODY,
         ));
     }
-    page = page.push(row![nav, shown].spacing(theme::CARD_SPACING));
+    page = page.push(row![nav, shown].spacing(style::drawn(space::GUTTER.drawn())));
 
     iced::widget::container(page)
-        .padding(theme::CARD_SPACING)
+        .padding(style::drawn(space::GUTTER.drawn()))
         .into()
 }
 

@@ -8,10 +8,8 @@ use super::Action;
 use crate::api::Api;
 use crate::app::Message;
 use crate::error::Answer;
-use crate::style::Drawn;
-use crate::style::typeface;
+use crate::style::{self, Drawn, Viewport, space, typeface};
 use crate::text::{self as strings, Text};
-use crate::theme;
 use crate::widget;
 use crate::widget::prose;
 use crate::window;
@@ -109,7 +107,11 @@ pub async fn load(api: Rc<Api>, height: Drawn) -> Answer<State> {
     Answer::of(async {
         Ok(State {
             timers: api.series_timers().await.bubbled()?,
-            window: window::Window::new(window::Id::Series, Drawn::of(theme::ROW_HEIGHT), height),
+            window: window::Window::new(
+                window::Id::Series,
+                Drawn::of(style::drawn(space::LIST_ROW.drawn())),
+                height,
+            ),
         })
     })
     .await
@@ -129,7 +131,7 @@ fn entry<'a>(timer: &'a SeriesTimerInfoDto) -> Element<'a, Message> {
             ))
             .on_press(Message::LiveTvAction(Action::CancelSeriesTimer(id))),
         ]
-        .spacing(theme::CARD_SPACING)
+        .spacing(style::drawn(space::GUTTER.drawn()))
         .into(),
         None => iced::widget::Space::new().into(),
     };
@@ -143,10 +145,10 @@ fn entry<'a>(timer: &'a SeriesTimerInfoDto) -> Element<'a, Message> {
             .width(Fill),
             controls,
         ]
-        .spacing(theme::CARD_SPACING)
+        .spacing(style::drawn(space::GUTTER.drawn()))
         .align_y(iced::Center),
     )
-    .height(theme::ROW_HEIGHT)
+    .height(style::drawn(space::LIST_ROW.drawn()))
     .into()
 }
 
@@ -162,19 +164,26 @@ pub fn view<'a>(state: &'a State) -> Element<'a, Message> {
 }
 
 /// A number the user edits as text, kept as the number the server carries.
-fn number<'a>(label: Text, value: i32, edited: impl Fn(i32) -> Field + 'a) -> Element<'a, Message> {
+fn number<'a>(
+    label: Text,
+    value: i32,
+    edited: impl Fn(i32) -> Field + 'a,
+    viewport: Viewport,
+) -> Element<'a, Message> {
     row![
         container(prose(strings::lookup(label).to_owned(), typeface::BODY))
-            .width(theme::GUIDE_CHANNEL_WIDTH),
-        iced::widget::text_input("", &value.to_string()).on_input(move |typed| {
-            let read = match crate::failure::unraised::read::<i32>(typed.trim()) {
-                Ok(read) => read,
-                Err(_) => value,
-            };
-            Message::LiveTvAction(Action::Edited(edited(read)))
-        }),
+            .width(style::drawn(space::guide_channel(viewport))),
+        iced::widget::text_input("", &value.to_string())
+            .style(style::input)
+            .on_input(move |typed| {
+                let read = match crate::failure::unraised::read::<i32>(typed.trim()) {
+                    Ok(read) => read,
+                    Err(_) => value,
+                };
+                Message::LiveTvAction(Action::Edited(edited(read)))
+            }),
     ]
-    .spacing(theme::CARD_SPACING)
+    .spacing(style::drawn(space::GUTTER.drawn()))
     .align_y(iced::Center)
     .into()
 }
@@ -185,7 +194,7 @@ fn switch<'a>(label: Text, value: bool, edited: fn(bool) -> Field) -> Element<'a
             .on_toggle(move |value| Message::LiveTvAction(Action::Edited(edited(value)))),
         prose(strings::lookup(label).to_owned(), typeface::BODY),
     ]
-    .spacing(8)
+    .spacing(style::drawn(space::CONTROL_GAP.drawn()))
     .align_y(iced::Center)
     .into()
 }
@@ -194,7 +203,7 @@ fn switch<'a>(label: Text, value: bool, edited: fn(bool) -> Field) -> Element<'a
 /// record-new-only, skip-episodes-in-library, keep-until, keep-up-to,
 /// priority, and pre-roll and post-roll padding.
 /// Priority and keep-until are shown as the Jellyfin server states them.
-pub fn options<'a>(editing: &'a Editing) -> Element<'a, Message> {
+pub fn options<'a>(editing: &'a Editing, viewport: Viewport) -> Element<'a, Message> {
     let held = &editing.options;
     let days = held.days.clone().unwrap_or_default();
 
@@ -205,45 +214,41 @@ pub fn options<'a>(editing: &'a Editing) -> Element<'a, Message> {
         };
         button(prose(named, typeface::BODY))
             .style(if held.day_pattern == *pattern {
-                button::primary
+                style::submit
             } else {
-                button::secondary
+                style::raised
             })
             .on_press(Message::LiveTvAction(Action::Edited(Field::DayPattern(
                 *pattern,
             ))))
             .into()
     }))
-    .spacing(8);
+    .spacing(style::drawn(space::CONTROL_GAP.drawn()));
 
     let chosen = row(DAYS.iter().map(|day| {
         let wanted = days.contains(day);
         button(prose(format!("{day:?}"), typeface::BODY))
-            .style(if wanted {
-                button::primary
-            } else {
-                button::secondary
-            })
+            .style(if wanted { style::submit } else { style::raised })
             .on_press(Message::LiveTvAction(Action::Edited(Field::Day(
                 *day, !wanted,
             ))))
             .into()
     }))
-    .spacing(8);
+    .spacing(style::drawn(space::CONTROL_GAP.drawn()));
 
     let keep = row(KEEP.iter().map(|until| {
         button(prose(format!("{until:?}"), typeface::BODY))
             .style(if held.keep_until == Some(*until) {
-                button::primary
+                style::submit
             } else {
-                button::secondary
+                style::raised
             })
             .on_press(Message::LiveTvAction(Action::Edited(Field::KeepUntil(
                 *until,
             ))))
             .into()
     }))
-    .spacing(8);
+    .spacing(style::drawn(space::CONTROL_GAP.drawn()));
 
     let confirm = if editing.creating {
         Text::ProgramRecordSeries
@@ -289,22 +294,26 @@ pub fn options<'a>(editing: &'a Editing) -> Element<'a, Message> {
             number(
                 Text::SeriesKeepUpTo,
                 held.keep_up_to.unwrap_or(0),
-                Field::KeepUpTo
+                Field::KeepUpTo,
+                viewport
             ),
             number(
                 Text::SeriesPriority,
                 held.priority.unwrap_or(0),
-                Field::Priority
+                Field::Priority,
+                viewport
             ),
             number(
                 Text::SeriesPrePadding,
                 held.pre_padding_seconds.unwrap_or(0),
-                Field::PrePaddingSeconds
+                Field::PrePaddingSeconds,
+                viewport
             ),
             number(
                 Text::SeriesPostPadding,
                 held.post_padding_seconds.unwrap_or(0),
-                Field::PostPaddingSeconds
+                Field::PostPaddingSeconds,
+                viewport
             ),
             row![
                 button(prose(strings::lookup(confirm).to_owned(), typeface::BODY))
@@ -315,12 +324,12 @@ pub fn options<'a>(editing: &'a Editing) -> Element<'a, Message> {
                 ))
                 .on_press(Message::LiveTvAction(Action::CloseSeries)),
             ]
-            .spacing(theme::CARD_SPACING),
+            .spacing(style::drawn(space::GUTTER.drawn())),
         ]
-        .spacing(theme::CARD_SPACING),
+        .spacing(style::drawn(space::GUTTER.drawn())),
     )
-    .style(theme::over_video)
-    .padding(theme::CARD_SPACING)
+    .style(style::over_video)
+    .padding(style::drawn(space::GUTTER.drawn()))
     .width(Fill)
     .height(Fill)
     .into()

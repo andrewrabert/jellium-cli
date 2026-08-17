@@ -15,8 +15,7 @@ use crate::app::Message;
 use crate::error::Answer;
 use crate::images::{self, Cache};
 use crate::route::Listing;
-use crate::style::typeface;
-use crate::style::{Drawn, Viewport};
+use crate::style::{self, Drawn, Viewport, space, typeface};
 use crate::text::{self as strings, Text};
 use crate::theme;
 use crate::widget;
@@ -106,8 +105,8 @@ impl Browse {
             listing,
             grid: window::Grid::new(
                 id,
-                Drawn::of(theme::CARD_WIDTH + theme::CARD_SPACING),
-                Drawn::of(theme::CARD_HEIGHT),
+                Drawn::of(theme::CARD_WIDTH + style::drawn(space::GUTTER.drawn())),
+                Drawn::of(theme::CARD_HEIGHT + style::drawn(space::GUTTER.drawn())),
                 viewport.canvas(),
             ),
             items: Paged::new(0),
@@ -207,9 +206,9 @@ fn sort_surface<'a>(listing: &Listing) -> Element<'a, Message> {
             strings::lookup(Text::LibrarySort).to_owned(),
             typeface::BODY
         ),
-        row(controls).spacing(theme::CARD_SPACING),
+        row(controls).spacing(style::drawn(space::GUTTER.drawn())),
     ]
-    .spacing(theme::CARD_SPACING)
+    .spacing(style::drawn(space::GUTTER.drawn()))
     .align_y(iced::Alignment::Center)
     .into()
 }
@@ -217,11 +216,11 @@ fn sort_surface<'a>(listing: &Listing) -> Element<'a, Message> {
 fn letter_jump<'a>() -> Element<'a, Message> {
     row(window::LETTERS.into_iter().map(|letter| {
         button(prose(letter.to_string(), typeface::BODY))
-            .style(button::text)
+            .style(style::flat)
             .on_press(Message::BrowseAction(Action::Jumped(letter)))
             .into()
     }))
-    .spacing(4)
+    .spacing(style::drawn(space::BLOCK_GAP.drawn()))
     .into()
 }
 
@@ -248,7 +247,7 @@ fn narrowing<'a>(label: String, on: bool, narrow: Narrow) -> Element<'a, Message
         }),
         prose(label, typeface::BODY),
     ]
-    .spacing(theme::CARD_SPACING)
+    .spacing(style::drawn(space::GUTTER.drawn()))
     .align_y(iced::Alignment::Center)
     .into()
 }
@@ -270,7 +269,7 @@ fn filter_surface<'a>(browse: &'a Browse) -> Element<'a, Message> {
             ))
             .on_press(Message::BrowseAction(Action::ClearFilters)),
         ]
-        .spacing(theme::CARD_SPACING),
+        .spacing(style::drawn(space::GUTTER.drawn())),
         narrowing(
             strings::lookup(Text::FilterPlayed).to_string(),
             facets.played == Some(true),
@@ -302,7 +301,7 @@ fn filter_surface<'a>(browse: &'a Browse) -> Element<'a, Message> {
             Narrow::Uhd(false),
         ),
     ]
-    .spacing(8);
+    .spacing(style::drawn(space::CONTROL_GAP.drawn()));
 
     for kind in VideoKind::ALL {
         surface = surface.push(narrowing(
@@ -377,8 +376,8 @@ pub fn view<'a>(browse: &'a Browse, images: &'a Cache, read_only: bool) -> Eleme
         ))
         .on_press(Message::BrowseAction(Action::OpenFilters)),
     ]
-    .spacing(theme::CARD_SPACING)
-    .padding(theme::CARD_SPACING);
+    .spacing(style::drawn(space::GUTTER.drawn()))
+    .padding(style::drawn(space::GUTTER.drawn()));
 
     if browse.filtering {
         page = page.push(filter_surface(browse));
@@ -399,7 +398,7 @@ pub fn view<'a>(browse: &'a Browse, images: &'a Cache, read_only: bool) -> Eleme
             ),
             None => iced::widget::Space::new()
                 .width(theme::CARD_WIDTH)
-                .height(theme::CARD_HEIGHT)
+                .height(theme::CARD_HEIGHT + style::drawn(space::GUTTER.drawn()))
                 .into(),
         },
     ));

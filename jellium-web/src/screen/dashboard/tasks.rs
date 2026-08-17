@@ -5,9 +5,8 @@ use iced::{Element, Fill};
 
 use crate::app::Message;
 use crate::error::Answer;
-use crate::style::typeface;
+use crate::style::{self, space, typeface};
 use crate::text::{self as strings, Text};
-use crate::theme;
 use crate::widget::prose;
 
 /// Every scheduled task, with the state and progress each push carries.
@@ -87,8 +86,8 @@ pub fn view<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
         strings::lookup(Text::TasksTitle).to_owned(),
         typeface::HEADING_2
     )]
-    .spacing(theme::CARD_SPACING)
-    .padding(theme::CARD_SPACING);
+    .spacing(style::drawn(space::GUTTER.drawn()))
+    .padding(style::drawn(space::GUTTER.drawn()));
 
     for task in &state.tasks {
         let progress = task
@@ -106,7 +105,7 @@ pub fn view<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
                 typeface::BODY
             ),
         ]
-        .spacing(theme::CARD_SPACING);
+        .spacing(style::drawn(space::GUTTER.drawn()));
 
         if !read_only {
             held = held.push(match task.state {
@@ -156,8 +155,8 @@ pub fn one<'a>(state: &'a One, read_only: bool) -> Element<'a, Message> {
             typeface::BODY
         ),
     ]
-    .spacing(theme::CARD_SPACING)
-    .padding(theme::CARD_SPACING);
+    .spacing(style::drawn(space::GUTTER.drawn()))
+    .padding(style::drawn(space::GUTTER.drawn()));
 
     if let Some(last) = state.info.last_execution_result.as_ref() {
         page = page.push(prose(
@@ -191,7 +190,7 @@ pub fn one<'a>(state: &'a One, read_only: bool) -> Element<'a, Message> {
                 .unwrap_or_default(),
             typeface::BODY
         )]
-        .spacing(theme::CARD_SPACING);
+        .spacing(style::drawn(space::GUTTER.drawn()));
         if !read_only {
             held = held.push(
                 button(prose(
@@ -237,7 +236,7 @@ pub fn one<'a>(state: &'a One, read_only: bool) -> Element<'a, Message> {
                     }
                 ))),
             ]
-            .spacing(theme::CARD_SPACING),
+            .spacing(style::drawn(space::GUTTER.drawn())),
         );
         page = page.push(
             button(prose(

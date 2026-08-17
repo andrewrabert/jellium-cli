@@ -12,6 +12,7 @@ use uuid::Uuid;
 
 use crate::app::Message;
 use crate::control;
+use crate::style::space;
 use crate::text::Text;
 
 pub struct State {
@@ -159,7 +160,7 @@ pub fn view(state: &State) -> Element<'_, Message> {
         return shown;
     };
     iced::widget::column![crate::widget::banner(told.clone()), shown]
-        .spacing(crate::theme::CARD_SPACING)
+        .spacing(crate::style::drawn(space::GUTTER.drawn()))
         .into()
 }
 

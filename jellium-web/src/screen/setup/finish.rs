@@ -5,10 +5,9 @@ use iced::widget::{button, column};
 
 use crate::app::Message;
 use crate::text::{self as strings, Text};
-use crate::theme;
 
 use super::Action;
-use crate::style::typeface;
+use crate::style::{self, space, typeface};
 use crate::widget::prose;
 
 /// The completion message and the action; no restart is offered, expected or
@@ -29,6 +28,6 @@ pub fn view<'a>() -> Element<'a, Message> {
         ))
         .on_press(Message::SetupAction(Action::Complete)),
     ]
-    .spacing(theme::CARD_SPACING)
+    .spacing(style::drawn(space::GUTTER.drawn()))
     .into()
 }

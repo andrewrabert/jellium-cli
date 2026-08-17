@@ -8,9 +8,8 @@ use crate::app::Message;
 use crate::images::{self, Cache};
 use crate::player::osd::{self, Transport};
 use crate::player::remote::{self, Bound};
-use crate::style::typeface;
+use crate::style::{self, Viewport, space, typeface};
 use crate::text::{self as strings, Text};
-use crate::theme;
 use crate::widget::prose;
 
 /// One target the picker offers, named by its device name with its client
@@ -21,7 +20,7 @@ fn offered(target: &Target) -> Element<'_, Message> {
             prose(target.device_name.clone(), typeface::BODY),
             prose(target.client_name.clone(), typeface::SECONDARY),
         ]
-        .spacing(2),
+        .spacing(style::drawn(space::BLOCK_GAP.drawn())),
     )
     .on_press(Message::RemoteAction(remote::Action::Take(
         target.session.clone(),
@@ -37,11 +36,10 @@ fn picker<'a>(targets: &'a [Target]) -> Element<'a, Message> {
             typeface::BODY,
         );
     }
-    let listed = targets
-        .iter()
-        .fold(column![].spacing(theme::CARD_SPACING), |listed, target| {
-            listed.push(offered(target))
-        });
+    let listed = targets.iter().fold(
+        column![].spacing(style::drawn(space::GUTTER.drawn())),
+        |listed, target| listed.push(offered(target)),
+    );
     scrollable(listed).height(Fill).into()
 }
 
@@ -55,6 +53,7 @@ pub fn view<'a>(
     device: crate::prefs::Device,
     quality: jellium_protocol::Quality,
     images: &'a Cache,
+    viewport: Viewport,
 ) -> Element<'a, Message> {
     let body: Element<'a, Message> = match bound {
         None => picker(targets),
@@ -68,9 +67,10 @@ pub fn view<'a>(
                 quality,
                 chrono::Utc::now(),
                 images,
+                viewport,
             ),
         ]
-        .spacing(theme::CARD_SPACING)
+        .spacing(style::drawn(space::GUTTER.drawn()))
         .into(),
     };
 
@@ -82,9 +82,9 @@ pub fn view<'a>(
             ),
             body
         ]
-        .spacing(theme::CARD_SPACING),
+        .spacing(style::drawn(space::GUTTER.drawn())),
     )
-    .padding(theme::CARD_SPACING)
+    .padding(style::drawn(space::GUTTER.drawn()))
     .into()
 }
 

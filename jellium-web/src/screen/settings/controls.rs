@@ -6,9 +6,8 @@ use iced::widget::{column, row};
 
 use crate::app::Message;
 use crate::player::binding::BINDINGS;
-use crate::style::typeface;
+use crate::style::{self, space, typeface};
 use crate::text::{self as strings, Text};
-use crate::theme;
 use crate::widget::prose;
 
 /// Every entry of `player::binding::BINDINGS`, each naming its key and what it
@@ -25,9 +24,9 @@ pub fn view<'a>() -> Element<'a, Message> {
                 typeface::BODY
             ),
         ]
-        .spacing(theme::CARD_SPACING)
+        .spacing(style::drawn(space::GUTTER.drawn()))
     ]
-    .spacing(theme::CARD_SPACING);
+    .spacing(style::drawn(space::GUTTER.drawn()));
 
     for binding in BINDINGS {
         shown = shown.push(
@@ -38,7 +37,7 @@ pub fn view<'a>() -> Element<'a, Message> {
                     typeface::BODY
                 ),
             ]
-            .spacing(theme::CARD_SPACING),
+            .spacing(style::drawn(space::GUTTER.drawn())),
         );
     }
 

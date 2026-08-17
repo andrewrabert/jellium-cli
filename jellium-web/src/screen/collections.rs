@@ -14,11 +14,9 @@ use crate::error::{Answer, Operation};
 use crate::images::{self, Cache};
 use crate::route::Listing;
 use crate::screen::browse::{self, Browse};
-use crate::style::Viewport;
+use crate::style::{self, Viewport, space, typeface};
 use crate::text::{self as strings, Text};
-use crate::theme;
 
-use crate::style::typeface;
 use crate::widget::prose;
 use iced::Task;
 
@@ -105,11 +103,12 @@ pub async fn load(
 fn naming<'a>(held: &'a str, label: Text, apply: Message) -> Element<'a, Message> {
     row![
         text_input("", held)
+            .style(style::input)
             .on_input(|typed| Message::CollectionAction(Action::Typed(typed)))
-            .padding(8),
+            .padding(style::drawn(space::CONTROL_GAP.drawn())),
         button(prose(strings::lookup(label).to_owned(), typeface::BODY)).on_press(apply),
     ]
-    .spacing(theme::CARD_SPACING)
+    .spacing(style::drawn(space::GUTTER.drawn()))
     .align_y(iced::Alignment::Center)
     .into()
 }
@@ -119,7 +118,7 @@ pub fn view_listed<'a>(
     images: &'a Cache,
     read_only: bool,
 ) -> Element<'a, Message> {
-    let mut page = column![].spacing(theme::CARD_SPACING);
+    let mut page = column![].spacing(style::drawn(space::GUTTER.drawn()));
     if !read_only {
         page = page.push(naming(
             &state.naming,
@@ -135,7 +134,7 @@ pub fn view<'a>(state: &'a State, images: &'a Cache, read_only: bool) -> Element
     let Some(id) = state.collection.id else {
         return column![].into();
     };
-    let mut page = column![].spacing(theme::CARD_SPACING);
+    let mut page = column![].spacing(style::drawn(space::GUTTER.drawn()));
 
     if !read_only {
         page = page
@@ -168,7 +167,7 @@ pub fn view<'a>(state: &'a State, images: &'a Cache, read_only: bool) -> Element
                     ))
                     .on_press(Message::CollectionAction(Action::Delete { id })),
                 ]
-                .spacing(theme::CARD_SPACING),
+                .spacing(style::drawn(space::GUTTER.drawn())),
             );
     }
 

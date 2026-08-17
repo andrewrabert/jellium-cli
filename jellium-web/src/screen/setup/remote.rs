@@ -6,10 +6,9 @@ use iced::widget::{checkbox, column, row};
 use crate::app::Message;
 use crate::error::Answer;
 use crate::text::{self as strings, Text};
-use crate::theme;
 
 use super::{Action, Edit};
-use crate::style::typeface;
+use crate::style::{self, space, typeface};
 use crate::widget::prose;
 
 #[derive(Debug, Clone)]
@@ -40,7 +39,7 @@ pub fn view(state: &State) -> Element<'_, Message> {
                 typeface::BODY
             ),
         ]
-        .spacing(theme::CARD_SPACING),
+        .spacing(style::drawn(space::GUTTER.drawn())),
         row![
             checkbox(state.access.enable_automatic_port_mapping)
                 .on_toggle(|on| Message::SetupAction(Action::Edited(Edit::PortMapping(on)))),
@@ -49,8 +48,8 @@ pub fn view(state: &State) -> Element<'_, Message> {
                 typeface::BODY
             ),
         ]
-        .spacing(theme::CARD_SPACING),
+        .spacing(style::drawn(space::GUTTER.drawn())),
     ]
-    .spacing(theme::CARD_SPACING)
+    .spacing(style::drawn(space::GUTTER.drawn()))
     .into()
 }

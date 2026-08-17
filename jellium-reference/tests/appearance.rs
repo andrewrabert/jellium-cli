@@ -471,3 +471,74 @@ fn every_cited_span_holds_the_value_that_cites_it() {
         "values whose cited spans do not carry them: {absent:#?}"
     );
 }
+
+/// The three spellings a text size and a gap reach iced through, named rather
+/// than matched on a word boundary, so this gate's scope is its own.
+const GAPS: &[&str] = &[".size(", ".spacing(", ".padding("];
+
+/// Every `.rs` file under a directory, sorted.
+fn sources(directory: &Path) -> Vec<PathBuf> {
+    let mut found = Vec::new();
+    let mut pending = vec![directory.to_path_buf()];
+    while let Some(at) = pending.pop() {
+        let entries = match std::fs::read_dir(&at) {
+            Ok(entries) => entries,
+            Err(_) => continue,
+        };
+        for entry in entries {
+            let path = entry.expect("the entry is readable").path();
+            if path.is_dir() {
+                pending.push(path);
+            } else if path.extension().and_then(|value| value.to_str()) == Some("rs") {
+                found.push(path);
+            }
+        }
+    }
+    found.sort();
+    found
+}
+
+/// The argument a call opens at `at` begins with, with the whitespace and the
+/// line breaks before it gone.
+fn argument(text: &str, at: usize) -> Option<char> {
+    text[at..].chars().find(|value| !value.is_whitespace())
+}
+
+#[test]
+fn no_literal_reaches_a_text_size_or_a_gap() {
+    let root = workspace_root();
+    let directory = root.join("jellium-web/src");
+    let files = sources(&directory);
+    assert!(
+        !files.is_empty(),
+        "no source was read out of jellium-web/src"
+    );
+
+    let mut spelled = Vec::new();
+    for file in files {
+        let text = std::fs::read_to_string(&file).expect("the source is readable");
+        let named = file
+            .strip_prefix(&root)
+            .expect("the source sits under the workspace")
+            .display()
+            .to_string();
+        for call in GAPS {
+            let mut at = 0;
+            while let Some(found) = text[at..].find(call) {
+                let opened = at + found + call.len();
+                at = opened;
+                let Some(first) = argument(&text, opened) else {
+                    continue;
+                };
+                if first.is_ascii_digit() || first == '-' {
+                    let line = text[..opened].lines().count();
+                    spelled.push(format!("{named}:{line} spells a number in {call}"));
+                }
+            }
+        }
+    }
+    assert!(
+        spelled.is_empty(),
+        "numbers reaching a text size or a gap: {spelled:#?}"
+    );
+}
