@@ -154,7 +154,7 @@ pub fn view(state: &State, viewport: Viewport) -> Element<'_, Message> {
         jellium_model::login::Screen::Add => add::view(state, viewport),
         jellium_model::login::Screen::Credentials => credentials::view(state, viewport),
         jellium_model::login::Screen::QuickConnect => quickconnect::view(state),
-        jellium_model::login::Screen::Reset => reset::view(state),
+        jellium_model::login::Screen::Reset => reset::view(state, viewport),
     };
     let Some(told) = &state.told else {
         return shown;

@@ -1,12 +1,11 @@
 use iced::Element;
-use iced::widget::{button, column, container, text_input};
 
 use crate::app::Message;
+use crate::style::{Viewport, typeface};
 use crate::text::{self as strings, Text};
+use crate::widget::{self, Emphasis, Secrecy};
 
 use super::{Action, Edit};
-use crate::style::{self, space, typeface};
-use crate::widget::prose;
 
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct State {
@@ -20,70 +19,71 @@ pub struct State {
     pub expires: Option<i64>,
 }
 
-pub fn view<'a>(state: &'a super::State) -> Element<'a, Message> {
+/// The reference's forgot-password form, and its reset form once the server
+/// has written a pin: a heading, the field with its description, the submit
+/// block and the cancel block.
+// reference: forgot-password-page
+// reference: reset-password-page
+pub fn view<'a>(state: &'a super::State, viewport: Viewport) -> Element<'a, Message> {
     let held = &state.reset;
-    let mut form = column![
-        prose(strings::lookup(Text::LoginResetTitle), typeface::HEADING_1),
-        text_input(strings::lookup(Text::LoginResetUsername), &held.username)
-            .style(style::input)
-            .on_input(|value| Message::LoginAction(Action::Edited(Edit::ResetUsername(value))))
-            .on_submit(Message::LoginAction(Action::ResetSubmit))
-            .padding(style::drawn(space::CONTROL_GAP.drawn())),
-        button(prose(
+    let mut rows = vec![
+        widget::heading(strings::lookup(Text::LoginResetTitle)),
+        widget::field(
+            Text::LoginResetUsername,
+            &held.username,
+            Some(Text::LoginResetHelp),
+            |value| Message::LoginAction(Action::Edited(Edit::ResetUsername(value))),
+            Message::LoginAction(Action::ResetSubmit),
+            Secrecy::Shown,
+        ),
+        widget::block(
             strings::lookup(Text::LoginResetSubmit),
-            typeface::BODY
-        ))
-        .style(style::submit)
-        .on_press(Message::LoginAction(Action::ResetSubmit)),
-    ]
-    .spacing(style::drawn(space::GUTTER.drawn()))
-    .max_width(520);
+            Some(Message::LoginAction(Action::ResetSubmit)),
+            Emphasis::Submit,
+        ),
+    ];
 
     match held.answered {
         Some(jellium_model::login::Reset::PinWritten) => {
-            form = form.push(prose(
+            rows.push(widget::prose(
                 strings::lookup(Text::LoginResetPinWritten),
                 typeface::BODY,
             ));
             if let Some(file) = &held.pin_file {
-                form = form
-                    .push(prose(
-                        strings::lookup(Text::LoginResetPinFile),
-                        typeface::BODY,
-                    ))
-                    .push(prose(format!("> {file}"), typeface::SECONDARY));
+                rows.push(widget::prose(
+                    strings::lookup(Text::LoginResetPinFile),
+                    typeface::BODY,
+                ));
+                rows.push(widget::prose(format!("> {file}"), typeface::SECONDARY));
             }
             if let Some(expires) = held.expires {
-                form = form.push(prose(
-                    crate::text::format(Text::LoginResetExpires, &[&stamped(expires)]),
+                rows.push(widget::prose(
+                    strings::format(Text::LoginResetExpires, &[&stamped(expires)]),
                     typeface::BODY,
                 ));
             }
-            form = form
-                .push(
-                    text_input(strings::lookup(Text::LoginResetPin), &held.pin)
-                        .style(style::input)
-                        .on_input(|value| Message::LoginAction(Action::Edited(Edit::Pin(value))))
-                        .on_submit(Message::LoginAction(Action::PinSubmit))
-                        .padding(style::drawn(space::CONTROL_GAP.drawn())),
-                )
-                .push(
-                    button(prose(
-                        strings::lookup(Text::LoginResetPinSubmit),
-                        typeface::BODY,
-                    ))
-                    .style(style::submit)
-                    .on_press(Message::LoginAction(Action::PinSubmit)),
-                );
+            rows.push(widget::field(
+                Text::LoginResetPin,
+                &held.pin,
+                None,
+                |value| Message::LoginAction(Action::Edited(Edit::Pin(value))),
+                Message::LoginAction(Action::PinSubmit),
+                Secrecy::Shown,
+            ));
+            rows.push(widget::block(
+                strings::lookup(Text::LoginResetPinSubmit),
+                Some(Message::LoginAction(Action::PinSubmit)),
+                Emphasis::Submit,
+            ));
         }
         Some(jellium_model::login::Reset::ContactAdministrator) => {
-            form = form.push(prose(
+            rows.push(widget::prose(
                 strings::lookup(Text::LoginResetContactAdministrator),
                 typeface::BODY,
             ));
         }
         Some(jellium_model::login::Reset::InNetworkRequired) => {
-            form = form.push(prose(
+            rows.push(widget::prose(
                 strings::lookup(Text::LoginResetInNetwork),
                 typeface::BODY,
             ));
@@ -91,16 +91,13 @@ pub fn view<'a>(state: &'a super::State) -> Element<'a, Message> {
         None => {}
     }
 
-    form = form.push(
-        button(prose(strings::lookup(Text::LoginBack), typeface::BODY))
-            .style(style::raised)
-            .on_press(Message::LoginAction(Action::Back)),
-    );
+    rows.push(widget::block(
+        strings::lookup(Text::LoginBack),
+        Some(Message::LoginAction(Action::Back)),
+        Emphasis::Raised,
+    ));
 
-    container(form)
-        .center_x(iced::Fill)
-        .center_y(iced::Fill)
-        .into()
+    widget::form(viewport, rows)
 }
 
 /// Milliseconds since the unix epoch as a local timestamp.

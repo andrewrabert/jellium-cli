@@ -165,3 +165,5 @@ select-server-card	src/controllers/session/selectServer/index.js	36	68	dccf5021b
 icon-family	src/styles/site.scss	64	67	7e39ca2406521f04d0e594c227ff69bcd151652b38c3bd9d7990472038a01971	ported
 login-page	src/controllers/session/login/index.html	1	58	859f78d4a5ac37252abe3ab9666d6a87be1fa05eb50604dc4460dfe39914ca3b	ported
 login-user-card	src/controllers/session/login/index.js	139	185	b73a8431b5723a8025a47bb978739697006975c43b4191a08ef64d266787fcef	ported
+reset-password-page	src/controllers/session/resetPassword/index.html	1	23	2adf514e73b914e4ec38812395fa385e4685471802ddc500c1c47154308f010e	ported
+forgot-password-page	src/apps/stable/routes/session/forgotPassword/index.tsx	78	127	d6f85c91f538e0a4ab6dd925181b6f325f5366f1e9be1d0729cf0228f7b97431	ported

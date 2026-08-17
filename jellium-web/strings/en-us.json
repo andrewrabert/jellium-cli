@@ -692,6 +692,7 @@
   "loginForgotPassword": "Forgot password",
   "loginResetTitle": "Reset a password",
   "loginResetUsername": "Username",
+  "loginResetHelp": "Enter your user name to begin a password reset.",
   "loginResetSubmit": "Request a reset",
   "loginResetPinWritten": "The Jellyfin server wrote a reset pin to a file on the machine it runs on.",
   "loginResetPinFile": "Pin file",

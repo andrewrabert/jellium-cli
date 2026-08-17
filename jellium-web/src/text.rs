@@ -99,6 +99,7 @@ text! {
     LoginForgotPassword => "loginForgotPassword",
     LoginResetTitle => "loginResetTitle",
     LoginResetUsername => "loginResetUsername",
+    LoginResetHelp => "loginResetHelp",
     LoginResetSubmit => "loginResetSubmit",
     LoginResetPinWritten => "loginResetPinWritten",
     LoginResetPinFile => "loginResetPinFile",
