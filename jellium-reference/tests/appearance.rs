@@ -600,6 +600,47 @@ fn no_literal_reaches_a_text_size_or_a_gap() {
     );
 }
 
+/// The ligature of every `Icon` variant, read out of the enum's own
+/// `ligature` arms, so the gate cannot drift from the variants it binds.
+fn ligatures(root: &Path) -> Vec<String> {
+    let text = std::fs::read_to_string(root.join("jellium-web/src/icon.rs"))
+        .expect("jellium-web/src/icon.rs is readable");
+    text.lines()
+        .filter_map(|line| {
+            let arm = line.trim().strip_prefix("Icon::")?;
+            let written = arm.split_once("=>")?.1.trim().trim_end_matches(',');
+            Some(written.trim_matches('"').to_owned())
+        })
+        .collect()
+}
+
+#[test]
+fn the_icon_table_and_the_variants_agree() {
+    let root = workspace_root();
+    let table = std::fs::read_to_string(root.join("jellium-web/icons/material.tsv"))
+        .expect("jellium-web/icons/material.tsv is readable");
+    let rows: Vec<&str> = table
+        .lines()
+        .filter_map(|line| line.split('\t').next())
+        .filter(|ligature| !ligature.is_empty())
+        .collect();
+    let named = ligatures(&root);
+    assert!(!named.is_empty(), "no ligature was read out of icon.rs");
+
+    let unlisted: Vec<&String> = named
+        .iter()
+        .filter(|ligature| !rows.contains(&ligature.as_str()))
+        .collect();
+    let stray: Vec<&&str> = rows
+        .iter()
+        .filter(|ligature| !named.iter().any(|named| named == *ligature))
+        .collect();
+    assert!(
+        unlisted.is_empty() && stray.is_empty(),
+        "the icon table lacks {unlisted:?} and holds {stray:?} under no variant"
+    );
+}
+
 /// The call this gate reads, which is iced's button constructor and not a
 /// function whose own name ends in it.
 const CONTROL: &str = "button(";

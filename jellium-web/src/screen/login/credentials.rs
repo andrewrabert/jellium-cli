@@ -1,13 +1,14 @@
 use iced::Element;
-use iced::widget::{button, column, container, row, scrollable, text_input};
+use iced::widget::column;
 use uuid::Uuid;
 
 use crate::app::Message;
+use crate::icon::Icon;
+use crate::style::{self, Viewport, card, space};
 use crate::text::{self as strings, Text};
+use crate::widget::{self, Emphasis, Face, Secrecy};
 
 use super::{Action, Edit};
-use crate::style::{self, space, typeface};
-use crate::widget::prose;
 
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct State {
@@ -30,121 +31,103 @@ pub fn images(state: &super::State) -> std::collections::HashSet<Uuid> {
         .collect()
 }
 
-fn picker<'a>(state: &'a super::State) -> Option<Element<'a, Message>> {
+/// The users the server offers, each on the square card the reference draws,
+/// with the person glyph where the user carries no image.
+// reference: login-user-card
+fn picker<'a>(state: &'a super::State, viewport: Viewport) -> Option<Element<'a, Message>> {
     let screen = state.target.as_ref()?;
     if screen.users.is_empty() {
         return None;
     }
-    let cards = screen.users.iter().map(|user| {
-        let mut card = column![]
-            .spacing(style::drawn(space::BLOCK_GAP.drawn()))
-            .align_x(iced::Center);
-        if let Some(handle) = state.images.get(&user.id) {
-            card = card.push(iced::widget::image(handle.clone()).width(96.0));
-        }
-        card = card.push(prose(user.name.clone(), typeface::BODY));
-        button(card)
-            .style(style::flat)
-            .on_press(Message::LoginAction(Action::Pick {
-                user: user.id,
-                name: user.name.clone(),
-            }))
-            .into()
-    });
-    Some(
-        column![
-            prose(strings::lookup(Text::LoginPickUser), typeface::BODY),
-            scrollable(row(cards).spacing(style::drawn(space::GUTTER.drawn()))).direction(
-                scrollable::Direction::Horizontal(scrollable::Scrollbar::default(),)
-            ),
-            prose(strings::lookup(Text::LoginTypeName), typeface::SECONDARY),
-        ]
-        .spacing(style::drawn(space::GUTTER.drawn()))
-        .into(),
-    )
+    let wall = card::Card::Wall(card::Shape::Square);
+    Some(widget::picker(
+        wall,
+        viewport,
+        screen
+            .users
+            .iter()
+            .map(|user| {
+                widget::card(
+                    wall,
+                    viewport,
+                    match state.images.get(&user.id) {
+                        Some(handle) => Face::Image(handle.clone()),
+                        None => Face::Icon(Icon::Person),
+                    },
+                    user.name.clone(),
+                    card::Bottom::Padded,
+                    Message::LoginAction(Action::Pick {
+                        user: user.id,
+                        name: user.name.clone(),
+                    }),
+                )
+            })
+            .collect(),
+    ))
 }
 
-pub fn view<'a>(state: &'a super::State) -> Element<'a, Message> {
-    let named = state
-        .target
-        .as_ref()
-        .map(|screen| {
-            if screen.name.is_empty() {
-                screen.server.clone()
-            } else {
-                screen.name.clone()
-            }
-        })
-        .unwrap_or_default();
-
-    let mut form =
-        column![prose(named, typeface::HEADING_1)].spacing(style::drawn(space::GUTTER.drawn()));
-    if let Some(picker) = picker(state) {
-        form = form.push(picker);
+/// The reference's login page: the user picker over the manual form, then the
+/// block controls.
+// reference: login-page
+pub fn view<'a>(state: &'a super::State, viewport: Viewport) -> Element<'a, Message> {
+    let mut page = column![widget::heading(strings::lookup(Text::LoginHeader))]
+        .spacing(style::drawn(space::SECTION_GAP.drawn()));
+    if let Some(picker) = picker(state, viewport) {
+        page = page.push(picker);
     }
-
-    form = form
-        .push(
-            text_input(
-                strings::lookup(Text::LoginUsername),
+    page = page.push(widget::form(
+        viewport,
+        vec![
+            widget::field(
+                Text::LoginUsername,
                 &state.credentials.username,
-            )
-            .style(style::input)
-            .on_input(|value| Message::LoginAction(Action::Edited(Edit::Username(value))))
-            .on_submit(Message::LoginAction(Action::Submit))
-            .padding(style::drawn(space::CONTROL_GAP.drawn())),
-        )
-        .push(
-            text_input(
-                strings::lookup(Text::LoginPassword),
+                None,
+                |value| Message::LoginAction(Action::Edited(Edit::Username(value))),
+                Message::LoginAction(Action::Submit),
+                Secrecy::Shown,
+            ),
+            widget::field(
+                Text::LoginPassword,
                 &state.credentials.password,
-            )
-            .style(style::input)
-            .on_input(|value| Message::LoginAction(Action::Edited(Edit::Password(value))))
-            .on_submit(Message::LoginAction(Action::Submit))
-            .secure(true)
-            .padding(style::drawn(space::CONTROL_GAP.drawn())),
-        )
-        .push(if state.working {
-            button(prose(strings::lookup(Text::LoginWorking), typeface::BODY)).style(style::submit)
-        } else {
-            button(prose(strings::lookup(Text::LoginSubmit), typeface::BODY))
-                .style(style::submit)
-                .on_press(Message::LoginAction(Action::Submit))
-        });
+                None,
+                |value| Message::LoginAction(Action::Edited(Edit::Password(value))),
+                Message::LoginAction(Action::Submit),
+                Secrecy::Hidden,
+            ),
+            widget::block(
+                strings::lookup(match state.working {
+                    true => Text::LoginWorking,
+                    false => Text::LoginSubmit,
+                }),
+                (!state.working).then_some(Message::LoginAction(Action::Submit)),
+                Emphasis::Submit,
+            ),
+        ],
+    ));
 
     if state
         .target
         .as_ref()
         .is_some_and(|screen| screen.quick_connect)
     {
-        form = form.push(
-            button(prose(
-                strings::lookup(Text::LoginQuickConnect),
-                typeface::BODY,
-            ))
-            .style(style::raised)
-            .on_press(Message::LoginAction(Action::QuickConnect)),
-        );
+        page = page.push(widget::block(
+            strings::lookup(Text::LoginQuickConnect),
+            Some(Message::LoginAction(Action::QuickConnect)),
+            Emphasis::Raised,
+        ));
     }
     if !state.read_only {
-        form = form.push(
-            button(prose(
-                strings::lookup(Text::LoginForgotPassword),
-                typeface::BODY,
-            ))
-            .style(style::raised)
-            .on_press(Message::LoginAction(Action::Reset)),
-        );
+        page = page.push(widget::block(
+            strings::lookup(Text::LoginForgotPassword),
+            Some(Message::LoginAction(Action::Reset)),
+            Emphasis::Raised,
+        ));
     }
-    form = form.push(
-        button(prose(strings::lookup(Text::LoginBack), typeface::BODY))
-            .style(style::raised)
-            .on_press(Message::LoginAction(Action::Back)),
-    );
+    page = page.push(widget::block(
+        strings::lookup(Text::LoginBack),
+        Some(Message::LoginAction(Action::Back)),
+        Emphasis::Raised,
+    ));
 
-    container(form.max_width(520))
-        .center_x(iced::Fill)
-        .center_y(iced::Fill)
-        .into()
+    widget::page(viewport, page.into())
 }

@@ -14,6 +14,7 @@ const TABLE: &str = include_str!("../icons/material.tsv");
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Icon {
+    Person,
     Storage,
 }
 
@@ -21,6 +22,7 @@ impl Icon {
     /// The ligature the reference writes for this glyph.
     pub fn ligature(self) -> &'static str {
         match self {
+            Icon::Person => "person",
             Icon::Storage => "storage",
         }
     }
