@@ -458,9 +458,7 @@ impl PerRow {
     /// `Math.round(width / rate)`, which is `getImageWidth`.
     // reference: card-image-width
     pub fn fill(self, width: Css) -> Fill {
-        Fill {
-            css: (f64::from(width.count()) / self.rate).round() as u32,
-        }
+        Fill::of(Css::of((f64::from(width.count()) / self.rate) as f32))
     }
 }
 
@@ -472,6 +470,16 @@ pub struct Fill {
 }
 
 impl Fill {
+    /// A request width is a page measurement, so a `Fill` is built from a `Css`
+    /// and from nothing else: `PerRow::fill` builds one for an image and
+    /// `space::preview` for a trickplay tile, and no canvas length reaches it,
+    /// there being no crossing from `Drawn` back to `Css`.
+    pub fn of(width: Css) -> Fill {
+        Fill {
+            css: width.count().round() as u32,
+        }
+    }
+
     pub fn count(self) -> u32 {
         self.css
     }

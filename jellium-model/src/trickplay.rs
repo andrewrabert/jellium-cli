@@ -7,6 +7,8 @@ use std::time::Duration;
 use jellium_protocol::Chapter;
 use jellyfin_api::types::BaseItemDto;
 
+use crate::appearance::card;
+
 /// The trickplay an item offers, by media source id and then by tile width.
 #[derive(Debug, Clone, Default)]
 pub struct Trickplay {
@@ -63,11 +65,11 @@ impl Trickplay {
 
     /// The narrowest width at or above `rendered` for `media_source`, the widest
     /// when none reaches it, and `None` when that source has none.
-    pub fn width_for(&self, media_source: &str, rendered: u16) -> Option<Description> {
+    pub fn width_for(&self, media_source: &str, rendered: card::Fill) -> Option<Description> {
         let described = self.held.get(media_source)?;
         described
             .iter()
-            .find(|held| held.width >= u32::from(rendered))
+            .find(|held| held.width >= rendered.count())
             .or_else(|| described.last())
             .copied()
     }
@@ -184,6 +186,10 @@ mod tests {
         assert_eq!(chapter_at(&[], Duration::from_secs(1)), None);
     }
 
+    fn rendered(width: f32) -> card::Fill {
+        card::Fill::of(crate::appearance::Css::of(width))
+    }
+
     fn described(widths: &[u32]) -> Trickplay {
         Trickplay {
             held: HashMap::from([(
@@ -202,21 +208,36 @@ mod tests {
     #[test]
     fn the_narrowest_width_at_or_above_the_preview_is_chosen() {
         let held = described(&[160, 320, 640]);
-        assert_eq!(held.width_for("source", 200).map(|d| d.width), Some(320));
-        assert_eq!(held.width_for("source", 320).map(|d| d.width), Some(320));
-        assert_eq!(held.width_for("source", 100).map(|d| d.width), Some(160));
+        assert_eq!(
+            held.width_for("source", rendered(200.0)).map(|d| d.width),
+            Some(320)
+        );
+        assert_eq!(
+            held.width_for("source", rendered(320.0)).map(|d| d.width),
+            Some(320)
+        );
+        assert_eq!(
+            held.width_for("source", rendered(100.0)).map(|d| d.width),
+            Some(160)
+        );
     }
 
     #[test]
     fn the_widest_stands_in_when_none_reaches_the_preview() {
         let held = described(&[160, 320]);
-        assert_eq!(held.width_for("source", 4_000).map(|d| d.width), Some(320));
+        assert_eq!(
+            held.width_for("source", rendered(4_000.0)).map(|d| d.width),
+            Some(320)
+        );
     }
 
     #[test]
     fn a_source_with_no_trickplay_offers_none() {
         let held = described(&[160]);
-        assert_eq!(held.width_for("other", 200), None);
-        assert_eq!(Trickplay::default().width_for("source", 200), None);
+        assert_eq!(held.width_for("other", rendered(200.0)), None);
+        assert_eq!(
+            Trickplay::default().width_for("source", rendered(200.0)),
+            None
+        );
     }
 }

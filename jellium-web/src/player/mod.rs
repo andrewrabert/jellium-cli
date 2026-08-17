@@ -43,7 +43,7 @@ use crate::profile::probe::{Engine, Media};
 use crate::profile::{self, Options};
 use crate::route::Route;
 use crate::settings::{Account, Shared};
-use crate::style::Viewport;
+use crate::style::{Viewport, card, space};
 use crate::text::Text;
 
 /// The display and the cursor hide after this long without input.
@@ -1353,7 +1353,7 @@ pub fn act(signed: &mut Signed, action: Action, viewport: Viewport) -> Task<Mess
             playing.preview = None;
             Task::none()
         }
-        Action::Settled => tile_wanted(signed),
+        Action::Settled => tile_wanted(signed, viewport),
         Action::OpenMenu(menu) => {
             playing.menu = Some(menu);
             Task::none()
@@ -1667,7 +1667,7 @@ pub fn tick(signed: &mut Signed) -> bool {
 /// The tile the preview needs, asked for once the pointer has settled.
 /// An item whose media source has no trickplay asks for nothing, and the
 /// preview falls back to the chapter image the display already holds.
-fn tile_wanted(signed: &mut Signed) -> Task<Message> {
+fn tile_wanted(signed: &mut Signed, viewport: Viewport) -> Task<Message> {
     let Some(playing) = signed.playing.as_ref() else {
         return Task::none();
     };
@@ -1680,7 +1680,7 @@ fn tile_wanted(signed: &mut Signed) -> Task<Message> {
     let source = playing.plan.media_source.clone();
     let Some(described) = playing
         .trickplay
-        .width_for(&source, crate::theme::CARD_WIDTH as u16)
+        .width_for(&source, card::Fill::of(space::preview(viewport)))
     else {
         return Task::none();
     };

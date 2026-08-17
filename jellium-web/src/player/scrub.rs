@@ -7,31 +7,31 @@ use jellium_protocol::Chapter;
 
 use crate::app::Message;
 use crate::player::Action;
-use crate::style::{self, Viewport, space};
-use crate::theme;
+use crate::style::{self, Drawn, Share, Viewport, space};
 
 const TICKS_PER_SECOND: f64 = 10_000_000.0;
 
-fn fraction(part: Duration, whole: Duration) -> f32 {
-    if whole.is_zero() {
-        return 0.0;
-    }
-    (part.as_secs_f32() / whole.as_secs_f32()).clamp(0.0, 1.0)
+/// The portions a bar is divided into, which is the resolution its fills carry.
+const PORTIONS: u16 = 1_000;
+
+/// How far through `whole` the instant `part` stands.
+fn through(part: Duration, whole: Duration) -> Share {
+    Share::part(part.as_millis() as i64, whole.as_millis() as i64)
 }
 
-fn portion(fraction: f32) -> u16 {
-    (fraction * 1000.0).round().clamp(0.0, 1000.0) as u16
+fn portion(share: Share) -> u16 {
+    style::drawn(share.of(Drawn::of(f32::from(PORTIONS)))).round() as u16
 }
 
-fn bar<'a>(filled: f32, style: fn(&iced::Theme) -> container::Style) -> Element<'a, Message> {
+fn bar<'a>(filled: Share, fill: fn(&iced::Theme) -> container::Style) -> Element<'a, Message> {
     let taken = portion(filled);
     let track = style::drawn(space::SLIDER_TRACK.drawn());
     row![
         container(Space::new().width(Fill))
             .width(Length::FillPortion(taken.max(1)))
             .height(track)
-            .style(style),
-        Space::new().width(Length::FillPortion(1000 - taken.min(999))),
+            .style(fill),
+        Space::new().width(Length::FillPortion(PORTIONS - taken.min(PORTIONS - 1))),
     ]
     .height(track)
     .into()
@@ -62,7 +62,7 @@ fn ticks<'a>(
     let mut taken = 0u16;
     for chapter in chapters {
         let start = Duration::from_secs_f64(chapter.start_ticks as f64 / TICKS_PER_SECOND);
-        let at = portion(fraction(start, duration));
+        let at = portion(through(start, duration));
         if at <= taken {
             continue;
         }
@@ -76,7 +76,7 @@ fn ticks<'a>(
             );
         taken = at;
     }
-    lane.push(Space::new().width(Length::FillPortion(1000u16.saturating_sub(taken).max(1))))
+    lane.push(Space::new().width(Length::FillPortion(PORTIONS.saturating_sub(taken).max(1))))
         .into()
 }
 
@@ -94,40 +94,45 @@ pub fn scrub<'a>(
 ) -> Element<'a, Message> {
     let row_height = style::drawn(space::SLIDER_THUMB.drawn());
     let seconds = duration.as_secs_f32().max(0.001);
-    let handle = slider(
-        0.0..=seconds,
-        position.as_secs_f32().min(seconds),
-        |value| Message::PlayerAction(Action::Scrub(Duration::from_secs_f32(value))),
-    )
-    .on_release(Message::PlayerAction(Action::ScrubReleased))
-    .step(0.1_f32)
-    .height(row_height);
 
-    let hovered = {
-        move |point: iced::Point| {
-            let across = (point.x / theme::CARD_WIDTH.max(1.0)).clamp(0.0, 1.0);
+    let measured = container(iced::widget::responsive(move |size| {
+        let handle = slider(
+            0.0..=seconds,
+            position.as_secs_f32().min(seconds),
+            |value| Message::PlayerAction(Action::Scrub(Duration::from_secs_f32(value))),
+        )
+        .on_release(Message::PlayerAction(Action::ScrubReleased))
+        .step(0.1_f32)
+        .height(row_height);
+
+        let hovered = move |point: iced::Point| {
+            let across = (point.x / size.width.max(1.0)).clamp(0.0, 1.0);
             Message::PlayerAction(Action::Hovered(Duration::from_secs_f32(across * seconds)))
-        }
-    };
+        };
 
-    let bar = stack![
-        bar(fraction(buffered, duration), buffered_style),
-        bar(fraction(position, duration), elapsed_style),
-        ticks(duration, chapters, viewport),
-        handle,
-    ]
+        let lanes = stack![
+            bar(through(buffered, duration), buffered_style),
+            bar(through(position, duration), elapsed_style),
+            ticks(duration, chapters, viewport),
+            handle,
+        ]
+        .width(Fill)
+        .height(row_height);
+
+        iced::widget::mouse_area(lanes)
+            .on_move(hovered)
+            .on_exit(Message::PlayerAction(Action::Unhovered))
+            .into()
+    }))
     .width(Fill)
     .height(row_height);
 
-    let bar = iced::widget::mouse_area(bar)
-        .on_move(hovered)
-        .on_exit(Message::PlayerAction(Action::Unhovered));
-
     let Some(shown) = preview.and_then(|preview| preview.frame.clone()) else {
-        return bar.into();
+        return measured.into();
     };
 
-    iced::widget::column![iced::widget::image(shown).width(theme::CARD_WIDTH), bar,]
+    let frame = style::drawn(space::preview(viewport).drawn(viewport.band()));
+    iced::widget::column![iced::widget::image(shown).width(frame), measured,]
         .spacing(style::drawn(space::BLOCK_GAP.drawn()))
         .into()
 }

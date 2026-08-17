@@ -28,7 +28,7 @@ use crate::route::Route;
 use crate::screen::livetv::{self, guide};
 use crate::screen::program;
 use crate::screen::{dashboard, detail, home, library, login, search};
-use crate::style::{self, Drawn, Viewport, space, typeface};
+use crate::style::{self, Drawn, Viewport, card, space, typeface};
 use crate::text::{self as strings, Text};
 use crate::widget;
 use crate::widget::prose;
@@ -1529,7 +1529,7 @@ impl Jellium {
                 let source = playing.plan.media_source.clone();
                 let Some(described) = playing
                     .trickplay
-                    .width_for(&source, crate::theme::CARD_WIDTH as u16)
+                    .width_for(&source, card::Fill::of(space::preview(viewport)))
                 else {
                     return Task::none();
                 };
