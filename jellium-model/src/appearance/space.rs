@@ -248,6 +248,35 @@ pub fn guide_channel(viewport: Viewport) -> Drawn {
     stepped(viewport, GUIDE_CHANNEL, &GUIDE_CHANNEL_STEPS).of(viewport.canvas().width())
 }
 
+/// The page a tall dialog leaves above itself.
+// reference: filter-dialog
+const FILTER_TOP: Share = Share::per_ten_thousand(1000);
+
+/// The page a tall dialog leaves below itself.
+// reference: filter-dialog
+const FILTER_BOTTOM: Share = Share::per_ten_thousand(2500);
+
+/// The page a dialog leaves at each end of a page that is not tall.
+// reference: filter-dialog
+const FILTER_END: Share = Share::per_ten_thousand(500);
+
+/// The page a dialog takes the first pair of ends on.
+// reference: filter-dialog
+const FILTER_TALL: Query = Query::MinHeight(Breakpoint::em(37.5));
+
+/// The filter surface stands as tall as the reference's own `.dynamicFilterDialog`:
+/// the page less a tenth at the top and a quarter at the bottom where
+/// `FILTER_TALL` matches, and less a twentieth at each end where it does not.
+// reference: filter-dialog
+pub fn filter_surface(viewport: Viewport) -> Drawn {
+    let height = viewport.canvas().height();
+    let (top, bottom) = match viewport.matches(FILTER_TALL) {
+        true => (FILTER_TOP, FILTER_BOTTOM),
+        false => (FILTER_END, FILTER_END),
+    };
+    Drawn::of(height.count() - top.of(height).count() - bottom.of(height).count())
+}
+
 /// The frame the scrub preview draws in, as tall as the page allows it.
 // reference: osd-preview
 const PREVIEW: Share = Share::units(20.0);

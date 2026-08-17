@@ -120,6 +120,7 @@ bar-top	src/components/nowPlayingBar/nowPlayingBar.scss	23	30	eb8108dabe17a20da9
 bar-image	src/components/nowPlayingBar/nowPlayingBar.scss	43	50	a42d8f610f3a0f8043e4ae076ab22bc25b0f4479f0f7404746645e250ba70ce7	ported
 progress-bar	src/components/indicators/indicators.scss	1	6	e2a74c1ecb8688c618e0153c894aaa46aacf1141250e65f73621ab39de5c6989	ported
 osd-preview	src/styles/videoosd.scss	60	81	2b4495a7ee6e2ec7b6cbd6b868f39f153b74974d9d16ba7c053cb7011a86024d	ported
+filter-dialog	src/components/filterdialog/style.scss	1	18	3386199b96d52a29065f5135c6193f0bf0b3465dbd6f20105ab8dede5e8a2acf	ported
 guide-row	src/components/guide/guide.scss	77	87	58d9ac30dc487b057b4263e2f143287c53b2df9893c574cea61a03a40cbcc1eb	ported
 guide-strip	src/components/guide/guide.scss	98	122	9b1fd214d27b47e858d9afe46942adfdfd646465e4f8195b974150064a055c2c	ported
 guide-channel	src/components/guide/guide.scss	173	204	6c4a7ced41bcd2f23acd2e13e03af834a1d8c1392986fce13519f8acaddae9c5	ported
