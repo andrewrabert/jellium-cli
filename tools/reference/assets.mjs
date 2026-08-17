@@ -41,8 +41,8 @@ const WEIGHTS = ['400', '700'];
 // the_icon_table_and_the_variants_agree in that file.
 const ICONS = [
     'book', 'filter_alt', 'folder', 'live_tv', 'movie', 'music_note',
-    'music_video', 'person', 'photo', 'queue', 'quiz', 'sort_by_alpha',
-    'storage', 'theaters', 'tv', 'video_library'
+    'music_video', 'person', 'photo', 'queue', 'quiz', 'search',
+    'sort_by_alpha', 'storage', 'theaters', 'tv', 'video_library'
 ];
 
 const BRANDING = [

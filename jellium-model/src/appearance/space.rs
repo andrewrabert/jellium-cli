@@ -271,6 +271,18 @@ pub const LETTERS_ROOMY: Query = Query::MinWidth(Breakpoint::em(62.5));
 // reference: alpha-picker-reserve
 pub const LETTERS_RESERVE: Share = Share::per_ten_thousand(750);
 
+/// `.searchFieldsInner`, which the page centres in what it is given.
+// reference: search-field
+pub const SEARCH_FIELD: Length = Length::em(60.0);
+
+/// `.searchfields-icon`'s gap to the field it stands before.
+// reference: search-icon
+pub const SEARCH_ICON_GAP: Length = Length::em(0.25);
+
+/// The same icon's drop from the field's own baseline.
+// reference: search-icon
+pub const SEARCH_ICON_DROP: Length = Length::em(0.1);
+
 // reference: control-icon-button
 pub const ICON_MARGIN: Length = Length::em(0.29);
 

@@ -2,7 +2,7 @@ use std::collections::HashSet;
 use std::rc::Rc;
 
 use iced::Element;
-use iced::widget::{button, column, row, text_input};
+use iced::widget::column;
 use jellium_model::paged::Paged;
 use jellium_model::window;
 use jellyfin_api::types::BaseItemDto;
@@ -166,20 +166,7 @@ fn narrowed(facet: jellium_model::facets::Facet, id: uuid::Uuid) -> crate::route
 }
 
 pub fn view<'a>(state: &'a State, viewport: Viewport, images: &'a Cache) -> Element<'a, Message> {
-    let bar = row![
-        text_input(strings::lookup(Text::SearchPlaceholder), &state.term)
-            .style(style::input)
-            .on_input(Message::SearchEdited)
-            .on_submit(Message::SearchSubmitted)
-            .padding(style::drawn(space::CONTROL_GAP.drawn())),
-        button(prose(strings::lookup(Text::SearchSubmit), typeface::BODY))
-            .style(style::submit)
-            .on_press(Message::SearchSubmitted),
-    ]
-    .spacing(style::drawn(space::GUTTER.drawn()))
-    .align_y(iced::Alignment::Center);
-
-    let mut page = column![bar]
+    let mut page = column![widget::searching(&state.term, viewport)]
         .spacing(style::drawn(space::GUTTER.drawn()))
         .padding(style::drawn(space::GUTTER.drawn()));
 

@@ -245,7 +245,6 @@ text! {
     LibraryTabStudios => "libraryTabStudios",
     LibraryTabNetworks => "libraryTabNetworks",
     SearchPlaceholder => "searchPlaceholder",
-    SearchSubmit => "searchSubmit",
     SearchEmpty => "searchEmpty",
     DetailOverview => "detailOverview",
     DetailSimilar => "detailSimilar",

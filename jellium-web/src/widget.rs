@@ -908,6 +908,32 @@ pub fn field<'a>(
     held.into()
 }
 
+/// The search field as the reference draws it: its glyph, then the field
+/// itself, centred together in `SEARCH_FIELD` of width.
+// reference: search-field
+// reference: search-field-page
+pub fn searching<'a>(term: &str, viewport: Viewport) -> Element<'a, Message> {
+    let glyph = container(crate::icon::icon(Icon::Search, typeface::SEARCH_ICON)).padding(
+        iced::Padding::ZERO
+            .right(style::drawn(space::SEARCH_ICON_GAP.drawn()))
+            .bottom(style::drawn(space::SEARCH_ICON_DROP.drawn())),
+    );
+    let typed = iced::widget::text_input(strings::lookup(Text::SearchPlaceholder), term)
+        .style(style::input)
+        .size(style::drawn(typeface::FIELD.drawn()))
+        .padding(style::padding(space::INPUT_PAD))
+        .on_input(Message::SearchEdited)
+        .on_submit(Message::SearchSubmitted);
+    let side = style::drawn(space::page_side(viewport.canvas()));
+    container(
+        container(row![glyph, typed].align_y(iced::Alignment::Center))
+            .max_width(style::drawn(space::SEARCH_FIELD.drawn())),
+    )
+    .padding(iced::Padding::ZERO.right(side).left(side))
+    .center_x(Fill)
+    .into()
+}
+
 /// Which of the reference's two block faces a control draws.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Emphasis {

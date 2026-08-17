@@ -50,6 +50,7 @@ icons! {
     Photo => "photo",
     Queue => "queue",
     Quiz => "quiz",
+    Search => "search",
     SortByAlpha => "sort_by_alpha",
     Storage => "storage",
     Theaters => "theaters",

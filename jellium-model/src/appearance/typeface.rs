@@ -47,6 +47,10 @@ pub const CARD_ICON: Length = Length::em(5.0);
 // reference: filter-indicator
 pub const INDICATOR: Length = BODY.times(Ratio::thousandths(600));
 
+/// `.searchfields-icon`, the one glyph the search field stands beside.
+// reference: search-icon
+pub const SEARCH_ICON: Length = Length::em(2.0);
+
 /// The steps `.alphaPicker-vertical` takes as the page shortens, in the order
 /// the cascade resolves them.
 // reference: alpha-picker-size
