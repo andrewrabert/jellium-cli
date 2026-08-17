@@ -434,7 +434,11 @@ fn transport<'a>(
         controls = controls.push(volume(device, viewport));
     }
     controls = controls
-        .push(opening(Icon::Settings, Text::PlayerSettings, Menu::Settings))
+        .push(opening(
+            Icon::Settings,
+            Text::PlayerSettings,
+            Menu::Settings,
+        ))
         .push(acting(
             Icon::Shuffle,
             Text::QueueShuffle,
@@ -705,9 +709,13 @@ pub fn view<'a>(
 
     panel = match playing.live.as_ref() {
         Some(live) => panel.push(live_transport(playing, live, chrono::Utc::now())),
-        None => panel
-            .push(elapsed(playing, viewport))
-            .push(transport(playing, Surface::Osd, sync_play, device, viewport)),
+        None => panel.push(elapsed(playing, viewport)).push(transport(
+            playing,
+            Surface::Osd,
+            sync_play,
+            device,
+            viewport,
+        )),
     };
 
     column![

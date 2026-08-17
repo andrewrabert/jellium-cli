@@ -186,7 +186,11 @@ fn boxed<'a>(
 /// The margin `.cardBox-bottompadded` reserves under a card, which the
 /// reference sets by the section the card stands in.
 // reference: card-box-bottom
-fn reserving<'a>(body: Element<'a, Message>, room: Room, bottom: card::Bottom) -> Element<'a, Message> {
+fn reserving<'a>(
+    body: Element<'a, Message>,
+    room: Room,
+    bottom: card::Bottom,
+) -> Element<'a, Message> {
     match bottom {
         card::Bottom::Flush => body,
         card::Bottom::Padded => {
