@@ -8,7 +8,7 @@ pub mod metadata;
 pub mod remote;
 pub mod user;
 
-use iced::widget::{button, center, row, scrollable};
+use iced::widget::{button, center, row};
 use iced::{Element, Task};
 use jellium_model::setup::Step;
 
@@ -43,15 +43,15 @@ pub enum Body {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Edit {
     ServerName(String),
-    Culture(Choice),
+    Culture(Choice<String>),
     UserName(String),
     Password(String),
     Confirmation(String),
     LibraryName(String),
-    ContentType(Choice),
+    ContentType(Choice<String>),
     Renaming(String),
-    MetadataLanguage(Choice),
-    MetadataCountry(Choice),
+    MetadataLanguage(Choice<String>),
+    MetadataCountry(Choice<String>),
     RemoteAccess(bool),
     PortMapping(bool),
 }
@@ -456,7 +456,7 @@ fn body(state: &State) -> Element<'_, Message> {
 /// version and the snapshot's differ, the sentence naming a resumed saved
 /// server, Back, Next, and the refusal over the server's own message.
 pub fn view(state: &State, viewport: Viewport) -> Element<'_, Message> {
-    let mut rows = vec![
+    let rows = [
         prose(strings::lookup(Text::SetupTitle), typeface::HEADING_2),
         prose(
             strings::format(
@@ -468,10 +468,10 @@ pub fn view(state: &State, viewport: Viewport) -> Element<'_, Message> {
             ),
             typeface::SECONDARY,
         ),
-    ];
-
-    if state.startup.off_snapshot() {
-        rows.push(prose(
+    ]
+    .into_iter()
+    .chain(state.startup.off_snapshot().then(|| {
+        prose(
             strings::format(
                 Text::WarningOffSnapshot,
                 &[
@@ -480,23 +480,21 @@ pub fn view(state: &State, viewport: Viewport) -> Element<'_, Message> {
                 ],
             ),
             typeface::SECONDARY,
-        ));
-    }
-    if state.startup.resumed {
-        rows.push(prose(
-            strings::lookup(Text::SetupResumed),
-            typeface::SECONDARY,
-        ));
-    }
-
-    rows.push(body(state));
+        )
+    }))
+    .chain(
+        state
+            .startup
+            .resumed
+            .then(|| prose(strings::lookup(Text::SetupResumed), typeface::SECONDARY)),
+    );
 
     let mut controls = row![
         button(prose(strings::lookup(Text::SetupBack), typeface::BODY))
             .style(style::raised)
             .on_press(Message::SetupAction(Action::Back)),
     ]
-    .spacing(style::drawn(space::GUTTER.drawn()));
+    .spacing(style::drawn(space::CONTROL_GAP.drawn()));
     if ready(state) && !state.working {
         controls = controls.push(
             button(prose(strings::lookup(Text::SetupNext), typeface::BODY))
@@ -504,7 +502,13 @@ pub fn view(state: &State, viewport: Viewport) -> Element<'_, Message> {
                 .on_press(Message::SetupAction(Action::Next)),
         );
     }
-    rows.push(controls.into());
-
-    center(scrollable(widget::form(viewport, rows))).into()
+    center(crate::widget::scrolled(
+        iced::widget::container(widget::capped(
+            viewport,
+            space::FIELD_GAP,
+            rows.chain([body(state), controls.into()]),
+        ))
+        .padding(style::padding(space::PAGE_PAD)),
+    ))
+    .into()
 }

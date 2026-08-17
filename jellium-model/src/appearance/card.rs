@@ -849,13 +849,13 @@ fn request(card: Card) -> &'static Request {
 fn written(footer: Footer) -> Drawn {
     let name = space::CARD_FOOTER_PAD
         .top
-        .plus(typeface::BODY.times(typeface::LINE_HEIGHT))
+        .plus(typeface::LINE_HEIGHT.of(typeface::BODY))
         .plus(space::CARD_FOOTER_PAD.bottom);
     match footer {
         Footer::Bare => Drawn::ZERO,
         Footer::Name => name.drawn(),
         Footer::NameAndSubtitle => name
-            .plus(typeface::SECONDARY.times(typeface::LINE_HEIGHT))
+            .plus(typeface::LINE_HEIGHT.of(typeface::SECONDARY))
             .drawn(),
     }
 }

@@ -1,6 +1,7 @@
+use std::borrow::Cow;
 use std::rc::Rc;
 
-use iced::widget::{button, column, container, row};
+use iced::widget::{button, column, container};
 use iced::{Element, Fill};
 use jellyfin_api::types::TimerInfoDto;
 
@@ -8,50 +9,63 @@ use super::Action;
 use crate::api::Api;
 use crate::app::Message;
 use crate::error::Answer;
-use crate::style::{self, Drawn, space, typeface};
+use crate::style::{self, space, typeface};
 use crate::text::{self as strings, Text};
-use crate::widget;
-use crate::widget::{line, prose};
-use crate::window;
+use crate::widget::{self, prose};
 
 #[derive(Debug, Clone)]
 pub struct State {
     /// Upcoming timers ordered by start time.
     pub timers: Vec<TimerInfoDto>,
-    pub window: window::Window,
 }
 
-pub async fn load(api: Rc<Api>, height: Drawn) -> Answer<State> {
+/// Every row of the schedule: three lines and nothing before them.
+const ROW: space::ListRow = space::ListRow::bare(space::Lines::Three);
+
+pub async fn load(api: Rc<Api>) -> Answer<State> {
     Answer::of(async {
         Ok(State {
             timers: api.timers().await.bubbled()?,
-            window: window::Window::new(
-                window::Id::Schedule,
-                Drawn::of(style::drawn(space::LIST_ROW.drawn())),
-                height,
-            ),
         })
     })
     .await
 }
 
-/// The day heading a timer falls under, and nothing when it repeats the day
-/// the timer before it carried.
-fn day(timers: &[TimerInfoDto], index: usize) -> Option<String> {
-    let at = timers.get(index)?.start_date?;
-    let named = chrono::DateTime::<chrono::Local>::from(at)
-        .format("%A %d %B")
-        .to_string();
-    let before = index
-        .checked_sub(1)
-        .and_then(|before| timers.get(before))
-        .and_then(|timer| timer.start_date)
-        .map(|at| {
-            chrono::DateTime::<chrono::Local>::from(at)
-                .format("%A %d %B")
-                .to_string()
-        });
-    (before.as_deref() != Some(named.as_str())).then_some(named)
+/// One run of timers sharing a day: the heading the reference writes over the
+/// run, and none where its timers carry no start.
+struct Day<'a> {
+    named: Option<String>,
+    timers: &'a [TimerInfoDto],
+}
+
+/// The day a timer falls under, written as the reference writes it: the weekday
+/// in full, the month short, the day of the month.
+// reference: schedule-groups
+fn named(at: chrono::DateTime<chrono::Utc>) -> String {
+    chrono::DateTime::<chrono::Local>::from(at)
+        .format("%A, %b %-d")
+        .to_string()
+}
+
+/// The runs of consecutive timers sharing a day, in the order they arrive.
+// reference: schedule-groups
+fn days(timers: &[TimerInfoDto]) -> Vec<Day<'_>> {
+    let mut days: Vec<Day<'_>> = Vec::new();
+    let mut start = 0;
+    for index in 0..timers.len() {
+        let ends = timers
+            .get(index + 1)
+            .map(|next| next.start_date.map(named) != timers[index].start_date.map(named))
+            .unwrap_or(true);
+        if ends {
+            days.push(Day {
+                named: timers[start].start_date.map(named),
+                timers: &timers[start..=index],
+            });
+            start = index + 1;
+        }
+    }
+    days
 }
 
 /// True when the Jellyfin server reports this timer conflicted.
@@ -77,71 +91,60 @@ fn airtime(timer: &TimerInfoDto) -> String {
     )
 }
 
-fn entry<'a>(timers: &'a [TimerInfoDto], index: usize) -> Element<'a, Message> {
-    let timer = &timers[index];
-    let heading: Element<'a, Message> = match day(timers, index) {
-        Some(named) => prose(
-            crate::text::format(Text::ScheduleDay, &[&named]),
-            typeface::BODY,
-        ),
-        None => iced::widget::Space::new().into(),
-    };
-
-    let mut named = column![
-        line(
-            timer.name.clone().unwrap_or_default(),
-            typeface::BODY,
-            typeface::Weight::Regular
-        ),
-        line(
-            format!(
-                "{} — {}",
-                timer.channel_name.clone().unwrap_or_default(),
-                airtime(timer)
-            ),
-            typeface::SECONDARY,
-            typeface::Weight::Regular,
-        ),
-    ]
-    .spacing(style::drawn(space::BLOCK_GAP.drawn()))
-    .width(Fill);
+fn entry(timer: &TimerInfoDto) -> widget::list::Row<'_> {
+    let mut secondary = vec![Cow::from(format!(
+        "{} — {}",
+        timer.channel_name.clone().unwrap_or_default(),
+        airtime(timer)
+    ))];
     if conflicted(timer) {
-        named = named.push(line(
-            strings::lookup(Text::ScheduleConflicted),
-            typeface::SECONDARY,
-            typeface::Weight::Regular,
-        ));
+        secondary.push(strings::lookup(Text::ScheduleConflicted).into());
     }
 
-    let cancel: Element<'a, Message> = match timer.id.clone() {
-        Some(id) => button(prose(strings::lookup(Text::ScheduleCancel), typeface::BODY))
-            .style(style::raised)
-            .on_press(Message::LiveTvAction(Action::CancelTimer(id)))
-            .into(),
-        None => iced::widget::Space::new().into(),
-    };
-
-    container(
-        column![
-            heading,
-            row![named, cancel]
-                .spacing(style::drawn(space::GUTTER.drawn()))
-                .align_y(iced::Center),
-        ]
-        .spacing(style::drawn(space::BLOCK_GAP.drawn())),
-    )
-    .height(style::drawn(space::LIST_ROW.drawn()))
-    .into()
+    widget::list::Row {
+        face: None,
+        index: None,
+        title: timer.name.clone().unwrap_or_default().into(),
+        secondary,
+        press: widget::list::Press::Inert,
+        controls: match timer.id.clone() {
+            Some(id) => vec![
+                button(prose(strings::lookup(Text::ScheduleCancel), typeface::BODY))
+                    .style(style::flat)
+                    .on_press(Message::LiveTvAction(Action::CancelTimer(id)))
+                    .into(),
+            ],
+            None => Vec::new(),
+        },
+    }
 }
 
-/// A windowed list grouped by day, each row carrying its channel, program,
+/// One group's heading over its rows, and its rows alone where the group has
+/// none.
+// reference: schedule-groups
+// reference: section-title-cards
+fn grouped<'a>(day: Day<'a>) -> Element<'a, Message> {
+    let rows = widget::list::listed(ROW, day.timers.iter().map(entry));
+    match day.named {
+        None => rows,
+        Some(named) => column![
+            container(prose(named, typeface::HEADING_2))
+                .padding(style::padding(space::GROUP_TITLE_PAD)),
+            rows,
+        ]
+        .into(),
+    }
+}
+
+/// The timers grouped by the day they start on, each group under the heading
+/// the reference writes over it and its rows carrying the channel, program,
 /// time and status, a timer the Jellyfin server reports conflicted shown as
 /// conflicted, and a control that cancels it.
 pub fn view<'a>(state: &'a State) -> Element<'a, Message> {
     if state.timers.is_empty() {
-        return widget::banner(strings::lookup(Text::ScheduleEmpty).to_string());
+        return widget::centered(strings::lookup(Text::ScheduleEmpty).to_string());
     }
-    window::list(state.window, state.timers.len(), move |index| {
-        entry(&state.timers, index)
-    })
+    widget::scrolled(column(days(&state.timers).into_iter().map(grouped)))
+        .height(Fill)
+        .into()
 }

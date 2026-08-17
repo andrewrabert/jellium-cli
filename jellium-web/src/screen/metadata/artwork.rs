@@ -144,9 +144,9 @@ pub fn view<'a>(
         }
         control.into()
     }))
-    .spacing(style::drawn(space::GUTTER.drawn()));
+    .spacing(style::drawn(space::CONTROL_GAP.drawn()));
 
-    let mut page = column![strip].spacing(style::drawn(space::GUTTER.drawn()));
+    let mut page = column![strip].spacing(style::drawn(space::SECTION_GAP.drawn()));
 
     for kind in Kind::ALL {
         let held = held_of(state, kind);
@@ -234,7 +234,7 @@ pub fn view<'a>(
             )))
             .into()
     }))
-    .spacing(style::drawn(space::GUTTER.drawn()));
+    .spacing(style::drawn(space::CONTROL_GAP.drawn()));
 
     page = page.push(providers).push(
         button(prose(strings::lookup(Text::ArtworkSearch), typeface::BODY))

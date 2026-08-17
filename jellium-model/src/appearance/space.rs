@@ -1,12 +1,15 @@
 //! Every padding, gap, radius, border and shadow the client draws, and the page
-//! padding that is a share of the viewport.
+//! padding that is a share of the viewport. A construct carrying both a measure
+//! and a colour is named the same here and in `scheme`; the module names which
+//! of the two a constant is.
 
 use chrono::TimeDelta;
 
 use super::scheme::{self, Color};
 use super::typeface;
 use super::{
-    Breakpoint, Canvas, Css, Drawn, Length, Letters, Orientation, Query, Ratio, Share, Viewport,
+    Band, Breakpoint, Canvas, Css, Drawn, Length, Letters, Orientation, Query, Ratio, Share,
+    Viewport,
 };
 
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -15,6 +18,15 @@ pub struct Padding {
     pub right: Length,
     pub bottom: Length,
     pub left: Length,
+}
+
+/// A padding written in css pixels, which is how MUI writes its own.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct Inset {
+    pub top: Css,
+    pub right: Css,
+    pub bottom: Css,
+    pub left: Css,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -81,7 +93,7 @@ impl Room {
 // reference: card-box
 pub const CARD_MARGIN: Length = Length::em(0.6);
 
-pub const GUTTER: Length = CARD_MARGIN.plus(CARD_MARGIN);
+pub const GUTTER: Length = CARD_MARGIN.abutting(CARD_MARGIN);
 
 // reference: card-box-bottom
 pub const CARD_BOTTOM: Length = Length::em(1.8);
@@ -95,15 +107,97 @@ pub const CARD_BOTTOM_AT: Query = Query::MaxWidth(Breakpoint::em(50.0));
 // reference: control-button
 pub const CONTROL_MARGIN: Length = Length::em(0.3);
 
-pub const CONTROL_GAP: Length = CONTROL_MARGIN.plus(CONTROL_MARGIN);
+pub const CONTROL_GAP: Length = CONTROL_MARGIN.abutting(CONTROL_MARGIN);
 
 // reference: control-button-block
 pub const BLOCK_MARGIN: Length = Length::em(0.25);
 
-pub const BLOCK_GAP: Length = BLOCK_MARGIN.plus(BLOCK_MARGIN);
+/// Two `.block` controls are block-level siblings in normal flow.
+pub const BLOCK_GAP: Length = BLOCK_MARGIN.collapsing(BLOCK_MARGIN);
 
 // reference: control-field
+// reference: control-select-container
+// reference: control-checkbox-container
 pub const FIELD_GAP: Length = Length::em(1.8);
+
+/// `.inputLabel`'s own margin under itself.
+// reference: control-input-label
+// reference: control-select-label
+pub const LABEL_GAP: Length = Length::em(0.25);
+
+/// `.fieldDescription`'s own margin over itself.
+// reference: control-field-description
+// reference: control-select-description
+pub const DESCRIPTION_GAP: Length = Length::em(0.25);
+
+/// `.emby-select`'s own padding, written in the em of the 110% it is set in,
+/// its trailing side the reserve the chevron is laid over.
+// reference: control-select
+pub const SELECT_PAD: Padding = Padding {
+    top: typeface::FIELD.times(Ratio::thousandths(500)),
+    right: typeface::FIELD.times(Ratio::thousandths(1900)),
+    bottom: typeface::FIELD.times(Ratio::thousandths(500)),
+    left: typeface::FIELD.times(Ratio::thousandths(500)),
+};
+
+/// `.emby-select-withcolor`'s edge, which the reference draws thinner than an
+/// input's.
+// reference: scheme-select
+pub const SELECT_BORDER: Length = Length::em(0.07);
+
+/// `.selectArrowContainer`'s inset from the field's trailing edge.
+// reference: control-select-arrow
+pub const SELECT_ARROW_INSET: Length = Length::em(0.3);
+
+/// `.checkboxOutline`, the box itself.
+// reference: control-checkbox
+pub const CHECKBOX: Length = Length::em(1.83);
+
+// reference: control-checkbox
+pub const CHECKBOX_BORDER: Length = Length::em(0.14);
+
+// reference: control-checkbox
+pub const CHECKBOX_RADIUS: Length = Length::em(0.14);
+
+/// `.emby-checkbox-label`'s own inset, where the label and the description
+/// under it both begin.
+// reference: control-checkbox-label
+// reference: control-checkbox-description
+pub const CHECKBOX_INSET: Length = Length::em(2.4);
+
+/// What that inset leaves between the box and the label.
+pub const CHECKBOX_GAP: Length = CHECKBOX_INSET.less(CHECKBOX);
+
+/// `.emby-checkbox-label`'s own height, which is what one checkbox row stands
+/// in.
+// reference: control-checkbox-label
+pub const CHECKBOX_ROW: Length = Length::em(2.35);
+
+// reference: control-checkbox-list
+const CHECKBOX_LIST_MARGIN: Length = Length::em(0.5);
+
+/// Two `.checkboxList` rows are block-level siblings in normal flow.
+pub const CHECKBOX_LIST_GAP: Length = CHECKBOX_LIST_MARGIN.collapsing(CHECKBOX_LIST_MARGIN);
+
+/// `.fieldDescription`'s own inset from the control it stands under.
+// reference: field-description
+pub const DESCRIPTION_INSET: Length = Length::em(0.15);
+
+// reference: section-vertical
+const SECTION_BOTTOM: Length = Length::em(2.7);
+
+// reference: section-vertical
+const SECTION_BOTTOM_MOBILE: Length = Length::em(1.0);
+
+/// The margin `.verticalSection-extrabottompadding` leaves under a section,
+/// which the reference cuts on a mobile page.
+// reference: section-vertical
+pub fn section_bottom(band: Band) -> Length {
+    match band {
+        Band::Mobile => SECTION_BOTTOM_MOBILE,
+        Band::Desktop => SECTION_BOTTOM,
+    }
+}
 
 // reference: section-title
 pub const SECTION_GAP: Length = Length::em(1.25);
@@ -111,13 +205,31 @@ pub const SECTION_GAP: Length = Length::em(1.25);
 // reference: section-title-cards
 pub const SECTION_TITLE_TOP: Length = Length::em(1.25);
 
+/// `.sectionTitle-cards` standing in a div that is no
+/// `.sectionTitleContainer-cards`, which is what a grouped list writes over
+/// each of its groups.
 // reference: section-title-cards
-pub const SECTION_TITLE_BOTTOM: Length = Length::em(0.2);
+pub const GROUP_TITLE_PAD: Padding = Padding {
+    top: Length::em(0.5),
+    right: Length::em(0.0),
+    bottom: Length::em(0.2),
+    left: Length::em(0.0),
+};
 
 /// The page's own padding, `.padded-top` and `.padded-bottom`, rather than the
 /// `1em` standing inside a button's `padding: 0.9em 1em`.
 // reference: page-padded
-pub const PAD: Length = Length::em(1.0);
+const PAD: Length = Length::em(1.0);
+
+/// `.padded-top` and `.padded-bottom`, and nothing at the sides, which
+/// `page_side` carries instead.
+// reference: page-padded
+pub const PAGE_PAD: Padding = Padding {
+    top: PAD,
+    right: Length::em(0.0),
+    bottom: PAD,
+    left: Length::em(0.0),
+};
 
 // reference: login-disclaimer
 pub const DISCLAIMER_GAP: Length = Length::em(2.0);
@@ -145,12 +257,13 @@ pub const BUTTON_PAD: Padding = Padding {
     left: Length::em(1.0),
 };
 
+/// `.emby-input`'s own padding, written in the em of the 110% it is set in.
 // reference: control-input
 pub const INPUT_PAD: Padding = Padding {
-    top: Length::em(0.4),
-    right: Length::em(0.25),
-    bottom: Length::em(0.4),
-    left: Length::em(0.25),
+    top: typeface::FIELD.times(Ratio::thousandths(400)),
+    right: typeface::FIELD.times(Ratio::thousandths(250)),
+    bottom: typeface::FIELD.times(Ratio::thousandths(400)),
+    left: typeface::FIELD.times(Ratio::thousandths(250)),
 };
 
 // reference: card-text
@@ -175,13 +288,53 @@ pub const RADIUS: Length = Length::em(0.2);
 // reference: scheme-input
 pub const INPUT_BORDER: Length = Length::em(0.16);
 
+/// The shadow a raised surface carries, which the reference writes the same
+/// under a card and under a toast.
 // reference: card-shadow
-pub const CARD_SHADOW: Shadow = Shadow {
+// reference: toast-face
+pub const SHADOW: Shadow = Shadow {
     drop: Length::em(0.0725),
     blur: Length::em(0.29),
     spread: Length::em(0.0),
     color: scheme::SHADOW,
 };
+
+/// The rail a scrollbar stands in, and the scroller filling it.
+// reference: scrollbar-size
+pub const SCROLLBAR: Length = Length::em(0.4);
+
+/// `.toast`'s own width, which it is never drawn narrower than, across the
+/// border box its own `box-sizing` measures.
+// reference: toast-face
+const TOAST_MIN: Length = Length::em(20.0);
+
+// reference: toast-face
+pub const TOAST_PAD: Padding = Padding {
+    top: Length::em(1.0),
+    right: Length::em(1.5),
+    bottom: Length::em(1.0),
+    left: Length::em(1.5),
+};
+
+/// That floor inside `TOAST_PAD`, which is what a notice's content is laid
+/// against.
+// reference: toast-face
+pub const TOAST_MIN_INSIDE: Length = TOAST_MIN.less(TOAST_PAD.left).less(TOAST_PAD.right);
+
+/// `.toast`'s own corners, which the reference rounds tighter than a control's.
+// reference: toast-face
+pub const TOAST_RADIUS: Length = Length::em(0.15);
+
+/// The margin one toast carries above and below itself.
+// reference: toast-face
+pub const TOAST_MARGIN: Length = Length::em(0.25);
+
+/// `.toastContainer` is a flex column, which collapses nothing.
+pub const TOAST_GAP: Length = TOAST_MARGIN.abutting(TOAST_MARGIN);
+
+/// `.toastContainer`'s inset from the foot and the leading edge of the page.
+// reference: toast-container
+pub const TOAST_INSET: Length = Length::em(1.0);
 
 // reference: header-logo — the slot's width
 // reference: header-title — its height, which the title rule carries
@@ -201,12 +354,454 @@ pub const LIST_BODY_PAD: Padding = Padding {
     left: Length::em(0.75),
 };
 
-/// A list row: a body line over a secondary line, inside the body padding.
-pub const LIST_ROW: Length = LIST_BODY_PAD
-    .top
-    .plus(LIST_BODY_PAD.bottom)
-    .plus(typeface::BODY.times(typeface::LINE_HEIGHT))
-    .plus(typeface::SECONDARY.times(typeface::LINE_HEIGHT));
+/// `.listItemBodyText`'s own padding, which is what stands between one line of
+/// a row's body and the next.
+// reference: list-body-text
+pub const LIST_TEXT_PAD: Padding = Padding {
+    top: Length::em(0.1),
+    right: Length::em(0.0),
+    bottom: Length::em(0.1),
+    left: Length::em(0.0),
+};
+
+/// `.listItemImage`'s own square.
+// reference: list-image
+pub const LIST_IMAGE: Slot = Slot {
+    width: Length::em(4.0),
+    height: Length::em(4.0),
+};
+
+/// The gap `.listItem-indexnumberleft` leaves between a row's position and
+/// what follows it.
+// reference: list-index
+pub const LIST_INDEX_GAP: Length = Length::em(1.0);
+
+/// How many lines a list's rows stack in their bodies, which is what holds
+/// every row of one list to one height: the first line is the row's title and
+/// the rest are its secondary lines.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Lines {
+    One,
+    Two,
+    Three,
+}
+
+/// What a list stands before every row's body, which the row's height is the
+/// taller of: `.listItemImage`'s square, `.listItemIcon`'s box, or nothing.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Before {
+    Image,
+    Icon,
+    Nothing,
+}
+
+/// One `.listItem`'s every vertical measure and the height a list of them
+/// pitches at, which is those same measures summed: `.listItem`'s own padding
+/// around the taller of what stands before the body and the body itself, over
+/// the rule `.listItem-border` draws.
+// reference: control-list-item
+// reference: control-list-border
+// reference: list-body
+// reference: list-body-text
+// reference: list-body-text-desktop
+// reference: list-image
+// reference: list-icon
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct ListRow {
+    lines: Lines,
+    before: Before,
+}
+
+impl ListRow {
+    /// A list standing `.listItemImage`'s square before every row's body.
+    pub const fn art(lines: Lines) -> ListRow {
+        ListRow {
+            lines,
+            before: Before::Image,
+        }
+    }
+
+    /// A list standing `.listItemIcon` there.
+    pub const fn glyph(lines: Lines) -> ListRow {
+        ListRow {
+            lines,
+            before: Before::Icon,
+        }
+    }
+
+    /// A list whose rows start at their bodies.
+    pub const fn bare(lines: Lines) -> ListRow {
+        ListRow {
+            lines,
+            before: Before::Nothing,
+        }
+    }
+
+    /// `.listItem`'s own padding.
+    pub const fn padding(self) -> Padding {
+        LIST_ITEM_PAD
+    }
+
+    /// `.listItemBody`'s own padding.
+    pub const fn body(self) -> Padding {
+        LIST_BODY_PAD
+    }
+
+    /// `.listItemBodyText`'s own padding, which one line of the body stands
+    /// inside.
+    pub const fn text(self) -> Padding {
+        LIST_TEXT_PAD
+    }
+
+    /// The line box that text stands in.
+    pub const fn leading(self) -> typeface::Leading {
+        typeface::LIST_LEADING
+    }
+
+    /// The size a row's title is written at.
+    pub const fn title(self) -> Length {
+        typeface::BODY
+    }
+
+    /// The size every line under the title is written at.
+    pub const fn secondary(self) -> Length {
+        typeface::SECONDARY
+    }
+
+    /// The rule `.listItem-border` draws under the row and on no other side.
+    pub const fn rule(self) -> Length {
+        LIST_RULE
+    }
+
+    /// The row standing over that rule.
+    pub const fn standing(self) -> Length {
+        self.padding()
+            .top
+            .plus(self.padding().bottom)
+            .plus(self.written().taller(self.faced()))
+    }
+
+    /// That row and its rule, which is the height a list pitches at.
+    pub const fn height(self) -> Length {
+        self.standing().plus(self.rule())
+    }
+
+    /// One line of the body in its line box inside `.listItemBodyText`'s own
+    /// padding.
+    const fn line(self, size: Length) -> Length {
+        self.text()
+            .top
+            .plus(self.text().bottom)
+            .plus(self.leading().of(size))
+    }
+
+    /// `.listItemBody` itself: its own padding around the lines it stacks.
+    const fn written(self) -> Length {
+        let secondary = self.line(self.secondary());
+        let stacked = match self.lines {
+            Lines::One => self.line(self.title()),
+            Lines::Two => self.line(self.title()).plus(secondary),
+            Lines::Three => self.line(self.title()).plus(secondary).plus(secondary),
+        };
+        self.body().top.plus(self.body().bottom).plus(stacked)
+    }
+
+    /// What stands before the body, as tall as it is drawn.
+    const fn faced(self) -> Length {
+        match self.before {
+            Before::Image => LIST_IMAGE.height,
+            Before::Icon => typeface::LIST_ICON,
+            Before::Nothing => Length::em(0.0),
+        }
+    }
+}
+
+/// `a[data-role=button]`'s own padding.
+// reference: control-localnav
+pub const LOCALNAV_PAD: Padding = Padding {
+    top: Length::em(0.8),
+    right: Length::em(1.0),
+    bottom: Length::em(0.8),
+    left: Length::em(1.0),
+};
+
+/// The room the group takes back between adjacent controls, which lays each
+/// one over the control before it.
+// reference: control-localnav-group
+pub const LOCALNAV_OVERLAP: Length = Length::em(-0.4);
+
+/// The radius the group carries at its two ends and nowhere else.
+// reference: control-localnav-group
+pub const LOCALNAV_RADIUS: Length = Length::em(0.3125);
+
+/// The room `.localnav` reserves under itself.
+// reference: localnav-row
+pub const LOCALNAV_BOTTOM: Length = Length::em(2.2);
+
+/// MUI's own spacing step, which every measure the reference writes as
+/// `spacing(n)` is a count of.
+// reference: mui-spacing
+pub const SPACING_STEP: Css = Css::of(8.0);
+
+/// The rhythm a dashboard screen stacks its content at, which is three steps.
+// reference: dashboard-content
+pub const DASHBOARD_GAP: Css = SPACING_STEP.times(Ratio::thousandths(3000));
+
+/// `.content-primary`'s own side padding on a dashboard page.
+// reference: dashboard-content-side
+pub const DASHBOARD_SIDE: Length = Length::em(1.0);
+
+/// The room `.dashboardDocument .content-primary` leaves above itself.
+// reference: dashboard-frame
+pub const DASHBOARD_TOP: Length = Length::em(3.25);
+
+/// `$drawer-width`, the column the navigation drawer stands in and the page's
+/// own content begins after.
+// reference: dashboard-frame
+pub const DRAWER: Css = Css::of(240.0);
+
+/// The page the drawer stands beside the content on rather than over it.
+// reference: dashboard-frame
+pub const DRAWER_BESIDE_AT: Query = Query::MinWidth(Breakpoint::pixels(900));
+
+/// `.MuiDrawer-paper`'s own foot, which the reference leaves clear for the
+/// now-playing bar.
+// reference: drawer-paper
+pub const DRAWER_BOTTOM: Length = Length::em(4.2);
+
+/// `.MuiListItemButton-root`'s own padding, which MUI writes as the bare
+/// numbers the DOM reads as css pixels.
+// reference: drawer-entry
+pub const DRAWER_ENTRY_PAD: Inset = Inset {
+    top: Css::unitless(8.0),
+    right: Css::unitless(16.0),
+    bottom: Css::unitless(8.0),
+    left: Css::unitless(16.0),
+};
+
+/// The slot `MuiListItemIcon` stands an entry's glyph in, which the reference
+/// narrows from MUI's own.
+// reference: dashboard-list-icon
+// reference: dashboard-list-icon-slot
+pub const DRAWER_GLYPH: Css = Css::unitless(36.0);
+
+/// The inset an entry held by a group stands at, which is four steps.
+// reference: drawer-server
+pub const DRAWER_NESTED: Css = SPACING_STEP.times(Ratio::thousandths(4000));
+
+/// A body cell's own padding at MRT's compact density.
+// reference: table-body-cell
+pub const TABLE_CELL_PAD: Padding = Padding {
+    top: Length::em(0.5),
+    right: Length::em(0.5),
+    bottom: Length::em(0.5),
+    left: Length::em(0.5),
+};
+
+/// The same cell in a display column, which MRT pads at the sides alone.
+// reference: table-body-cell
+pub const TABLE_DISPLAY_PAD: Padding = Padding {
+    top: Length::em(0.0),
+    right: Length::em(0.5),
+    bottom: Length::em(0.0),
+    left: Length::em(0.5),
+};
+
+/// A head cell's own padding, which MRT writes shallower above than below.
+// reference: table-head-cell
+pub const TABLE_HEAD_PAD: Padding = Padding {
+    top: Length::em(0.25),
+    right: Length::em(0.5),
+    bottom: Length::em(0.4),
+    left: Length::em(0.5),
+};
+
+/// The rule every table cell draws under itself, written in css pixels.
+// reference: mui-table-cell
+pub const TABLE_CELL_RULE: Css = Css::of(1.0);
+
+/// A toolbar's own least height; the reference keeps two of these clear of the
+/// table's container, one for each toolbar the paper stands.
+// reference: table-toolbar
+// reference: table-container
+pub const TABLE_TOOLBAR: Length = Length::em(3.5);
+
+/// The padding the toolbar's own row carries.
+// reference: table-toolbar-row
+pub const TABLE_TOOLBAR_PAD: Length = Length::em(0.5);
+
+/// The gap between the controls standing in that row.
+// reference: table-toolbar-row
+pub const TABLE_TOOLBAR_GAP: Length = Length::em(0.5);
+
+/// The gap `TablePage` leaves between its title and the line under it, which
+/// is two steps.
+// reference: table-page
+pub const TABLE_TITLE_GAP: Css = SPACING_STEP.times(Ratio::thousandths(2000));
+
+/// The room it leaves under that stack, which is one.
+// reference: table-page
+pub const TABLE_TITLE_BOTTOM: Css = SPACING_STEP;
+
+/// The width MRT gives a column whose definition declares none.
+// reference: table-column-default
+pub const TABLE_COLUMN: Css = Css::unitless(180.0);
+
+/// The narrowest MRT draws any column, whatever its definition declares.
+// reference: table-cell-width
+pub const TABLE_COLUMN_FLOOR: Css = Css::unitless(30.0);
+
+// reference: table-activity-columns
+pub const ACTIVITY_TIME: Css = Css::unitless(160.0);
+
+// reference: table-activity-columns
+pub const ACTIVITY_LEVEL: Css = Css::unitless(90.0);
+
+// reference: table-activity-columns
+pub const ACTIVITY_USER: Css = Css::unitless(75.0);
+
+// reference: table-activity-columns
+pub const ACTIVITY_NAME: Css = Css::unitless(270.0);
+
+// reference: table-activity-columns
+pub const ACTIVITY_OVERVIEW: Css = Css::unitless(170.0);
+
+// reference: table-activity-columns
+pub const ACTIVITY_TYPE: Css = Css::unitless(150.0);
+
+// reference: table-activity-columns
+pub const ACTIVITY_ACTIONS: Css = Css::unitless(60.0);
+
+// reference: table-devices-columns
+pub const DEVICES_LAST_ACTIVE: Css = Css::unitless(160.0);
+
+// reference: table-devices-columns
+pub const DEVICES_DEVICE: Css = Css::unitless(200.0);
+
+// reference: table-devices-columns
+pub const DEVICES_APP: Css = Css::unitless(200.0);
+
+// reference: table-devices-columns
+pub const DEVICES_USER: Css = Css::unitless(120.0);
+
+// reference: table-devices-actions
+pub const DEVICES_ACTIONS: Css = Css::unitless(100.0);
+
+// reference: table-keys-columns
+pub const KEYS_TOKEN: Css = Css::unitless(300.0);
+
+// reference: table-keys-columns
+pub const KEYS_APP: Css = TABLE_COLUMN;
+
+// reference: table-keys-columns
+pub const KEYS_ISSUED: Css = TABLE_COLUMN;
+
+/// The keys screen declares a narrower action column than MRT will draw, so it
+/// stands at the floor instead.
+// reference: table-keys-actions
+pub const KEYS_ACTIONS: Css = TABLE_COLUMN_FLOOR;
+
+/// One segment of the toolbar's group: its own padding.
+// reference: mui-toggle-button
+pub const TOGGLE_PAD: Css = Css::unitless(7.0);
+
+/// The edge that segment carries.
+// reference: mui-toggle-button
+pub const TOGGLE_BORDER: Css = Css::of(1.0);
+
+/// The radius the group carries at its two ends.
+// reference: mui-shape
+pub const TOGGLE_RADIUS: Css = Css::unitless(4.0);
+
+/// The room the group takes back between adjacent segments.
+// reference: mui-toggle-group
+pub const TOGGLE_OVERLAP: Css = Css::unitless(-1.0);
+
+/// The height a table pitches its body rows at: a cell's own padding around
+/// one line of the table's lettering, over the rule the cell draws under
+/// itself. Every row is one line, the reference setting `white-space: nowrap`
+/// at this density.
+// reference: table-body-cell
+// reference: mui-table-cell
+pub fn table_row(band: Band) -> Drawn {
+    TABLE_CELL_PAD
+        .top
+        .plus(typeface::TABLE_LEADING.of(typeface::TABLE))
+        .plus(TABLE_CELL_PAD.bottom)
+        .drawn()
+        .plus(TABLE_CELL_RULE.drawn(band))
+}
+
+/// The head row's own height, which is the head cell's padding and that same
+/// rule around the line box MUI writes for a head cell.
+// reference: table-head-cell
+// reference: mui-table-cell
+pub fn table_head(band: Band) -> Drawn {
+    TABLE_HEAD_PAD
+        .top
+        .plus(typeface::TABLE_HEAD_LEADING.of(typeface::TABLE))
+        .plus(TABLE_HEAD_PAD.bottom)
+        .drawn()
+        .plus(TABLE_CELL_RULE.drawn(band))
+}
+
+/// `.listItem`'s own padding, which the reference writes wider at the leading
+/// edge than at the other three.
+// reference: control-list-item
+pub const LIST_ITEM_PAD: Padding = Padding {
+    top: Length::em(0.25),
+    right: Length::em(0.25),
+    bottom: Length::em(0.25),
+    left: Length::em(0.5),
+};
+
+/// The rule `.listItem-border` draws under a row and on no other side.
+// reference: control-list-border
+pub const LIST_RULE: Length = Length::em(0.1);
+
+/// `.editPageSidebar`'s width, and `.editPageInnerContent`'s beside it.
+// reference: metadata-sidebar
+pub const EDITOR_SIDEBAR: Share = Share::per_ten_thousand(3000);
+
+// reference: metadata-sidebar
+pub const EDITOR_CONTENT: Share = Share::per_ten_thousand(6850);
+
+/// The same two on the widest page the reference writes a step for.
+// reference: metadata-sidebar-wide
+pub const EDITOR_SIDEBAR_WIDE: Share = Share::per_ten_thousand(2500);
+
+// reference: metadata-sidebar-wide
+pub const EDITOR_CONTENT_WIDE: Share = Share::per_ten_thousand(7350);
+
+/// The page the reference stands the sidebar beside the content on.
+// reference: metadata-sidebar
+pub const EDITOR_BESIDE_AT: Query = Query::MinWidth(Breakpoint::em(50.0));
+
+// reference: metadata-sidebar-wide
+pub const EDITOR_WIDE_AT: Query = Query::MinWidth(Breakpoint::em(112.5));
+
+/// The gutter the reference leaves between the sidebar and the content beside
+/// it, which the sidebar's own rule stands in.
+// reference: metadata-sidebar
+pub const EDITOR_GAP: Share = Share::WHOLE.less(EDITOR_SIDEBAR).less(EDITOR_CONTENT);
+
+/// The same gutter on the widest page the reference writes a step for.
+// reference: metadata-sidebar-wide
+pub const EDITOR_GAP_WIDE: Share = Share::WHOLE
+    .less(EDITOR_SIDEBAR_WIDE)
+    .less(EDITOR_CONTENT_WIDE);
+
+/// The rule down the sidebar's trailing edge, written in css pixels.
+// reference: metadata-sidebar
+pub const EDITOR_RULE: Css = Css::of(1.0);
+
+/// The gap `.listItemIcon` leaves between a row's glyph and its body.
+// reference: list-icon
+pub const LIST_ICON_GAP: Length = Length::em(0.25);
+
+/// The inset the settings menu writes on its own section title.
+// reference: settings-menu
+pub const SECTION_TITLE_INSET: Length = Length::em(0.25);
 
 /// The now-playing bar, which stands as tall as this.
 // reference: bar-top
@@ -376,7 +971,7 @@ pub const SUGGESTION_PAD: Padding = Padding {
 // reference: control-icon-button
 pub const ICON_MARGIN: Length = Length::em(0.29);
 
-pub const ICON_GAP: Length = ICON_MARGIN.plus(ICON_MARGIN);
+pub const ICON_GAP: Length = ICON_MARGIN.abutting(ICON_MARGIN);
 
 /// `.paper-icon-button-light`'s padding, which is what rounds it into a disc.
 // reference: control-icon-button
@@ -542,6 +1137,22 @@ pub fn guide_minute(viewport: Viewport) -> Drawn {
 // reference: guide-channel
 pub fn guide_channel(viewport: Viewport) -> Drawn {
     stepped(viewport, GUIDE_CHANNEL, &GUIDE_CHANNEL_STEPS).of(viewport.canvas().width())
+}
+
+// reference: control-tab
+const TAB_SIDES: Ratio = Ratio::thousandths(1500);
+
+/// A tab's own padding, which the reference writes as `1.5em` of the tab's own
+/// lettering on every side.
+// reference: control-tab
+pub fn tab_pad(viewport: Viewport) -> Padding {
+    let side = typeface::tab(viewport).times(TAB_SIDES);
+    Padding {
+        top: side,
+        right: side,
+        bottom: side,
+        left: side,
+    }
 }
 
 /// The page a tall dialog leaves above itself.

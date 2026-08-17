@@ -1,8 +1,9 @@
+use std::borrow::Cow;
 use std::collections::HashSet;
 use std::rc::Rc;
 
-use iced::widget::{Space, button, column, container, image, row};
-use iced::{Element, Fill};
+use iced::Element;
+use iced::widget::button;
 use jellyfin_api::types::BaseItemDto;
 use uuid::Uuid;
 
@@ -13,8 +14,7 @@ use crate::error::Answer;
 use crate::images::{self, Cache};
 use crate::style::{self, Drawn, space, typeface};
 use crate::text::{self as strings, Text};
-use crate::widget;
-use crate::widget::{line, prose};
+use crate::widget::{self, prose};
 use crate::window;
 
 #[derive(Debug, Clone)]
@@ -34,15 +34,14 @@ pub fn writing(item: &BaseItemDto) -> Option<&str> {
     in_progress(item).then_some(item.timer_id.as_deref())?
 }
 
+/// Every row of the recordings list: its poster over two lines.
+const ROW: space::ListRow = space::ListRow::art(space::Lines::Two);
+
 pub async fn load(api: Rc<Api>, height: Drawn) -> Answer<State> {
     Answer::of(async {
         Ok(State {
             recordings: api.recordings().await.bubbled()?,
-            window: window::Window::new(
-                window::Id::Recordings,
-                Drawn::of(style::drawn(space::LIST_ROW.drawn())),
-                height,
-            ),
+            window: window::Window::new(window::Id::Recordings, ROW.height().drawn(), height),
         })
     })
     .await
@@ -56,89 +55,91 @@ fn key(item: &BaseItemDto) -> Option<images::Key> {
     })
 }
 
+/// The control that stops the timer writing an in-progress recording.
+fn stop<'a>(timer: &str) -> Element<'a, Message> {
+    button(prose(strings::lookup(Text::RecordingsStop), typeface::BODY))
+        .style(style::flat)
+        .on_press(Message::LiveTvAction(Action::StopRecording(
+            timer.to_string(),
+        )))
+        .into()
+}
+
+/// The control that carries out a delete already asked for.
+fn confirm<'a>(id: Uuid) -> Element<'a, Message> {
+    button(prose(
+        strings::lookup(Text::RecordingsDeleteConfirm),
+        typeface::BODY,
+    ))
+    .style(style::flat)
+    .on_press(Message::LiveTvAction(Action::ConfirmDelete(id)))
+    .into()
+}
+
+/// The control that abandons a delete already asked for.
+fn cancel<'a>() -> Element<'a, Message> {
+    button(prose(
+        strings::lookup(Text::RecordingsDeleteCancel),
+        typeface::BODY,
+    ))
+    .style(style::flat)
+    .on_press(Message::LiveTvAction(Action::CloseDelete))
+    .into()
+}
+
+/// The control that asks for a delete.
+fn delete<'a>(id: Uuid) -> Element<'a, Message> {
+    button(prose(
+        strings::lookup(Text::RecordingsDelete),
+        typeface::BODY,
+    ))
+    .style(style::flat)
+    .on_press(Message::LiveTvAction(Action::Delete(id)))
+    .into()
+}
+
+// reference: list-markup
 fn entry<'a>(
     item: &'a BaseItemDto,
     confirming: Option<Uuid>,
     art: Option<iced::widget::image::Handle>,
 ) -> Element<'a, Message> {
-    let poster: Element<'a, Message> = match art {
-        Some(handle) => image(handle)
-            .width(style::drawn(space::BAR_ART.drawn()))
-            .into(),
-        None => Space::new()
-            .width(style::drawn(space::BAR_ART.drawn()))
-            .into(),
-    };
-
-    let Some(id) = item.id else {
-        return Space::new().into();
-    };
-
-    let mut named = column![line(
-        item.name.clone().unwrap_or_default(),
-        typeface::BODY,
-        typeface::Weight::Regular,
-    )]
-    .spacing(style::drawn(space::BLOCK_GAP.drawn()))
-    .width(Fill);
-    if in_progress(item) {
-        named = named.push(line(
-            strings::lookup(Text::RecordingsInProgress),
-            typeface::SECONDARY,
-            typeface::Weight::Regular,
-        ));
-    }
-
-    let mut controls = row![
-        button(prose(strings::lookup(Text::ProgramPlay), typeface::BODY))
-            .style(style::raised)
-            .on_press(Message::LiveTvAction(Action::PlayRecording(id))),
-    ]
-    .spacing(style::drawn(space::GUTTER.drawn()));
-
-    if let Some(timer) = writing(item) {
-        controls = controls.push(
-            button(prose(strings::lookup(Text::RecordingsStop), typeface::BODY))
-                .style(style::raised)
-                .on_press(Message::LiveTvAction(Action::StopRecording(
-                    timer.to_string(),
-                ))),
-        );
-    } else if confirming == Some(id) {
-        controls = controls.push(
-            button(prose(
-                strings::lookup(Text::RecordingsDeleteConfirm),
-                typeface::BODY,
-            ))
-            .style(style::raised)
-            .on_press(Message::LiveTvAction(Action::ConfirmDelete(id))),
-        );
-        controls = controls.push(
-            button(prose(
-                strings::lookup(Text::RecordingsDeleteCancel),
-                typeface::BODY,
-            ))
-            .style(style::raised)
-            .on_press(Message::LiveTvAction(Action::CloseDelete)),
-        );
-    } else {
-        controls = controls.push(
-            button(prose(
-                strings::lookup(Text::RecordingsDelete),
-                typeface::BODY,
-            ))
-            .style(style::raised)
-            .on_press(Message::LiveTvAction(Action::Delete(id))),
+    let mut controls: Vec<Element<'a, Message>> = Vec::new();
+    if let Some(id) = item.id {
+        controls.push(
+            button(prose(strings::lookup(Text::ProgramPlay), typeface::BODY))
+                .style(style::flat)
+                .on_press(Message::LiveTvAction(Action::PlayRecording(id)))
+                .into(),
         );
     }
+    match (writing(item), item.id) {
+        (Some(timer), _) => controls.push(stop(timer)),
+        (None, Some(id)) if confirming == Some(id) => {
+            controls.push(confirm(id));
+            controls.push(cancel());
+        }
+        (None, Some(id)) => controls.push(delete(id)),
+        (None, None) => {}
+    }
 
-    container(
-        row![poster, named, controls]
-            .spacing(style::drawn(space::GUTTER.drawn()))
-            .align_y(iced::Center),
+    widget::list::row(
+        ROW,
+        widget::list::Row {
+            face: Some(widget::list::Face::Art {
+                image: art,
+                elapsed: None,
+            }),
+            index: None,
+            title: item.name.clone().unwrap_or_default().into(),
+            secondary: in_progress(item)
+                .then(|| Cow::from(strings::lookup(Text::RecordingsInProgress)))
+                .into_iter()
+                .collect(),
+            press: widget::list::Press::Inert,
+            controls,
+        },
     )
-    .height(style::drawn(space::LIST_ROW.drawn()))
-    .into()
 }
 
 /// A windowed list: an in-progress recording marked as in progress and
@@ -150,7 +151,7 @@ pub fn view<'a>(
     images: &'a Cache,
 ) -> Element<'a, Message> {
     if state.recordings.is_empty() {
-        return widget::banner(strings::lookup(Text::RecordingsEmpty).to_string());
+        return widget::centered(strings::lookup(Text::RecordingsEmpty).to_string());
     }
 
     window::list(state.window, state.recordings.len(), move |index| {

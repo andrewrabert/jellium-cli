@@ -1,14 +1,14 @@
 //! The users the server holds, and the one user a user screen edits.
 
-use iced::widget::{button, column, row, text_input};
-use iced::{Element, Fill};
+use iced::Element;
+use iced::widget::{button, row, text_input};
 use uuid::Uuid;
 
 use crate::app::Message;
 use crate::error::Answer;
 use crate::style::{self, space, typeface};
 use crate::text::{self as strings, Text};
-use crate::widget::{line, prose};
+use crate::widget::{self, line, prose};
 use jellium_model::form::{Field, Form};
 
 /// Every user on the server, and what a new one is being named.
@@ -157,46 +157,41 @@ pub async fn open(api: std::rc::Rc<crate::api::Api>, id: Uuid, tab: super::UserT
 }
 
 /// The form that creates a user: its name, its password and the control.
-pub fn new<'a>(state: &'a State) -> Element<'a, Message> {
-    column![
-        prose(strings::lookup(Text::UsersCreate), typeface::HEADING_2),
+pub fn new<'a>(state: &'a State) -> Vec<Element<'a, Message>> {
+    vec![
         text_input(strings::lookup(Text::UsersName), &state.naming)
             .style(style::input)
-            .on_input(|typed| Message::DashboardAction(super::Action::Typed(typed))),
+            .on_input(|typed| Message::DashboardAction(super::Action::Typed(typed)))
+            .into(),
         text_input(strings::lookup(Text::UsersPassword), &state.password)
             .style(style::input)
             .secure(true)
-            .on_input(|typed| Message::DashboardAction(super::Action::TypedPassword(typed))),
+            .on_input(|typed| Message::DashboardAction(super::Action::TypedPassword(typed)))
+            .into(),
         button(prose(strings::lookup(Text::UsersCreate), typeface::BODY))
             .style(style::submit)
             .on_press(Message::DashboardAction(super::Action::Write(
                 super::Written::CreateUser {
                     name: state.naming.clone(),
                     password: state.password.clone(),
-                }
-            ))),
+                },
+            )))
+            .into(),
     ]
-    .spacing(style::drawn(space::GUTTER.drawn()))
-    .padding(style::drawn(space::GUTTER.drawn()))
-    .into()
 }
 
 /// The user list, and the control that creates one.
-pub fn view<'a>(state: &'a State, read_only: bool, own: Uuid) -> Element<'a, Message> {
-    let mut page = column![prose(
-        strings::lookup(Text::UsersTitle),
-        typeface::HEADING_2
-    )]
-    .spacing(style::drawn(space::GUTTER.drawn()))
-    .padding(style::drawn(space::GUTTER.drawn()));
+pub fn view<'a>(state: &'a State, read_only: bool, own: Uuid) -> Vec<Element<'a, Message>> {
+    let mut page: Vec<Element<'a, Message>> = Vec::new();
 
     if !read_only {
-        page = page.push(
+        page.push(
             button(prose(strings::lookup(Text::UsersCreate), typeface::BODY))
                 .style(style::raised)
                 .on_press(Message::DashboardAction(super::Action::Open(
                     super::Screen::UserNew,
-                ))),
+                )))
+                .into(),
         );
     }
 
@@ -209,7 +204,8 @@ pub fn view<'a>(state: &'a State, read_only: bool, own: Uuid) -> Element<'a, Mes
             button(line(
                 name.clone(),
                 typeface::BODY,
-                typeface::Weight::Regular
+                typeface::Weight::Regular,
+                typeface::LINE_HEIGHT,
             ))
             .style(style::link)
             .on_press(Message::DashboardAction(super::Action::Open(
@@ -219,7 +215,7 @@ pub fn view<'a>(state: &'a State, read_only: bool, own: Uuid) -> Element<'a, Mes
                 }
             ))),
         ]
-        .spacing(style::drawn(space::GUTTER.drawn()));
+        .spacing(style::drawn(space::CONTROL_GAP.drawn()));
 
         if id == own {
             held = held.push(prose(
@@ -238,70 +234,64 @@ pub fn view<'a>(state: &'a State, read_only: bool, own: Uuid) -> Element<'a, Mes
                     ))),
             );
         }
-        page = page.push(held);
+        page.push(held.into());
     }
 
-    iced::widget::scrollable(page)
-        .width(Fill)
-        .height(Fill)
-        .into()
+    page
 }
 
 /// One user's four panels: profile, library and device access, parental
 /// control, and password.
-pub fn one<'a>(state: &'a One, read_only: bool, own: Uuid) -> Element<'a, Message> {
-    let mut tabs = row![].spacing(style::drawn(space::GUTTER.drawn()));
-    for tab in super::UserTab::ALL {
-        let control =
-            button(prose(strings::lookup(tab.label()), typeface::BODY)).style(style::flat);
-        tabs = tabs.push(if tab == state.tab {
-            control
-        } else {
-            control.on_press(Message::DashboardAction(super::Action::Open(
+pub fn one<'a>(state: &'a One, read_only: bool, own: Uuid) -> Vec<Element<'a, Message>> {
+    let panels = widget::localnav(super::UserTab::ALL.into_iter().map(|tab| widget::Entry {
+        label: tab.label(),
+        showing: match tab == state.tab {
+            true => widget::Showing::Shown,
+            false => widget::Showing::Offered(Message::DashboardAction(super::Action::Open(
                 super::Screen::User { id: state.id, tab },
-            )))
-        });
-    }
+            ))),
+        },
+    }));
 
-    let mut page = column![tabs, prose(state.name.clone(), typeface::HEADING_2)]
-        .spacing(style::drawn(space::GUTTER.drawn()))
-        .padding(style::drawn(space::GUTTER.drawn()));
+    let mut page: Vec<Element<'a, Message>> = Vec::new();
 
     match state.tab {
         super::UserTab::Password => {
-            page = page.push(
+            page.push(
                 text_input(strings::lookup(Text::UsersPassword), &state.current)
                     .style(style::input)
                     .secure(true)
                     .on_input(|typed| {
                         Message::DashboardAction(super::Action::TypedCurrentPassword(typed))
-                    }),
+                    })
+                    .into(),
             );
-            page = page.push(
+            page.push(
                 text_input(strings::lookup(Text::UsersPassword), &state.replacement)
                     .style(style::input)
                     .secure(true)
-                    .on_input(|typed| {
-                        Message::DashboardAction(super::Action::TypedPassword(typed))
-                    }),
+                    .on_input(|typed| Message::DashboardAction(super::Action::TypedPassword(typed)))
+                    .into(),
             );
             if !read_only {
-                page = page.push(
+                page.push(
                     button(prose(strings::lookup(Text::DashboardSave), typeface::BODY))
                         .style(style::submit)
                         .on_press(Message::DashboardAction(super::Action::Write(
                             super::Written::SetPassword { id: state.id },
-                        ))),
+                        )))
+                        .into(),
                 );
-                page = page.push(
+                page.push(
                     button(prose(
                         strings::lookup(Text::UsersImageUpload),
                         typeface::BODY,
                     ))
                     .style(style::raised)
-                    .on_press(Message::DashboardAction(super::Action::ChooseImage)),
+                    .on_press(Message::DashboardAction(super::Action::ChooseImage))
+                    .into(),
                 );
-                page = page.push(
+                page.push(
                     button(prose(
                         strings::lookup(Text::UsersImageRemove),
                         typeface::BODY,
@@ -312,7 +302,8 @@ pub fn one<'a>(state: &'a One, read_only: bool, own: Uuid) -> Element<'a, Messag
                             crate::screen::confirm::Destructive::RemoveUserImage { id: state.id },
                             state.name.clone(),
                         ),
-                    ))),
+                    )))
+                    .into(),
                 );
             }
         }
@@ -324,28 +315,28 @@ pub fn one<'a>(state: &'a One, read_only: bool, own: Uuid) -> Element<'a, Messag
             let policy = !matches!(tab, super::UserTab::Profile);
             for field in fields.iter().filter(|field| shown(tab, **field)) {
                 if policy && state.id == own && field.key() == "IsAdministrator" {
-                    page = page.push(prose(
+                    page.push(prose(
                         strings::lookup(Text::UsersOwnAdministrator),
                         typeface::BODY,
                     ));
                     continue;
                 }
-                page = page.push(super::control(*field, form.value(*field), policy));
+                page.push(super::control(*field, form.value(*field)));
             }
             if !read_only {
-                page = page.push(
+                page.push(
                     button(prose(strings::lookup(Text::DashboardSave), typeface::BODY))
                         .style(style::submit)
-                        .on_press(Message::DashboardAction(super::Action::Save)),
+                        .on_press(Message::DashboardAction(super::Action::Save))
+                        .into(),
                 );
             }
         }
     }
 
-    iced::widget::scrollable(page)
-        .width(Fill)
-        .height(Fill)
-        .into()
+    let mut shown: Vec<Element<'a, Message>> = vec![panels];
+    shown.append(&mut page);
+    shown
 }
 
 /// Which panel a policy field stands in.

@@ -1,8 +1,8 @@
 //! Every package the configured repositories offer, and the installs running
 //! now.
 
+use iced::Element;
 use iced::widget::{button, column, row};
-use iced::{Element, Fill};
 
 use crate::app::Message;
 use crate::error::Answer;
@@ -29,7 +29,7 @@ pub async fn load(api: std::rc::Rc<crate::api::Api>, height: Drawn) -> Answer<St
             packages: api.packages().await.bubbled()?,
             window: window::Window::new(
                 window::Id::Catalog,
-                Drawn::of(style::drawn(space::LIST_ROW.drawn())),
+                space::ListRow::bare(space::Lines::Two).height().drawn(),
                 height,
             ),
             versions: std::collections::HashMap::new(),
@@ -76,10 +76,11 @@ fn version<'a>(state: &'a State, package: &'a jellyfin_api::types::PackageInfo) 
 
 /// Each package with its name, description and versions, its install control
 /// behind a confirmation, and a running install's cancel.
-pub fn view<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
-    column![
-        prose(strings::lookup(Text::CatalogTitle), typeface::HEADING_2),
-        window::list(state.window, state.packages.len(), move |index| {
+pub fn view<'a>(state: &'a State, read_only: bool) -> Vec<Element<'a, Message>> {
+    vec![window::list(
+        state.window,
+        state.packages.len(),
+        move |index| {
             let Some(package) = state.packages.get(index) else {
                 return prose("", typeface::BODY);
             };
@@ -92,26 +93,33 @@ pub fn view<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
                 .unwrap_or_default();
 
             let mut held = column![
-                line(name.clone(), typeface::BODY, typeface::Weight::Regular),
+                line(
+                    name.clone(),
+                    typeface::BODY,
+                    typeface::Weight::Regular,
+                    typeface::LINE_HEIGHT,
+                ),
                 line(
                     package.description.clone().unwrap_or_default(),
                     typeface::BODY,
                     typeface::Weight::Regular,
+                    typeface::LINE_HEIGHT,
                 ),
                 line(
                     strings::format(Text::CatalogVersions, &[&chosen]),
                     typeface::BODY,
                     typeface::Weight::Regular,
+                    typeface::LINE_HEIGHT,
                 ),
             ]
-            .spacing(style::drawn(space::GUTTER.drawn()));
+            .spacing(style::drawn(space::SECTION_GAP.drawn()));
 
             if state.installing.contains_key(&name) {
                 let mut running = row![prose(
                     strings::lookup(Text::CatalogInstalling),
                     typeface::BODY
                 )]
-                .spacing(style::drawn(space::GUTTER.drawn()));
+                .spacing(style::drawn(space::CONTROL_GAP.drawn()));
                 if !read_only && let Some(plugin) = state.installing[&name].plugin {
                     running = running.push(
                         button(prose(strings::lookup(Text::CatalogCancel), typeface::BODY))
@@ -142,11 +150,6 @@ pub fn view<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
                 );
             }
             held.into()
-        }),
-    ]
-    .spacing(style::drawn(space::GUTTER.drawn()))
-    .padding(style::drawn(space::GUTTER.drawn()))
-    .width(Fill)
-    .height(Fill)
-    .into()
+        },
+    )]
 }

@@ -1,7 +1,7 @@
 use iced::advanced::widget::Id as WidgetId;
 use iced::widget::operation::scroll_to;
 use iced::widget::scrollable::AbsoluteOffset;
-use iced::widget::{Space, column, scrollable};
+use iced::widget::{Space, column};
 use iced::{Element, Fill, Task};
 
 use crate::app::Message;
@@ -17,7 +17,6 @@ fn scrollable_id(id: Id) -> WidgetId {
         Id::Channels => WidgetId::new("window-channels"),
         Id::Queue => WidgetId::new("window-queue"),
         Id::Recordings => WidgetId::new("window-recordings"),
-        Id::Schedule => WidgetId::new("window-schedule"),
         Id::Series => WidgetId::new("window-series"),
         Id::Activity => WidgetId::new("window-activity"),
         Id::Log => WidgetId::new("window-log"),
@@ -25,6 +24,7 @@ fn scrollable_id(id: Id) -> WidgetId {
         Id::Users => WidgetId::new("window-users"),
         Id::Tasks => WidgetId::new("window-tasks"),
         Id::Devices => WidgetId::new("window-devices"),
+        Id::Keys => WidgetId::new("window-keys"),
         Id::Plugins => WidgetId::new("window-plugins"),
         Id::Browse => WidgetId::new("window-browse"),
         Id::Entries => WidgetId::new("window-entries"),
@@ -86,7 +86,7 @@ pub fn grid<'a>(
     .width(Fill);
 
     let id = grid.id();
-    scrollable(content)
+    crate::widget::scrolled(content)
         .id(scrollable_id(id))
         .on_scroll(move |viewport| {
             Message::Scrolled(Scrolled {
@@ -122,7 +122,7 @@ pub fn list<'a>(
     .width(Fill);
 
     let id = window.id();
-    scrollable(content)
+    crate::widget::scrolled(content)
         .id(scrollable_id(id))
         .on_scroll(move |viewport| {
             Message::Scrolled(Scrolled {
@@ -154,11 +154,8 @@ pub fn rail<'a>(
     ];
 
     let id = window.id();
-    scrollable(content)
+    crate::widget::sideways(content)
         .id(scrollable_id(id))
-        .direction(scrollable::Direction::Horizontal(
-            scrollable::Scrollbar::default(),
-        ))
         .on_scroll(move |viewport| {
             Message::Scrolled(Scrolled {
                 id,

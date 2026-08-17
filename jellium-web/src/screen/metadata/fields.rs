@@ -26,12 +26,12 @@ fn label(field: jellium_model::form::Field) -> String {
 /// text, with a lock control beside the nine Jellyfin models and none beside
 /// the rest.
 pub fn view<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
-    let mut page = column![].spacing(style::drawn(space::GUTTER.drawn()));
+    let mut page = column![].spacing(style::drawn(space::FIELD_GAP.drawn()));
 
     for field in item::fields_of(state.item.type_) {
         let held = state.form.value(field);
         let mut line = row![prose(label(field), typeface::BODY)]
-            .spacing(style::drawn(space::GUTTER.drawn()))
+            .spacing(style::drawn(space::CONTROL_GAP.drawn()))
             .align_y(iced::Alignment::Center);
 
         line = line.push(if read_only {
@@ -76,7 +76,7 @@ pub fn people<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
         strings::lookup(Text::MetadataPeople),
         typeface::HEADING_3
     )]
-    .spacing(style::drawn(space::GUTTER.drawn()));
+    .spacing(style::drawn(space::SECTION_GAP.drawn()));
 
     for (at, person) in state.people.iter().enumerate() {
         if read_only {
@@ -125,7 +125,7 @@ pub fn people<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
                 .style(style::raised)
                 .on_press(Message::MetadataAction(Action::PersonRemoved { at })),
             ]
-            .spacing(style::drawn(space::GUTTER.drawn()))
+            .spacing(style::drawn(space::CONTROL_GAP.drawn()))
             .align_y(iced::Alignment::Center),
         );
     }
@@ -150,11 +150,11 @@ pub fn providers<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> 
         strings::lookup(Text::MetadataProviders),
         typeface::HEADING_3
     )]
-    .spacing(style::drawn(space::GUTTER.drawn()));
+    .spacing(style::drawn(space::SECTION_GAP.drawn()));
 
     for (at, (provider, id)) in state.providers.iter().enumerate() {
         let mut line = row![prose(provider.clone(), typeface::BODY)]
-            .spacing(style::drawn(space::GUTTER.drawn()))
+            .spacing(style::drawn(space::CONTROL_GAP.drawn()))
             .align_y(iced::Alignment::Center);
         line = line.push(if read_only {
             Element::from(prose(id.clone(), typeface::BODY))

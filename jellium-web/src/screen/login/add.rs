@@ -1,7 +1,7 @@
 use iced::Element;
 
 use crate::app::Message;
-use crate::style::Viewport;
+use crate::style::{Viewport, space};
 use crate::text::{self as strings, Text};
 use crate::widget::{self, Emphasis, Secrecy};
 
@@ -17,9 +17,10 @@ pub struct State {
 /// description, and the two block controls.
 // reference: add-server-page
 pub fn view<'a>(state: &'a super::State, viewport: Viewport) -> Element<'a, Message> {
-    widget::form(
+    widget::capped(
         viewport,
-        vec![
+        space::FIELD_GAP,
+        [
             widget::heading(strings::lookup(Text::LoginAddTitle)),
             widget::field(
                 Text::LoginAddUrl,

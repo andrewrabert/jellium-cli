@@ -17,7 +17,7 @@ pub struct State {
     /// The whole startup configuration, read on entry and written back whole.
     pub configuration: jellium_protocol::SetupConfiguration,
     /// The UI cultures the server reports.
-    pub cultures: Vec<Choice>,
+    pub cultures: Vec<Choice<String>>,
 }
 
 pub async fn load(api: std::rc::Rc<crate::api::Api>) -> Answer<State> {
@@ -72,6 +72,6 @@ pub fn view(state: &State) -> Element<'_, Message> {
             typeface::SECONDARY
         ),
     ]
-    .spacing(style::drawn(space::GUTTER.drawn()))
+    .spacing(style::drawn(space::FIELD_GAP.drawn()))
     .into()
 }

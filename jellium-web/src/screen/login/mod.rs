@@ -12,7 +12,7 @@ use uuid::Uuid;
 
 use crate::app::Message;
 use crate::control;
-use crate::style::{Viewport, space};
+use crate::style::Viewport;
 use crate::text::Text;
 
 pub struct State {
@@ -156,12 +156,13 @@ pub fn view(state: &State, viewport: Viewport) -> Element<'_, Message> {
         jellium_model::login::Screen::QuickConnect => quickconnect::view(state, viewport),
         jellium_model::login::Screen::Reset => reset::view(state, viewport),
     };
-    let Some(told) = &state.told else {
-        return shown;
-    };
-    iced::widget::column![crate::widget::banner(told.clone()), shown]
-        .spacing(crate::style::drawn(space::GUTTER.drawn()))
-        .into()
+    crate::widget::toasted(
+        shown,
+        state
+            .told
+            .iter()
+            .map(|told| crate::widget::toast(None, told.clone())),
+    )
 }
 
 /// The five-second poll, held only while the Quick Connect screen shows a

@@ -2,7 +2,7 @@ use std::collections::HashSet;
 use std::rc::Rc;
 
 use iced::Element;
-use iced::widget::{button, checkbox, column, row, scrollable};
+use iced::widget::{button, checkbox, column, row};
 use jellium_model::facets::{SeriesState, VideoKind};
 use jellium_model::paged::Paged;
 use jellium_model::sort::Sort;
@@ -305,9 +305,9 @@ fn sort_surface<'a>(listing: &Listing) -> Element<'a, Message> {
     });
     row![
         prose(strings::lookup(Text::LibrarySort), typeface::BODY),
-        row(controls).spacing(style::drawn(space::GUTTER.drawn())),
+        row(controls).spacing(style::drawn(space::CONTROL_GAP.drawn())),
     ]
-    .spacing(style::drawn(space::GUTTER.drawn()))
+    .spacing(style::drawn(space::CONTROL_GAP.drawn()))
     .align_y(iced::Alignment::Center)
     .into()
 }
@@ -406,7 +406,7 @@ fn narrowing<'a>(label: String, on: bool, narrow: Narrow) -> Element<'a, Message
         }),
         prose(label, typeface::BODY),
     ]
-    .spacing(style::drawn(space::GUTTER.drawn()))
+    .spacing(style::drawn(space::CONTROL_GAP.drawn()))
     .align_y(iced::Alignment::Center)
     .into()
 }
@@ -424,7 +424,7 @@ fn filter_surface<'a>(browse: &'a Browse, viewport: Viewport) -> Element<'a, Mes
                 .style(style::raised)
                 .on_press(Message::BrowseAction(Action::ClearFilters)),
         ]
-        .spacing(style::drawn(space::GUTTER.drawn())),
+        .spacing(style::drawn(space::CONTROL_GAP.drawn())),
         narrowing(
             strings::lookup(Text::FilterPlayed).to_string(),
             facets.played == Some(true),
@@ -510,7 +510,7 @@ fn filter_surface<'a>(browse: &'a Browse, viewport: Viewport) -> Element<'a, Mes
         ));
     }
 
-    scrollable(surface)
+    crate::widget::scrolled(surface)
         .height(style::drawn(space::filter_surface(viewport)))
         .into()
 }
@@ -524,8 +524,8 @@ pub fn view<'a>(browse: &'a Browse, viewport: Viewport, images: &'a Cache) -> El
         prose(browse.heading.clone(), typeface::HEADING_1),
         paging(browse),
     ]
-    .spacing(style::drawn(space::GUTTER.drawn()))
-    .padding(style::drawn(space::GUTTER.drawn()));
+    .spacing(style::drawn(space::SECTION_GAP.drawn()))
+    .padding(style::padding(space::PAGE_PAD));
 
     match browse.opened {
         Some(Opened::Sort) => page = page.push(sort_surface(&browse.listing)),

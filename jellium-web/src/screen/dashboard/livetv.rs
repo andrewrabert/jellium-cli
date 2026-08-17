@@ -1,8 +1,8 @@
 //! The Live TV administration: tuners, listing providers, channel mapping and
 //! the DVR settings.
 
-use iced::widget::{button, column, pick_list, row, text_input};
-use iced::{Element, Fill};
+use iced::Element;
+use iced::widget::{button, pick_list, row, text_input};
 
 use crate::app::Message;
 use crate::error::Answer;
@@ -134,46 +134,32 @@ pub async fn load(api: std::rc::Rc<crate::api::Api>, tab: super::LiveTvTab) -> A
     .await
 }
 
-/// The four tabs, and whichever one is shown.
-pub fn view<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
-    let mut tabs = row![].spacing(style::drawn(space::GUTTER.drawn()));
-    for tab in super::LiveTvTab::ALL {
-        let control =
-            button(prose(strings::lookup(tab.label()), typeface::BODY)).style(style::flat);
-        tabs = tabs.push(if tab == state.tab {
-            control
-        } else {
-            control.on_press(Message::DashboardAction(super::Action::Open(
-                super::Screen::LiveTv { tab },
-            )))
-        });
-    }
-
-    let mut page = column![tabs]
-        .spacing(style::drawn(space::GUTTER.drawn()))
-        .padding(style::drawn(space::GUTTER.drawn()));
-
-    page = match state.tab {
+/// Whichever of the four screens is shown.
+pub fn view<'a>(state: &'a State, read_only: bool) -> Vec<Element<'a, Message>> {
+    let page: Page<'a> = vec![crate::widget::localnav(
+        super::LiveTvTab::ALL
+            .into_iter()
+            .map(|tab| crate::widget::Entry {
+                label: tab.label(),
+                showing: match tab == state.tab {
+                    true => crate::widget::Showing::Shown,
+                    false => crate::widget::Showing::Offered(Message::DashboardAction(
+                        super::Action::Open(super::Screen::LiveTv { tab }),
+                    )),
+                },
+            }),
+    )];
+    match state.tab {
         super::LiveTvTab::Tuners => tuners(page, state, read_only),
         super::LiveTvTab::Providers => providers(page, state, read_only),
         super::LiveTvTab::Mapping => mapping(page, state, read_only),
         super::LiveTvTab::Dvr => dvr(page, state, read_only),
-    };
-
-    iced::widget::scrollable(page)
-        .width(Fill)
-        .height(Fill)
-        .into()
+    }
 }
 
-type Page<'a> = iced::widget::Column<'a, Message>;
+type Page<'a> = Vec<Element<'a, Message>>;
 
 fn tuners<'a>(mut page: Page<'a>, state: &'a State, read_only: bool) -> Page<'a> {
-    page = page.push(prose(
-        strings::lookup(Text::TunersTitle),
-        typeface::HEADING_2,
-    ));
-
     for tuner in &state.tuners {
         let Some(id) = tuner.id.clone() else {
             continue;
@@ -183,7 +169,7 @@ fn tuners<'a>(mut page: Page<'a>, state: &'a State, read_only: bool) -> Page<'a>
             prose(url.clone(), typeface::BODY),
             prose(tuner.type_.clone().unwrap_or_default(), typeface::BODY),
         ]
-        .spacing(style::drawn(space::GUTTER.drawn()));
+        .spacing(style::drawn(space::CONTROL_GAP.drawn()));
         if !read_only {
             held = held.push(
                 button(prose(strings::lookup(Text::TunersReset), typeface::BODY))
@@ -206,22 +192,23 @@ fn tuners<'a>(mut page: Page<'a>, state: &'a State, read_only: bool) -> Page<'a>
                     ))),
             );
         }
-        page = page.push(held);
+        page.push(held.into());
     }
 
     if read_only {
         return page;
     }
 
-    page = page.push(
+    page.push(
         button(prose(strings::lookup(Text::TunersDiscover), typeface::BODY))
             .style(style::raised)
             .on_press(Message::DashboardAction(super::Action::Write(
                 super::Written::DiscoverTuners,
-            ))),
+            )))
+            .into(),
     );
     for found in &state.discovered {
-        page = page.push(prose(found.url.clone().unwrap_or_default(), typeface::BODY));
+        page.push(prose(found.url.clone().unwrap_or_default(), typeface::BODY));
     }
 
     let types = state
@@ -246,23 +233,20 @@ fn tuners<'a>(mut page: Page<'a>, state: &'a State, read_only: bool) -> Page<'a>
                     }
                 ))),
         ]
-        .spacing(style::drawn(space::GUTTER.drawn())),
-    )
+        .spacing(style::drawn(space::CONTROL_GAP.drawn()))
+        .into(),
+    );
+    page
 }
 
 fn providers<'a>(mut page: Page<'a>, state: &'a State, read_only: bool) -> Page<'a> {
-    page = page.push(prose(
-        strings::lookup(Text::ProvidersTitle),
-        typeface::HEADING_2,
-    ));
-
     for provider in &state.providers {
         let Some(id) = provider.id.clone() else {
             continue;
         };
         let named = provider.type_.clone().unwrap_or_default();
-        let mut held =
-            row![prose(named.clone(), typeface::BODY)].spacing(style::drawn(space::GUTTER.drawn()));
+        let mut held = row![prose(named.clone(), typeface::BODY)]
+            .spacing(style::drawn(space::CONTROL_GAP.drawn()));
         if !read_only {
             held = held.push(
                 button(prose(
@@ -278,14 +262,14 @@ fn providers<'a>(mut page: Page<'a>, state: &'a State, read_only: bool) -> Page<
                 ))),
             );
         }
-        page = page.push(held);
+        page.push(held.into());
     }
 
     if read_only {
         return page;
     }
 
-    page = page.push(
+    page.push(
         row![
             button(prose(
                 strings::lookup(Text::ProvidersSchedulesDirect),
@@ -297,68 +281,77 @@ fn providers<'a>(mut page: Page<'a>, state: &'a State, read_only: bool) -> Page<
                 .style(style::flat)
                 .on_press(Message::DashboardAction(super::Action::ProviderKind(false))),
         ]
-        .spacing(style::drawn(space::GUTTER.drawn())),
+        .spacing(style::drawn(space::CONTROL_GAP.drawn()))
+        .into(),
     );
 
     if state.provider.schedules_direct {
-        page = page
-            .push(
-                text_input(
-                    strings::lookup(Text::ProvidersUsername),
-                    &state.provider.username,
-                )
-                .style(style::input)
-                .on_input(|typed| Message::DashboardAction(super::Action::Typed(typed))),
+        page.push(
+            text_input(
+                strings::lookup(Text::ProvidersUsername),
+                &state.provider.username,
             )
-            .push(
-                text_input(
-                    strings::lookup(Text::ProvidersPassword),
-                    &state.provider.password,
-                )
-                .style(style::input)
-                .secure(true)
-                .on_input(|typed| Message::DashboardAction(super::Action::TypedPassword(typed))),
+            .style(style::input)
+            .on_input(|typed| Message::DashboardAction(super::Action::Typed(typed)))
+            .into(),
+        );
+        page.push(
+            text_input(
+                strings::lookup(Text::ProvidersPassword),
+                &state.provider.password,
             )
-            .push(pick_list(
+            .style(style::input)
+            .secure(true)
+            .on_input(|typed| Message::DashboardAction(super::Action::TypedPassword(typed)))
+            .into(),
+        );
+        page.push(
+            pick_list(
                 state.countries.clone(),
                 Some(state.provider.country.clone()),
                 |chosen| Message::DashboardAction(super::Action::ProviderCountry(chosen)),
-            ))
-            .push(
-                text_input(
-                    strings::lookup(Text::ProvidersPostcode),
-                    &state.provider.postcode,
-                )
-                .style(style::input)
-                .on_input(|typed| Message::DashboardAction(super::Action::ProviderPostcode(typed))),
             )
-            .push(
-                button(prose(
-                    strings::lookup(Text::ProvidersLineup),
-                    typeface::BODY,
-                ))
-                .style(style::raised)
-                .on_press(Message::DashboardAction(super::Action::Write(
-                    super::Written::FetchLineups,
-                ))),
-            );
+            .into(),
+        );
+        page.push(
+            text_input(
+                strings::lookup(Text::ProvidersPostcode),
+                &state.provider.postcode,
+            )
+            .style(style::input)
+            .on_input(|typed| Message::DashboardAction(super::Action::ProviderPostcode(typed)))
+            .into(),
+        );
+        page.push(
+            button(prose(
+                strings::lookup(Text::ProvidersLineup),
+                typeface::BODY,
+            ))
+            .style(style::raised)
+            .on_press(Message::DashboardAction(super::Action::Write(
+                super::Written::FetchLineups,
+            )))
+            .into(),
+        );
         for lineup in &state.lineups {
-            page = page.push(
+            page.push(
                 button(prose(
                     lineup.name.clone().unwrap_or_default(),
                     typeface::BODY,
                 ))
                 .style(style::link)
-                .on_press(Message::DashboardAction(
-                    super::Action::ProviderLineup(lineup.id.clone().unwrap_or_default()),
-                )),
+                .on_press(Message::DashboardAction(super::Action::ProviderLineup(
+                    lineup.id.clone().unwrap_or_default(),
+                )))
+                .into(),
             );
         }
     } else {
-        page = page.push(
+        page.push(
             text_input(strings::lookup(Text::ProvidersPath), &state.provider.path)
                 .style(style::input)
-                .on_input(|typed| Message::DashboardAction(super::Action::Typed(typed))),
+                .on_input(|typed| Message::DashboardAction(super::Action::Typed(typed)))
+                .into(),
         );
     }
 
@@ -367,15 +360,13 @@ fn providers<'a>(mut page: Page<'a>, state: &'a State, read_only: bool) -> Page<
             .style(style::submit)
             .on_press(Message::DashboardAction(super::Action::Write(
                 super::Written::AddProvider,
-            ))),
-    )
+            )))
+            .into(),
+    );
+    page
 }
 
 fn mapping<'a>(mut page: Page<'a>, state: &'a State, read_only: bool) -> Page<'a> {
-    page = page.push(prose(
-        strings::lookup(Text::MappingTitle),
-        typeface::HEADING_2,
-    ));
     let Some(options) = state.mapping.as_ref() else {
         return page;
     };
@@ -394,7 +385,7 @@ fn mapping<'a>(mut page: Page<'a>, state: &'a State, read_only: bool) -> Page<'a
             channel.name.clone().unwrap_or_default(),
             typeface::BODY
         )]
-        .spacing(style::drawn(space::GUTTER.drawn()));
+        .spacing(style::drawn(space::CONTROL_GAP.drawn()));
         if !read_only {
             let tuner = id.clone();
             held = held.push(pick_list(
@@ -408,21 +399,21 @@ fn mapping<'a>(mut page: Page<'a>, state: &'a State, read_only: bool) -> Page<'a
                 },
             ));
         }
-        page = page.push(held);
+        page.push(held.into());
     }
     page
 }
 
 fn dvr<'a>(mut page: Page<'a>, state: &'a State, read_only: bool) -> Page<'a> {
-    page = page.push(prose(strings::lookup(Text::DvrTitle), typeface::HEADING_2));
     for field in DVR {
-        page = page.push(super::control(*field, state.dvr.value(*field), false));
+        page.push(super::control(*field, state.dvr.value(*field)));
     }
     if !read_only {
-        page = page.push(
+        page.push(
             button(prose(strings::lookup(Text::DashboardSave), typeface::BODY))
                 .style(style::submit)
-                .on_press(Message::DashboardAction(super::Action::Save)),
+                .on_press(Message::DashboardAction(super::Action::Save))
+                .into(),
         );
     }
     page

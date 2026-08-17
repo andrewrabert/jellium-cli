@@ -25,23 +25,6 @@ const STANDARDS: &[&str] = &["ieee-754", "css-initial-font-size"];
 /// the machinery bucket without first shedding its type.
 const SCALARS: &[&str] = &["f32", "f64", "u8", "u16", "u32", "u64", "usize", "i32"];
 
-/// A value that is its unit's identity or its zero, written as its own
-/// initializer: the unit rather than anything taken from the reference.
-const UNITS: &[&str] = &[
-    "Length::em(0.0)",
-    "Length::em(1.0)",
-    "Drawn::of(0.0)",
-    "Css::of(0.0)",
-    "Share::per_ten_thousand(0)",
-    "Share::per_ten_thousand(10_000)",
-    "Alpha::thousandths(1000)",
-    "Ratio::thousandths(1000)",
-];
-
-fn identity_or_zero(initializer: &str) -> bool {
-    UNITS.iter().any(|unit| initializer.trim() == *unit)
-}
-
 /// Which of the four buckets a value falls in. A value falling in none of them
 /// is what the residue check fails on.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -64,6 +47,7 @@ struct Value {
     at: String,
     written: String,
     initializer: String,
+    measures: Vec<Measure>,
     cited: Vec<String>,
     oracle: bool,
     standard: Option<String>,
@@ -84,23 +68,27 @@ impl Value {
         if self.derived() {
             return Some(Bucket::Derived);
         }
-        identity_or_zero(&self.initializer).then_some(Bucket::Identity)
+        let unit = !self.measures.is_empty()
+            && self
+                .measures
+                .iter()
+                .all(|measure| matches!(measure, Measure::Identity));
+        unit.then_some(Bucket::Identity)
     }
 
     /// Whether the value is built from other constants, and so inherits their
-    /// citations.
+    /// citations; a written number carries no name, however its digits are
+    /// grouped.
     fn derived(&self) -> bool {
         self.initializer
             .split(|value: char| !value.is_alphanumeric() && value != '_')
             .any(|word| {
                 word.len() > 1
                     && word.contains('_')
+                    && word.chars().any(|value| value.is_ascii_uppercase())
                     && word.chars().all(|value| {
                         value.is_ascii_uppercase() || value.is_ascii_digit() || value == '_'
                     })
-                    && word != "ZERO"
-                    && word != "WHOLE"
-                    && word != "OPAQUE"
             })
     }
 }
@@ -205,6 +193,7 @@ fn appearance(root: &Path) -> Vec<Value> {
                 name: name.trim().to_owned(),
                 at: format!("{named}:{}", index + 1),
                 written,
+                measures: measures(&initializer),
                 initializer,
                 cited,
                 oracle,
@@ -281,27 +270,213 @@ fn checkout() -> Option<PathBuf> {
     Some(PathBuf::from(named))
 }
 
-/// Text with its spacing and its leading zeros gone, which is the form a css
-/// declaration and a Rust literal can be compared in.
+/// Whether two characters standing side by side belong to one value, which is
+/// what a run of spacing is kept for and what a spelling must not be found
+/// inside.
+fn joined(before: char, after: char) -> bool {
+    let value = |held: char| held.is_ascii_alphanumeric() || held == '_' || held == '#';
+    let decimal =
+        (before == '.' && after.is_ascii_digit()) || (before.is_ascii_digit() && after == '.');
+    (value(before) && value(after)) || decimal
+}
+
+/// Text as a css declaration and a Rust literal can be compared in: lowered,
+/// its leading zeros gone, and its spacing gone wherever the spacing parts two
+/// characters that do not join.
 fn flattened(text: &str) -> String {
-    let packed: Vec<char> = text
-        .chars()
-        .filter(|value| !value.is_whitespace())
-        .flat_map(|value| value.to_lowercase())
-        .collect();
-    let mut written = String::with_capacity(packed.len());
-    for (index, value) in packed.iter().enumerate() {
-        let dropped = *value == '0'
-            && packed.get(index + 1) == Some(&'.')
+    let lowered: Vec<char> = text.chars().flat_map(char::to_lowercase).collect();
+    let mut kept: Vec<char> = Vec::with_capacity(lowered.len());
+    for (index, value) in lowered.iter().enumerate() {
+        let leading = *value == '0'
+            && lowered.get(index + 1) == Some(&'.')
             && !index
                 .checked_sub(1)
-                .and_then(|before| packed.get(before))
+                .and_then(|before| lowered.get(before))
                 .is_some_and(|before| before.is_ascii_digit() || *before == '.');
-        if !dropped {
-            written.push(*value);
+        if !leading {
+            kept.push(*value);
         }
     }
+
+    let mut written = String::with_capacity(kept.len());
+    let mut at = 0;
+    while at < kept.len() {
+        let value = kept[at];
+        if !value.is_whitespace() {
+            written.push(value);
+            at += 1;
+            continue;
+        }
+        let mut end = at;
+        while end < kept.len() && kept[end].is_whitespace() {
+            end += 1;
+        }
+        let spanning = at
+            .checked_sub(1)
+            .and_then(|before| kept.get(before))
+            .zip(kept.get(end))
+            .is_some_and(|(before, after)| joined(*before, *after));
+        if spanning {
+            written.push(' ');
+        }
+        at = end;
+    }
     written
+}
+
+/// The unit a css declaration writes a count in.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Unit {
+    Em,
+    Rem,
+    Percent,
+    Pixels,
+    ViewportWidth,
+    ViewportHeight,
+    /// No unit at all, which is what a line height and a MUI measure are
+    /// written as.
+    Bare,
+}
+
+impl Unit {
+    fn read(suffix: &str) -> Option<Unit> {
+        match suffix {
+            "em" => Some(Unit::Em),
+            "rem" => Some(Unit::Rem),
+            "%" => Some(Unit::Percent),
+            "px" => Some(Unit::Pixels),
+            "vw" => Some(Unit::ViewportWidth),
+            "vh" => Some(Unit::ViewportHeight),
+            "" => Some(Unit::Bare),
+            _ => None,
+        }
+    }
+}
+
+/// A count as a declaration carries it: the decimals that name it, and the
+/// unit it stands in.
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct Count {
+    written: String,
+    unit: Unit,
+}
+
+impl Count {
+    fn of(count: f64, unit: Unit) -> Count {
+        Count {
+            written: trimmed(count),
+            unit,
+        }
+    }
+}
+
+/// A form a css declaration is allowed to carry a value in.
+#[derive(Debug, Clone, PartialEq, Eq)]
+enum Spelling {
+    /// A count in its unit, which a declaration carries by writing that count
+    /// in that unit to the same decimals.
+    Measured(Count),
+    /// A color in the shortest form css writes it, which a declaration carries
+    /// by writing it with no value character on either side.
+    Color(String),
+}
+
+/// One value an initializer writes.
+#[derive(Debug)]
+enum Measure {
+    /// A value taken from the reference, named as css writes it, with every
+    /// spelling a declaration may carry it in.
+    Spelt {
+        named: String,
+        spellings: Vec<Spelling>,
+    },
+    /// The unit's own zero or whole, which is the unit rather than anything
+    /// taken from the reference.
+    Identity,
+}
+
+/// A span of the pinned checkout: its text flattened, and every count it
+/// writes.
+struct Span {
+    text: String,
+    counts: Vec<Count>,
+}
+
+impl Span {
+    fn of(text: &str) -> Span {
+        let text = flattened(text);
+        Span {
+            counts: numbered(&text),
+            text,
+        }
+    }
+
+    /// Whether this writes the spelling as a value of its own.
+    fn carries(&self, spelling: &Spelling) -> bool {
+        match spelling {
+            Spelling::Measured(count) => self.counts.contains(count),
+            Spelling::Color(written) => self
+                .text
+                .match_indices(written)
+                .any(|(at, found)| self.bounded(at, found)),
+        }
+    }
+
+    /// Whether the text found at `at` stands with no value character on either
+    /// side of it.
+    fn bounded(&self, at: usize, found: &str) -> bool {
+        let opening = found.chars().next();
+        let closing = found.chars().next_back();
+        let before = self.text[..at].chars().next_back();
+        let after = self.text[at + found.len()..].chars().next();
+        !before
+            .zip(opening)
+            .is_some_and(|(before, opening)| joined(before, opening))
+            && !closing
+                .zip(after)
+                .is_some_and(|(closing, after)| joined(closing, after))
+    }
+}
+
+/// Every count a flattened span writes: a count opens where a digit, a `.` or
+/// a `-` stands beside a character it does not join, runs through the digits
+/// and the `.`, and takes the `%` or the letters that follow as its unit.
+fn numbered(text: &str) -> Vec<Count> {
+    let held: Vec<char> = text.chars().collect();
+    let mut counts = Vec::new();
+    let mut at = 0;
+    while at < held.len() {
+        let value = held[at];
+        let opens = (value.is_ascii_digit() || value == '.' || value == '-')
+            && at
+                .checked_sub(1)
+                .is_none_or(|before| !joined(held[before], value));
+        if !opens {
+            at += 1;
+            continue;
+        }
+        let mut end = at + usize::from(value == '-');
+        while end < held.len() && (held[end].is_ascii_digit() || held[end] == '.') {
+            end += 1;
+        }
+        let mut suffix = end;
+        if held.get(suffix) == Some(&'%') {
+            suffix += 1;
+        } else {
+            while suffix < held.len() && held[suffix].is_ascii_alphabetic() {
+                suffix += 1;
+            }
+        }
+        let written: String = held[at..end].iter().collect();
+        let unit: String = held[end..suffix].iter().collect();
+        if let Ok(count) = written.parse::<f64>()
+            && let Some(unit) = Unit::read(&unit)
+        {
+            counts.push(Count::of(count, unit));
+        }
+        at = suffix.max(at + 1);
+    }
+    counts
 }
 
 /// A number as css writes it: the fewest decimals that carry it.
@@ -312,10 +487,10 @@ fn trimmed(count: f64) -> String {
         .to_owned()
 }
 
-/// Every literal value an initializer takes, each with the spellings a css
-/// declaration is allowed to carry it in. A value that is its unit's identity
-/// or its zero yields no spelling, being the unit itself.
-fn spellings(initializer: &str) -> Vec<(String, Vec<String>)> {
+/// Every value an initializer writes, in the order it writes them; a
+/// constructor no arm names writes none, so a value written in one reaches no
+/// bucket of its own.
+fn measures(initializer: &str) -> Vec<Measure> {
     let mut found = Vec::new();
     let flat = flattened(initializer);
     let mut rest = flat.as_str();
@@ -338,77 +513,149 @@ fn spellings(initializer: &str) -> Vec<(String, Vec<String>)> {
             continue;
         };
         let arguments = &tail[..end];
-        match (name.as_str(), call) {
+        rest = after;
+        // every argument is read with its digit separators gone, so
+        // `Length::em(1.669_565_2)` is a count and not a name
+        let number = arguments.replace('_', "").parse::<f64>();
+        let measure = match (name.as_str(), call) {
             // a design length is root-relative, the canvas applying the root
             // once for the whole surface, so a rule written in rem spells the
             // same value a rule written in em does
-            ("length", "em") | ("breakpoint", "em") => {
-                if let Ok(em) = arguments.parse::<f64>()
-                    && em != 0.0
-                    && em != 1.0
-                {
-                    found.push((
-                        format!("{}em", trimmed(em)),
-                        vec![
-                            format!("{}em", trimmed(em)),
-                            format!("{}rem", trimmed(em)),
-                            format!("{}%", trimmed(em * 100.0)),
+            ("length", "em") => {
+                let Ok(em) = number else { continue };
+                if em == 0.0 || em == 1.0 {
+                    Measure::Identity
+                } else {
+                    Measure::Spelt {
+                        named: format!("{}em", trimmed(em)),
+                        spellings: vec![
+                            Spelling::Measured(Count::of(em, Unit::Em)),
+                            Spelling::Measured(Count::of(em, Unit::Rem)),
+                            Spelling::Measured(Count::of(em * 100.0, Unit::Percent)),
                         ],
-                    ));
+                    }
                 }
             }
-            ("breakpoint", "pixels") | ("css", "of") => {
-                if let Ok(px) = arguments.parse::<f64>()
-                    && px != 0.0
-                {
-                    found.push((
-                        format!("{}px", trimmed(px)),
-                        vec![format!("{}px", trimmed(px))],
-                    ));
+            ("breakpoint", "em") => {
+                let Ok(em) = number else { continue };
+                Measure::Spelt {
+                    named: format!("{}em", trimmed(em)),
+                    spellings: vec![
+                        Spelling::Measured(Count::of(em, Unit::Em)),
+                        Spelling::Measured(Count::of(em, Unit::Rem)),
+                    ],
                 }
+            }
+            ("breakpoint", "pixels") => {
+                let Ok(px) = number else { continue };
+                Measure::Spelt {
+                    named: format!("{}px", trimmed(px)),
+                    spellings: vec![Spelling::Measured(Count::of(px, Unit::Pixels))],
+                }
+            }
+            ("css", "of") => {
+                let Ok(px) = number else { continue };
+                if px == 0.0 {
+                    Measure::Identity
+                } else {
+                    Measure::Spelt {
+                        named: format!("{}px", trimmed(px)),
+                        spellings: vec![Spelling::Measured(Count::of(px, Unit::Pixels))],
+                    }
+                }
+            }
+            ("css", "unitless") => {
+                let Ok(px) = number else { continue };
+                if px == 0.0 {
+                    Measure::Identity
+                } else {
+                    Measure::Spelt {
+                        named: trimmed(px),
+                        spellings: vec![Spelling::Measured(Count::of(px, Unit::Bare))],
+                    }
+                }
+            }
+            // a canvas length is not a css value: its zero is the unit, and the
+            // reference writes no other
+            ("drawn", "of") => {
+                let Ok(count) = number else { continue };
+                if count != 0.0 {
+                    continue;
+                }
+                Measure::Identity
             }
             ("share", "per_ten_thousand") => {
-                if let Ok(share) = arguments.replace('_', "").parse::<f64>()
-                    && share != 0.0
-                    && share != 10_000.0
-                {
-                    let percent = trimmed(share / 100.0);
-                    found.push((
-                        format!("{percent}%"),
-                        vec![format!("{percent}%"), format!("{percent}vw")],
-                    ));
+                let Ok(share) = number else { continue };
+                if share == 0.0 || share == 10_000.0 {
+                    Measure::Identity
+                } else {
+                    Measure::Spelt {
+                        named: format!("{}%", trimmed(share / 100.0)),
+                        spellings: vec![
+                            Spelling::Measured(Count::of(share / 100.0, Unit::Percent)),
+                            Spelling::Measured(Count::of(share / 100.0, Unit::ViewportWidth)),
+                        ],
+                    }
                 }
             }
             ("share", "units") => {
-                if let Ok(count) = arguments.parse::<f64>()
-                    && count != 0.0
-                {
-                    let count = trimmed(count);
-                    found.push((
-                        format!("{count}vw"),
-                        vec![format!("{count}vw"), format!("{count}vh")],
-                    ));
+                let Ok(count) = number else { continue };
+                if count == 0.0 {
+                    Measure::Identity
+                } else {
+                    Measure::Spelt {
+                        named: format!("{}vw", trimmed(count)),
+                        spellings: vec![
+                            Spelling::Measured(Count::of(count, Unit::ViewportWidth)),
+                            Spelling::Measured(Count::of(count, Unit::ViewportHeight)),
+                        ],
+                    }
                 }
             }
+            // a ratio is a multiple of the lettering the rule is written in,
+            // which css writes bare, in the element's own em, or as a
+            // percentage
             ("ratio", "thousandths") => {
-                if let Ok(thousandths) = arguments.parse::<f64>()
-                    && thousandths != 1000.0
-                {
-                    let factor = trimmed(thousandths / 1000.0);
-                    found.push((
-                        factor.clone(),
-                        vec![factor, format!("{}%", trimmed(thousandths / 10.0))],
-                    ));
+                let Ok(thousandths) = number else { continue };
+                if thousandths == 0.0 || thousandths == 1000.0 {
+                    Measure::Identity
+                } else {
+                    Measure::Spelt {
+                        named: trimmed(thousandths / 1000.0),
+                        spellings: vec![
+                            Spelling::Measured(Count::of(thousandths / 1000.0, Unit::Bare)),
+                            Spelling::Measured(Count::of(thousandths / 1000.0, Unit::Em)),
+                            Spelling::Measured(Count::of(thousandths / 10.0, Unit::Percent)),
+                        ],
+                    }
+                }
+            }
+            ("alpha", "thousandths") => {
+                let Ok(thousandths) = number else { continue };
+                if thousandths == 0.0 || thousandths == 1000.0 {
+                    Measure::Identity
+                } else {
+                    Measure::Spelt {
+                        named: trimmed(thousandths / 1000.0),
+                        spellings: vec![Spelling::Measured(Count::of(
+                            thousandths / 1000.0,
+                            Unit::Bare,
+                        ))],
+                    }
                 }
             }
             ("color", "rgb" | "rgba") => {
-                if let Some(color) = color(arguments) {
-                    found.push((color.clone(), vec![color]));
+                let Some(color) = color(arguments) else {
+                    continue;
+                };
+                Measure::Spelt {
+                    named: color.clone(),
+                    spellings: vec![Spelling::Color(flattened(&color))],
                 }
             }
-            _ => {}
-        }
-        rest = after;
+            _ => continue,
+        };
+        found.push(measure);
     }
     found
 }
@@ -473,24 +720,46 @@ fn color(arguments: &str) -> Option<String> {
     ))
 }
 
+/// The gate over the reading above, which runs whether or not a checkout is
+/// named.
+#[test]
+fn a_span_carries_a_value_only_where_it_writes_it() {
+    assert_eq!(flattened("padding: 0.4em .25em"), "padding:.4em.25em");
+    assert_eq!(
+        flattened("0 0 0.29em rgba(0, 0, 0, 0.37)"),
+        "0 0 .29em rgba(0,0,0,.37)"
+    );
+
+    let mui = Span::of("paddingTop: 0.08, paddingBottom: 128, minWidth: 8px");
+    assert!(!mui.carries(&Spelling::Measured(Count::of(8.0, Unit::Bare))));
+    assert!(mui.carries(&Spelling::Measured(Count::of(8.0, Unit::Pixels))));
+
+    let sheet = Span::of("color: #ffffff; font-size: 1.66956521739130434em");
+    assert!(!sheet.carries(&Spelling::Color("#fff".to_owned())));
+    assert!(sheet.carries(&Spelling::Measured(Count::of(1.669_565_2, Unit::Em))));
+
+    assert!(matches!(
+        measures("Length::em(0.6)").as_slice(),
+        [Measure::Spelt { named, .. }] if named == "0.6em"
+    ));
+    assert!(matches!(
+        measures("Length::em(1.0)").as_slice(),
+        [Measure::Identity]
+    ));
+    assert!(matches!(
+        measures("Alpha::thousandths(0)").as_slice(),
+        [Measure::Identity]
+    ));
+}
+
 #[test]
 fn every_cited_span_holds_the_value_that_cites_it() {
     let root = workspace_root();
-    assert_eq!(flattened("padding: 0.4em .25em"), "padding:.4em.25em");
-    assert_eq!(
-        spellings("Length::em(0.6)")
-            .into_iter()
-            .map(|(named, _)| named)
-            .collect::<Vec<String>>(),
-        vec!["0.6em".to_owned()]
-    );
-    assert!(spellings("Length::em(1.0)").is_empty());
-
     let Some(checkout) = checkout() else {
         return;
     };
     let rows = ported(&root);
-    let mut spans: BTreeMap<String, String> = BTreeMap::new();
+    let mut spans: BTreeMap<String, Span> = BTreeMap::new();
     let mut absent = Vec::new();
 
     for value in &appearance(&root) {
@@ -501,25 +770,33 @@ fn every_cited_span_holds_the_value_that_cites_it() {
         if bucket == Bucket::Machinery || value.derived() || value.cited.is_empty() {
             continue;
         }
-        let mut held = String::new();
         for construct in &value.cited {
-            let text = spans.entry(construct.clone()).or_insert_with(|| {
-                let (path, first, last) = rows
-                    .get(construct)
-                    .unwrap_or_else(|| panic!("{construct} has a ported row"));
-                let source = checkout.join(path);
-                let text = std::fs::read_to_string(&source)
-                    .unwrap_or_else(|_| panic!("{} is readable", source.display()));
-                let lines: Vec<&str> = text.split('\n').collect();
-                flattened(&lines[first - 1..*last].join("\n"))
-            });
-            held.push_str(text);
+            if spans.contains_key(construct) {
+                continue;
+            }
+            let (path, first, last) = rows
+                .get(construct)
+                .unwrap_or_else(|| panic!("{construct} has a ported row"));
+            let source = checkout.join(path);
+            let text = std::fs::read_to_string(&source)
+                .unwrap_or_else(|_| panic!("{} is readable", source.display()));
+            let lines: Vec<&str> = text.split('\n').collect();
+            spans.insert(
+                construct.clone(),
+                Span::of(&lines[*first - 1..*last].join("\n")),
+            );
         }
-        for (named, allowed) in spellings(&value.initializer) {
-            if !allowed
-                .iter()
-                .any(|spelling| held.contains(&flattened(spelling)))
-            {
+        for measure in &value.measures {
+            let Measure::Spelt { named, spellings } = measure else {
+                continue;
+            };
+            let carried = spellings.iter().any(|spelling| {
+                value
+                    .cited
+                    .iter()
+                    .any(|construct| spans[construct].carries(spelling))
+            });
+            if !carried {
                 absent.push(format!(
                     "{} ({}) takes {named}, which {:?} does not carry",
                     value.at, value.name, value.cited
@@ -533,9 +810,10 @@ fn every_cited_span_holds_the_value_that_cites_it() {
     );
 }
 
-/// The three spellings a text size and a gap reach iced through, named rather
-/// than matched on a word boundary, so this gate's scope is its own.
-const GAPS: &[&str] = &[".size(", ".spacing(", ".padding("];
+/// The four spellings a text size, a line box and a gap reach iced through,
+/// named rather than matched on a word boundary, so this gate's scope is its
+/// own.
+const GAPS: &[&str] = &[".size(", ".line_height(", ".spacing(", ".padding("];
 
 /// Every `.rs` file under a directory, sorted.
 fn sources(directory: &Path) -> Vec<PathBuf> {
@@ -604,12 +882,13 @@ fn no_literal_reaches_a_text_size_or_a_gap() {
     );
 }
 
-/// The six spellings a drawn length reaches iced through, named rather than
+/// The seven spellings a drawn length reaches iced through, named rather than
 /// matched on a word boundary, so `max_width` is inside this gate's scope
 /// rather than caught by the `width` that ends it.
 const LENGTHS: &[&str] = &[
     ".width(",
     ".max_width(",
+    ".scroller_width(",
     ".height(",
     ".max_height(",
     ".radius(",

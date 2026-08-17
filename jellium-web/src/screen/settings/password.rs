@@ -2,14 +2,12 @@
 //! changing it does to every other device.
 
 use iced::Element;
-use iced::widget::{button, column, text_input};
 
 use crate::app::Message;
 use crate::text::{self as strings, Text};
+use crate::widget;
 
 use super::Action;
-use crate::style::{self, space, typeface};
-use crate::widget::prose;
 
 /// What has been typed into the two password fields.
 #[derive(Debug, Clone, Default)]
@@ -18,32 +16,45 @@ pub struct State {
     pub replacement: String,
 }
 
-/// The two fields, the sentence stating that the server signs out every other
-/// device signed in as this account, and the control, which is absent under
-/// read-only.
-pub fn view<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
-    let mut shown = column![
-        prose(strings::lookup(Text::PasswordOtherDevices), typeface::BODY),
-        prose(strings::lookup(Text::PasswordCurrent), typeface::BODY),
-        text_input("", &state.current)
-            .style(style::input)
-            .secure(true)
-            .on_input(|typed| Message::SettingsAction(Action::TypedCurrentPassword(typed))),
-        prose(strings::lookup(Text::PasswordNew), typeface::BODY),
-        text_input("", &state.replacement)
-            .style(style::input)
-            .secure(true)
-            .on_input(|typed| Message::SettingsAction(Action::TypedNewPassword(typed))),
-    ]
-    .spacing(style::drawn(space::GUTTER.drawn()));
+/// The two password fields over the sentence stating that the server signs out
+/// every other device signed in as this account, in their own section, and the
+/// control that writes, which is absent under read-only.
+// reference: settings-password-form
+pub fn sections<'a>(state: &'a State, read_only: bool) -> Vec<Element<'a, Message>> {
+    let submits = match read_only {
+        true => Message::Unchanged,
+        false => Message::SettingsAction(Action::ChangePassword),
+    };
+
+    let mut sections = vec![widget::fields(
+        Text::PasswordChange,
+        [
+            widget::field(
+                Text::PasswordCurrent,
+                &state.current,
+                None,
+                |typed| Message::SettingsAction(Action::TypedCurrentPassword(typed)),
+                submits.clone(),
+                widget::Secrecy::Hidden,
+            ),
+            widget::field(
+                Text::PasswordNew,
+                &state.replacement,
+                Some(Text::PasswordOtherDevices),
+                |typed| Message::SettingsAction(Action::TypedNewPassword(typed)),
+                submits,
+                widget::Secrecy::Hidden,
+            ),
+        ],
+    )];
 
     if !read_only {
-        shown = shown.push(
-            button(prose(strings::lookup(Text::PasswordChange), typeface::BODY))
-                .style(style::submit)
-                .on_press(Message::SettingsAction(Action::ChangePassword)),
-        );
+        sections.push(widget::block(
+            strings::lookup(Text::SettingsSave),
+            Some(Message::SettingsAction(Action::ChangePassword)),
+            widget::Emphasis::Submit,
+        ));
     }
 
-    shown.into()
+    sections
 }

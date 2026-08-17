@@ -31,6 +31,17 @@ pub fn padding(padding: space::Padding) -> iced::Padding {
     }
 }
 
+/// A padding the reference writes in css pixels, which the band's root
+/// resolves once for the whole surface.
+pub fn inset(inset: space::Inset, band: Band) -> iced::Padding {
+    iced::Padding {
+        top: drawn(inset.top.drawn(band)),
+        right: drawn(inset.right.drawn(band)),
+        bottom: drawn(inset.bottom.drawn(band)),
+        left: drawn(inset.left.drawn(band)),
+    }
+}
+
 /// The ported shadow as iced draws one; iced's own shadow carries no spread,
 /// which is the one part of `space::Shadow` that does not cross.
 pub fn shadow(shadow: space::Shadow) -> iced::Shadow {
@@ -85,6 +96,19 @@ const ICON_FAMILY: &str = "Material Icons";
 /// The face a glyph is drawn in.
 pub const ICONS: iced::Font = iced::Font::with_name(ICON_FAMILY);
 
+/// The line box a run of text stands in, which iced takes as a factor of the
+/// size the run is drawn at.
+pub fn leading(leading: typeface::Leading) -> iced::widget::text::LineHeight {
+    match leading {
+        typeface::Leading::Factor(factor) => {
+            iced::widget::text::LineHeight::Relative(factor.factor())
+        }
+        typeface::Leading::Length(length) => {
+            iced::widget::text::LineHeight::Absolute(drawn(length.drawn()).into())
+        }
+    }
+}
+
 /// The canvas scale the band draws at, which is what resolves every em.
 pub fn scale(band: Band) -> f32 {
     band.root().factor()
@@ -116,7 +140,55 @@ pub fn dialog(_theme: &iced::Theme) -> iced::widget::container::Style {
             radius: radius(),
             ..iced::Border::default()
         })
-        .shadow(shadow(space::CARD_SHADOW))
+        .shadow(shadow(space::SHADOW))
+}
+
+/// The reference's `.toast`: its own surface, rounded tighter than a control
+/// and carrying the shadow a raised surface carries.
+// reference: scheme-toast
+// reference: toast-face
+pub fn toast(_theme: &iced::Theme) -> iced::widget::container::Style {
+    iced::widget::container::Style::default()
+        .background(color(scheme::TOAST))
+        .color(color(scheme::ON_TOAST))
+        .border(iced::Border {
+            radius: iced::border::Radius::new(drawn(space::TOAST_RADIUS.drawn())),
+            ..iced::Border::default()
+        })
+        .shadow(shadow(space::SHADOW))
+}
+
+/// Every scrollbar the client draws: the reference's own thumb on its own
+/// track, in one face at rest, under the pointer and under a drag.
+/// The reference sets `scrollbar-color` and `scrollbar-width` on every
+/// element, and both engines this client runs on drop the
+/// `::-webkit-scrollbar-thumb` rule beside them where either standard property
+/// is set, so the thumb is `#3b3b3b` on `#202020` and its corners are square.
+// reference: scheme-scrollbar
+pub fn scrollbar(
+    _theme: &iced::Theme,
+    _status: iced::widget::scrollable::Status,
+) -> iced::widget::scrollable::Style {
+    let rail = iced::widget::scrollable::Rail {
+        background: Some(iced::Background::Color(color(scheme::SCROLLBAR_TRACK))),
+        border: iced::Border::default(),
+        scroller: iced::widget::scrollable::Scroller {
+            background: iced::Background::Color(color(scheme::SCROLLBAR_THUMB)),
+            border: iced::Border::default(),
+        },
+    };
+    iced::widget::scrollable::Style {
+        container: iced::widget::container::Style::default(),
+        vertical_rail: rail,
+        horizontal_rail: rail,
+        gap: None,
+        auto_scroll: iced::widget::scrollable::AutoScroll {
+            background: iced::Background::Color(iced::Color::TRANSPARENT),
+            border: iced::Border::default(),
+            shadow: iced::Shadow::default(),
+            icon: iced::Color::TRANSPARENT,
+        },
+    }
 }
 
 /// What a dialog is drawn over, which the reference paints black behind its
@@ -155,7 +227,7 @@ fn fading(angle: iced::Degrees) -> iced::Background {
     iced::Background::Gradient(iced::Gradient::Linear(
         iced::gradient::Linear::new(angle)
             .add_stop(0.0, color(scheme::SCRIM))
-            .add_stop(1.0, color(scheme::SCRIM.clear())),
+            .add_stop(1.0, color(scheme::SCRIM.at(scheme::Alpha::CLEAR))),
     ))
 }
 
@@ -204,6 +276,16 @@ pub fn submit(
         return faced(scheme::ACCENT_FOCUS, scheme::ON_ACCENT);
     }
     faced(scheme::ACCENT, scheme::ON_ACCENT)
+}
+
+/// The reference's `.button-delete`, which it gives the control that removes
+/// something and lights no differently where it is reached.
+// reference: scheme-delete
+pub fn destructive(
+    _theme: &iced::Theme,
+    _status: iced::widget::button::Status,
+) -> iced::widget::button::Style {
+    faced(scheme::DELETE, scheme::ON_DELETE)
 }
 
 /// A control carrying no face of its own until it is reached, which is what a
@@ -270,6 +352,256 @@ pub fn link(
     }
 }
 
+/// The surface the navigation drawer stands on, which is the scheme's own
+/// paper.
+// reference: drawer-paper
+// reference: scheme-anchors
+pub fn drawer(_theme: &iced::Theme) -> iced::widget::container::Style {
+    iced::widget::container::Style::default()
+        .background(color(scheme::SURFACE))
+        .color(color(scheme::TEXT))
+}
+
+/// A drawer entry whose screen the dashboard is not showing: no face of its
+/// own until it is reached.
+// reference: drawer-entry
+// reference: mui-dark-action
+pub fn drawer_offered(
+    _theme: &iced::Theme,
+    status: iced::widget::button::Status,
+) -> iced::widget::button::Style {
+    if lit(status) {
+        return faced(scheme::ACTION_HOVER, scheme::TEXT);
+    }
+    iced::widget::button::Style {
+        text_color: color(scheme::TEXT),
+        ..iced::widget::button::Style::default()
+    }
+}
+
+/// The entry whose screen the dashboard is showing: the accent at a fifth of
+/// its opacity, and at twenty-eight hundredths where it is reached.
+// reference: drawer-entry
+pub fn drawer_shown(
+    _theme: &iced::Theme,
+    status: iced::widget::button::Status,
+) -> iced::widget::button::Style {
+    if lit(status) {
+        return faced(scheme::DRAWER_SHOWN_HOVER, scheme::TEXT);
+    }
+    faced(scheme::DRAWER_SHOWN, scheme::TEXT)
+}
+
+/// A tab the strip is not showing: the reference's own grey lettering on no
+/// face of its own, in the accent where it is reached.
+// reference: scheme-tab
+pub fn tab_offered(
+    _theme: &iced::Theme,
+    status: iced::widget::button::Status,
+) -> iced::widget::button::Style {
+    iced::widget::button::Style {
+        text_color: match lit(status) {
+            true => color(scheme::ACCENT),
+            false => color(scheme::TAB_OFFERED),
+        },
+        ..iced::widget::button::Style::default()
+    }
+}
+
+/// The tab whose body the strip is showing: the reference's white lettering,
+/// in the accent where it is reached, its hover outranking its shown face.
+// reference: scheme-tab
+pub fn tab_shown(
+    _theme: &iced::Theme,
+    status: iced::widget::button::Status,
+) -> iced::widget::button::Style {
+    iced::widget::button::Style {
+        text_color: match lit(status) {
+            true => color(scheme::ACCENT),
+            false => color(scheme::TAB_SHOWN),
+        },
+        ..iced::widget::button::Style::default()
+    }
+}
+
+/// Which end of a `.localnav` group a control stands at, which is where the
+/// group's own radius falls.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Ends {
+    Leading,
+    Trailing,
+    Both,
+    Neither,
+}
+
+/// The group's radius where `ends` puts it and nothing anywhere else.
+// reference: control-localnav-group
+// reference: mui-toggle-group
+fn rounded(ends: Ends, corner: Drawn) -> iced::border::Radius {
+    let corner = drawn(corner);
+    let (leading, trailing) = match ends {
+        Ends::Leading => (corner, 0.0),
+        Ends::Trailing => (0.0, corner),
+        Ends::Both => (corner, corner),
+        Ends::Neither => (0.0, 0.0),
+    };
+    iced::border::Radius::default()
+        .top_left(leading)
+        .bottom_left(leading)
+        .top_right(trailing)
+        .bottom_right(trailing)
+}
+
+/// A control of a `.localnav` group whose screen the group is not showing.
+/// The reference gives it no face under the pointer.
+// reference: control-localnav
+// reference: control-localnav-group
+pub fn localnav_offered(
+    _theme: &iced::Theme,
+    _status: iced::widget::button::Status,
+    ends: Ends,
+) -> iced::widget::button::Style {
+    iced::widget::button::Style {
+        border: iced::Border {
+            radius: rounded(ends, space::LOCALNAV_RADIUS.drawn()),
+            ..iced::Border::default()
+        },
+        ..faced(scheme::LOCALNAV, scheme::TEXT)
+    }
+}
+
+/// The control whose screen the group is showing, which the reference does not
+/// light either.
+// reference: control-localnav-group
+// reference: scheme-localnav-active
+pub fn localnav_shown(
+    _theme: &iced::Theme,
+    _status: iced::widget::button::Status,
+    ends: Ends,
+) -> iced::widget::button::Style {
+    iced::widget::button::Style {
+        border: iced::Border {
+            radius: rounded(ends, space::LOCALNAV_RADIUS.drawn()),
+            ..iced::Border::default()
+        },
+        ..faced(scheme::LOCALNAV_SHOWN, scheme::ON_LOCALNAV_SHOWN)
+    }
+}
+
+/// The surface `MRT_TablePaper` stands the table on, which is the scheme's own
+/// paper, with the lettering MUI writes on it.
+// reference: table-paper
+// reference: table-activity-face
+pub fn table(_theme: &iced::Theme) -> iced::widget::container::Style {
+    iced::widget::container::Style::default()
+        .background(color(scheme::SURFACE))
+        .color(color(scheme::ON_SURFACE))
+}
+
+/// The rule every table cell draws under itself.
+// reference: mui-table-cell
+pub fn table_rule(_theme: &iced::Theme) -> iced::widget::container::Style {
+    iced::widget::container::Style::default().background(color(scheme::TABLE_RULE))
+}
+
+/// The edge one segment of the toolbar's group carries, and the radius the
+/// group carries at its two ends alone. The radius is written in css pixels,
+/// so the band resolves it.
+// reference: mui-toggle-button
+// reference: mui-toggle-group
+fn toggle_edge(ends: Ends, band: Band) -> iced::Border {
+    iced::Border {
+        color: color(scheme::DIVIDER),
+        width: drawn(space::TOGGLE_BORDER.drawn(band)),
+        radius: rounded(ends, space::TOGGLE_RADIUS.drawn(band)),
+    }
+}
+
+/// A segment of the toolbar's group whose view the screen is not showing: no
+/// face of its own until it is reached, inside MUI's own divider.
+// reference: mui-toggle-button
+// reference: mui-toggle-group
+pub fn toggle_offered(
+    _theme: &iced::Theme,
+    status: iced::widget::button::Status,
+    ends: Ends,
+    band: Band,
+) -> iced::widget::button::Style {
+    let face = match lit(status) {
+        true => faced(scheme::ACTION_HOVER, scheme::ON_SURFACE),
+        false => iced::widget::button::Style {
+            text_color: color(scheme::ON_SURFACE),
+            ..iced::widget::button::Style::default()
+        },
+    };
+    iced::widget::button::Style {
+        border: toggle_edge(ends, band),
+        ..face
+    }
+}
+
+/// The segment whose view it is showing: white at a fifth of its opacity, and
+/// at twenty-eight hundredths where it is reached.
+// reference: mui-toggle-button
+// reference: mui-toggle-group
+pub fn toggle_shown(
+    _theme: &iced::Theme,
+    status: iced::widget::button::Status,
+    ends: Ends,
+    band: Band,
+) -> iced::widget::button::Style {
+    let face = match lit(status) {
+        true => faced(scheme::TOGGLE_SHOWN_HOVER, scheme::ON_SURFACE),
+        false => faced(scheme::TOGGLE_SHOWN, scheme::ON_SURFACE),
+    };
+    iced::widget::button::Style {
+        border: toggle_edge(ends, band),
+        ..face
+    }
+}
+
+/// The rule `.listItem-border` draws under a row.
+// reference: scheme-list-border
+pub fn list_rule(_theme: &iced::Theme) -> iced::widget::container::Style {
+    iced::widget::container::Style::default().background(color(scheme::LIST_RULE))
+}
+
+/// A node of the metadata sidebar the manager is not showing: no face of its
+/// own until it is reached, and the reference's own blue with white lettering
+/// there.
+// reference: metadata-tree
+pub fn tree_offered(
+    _theme: &iced::Theme,
+    status: iced::widget::button::Status,
+) -> iced::widget::button::Style {
+    if lit(status) {
+        return faced(scheme::TREE_HOVER, scheme::ON_TREE_HOVER);
+    }
+    iced::widget::button::Style {
+        text_color: color(scheme::TEXT),
+        ..iced::widget::button::Style::default()
+    }
+}
+
+/// The node whose part the manager is showing, which the reference paints in
+/// the accent whether or not it is reached.
+// reference: metadata-tree
+pub fn tree_shown(
+    _theme: &iced::Theme,
+    status: iced::widget::button::Status,
+) -> iced::widget::button::Style {
+    match lit(status) {
+        true => faced(scheme::TREE_SHOWN, scheme::ON_TREE_HOVER),
+        false => faced(scheme::TREE_SHOWN, scheme::TEXT),
+    }
+}
+
+/// The rule down the metadata sidebar's trailing edge.
+// reference: metadata-sidebar
+pub fn editor_rule(_theme: &iced::Theme) -> iced::widget::container::Style {
+    iced::widget::container::Style::default().background(color(scheme::EDITOR_RULE))
+}
+
 /// The frame a card's image sits in, which the reference fills with
 /// `.cardPadder`'s own color behind an image that has not arrived.
 // reference: card-container
@@ -280,7 +612,7 @@ pub fn card_padder(_theme: &iced::Theme) -> iced::widget::container::Style {
             radius: radius(),
             ..iced::Border::default()
         })
-        .shadow(shadow(space::CARD_SHADOW))
+        .shadow(shadow(space::SHADOW))
 }
 
 /// A card drawing no image, which the reference gives one of five backgrounds
@@ -297,7 +629,7 @@ pub fn card_face(
             radius: radius(),
             ..iced::Border::default()
         })
-        .shadow(shadow(space::CARD_SHADOW))
+        .shadow(shadow(space::SHADOW))
 }
 
 /// What a card writes under its image.
@@ -334,6 +666,91 @@ pub fn label(_theme: &iced::Theme) -> iced::widget::text::Style {
 pub fn description(_theme: &iced::Theme) -> iced::widget::text::Style {
     iced::widget::text::Style {
         color: Some(color(scheme::TEXT_SECONDARY)),
+    }
+}
+
+/// The reference's `.emby-select-withcolor`: its own face inside its own edge,
+/// that edge in the accent while the field is reached or open.
+// reference: scheme-select
+// reference: scheme-select-focus
+// reference: control-select-withcolor
+pub fn select(
+    _theme: &iced::Theme,
+    status: iced::widget::pick_list::Status,
+) -> iced::widget::pick_list::Style {
+    let edge = match status {
+        iced::widget::pick_list::Status::Active => scheme::SELECT,
+        iced::widget::pick_list::Status::Hovered
+        | iced::widget::pick_list::Status::Opened { .. } => scheme::ACCENT,
+    };
+    iced::widget::pick_list::Style {
+        text_color: color(scheme::TEXT),
+        placeholder_color: color(scheme::TEXT_SECONDARY),
+        handle_color: color(scheme::TEXT),
+        background: iced::Background::Color(color(scheme::SELECT)),
+        border: iced::Border {
+            color: color(edge),
+            width: drawn(space::SELECT_BORDER.drawn()),
+            radius: radius(),
+        },
+    }
+}
+
+// the reference hands its options to the browser's own popup, which this
+// canvas cannot raise, so the list is drawn here on `option`'s own face
+// the row under the pointer takes the face the reference gives a reached
+// `.listItem`, the browser deciding that face in the reference
+// reference: scheme-select-option
+// reference: scheme-list-state
+pub fn menu(_theme: &iced::Theme) -> iced::widget::overlay::menu::Style {
+    iced::widget::overlay::menu::Style {
+        background: iced::Background::Color(color(scheme::SELECT_OPTION)),
+        border: iced::Border {
+            color: color(scheme::SELECT),
+            width: drawn(space::SELECT_BORDER.drawn()),
+            radius: radius(),
+        },
+        text_color: color(scheme::TEXT),
+        selected_text_color: color(scheme::TEXT),
+        selected_background: iced::Background::Color(color(scheme::LIST_HOVER)),
+        shadow: iced::Shadow::default(),
+    }
+}
+
+/// The reference's `.checkboxOutline`: an edge in the page's own lettering
+/// while it is unchecked, the accent filling it when it is, and white at its
+/// edge where a checked box is reached.
+// reference: scheme-checkbox
+// reference: scheme-checkbox-outline
+// reference: control-checkbox
+pub fn checkbox(
+    _theme: &iced::Theme,
+    status: iced::widget::checkbox::Status,
+) -> iced::widget::checkbox::Style {
+    let (filled, edge) = match status {
+        iced::widget::checkbox::Status::Active { is_checked: true }
+        | iced::widget::checkbox::Status::Disabled { is_checked: true } => {
+            (Some(scheme::ACCENT), scheme::ACCENT)
+        }
+        iced::widget::checkbox::Status::Active { is_checked: false }
+        | iced::widget::checkbox::Status::Disabled { is_checked: false } => (None, scheme::TEXT),
+        iced::widget::checkbox::Status::Hovered { is_checked: true } => {
+            (Some(scheme::ACCENT), scheme::CHECKBOX_FOCUS)
+        }
+        iced::widget::checkbox::Status::Hovered { is_checked: false } => (None, scheme::ACCENT),
+    };
+    iced::widget::checkbox::Style {
+        background: match filled {
+            Some(face) => iced::Background::Color(color(face)),
+            None => iced::Background::Color(iced::Color::TRANSPARENT),
+        },
+        icon_color: color(scheme::ON_CHECKBOX),
+        border: iced::Border {
+            color: color(edge),
+            width: drawn(space::CHECKBOX_BORDER.drawn()),
+            radius: iced::border::Radius::new(drawn(space::CHECKBOX_RADIUS.drawn())),
+        },
+        text_color: Some(color(scheme::TEXT)),
     }
 }
 

@@ -1,8 +1,9 @@
+use std::borrow::Cow;
 use std::collections::HashSet;
 use std::rc::Rc;
 
 use chrono::{DateTime, Utc};
-use iced::widget::{Space, button, column, container, image, row};
+use iced::widget::{button, column, row};
 use iced::{Element, Fill};
 
 use super::Action;
@@ -13,8 +14,7 @@ use crate::images::{self, Cache};
 use crate::livetv::Channel;
 use crate::style::{self, Drawn, space, typeface};
 use crate::text::{self as strings, Text};
-use crate::widget;
-use crate::widget::{line, prose};
+use crate::widget::{self, prose};
 use crate::window;
 
 #[derive(Debug, Clone)]
@@ -25,6 +25,9 @@ pub struct State {
     pub window: window::Window,
 }
 
+/// Every row of the channels list: its logo over two lines.
+const ROW: space::ListRow = space::ListRow::art(space::Lines::Two);
+
 pub async fn load(
     api: Rc<Api>,
     kind: jellyfin_api::types::ChannelType,
@@ -34,11 +37,7 @@ pub async fn load(
         Ok(State {
             channels: api.channels(kind, None).await.bubbled()?,
             kind,
-            window: window::Window::new(
-                window::Id::Channels,
-                Drawn::of(style::drawn(space::LIST_ROW.drawn())),
-                height,
-            ),
+            window: window::Window::new(window::Id::Channels, ROW.height().drawn(), height),
         })
     })
     .await
@@ -57,55 +56,38 @@ fn entry<'a>(
     now: DateTime<Utc>,
     logo: Option<iced::widget::image::Handle>,
 ) -> Element<'a, Message> {
-    let art: Element<'a, Message> = match logo {
-        Some(handle) => image(handle)
-            .width(style::drawn(space::BAR_ART.drawn()))
-            .into(),
-        None => Space::new()
-            .width(style::drawn(space::BAR_ART.drawn()))
-            .into(),
+    let favourite = match channel.favorite {
+        true => Text::ChannelUnfavorite,
+        false => Text::ChannelFavorite,
     };
-
-    let mut named = column![line(
-        format!("{} {}", channel.number, channel.name),
-        typeface::BODY,
-        typeface::Weight::Regular,
-    )]
-    .spacing(style::drawn(space::BLOCK_GAP.drawn()))
-    .width(Fill);
-    if let Some(program) = &channel.current {
-        named = named.push(line(
-            program.title.clone(),
-            typeface::SECONDARY,
-            typeface::Weight::Regular,
-        ));
-        named = named.push(widget::elapsed_bar(program.elapsed(now)));
-    }
-
-    let favourite = if channel.favorite {
-        Text::ChannelUnfavorite
-    } else {
-        Text::ChannelFavorite
-    };
-
-    container(
-        row![
-            art,
-            button(named)
-                .style(style::flat)
-                .on_press(Message::LiveTvAction(Action::PlayChannel(channel.id))),
-            button(prose(strings::lookup(favourite), typeface::BODY))
-                .style(style::flat)
-                .on_press(Message::LiveTvAction(Action::Favorited(
-                    channel.id,
-                    !channel.favorite
-                ))),
-        ]
-        .spacing(style::drawn(space::GUTTER.drawn()))
-        .align_y(iced::Center),
+    widget::list::row(
+        ROW,
+        widget::list::Row {
+            face: Some(widget::list::Face::Art {
+                image: logo,
+                elapsed: channel.current.as_ref().map(|program| program.elapsed(now)),
+            }),
+            index: None,
+            title: format!("{} {}", channel.number, channel.name).into(),
+            secondary: channel
+                .current
+                .iter()
+                .map(|program| Cow::from(program.title.clone()))
+                .collect(),
+            press: widget::list::Press::Body(Message::LiveTvAction(Action::PlayChannel(
+                channel.id,
+            ))),
+            controls: vec![
+                button(prose(strings::lookup(favourite), typeface::BODY))
+                    .style(style::flat)
+                    .on_press(Message::LiveTvAction(Action::Favorited(
+                        channel.id,
+                        !channel.favorite,
+                    )))
+                    .into(),
+            ],
+        },
     )
-    .height(style::drawn(space::LIST_ROW.drawn()))
-    .into()
 }
 
 /// The TV and radio filter above a windowed list of rows, each carrying the
@@ -130,14 +112,14 @@ pub fn view<'a>(state: &'a State, now: DateTime<Utc>, images: &'a Cache) -> Elem
             })
             .on_press(Message::LiveTvAction(Action::Kind(ChannelType::Radio))),
     ]
-    .spacing(style::drawn(space::GUTTER.drawn()));
+    .spacing(style::drawn(space::CONTROL_GAP.drawn()));
 
     if state.channels.is_empty() {
         return column![
             filter,
-            widget::banner(strings::lookup(Text::ChannelsEmpty).to_string()),
+            widget::centered(strings::lookup(Text::ChannelsEmpty).to_string()),
         ]
-        .spacing(style::drawn(space::GUTTER.drawn()))
+        .spacing(style::drawn(space::SECTION_GAP.drawn()))
         .into();
     }
 
@@ -147,7 +129,7 @@ pub fn view<'a>(state: &'a State, now: DateTime<Utc>, images: &'a Cache) -> Elem
     });
 
     column![filter, rows]
-        .spacing(style::drawn(space::GUTTER.drawn()))
+        .spacing(style::drawn(space::SECTION_GAP.drawn()))
         .width(Fill)
         .height(Fill)
         .into()

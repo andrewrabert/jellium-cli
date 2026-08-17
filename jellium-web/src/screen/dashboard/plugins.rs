@@ -1,8 +1,8 @@
 //! The installed plugins, each with its name, version and status, and the
 //! configuration pages it hosts.
 
+use iced::Element;
 use iced::widget::{button, column, row};
-use iced::{Element, Fill};
 use uuid::Uuid;
 
 use crate::app::Message;
@@ -50,13 +50,26 @@ fn status(plugin: &jellyfin_api::types::PluginInfo) -> String {
 /// Each plugin's name, version and status, its enable, disable and uninstall
 /// controls, and the configuration pages it hosts; a plugin hosting no page
 /// shows none.
-pub fn view<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
-    let mut listed = column![prose(
-        strings::lookup(Text::PluginsTitle),
-        typeface::HEADING_2
-    )]
-    .spacing(style::drawn(space::GUTTER.drawn()))
-    .padding(style::drawn(space::GUTTER.drawn()));
+pub fn view<'a>(state: &'a State, read_only: bool) -> Vec<Element<'a, Message>> {
+    let mut listed: Vec<Element<'a, Message>> = vec![
+        row![
+            button(prose(strings::lookup(Text::CatalogTitle), typeface::BODY))
+                .style(style::link)
+                .on_press(Message::DashboardAction(super::Action::Open(
+                    super::Screen::Catalog
+                ))),
+            button(prose(
+                strings::lookup(Text::RepositoriesTitle),
+                typeface::BODY
+            ))
+            .style(style::link)
+            .on_press(Message::DashboardAction(super::Action::Open(
+                super::Screen::Repositories
+            ))),
+        ]
+        .spacing(style::drawn(space::CONTROL_GAP.drawn()))
+        .into(),
+    ];
 
     for plugin in &state.plugins {
         let Some(id) = plugin.id else {
@@ -67,20 +80,23 @@ pub fn view<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
             line(
                 plugin.name.clone().unwrap_or_default(),
                 typeface::BODY,
-                typeface::Weight::Regular
+                typeface::Weight::Regular,
+                typeface::LINE_HEIGHT,
             ),
             line(
                 strings::format(Text::PluginsVersion, &[&version]),
                 typeface::BODY,
                 typeface::Weight::Regular,
+                typeface::LINE_HEIGHT,
             ),
             line(
                 strings::format(Text::PluginsStatus, &[&status(plugin)]),
                 typeface::BODY,
                 typeface::Weight::Regular,
+                typeface::LINE_HEIGHT,
             ),
         ]
-        .spacing(style::drawn(space::GUTTER.drawn()));
+        .spacing(style::drawn(space::SECTION_GAP.drawn()));
 
         if !read_only {
             held = held.push(
@@ -118,7 +134,7 @@ pub fn view<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
                         )
                     ))),
                 ]
-                .spacing(style::drawn(space::GUTTER.drawn())),
+                .spacing(style::drawn(space::CONTROL_GAP.drawn())),
             );
         }
 
@@ -139,11 +155,8 @@ pub fn view<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
                 );
             }
         }
-        listed = listed.push(held);
+        listed.push(held.into());
     }
 
-    iced::widget::scrollable(listed)
-        .width(Fill)
-        .height(Fill)
-        .into()
+    listed
 }

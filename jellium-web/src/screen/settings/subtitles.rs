@@ -2,15 +2,14 @@
 //! cues are drawn and nothing the server burns into the picture.
 
 use iced::Element;
-use iced::widget::column;
 use jellium_model::prefs::{Held, OPACITIES, SubtitleColour, SubtitleShadow, SubtitleSize};
 
 use crate::app::Message;
+use crate::style::space;
 use crate::text::{self as strings, Text};
+use crate::widget;
 
-use super::{Setting, choices};
-use crate::style::{self, space, typeface};
-use crate::widget::prose;
+use super::{Action, Setting};
 
 fn size_label(size: SubtitleSize) -> String {
     strings::lookup(match size {
@@ -49,53 +48,60 @@ fn opacity_label(opacity: i32) -> String {
     format!("{opacity}%")
 }
 
-/// Text size, text colour, background colour with its opacity and drop shadow,
-/// the sentence stating that burned-in subtitles ignore every setting here, and
-/// the save, which is absent under read-only.
-pub fn view<'a>(held: Held, read_only: bool) -> Element<'a, Message> {
-    let mut shown = column![
-        prose(strings::lookup(Text::SubtitlesBurnedIn), typeface::BODY),
-        choices(
-            Text::SubtitlesSize,
-            &SubtitleSize::ALL,
-            held.subtitle_size,
-            size_label,
-            Setting::SubtitleSize,
-        ),
-        choices(
-            Text::SubtitlesColour,
-            &SubtitleColour::ALL,
-            held.subtitle_colour,
-            colour_label,
-            Setting::SubtitleColour,
-        ),
-        choices(
-            Text::SubtitlesBackground,
-            &SubtitleColour::ALL,
-            held.subtitle_background,
-            colour_label,
-            Setting::SubtitleBackground,
-        ),
-        choices(
-            Text::SubtitlesOpacity,
-            &OPACITIES,
-            held.subtitle_opacity,
-            opacity_label,
-            Setting::SubtitleOpacity,
-        ),
-        choices(
-            Text::SubtitlesShadow,
-            &SubtitleShadow::ALL,
-            held.subtitle_shadow,
-            shadow_label,
-            Setting::SubtitleShadow,
-        ),
-    ]
-    .spacing(style::drawn(space::GUTTER.drawn()));
-
-    if !read_only {
-        shown = shown.push(super::save());
-    }
-
-    shown.into()
+/// The sentence stating that burned-in subtitles ignore every setting here,
+/// then text size, text colour, background colour with its opacity and drop
+/// shadow, each a dropdown, in the screen's own section.
+// reference: settings-subtitles-form
+pub fn sections<'a>(held: Held) -> Vec<Element<'a, Message>> {
+    vec![widget::fields(
+        Text::SettingsSubtitles,
+        [
+            widget::description(Text::SubtitlesBurnedIn, space::DESCRIPTION_INSET),
+            widget::select(
+                Text::SubtitlesSize,
+                None,
+                super::choices(SubtitleSize::ALL, size_label, |size| {
+                    Action::Set(Setting::SubtitleSize(size))
+                }),
+                &Action::Set(Setting::SubtitleSize(held.subtitle_size)),
+                Message::SettingsAction,
+            ),
+            widget::select(
+                Text::SubtitlesColour,
+                None,
+                super::choices(SubtitleColour::ALL, colour_label, |colour| {
+                    Action::Set(Setting::SubtitleColour(colour))
+                }),
+                &Action::Set(Setting::SubtitleColour(held.subtitle_colour)),
+                Message::SettingsAction,
+            ),
+            widget::select(
+                Text::SubtitlesBackground,
+                None,
+                super::choices(SubtitleColour::ALL, colour_label, |colour| {
+                    Action::Set(Setting::SubtitleBackground(colour))
+                }),
+                &Action::Set(Setting::SubtitleBackground(held.subtitle_background)),
+                Message::SettingsAction,
+            ),
+            widget::select(
+                Text::SubtitlesOpacity,
+                None,
+                super::choices(OPACITIES, opacity_label, |opacity| {
+                    Action::Set(Setting::SubtitleOpacity(opacity))
+                }),
+                &Action::Set(Setting::SubtitleOpacity(held.subtitle_opacity)),
+                Message::SettingsAction,
+            ),
+            widget::select(
+                Text::SubtitlesShadow,
+                None,
+                super::choices(SubtitleShadow::ALL, shadow_label, |shadow| {
+                    Action::Set(Setting::SubtitleShadow(shadow))
+                }),
+                &Action::Set(Setting::SubtitleShadow(held.subtitle_shadow)),
+                Message::SettingsAction,
+            ),
+        ],
+    )]
 }

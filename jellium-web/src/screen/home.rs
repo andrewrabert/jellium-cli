@@ -2,7 +2,7 @@ use std::collections::HashSet;
 use std::rc::Rc;
 
 use iced::Element;
-use iced::widget::{column, row, scrollable};
+use iced::widget::{column, row};
 use jellyfin_api::types::{BaseItemDto, CollectionType, MediaType};
 
 use crate::api::Api;
@@ -171,7 +171,7 @@ pub fn view<'a>(
 ) -> Element<'a, Message> {
     if state.libraries.is_empty() && state.continue_watching.is_empty() && state.next_up.is_empty()
     {
-        return widget::banner(strings::lookup(Text::HomeEmpty).to_string());
+        return widget::centered(strings::lookup(Text::HomeEmpty).to_string());
     }
 
     let mut page = column![];
@@ -188,16 +188,13 @@ pub fn view<'a>(
             widget::wall(
                 card::Card::LIBRARY,
                 Room::content(viewport),
-                libraries
-                    .iter()
-                    .filter_map(|library| {
-                        Some(widget::library_tile(
-                            library,
-                            Room::content(viewport),
-                            Message::Navigated(opens(library)?),
-                        ))
-                    })
-                    .collect(),
+                libraries.iter().filter_map(|library| {
+                    Some(widget::library_tile(
+                        library,
+                        Room::content(viewport),
+                        Message::Navigated(opens(library)?),
+                    ))
+                }),
             ),
         ));
     }
@@ -260,7 +257,7 @@ pub fn view<'a>(
             ),
         ));
     }
-    scrollable(page).into()
+    crate::widget::scrolled(page).into()
 }
 
 pub fn images(state: &State) -> HashSet<images::Key> {

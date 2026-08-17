@@ -1,7 +1,7 @@
 //! The plugin repositories the server is configured with.
 
-use iced::widget::{button, column, row, text_input};
-use iced::{Element, Fill};
+use iced::Element;
+use iced::widget::{button, row, text_input};
 
 use crate::app::Message;
 use crate::error::Answer;
@@ -30,13 +30,8 @@ pub async fn load(api: std::rc::Rc<crate::api::Api>) -> Answer<State> {
 
 /// Each repository with its name and url, its removal, and the control that
 /// adds one behind a confirmation naming the url.
-pub fn view<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
-    let mut page = column![prose(
-        strings::lookup(Text::RepositoriesTitle),
-        typeface::HEADING_2
-    )]
-    .spacing(style::drawn(space::GUTTER.drawn()))
-    .padding(style::drawn(space::GUTTER.drawn()));
+pub fn view<'a>(state: &'a State, read_only: bool) -> Vec<Element<'a, Message>> {
+    let mut page: Vec<Element<'a, Message>> = Vec::new();
 
     for repository in &state.repositories {
         let url = repository.url.clone().unwrap_or_default();
@@ -44,7 +39,7 @@ pub fn view<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
             prose(repository.name.clone().unwrap_or_default(), typeface::BODY),
             prose(url.clone(), typeface::BODY),
         ]
-        .spacing(style::drawn(space::GUTTER.drawn()));
+        .spacing(style::drawn(space::CONTROL_GAP.drawn()));
         if !read_only {
             held = held.push(
                 button(prose(
@@ -60,11 +55,11 @@ pub fn view<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
                 ))),
             );
         }
-        page = page.push(held);
+        page.push(held.into());
     }
 
     if !read_only {
-        page = page.push(
+        page.push(
             row![
                 text_input(strings::lookup(Text::UsersName), &state.naming)
                     .style(style::input)
@@ -89,12 +84,10 @@ pub fn view<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
                     )
                 ))),
             ]
-            .spacing(style::drawn(space::GUTTER.drawn())),
+            .spacing(style::drawn(space::CONTROL_GAP.drawn()))
+            .into(),
         );
     }
 
-    iced::widget::scrollable(page)
-        .width(Fill)
-        .height(Fill)
-        .into()
+    page
 }

@@ -1,15 +1,14 @@
 //! The Quick Connect screen: authorizing a code another device is showing.
 
 use iced::Element;
-use iced::widget::{button, column, text_input};
 use jellium_model::quickconnect::Outcome;
 
 use crate::app::Message;
+use crate::style::space;
 use crate::text::{self as strings, Text};
+use crate::widget;
 
 use super::Action;
-use crate::style::{self, space, typeface};
-use crate::widget::prose;
 
 /// The code being typed, the codes this run authorized, and what the last
 /// authorize answered.
@@ -22,45 +21,49 @@ pub struct State {
     pub outcome: Option<Outcome>,
 }
 
-/// The description, the code field, the authorize control — absent under
-/// read-only — and the outcome of the last authorize.
-pub fn view<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
-    let mut shown = column![
-        prose(
-            strings::lookup(Text::QuickConnectDescription),
-            typeface::BODY
+/// What authorizing the code now typed asks confirmation for.
+fn asking(state: &State) -> crate::screen::confirm::Pending {
+    crate::screen::confirm::Pending::of(
+        crate::screen::confirm::Destructive::AuthorizeQuickConnect {
+            code: state.code.clone(),
+        },
+        state.code.clone(),
+    )
+}
+
+/// The description, the code field, the authorize control filling the form's
+/// width — absent under read-only — and the outcome of the last authorize.
+// reference: settings-quickconnect-form
+pub fn sections<'a>(state: &'a State, read_only: bool) -> Vec<Element<'a, Message>> {
+    let mut rows = vec![
+        widget::description(Text::QuickConnectDescription, space::DESCRIPTION_INSET),
+        widget::field(
+            Text::QuickConnectCode,
+            &state.code,
+            None,
+            |typed| Message::SettingsAction(Action::Typed(typed)),
+            match read_only {
+                true => Message::Unchanged,
+                false => Message::SettingsAction(Action::Ask(asking(state))),
+            },
+            widget::Secrecy::Shown,
         ),
-        prose(strings::lookup(Text::QuickConnectCode), typeface::BODY),
-        text_input("", &state.code)
-            .style(style::input)
-            .on_input(|typed| Message::SettingsAction(Action::Typed(typed))),
-    ]
-    .spacing(style::drawn(space::GUTTER.drawn()));
+    ];
 
     if !read_only {
-        shown = shown.push(
-            button(prose(
-                strings::lookup(Text::QuickConnectAuthorize),
-                typeface::BODY,
-            ))
-            .style(style::submit)
-            .on_press(Message::SettingsAction(Action::Ask(
-                crate::screen::confirm::Pending::of(
-                    crate::screen::confirm::Destructive::AuthorizeQuickConnect {
-                        code: state.code.clone(),
-                    },
-                    state.code.clone(),
-                ),
-            ))),
-        );
-    }
-
-    if let Some(Outcome::Authorized) = state.outcome {
-        shown = shown.push(prose(
-            strings::lookup(Text::QuickConnectAuthorized),
-            typeface::BODY,
+        rows.push(widget::block(
+            strings::lookup(Text::QuickConnectAuthorize),
+            Some(Message::SettingsAction(Action::Ask(asking(state)))),
+            widget::Emphasis::Submit,
         ));
     }
 
-    shown.into()
+    if let Some(Outcome::Authorized) = state.outcome {
+        rows.push(widget::description(
+            Text::QuickConnectAuthorized,
+            space::DESCRIPTION_INSET,
+        ));
+    }
+
+    vec![widget::fields(Text::SettingsQuickConnect, rows)]
 }

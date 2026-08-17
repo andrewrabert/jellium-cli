@@ -44,26 +44,22 @@ fn picker<'a>(state: &'a super::State, viewport: Viewport) -> Option<Element<'a,
     Some(widget::picker(
         wall,
         Room::content(viewport),
-        screen
-            .users
-            .iter()
-            .map(|user| {
-                widget::card(
-                    wall,
-                    Room::content(viewport),
-                    match state.images.get(&user.id) {
-                        Some(handle) => Face::Image(handle.clone()),
-                        None => Face::Icon(Icon::Person),
-                    },
-                    user.name.clone(),
-                    card::Bottom::Padded,
-                    Message::LoginAction(Action::Pick {
-                        user: user.id,
-                        name: user.name.clone(),
-                    }),
-                )
-            })
-            .collect(),
+        screen.users.iter().map(|user| {
+            widget::card(
+                wall,
+                Room::content(viewport),
+                match state.images.get(&user.id) {
+                    Some(handle) => Face::Image(handle.clone()),
+                    None => Face::Icon(Icon::Person),
+                },
+                user.name.clone(),
+                card::Bottom::Padded,
+                Message::LoginAction(Action::Pick {
+                    user: user.id,
+                    name: user.name.clone(),
+                }),
+            )
+        }),
     ))
 }
 
@@ -76,9 +72,10 @@ pub fn view<'a>(state: &'a super::State, viewport: Viewport) -> Element<'a, Mess
     if let Some(picker) = picker(state, viewport) {
         page = page.push(picker);
     }
-    page = page.push(widget::form(
+    page = page.push(widget::capped(
         viewport,
-        vec![
+        space::FIELD_GAP,
+        [
             widget::field(
                 Text::LoginUsername,
                 &state.credentials.username,

@@ -1,6 +1,6 @@
 //! The measured line behind [`crate::widget::line`].
 
-use iced::advanced::text::{LineHeight, Paragraph, Shaping, Wrapping, paragraph};
+use iced::advanced::text::{Paragraph, Shaping, Wrapping, paragraph};
 use iced::advanced::widget::{Tree, tree};
 use iced::advanced::{Layout, Widget, layout, mouse, renderer, text};
 use iced::{Rectangle, Size};
@@ -17,14 +17,21 @@ pub struct Line {
     content: String,
     size: Length,
     weight: typeface::Weight,
+    leading: typeface::Leading,
 }
 
 impl Line {
-    pub fn new(content: String, size: Length, weight: typeface::Weight) -> Self {
+    pub fn new(
+        content: String,
+        size: Length,
+        weight: typeface::Weight,
+        leading: typeface::Leading,
+    ) -> Self {
         Self {
             content,
             size,
             weight,
+            leading,
         }
     }
 
@@ -71,7 +78,7 @@ impl Line {
             content,
             bounds,
             size: style::drawn(self.size.drawn()).into(),
-            line_height: LineHeight::default(),
+            line_height: style::leading(self.leading),
             font: style::font(self.weight),
             align_x: text::Alignment::Default,
             align_y: iced::alignment::Vertical::Top,

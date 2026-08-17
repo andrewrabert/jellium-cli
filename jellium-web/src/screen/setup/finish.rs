@@ -23,6 +23,6 @@ pub fn view<'a>() -> Element<'a, Message> {
         .style(style::submit)
         .on_press(Message::SetupAction(Action::Complete)),
     ]
-    .spacing(style::drawn(space::GUTTER.drawn()))
+    .spacing(style::drawn(space::BLOCK_GAP.drawn()))
     .into()
 }

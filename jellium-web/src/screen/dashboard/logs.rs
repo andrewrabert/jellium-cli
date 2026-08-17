@@ -1,7 +1,7 @@
 //! The server's log files, and the tail of the one a viewer shows.
 
-use iced::widget::{button, column};
-use iced::{Element, Fill};
+use iced::Element;
+use iced::widget::button;
 
 use crate::app::Message;
 use crate::error::Answer;
@@ -48,7 +48,7 @@ pub async fn open(
             window: window::Window::new(
                 window::Id::Log,
                 Drawn::of(style::drawn(
-                    typeface::BODY.times(typeface::LINE_HEIGHT).drawn(),
+                    typeface::LINE_HEIGHT.of(typeface::BODY).drawn(),
                 )),
                 height,
             ),
@@ -64,14 +64,12 @@ fn sized(bytes: u64) -> String {
 }
 
 /// Each log file with its name and size.
-pub fn view<'a>(state: &'a State) -> Element<'a, Message> {
-    let mut page = column![prose(strings::lookup(Text::LogsTitle), typeface::HEADING_2)]
-        .spacing(style::drawn(space::GUTTER.drawn()))
-        .padding(style::drawn(space::GUTTER.drawn()));
+pub fn view<'a>(state: &'a State) -> Vec<Element<'a, Message>> {
+    let mut page: Vec<Element<'a, Message>> = Vec::new();
 
     for file in &state.files {
         let name = file.name.clone().unwrap_or_default();
-        page = page.push(
+        page.push(
             iced::widget::row![
                 button(prose(name.clone(), typeface::BODY))
                     .style(style::link)
@@ -83,14 +81,12 @@ pub fn view<'a>(state: &'a State) -> Element<'a, Message> {
                     typeface::BODY
                 ),
             ]
-            .spacing(style::drawn(space::GUTTER.drawn())),
+            .spacing(style::drawn(space::CONTROL_GAP.drawn()))
+            .into(),
         );
     }
 
-    iced::widget::scrollable(page)
-        .width(Fill)
-        .height(Fill)
-        .into()
+    page
 }
 
 /// The most of a log file the local server delivers, which is what names the
@@ -99,13 +95,11 @@ const TAIL_LIMIT: u64 = 2 * 1024 * 1024;
 
 /// The sentence naming the tail and the file's full size, and only the lines
 /// the window shows.
-pub fn viewer<'a>(held: &'a Viewer) -> Element<'a, Message> {
-    let mut page = column![prose(held.name.clone(), typeface::HEADING_2)]
-        .spacing(style::drawn(space::GUTTER.drawn()))
-        .padding(style::drawn(space::GUTTER.drawn()));
+pub fn viewer<'a>(held: &'a Viewer) -> Vec<Element<'a, Message>> {
+    let mut page: Vec<Element<'a, Message>> = vec![prose(held.name.clone(), typeface::HEADING_2)];
 
     if held.tail.truncated() {
-        page = page.push(prose(
+        page.push(prose(
             strings::format(
                 Text::LogsTail,
                 &[&sized(TAIL_LIMIT), &sized(held.tail.size())],
@@ -119,9 +113,8 @@ pub fn viewer<'a>(held: &'a Viewer) -> Element<'a, Message> {
             held.tail.line(index),
             typeface::BODY,
             typeface::Weight::Regular,
+            typeface::LINE_HEIGHT,
         )
-    }))
-    .width(Fill)
-    .height(Fill)
-    .into()
+    }));
+    page
 }

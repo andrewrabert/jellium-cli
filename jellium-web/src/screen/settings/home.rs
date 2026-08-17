@@ -4,17 +4,18 @@
 use std::rc::Rc;
 
 use iced::Element;
-use iced::widget::{button, column, row};
+use iced::widget::column;
 use uuid::Uuid;
 
 use crate::api::Api;
 use crate::app::Message;
 use crate::error::Answer;
-use crate::text::{self as strings, Text};
-
-use super::{Action, Setting, toggle};
+use crate::icon::Icon;
 use crate::style::{self, space, typeface};
-use crate::widget::prose;
+use crate::text::{self as strings, Text};
+use crate::widget;
+
+use super::{Action, Setting};
 
 /// The libraries the server offers, so the order and the exclusions are edited
 /// against names rather than ids.
@@ -41,80 +42,82 @@ fn named(state: &State, id: Uuid) -> String {
         .unwrap_or_default()
 }
 
-/// The libraries in the configuration's order, each with its move and hide
-/// controls, the two row toggles, and the save, which is absent under
-/// read-only.
-pub fn view<'a>(
+/// The two row flags in the screen's own section; the libraries in the
+/// configuration's order as a ruled list carrying the reference's two move
+/// controls, over the checkbox list saying which of them the home screen shows.
+// reference: settings-home-form
+// reference: settings-home-order
+// reference: settings-home-media
+pub fn sections<'a>(
     state: &'a State,
     held: jellium_model::prefs::Held,
     configuration: &'a jellium_model::form::Form,
-    read_only: bool,
-) -> Element<'a, Message> {
+) -> Vec<Element<'a, Message>> {
     let ids: Vec<Uuid> = state.libraries.iter().filter_map(|it| it.id).collect();
     let order = jellium_model::user::ids(configuration, jellium_model::user::ORDERED_VIEWS);
     let hidden = jellium_model::user::ids(configuration, jellium_model::user::MY_MEDIA_EXCLUDES);
     let arranged = jellium_model::user::arranged(&ids, &order, &[]);
 
-    let mut shown = column![prose(strings::lookup(Text::HomeOrder), typeface::BODY)]
-        .spacing(style::drawn(space::GUTTER.drawn()));
-
-    for id in arranged {
-        let is_hidden = hidden.contains(&id);
-        let mut controls = row![prose(named(state, id), typeface::BODY)]
-            .spacing(style::drawn(space::GUTTER.drawn()));
-        if !read_only {
-            controls = controls
-                .push(
-                    button(prose(strings::lookup(Text::HomeMoveUp), typeface::BODY))
-                        .style(style::raised)
-                        .on_press(Message::SettingsAction(Action::MoveLibrary {
-                            id,
-                            down: false,
-                        })),
-                )
-                .push(
-                    button(prose(strings::lookup(Text::HomeMoveDown), typeface::BODY))
-                        .style(style::raised)
-                        .on_press(Message::SettingsAction(Action::MoveLibrary {
-                            id,
-                            down: true,
-                        })),
-                )
-                .push(
-                    button(prose(
-                        strings::lookup(if is_hidden {
-                            Text::HomeShowLibrary
-                        } else {
-                            Text::HomeHideLibrary
-                        })
-                        .to_owned(),
-                        typeface::BODY,
-                    ))
-                    .style(style::raised)
-                    .on_press(Message::SettingsAction(Action::HideLibrary {
+    let ordered = widget::list::listed(
+        space::ListRow::glyph(space::Lines::One),
+        arranged.iter().copied().map(|id| widget::list::Row {
+            face: Some(widget::list::Face::Glyph(Icon::FolderOpen)),
+            index: None,
+            title: named(state, id).into(),
+            secondary: Vec::new(),
+            press: widget::list::Press::Inert,
+            controls: vec![
+                widget::icon_button(
+                    Icon::KeyboardArrowUp,
+                    typeface::ICON_BUTTON,
+                    Text::HomeMoveUp,
+                    Message::SettingsAction(Action::MoveLibrary {
                         id,
-                        hidden: !is_hidden,
-                    })),
-                );
-        }
-        shown = shown.push(controls);
-    }
+                        toward: jellium_model::user::Toward::Earlier,
+                    }),
+                ),
+                widget::icon_button(
+                    Icon::KeyboardArrowDown,
+                    typeface::ICON_BUTTON,
+                    Text::HomeMoveDown,
+                    Message::SettingsAction(Action::MoveLibrary {
+                        id,
+                        toward: jellium_model::user::Toward::Later,
+                    }),
+                ),
+            ],
+        }),
+    );
 
-    shown = shown
-        .push(toggle(
-            Text::HomeContinueWatchingRow,
-            held.continue_watching,
-            Setting::ContinueWatchingRow,
-        ))
-        .push(toggle(
-            Text::HomeNextUpRow,
-            held.next_up,
-            Setting::NextUpRow,
-        ));
+    let shown = widget::labelled(
+        Text::HomeInMyMedia,
+        column(arranged.iter().copied().map(|id| {
+            widget::flag(named(state, id), None, !hidden.contains(&id), move |on| {
+                Message::SettingsAction(Action::HideLibrary { id, hidden: !on })
+            })
+        }))
+        .spacing(style::drawn(space::CHECKBOX_LIST_GAP.drawn()))
+        .into(),
+    );
 
-    if !read_only {
-        shown = shown.push(super::save());
-    }
-
-    shown.into()
+    vec![
+        widget::fields(
+            Text::SettingsHome,
+            [
+                widget::flag(
+                    strings::lookup(Text::HomeContinueWatchingRow),
+                    None,
+                    held.continue_watching,
+                    |on| Message::SettingsAction(Action::Set(Setting::ContinueWatchingRow(on))),
+                ),
+                widget::flag(
+                    strings::lookup(Text::HomeNextUpRow),
+                    None,
+                    held.next_up,
+                    |on| Message::SettingsAction(Action::Set(Setting::NextUpRow(on))),
+                ),
+            ],
+        ),
+        widget::fields(Text::HomeOrder, [ordered, shown]),
+    ]
 }

@@ -4,17 +4,16 @@
 use std::rc::Rc;
 
 use iced::Element;
-use iced::widget::column;
 use jellium_model::prefs::{Held, SKIPS, SYNC_ATTEMPTS, SYNC_OFFSETS};
 use jellium_protocol::{Quality, SyncAccess, sync::SyncMethod};
 
 use crate::api::Api;
 use crate::app::Message;
 use crate::error::Answer;
-use crate::style::{self, space};
 use crate::text::{self as strings, Text};
+use crate::widget;
 
-use super::{Setting, choice, choices, flag, listed, save};
+use super::{Action, Setting};
 
 /// The languages the server reports, which is what the two pickers offer.
 #[derive(Debug, Clone)]
@@ -52,106 +51,207 @@ fn quality_label(quality: Quality) -> String {
     }
 }
 
-/// The two language pickers, play-default-audio-track, subtitle mode, next-
-/// episode autoplay, the bitrate ceiling from `Quality::LADDER`, the two skip
-/// lengths from `prefs::SKIPS`, and the three SyncPlay controls, which are
-/// absent when `sync_play` is `SyncAccess::None`; the save is absent under
-/// read-only.
-pub fn view<'a>(
+/// What this region calls the mode `option` names.
+fn mode_label(option: &str) -> Text {
+    match option {
+        "Always" => Text::PlaybackSubtitleModeAlways,
+        "OnlyForced" => Text::PlaybackSubtitleModeOnlyForced,
+        "None" => Text::PlaybackSubtitleModeNone,
+        "Smart" => Text::PlaybackSubtitleModeSmart,
+        _ => Text::PlaybackSubtitleModeDefault,
+    }
+}
+
+/// The sentence this region writes under the mode `option` names.
+fn mode_help(option: &str) -> Text {
+    match option {
+        "Always" => Text::PlaybackSubtitleModeAlwaysHelp,
+        "OnlyForced" => Text::PlaybackSubtitleModeOnlyForcedHelp,
+        "None" => Text::PlaybackSubtitleModeNoneHelp,
+        "Smart" => Text::PlaybackSubtitleModeSmartHelp,
+        _ => Text::PlaybackSubtitleModeDefaultHelp,
+    }
+}
+
+/// Every language the server names as an option, under the option that leaves
+/// the preference unset.
+fn languages(
+    field: jellium_model::form::Field,
+    cultures: &[jellyfin_api::types::CultureDto],
+) -> Vec<widget::Choice<Action>> {
+    let mut offered = vec![widget::Choice {
+        label: strings::lookup(Text::PlaybackLanguageAny).to_owned(),
+        value: Action::Edited(field, String::new()),
+    }];
+    offered.extend(cultures.iter().filter_map(|culture| {
+        let code = culture.three_letter_iso_language_name.clone()?;
+        Some(widget::Choice {
+            label: culture.name.clone().unwrap_or_else(|| code.clone()),
+            value: Action::Edited(field, code),
+        })
+    }));
+    offered
+}
+
+/// The two language dropdowns, play-default-audio-track, the subtitle mode
+/// over the help the held mode carries, next-episode autoplay, the bitrate
+/// ceiling and the two skip lengths in the screen's own section; and the
+/// SyncPlay section, which is absent when `sync_play` is `SyncAccess::None`.
+// reference: settings-playback-form
+pub fn sections<'a>(
     state: &'a State,
     held: Held,
     configuration: &'a jellium_model::form::Form,
     sync_play: SyncAccess,
-    read_only: bool,
-) -> Element<'a, Message> {
-    let mut shown = column![
-        listed(
-            Text::PlaybackAudioLanguage,
-            jellium_model::user::AUDIO_LANGUAGE,
-            configuration,
-            &state.cultures,
-        ),
-        listed(
-            Text::PlaybackSubtitleLanguage,
-            jellium_model::user::SUBTITLE_LANGUAGE,
-            configuration,
-            &state.cultures,
-        ),
-        flag(
-            Text::PlaybackDefaultAudioTrack,
-            jellium_model::user::PLAY_DEFAULT_AUDIO_TRACK,
-            configuration,
-        ),
-        choice(
-            Text::PlaybackSubtitleMode,
-            jellium_model::user::SUBTITLE_MODE,
-            configuration,
-        ),
-        flag(
-            Text::PlaybackNextEpisode,
-            jellium_model::user::NEXT_EPISODE_AUTOPLAY,
-            configuration,
-        ),
-        choices(
-            Text::PlaybackQuality,
-            &Quality::LADDER,
-            held.quality,
-            quality_label,
-            Setting::Quality,
-        ),
-        choices(
-            Text::PlaybackSkipBack,
-            &SKIPS,
-            held.skip_back_seconds,
-            |seconds| strings::format(Text::PlaybackSeconds, &[&seconds.to_string()]),
-            Setting::SkipBack,
-        ),
-        choices(
-            Text::PlaybackSkipForward,
-            &SKIPS,
-            held.skip_forward_seconds,
-            |seconds| strings::format(Text::PlaybackSeconds, &[&seconds.to_string()]),
-            Setting::SkipForward,
-        ),
-    ]
-    .spacing(style::drawn(space::GUTTER.drawn()));
+) -> Vec<Element<'a, Message>> {
+    let options = match jellium_model::user::SUBTITLE_MODE {
+        jellium_model::form::Field::Choice { options, .. } => options,
+        _ => &[],
+    };
+
+    let mut sections = vec![widget::fields(
+        Text::SettingsPlayback,
+        [
+            widget::select(
+                Text::PlaybackAudioLanguage,
+                None,
+                languages(jellium_model::user::AUDIO_LANGUAGE, &state.cultures),
+                &Action::Edited(
+                    jellium_model::user::AUDIO_LANGUAGE,
+                    configuration.value(jellium_model::user::AUDIO_LANGUAGE),
+                ),
+                Message::SettingsAction,
+            ),
+            widget::select(
+                Text::PlaybackSubtitleLanguage,
+                None,
+                languages(jellium_model::user::SUBTITLE_LANGUAGE, &state.cultures),
+                &Action::Edited(
+                    jellium_model::user::SUBTITLE_LANGUAGE,
+                    configuration.value(jellium_model::user::SUBTITLE_LANGUAGE),
+                ),
+                Message::SettingsAction,
+            ),
+            widget::flag(
+                strings::lookup(Text::PlaybackDefaultAudioTrack),
+                None,
+                configuration.flagged(jellium_model::user::PLAY_DEFAULT_AUDIO_TRACK),
+                |on| {
+                    Message::SettingsAction(Action::Flagged(
+                        jellium_model::user::PLAY_DEFAULT_AUDIO_TRACK,
+                        on,
+                    ))
+                },
+            ),
+            widget::select(
+                Text::PlaybackSubtitleMode,
+                Some(mode_help(
+                    &configuration.value(jellium_model::user::SUBTITLE_MODE),
+                )),
+                super::choices(
+                    options.iter().copied(),
+                    |option| strings::lookup(mode_label(option)).to_owned(),
+                    |option| Action::Edited(jellium_model::user::SUBTITLE_MODE, option.to_owned()),
+                ),
+                &Action::Edited(
+                    jellium_model::user::SUBTITLE_MODE,
+                    configuration.value(jellium_model::user::SUBTITLE_MODE),
+                ),
+                Message::SettingsAction,
+            ),
+            widget::flag(
+                strings::lookup(Text::PlaybackNextEpisode),
+                None,
+                configuration.flagged(jellium_model::user::NEXT_EPISODE_AUTOPLAY),
+                |on| {
+                    Message::SettingsAction(Action::Flagged(
+                        jellium_model::user::NEXT_EPISODE_AUTOPLAY,
+                        on,
+                    ))
+                },
+            ),
+            widget::select(
+                Text::PlaybackQuality,
+                None,
+                super::choices(Quality::LADDER, quality_label, |quality| {
+                    Action::Set(Setting::Quality(quality))
+                }),
+                &Action::Set(Setting::Quality(held.quality)),
+                Message::SettingsAction,
+            ),
+            widget::select(
+                Text::PlaybackSkipBack,
+                None,
+                super::choices(
+                    SKIPS,
+                    |seconds| strings::format(Text::PlaybackSeconds, &[&seconds.to_string()]),
+                    |seconds| Action::Set(Setting::SkipBack(seconds)),
+                ),
+                &Action::Set(Setting::SkipBack(held.skip_back_seconds)),
+                Message::SettingsAction,
+            ),
+            widget::select(
+                Text::PlaybackSkipForward,
+                None,
+                super::choices(
+                    SKIPS,
+                    |seconds| strings::format(Text::PlaybackSeconds, &[&seconds.to_string()]),
+                    |seconds| Action::Set(Setting::SkipForward(seconds)),
+                ),
+                &Action::Set(Setting::SkipForward(held.skip_forward_seconds)),
+                Message::SettingsAction,
+            ),
+        ],
+    )];
 
     if sync_play != SyncAccess::None {
-        shown = shown
-            .push(iced::widget::text(strings::lookup(Text::PlaybackSyncPlay)))
-            .push(choices(
-                Text::PlaybackSyncOffset,
-                &SYNC_OFFSETS,
-                held.sync.extra_offset_ms,
+        let offset = widget::select(
+            Text::PlaybackSyncOffset,
+            None,
+            super::choices(
+                SYNC_OFFSETS,
                 |ms| strings::format(Text::PlaybackSyncMilliseconds, &[&ms.to_string()]),
-                Setting::SyncExtraOffset,
-            ))
-            .push(choices(
-                Text::PlaybackSyncMethod,
-                &METHODS,
-                held.sync.method,
-                method_label,
-                Setting::SyncMethod,
-            ))
-            .push(choices(
-                Text::PlaybackSyncRateAttempts,
-                &SYNC_ATTEMPTS,
-                held.sync.rate_attempts,
+                |ms| Action::Set(Setting::SyncExtraOffset(ms)),
+            ),
+            &Action::Set(Setting::SyncExtraOffset(held.sync.extra_offset_ms)),
+            Message::SettingsAction,
+        );
+        let method = widget::select(
+            Text::PlaybackSyncMethod,
+            None,
+            super::choices(METHODS, method_label, |method| {
+                Action::Set(Setting::SyncMethod(method))
+            }),
+            &Action::Set(Setting::SyncMethod(held.sync.method)),
+            Message::SettingsAction,
+        );
+        let rate_attempts = widget::select(
+            Text::PlaybackSyncRateAttempts,
+            None,
+            super::choices(
+                SYNC_ATTEMPTS,
                 |attempts| attempts.to_string(),
-                Setting::SyncRateAttempts,
-            ))
-            .push(choices(
-                Text::PlaybackSyncSeekAttempts,
-                &SYNC_ATTEMPTS,
-                held.sync.seek_attempts,
+                |attempts| Action::Set(Setting::SyncRateAttempts(attempts)),
+            ),
+            &Action::Set(Setting::SyncRateAttempts(held.sync.rate_attempts)),
+            Message::SettingsAction,
+        );
+        let seek_attempts = widget::select(
+            Text::PlaybackSyncSeekAttempts,
+            None,
+            super::choices(
+                SYNC_ATTEMPTS,
                 |attempts| attempts.to_string(),
-                Setting::SyncSeekAttempts,
-            ));
+                |attempts| Action::Set(Setting::SyncSeekAttempts(attempts)),
+            ),
+            &Action::Set(Setting::SyncSeekAttempts(held.sync.seek_attempts)),
+            Message::SettingsAction,
+        );
+        sections.push(widget::fields(
+            Text::PlaybackSyncPlay,
+            [offset, method, rate_attempts, seek_attempts],
+        ));
     }
 
-    if !read_only {
-        shown = shown.push(save());
-    }
-
-    shown.into()
+    sections
 }

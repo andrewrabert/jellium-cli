@@ -8,7 +8,7 @@ use std::collections::HashSet;
 use std::rc::Rc;
 
 use chrono::{DateTime, Utc};
-use iced::widget::{button, column, row};
+use iced::widget::column;
 use iced::{Element, Fill, Subscription, Task};
 use jellium_protocol::TimerChanged;
 use uuid::Uuid;
@@ -19,7 +19,7 @@ use crate::error::{Answer, Operation};
 use crate::images::{self, Cache};
 use crate::style::{self, Drawn, Viewport, space, typeface};
 use crate::text::{self as strings, Text};
-use crate::widget::prose;
+use crate::widget::{self, prose};
 use crate::window;
 
 /// Which of the five tabs the Live TV screen shows.
@@ -127,7 +127,7 @@ pub async fn load(api: Rc<Api>, tab: Tab, height: Drawn) -> Answer<State> {
                     .bubbled()?,
             ),
             Tab::Recordings => Body::Recordings(recordings::load(api, height).await.bubbled()?),
-            Tab::Schedule => Body::Schedule(schedule::load(api, height).await.bubbled()?),
+            Tab::Schedule => Body::Schedule(schedule::load(api).await.bubbled()?),
             Tab::Series => Body::Series(series::load(api, height).await.bubbled()?),
         };
         Ok(State {
@@ -151,17 +151,16 @@ pub fn view<'a>(
         return series::options(editing, viewport);
     }
 
-    let tabs = row(Tab::ALL.iter().map(|tab| {
-        button(prose(strings::lookup(tab.label()), typeface::BODY))
-            .style(if *tab == state.tab {
-                style::submit
-            } else {
-                style::raised
-            })
-            .on_press(Message::LiveTvAction(Action::Selected(*tab)))
-            .into()
-    }))
-    .spacing(style::drawn(space::GUTTER.drawn()));
+    let tabs = widget::tabs(
+        viewport,
+        Tab::ALL.into_iter().map(|tab| widget::Entry {
+            label: tab.label(),
+            showing: match tab == state.tab {
+                true => widget::Showing::Shown,
+                false => widget::Showing::Offered(Message::LiveTvAction(Action::Selected(tab))),
+            },
+        }),
+    );
 
     let body = match &state.body {
         Body::Guide(guide) => guide::view(guide, now, images, viewport),
@@ -176,7 +175,7 @@ pub fn view<'a>(
         tabs,
         body,
     ]
-    .spacing(style::drawn(space::GUTTER.drawn()))
+    .spacing(style::drawn(space::SECTION_GAP.drawn()))
     .width(Fill)
     .height(Fill)
     .into()
@@ -202,7 +201,7 @@ pub fn keys(state: &State) -> Subscription<Action> {
 /// The Live TV screen this tab is showing, and nothing while another screen is.
 fn showing(signed: &mut Signed) -> Option<&mut State> {
     match &mut signed.view {
-        crate::app::View::LiveTv(state) => Some(state),
+        crate::app::View::LiveTv(state) => Some(state.as_mut()),
         _ => None,
     }
 }

@@ -21,8 +21,24 @@ impl Css {
         Css { count }
     }
 
+    /// A length a MUI style declaration writes as a bare number, which the DOM
+    /// reads as a count of css pixels.
+    pub const fn unitless(count: f32) -> Css {
+        Css { count }
+    }
+
     pub fn count(self) -> f32 {
         self.count
+    }
+
+    pub const fn times(self, ratio: Ratio) -> Css {
+        Css::of(self.count * ratio.factor())
+    }
+
+    /// MUI's `pxToRem`: this count of css pixels as the design length it is
+    /// over the 16px base.
+    pub const fn length(self) -> Length {
+        Length::em(self.count / BASE)
     }
 
     /// The canvas length this measures, which is this over the band's root.
@@ -89,6 +105,12 @@ impl Share {
         }
         let share = part.saturating_mul(10_000) / whole;
         Share::per_ten_thousand(share.min(10_000) as u32)
+    }
+
+    /// What this leaves after `taken`, and none of it where `taken` is more
+    /// than this.
+    pub const fn less(self, taken: Share) -> Share {
+        Share::per_ten_thousand(self.per_ten_thousand.saturating_sub(taken.per_ten_thousand))
     }
 
     /// A share is taken of either measurement and answers in the one it was
@@ -209,8 +231,38 @@ impl Length {
         Length::em(self.em + other.em)
     }
 
+    /// Const, so a length that is one ported length less another is written as
+    /// that difference rather than as its arithmetic result.
+    pub const fn less(self, other: Length) -> Length {
+        Length::em(self.em - other.em)
+    }
+
     pub const fn times(self, ratio: Ratio) -> Length {
         Length::em(self.em * ratio.factor())
+    }
+
+    /// Two margins that meet where css does not collapse them, which is any
+    /// pair side by side and any pair stacked inside a flex container.
+    pub const fn abutting(self, other: Length) -> Length {
+        Length::em(self.em + other.em)
+    }
+
+    /// Two vertical margins that meet as block-level siblings in normal flow,
+    /// which css collapses into the larger of the two.
+    pub const fn collapsing(self, other: Length) -> Length {
+        match self.em > other.em {
+            true => self,
+            false => other,
+        }
+    }
+
+    /// The taller of two boxes standing side by side, which is what a flex
+    /// row's own height is.
+    pub const fn taller(self, other: Length) -> Length {
+        match self.em > other.em {
+            true => self,
+            false => other,
+        }
     }
 }
 

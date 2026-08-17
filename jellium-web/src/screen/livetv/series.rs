@@ -10,8 +10,7 @@ use crate::app::Message;
 use crate::error::Answer;
 use crate::style::{self, Drawn, Viewport, space, typeface};
 use crate::text::{self as strings, Text};
-use crate::widget;
-use crate::widget::{line, prose};
+use crate::widget::{self, prose};
 use crate::window;
 
 #[derive(Debug, Clone)]
@@ -103,57 +102,50 @@ impl Editing {
     }
 }
 
+/// Every row of the series list: one line and nothing before it.
+const ROW: space::ListRow = space::ListRow::bare(space::Lines::One);
+
 pub async fn load(api: Rc<Api>, height: Drawn) -> Answer<State> {
     Answer::of(async {
         Ok(State {
             timers: api.series_timers().await.bubbled()?,
-            window: window::Window::new(
-                window::Id::Series,
-                Drawn::of(style::drawn(space::LIST_ROW.drawn())),
-                height,
-            ),
+            window: window::Window::new(window::Id::Series, ROW.height().drawn(), height),
         })
     })
     .await
 }
 
 fn entry<'a>(timer: &'a SeriesTimerInfoDto) -> Element<'a, Message> {
-    let controls: Element<'a, Message> = match timer.id.clone() {
-        Some(id) => row![
-            button(prose(strings::lookup(Text::SeriesEdit), typeface::BODY))
-                .style(style::raised)
-                .on_press(Message::LiveTvAction(Action::EditSeries(id.clone()))),
-            button(prose(strings::lookup(Text::SeriesCancel), typeface::BODY))
-                .style(style::raised)
-                .on_press(Message::LiveTvAction(Action::CancelSeriesTimer(id))),
-        ]
-        .spacing(style::drawn(space::GUTTER.drawn()))
-        .into(),
-        None => iced::widget::Space::new().into(),
-    };
-
-    container(
-        row![
-            container(line(
-                timer.name.clone().unwrap_or_default(),
-                typeface::BODY,
-                typeface::Weight::Regular,
-            ))
-            .width(Fill),
-            controls,
-        ]
-        .spacing(style::drawn(space::GUTTER.drawn()))
-        .align_y(iced::Center),
+    widget::list::row(
+        ROW,
+        widget::list::Row {
+            face: None,
+            index: None,
+            title: timer.name.clone().unwrap_or_default().into(),
+            secondary: Vec::new(),
+            press: widget::list::Press::Inert,
+            controls: match timer.id.clone() {
+                Some(id) => vec![
+                    button(prose(strings::lookup(Text::SeriesEdit), typeface::BODY))
+                        .style(style::flat)
+                        .on_press(Message::LiveTvAction(Action::EditSeries(id.clone())))
+                        .into(),
+                    button(prose(strings::lookup(Text::SeriesCancel), typeface::BODY))
+                        .style(style::flat)
+                        .on_press(Message::LiveTvAction(Action::CancelSeriesTimer(id)))
+                        .into(),
+                ],
+                None => Vec::new(),
+            },
+        },
     )
-    .height(style::drawn(space::LIST_ROW.drawn()))
-    .into()
 }
 
 /// A windowed list of series timers by name, each with a control that opens
 /// its options and one that cancels it, and no sort control.
 pub fn view<'a>(state: &'a State) -> Element<'a, Message> {
     if state.timers.is_empty() {
-        return widget::banner(strings::lookup(Text::SeriesEmpty).to_string());
+        return widget::centered(strings::lookup(Text::SeriesEmpty).to_string());
     }
     window::list(state.window, state.timers.len(), move |index| {
         entry(&state.timers[index])
@@ -180,7 +172,7 @@ fn number<'a>(
                 Message::LiveTvAction(Action::Edited(edited(read)))
             }),
     ]
-    .spacing(style::drawn(space::GUTTER.drawn()))
+    .spacing(style::drawn(space::CONTROL_GAP.drawn()))
     .align_y(iced::Center)
     .into()
 }
@@ -314,12 +306,12 @@ pub fn options<'a>(editing: &'a Editing, viewport: Viewport) -> Element<'a, Mess
                     .style(style::raised)
                     .on_press(Message::LiveTvAction(Action::CloseSeries)),
             ]
-            .spacing(style::drawn(space::GUTTER.drawn())),
+            .spacing(style::drawn(space::CONTROL_GAP.drawn())),
         ]
-        .spacing(style::drawn(space::GUTTER.drawn())),
+        .spacing(style::drawn(space::FIELD_GAP.drawn())),
     )
     .style(style::over_video)
-    .padding(style::drawn(space::GUTTER.drawn()))
+    .padding(style::padding(space::PAGE_PAD))
     .width(Fill)
     .height(Fill)
     .into()

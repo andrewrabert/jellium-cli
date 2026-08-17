@@ -1,29 +1,25 @@
 //! The display screen: whether missing episodes are drawn.
 
 use iced::Element;
-use iced::widget::column;
 
 use crate::app::Message;
-use crate::style::{self, space};
-use crate::text::Text;
+use crate::text::{self as strings, Text};
+use crate::widget;
 
-use super::flag;
+use super::Action;
 
-/// `DisplayMissingEpisodes`, and the save, which is absent under read-only.
-pub fn view<'a>(
-    configuration: &'a jellium_model::form::Form,
-    read_only: bool,
-) -> Element<'a, Message> {
-    let mut shown = column![flag(
-        Text::DisplayMissingEpisodes,
-        jellium_model::user::MISSING_EPISODES,
-        configuration,
-    ),]
-    .spacing(style::drawn(space::GUTTER.drawn()));
-
-    if !read_only {
-        shown = shown.push(super::save());
-    }
-
-    shown.into()
+/// The `DisplayMissingEpisodes` flag over its help in the screen's own section.
+// reference: settings-display-form
+pub fn sections<'a>(configuration: &'a jellium_model::form::Form) -> Vec<Element<'a, Message>> {
+    vec![widget::fields(
+        Text::SettingsDisplay,
+        [widget::flag(
+            strings::lookup(Text::DisplayMissingEpisodes),
+            Some(Text::DisplayMissingEpisodesHelp),
+            configuration.flagged(jellium_model::user::MISSING_EPISODES),
+            |on| {
+                Message::SettingsAction(Action::Flagged(jellium_model::user::MISSING_EPISODES, on))
+            },
+        )],
+    )]
 }

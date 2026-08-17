@@ -5,7 +5,7 @@ pub mod identify;
 use std::collections::HashSet;
 use std::rc::Rc;
 
-use iced::widget::{button, column, row, scrollable};
+use iced::widget::{button, column, row};
 use iced::{Element, Task};
 use jellium_model::form::Form;
 use jellium_model::item;
@@ -18,7 +18,7 @@ use crate::error::{Answer, Operation};
 use crate::images::{self, Cache, Foreign};
 use crate::style::{self, Viewport, space, typeface};
 use crate::text::{self as strings, Text};
-use crate::widget::prose;
+use crate::widget::{self, prose};
 
 /// One part of the metadata manager.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -55,7 +55,8 @@ impl Part {
 
 #[derive(Debug, Clone)]
 pub struct State {
-    pub part: Part,
+    /// The part shown, and none while the page shows its parts.
+    pub part: Option<Part>,
     pub item: BaseItemDto,
     /// The item read whole, edited by key and written whole.
     pub form: Form,
@@ -102,7 +103,7 @@ pub enum Action {
     Close,
 }
 
-pub async fn load(api: Rc<Api>, item: Uuid, part: Part) -> Answer<State> {
+pub async fn load(api: Rc<Api>, item: Uuid, part: Option<Part>) -> Answer<State> {
     Answer::of(async {
         let held = api.item(item).await.bubbled()?;
         let whole = api.item_whole(item).await.bubbled()?;
@@ -149,8 +150,10 @@ pub async fn load(api: Rc<Api>, item: Uuid, part: Part) -> Answer<State> {
     .await
 }
 
-/// The part shown beside the six-part column; every control is absent under
-/// read-only.
+/// The part shown beside the manager's own sidebar; every control is absent
+/// under read-only.
+// reference: metadata-sidebar
+// reference: metadata-sidebar-wide
 pub fn view<'a>(
     state: &'a State,
     viewport: Viewport,
@@ -163,41 +166,28 @@ pub fn view<'a>(
     };
     let searchable = identify::Search::of(state.item.type_).is_some();
 
-    let parts = column(Part::ALL.into_iter().filter_map(|part| {
-        if part == Part::Identify && !searchable {
-            return None;
-        }
-        let mut control =
-            button(prose(strings::lookup(part.label()), typeface::BODY)).style(style::flat);
-        if part != state.part {
-            control = control.on_press(Message::MetadataAction(Action::Open(part)));
-        }
-        Some(control.into())
-    }))
-    .spacing(style::drawn(space::CONTROL_GAP.drawn()));
-
-    let body: Element<'a, Message> = match state.part {
+    let body: Option<Element<'a, Message>> = state.part.map(|part| match part {
         Part::Fields => column![
             fields::view(state, read_only),
             fields::people(state, read_only),
             fields::providers(state, read_only),
         ]
-        .spacing(style::drawn(space::GUTTER.drawn()))
+        .spacing(style::drawn(space::SECTION_GAP.drawn()))
         .into(),
         Part::Identify => identify::view(&state.identify, viewport, foreign, read_only),
         Part::Images => artwork::view(&state.artwork, viewport, images, foreign, id, read_only),
         Part::Locks => locks(state, read_only),
         Part::ContentType => content_type(state, read_only),
         Part::Deletion => deletion(state, read_only),
-    };
+    });
 
     let mut page = column![prose(
         state.item.name.clone().unwrap_or_default(),
         typeface::HEADING_1
     )]
-    .spacing(style::drawn(space::GUTTER.drawn()));
+    .spacing(style::drawn(space::SECTION_GAP.drawn()));
 
-    if !read_only && state.part == Part::Fields {
+    if !read_only && state.part == Some(Part::Fields) {
         page = page.push(
             button(prose(strings::lookup(Text::MetadataSave), typeface::BODY))
                 .style(style::submit)
@@ -205,16 +195,31 @@ pub fn view<'a>(
         );
     }
 
-    scrollable(
+    crate::widget::scrolled(
         column![
             page,
-            row![parts, body].spacing(style::drawn(space::GUTTER.drawn())),
+            widget::editor(
+                Part::ALL
+                    .into_iter()
+                    .filter(|part| *part != Part::Identify || searchable)
+                    .map(|part| widget::Entry {
+                        label: part.label(),
+                        showing: match state.part == Some(part) {
+                            true => widget::Showing::Shown,
+                            false => widget::Showing::Offered(Message::MetadataAction(
+                                Action::Open(part),
+                            )),
+                        },
+                    }),
+                body,
+                viewport,
+            ),
             button(prose(strings::lookup(Text::MetadataClose), typeface::BODY))
                 .style(style::raised)
                 .on_press(Message::MetadataAction(Action::Close)),
         ]
-        .spacing(style::drawn(space::GUTTER.drawn()))
-        .padding(style::drawn(space::GUTTER.drawn())),
+        .spacing(style::drawn(space::SECTION_GAP.drawn()))
+        .padding(style::padding(space::PAGE_PAD)),
     )
     .into()
 }
@@ -237,7 +242,7 @@ fn locks<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
                     typeface::BODY
                 ),
             ]
-            .spacing(style::drawn(space::GUTTER.drawn()))
+            .spacing(style::drawn(space::CONTROL_GAP.drawn()))
             .into();
         }
         row![
@@ -245,7 +250,7 @@ fn locks<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
                 .on_toggle(move |on| Message::MetadataAction(Action::Locked(lock, on))),
             shown,
         ]
-        .spacing(style::drawn(space::GUTTER.drawn()))
+        .spacing(style::drawn(space::CONTROL_GAP.drawn()))
         .align_y(iced::Alignment::Center)
         .into()
     });
@@ -303,7 +308,7 @@ fn deletion<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
                 )
             ))),
     ]
-    .spacing(style::drawn(space::GUTTER.drawn()))
+    .spacing(style::drawn(space::BLOCK_GAP.drawn()))
     .into()
 }
 
@@ -318,7 +323,7 @@ pub fn act(signed: &mut Signed, action: Action) -> Task<Message> {
 
     match action {
         Action::Open(part) => {
-            state.part = part;
+            state.part = Some(part);
             Task::none()
         }
         Action::Edited(field, value) => {

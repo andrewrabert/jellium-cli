@@ -1,14 +1,17 @@
-//! The devices the server has seen, and the API keys it holds.
+//! The devices the server has seen.
 
-use iced::widget::{button, column, row, text_input};
-use iced::{Element, Fill};
+use iced::Element;
+use iced::widget::{button, text_input};
 
 use crate::app::Message;
 use crate::error::Answer;
-use crate::style::{self, Drawn, space, typeface};
+use crate::icon::{self, Icon};
+use crate::style::{self, Viewport, space, typeface};
 use crate::text::{self as strings, Text};
-use crate::widget::{line, prose};
+use crate::widget::table::{self, Column, Holding, Table};
 use crate::window;
+
+use super::frame;
 
 /// Every device the server has seen, and what one is being renamed to.
 #[derive(Debug, Clone)]
@@ -21,14 +24,18 @@ pub struct State {
     pub own: String,
 }
 
-pub async fn load(api: std::rc::Rc<crate::api::Api>, own: String, height: Drawn) -> Answer<State> {
+pub async fn load(
+    api: std::rc::Rc<crate::api::Api>,
+    own: String,
+    viewport: Viewport,
+) -> Answer<State> {
     Answer::of(async {
         Ok(State {
             devices: api.devices().await.bubbled()?,
             window: window::Window::new(
                 window::Id::Devices,
-                Drawn::of(style::drawn(space::LIST_ROW.drawn())),
-                height,
+                space::table_row(viewport.band()),
+                viewport.canvas().height(),
             ),
             renaming: String::new(),
             own,
@@ -37,82 +44,130 @@ pub async fn load(api: std::rc::Rc<crate::api::Api>, own: String, height: Drawn)
     .await
 }
 
-/// Each device's name, client, user and last-seen time, its rename, and its
-/// deletion behind a confirmation naming it.
-pub fn view<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
-    let mut page = column![prose(
-        strings::lookup(Text::DevicesTitle),
-        typeface::HEADING_2
-    )]
-    .spacing(style::drawn(space::GUTTER.drawn()))
-    .padding(style::drawn(space::GUTTER.drawn()));
-
+/// A table of each device's last activity, its name, its application and that
+/// application's version, and the user it last carried, with the controls that
+/// rename and delete it.
+// reference: table-devices-columns
+// reference: table-devices-actions
+pub fn view<'a>(state: &'a State, read_only: bool) -> frame::Filling<'a> {
+    let mut toolbar: Vec<Element<'a, Message>> = Vec::new();
     if !read_only {
-        page = page.push(
+        toolbar.push(
             text_input(strings::lookup(Text::DevicesRename), &state.renaming)
                 .style(style::input)
-                .on_input(|typed| Message::DashboardAction(super::Action::Typed(typed))),
+                .on_input(|typed| Message::DashboardAction(super::Action::Typed(typed)))
+                .into(),
         );
     }
 
-    let listed = window::list(state.window, state.devices.len(), move |index| {
-        let Some(device) = state.devices.get(index) else {
-            return prose("", typeface::BODY);
-        };
-        let Some(id) = device.id.clone() else {
-            return prose("", typeface::BODY);
-        };
-        let name = device.name.clone().unwrap_or_default();
-        let mut held = row![
-            line(name.clone(), typeface::BODY, typeface::Weight::Regular),
-            line(
-                device.app_name.clone().unwrap_or_default(),
-                typeface::BODY,
-                typeface::Weight::Regular,
-            ),
-            line(
-                device.last_user_name.clone().unwrap_or_default(),
-                typeface::BODY,
-                typeface::Weight::Regular,
-            ),
-            line(
-                device
-                    .date_last_activity
-                    .map(|at| at.format("%Y-%m-%d %H:%M").to_string())
-                    .unwrap_or_default(),
-                typeface::BODY,
-                typeface::Weight::Regular,
-            ),
-        ]
-        .spacing(style::drawn(space::GUTTER.drawn()));
+    frame::Filling::Tabled {
+        subtitle: None,
+        table: Table {
+            toolbar,
+            columns: vec![
+                Column {
+                    label: Some(Text::ColumnLastActive),
+                    width: space::DEVICES_LAST_ACTIVE,
+                    holding: Holding::Written,
+                },
+                Column {
+                    label: Some(Text::ColumnDevice),
+                    width: space::DEVICES_DEVICE,
+                    holding: Holding::Written,
+                },
+                Column {
+                    label: Some(Text::ColumnApp),
+                    width: space::DEVICES_APP,
+                    holding: Holding::Written,
+                },
+                Column {
+                    label: Some(Text::ColumnUser),
+                    width: space::DEVICES_USER,
+                    holding: Holding::Written,
+                },
+                Column {
+                    label: None,
+                    width: space::DEVICES_ACTIONS,
+                    holding: Holding::Display,
+                },
+            ],
+            window: state.window,
+            rows: state.devices.len(),
+            cells: Box::new(move |index| cells(state, read_only, index)),
+        },
+    }
+}
 
-        if !read_only {
-            held = held.push(
-                button(prose(strings::lookup(Text::DevicesRename), typeface::BODY))
-                    .style(style::submit)
-                    .on_press(Message::DashboardAction(super::Action::Write(
-                        super::Written::SetDeviceName {
-                            id: id.clone(),
-                            name: state.renaming.clone(),
-                        },
-                    ))),
-            );
-            held = held.push(
-                button(prose(strings::lookup(Text::DevicesDelete), typeface::BODY))
-                    .style(style::raised)
-                    .on_press(Message::DashboardAction(super::Action::Ask(
-                        crate::screen::confirm::Pending::of(
-                            crate::screen::confirm::Destructive::DeleteDevice {
-                                id: id.clone(),
-                                own: id == state.own,
-                            },
-                            name,
-                        ),
-                    ))),
-            );
-        }
-        held.into()
-    });
+/// One device's cells, in the order the reference's own columns stand.
+// reference: table-devices-columns
+// reference: table-devices-actions
+fn cells<'a>(state: &'a State, read_only: bool, index: usize) -> Vec<Element<'a, Message>> {
+    let Some(device) = state.devices.get(index) else {
+        return Vec::new();
+    };
+    let name = device.name.clone().unwrap_or_default();
+    vec![
+        table::written(
+            device
+                .date_last_activity
+                .map(table::stamped)
+                .unwrap_or_default(),
+        ),
+        table::written(name.clone()),
+        table::written(application(device)),
+        table::written(device.last_user_name.clone().unwrap_or_default()),
+        actions(state, read_only, device, name),
+    ]
+}
 
-    page.push(listed).width(Fill).height(Fill).into()
+/// A device's application and the version of it, joined by one space, which is
+/// how the reference writes that column.
+// reference: table-devices-columns
+fn application(device: &jellyfin_api::types::DeviceInfoDto) -> String {
+    [device.app_name.as_deref(), device.app_version.as_deref()]
+        .into_iter()
+        .flatten()
+        .collect::<Vec<&str>>()
+        .join(" ")
+}
+
+/// The controls one device's own row carries: the rename, and the deletion
+/// behind a confirmation naming it.
+// reference: table-devices-actions
+fn actions<'a>(
+    state: &'a State,
+    read_only: bool,
+    device: &'a jellyfin_api::types::DeviceInfoDto,
+    name: String,
+) -> Element<'a, Message> {
+    let Some(id) = device.id.clone() else {
+        return iced::widget::Space::new().into();
+    };
+    if read_only {
+        return iced::widget::Space::new().into();
+    }
+    iced::widget::row![
+        button(icon::icon(Icon::Edit, typeface::ICON_BUTTON))
+            .style(style::icon_control)
+            .on_press(Message::DashboardAction(super::Action::Write(
+                super::Written::SetDeviceName {
+                    id: id.clone(),
+                    name: state.renaming.clone(),
+                },
+            ))),
+        button(icon::icon(Icon::Delete, typeface::ICON_BUTTON))
+            .style(style::icon_control)
+            .on_press(Message::DashboardAction(super::Action::Ask(
+                crate::screen::confirm::Pending::of(
+                    match id == state.own {
+                        true =>
+                            crate::screen::confirm::Destructive::DeleteOwnDevice { id: id.clone() },
+                        false =>
+                            crate::screen::confirm::Destructive::DeleteDevice { id: id.clone() },
+                    },
+                    name,
+                ),
+            ))),
+    ]
+    .into()
 }

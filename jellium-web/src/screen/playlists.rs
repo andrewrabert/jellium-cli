@@ -14,10 +14,20 @@ use crate::error::{Answer, Operation};
 use crate::images::{self, Cache};
 use crate::route::Listing;
 use crate::screen::browse::{self, Browse};
-use crate::style::{self, Drawn, Viewport, space, typeface};
+use crate::style::{self, Viewport, space, typeface};
 use crate::text::{self as strings, Text};
-use crate::widget;
-use crate::widget::{line, prose};
+use crate::widget::{self, prose};
+
+/// Whether this user may reorder and remove a playlist's entries, which is what
+/// puts the entry controls on screen.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Editing {
+    Offered,
+    Withheld,
+}
+
+/// Every row of a playlist: its poster over one line.
+const ROW: space::ListRow = space::ListRow::art(space::Lines::One);
 
 /// The playlists destination: every playlist, windowed, with the create control
 /// absent under read-only.
@@ -35,9 +45,7 @@ pub struct State {
     pub window: window::Window,
     pub entries: Paged<Entry>,
     pub naming: String,
-    /// Whether this user may edit this playlist, which is what puts the
-    /// reorder, removal and sharing controls on screen.
-    pub editable: bool,
+    pub editing: Editing,
     /// Open access, and the users this playlist is shared with.
     pub sharing: Sharing,
 }
@@ -145,6 +153,20 @@ pub async fn listed(
     .await
 }
 
+/// Whether `user` may edit the playlist `held`: it is open to everyone, or it
+/// is the playlist asked for and is shared with `user` for editing.
+fn editing(held: &BaseItemDto, playlist: Uuid, sharing: &Sharing, user: Uuid) -> Editing {
+    let shared = held.id == Some(playlist)
+        && sharing
+            .users
+            .iter()
+            .any(|share| share.user == user && share.can_edit);
+    match sharing.open || shared {
+        true => Editing::Offered,
+        false => Editing::Withheld,
+    }
+}
+
 pub async fn load(api: Rc<Api>, playlist: Uuid, user: Uuid, viewport: Viewport) -> Answer<State> {
     Answer::of(async {
         let held = api.item(playlist).await.bubbled()?;
@@ -159,27 +181,17 @@ pub async fn load(api: Rc<Api>, playlist: Uuid, user: Uuid, viewport: Viewport) 
             .playlist_sharing(playlist)
             .await
             .or_default(Text::FailurePlaylistSharingUnread);
-        let editable = sharing.open
-            || held.id == Some(playlist)
-                && sharing
-                    .users
-                    .iter()
-                    .any(|shared| shared.user == user && shared.can_edit);
-
         Ok(State {
-            playlist: held,
             window: window::Window::new(
                 window::Id::Entries,
-                Drawn::of(style::drawn(space::LIST_ROW.drawn())),
+                ROW.height().drawn(),
                 viewport.canvas().height(),
             ),
             entries,
             naming: String::new(),
-            editable,
-            sharing: Sharing {
-                open: sharing.open,
-                users: sharing.users,
-            },
+            editing: editing(&held, playlist, &sharing, user),
+            playlist: held,
+            sharing,
         })
     })
     .await
@@ -211,7 +223,7 @@ fn naming<'a>(held: &'a str, label: Text, apply: Message) -> Element<'a, Message
             .style(style::submit)
             .on_press(apply),
     ]
-    .spacing(style::drawn(space::GUTTER.drawn()))
+    .spacing(style::drawn(space::CONTROL_GAP.drawn()))
     .align_y(iced::Alignment::Center)
     .into()
 }
@@ -222,7 +234,7 @@ pub fn view_listed<'a>(
     images: &'a Cache,
     read_only: bool,
 ) -> Element<'a, Message> {
-    let mut page = column![].spacing(style::drawn(space::GUTTER.drawn()));
+    let mut page = column![].spacing(style::drawn(space::SECTION_GAP.drawn()));
     if !read_only {
         page = page.push(naming(
             &state.naming,
@@ -234,82 +246,83 @@ pub fn view_listed<'a>(
         .into()
 }
 
-/// One entry row: its position, its name, and the reorder and removal controls
-/// when this user may edit.
+/// One entry row: its position, its poster, its name, and the reorder and
+/// removal controls when this user may edit.
 fn entry_row<'a>(
     state: &'a State,
     playlist: Uuid,
     index: usize,
-    editable: bool,
+    images: &'a Cache,
+    editing: Editing,
 ) -> Element<'a, Message> {
     let Some(entry) = state.entries.row(index) else {
-        return iced::widget::Space::new()
-            .height(style::drawn(space::LIST_ROW.drawn()))
-            .into();
+        return widget::list::reserved(ROW);
     };
 
-    let mut held = row![
-        prose(format!("{}", index + 1), typeface::BODY),
-        button(line(
-            entry.item.name.clone().unwrap_or_default(),
-            typeface::BODY,
-            typeface::Weight::Regular,
-        ))
-        .style(style::flat)
-        .on_press(Message::PlaylistAction(Action::PlayFrom {
-            playlist,
-            index
-        })),
-    ]
-    .spacing(style::drawn(space::GUTTER.drawn()))
-    .align_y(iced::Alignment::Center);
-
-    if editable {
-        let entry_id = entry.entry.clone();
+    let mut controls: Vec<Element<'a, Message>> = Vec::new();
+    if editing == Editing::Offered {
+        let held = entry.entry.clone();
         if index > 0 {
-            held = held.push(
+            controls.push(
                 button(prose(strings::lookup(Text::PlaylistMoveUp), typeface::BODY))
-                    .style(style::raised)
+                    .style(style::flat)
                     .on_press(Message::PlaylistAction(Action::Move {
                         playlist,
-                        entry: entry_id.clone(),
+                        entry: held.clone(),
                         to: index - 1,
-                    })),
+                    }))
+                    .into(),
             );
         }
         if index + 1 < state.entries.len() {
-            held = held.push(
+            controls.push(
                 button(prose(
                     strings::lookup(Text::PlaylistMoveDown),
                     typeface::BODY,
                 ))
-                .style(style::raised)
+                .style(style::flat)
                 .on_press(Message::PlaylistAction(Action::Move {
                     playlist,
-                    entry: entry_id.clone(),
+                    entry: held.clone(),
                     to: index + 1,
-                })),
+                }))
+                .into(),
             );
         }
-        held = held.push(
+        controls.push(
             button(prose(strings::lookup(Text::PlaylistRemove), typeface::BODY))
-                .style(style::raised)
+                .style(style::flat)
                 .on_press(Message::PlaylistAction(Action::Remove {
                     playlist,
-                    entry: entry_id,
-                })),
+                    entry: held,
+                }))
+                .into(),
         );
     }
 
-    held.into()
+    widget::list::row(
+        ROW,
+        widget::list::Row {
+            face: Some(widget::list::Face::Art {
+                image: widget::poster_key(&entry.item).and_then(|key| images.handle(key)),
+                elapsed: None,
+            }),
+            index: Some(widget::list::Ordinal::at(index)),
+            title: entry.item.name.clone().unwrap_or_default().into(),
+            secondary: Vec::new(),
+            press: widget::list::Press::Body(Message::PlaylistAction(Action::PlayFrom {
+                playlist,
+                index,
+            })),
+            controls,
+        },
+    )
 }
 
 pub fn view<'a>(state: &'a State, images: &'a Cache, read_only: bool) -> Element<'a, Message> {
     let Some(id) = state.playlist.id else {
         return column![].into();
     };
-    let editable = state.editable && !read_only;
-
     let mut page = column![
         prose(
             state.playlist.name.clone().unwrap_or_default(),
@@ -329,12 +342,16 @@ pub fn view<'a>(state: &'a State, images: &'a Cache, read_only: bool) -> Element
                     shuffle: true
                 })),
         ]
-        .spacing(style::drawn(space::GUTTER.drawn())),
+        .spacing(style::drawn(space::CONTROL_GAP.drawn())),
     ]
-    .spacing(style::drawn(space::GUTTER.drawn()))
-    .padding(style::drawn(space::GUTTER.drawn()));
+    .spacing(style::drawn(space::SECTION_GAP.drawn()))
+    .padding(style::padding(space::PAGE_PAD));
 
-    if editable {
+    let editing = match read_only {
+        true => Editing::Withheld,
+        false => state.editing,
+    };
+    if editing == Editing::Offered {
         page = page
             .push(naming(
                 &state.naming,
@@ -353,7 +370,7 @@ pub fn view<'a>(state: &'a State, images: &'a Cache, read_only: bool) -> Element
                     )),
                     prose(strings::lookup(Text::PlaylistOpenAccess), typeface::BODY),
                 ]
-                .spacing(style::drawn(space::GUTTER.drawn()))
+                .spacing(style::drawn(space::CONTROL_GAP.drawn()))
                 .align_y(iced::Alignment::Center),
             );
 
@@ -379,16 +396,15 @@ pub fn view<'a>(state: &'a State, images: &'a Cache, read_only: bool) -> Element
                         user
                     })),
                 ]
-                .spacing(style::drawn(space::GUTTER.drawn()))
+                .spacing(style::drawn(space::CONTROL_GAP.drawn()))
                 .align_y(iced::Alignment::Center),
             );
         }
     }
 
-    let _ = images;
     let count = state.entries.len();
     page.push(crate::window::list(state.window, count, move |index| {
-        entry_row(state, id, index, editable)
+        entry_row(state, id, index, images, editing)
     }))
     .into()
 }

@@ -40,17 +40,22 @@ const WEIGHTS = ['400', '700'];
 // with no `Icon` variant, or a variant with no ligature here, is a failure of
 // the_icon_table_and_the_variants_agree in that file.
 const ICONS = [
-    'arrow_back', 'audiotrack', 'autorenew', 'book', 'cast', 'check',
-    'closed_caption', 'explore', 'fast_forward', 'fast_rewind', 'favorite',
-    'favorite_border', 'filter_alt', 'folder', 'fullscreen', 'fullscreen_exit',
-    'groups', 'live_tv', 'movie', 'music_note', 'music_video', 'pause',
-    'person', 'photo', 'play_arrow', 'queue', 'quiz', 'repeat', 'repeat_one',
-    'replay', 'search', 'settings', 'shuffle', 'skip_next', 'skip_previous',
-    'sort_by_alpha', 'stop', 'storage', 'theaters', 'tv', 'video_library',
-    'volume_off', 'volume_up'
+    'add', 'analytics', 'arrow_back', 'article', 'audiotrack', 'autorenew',
+    'book', 'cast', 'check', 'closed_caption', 'dashboard', 'delete', 'devices',
+    'dvr', 'edit', 'expand_less', 'expand_more', 'explore', 'extension',
+    'fast_forward', 'fast_rewind', 'favorite', 'favorite_border', 'filter_alt',
+    'folder', 'folder_open', 'fullscreen', 'fullscreen_exit', 'groups', 'home',
+    'keyboard', 'keyboard_arrow_down', 'keyboard_arrow_up', 'lan',
+    'library_add', 'live_tv', 'movie', 'music_note', 'music_video', 'palette',
+    'pause', 'people', 'perm_media', 'person', 'phonelink_lock', 'photo',
+    'play_arrow', 'play_circle', 'play_circle_filled', 'queue', 'quiz',
+    'repeat', 'repeat_one', 'replay', 'schedule', 'search', 'settings',
+    'shuffle', 'skip_next', 'skip_previous', 'sort_by_alpha', 'stop', 'storage',
+    'theaters', 'tv', 'video_library', 'volume_off', 'volume_up', 'vpn_key'
 ];
 
 const BRANDING = [
+    ['jellium-web/branding/avatar.png', 'src/assets/img/avatar.png'],
     ['jellium-web/branding/banner-light.png', 'node_modules/@jellyfin/ux-web/banner-light.png'],
     ['jellium-web/branding/icon-transparent.png', 'node_modules/@jellyfin/ux-web/icon-transparent.png'],
     ['jellium-web/branding/favicons/favicon.ico', 'node_modules/@jellyfin/ux-web/favicons/favicon.ico'],

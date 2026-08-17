@@ -298,8 +298,8 @@ fn sectioned<'a>(
 
 pub fn view<'a>(state: &'a State, viewport: Viewport, images: &'a Cache) -> Element<'a, Message> {
     let mut page = column![widget::searching(&state.term, viewport)]
-        .spacing(style::drawn(space::GUTTER.drawn()))
-        .padding(style::drawn(space::GUTTER.drawn()));
+        .spacing(style::drawn(space::SECTION_GAP.drawn()))
+        .padding(style::padding(space::PAGE_PAD));
 
     if state.term.trim().is_empty() {
         return page.push(suggesting(&state.suggestions)).into();

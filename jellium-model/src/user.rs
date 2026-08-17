@@ -37,25 +37,10 @@ pub const MY_MEDIA_EXCLUDES: Field = Field::Lines {
     key: "MyMediaExcludes",
 };
 
-/// The fields the playback screen covers.
-pub const PLAYBACK: &[Field] = &[
-    AUDIO_LANGUAGE,
-    SUBTITLE_LANGUAGE,
-    PLAY_DEFAULT_AUDIO_TRACK,
-    SUBTITLE_MODE,
-    NEXT_EPISODE_AUTOPLAY,
-];
-
-/// The fields the display screen covers.
-pub const DISPLAY: &[Field] = &[MISSING_EPISODES];
-
-/// The fields the home screen covers.
-pub const HOME: &[Field] = &[ORDERED_VIEWS, MY_MEDIA_EXCLUDES];
-
 /// True when the configuration asks for the next episode to play; a value that
 /// is neither `true` nor `false` reads as false.
 pub fn next_episode_autoplay(form: &Form) -> bool {
-    form.value(NEXT_EPISODE_AUTOPLAY) == "true"
+    form.flagged(NEXT_EPISODE_AUTOPLAY)
 }
 
 /// The ids one `Field::Lines` field holds, dropping every line that is not a
@@ -85,14 +70,24 @@ pub fn arranged(libraries: &[Uuid], order: &[Uuid], hidden: &[Uuid]) -> Vec<Uuid
     arranged
 }
 
-/// `order` with `id` moved one place later when `down` and one place earlier
-/// otherwise, over `libraries` when the order names none of them.
-pub fn moved(libraries: &[Uuid], order: &[Uuid], id: Uuid, down: bool) -> Vec<Uuid> {
+/// Which way a library moves in the home screen's own order.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Toward {
+    Earlier,
+    Later,
+}
+
+/// `order` with `id` moved one place `toward`, over `libraries` when the order
+/// names none of them.
+pub fn moved(libraries: &[Uuid], order: &[Uuid], id: Uuid, toward: Toward) -> Vec<Uuid> {
     let mut moved = arranged(libraries, order, &[]);
     let Some(at) = moved.iter().position(|held| *held == id) else {
         return moved;
     };
-    let to = if down { at + 1 } else { at.wrapping_sub(1) };
+    let to = match toward {
+        Toward::Later => at + 1,
+        Toward::Earlier => at.wrapping_sub(1),
+    };
     if to < moved.len() {
         moved.swap(at, to);
     }
@@ -144,14 +139,14 @@ mod tests {
     fn a_move_at_either_end_changes_nothing() {
         let libraries = [id(1), id(2), id(3)];
         let order = arranged(&libraries, &[], &[]);
-        assert_eq!(moved(&libraries, &order, id(1), false), order);
-        assert_eq!(moved(&libraries, &order, id(3), true), order);
+        assert_eq!(moved(&libraries, &order, id(1), Toward::Earlier), order);
+        assert_eq!(moved(&libraries, &order, id(3), Toward::Later), order);
         assert_eq!(
-            moved(&libraries, &order, id(1), true),
+            moved(&libraries, &order, id(1), Toward::Later),
             vec![id(2), id(1), id(3)]
         );
         assert_eq!(
-            moved(&libraries, &order, id(3), false),
+            moved(&libraries, &order, id(3), Toward::Earlier),
             vec![id(1), id(3), id(2)]
         );
     }

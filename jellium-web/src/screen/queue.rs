@@ -1,7 +1,6 @@
 use std::collections::HashSet;
 
-use iced::widget::Space;
-use iced::widget::{button, column, container, image, row};
+use iced::widget::{button, column, container, row};
 use iced::{Element, Fill};
 use jellium_protocol::Repeat;
 
@@ -11,8 +10,11 @@ use crate::player::group::{self, Joined};
 use crate::player::{Action, Playing};
 use crate::style::{self, space, typeface};
 use crate::text::{self as strings, Text};
-use crate::widget::{line, prose};
+use crate::widget::{self, prose};
 use crate::window;
+
+/// Every row of the queue: its poster over one line.
+pub const ROW: space::ListRow = space::ListRow::art(space::Lines::One);
 
 fn key(item: &jellyfin_api::types::BaseItemDto) -> Option<images::Key> {
     Some(images::Key {
@@ -57,40 +59,33 @@ fn repeat_label(repeat: Repeat) -> Text {
 }
 
 fn entry<'a>(
-    art: Element<'a, Message>,
-    name: String,
+    item: &'a jellyfin_api::types::BaseItemDto,
+    cache: &'a Cache,
     play: Option<Message>,
     remove: Message,
 ) -> Element<'a, Message> {
-    let title: Element<'a, Message> = match play {
-        Some(play) => button(line(name, typeface::BODY, typeface::Weight::Regular))
-            .style(style::flat)
-            .on_press(play)
-            .width(Fill)
-            .into(),
-        None => line(name, typeface::BODY, typeface::Weight::Regular),
-    };
-    row![
-        art,
-        title,
-        button(prose(strings::lookup(Text::QueueRemove), typeface::BODY))
-            .style(style::flat)
-            .on_press(remove),
-    ]
-    .spacing(style::drawn(space::GUTTER.drawn()))
-    .align_y(iced::Center)
-    .into()
-}
-
-fn art<'a>(item: &jellyfin_api::types::BaseItemDto, cache: &'a Cache) -> Element<'a, Message> {
-    match key(item).and_then(|key| cache.handle(key)) {
-        Some(handle) => image(handle)
-            .width(style::drawn(space::BAR_ART.drawn()))
-            .into(),
-        None => Space::new()
-            .width(style::drawn(space::BAR_ART.drawn()))
-            .into(),
-    }
+    widget::list::row(
+        ROW,
+        widget::list::Row {
+            face: Some(widget::list::Face::Art {
+                image: key(item).and_then(|key| cache.handle(key)),
+                elapsed: None,
+            }),
+            index: None,
+            title: item.name.clone().unwrap_or_default().into(),
+            secondary: Vec::new(),
+            press: match play {
+                Some(play) => widget::list::Press::Body(play),
+                None => widget::list::Press::Inert,
+            },
+            controls: vec![
+                button(prose(strings::lookup(Text::QueueRemove), typeface::BODY))
+                    .style(style::flat)
+                    .on_press(remove)
+                    .into(),
+            ],
+        },
+    )
 }
 
 /// The upcoming items, each removable, with the shuffle and repeat controls:
@@ -156,21 +151,14 @@ pub fn view<'a>(
             .style(style::raised)
             .on_press(Message::PlayerAction(Action::CycleRepeat)),
     ]
-    .spacing(style::drawn(space::GUTTER.drawn()));
+    .spacing(style::drawn(space::CONTROL_GAP.drawn()));
 
     let body: Element<'a, Message> = if rows.is_empty() {
         prose(strings::lookup(Text::QueueEmpty), typeface::BODY)
     } else {
         window::list(window, rows.len(), move |index| {
             let row = &rows[index];
-            container(entry(
-                art(row.item, cache),
-                row.item.name.clone().unwrap_or_default(),
-                row.play.clone(),
-                row.remove.clone(),
-            ))
-            .height(style::drawn(space::LIST_ROW.drawn()))
-            .into()
+            entry(row.item, cache, row.play.clone(), row.remove.clone())
         })
     };
 
@@ -180,10 +168,10 @@ pub fn view<'a>(
             controls,
             body,
         ]
-        .spacing(style::drawn(space::GUTTER.drawn())),
+        .spacing(style::drawn(space::SECTION_GAP.drawn())),
     )
     .style(style::over_video)
-    .padding(style::drawn(space::GUTTER.drawn()))
+    .padding(style::padding(space::PAGE_PAD))
     .width(Fill)
     .height(Fill)
     .into()

@@ -40,6 +40,7 @@ fn saved<'a>(
             strings::lookup(Text::LoginServersActive),
             typeface::SECONDARY,
             typeface::Weight::Regular,
+            typeface::LINE_HEIGHT,
         ));
     }
     if saved.credentialed {
@@ -47,6 +48,7 @@ fn saved<'a>(
             strings::lookup(Text::LoginServersSignedIn),
             typeface::SECONDARY,
             typeface::Weight::Regular,
+            typeface::LINE_HEIGHT,
         ));
     }
     if !(read_only && saved.credentialed) {
@@ -75,8 +77,7 @@ pub fn view<'a>(state: &'a super::State, viewport: Viewport) -> Element<'a, Mess
                 state
                     .servers
                     .iter()
-                    .map(|entry| saved(entry, viewport, state.read_only))
-                    .collect(),
+                    .map(|entry| saved(entry, viewport, state.read_only)),
             ),
             widget::block(
                 strings::lookup(Text::LoginServersAdd),

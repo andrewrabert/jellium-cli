@@ -18,6 +18,9 @@ use crate::window;
 
 pub use jellium_model::guide::{Fetched, Focus, Move, SPAN, STEP, State, Step, Trouble, half_hour};
 
+/// The guide pitches its channel rows at a two-line row's height.
+const ROW: space::ListRow = space::ListRow::bare(space::Lines::Two);
+
 /// Loads the TV channels and the guide range, opening at the current half hour
 /// with `SPAN` shown.
 pub async fn load(api: Rc<Api>, height: Drawn) -> Result<State, crate::error::Bubble> {
@@ -31,11 +34,7 @@ pub async fn load(api: Rc<Api>, height: Drawn) -> Result<State, crate::error::Bu
         channels,
         range,
         start,
-        window: window::Window::new(
-            window::Id::Guide,
-            Drawn::of(style::drawn(space::LIST_ROW.drawn())),
-            height,
-        ),
+        window: window::Window::new(window::Id::Guide, ROW.height().drawn(), height),
         programs: HashMap::new(),
         held: None,
         focus: Focus {
@@ -94,12 +93,14 @@ fn cell<'a>(program: &'a Program, focused: bool, viewport: Viewport) -> Element<
         line(
             program.title.clone(),
             typeface::BODY,
-            typeface::Weight::Regular
+            typeface::Weight::Regular,
+            typeface::LINE_HEIGHT,
         ),
         line(
             crate::livetv::airtime(program),
             typeface::SECONDARY,
             typeface::Weight::Regular,
+            typeface::LINE_HEIGHT,
         ),
         marks,
     ]
@@ -112,7 +113,7 @@ fn cell<'a>(program: &'a Program, focused: bool, viewport: Viewport) -> Element<
             style::raised
         })
         .width(minutes * style::drawn(space::guide_minute(viewport)))
-        .height(style::drawn(space::LIST_ROW.drawn()))
+        .height(style::drawn(ROW.height().drawn()))
         .on_press(Message::LiveTvAction(Action::Show(program.id.clone())))
         .into()
 }
@@ -189,24 +190,24 @@ pub fn view<'a>(
                 chrono::Local::now().date_naive()
             ))),
     ]
-    .spacing(style::drawn(space::GUTTER.drawn()))
+    .spacing(style::drawn(space::CONTROL_GAP.drawn()))
     .align_y(iced::Center);
 
     if let Some(Trouble::OutOfRange) = state.trouble {
         return column![
             controls,
-            crate::widget::banner(strings::lookup(Text::FailureGuideOutOfRange).to_string()),
+            crate::widget::centered(strings::lookup(Text::FailureGuideOutOfRange).to_string()),
         ]
-        .spacing(style::drawn(space::GUTTER.drawn()))
+        .spacing(style::drawn(space::SECTION_GAP.drawn()))
         .into();
     }
 
     if state.channels.is_empty() {
         return column![
             controls,
-            crate::widget::banner(strings::lookup(Text::GuideEmpty).to_string()),
+            crate::widget::centered(strings::lookup(Text::GuideEmpty).to_string()),
         ]
-        .spacing(style::drawn(space::GUTTER.drawn()))
+        .spacing(style::drawn(space::SECTION_GAP.drawn()))
         .into();
     }
 
@@ -229,17 +230,18 @@ pub fn view<'a>(
                 format!("{} {}", channel.number, channel.name),
                 typeface::BODY,
                 typeface::Weight::Regular,
+                typeface::LINE_HEIGHT,
             ))
             .width(style::drawn(space::guide_channel(viewport)))
-            .height(style::drawn(space::LIST_ROW.drawn())),
+            .height(style::drawn(ROW.height().drawn())),
             row(cells).spacing(style::drawn(space::BLOCK_GAP.drawn())),
         ]
-        .height(style::drawn(space::LIST_ROW.drawn()))
+        .height(style::drawn(ROW.height().drawn()))
         .into()
     });
 
     column![controls, axis(state, now, viewport), grid]
-        .spacing(style::drawn(space::GUTTER.drawn()))
+        .spacing(style::drawn(space::SECTION_GAP.drawn()))
         .width(Fill)
         .height(Fill)
         .into()

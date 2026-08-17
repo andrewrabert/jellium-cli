@@ -208,6 +208,18 @@ pub fn answered(
     iced::Task::none()
 }
 
+/// The configuration page the dashboard is showing, and nothing where any
+/// other screen is.
+pub fn shown(signed: &Signed) -> Option<&State> {
+    match &signed.view {
+        crate::app::View::Dashboard(state) => match &state.body {
+            super::Body::Page(page) => Some(page),
+            _ => None,
+        },
+        _ => None,
+    }
+}
+
 /// The configuration page shown now, and nothing when another screen is.
 fn shown_mut(signed: &mut Signed) -> Option<&mut State> {
     match &mut signed.view {

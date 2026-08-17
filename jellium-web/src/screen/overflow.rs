@@ -187,7 +187,7 @@ pub fn view<'a>(
                     .style(style::raised)
                     .on_press(Message::OverflowAction(Action::Close)),
             )
-            .padding(style::drawn(space::GUTTER.drawn()))
+            .padding(style::padding(space::PAGE_PAD))
             .into();
     };
 
@@ -214,15 +214,15 @@ pub fn view<'a>(
             .style(style::submit)
             .on_press(Message::OverflowAction(Action::CreateAndFile)),
         ]
-        .spacing(style::drawn(space::GUTTER.drawn()))
+        .spacing(style::drawn(space::CONTROL_GAP.drawn()))
         .align_y(iced::Alignment::Center),
         column(offered).spacing(style::drawn(space::BLOCK_GAP.drawn())),
         button(prose(strings::lookup(Text::OverflowClose), typeface::BODY))
             .style(style::raised)
             .on_press(Message::OverflowAction(Action::Close)),
     ]
-    .spacing(style::drawn(space::GUTTER.drawn()))
-    .padding(style::drawn(space::GUTTER.drawn()))
+    .spacing(style::drawn(space::BLOCK_GAP.drawn()))
+    .padding(style::padding(space::PAGE_PAD))
     .into()
 }
 

@@ -1,6 +1,6 @@
 use std::collections::HashSet;
 
-use iced::widget::{button, column, container, scrollable};
+use iced::widget::{button, column, container};
 use iced::{Element, Fill};
 use jellium_protocol::{SyncAccess, Target};
 
@@ -35,10 +35,10 @@ fn picker<'a>(targets: &'a [Target]) -> Element<'a, Message> {
         return prose(strings::lookup(Text::RemoteEmpty), typeface::BODY);
     }
     let listed = targets.iter().fold(
-        column![].spacing(style::drawn(space::GUTTER.drawn())),
+        column![].spacing(style::drawn(space::BLOCK_GAP.drawn())),
         |listed, target| listed.push(offered(target)),
     );
-    scrollable(listed).height(Fill).into()
+    crate::widget::scrolled(listed).height(Fill).into()
 }
 
 /// The device picker when nothing is bound — each target named by its device
@@ -65,7 +65,7 @@ pub fn view<'a>(
                 viewport,
             ),
         ]
-        .spacing(style::drawn(space::GUTTER.drawn()))
+        .spacing(style::drawn(space::SECTION_GAP.drawn()))
         .into(),
     };
 
@@ -74,9 +74,9 @@ pub fn view<'a>(
             prose(strings::lookup(Text::RemoteTitle), typeface::HEADING_2),
             body
         ]
-        .spacing(style::drawn(space::GUTTER.drawn())),
+        .spacing(style::drawn(space::SECTION_GAP.drawn())),
     )
-    .padding(style::drawn(space::GUTTER.drawn()))
+    .padding(style::padding(space::PAGE_PAD))
     .into()
 }
 

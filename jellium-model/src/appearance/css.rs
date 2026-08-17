@@ -112,7 +112,7 @@ html[data-idle] canvas {{
   cursor: none;
 }}
 ",
-        line_height = super::trimmed(typeface::LINE_HEIGHT.factor()),
+        line_height = typeface::LINE_HEIGHT.css(),
         background = scheme::BACKGROUND.css(),
         text = scheme::TEXT.css(),
         error = scheme::ERROR.css(),

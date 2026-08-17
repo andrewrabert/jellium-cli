@@ -1,7 +1,7 @@
 //! Dashboard home: what the server is, who is on it, and what it is doing.
 
-use iced::widget::{button, column, row};
-use iced::{Element, Fill};
+use iced::Element;
+use iced::widget::{button, row};
 
 use crate::app::Message;
 use crate::error::Answer;
@@ -58,35 +58,32 @@ fn running(state: &State) -> impl Iterator<Item = &jellium_protocol::TaskState> 
 /// The server's name and version, every session with what it plays, each
 /// running task with its progress, the scan indicator, and the global scan,
 /// restart and shutdown controls.
-pub fn view<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
-    let mut page = column![
-        prose(strings::lookup(Text::DashboardHome), typeface::HEADING_2),
+pub fn view<'a>(state: &'a State, read_only: bool) -> Vec<Element<'a, Message>> {
+    let mut page: Vec<Element<'a, Message>> = vec![
         prose(
             strings::format(
                 Text::DashboardServer,
-                &[&state.info.server_name.clone().unwrap_or_default()]
+                &[&state.info.server_name.clone().unwrap_or_default()],
             ),
-            typeface::BODY
+            typeface::BODY,
         ),
         prose(
             strings::format(
                 Text::DashboardVersion,
-                &[&state.info.version.clone().unwrap_or_default()]
+                &[&state.info.version.clone().unwrap_or_default()],
             ),
-            typeface::BODY
+            typeface::BODY,
         ),
-    ]
-    .spacing(style::drawn(space::GUTTER.drawn()))
-    .padding(style::drawn(space::GUTTER.drawn()));
+    ];
 
     if let Some(progress) = state.scanning {
-        page = page.push(prose(
+        page.push(prose(
             strings::format(Text::DashboardScanning, &[&format!("{progress:.0}")]),
             typeface::BODY,
         ));
     }
 
-    page = page.push(prose(
+    page.push(prose(
         strings::lookup(Text::DashboardSessions),
         typeface::BODY,
     ));
@@ -95,7 +92,7 @@ pub fn view<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
             .playing
             .clone()
             .unwrap_or_else(|| strings::lookup(Text::DashboardSessionNothing).to_string());
-        page = page.push(prose(
+        page.push(prose(
             format!(
                 "{} · {} · {} · {}",
                 session.device_name, session.client_name, session.user_name, playing
@@ -104,7 +101,7 @@ pub fn view<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
         ));
     }
 
-    page = page.push(prose(
+    page.push(prose(
         strings::lookup(Text::DashboardRunningTasks),
         typeface::BODY,
     ));
@@ -113,11 +110,11 @@ pub fn view<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
             .progress
             .map(|progress| format!("{progress:.0}%"))
             .unwrap_or_default();
-        page = page.push(prose(format!("{} {progress}", task.name), typeface::BODY));
+        page.push(prose(format!("{} {progress}", task.name), typeface::BODY));
     }
 
     if !read_only {
-        page = page.push(
+        page.push(
             row![
                 button(prose(
                     strings::lookup(Text::DashboardScanAll),
@@ -150,12 +147,10 @@ pub fn view<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
                     )
                 ))),
             ]
-            .spacing(style::drawn(space::GUTTER.drawn())),
+            .spacing(style::drawn(space::CONTROL_GAP.drawn()))
+            .into(),
         );
     }
 
-    iced::widget::scrollable(page)
-        .width(Fill)
-        .height(Fill)
-        .into()
+    page
 }

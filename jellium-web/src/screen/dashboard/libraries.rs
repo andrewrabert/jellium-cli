@@ -1,7 +1,7 @@
 //! The virtual folders the server holds, their media paths and their options.
 
-use iced::widget::{button, column, row, text_input};
-use iced::{Element, Fill};
+use iced::Element;
+use iced::widget::{button, row, text_input};
 
 use crate::app::Message;
 use crate::error::Answer;
@@ -42,7 +42,7 @@ fn content_label(kind: jellyfin_api::types::CollectionTypeOptions) -> Text {
 }
 
 /// Every content type as a picker option.
-pub fn content_choices() -> Vec<crate::widget::Choice> {
+pub fn content_choices() -> Vec<crate::widget::Choice<String>> {
     CONTENT_TYPES
         .into_iter()
         .map(|kind| crate::widget::Choice {
@@ -58,7 +58,7 @@ pub struct State {
     pub folders: Vec<jellyfin_api::types::VirtualFolderInfo>,
     /// The name typed for a new library, and the content type chosen for it.
     pub naming: String,
-    pub content_type: crate::widget::Choice,
+    pub content_type: crate::widget::Choice<String>,
     /// How far a scan of each library has got, by the item the refresh names.
     pub refreshing: std::collections::HashMap<uuid::Uuid, f64>,
 }
@@ -168,16 +168,11 @@ pub fn refreshed(state: &mut State, items: &[jellium_protocol::Refreshed]) {
 }
 
 /// Every library with its scan control, and the control that creates one.
-pub fn view<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
-    let mut page = column![prose(
-        strings::lookup(Text::LibrariesTitle),
-        typeface::HEADING_2
-    )]
-    .spacing(style::drawn(space::GUTTER.drawn()))
-    .padding(style::drawn(space::GUTTER.drawn()));
+pub fn view<'a>(state: &'a State, read_only: bool) -> Vec<Element<'a, Message>> {
+    let mut page: Vec<Element<'a, Message>> = Vec::new();
 
     if !read_only {
-        page = page.push(
+        page.push(
             row![
                 text_input(strings::lookup(Text::LibrariesCreate), &state.naming)
                     .style(style::input)
@@ -199,7 +194,8 @@ pub fn view<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
                     }
                 ))),
             ]
-            .spacing(style::drawn(space::GUTTER.drawn())),
+            .spacing(style::drawn(space::CONTROL_GAP.drawn()))
+            .into(),
         );
     }
 
@@ -212,7 +208,7 @@ pub fn view<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
                     super::Screen::Library { name: name.clone() }
                 ))),
         ]
-        .spacing(style::drawn(space::GUTTER.drawn()));
+        .spacing(style::drawn(space::CONTROL_GAP.drawn()));
 
         let named = folder
             .item_id
@@ -247,23 +243,18 @@ pub fn view<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
                 ))),
             );
         }
-        page = page.push(held);
+        page.push(held.into());
     }
 
-    iced::widget::scrollable(page)
-        .width(Fill)
-        .height(Fill)
-        .into()
+    page
 }
 
 /// One library: its paths, the browser a path is chosen from, and its options.
-pub fn one<'a>(state: &'a One, read_only: bool) -> Element<'a, Message> {
-    let mut page = column![prose(state.name.clone(), typeface::HEADING_2)]
-        .spacing(style::drawn(space::GUTTER.drawn()))
-        .padding(style::drawn(space::GUTTER.drawn()));
+pub fn one<'a>(state: &'a One, read_only: bool) -> Vec<Element<'a, Message>> {
+    let mut page: Vec<Element<'a, Message>> = Vec::new();
 
     if !read_only {
-        page = page.push(
+        page.push(
             row![
                 text_input(strings::lookup(Text::LibrariesRename), &state.renaming)
                     .style(style::input)
@@ -280,14 +271,15 @@ pub fn one<'a>(state: &'a One, read_only: bool) -> Element<'a, Message> {
                     }
                 ))),
             ]
-            .spacing(style::drawn(space::GUTTER.drawn())),
+            .spacing(style::drawn(space::CONTROL_GAP.drawn()))
+            .into(),
         );
     }
 
-    page = page.push(prose(strings::lookup(Text::LibrariesPaths), typeface::BODY));
+    page.push(prose(strings::lookup(Text::LibrariesPaths), typeface::BODY));
     for path in &state.paths {
-        let mut held =
-            row![prose(path.clone(), typeface::BODY)].spacing(style::drawn(space::GUTTER.drawn()));
+        let mut held = row![prose(path.clone(), typeface::BODY)]
+            .spacing(style::drawn(space::CONTROL_GAP.drawn()));
         if !read_only {
             held = held.push(
                 button(prose(
@@ -306,11 +298,11 @@ pub fn one<'a>(state: &'a One, read_only: bool) -> Element<'a, Message> {
                 ))),
             );
         }
-        page = page.push(held);
+        page.push(held.into());
     }
 
     if !read_only {
-        page = page.push(
+        page.push(
             button(prose(
                 strings::lookup(Text::LibrariesBrowse),
                 typeface::BODY,
@@ -318,13 +310,14 @@ pub fn one<'a>(state: &'a One, read_only: bool) -> Element<'a, Message> {
             .style(style::raised)
             .on_press(Message::DashboardAction(super::Action::Browse(
                 state.browsing.clone().unwrap_or_default(),
-            ))),
+            )))
+            .into(),
         );
         for entry in &state.entries {
             let Some(path) = entry.path.clone() else {
                 continue;
             };
-            page = page.push(
+            page.push(
                 row![
                     button(prose(
                         entry.name.clone().unwrap_or_default(),
@@ -346,28 +339,27 @@ pub fn one<'a>(state: &'a One, read_only: bool) -> Element<'a, Message> {
                         }
                     ))),
                 ]
-                .spacing(style::drawn(space::GUTTER.drawn())),
+                .spacing(style::drawn(space::CONTROL_GAP.drawn()))
+                .into(),
             );
         }
     }
 
-    page = page.push(prose(
+    page.push(prose(
         strings::lookup(Text::LibrariesOptions),
         typeface::BODY,
     ));
     for field in OPTIONS {
-        page = page.push(super::control(*field, state.options.value(*field), false));
+        page.push(super::control(*field, state.options.value(*field)));
     }
     if !read_only {
-        page = page.push(
+        page.push(
             button(prose(strings::lookup(Text::DashboardSave), typeface::BODY))
                 .style(style::submit)
-                .on_press(Message::DashboardAction(super::Action::Save)),
+                .on_press(Message::DashboardAction(super::Action::Save))
+                .into(),
         );
     }
 
-    iced::widget::scrollable(page)
-        .width(Fill)
-        .height(Fill)
-        .into()
+    page
 }

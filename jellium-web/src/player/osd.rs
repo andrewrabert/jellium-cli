@@ -2,7 +2,7 @@ use std::collections::HashSet;
 use std::time::Duration;
 
 use iced::widget::Space;
-use iced::widget::{button, column, container, image, row, scrollable, slider, stack};
+use iced::widget::{button, column, container, image, row, slider, stack};
 use iced::{Element, Fill, Length};
 use jellium_model::item::{self, Mark};
 use jellium_protocol::{Method, Quality, Repeat, Subtitles, SyncAccess};
@@ -224,7 +224,9 @@ fn menu<'a>(
     Some(
         container(
             column![
-                scrollable(column(entries).spacing(style::drawn(space::BLOCK_GAP.drawn()))),
+                crate::widget::scrolled(
+                    column(entries).spacing(style::drawn(space::BLOCK_GAP.drawn()))
+                ),
                 acting(
                     Icon::ArrowBack,
                     typeface::ICON_BUTTON,

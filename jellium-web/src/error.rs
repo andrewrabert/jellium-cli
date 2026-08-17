@@ -308,6 +308,9 @@ pub enum Operation {
     RepositoryRemove,
     DeviceRename,
     DeviceDelete,
+    /// Deleting this installation's own device, which ends the session it
+    /// holds.
+    OwnDeviceDelete,
     KeyCreate,
     KeyRevoke,
     TaskStart,
@@ -386,7 +389,7 @@ impl Operation {
             Operation::RepositoryAdd => Text::FailureWroteRepositoryAdd,
             Operation::RepositoryRemove => Text::FailureWroteRepositoryRemove,
             Operation::DeviceRename => Text::FailureWroteDeviceRename,
-            Operation::DeviceDelete => Text::FailureWroteDeviceDelete,
+            Operation::DeviceDelete | Operation::OwnDeviceDelete => Text::FailureWroteDeviceDelete,
             Operation::KeyCreate => Text::FailureWroteKeyCreate,
             Operation::KeyRevoke => Text::FailureWroteKeyRevoke,
             Operation::TaskStart => Text::FailureWroteTaskStart,
@@ -525,12 +528,13 @@ pub fn told(key: Text) -> crate::failure::Failure {
 }
 
 /// One answer from the local server, or from the Jellyfin server through it.
-/// An `Answer` gives up its value only to a caller that propagates its trouble
-/// or names what becomes of it: it offers no `ok`, no `unwrap_or_default` and
-/// no `Err` to match.
+/// Its body crosses behind a pointer, so every message carrying an answer is
+/// one width whatever the answer holds. An `Answer` gives up its value only to
+/// a caller that propagates its trouble or names what becomes of it: it offers
+/// no `ok`, no `unwrap_or_default` and no `Err` to match.
 #[must_use = "the answer carries a trouble that must be raised or propagated"]
 #[derive(Debug, Clone)]
-pub struct Answer<T>(Result<T, Trouble>);
+pub struct Answer<T>(Result<Box<T>, Trouble>);
 
 /// A trouble on its way to the request that will answer it. It carries no
 /// accessor, no `Display` and no way out but `Answer::of`, so a caller holding
@@ -561,20 +565,20 @@ impl<T> Answer<T> {
     /// The answer `read` resolves to, which is what every request is built
     /// with.
     pub async fn of(read: impl Future<Output = Result<T, Bubble>>) -> Answer<T> {
-        Answer(read.await.map_err(|bubbled| bubbled.0))
+        Answer(read.await.map(Box::new).map_err(|bubbled| bubbled.0))
     }
 
     /// The value, propagating the trouble as a `Bubble` that only `Answer::of`
     /// can absorb, so `?` inside a request body is the one way past it.
     pub fn bubbled(self) -> Result<T, Bubble> {
-        self.0.map_err(Bubble)
+        self.0.map(|held| *held).map_err(Bubble)
     }
 
     /// The value; a trouble is raised as a passing failure naming `reading`,
     /// and answers `None`.
     pub fn or_none(self, reading: Text) -> Option<T> {
         match self.0 {
-            Ok(held) => Some(held),
+            Ok(held) => Some(*held),
             Err(trouble) => {
                 crate::failure::raise(crate::failure::reading_failed(&trouble, reading));
                 None
@@ -595,7 +599,7 @@ impl<T> Answer<T> {
     /// session's failure list and shown above no view.
     pub fn disregarded(self, reading: Text) -> Option<T> {
         match self.0 {
-            Ok(held) => Some(held),
+            Ok(held) => Some(*held),
             Err(trouble) => {
                 crate::failure::disregard(trouble, reading);
                 None
@@ -609,7 +613,7 @@ impl<T> Answer<T> {
     /// This is what every administrative write reads its answer through.
     pub fn or_refused(self, wrote: &Wrote) -> Option<T> {
         match self.0 {
-            Ok(held) => Some(held),
+            Ok(held) => Some(*held),
             Err(trouble) => {
                 crate::failure::raise(write_refused(wrote, &trouble));
                 None
@@ -619,7 +623,7 @@ impl<T> Answer<T> {
 
     /// The answer with its value mapped and its trouble untouched.
     pub fn map<U>(self, f: impl FnOnce(T) -> U) -> Answer<U> {
-        Answer(self.0.map(f))
+        Answer(self.0.map(|held| Box::new(f(*held))))
     }
 }
 

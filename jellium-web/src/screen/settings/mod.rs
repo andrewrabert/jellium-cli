@@ -1,19 +1,20 @@
-//! The settings region: one route stack, one navigation column, one save rule.
+//! The settings region: one route stack, one menu page, one save rule.
 //! No control here writes on change; only Save writes, so leaving a screen
 //! holding edits warns before they are lost.
 
 use std::rc::Rc;
 
-use iced::widget::{button, checkbox, column, row};
+use iced::widget::{column, container};
 use iced::{Element, Task};
 use uuid::Uuid;
 
 use crate::api::Api;
 use crate::app::{Message, Signed};
 use crate::error::Answer;
-use crate::style::{self, space, typeface};
+use crate::icon::Icon;
+use crate::style::{self, Viewport, space, typeface};
 use crate::text::{self as strings, Text};
-use crate::widget::prose;
+use crate::widget::{self, prose};
 
 pub mod controls;
 pub mod display;
@@ -27,8 +28,10 @@ pub mod subtitles;
 /// One settings screen, and everything that addresses it.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Screen {
+    /// The page the region opens on, which lists the screens and shows none of
+    /// them.
+    Menu,
     Profile,
-    Password,
     Display,
     Home,
     Playback,
@@ -38,22 +41,22 @@ pub enum Screen {
 }
 
 impl Screen {
-    /// Every screen, in the order the column shows them.
-    pub const ALL: [Screen; 8] = [
+    /// Every screen the menu lists, in the order the reference lists them.
+    // reference: settings-menu-rows
+    pub const ALL: [Screen; 7] = [
         Screen::Profile,
-        Screen::Password,
+        Screen::QuickConnect,
         Screen::Display,
         Screen::Home,
         Screen::Playback,
         Screen::Subtitles,
         Screen::Controls,
-        Screen::QuickConnect,
     ];
 
     pub fn label(self) -> Text {
         match self {
+            Screen::Menu => Text::SettingsTitle,
             Screen::Profile => Text::SettingsProfile,
-            Screen::Password => Text::SettingsPassword,
             Screen::Display => Text::SettingsDisplay,
             Screen::Home => Text::SettingsHome,
             Screen::Playback => Text::SettingsPlayback,
@@ -75,27 +78,58 @@ impl Screen {
                 | Screen::Controls
         )
     }
+
+    // the reference's own form ends with the block submit control on these
+    // four pages and on no other
+    // reference: settings-display-save
+    // reference: settings-home-save
+    // reference: settings-playback-save
+    // reference: settings-subtitles-save
+    pub fn saves(self) -> bool {
+        matches!(
+            self,
+            Screen::Display | Screen::Home | Screen::Playback | Screen::Subtitles
+        )
+    }
 }
 
-/// The screens `session` reaches, in column order: profile and password always,
-/// the five preference screens under `preference_access`, and Quick Connect
-/// while the server reports it enabled.
-pub fn column_of(session: &jellium_protocol::Session) -> Vec<Screen> {
-    Screen::ALL
-        .into_iter()
-        .filter(|screen| match screen {
-            Screen::QuickConnect => session.quick_connect,
-            screen if screen.preference_access() => session.preference_access,
-            _ => true,
-        })
-        .collect()
+/// The glyph the reference's own menu puts on the row that opens `screen`, and
+/// none for the menu itself, which is no row of it.
+// reference: settings-menu-rows
+fn glyph(screen: Screen) -> Option<Icon> {
+    match screen {
+        Screen::Menu => None,
+        Screen::Profile => Some(Icon::Person),
+        Screen::QuickConnect => Some(Icon::PhonelinkLock),
+        Screen::Display => Some(Icon::Tv),
+        Screen::Home => Some(Icon::Home),
+        Screen::Playback => Some(Icon::PlayCircleFilled),
+        Screen::Subtitles => Some(Icon::ClosedCaption),
+        Screen::Controls => Some(Icon::Keyboard),
+    }
+}
+
+/// Every settings screen `session` reaches, in the order the reference's own
+/// menu lists them.
+// reference: settings-menu-rows
+pub fn reached(session: &jellium_protocol::Session) -> impl Iterator<Item = Screen> {
+    Screen::ALL.into_iter().filter(|screen| match screen {
+        Screen::QuickConnect => session.quick_connect,
+        screen if screen.preference_access() => session.preference_access,
+        _ => true,
+    })
+}
+
+/// Whether `session` reaches `screen`; the menu itself always is.
+pub fn reaches(session: &jellium_protocol::Session, screen: Screen) -> bool {
+    screen == Screen::Menu || reached(session).any(|held| held == screen)
 }
 
 /// What the shown screen holds.
 #[derive(Debug)]
 pub enum Body {
+    Menu,
     Profile(Box<profile::State>),
-    Password(password::State),
     Display,
     Home(Box<home::State>),
     Playback(Box<playback::State>),
@@ -107,8 +141,8 @@ pub enum Body {
 /// What one settings screen answered with.
 #[derive(Debug, Clone)]
 pub enum Loaded {
+    Menu,
     Profile(Box<profile::State>),
-    Password,
     Display,
     Home(Box<home::State>),
     Playback(Box<playback::State>),
@@ -130,8 +164,8 @@ impl State {
         State {
             screen,
             body: match loaded {
+                Loaded::Menu => Body::Menu,
                 Loaded::Profile(state) => Body::Profile(state),
-                Loaded::Password => Body::Password(password::State::default()),
                 Loaded::Display => Body::Display,
                 Loaded::Home(state) => Body::Home(state),
                 Loaded::Playback(state) => Body::Playback(state),
@@ -193,6 +227,8 @@ pub enum Action {
     Open(Screen),
     /// Edits one field of the user configuration the session holds.
     Edited(jellium_model::form::Field, String),
+    /// Sets one flag of the user configuration the session holds.
+    Flagged(jellium_model::form::Field, bool),
     /// Sets one preference of the bag the session holds.
     Set(Setting),
     /// Writes what the shown screen edits, which is the only thing that writes.
@@ -202,11 +238,12 @@ pub enum Action {
     Typed(String),
     TypedCurrentPassword(String),
     TypedNewPassword(String),
-    /// Moves one home library, and hides or shows it.
+    /// Moves one library in the home screen's own order.
     MoveLibrary {
         id: Uuid,
-        down: bool,
+        toward: jellium_model::user::Toward,
     },
+    /// Hides one home library, and shows it.
     HideLibrary {
         id: Uuid,
         hidden: bool,
@@ -233,8 +270,8 @@ pub async fn load(
     Answer::of(async {
         drop(client);
         let loaded = match screen {
+            Screen::Menu => Loaded::Menu,
             Screen::Profile => Loaded::Profile(Box::new(profile::load(api, user).await.bubbled()?)),
-            Screen::Password => Loaded::Password,
             Screen::Display => Loaded::Display,
             Screen::Home => Loaded::Home(Box::new(home::load(api).await.bubbled()?)),
             Screen::Playback => Loaded::Playback(Box::new(playback::load(api).await.bubbled()?)),
@@ -247,207 +284,109 @@ pub async fn load(
     .await
 }
 
-/// The one save control, which is the only control on a settings screen that
-/// writes.
-pub fn save<'a>() -> Element<'a, Message> {
-    button(prose(strings::lookup(Text::SettingsSave), typeface::BODY))
-        .style(style::submit)
-        .on_press(Message::SettingsAction(Action::Save))
-        .into()
-}
-
-/// One row of choices, the one held drawn without a press, so no control on a
-/// settings screen writes on change.
-pub fn choices<'a, T: Copy + PartialEq + 'static>(
-    label: Text,
-    offered: &'static [T],
-    held: T,
+/// The options one dropdown offers: each value under the name this region
+/// gives it, carrying the control that chooses it.
+pub fn choices<T: Clone>(
+    values: impl IntoIterator<Item = T>,
     naming: impl Fn(T) -> String,
-    setting: impl Fn(T) -> Setting,
-) -> Element<'a, Message> {
-    let mut controls = row![].spacing(style::drawn(space::GUTTER.drawn()));
-    for offer in offered.iter().copied() {
-        let mut control = button(prose(naming(offer), typeface::BODY)).style(style::flat);
-        if offer != held {
-            control = control.on_press(Message::SettingsAction(Action::Set(setting(offer))));
-        }
-        controls = controls.push(control);
-    }
-    column![prose(strings::lookup(label), typeface::BODY), controls]
-        .spacing(style::drawn(space::GUTTER.drawn()))
-        .into()
+    chooses: impl Fn(T) -> Action,
+) -> Vec<widget::Choice<Action>> {
+    values
+        .into_iter()
+        .map(|value| widget::Choice {
+            label: naming(value.clone()),
+            value: chooses(value),
+        })
+        .collect()
 }
 
-/// One flag of the user configuration, labelled by this region's own text
-/// rather than by its json key.
-pub fn flag<'a>(
-    label: Text,
-    field: jellium_model::form::Field,
-    configuration: &jellium_model::form::Form,
-) -> Element<'a, Message> {
-    row![
-        checkbox(configuration.value(field) == "true").on_toggle(move |on| {
-            Message::SettingsAction(Action::Edited(field, on.to_string()))
-        }),
-        prose(strings::lookup(label), typeface::BODY),
+/// The signed-in user's own name over the rows that open every screen they
+/// reach, which is the one section the menu page draws.
+// reference: settings-menu
+// reference: settings-menu-rows
+fn menu<'a>(signed: &'a Signed) -> Element<'a, Message> {
+    column![
+        container(prose(signed.session.user_name.clone(), typeface::HEADING_2))
+            .padding(iced::Padding::ZERO.left(style::drawn(space::SECTION_TITLE_INSET.drawn()))),
+        widget::list::listed(
+            space::ListRow::glyph(space::Lines::One),
+            reached(&signed.session).filter_map(|screen| {
+                Some(widget::list::Row {
+                    face: Some(widget::list::Face::Glyph(glyph(screen)?)),
+                    index: None,
+                    title: strings::lookup(screen.label()).into(),
+                    secondary: Vec::new(),
+                    press: widget::list::Press::Whole(Message::SettingsAction(Action::Open(
+                        screen,
+                    ))),
+                    controls: Vec::new(),
+                })
+            }),
+        ),
     ]
-    .spacing(style::drawn(space::GUTTER.drawn()))
-    .align_y(iced::Center)
+    .spacing(style::drawn(space::SECTION_GAP.drawn()))
     .into()
 }
 
-/// One preference held as a flag in the bag rather than the configuration.
-pub fn toggle<'a>(
-    label: Text,
-    held: bool,
-    setting: impl Fn(bool) -> Setting + 'static,
-) -> Element<'a, Message> {
-    row![
-        checkbox(held).on_toggle(move |on| Message::SettingsAction(Action::Set(setting(on)))),
-        prose(strings::lookup(label), typeface::BODY),
-    ]
-    .spacing(style::drawn(space::GUTTER.drawn()))
-    .align_y(iced::Center)
-    .into()
-}
-
-fn mode_label(option: &str) -> Text {
-    match option {
-        "Always" => Text::PlaybackSubtitleModeAlways,
-        "OnlyForced" => Text::PlaybackSubtitleModeOnlyForced,
-        "None" => Text::PlaybackSubtitleModeNone,
-        "Smart" => Text::PlaybackSubtitleModeSmart,
-        _ => Text::PlaybackSubtitleModeDefault,
-    }
-}
-
-/// One `Field::Choice` of the user configuration, its options named by this
-/// region's own text.
-pub fn choice<'a>(
-    label: Text,
-    field: jellium_model::form::Field,
-    configuration: &jellium_model::form::Form,
-) -> Element<'a, Message> {
-    let jellium_model::form::Field::Choice { options, .. } = field else {
-        return prose(strings::lookup(label), typeface::BODY);
-    };
-    let held = configuration.value(field);
-    let mut controls = row![].spacing(style::drawn(space::GUTTER.drawn()));
-    for option in options {
-        let mut control =
-            button(prose(strings::lookup(mode_label(option)), typeface::BODY)).style(style::flat);
-        if *option != held {
-            control = control.on_press(Message::SettingsAction(Action::Edited(
-                field,
-                (*option).to_owned(),
-            )));
-        }
-        controls = controls.push(control);
-    }
-    column![prose(strings::lookup(label), typeface::BODY), controls]
-        .spacing(style::drawn(space::GUTTER.drawn()))
-        .into()
-}
-
-/// One `Field::Listed` of the user configuration, offered against the list the
-/// screen supplies at runtime.
-pub fn listed<'a>(
-    label: Text,
-    field: jellium_model::form::Field,
-    configuration: &jellium_model::form::Form,
-    cultures: &[jellyfin_api::types::CultureDto],
-) -> Element<'a, Message> {
-    let held = configuration.value(field);
-    let mut controls = row![].spacing(style::drawn(space::GUTTER.drawn()));
-    let mut any = button(prose(
-        strings::lookup(Text::PlaybackLanguageAny),
-        typeface::BODY,
-    ))
-    .style(style::flat);
-    if !held.is_empty() {
-        any = any.on_press(Message::SettingsAction(Action::Edited(
-            field,
-            String::new(),
-        )));
-    }
-    controls = controls.push(any);
-    for culture in cultures {
-        let Some(code) = culture.three_letter_iso_language_name.clone() else {
-            continue;
-        };
-        let mut control = button(prose(
-            culture.name.clone().unwrap_or_else(|| code.clone()),
-            typeface::BODY,
-        ))
-        .style(style::flat);
-        if code != held {
-            control = control.on_press(Message::SettingsAction(Action::Edited(field, code)));
-        }
-        controls = controls.push(control);
-    }
-    column![prose(strings::lookup(label), typeface::BODY), controls]
-        .spacing(style::drawn(space::GUTTER.drawn()))
-        .into()
-}
-
-/// The navigation column beside the screen shown, the read-only indicator above
-/// both, and the confirmation in the acting control's place.
+/// The shown screen's sections, or the menu's own, the save control under a
+/// screen that carries one and the confirmation in their place, every one of
+/// them held to the form's own width, under the read-only indicator and inside
+/// the page's padding.
 pub fn view<'a>(
     state: &'a State,
     signed: &'a Signed,
     images: &'a crate::images::Cache,
+    viewport: Viewport,
 ) -> Element<'a, Message> {
     let read_only = signed.session.read_only;
 
-    let mut nav = column![prose(
-        strings::lookup(Text::SettingsTitle),
-        typeface::HEADING_3
-    )]
-    .spacing(style::drawn(space::GUTTER.drawn()));
-    for screen in column_of(&signed.session) {
-        let mut control =
-            button(prose(strings::lookup(screen.label()), typeface::BODY)).style(style::flat);
-        if screen != state.screen {
-            control = control.on_press(Message::SettingsAction(Action::Open(screen)));
-        }
-        nav = nav.push(control);
-    }
-
-    let body: Element<'a, Message> = match &state.body {
-        Body::Profile(profile) => profile::view(profile, read_only, images),
-        Body::Password(password) => password::view(password, read_only),
-        Body::Display => display::view(&signed.configuration, read_only),
-        Body::Home(home) => home::view(home, signed.held, &signed.configuration, read_only),
-        Body::Playback(playback) => playback::view(
+    let mut sections: Vec<Element<'a, Message>> = match &state.body {
+        Body::Menu => vec![menu(signed)],
+        Body::Profile(profile) => profile::sections(profile, read_only, images),
+        Body::Display => display::sections(&signed.configuration),
+        Body::Home(home) => home::sections(home, signed.held, &signed.configuration),
+        Body::Playback(playback) => playback::sections(
             playback,
             signed.held,
             &signed.configuration,
             signed.session.sync_play,
-            read_only,
         ),
-        Body::Subtitles => subtitles::view(signed.held, read_only),
-        Body::Controls => controls::view(),
-        Body::QuickConnect(quick) => quickconnect::view(quick, read_only),
+        Body::Subtitles => subtitles::sections(signed.held),
+        Body::Controls => controls::sections(),
+        Body::QuickConnect(quick) => quickconnect::sections(quick, read_only),
     };
 
-    let shown: Element<'a, Message> = match &state.confirming {
-        Some(pending) => {
-            crate::screen::confirm::view(pending, crate::screen::confirm::Region::Settings)
-        }
-        None => body,
+    if state.screen.saves() && !read_only {
+        sections.push(widget::block(
+            strings::lookup(Text::SettingsSave),
+            Some(Message::SettingsAction(Action::Save)),
+            widget::Emphasis::Submit,
+        ));
+    }
+
+    let rows: Vec<Element<'a, Message>> = match &state.confirming {
+        Some(pending) => vec![crate::screen::confirm::view(
+            pending,
+            crate::screen::confirm::Region::Settings,
+        )],
+        None => sections,
     };
 
-    let mut page = column![].spacing(style::drawn(space::GUTTER.drawn()));
+    let mut page = column![].spacing(style::drawn(space::SECTION_GAP.drawn()));
     if signed.server_changed {
         page = page.push(prose(
             strings::lookup(Text::SettingsServerChanged),
             typeface::BODY,
         ));
     }
-    page = page.push(row![nav, shown].spacing(style::drawn(space::GUTTER.drawn())));
+    page = page.push(widget::capped(
+        viewport,
+        space::section_bottom(viewport.band()),
+        rows,
+    ));
 
-    iced::widget::container(page)
-        .padding(style::drawn(space::GUTTER.drawn()))
+    container(page)
+        .padding(style::padding(space::PAGE_PAD))
         .into()
 }
 
@@ -468,6 +407,10 @@ pub fn act(signed: &mut Signed, action: Action) -> Task<Message> {
         }
         Action::Edited(field, value) => {
             signed.configuration.edit(field, value);
+            Task::none()
+        }
+        Action::Flagged(field, on) => {
+            signed.configuration.flag(field, on);
             Task::none()
         }
         Action::Set(setting) => {
@@ -491,32 +434,28 @@ pub fn act(signed: &mut Signed, action: Action) -> Task<Message> {
             Task::none()
         }
         Action::TypedCurrentPassword(typed) => {
-            if let crate::app::View::Settings(State {
-                body: Body::Password(password),
-                ..
-            }) = &mut signed.view
+            if let crate::app::View::Settings(state) = &mut signed.view
+                && let Body::Profile(profile) = &mut state.body
             {
-                password.current = typed;
+                profile.password.current = typed;
             }
             Task::none()
         }
         Action::TypedNewPassword(typed) => {
-            if let crate::app::View::Settings(State {
-                body: Body::Password(password),
-                ..
-            }) = &mut signed.view
+            if let crate::app::View::Settings(state) = &mut signed.view
+                && let Body::Profile(profile) = &mut state.body
             {
-                password.replacement = typed;
+                profile.password.replacement = typed;
             }
             Task::none()
         }
-        Action::MoveLibrary { id, down } => {
+        Action::MoveLibrary { id, toward } => {
             let Some(libraries) = library_ids(signed) else {
                 return Task::none();
             };
             let order =
                 jellium_model::user::ids(&signed.configuration, jellium_model::user::ORDERED_VIEWS);
-            let moved = jellium_model::user::moved(&libraries, &order, id, down);
+            let moved = jellium_model::user::moved(&libraries, &order, id, toward);
             signed.configuration.edit(
                 jellium_model::user::ORDERED_VIEWS,
                 moved
@@ -553,11 +492,10 @@ pub fn act(signed: &mut Signed, action: Action) -> Task<Message> {
             Task::none()
         }
         Action::SaveName => {
-            let crate::app::View::Settings(State {
-                body: Body::Profile(profile),
-                ..
-            }) = &signed.view
-            else {
+            let crate::app::View::Settings(state) = &signed.view else {
+                return Task::none();
+            };
+            let Body::Profile(profile) = &state.body else {
                 return Task::none();
             };
             let api = signed.api.clone();
@@ -573,17 +511,16 @@ pub fn act(signed: &mut Signed, action: Action) -> Task<Message> {
             )
         }
         Action::ChangePassword => {
-            let crate::app::View::Settings(State {
-                body: Body::Password(password),
-                ..
-            }) = &signed.view
-            else {
+            let crate::app::View::Settings(state) = &signed.view else {
                 return Task::none();
             };
+            let Body::Profile(profile) = &state.body else {
+                return Task::none();
+            };
+            let current = profile.password.current.clone();
+            let replacement = profile.password.replacement.clone();
             let api = signed.api.clone();
             let id = signed.session.user_id;
-            let current = password.current.clone();
-            let replacement = password.replacement.clone();
             let wrote = crate::error::Wrote {
                 operation: crate::error::Operation::UserPassword,
                 object: signed.session.user_name.clone(),
@@ -610,11 +547,10 @@ pub fn act(signed: &mut Signed, action: Action) -> Task<Message> {
 }
 
 fn library_ids(signed: &Signed) -> Option<Vec<Uuid>> {
-    let crate::app::View::Settings(State {
-        body: Body::Home(home),
-        ..
-    }) = &signed.view
-    else {
+    let crate::app::View::Settings(state) = &signed.view else {
+        return None;
+    };
+    let Body::Home(home) = &state.body else {
         return None;
     };
     Some(home.libraries.iter().filter_map(|it| it.id).collect())

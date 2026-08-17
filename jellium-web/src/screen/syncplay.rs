@@ -1,4 +1,4 @@
-use iced::widget::{button, column, container, row, scrollable};
+use iced::widget::{button, column, container, row};
 use iced::{Element, Fill};
 use jellium_protocol::{Group, GroupState, SyncAccess};
 
@@ -41,13 +41,13 @@ fn offered(group: &Group) -> Element<'_, Message> {
             .style(style::raised)
             .on_press(Message::GroupAction(group::Action::Join(group.id))),
     ]
-    .spacing(style::drawn(space::GUTTER.drawn()))
+    .spacing(style::drawn(space::CONTROL_GAP.drawn()))
     .align_y(iced::Center)
     .into()
 }
 
 fn picker<'a>(groups: &'a [Group], access: SyncAccess) -> Element<'a, Message> {
-    let mut body = column![].spacing(style::drawn(space::GUTTER.drawn()));
+    let mut body = column![].spacing(style::drawn(space::BLOCK_GAP.drawn()));
     if access == SyncAccess::CreateAndJoin {
         body = body.push(
             button(prose(strings::lookup(Text::SyncPlayCreate), typeface::BODY))
@@ -61,10 +61,11 @@ fn picker<'a>(groups: &'a [Group], access: SyncAccess) -> Element<'a, Message> {
             .into();
     }
     let listed = groups.iter().fold(
-        column![].spacing(style::drawn(space::GUTTER.drawn())),
+        column![].spacing(style::drawn(space::BLOCK_GAP.drawn())),
         |listed, group| listed.push(offered(group)),
     );
-    body.push(scrollable(listed).height(Fill)).into()
+    body.push(crate::widget::scrolled(listed).height(Fill))
+        .into()
 }
 
 fn active<'a>(joined: &'a Joined) -> Element<'a, Message> {
@@ -90,13 +91,13 @@ fn active<'a>(joined: &'a Joined) -> Element<'a, Message> {
             .style(style::raised)
             .on_press(Message::GroupAction(group::Action::Stop)),
     )
-    .push(iced::widget::Space::new().height(style::drawn(space::GUTTER.drawn())))
+    .push(iced::widget::Space::new().height(style::drawn(space::BLOCK_GAP.drawn())))
     .push(
         button(prose(strings::lookup(Text::SyncPlayLeave), typeface::BODY))
             .style(style::raised)
             .on_press(Message::GroupAction(group::Action::Leave)),
     )
-    .spacing(style::drawn(space::GUTTER.drawn()))
+    .spacing(style::drawn(space::BLOCK_GAP.drawn()))
     .into()
 }
 
@@ -120,8 +121,8 @@ pub fn view<'a>(
             prose(strings::lookup(Text::SyncPlayTitle), typeface::HEADING_2),
             body
         ]
-        .spacing(style::drawn(space::GUTTER.drawn())),
+        .spacing(style::drawn(space::SECTION_GAP.drawn())),
     )
-    .padding(style::drawn(space::GUTTER.drawn()))
+    .padding(style::padding(space::PAGE_PAD))
     .into()
 }

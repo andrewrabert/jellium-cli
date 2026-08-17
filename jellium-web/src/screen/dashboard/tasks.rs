@@ -1,7 +1,7 @@
 //! The scheduled tasks the server holds, and the one task a task screen shows.
 
-use iced::widget::{button, column, row};
-use iced::{Element, Fill};
+use iced::Element;
+use iced::widget::{button, row};
 
 use crate::app::Message;
 use crate::error::Answer;
@@ -81,13 +81,8 @@ fn state_text(state: jellium_protocol::TaskRunState) -> Text {
 }
 
 /// Every task with its state and its running progress.
-pub fn view<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
-    let mut page = column![prose(
-        strings::lookup(Text::TasksTitle),
-        typeface::HEADING_2
-    )]
-    .spacing(style::drawn(space::GUTTER.drawn()))
-    .padding(style::drawn(space::GUTTER.drawn()));
+pub fn view<'a>(state: &'a State, read_only: bool) -> Vec<Element<'a, Message>> {
+    let mut page: Vec<Element<'a, Message>> = Vec::new();
 
     for task in &state.tasks {
         let progress = task
@@ -98,7 +93,8 @@ pub fn view<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
             button(line(
                 task.name.clone(),
                 typeface::BODY,
-                typeface::Weight::Regular
+                typeface::Weight::Regular,
+                typeface::LINE_HEIGHT,
             ))
             .style(style::link)
             .on_press(Message::DashboardAction(super::Action::Open(
@@ -110,9 +106,10 @@ pub fn view<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
                 format!("{}{progress}", strings::lookup(state_text(task.state))),
                 typeface::BODY,
                 typeface::Weight::Regular,
+                typeface::LINE_HEIGHT,
             ),
         ]
-        .spacing(style::drawn(space::GUTTER.drawn()));
+        .spacing(style::drawn(space::CONTROL_GAP.drawn()));
 
         if !read_only {
             held = held.push(match task.state {
@@ -138,33 +135,28 @@ pub fn view<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
                     ))),
             });
         }
-        page = page.push(held);
+        page.push(held.into());
     }
 
-    iced::widget::scrollable(page)
-        .width(Fill)
-        .height(Fill)
-        .into()
+    page
 }
 
 /// One task: its description, its last execution's status and duration, and
 /// its triggers.
-pub fn one<'a>(state: &'a One, read_only: bool) -> Element<'a, Message> {
-    let mut page = column![
+pub fn one<'a>(state: &'a One, read_only: bool) -> Vec<Element<'a, Message>> {
+    let mut page: Vec<Element<'a, Message>> = vec![
         prose(
             state.info.name.clone().unwrap_or_default(),
-            typeface::HEADING_2
+            typeface::HEADING_2,
         ),
         prose(
             state.info.description.clone().unwrap_or_default(),
-            typeface::BODY
+            typeface::BODY,
         ),
-    ]
-    .spacing(style::drawn(space::GUTTER.drawn()))
-    .padding(style::drawn(space::GUTTER.drawn()));
+    ];
 
     if let Some(last) = state.info.last_execution_result.as_ref() {
-        page = page.push(prose(
+        page.push(prose(
             strings::format(
                 Text::TasksLastRun,
                 &[&last
@@ -176,14 +168,14 @@ pub fn one<'a>(state: &'a One, read_only: bool) -> Element<'a, Message> {
         ));
         if let (Some(start), Some(end)) = (last.start_time_utc, last.end_time_utc) {
             let ran = end - start;
-            page = page.push(prose(
+            page.push(prose(
                 strings::format(Text::TasksDuration, &[&format!("{}", ran.num_seconds())]),
                 typeface::BODY,
             ));
         }
     }
 
-    page = page.push(prose(strings::lookup(Text::TasksTriggers), typeface::BODY));
+    page.push(prose(strings::lookup(Text::TasksTriggers), typeface::BODY));
     for (index, trigger) in state.triggers.iter().enumerate() {
         let mut held = row![prose(
             trigger
@@ -192,7 +184,7 @@ pub fn one<'a>(state: &'a One, read_only: bool) -> Element<'a, Message> {
                 .unwrap_or_default(),
             typeface::BODY
         )]
-        .spacing(style::drawn(space::GUTTER.drawn()));
+        .spacing(style::drawn(space::CONTROL_GAP.drawn()));
         if !read_only {
             held = held.push(
                 button(prose(
@@ -205,11 +197,11 @@ pub fn one<'a>(state: &'a One, read_only: bool) -> Element<'a, Message> {
                 ))),
             );
         }
-        page = page.push(held);
+        page.push(held.into());
     }
 
     if !read_only {
-        page = page.push(
+        page.push(
             row![
                 button(prose(
                     strings::lookup(Text::TasksTriggerDaily),
@@ -242,9 +234,10 @@ pub fn one<'a>(state: &'a One, read_only: bool) -> Element<'a, Message> {
                     }
                 ))),
             ]
-            .spacing(style::drawn(space::GUTTER.drawn())),
+            .spacing(style::drawn(space::CONTROL_GAP.drawn()))
+            .into(),
         );
-        page = page.push(
+        page.push(
             button(prose(strings::lookup(Text::DashboardSave), typeface::BODY))
                 .style(style::submit)
                 .on_press(Message::DashboardAction(super::Action::Write(
@@ -252,12 +245,10 @@ pub fn one<'a>(state: &'a One, read_only: bool) -> Element<'a, Message> {
                         id: state.info.id.clone().unwrap_or_default(),
                         name: state.info.name.clone().unwrap_or_default(),
                     },
-                ))),
+                )))
+                .into(),
         );
     }
 
-    iced::widget::scrollable(page)
-        .width(Fill)
-        .height(Fill)
-        .into()
+    page
 }

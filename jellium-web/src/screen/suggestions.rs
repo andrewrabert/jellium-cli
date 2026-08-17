@@ -84,7 +84,7 @@ pub fn view<'a>(
             overflow,
         ),
     )]
-    .spacing(style::drawn(space::GUTTER.drawn()));
+    .spacing(style::drawn(space::SECTION_GAP.drawn()));
 
     for rail in &state.recommendations {
         page = page.push(widget::section(

@@ -1,8 +1,8 @@
 //! The server's configuration, one section per screen, read whole and written
 //! whole.
 
+use iced::Element;
 use iced::widget::{button, checkbox, column, text_input};
-use iced::{Element, Fill};
 
 use crate::app::Message;
 use crate::error::Answer;
@@ -37,31 +37,13 @@ pub async fn load(api: std::rc::Rc<crate::api::Api>, section: super::Section) ->
 }
 
 /// One control per field, an explicit save, and the unsaved-edit indicator.
-pub fn view<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
-    let mut tabs = iced::widget::row![].spacing(style::drawn(space::GUTTER.drawn()));
-    for section in super::Section::ALL {
-        let control =
-            button(prose(strings::lookup(section.label()), typeface::BODY)).style(style::flat);
-        tabs = tabs.push(if section == state.section {
-            control
-        } else {
-            control.on_press(Message::DashboardAction(super::Action::Open(
-                super::Screen::Settings { section },
-            )))
-        });
-    }
-
-    let mut page = column![
-        tabs,
-        prose(strings::lookup(state.section.label()), typeface::HEADING_2)
-    ]
-    .spacing(style::drawn(space::GUTTER.drawn()))
-    .padding(style::drawn(space::GUTTER.drawn()));
+pub fn view<'a>(state: &'a State, read_only: bool) -> Vec<Element<'a, Message>> {
+    let mut page: Vec<Element<'a, Message>> = Vec::new();
 
     for field in state.section.fields() {
         let field = *field;
         let held = state.form.value(field);
-        page = page.push(match field {
+        page.push(match field {
             Field::Flag { key } => Element::from(
                 iced::widget::row![
                     checkbox(held == "true").on_toggle(move |held| {
@@ -69,7 +51,7 @@ pub fn view<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
                     }),
                     prose(key, typeface::BODY),
                 ]
-                .spacing(style::drawn(space::GUTTER.drawn()))
+                .spacing(style::drawn(space::CONTROL_GAP.drawn()))
                 .align_y(iced::Center),
             ),
             _ => Element::from(
@@ -81,18 +63,18 @@ pub fn view<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
                             Message::DashboardAction(super::Action::Edited(field, held))
                         }),
                 ]
-                .spacing(style::drawn(space::GUTTER.drawn())),
+                .spacing(style::drawn(space::BLOCK_GAP.drawn())),
             ),
         });
     }
 
     if state.form.dirty() {
-        page = page.push(prose(
+        page.push(prose(
             strings::lookup(Text::DashboardUnsaved),
             typeface::BODY,
         ));
     } else if state.saved {
-        page = page.push(prose(strings::lookup(Text::DashboardSaved), typeface::BODY));
+        page.push(prose(strings::lookup(Text::DashboardSaved), typeface::BODY));
     }
 
     if !read_only {
@@ -101,11 +83,8 @@ pub fn view<'a>(state: &'a State, read_only: bool) -> Element<'a, Message> {
         if state.form.dirty() {
             save = save.on_press(Message::DashboardAction(super::Action::Save));
         }
-        page = page.push(save);
+        page.push(save.into());
     }
 
-    iced::widget::scrollable(page)
-        .width(Fill)
-        .height(Fill)
-        .into()
+    page
 }

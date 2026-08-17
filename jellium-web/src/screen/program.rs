@@ -76,7 +76,7 @@ pub fn view<'a>(
         flags = flags.push(badge(Text::GuideBadgeRepeat));
     }
 
-    let mut controls = row![].spacing(style::drawn(space::GUTTER.drawn()));
+    let mut controls = row![].spacing(style::drawn(space::CONTROL_GAP.drawn()));
     if program.airing(now) {
         controls = controls.push(
             button(prose(strings::lookup(Text::ProgramPlay), typeface::BODY))
@@ -149,11 +149,11 @@ pub fn view<'a>(
         ),
         controls,
     ]
-    .spacing(style::drawn(space::GUTTER.drawn()))
+    .spacing(style::drawn(space::SECTION_GAP.drawn()))
     .width(Fill);
 
-    container(row![art, described].spacing(style::drawn(space::GUTTER.drawn())))
-        .padding(style::drawn(space::GUTTER.drawn()))
+    container(row![art, described].spacing(style::drawn(space::SECTION_GAP.drawn())))
+        .padding(style::padding(space::PAGE_PAD))
         .width(Fill)
         .into()
 }

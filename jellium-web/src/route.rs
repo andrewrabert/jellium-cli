@@ -18,10 +18,11 @@ pub enum Route {
     Detail {
         id: Uuid,
     },
-    /// The metadata manager for one item, at one of its six parts.
+    /// The metadata manager for one item, at one of its six parts, and at none
+    /// while the page shows its parts.
     Metadata {
         item: Uuid,
-        part: crate::screen::metadata::Part,
+        part: Option<crate::screen::metadata::Part>,
     },
     Collections,
     Collection {

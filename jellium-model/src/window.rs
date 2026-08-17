@@ -7,7 +7,6 @@ pub enum Id {
     Channels,
     Queue,
     Recordings,
-    Schedule,
     Series,
     Activity,
     Log,
@@ -15,6 +14,7 @@ pub enum Id {
     Users,
     Tasks,
     Devices,
+    Keys,
     Plugins,
     /// The one browse surface on screen: a library grid, search results, a hub,
     /// a filtered list, a collection's contents, or either destination.

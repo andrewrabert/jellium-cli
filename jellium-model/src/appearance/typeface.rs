@@ -1,7 +1,7 @@
 //! The reference's type scale over the 16px base, and the two weights the
 //! client draws.
 
-use super::{Breakpoint, Length, Query, Ratio, Viewport};
+use super::{Breakpoint, Css, Length, Query, Ratio, Viewport};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Weight {
@@ -9,8 +9,36 @@ pub enum Weight {
     Bold,
 }
 
+/// The line box a run of text stands in, which the reference writes either as
+/// a factor of the size the run is set at or as a length of its own.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum Leading {
+    Factor(Ratio),
+    Length(Length),
+}
+
+impl Leading {
+    /// The line box a run set at `size` stands in.
+    pub const fn of(self, size: Length) -> Length {
+        match self {
+            Leading::Factor(factor) => size.times(factor),
+            Leading::Length(length) => length,
+        }
+    }
+
+    /// The factor to the fewest decimals that carry it, and the length in em.
+    pub fn css(self) -> String {
+        match self {
+            Leading::Factor(factor) => super::trimmed(factor.factor()),
+            Leading::Length(length) => {
+                format!("{}em", super::trimmed(length.drawn().count() / super::BASE))
+            }
+        }
+    }
+}
+
 // reference: type-line-height
-pub const LINE_HEIGHT: Ratio = Ratio::thousandths(1350);
+pub const LINE_HEIGHT: Leading = Leading::Factor(Ratio::thousandths(1350));
 
 // reference: type-root
 pub const DESKTOP_ROOT: Ratio = Ratio::thousandths(930);
@@ -35,7 +63,17 @@ pub const BODY: Length = Length::em(1.0);
 pub const SECONDARY: Length = Length::em(0.86);
 
 // reference: control-input
+// reference: control-select
 pub const FIELD: Length = Length::em(1.1);
+
+/// `.selectArrow`, the chevron laid over a select's trailing edge.
+// reference: control-select-arrow-glyph
+pub const SELECT_ARROW: Length = Length::em(1.7);
+
+/// `.checkboxIcon`, which the reference writes smaller than the box it stands
+/// in.
+// reference: control-checkbox-icon
+pub const CHECKBOX_MARK: Length = Length::em(1.6);
 
 // reference: type-button-icon
 pub const BUTTON_ICON: Length = Length::em(1.36);
@@ -60,6 +98,63 @@ pub const BAR_ICON: Length = ICON_BUTTON.times(Ratio::thousandths(1200));
 // reference: filter-indicator
 pub const INDICATOR: Length = BODY.times(Ratio::thousandths(600));
 
+/// `.listItemIcon`, which the reference writes larger than the body of the row
+/// it stands before.
+// reference: list-icon
+pub const LIST_ICON: Length = BODY.times(Ratio::thousandths(1430));
+
+/// The line box `.layout-desktop` gives `.listItemBodyText`, which the
+/// reference writes tighter than the page's own.
+// reference: list-body-text-desktop
+pub const LIST_LEADING: Leading = Leading::Factor(Ratio::thousandths(1200));
+
+/// The size MUI sets its own `body2` variant at, in the css pixels it writes
+/// before `pxToRem` puts that size over the 16px base.
+// reference: mui-typography
+const MUI_BODY_2: Css = Css::unitless(14.0);
+
+/// MUI's own `body2`, which every cell of a table is written in.
+// reference: mui-typography
+pub const TABLE: Length = MUI_BODY_2.length();
+
+// reference: mui-typography
+pub const TABLE_LEADING: Leading = Leading::Factor(Ratio::thousandths(1430));
+
+/// The line box MUI writes for a head cell, in the css pixels it writes before
+/// `pxToRem`.
+// reference: mui-table-cell
+const MUI_HEAD_LEADING: Css = Css::unitless(24.0);
+
+/// The line box a head cell's lettering stands in, which MUI writes as a
+/// length rather than as a factor.
+// reference: mui-table-cell
+pub const TABLE_HEAD_LEADING: Leading = Leading::Length(MUI_HEAD_LEADING.length());
+
+/// MRT writes `bold` over MUI's own 500, and a browser resolves that against
+/// the two faces the client bundles as the bolder one.
+// reference: table-head-cell
+pub const TABLE_HEAD_WEIGHT: Weight = Weight::Bold;
+
+/// The size MUI sets a small toggle at, in the css pixels it writes before
+/// `pxToRem`.
+// reference: mui-toggle-button
+const MUI_TOGGLE: Css = Css::unitless(13.0);
+
+/// One segment of the top toolbar's group, which MUI writes smaller than its
+/// own `button` variant.
+// reference: mui-toggle-button
+pub const TOGGLE: Length = MUI_TOGGLE.length();
+
+/// `typography.button`'s own line box; the reference takes that variant's
+/// uppercasing off and leaves its box.
+// reference: mui-typography
+// reference: mui-theme-typography
+pub const TOGGLE_LEADING: Leading = Leading::Factor(Ratio::thousandths(1750));
+
+/// `.toast`'s own lettering, which the reference writes larger than the body.
+// reference: toast-face
+pub const TOAST: Length = Length::em(1.1);
+
 /// `.detailButton-icon`.
 // reference: detail-button-icon
 pub const DETAIL_ICON: Length = Length::em(1.6);
@@ -67,6 +162,22 @@ pub const DETAIL_ICON: Length = Length::em(1.6);
 /// `.searchfields-icon`, the one glyph the search field stands beside.
 // reference: search-icon
 pub const SEARCH_ICON: Length = Length::em(2.0);
+
+// the reference writes 600, and a browser resolves that against the two faces
+// the client bundles as the bolder one
+// reference: control-tab
+pub const TAB_WEIGHT: Weight = Weight::Bold;
+
+/// The line box a tab's lettering stands in, which the reference writes
+/// tighter than the page's own.
+// reference: control-tab
+pub const TAB_LEADING: Leading = Leading::Factor(Ratio::thousandths(1250));
+
+// reference: tab-size
+const TAB_NARROW: Length = BODY.times(Ratio::thousandths(835));
+
+// reference: tab-size
+const TAB_NARROW_AT: Query = Query::MaxWidth(Breakpoint::em(100.0));
 
 /// The steps `.alphaPicker-vertical` takes as the page shortens, in the order
 /// the cascade resolves them.
@@ -89,6 +200,16 @@ const LETTERS_STEPS: [(Query, Length); 4] = [
         BODY.times(Ratio::thousandths(740)),
     ),
 ];
+
+/// The lettering a tab is written in.
+// 83.5% of the body on a page no wider than 100em, and the body above it
+// reference: tab-size
+pub fn tab(viewport: Viewport) -> Length {
+    match viewport.matches(TAB_NARROW_AT) {
+        true => TAB_NARROW,
+        false => BODY,
+    }
+}
 
 /// The size the letter picker's letters draw at.
 /// 94% of the body at 49em of height and shorter, 90% at 44em, 82% at 37em,

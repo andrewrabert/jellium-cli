@@ -4,18 +4,17 @@ use std::collections::HashSet;
 use std::rc::Rc;
 
 use iced::Element;
-use iced::widget::{button, column, text_input};
 use uuid::Uuid;
 
 use crate::api::Api;
 use crate::app::Message;
 use crate::error::Answer;
 use crate::images::Cache;
+use crate::style::{space, typeface};
 use crate::text::{self as strings, Text};
+use crate::widget::{self, prose};
 
 use super::Action;
-use crate::style::{self, space, typeface};
-use crate::widget::prose;
 
 /// The signed-in user as the profile screen shows them.
 #[derive(Debug, Clone)]
@@ -30,6 +29,12 @@ pub struct State {
     pub read: serde_json::Value,
     /// What has been typed into the display name field.
     pub naming: String,
+    /// What has been typed into the two password fields, which the reference
+    /// draws under the name on this page.
+    pub password: super::password::State,
+    /// The tag the server reports for this account's own image, and none for
+    /// an account that has none.
+    pub image: Option<String>,
 }
 
 pub async fn load(api: Rc<Api>, id: Uuid) -> Answer<State> {
@@ -60,90 +65,107 @@ pub async fn load(api: Rc<Api>, id: Uuid) -> Answer<State> {
                 .and_then(serde_json::Value::as_bool)
                 .unwrap_or(false),
             last_active: stamped,
+            image: read
+                .get("PrimaryImageTag")
+                .and_then(serde_json::Value::as_str)
+                .map(str::to_owned),
             read,
+            password: super::password::State::default(),
         })
     })
     .await
 }
 
+/// What removing this account's image asks confirmation for.
+fn removing(state: &State) -> crate::screen::confirm::Pending {
+    crate::screen::confirm::Pending::of(
+        crate::screen::confirm::Destructive::RemoveUserImage { id: state.id },
+        state.name.clone(),
+    )
+}
+
+/// This account's own image where the cache holds it, and the placeholder the
+/// reference stands in for an account with no image.
+// reference: settings-profile-image
+fn face(state: &State, images: &Cache) -> iced::widget::image::Handle {
+    const AVATAR: &[u8] = include_bytes!("../../../branding/avatar.png");
+    images
+        .handle(image_key(state))
+        .unwrap_or_else(|| iced::widget::image::Handle::from_bytes(AVATAR))
+}
+
 /// The name, whether the account is an administrator, when it was last active,
-/// the image with its Choose and Remove controls, and the refusal a chosen file
-/// earned; the three writing controls are absent under read-only.
-pub fn view<'a>(state: &'a State, read_only: bool, images: &'a Cache) -> Element<'a, Message> {
-    let mut shown = column![
+/// the image with the one control it offers and the display name field in the
+/// screen's own section, then the password section; the writing controls are
+/// absent under read-only.
+// reference: settings-profile-form
+pub fn sections<'a>(
+    state: &'a State,
+    read_only: bool,
+    images: &'a Cache,
+) -> Vec<Element<'a, Message>> {
+    let mut rows = vec![
         prose(state.name.clone(), typeface::HEADING_3),
-        prose(
-            strings::lookup(if state.administrator {
-                Text::ProfileAdministrator
-            } else {
-                Text::ProfileMember
-            })
-            .to_owned(),
-            typeface::BODY
+        widget::description(
+            match state.administrator {
+                true => Text::ProfileAdministrator,
+                false => Text::ProfileMember,
+            },
+            space::DESCRIPTION_INSET,
         ),
-    ]
-    .spacing(style::drawn(space::GUTTER.drawn()));
+    ];
 
     if let Some(at) = state.last_active {
-        shown = shown.push(prose(
+        rows.push(prose(
             strings::format(Text::ProfileLastActive, &[&at.to_rfc3339()]),
             typeface::BODY,
         ));
     }
 
-    shown = shown.push(prose(strings::lookup(Text::ProfileImage), typeface::BODY));
-    if let Some(handle) = images.handle(image_key(state)) {
-        shown = shown.push(iced::widget::image(handle));
+    rows.push(widget::labelled(
+        Text::ProfileImage,
+        iced::widget::image(face(state, images)).into(),
+    ));
+
+    // reference: settings-profile-image-controls
+    if !read_only {
+        rows.push(match state.image {
+            Some(_) => widget::control(
+                strings::lookup(Text::UsersImageRemove),
+                Some(Message::SettingsAction(Action::Ask(removing(state)))),
+                widget::Emphasis::Raised,
+            ),
+            None => widget::control(
+                strings::lookup(Text::ProfileImageChoose),
+                Some(Message::SettingsAction(Action::ChooseImage)),
+                widget::Emphasis::Submit,
+            ),
+        });
     }
+
+    rows.push(widget::field(
+        Text::ProfileDisplayName,
+        &state.naming,
+        None,
+        |typed| Message::SettingsAction(Action::Typed(typed)),
+        match read_only {
+            true => Message::Unchanged,
+            false => Message::SettingsAction(Action::SaveName),
+        },
+        widget::Secrecy::Shown,
+    ));
 
     if !read_only {
-        shown = shown
-            .push(
-                button(prose(
-                    strings::lookup(Text::ProfileImageChoose),
-                    typeface::BODY,
-                ))
-                .style(style::raised)
-                .on_press(Message::SettingsAction(Action::ChooseImage)),
-            )
-            .push(
-                button(prose(
-                    strings::lookup(Text::UsersImageRemove),
-                    typeface::BODY,
-                ))
-                .style(style::raised)
-                .on_press(Message::SettingsAction(Action::Ask(
-                    crate::screen::confirm::Pending::of(
-                        crate::screen::confirm::Destructive::RemoveUserImage { id: state.id },
-                        state.name.clone(),
-                    ),
-                ))),
-            );
+        rows.push(widget::control(
+            strings::lookup(Text::ProfileSaveName),
+            Some(Message::SettingsAction(Action::SaveName)),
+            widget::Emphasis::Submit,
+        ));
     }
 
-    shown = shown
-        .push(prose(
-            strings::lookup(Text::ProfileDisplayName),
-            typeface::BODY,
-        ))
-        .push(
-            text_input("", &state.naming)
-                .style(style::input)
-                .on_input(|typed| Message::SettingsAction(Action::Typed(typed))),
-        );
-
-    if !read_only {
-        shown = shown.push(
-            button(prose(
-                strings::lookup(Text::ProfileSaveName),
-                typeface::BODY,
-            ))
-            .style(style::submit)
-            .on_press(Message::SettingsAction(Action::SaveName)),
-        );
-    }
-
-    shown.into()
+    std::iter::once(widget::fields(Text::SettingsProfile, rows))
+        .chain(super::password::sections(&state.password, read_only))
+        .collect()
 }
 
 fn image_key(state: &State) -> crate::images::Key {

@@ -130,7 +130,7 @@ fn naming<'a>(held: &'a str, label: Text, apply: Message) -> Element<'a, Message
             .style(style::submit)
             .on_press(apply),
     ]
-    .spacing(style::drawn(space::GUTTER.drawn()))
+    .spacing(style::drawn(space::CONTROL_GAP.drawn()))
     .align_y(iced::Alignment::Center)
     .into()
 }
@@ -141,7 +141,7 @@ pub fn view_listed<'a>(
     images: &'a Cache,
     read_only: bool,
 ) -> Element<'a, Message> {
-    let mut page = column![].spacing(style::drawn(space::GUTTER.drawn()));
+    let mut page = column![].spacing(style::drawn(space::SECTION_GAP.drawn()));
     if !read_only {
         page = page.push(naming(
             &state.naming,
@@ -162,7 +162,7 @@ pub fn view<'a>(
     let Some(id) = state.collection.id else {
         return column![].into();
     };
-    let mut page = column![].spacing(style::drawn(space::GUTTER.drawn()));
+    let mut page = column![].spacing(style::drawn(space::SECTION_GAP.drawn()));
 
     if !read_only {
         page = page
@@ -192,7 +192,7 @@ pub fn view<'a>(
                     .style(style::raised)
                     .on_press(Message::CollectionAction(Action::Delete { id })),
                 ]
-                .spacing(style::drawn(space::GUTTER.drawn())),
+                .spacing(style::drawn(space::CONTROL_GAP.drawn())),
             );
     }
 

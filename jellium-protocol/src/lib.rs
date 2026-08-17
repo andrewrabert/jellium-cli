@@ -446,7 +446,8 @@ pub struct ActivityEntry {
     pub severity: String,
     /// The user the entry names, absent when it names none.
     pub user: Option<Uuid>,
-    pub user_name: String,
+    /// The item the entry names, absent when it names none.
+    pub item: Option<Uuid>,
     /// Milliseconds since the unix epoch on the local server's clock.
     pub at: i64,
 }

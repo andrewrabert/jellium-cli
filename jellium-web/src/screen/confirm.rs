@@ -99,9 +99,10 @@ pub enum Destructive {
     },
     DeleteDevice {
         id: String,
-        /// True for this installation's own device, whose deletion ends this
-        /// session.
-        own: bool,
+    },
+    /// This installation's own device, whose deletion ends this session.
+    DeleteOwnDevice {
+        id: String,
     },
     RevokeKey {
         key: String,
@@ -132,7 +133,7 @@ impl Destructive {
     /// What confirming this action takes: an object whose loss cannot be
     /// undone by re-adding it demands its name typed, and everything else a
     /// second press.
-    fn tier(&self) -> Tier {
+    pub fn tier(&self) -> Tier {
         match self {
             Destructive::DeleteUser { .. }
             | Destructive::DeleteLibrary { .. }
@@ -143,6 +144,7 @@ impl Destructive {
             | Destructive::AddRepository { .. }
             | Destructive::RemoveRepository { .. }
             | Destructive::DeleteDevice { .. }
+            | Destructive::DeleteOwnDevice { .. }
             | Destructive::RevokeKey { .. }
             | Destructive::DeleteTuner { .. }
             | Destructive::DeleteProvider { .. }
@@ -153,6 +155,42 @@ impl Destructive {
             | Destructive::Shutdown => Tier::Press,
         }
     }
+
+    /// The delete face where the action removes its object, the submit face
+    /// everywhere else.
+    // reference: confirm-primary
+    pub fn consequence(&self) -> Consequence {
+        match self {
+            Destructive::DeleteUser { .. }
+            | Destructive::DeleteLibrary { .. }
+            | Destructive::DeleteItem { .. }
+            | Destructive::DeletePath { .. }
+            | Destructive::RemoveRepository { .. }
+            | Destructive::DeleteDevice { .. }
+            | Destructive::DeleteOwnDevice { .. }
+            | Destructive::RevokeKey { .. }
+            | Destructive::DeleteTuner { .. }
+            | Destructive::DeleteProvider { .. }
+            | Destructive::RemoveUserImage { .. }
+            | Destructive::UninstallPlugin { .. } => Consequence::Removes,
+            Destructive::StopTask { .. }
+            | Destructive::InstallPackage { .. }
+            | Destructive::AddRepository { .. }
+            | Destructive::AuthorizeQuickConnect { .. }
+            | Destructive::Restart
+            | Destructive::Shutdown => Consequence::Proceeds,
+        }
+    }
+}
+
+/// What confirming an action does to its object, which is which of the
+/// reference's two faces the confirming control carries.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Consequence {
+    /// The object is removed.
+    Removes,
+    /// The object stands.
+    Proceeds,
 }
 
 /// One destructive action, its object and what confirming it takes.
@@ -162,17 +200,14 @@ pub struct Pending {
     /// The object the sentence names, and what `Tier::Typed` must be matched
     /// against.
     pub object: String,
-    pub tier: Tier,
     /// What has been typed so far.
     pub typed: String,
 }
 
 impl Pending {
-    /// The action `destructive` is asked about as, at the tier its object
-    /// demands.
+    /// The action `destructive` is asked about as.
     pub fn of(destructive: Destructive, object: String) -> Pending {
         Pending {
-            tier: destructive.tier(),
             action: destructive,
             object,
             typed: String::new(),
@@ -181,7 +216,7 @@ impl Pending {
 
     /// True once the confirmation is satisfied and the action may proceed.
     pub fn ready(&self) -> bool {
-        match self.tier {
+        match self.action.tier() {
             Tier::Press => true,
             Tier::Typed => self.typed == self.object,
         }
@@ -217,14 +252,12 @@ impl Pending {
             Destructive::RemoveRepository { .. } => {
                 strings::format(Text::ConfirmRemoveRepository, &[&self.object])
             }
-            Destructive::DeleteDevice { own, .. } => strings::format(
-                if *own {
-                    Text::ConfirmDeleteOwnDevice
-                } else {
-                    Text::ConfirmDeleteDevice
-                },
-                &[&self.object],
-            ),
+            Destructive::DeleteDevice { .. } => {
+                strings::format(Text::ConfirmDeleteDevice, &[&self.object])
+            }
+            Destructive::DeleteOwnDevice { .. } => {
+                strings::format(Text::ConfirmDeleteOwnDevice, &[&self.object])
+            }
             Destructive::RevokeKey { .. } => {
                 strings::format(Text::ConfirmRevokeKey, &[&self.object])
             }
@@ -254,9 +287,9 @@ impl Pending {
 /// action.
 pub fn view<'a>(pending: &'a Pending, region: Region) -> Element<'a, Message> {
     let mut shown = column![prose(pending.sentence(), typeface::BODY)]
-        .spacing(style::drawn(space::GUTTER.drawn()));
+        .spacing(style::drawn(space::BLOCK_GAP.drawn()));
 
-    if pending.tier == Tier::Typed {
+    if pending.action.tier() == Tier::Typed {
         shown = shown.push(
             text_input(strings::lookup(Text::ConfirmTypeName), &pending.typed)
                 .style(style::input)
@@ -264,8 +297,13 @@ pub fn view<'a>(pending: &'a Pending, region: Region) -> Element<'a, Message> {
         );
     }
 
+    let face: fn(&iced::Theme, iced::widget::button::Status) -> iced::widget::button::Style =
+        match pending.action.consequence() {
+            Consequence::Removes => style::destructive,
+            Consequence::Proceeds => style::submit,
+        };
     let mut proceed =
-        button(prose(strings::lookup(Text::ConfirmProceed), typeface::BODY)).style(style::submit);
+        button(prose(strings::lookup(Text::ConfirmProceed), typeface::BODY)).style(face);
     if pending.ready() {
         proceed = proceed.on_press(region.confirm());
     }
@@ -278,7 +316,7 @@ pub fn view<'a>(pending: &'a Pending, region: Region) -> Element<'a, Message> {
                     .style(style::raised)
                     .on_press(region.close()),
             ]
-            .spacing(style::drawn(space::GUTTER.drawn())),
+            .spacing(style::drawn(space::CONTROL_GAP.drawn())),
         )
         .into()
 }

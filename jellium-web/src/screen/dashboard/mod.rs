@@ -4,6 +4,7 @@
 pub mod activity;
 pub mod catalog;
 pub mod devices;
+pub mod frame;
 pub mod home;
 pub mod keys;
 pub mod libraries;
@@ -18,14 +19,14 @@ pub mod users;
 
 use std::rc::Rc;
 
-use iced::widget::{button, column, row};
-use iced::{Element, Fill, Task};
+use iced::widget::{column, row};
+use iced::{Element, Task};
 use uuid::Uuid;
 
 use crate::api::Api;
 use crate::app::{Message, Signed};
 use crate::error::{Answer, Operation, Wrote};
-use crate::style::{self, Drawn, Viewport, space, typeface};
+use crate::style::{self, Viewport, space, typeface};
 use crate::text::{self as strings, Text};
 use crate::widget::prose;
 
@@ -42,16 +43,6 @@ pub enum Section {
 }
 
 impl Section {
-    pub const ALL: [Section; 7] = [
-        Section::General,
-        Section::Networking,
-        Section::Branding,
-        Section::Resume,
-        Section::Streaming,
-        Section::Transcoding,
-        Section::Trickplay,
-    ];
-
     pub fn label(self) -> Text {
         match self {
             Section::General => Text::DashboardSettings,
@@ -261,12 +252,7 @@ impl LiveTvTab {
 }
 
 /// One control of a form, drawn by what its field edits.
-pub fn control<'a>(
-    field: jellium_model::form::Field,
-    held: String,
-    policy: bool,
-) -> Element<'a, Message> {
-    let _ = policy;
+pub fn control<'a>(field: jellium_model::form::Field, held: String) -> Element<'a, Message> {
     match field {
         jellium_model::form::Field::Flag { key } => Element::from(
             row![
@@ -275,7 +261,7 @@ pub fn control<'a>(
                 }),
                 prose(key, typeface::BODY),
             ]
-            .spacing(style::drawn(space::GUTTER.drawn()))
+            .spacing(style::drawn(space::CONTROL_GAP.drawn()))
             .align_y(iced::Center),
         ),
         _ => Element::from(
@@ -287,7 +273,7 @@ pub fn control<'a>(
                         Message::DashboardAction(Action::Edited(field, held))
                     }),
             ]
-            .spacing(style::drawn(space::GUTTER.drawn())),
+            .spacing(style::drawn(space::BLOCK_GAP.drawn())),
         ),
     }
 }
@@ -317,26 +303,66 @@ pub enum Screen {
 }
 
 impl Screen {
-    /// The navigation column's entries, in the order it shows them.
-    pub const COLUMN: [Screen; 13] = [
-        Screen::Home,
-        Screen::Settings {
-            section: Section::General,
-        },
-        Screen::Users,
-        Screen::Libraries,
-        Screen::Tasks,
-        Screen::Logs,
-        Screen::Activity,
-        Screen::Plugins,
-        Screen::Catalog,
-        Screen::Repositories,
-        Screen::Devices,
-        Screen::Keys,
-        Screen::LiveTv {
-            tab: LiveTvTab::Tuners,
-        },
-    ];
+    /// The drawer entry this screen stands under, which is the entry the
+    /// drawer draws as shown while this screen is open.
+    // reference: drawer-server
+    // reference: drawer-devices
+    // reference: drawer-livetv
+    // reference: drawer-plugins
+    // reference: drawer-advanced
+    pub fn under(&self) -> Screen {
+        match self {
+            Screen::User { .. } | Screen::UserNew => Screen::Users,
+            Screen::Library { .. } => Screen::Libraries,
+            Screen::Task { .. } => Screen::Tasks,
+            Screen::Log { .. } => Screen::Logs,
+            Screen::Catalog | Screen::Repositories | Screen::PluginPage { .. } => Screen::Plugins,
+            Screen::LiveTv {
+                tab: LiveTvTab::Providers | LiveTvTab::Mapping,
+            } => Screen::LiveTv {
+                tab: LiveTvTab::Tuners,
+            },
+            other => other.clone(),
+        }
+    }
+
+    /// The glyph the drawer stands behind this screen's entry.
+    // reference: drawer-server
+    // reference: drawer-devices
+    // reference: drawer-livetv
+    // reference: drawer-plugins
+    // reference: drawer-advanced
+    pub fn glyph(&self) -> crate::icon::Icon {
+        use crate::icon::Icon;
+        match self {
+            Screen::Home => Icon::Dashboard,
+            Screen::Settings {
+                section: Section::General,
+            } => Icon::Settings,
+            Screen::Settings {
+                section: Section::Branding,
+            } => Icon::Palette,
+            Screen::Settings {
+                section: Section::Networking,
+            } => Icon::Lan,
+            Screen::Settings { .. } => Icon::PlayCircle,
+            Screen::Users | Screen::User { .. } | Screen::UserNew => Icon::People,
+            Screen::Libraries | Screen::Library { .. } => Icon::LibraryAdd,
+            Screen::Devices => Icon::Devices,
+            Screen::Activity => Icon::Analytics,
+            Screen::LiveTv {
+                tab: LiveTvTab::Dvr,
+            } => Icon::Dvr,
+            Screen::LiveTv { .. } => Icon::LiveTv,
+            Screen::Plugins
+            | Screen::Catalog
+            | Screen::Repositories
+            | Screen::PluginPage { .. } => Icon::Extension,
+            Screen::Keys => Icon::VpnKey,
+            Screen::Logs | Screen::Log { .. } => Icon::Article,
+            Screen::Tasks | Screen::Task { .. } => Icon::Schedule,
+        }
+    }
 
     pub fn label(&self) -> Text {
         match self {
@@ -351,7 +377,7 @@ impl Screen {
             Screen::Repositories => Text::RepositoriesTitle,
             Screen::Devices => Text::DevicesTitle,
             Screen::Keys => Text::KeysTitle,
-            Screen::LiveTv { .. } => Text::TunersTitle,
+            Screen::LiveTv { tab } => tab.label(),
             Screen::Plugins => Text::PluginsTitle,
             Screen::PluginPage { .. } => Text::PluginsConfigurationPages,
         }
@@ -438,6 +464,9 @@ pub struct State {
     pub body: Body,
     /// The destructive action awaiting its confirmation.
     pub confirming: Option<crate::screen::confirm::Pending>,
+    /// The drawer groups standing over what they hold, seeded with the group
+    /// the shown screen stands in.
+    pub opened: std::collections::BTreeSet<frame::Group>,
 }
 
 impl State {
@@ -464,6 +493,7 @@ impl State {
             Loaded::Page(opened) => Body::Page(Box::new(page::mounted(opened))),
         };
         State {
+            opened: frame::Group::of(&screen).into_iter().collect(),
             screen,
             body,
             confirming: None,
@@ -554,6 +584,8 @@ pub enum Written {
 #[derive(Debug, Clone, PartialEq)]
 pub enum Action {
     Open(Screen),
+    /// Opens the drawer group, or closes it where it is already open.
+    Opened(frame::Group),
     /// Browses the server's own filesystem at `path`, which is how a media
     /// path is chosen rather than typed.
     Browse(String),
@@ -579,7 +611,7 @@ pub enum Action {
     Ask(crate::screen::confirm::Pending),
     Typed(String),
     /// Chooses what a new library is created as.
-    ContentType(crate::widget::Choice),
+    ContentType(crate::widget::Choice<String>),
     Close,
     Confirm,
     /// Runs one write that is not destructive.
@@ -588,13 +620,14 @@ pub enum Action {
     Bridged(String),
 }
 
-/// Loads the screen `screen` names, against a page `height` pixels tall.
+/// Loads the screen `screen` names, against the page `viewport` measures.
 pub async fn load(
     api: Rc<Api>,
     screen: Screen,
-    height: Drawn,
+    viewport: Viewport,
     device: String,
 ) -> Answer<(Screen, Loaded)> {
+    let height = viewport.canvas().height();
     Answer::of(async {
         let loaded = match screen.clone() {
             Screen::Home => Loaded::Home(Box::new(home::load(api).await.bubbled()?)),
@@ -617,9 +650,9 @@ pub async fn load(
             Screen::Log { name } => {
                 Loaded::Log(Box::new(logs::open(api, name, height).await.bubbled()?))
             }
-            Screen::Activity => {
-                Loaded::Activity(Box::new(activity::load(api, None, height).await.bubbled()?))
-            }
+            Screen::Activity => Loaded::Activity(Box::new(
+                activity::load(api, None, viewport).await.bubbled()?,
+            )),
             Screen::Plugins => Loaded::Plugins(Box::new(plugins::load(api).await.bubbled()?)),
             Screen::Catalog => {
                 Loaded::Catalog(Box::new(catalog::load(api, height).await.bubbled()?))
@@ -628,9 +661,9 @@ pub async fn load(
                 Loaded::Repositories(Box::new(repositories::load(api).await.bubbled()?))
             }
             Screen::Devices => Loaded::Devices(Box::new(
-                devices::load(api, device, height).await.bubbled()?,
+                devices::load(api, device, viewport).await.bubbled()?,
             )),
-            Screen::Keys => Loaded::Keys(Box::new(keys::load(api).await.bubbled()?)),
+            Screen::Keys => Loaded::Keys(Box::new(keys::load(api, viewport).await.bubbled()?)),
             Screen::LiveTv { tab } => {
                 Loaded::LiveTv(Box::new(livetv::load(api, tab).await.bubbled()?))
             }
@@ -643,84 +676,89 @@ pub async fn load(
     .await
 }
 
-/// The navigation column beside the screen shown, and the read-only indicator
-/// above both.
-pub fn view<'a>(state: &'a State, session: &'a jellium_protocol::Session) -> Element<'a, Message> {
-    let mut column_of = column![].spacing(style::drawn(space::GUTTER.drawn()));
-    for entry in Screen::COLUMN {
-        let shown = state.screen == entry;
-        let control =
-            button(prose(strings::lookup(entry.label()), typeface::BODY)).style(style::flat);
-        column_of = column_of.push(if shown {
-            control
-        } else {
-            control.on_press(Message::DashboardAction(Action::Open(entry)))
-        });
-    }
-
-    let body: Element<'a, Message> = match state.confirming.as_ref() {
-        Some(pending) => {
-            crate::screen::confirm::view(pending, crate::screen::confirm::Region::Dashboard)
-        }
+/// The screen shown inside the dashboard's own page frame.
+pub fn view<'a>(
+    state: &'a State,
+    session: &'a jellium_protocol::Session,
+    viewport: Viewport,
+) -> Element<'a, Message> {
+    let filling: frame::Filling<'a> = match state.confirming.as_ref() {
+        Some(pending) => frame::Filling::Stacked(vec![crate::screen::confirm::view(
+            pending,
+            crate::screen::confirm::Region::Dashboard,
+        )]),
         None => match &state.body {
-            Body::Home(held) => home::view(held, session.read_only),
-            Body::Settings(held) => settings::view(held, session.read_only),
-            Body::Users(held) => match state.screen {
+            Body::Home(held) => frame::Filling::Stacked(home::view(held, session.read_only)),
+            Body::Settings(held) => {
+                frame::Filling::Stacked(settings::view(held, session.read_only))
+            }
+            Body::Users(held) => frame::Filling::Stacked(match state.screen {
                 Screen::UserNew => users::new(held),
                 _ => users::view(held, session.read_only, session.user_id),
-            },
-            Body::User(held) => users::one(held, session.read_only, session.user_id),
-            Body::Libraries(held) => libraries::view(held, session.read_only),
-            Body::Library(held) => libraries::one(held, session.read_only),
-            Body::Tasks(held) => tasks::view(held, session.read_only),
-            Body::Task(held) => tasks::one(held, session.read_only),
-            Body::Logs(held) => logs::view(held),
-            Body::Log(held) => logs::viewer(held),
-            Body::Activity(held) => activity::view(held),
-            Body::Catalog(held) => catalog::view(held, session.read_only),
-            Body::Repositories(held) => repositories::view(held, session.read_only),
+            }),
+            Body::User(held) => {
+                frame::Filling::Stacked(users::one(held, session.read_only, session.user_id))
+            }
+            Body::Libraries(held) => {
+                frame::Filling::Stacked(libraries::view(held, session.read_only))
+            }
+            Body::Library(held) => frame::Filling::Stacked(libraries::one(held, session.read_only)),
+            Body::Tasks(held) => frame::Filling::Stacked(tasks::view(held, session.read_only)),
+            Body::Task(held) => frame::Filling::Stacked(tasks::one(held, session.read_only)),
+            Body::Logs(held) => frame::Filling::Stacked(logs::view(held)),
+            Body::Log(held) => frame::Filling::Stacked(logs::viewer(held)),
+            Body::Activity(held) => activity::view(held, viewport.band()),
+            Body::Catalog(held) => frame::Filling::Stacked(catalog::view(held, session.read_only)),
+            Body::Repositories(held) => {
+                frame::Filling::Stacked(repositories::view(held, session.read_only))
+            }
             Body::Devices(held) => devices::view(held, session.read_only),
             Body::Keys(held) => keys::view(held, session.read_only),
-            Body::LiveTv(held) => livetv::view(held, session.read_only),
-            Body::Plugins(held) => plugins::view(held, session.read_only),
-            Body::Page(held) => shown_page(held),
+            Body::LiveTv(held) => frame::Filling::Stacked(livetv::view(held, session.read_only)),
+            Body::Plugins(held) => frame::Filling::Stacked(plugins::view(held, session.read_only)),
+            Body::Page(held) => frame::Filling::Stacked(shown_page(held)),
         },
     };
 
-    let mut page = column![].spacing(style::drawn(space::GUTTER.drawn()));
-    if session.read_only {
-        page = page.push(crate::widget::banner(
-            strings::lookup(Text::DashboardReadOnly).to_string(),
-        ));
-    }
-    page = page.push(
-        row![column_of, body]
-            .spacing(style::drawn(space::GUTTER.drawn()))
-            .width(Fill)
-            .height(Fill),
-    );
-    page.width(Fill).height(Fill).into()
+    frame::frame(
+        &state.screen,
+        &state.opened,
+        strings::lookup(state.screen.label()),
+        filling,
+        viewport,
+    )
 }
 
 /// What stands beside a configuration page: the frame occupies the viewport
-/// itself, so only the page's name, its busy state and its notice are drawn.
-fn shown_page<'a>(held: &'a page::State) -> Element<'a, Message> {
-    let mut shown = column![prose(held.name.clone(), typeface::BODY)]
-        .spacing(style::drawn(space::GUTTER.drawn()));
+/// itself, so only the page's name and its busy state are drawn.
+fn shown_page<'a>(held: &'a page::State) -> Vec<Element<'a, Message>> {
+    let mut shown = vec![prose(held.name.clone(), typeface::BODY)];
     if held.busy {
-        shown = shown.push(prose(strings::lookup(Text::StatusLoading), typeface::BODY));
+        shown.push(prose(strings::lookup(Text::StatusLoading), typeface::BODY));
     }
-    if let Some(notice) = held.notice.as_ref() {
-        shown = shown.push(crate::widget::banner(notice.clone()));
-    }
-    shown.into()
+    shown
 }
 
-/// The images the dashboard renders, all of them relayed from the local
-/// server's own origin.
-pub fn images(state: &State) -> std::collections::HashSet<crate::images::Key> {
-    let _ = state;
-    std::collections::HashSet::new()
+/// The write that deletes one device, told apart on its way back by the
+/// operation it reports under.
+fn device_deleted(
+    api: std::rc::Rc<crate::api::Api>,
+    operation: Operation,
+    id: String,
+    object: String,
+) -> Task<Message> {
+    Task::perform(
+        async move { api.delete_device(&id).await },
+        move |outcome| {
+            Message::DashboardWrote(
+                Wrote {
+                    operation,
+                    object: object.clone(),
+                },
+                outcome,
+            )
+        },
+    )
 }
 
 /// Applies a control.
@@ -731,6 +769,14 @@ pub fn act(signed: &mut Signed, action: Action, viewport: Viewport) -> Task<Mess
         Action::Open(screen) => Task::done(Message::Navigated(crate::route::Route::Dashboard {
             screen,
         })),
+        Action::Opened(group) => {
+            if let Some(state) = shown_mut(signed)
+                && !state.opened.remove(&group)
+            {
+                state.opened.insert(group);
+            }
+            Task::none()
+        }
         Action::Edited(field, value) => {
             match shown_mut(signed).map(|state| &mut state.body) {
                 Some(Body::Settings(held)) => {
@@ -766,10 +812,9 @@ pub fn act(signed: &mut Signed, action: Action, viewport: Viewport) -> Task<Mess
         }
         Action::Filtered(with_user) => {
             let api = signed.api.clone();
-            let height = viewport.canvas().height();
             Task::perform(
                 async move {
-                    activity::load(api, with_user, height)
+                    activity::load(api, with_user, viewport)
                         .await
                         .map(|state| (Screen::Activity, Loaded::Activity(Box::new(state))))
                 },
@@ -1113,20 +1158,11 @@ pub fn act(signed: &mut Signed, action: Action, viewport: Viewport) -> Task<Mess
                         },
                     )
                 }
-                crate::screen::confirm::Destructive::DeleteDevice { id, own } => {
-                    signed.own_device_deleted = own;
-                    Task::perform(
-                        async move { api.delete_device(&id).await },
-                        move |outcome| {
-                            Message::DashboardWrote(
-                                Wrote {
-                                    operation: Operation::DeviceDelete,
-                                    object: object.clone(),
-                                },
-                                outcome,
-                            )
-                        },
-                    )
+                crate::screen::confirm::Destructive::DeleteDevice { id } => {
+                    device_deleted(api, Operation::DeviceDelete, id, object)
+                }
+                crate::screen::confirm::Destructive::DeleteOwnDevice { id } => {
+                    device_deleted(api, Operation::OwnDeviceDelete, id, object)
                 }
                 crate::screen::confirm::Destructive::RevokeKey { key } => {
                     Task::perform(async move { api.revoke_key(&key).await }, move |outcome| {
@@ -1511,7 +1547,7 @@ pub fn act(signed: &mut Signed, action: Action, viewport: Viewport) -> Task<Mess
 /// The dashboard shown now, and nothing when another screen is.
 fn shown_mut(signed: &mut Signed) -> Option<&mut State> {
     match &mut signed.view {
-        crate::app::View::Dashboard(state) => Some(state),
+        crate::app::View::Dashboard(state) => Some(state.as_mut()),
         _ => None,
     }
 }
@@ -1692,11 +1728,10 @@ pub fn lineups(signed: &mut Signed, found: Vec<jellyfin_api::types::NameIdPair>)
 /// same two bounds the settings region applies.
 pub fn chosen(signed: &mut Signed, chosen: &crate::overlay::Chosen) -> Task<Message> {
     let refused = jellium_model::upload::refused(&chosen.mime, chosen.size);
-    let crate::app::View::Dashboard(State {
-        body: Body::User(user),
-        ..
-    }) = &mut signed.view
-    else {
+    let crate::app::View::Dashboard(state) = &mut signed.view else {
+        return Task::none();
+    };
+    let Body::User(user) = &mut state.body else {
         return Task::none();
     };
     if let Some(refused) = &refused {

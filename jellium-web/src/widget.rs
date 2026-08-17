@@ -1,14 +1,14 @@
 mod line;
+pub mod list;
+pub mod table;
 
 use std::borrow::Cow;
 use std::collections::HashSet;
 
-pub use line::Line;
-
 use iced::widget::{Space, button, column, container, grid, image, row, scrollable, text};
 use iced::{Element, Fill, Length};
 use jellium_model::item;
-use jellium_protocol::{Notice, Session, SyncAccess};
+use jellium_protocol::{Session, SyncAccess};
 use jellyfin_api::types::BaseItemDto;
 
 use crate::app::Message;
@@ -26,20 +26,31 @@ use crate::text::{self as strings, Text};
 /// client draws passes here, so the coverage it needs is observed once. A
 /// sentence out of the string table arrives borrowed and is drawn as it lies.
 pub fn prose<'a>(content: impl Into<Cow<'a, str>>, size: style::Length) -> Element<'a, Message> {
-    tinted(content, size, iced::widget::text::default)
+    tinted(
+        content,
+        size,
+        typeface::Weight::Regular,
+        typeface::LINE_HEIGHT,
+        iced::widget::text::default,
+    )
 }
 
-/// Wrapping text in one of the scheme's own colors, which is what a field's
-/// label and its description are drawn in.
+/// Wrapping text in one of the scheme's own colors, in the face and the line
+/// box it is set in, which is what a field's label, its description and a tab's
+/// own lettering are drawn in.
 fn tinted<'a>(
     content: impl Into<Cow<'a, str>>,
     size: style::Length,
+    weight: typeface::Weight,
+    leading: typeface::Leading,
     color: fn(&iced::Theme) -> iced::widget::text::Style,
 ) -> Element<'a, Message> {
     let content = content.into();
-    crate::fonts::observed(&content, typeface::Weight::Regular);
+    crate::fonts::observed(&content, weight);
     text(content)
         .size(style::drawn(size.drawn()))
+        .font(style::font(weight))
+        .line_height(style::leading(leading))
         .style(color)
         .into()
 }
@@ -50,20 +61,22 @@ pub fn line<'a>(
     content: impl Into<Cow<'a, str>>,
     size: style::Length,
     weight: typeface::Weight,
+    leading: typeface::Leading,
 ) -> Element<'a, Message> {
     let content = content.into();
     crate::fonts::observed(&content, weight);
-    Line::new(content.into_owned(), size, weight).into()
+    line::Line::new(content.into_owned(), size, weight, leading).into()
 }
 
-/// One option a picker offers: what it shows, and the value a write sends.
+/// One option a control offers: what it reads as, and the value choosing it
+/// carries.
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Choice {
+pub struct Choice<T> {
     pub label: String,
-    pub value: String,
+    pub value: T,
 }
 
-impl std::fmt::Display for Choice {
+impl<T> std::fmt::Display for Choice<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.write_str(&self.label)
     }
@@ -162,14 +175,20 @@ fn boxed<'a>(
         return column![drawn_face].width(width).into();
     }
 
-    let mut written = column![line(name, typeface::BODY, typeface::Weight::Regular)]
-        .align_x(iced::Center)
-        .width(width);
+    let mut written = column![line(
+        name,
+        typeface::BODY,
+        typeface::Weight::Regular,
+        typeface::LINE_HEIGHT
+    )]
+    .align_x(iced::Center)
+    .width(width);
     if let Some(subtitle) = subtitle.filter(|_| footer == card::Footer::NameAndSubtitle) {
         written = written.push(line(
             subtitle,
             typeface::SECONDARY,
             typeface::Weight::Regular,
+            typeface::LINE_HEIGHT,
         ));
     }
 
@@ -253,23 +272,19 @@ pub fn card<'a>(
 pub fn picker<'a>(
     card: card::Card,
     room: Room,
-    cards: Vec<Element<'a, Message>>,
+    cards: impl IntoIterator<Item = Element<'a, Message>>,
 ) -> Element<'a, Message> {
     let across = card.across(room).count();
-    let mut rows: Vec<Vec<Element<'a, Message>>> = Vec::new();
-    for held in cards {
-        if rows.last().is_none_or(|last| last.len() == across) {
-            rows.push(Vec::new());
-        }
-        rows.last_mut()
-            .expect("a row stands open once one is pushed")
-            .push(held);
-    }
     let gutter = style::drawn(space::GUTTER.drawn());
-    column(
-        rows.into_iter()
-            .map(|held| container(row(held).spacing(gutter)).center_x(Fill).into()),
-    )
+    let mut cards = cards.into_iter().peekable();
+    column(std::iter::from_fn(move || {
+        cards.peek()?;
+        Some(
+            container(row(cards.by_ref().take(across)).spacing(gutter))
+                .center_x(Fill)
+                .into(),
+        )
+    }))
     .spacing(gutter)
     .into()
 }
@@ -281,23 +296,15 @@ pub fn picker<'a>(
 pub fn wall<'a>(
     card: card::Card,
     room: Room,
-    cards: Vec<Element<'a, Message>>,
+    cards: impl IntoIterator<Item = Element<'a, Message>>,
 ) -> Element<'a, Message> {
     let across = card.across(room).count();
-    let mut rows: Vec<Vec<Element<'a, Message>>> = Vec::new();
-    for held in cards {
-        if rows.last().is_none_or(|last| last.len() == across) {
-            rows.push(Vec::new());
-        }
-        rows.last_mut()
-            .expect("a row stands open once one is pushed")
-            .push(held);
-    }
     let gutter = style::drawn(space::GUTTER.drawn());
-    column(
-        rows.into_iter()
-            .map(|held| row(held).spacing(gutter).into()),
-    )
+    let mut cards = cards.into_iter().peekable();
+    column(std::iter::from_fn(move || {
+        cards.peek()?;
+        Some(row(cards.by_ref().take(across)).spacing(gutter).into())
+    }))
     .spacing(gutter)
     .into()
 }
@@ -426,13 +433,10 @@ pub fn rail<'a>(
     images: &'a Cache,
     overflow: Overflow,
 ) -> Element<'a, Message> {
-    scrollable(
+    sideways(
         row(cards(card, items, room, images, overflow))
             .spacing(style::drawn(space::GUTTER.drawn())),
     )
-    .direction(scrollable::Direction::Horizontal(
-        scrollable::Scrollbar::default(),
-    ))
     .height(style::drawn(card.row(
         room,
         card::Footer::NameAndSubtitle,
@@ -441,19 +445,420 @@ pub fn rail<'a>(
     .into()
 }
 
-/// A section's title over its body, the title padded above and below by the two
-/// lengths `.sectionTitleContainer-cards` gives it.
+/// Whether a navigation is showing what one of its entries names, and what
+/// pressing it sends where it is not. This is the cap on a `Message`: a
+/// payload that outgrows the unit variant beside it stops the build, and
+/// crosses behind a `Box` instead.
+#[derive(Debug, Clone)]
+pub enum Showing {
+    Shown,
+    Offered(Message),
+}
+
+/// One entry of a navigation: what it is labelled, and whether the navigation
+/// is showing what it names.
+#[derive(Debug, Clone)]
+pub struct Entry {
+    pub label: Text,
+    pub showing: Showing,
+}
+
+/// What pressing an entry sends: what its `Showing` carries, and the press
+/// that changes nothing where the navigation is already showing what it names.
+fn pressed(showing: Showing) -> Message {
+    match showing {
+        Showing::Shown => Message::Unchanged,
+        Showing::Offered(press) => press,
+    }
+}
+
+/// The rail the reference's own scrollbar stands in, which is as wide as its
+/// scroller.
+// reference: scrollbar-size
+fn scrollbar() -> scrollable::Scrollbar {
+    let width = style::drawn(space::SCROLLBAR.drawn());
+    scrollable::Scrollbar::default()
+        .width(width)
+        .scroller_width(width)
+        .margin(style::drawn(Drawn::ZERO))
+}
+
+/// A surface scrolled up and down, on the rail the reference's scheme draws.
+// reference: scheme-scrollbar
+// reference: scrollbar-size
+pub fn scrolled<'a>(
+    content: impl Into<Element<'a, Message>>,
+) -> iced::widget::Scrollable<'a, Message> {
+    scrollable(content)
+        .direction(scrollable::Direction::Vertical(scrollbar()))
+        .style(style::scrollbar)
+}
+
+/// A surface scrolled sideways, on that same rail.
+// reference: scheme-scrollbar
+// reference: scrollbar-size
+pub fn sideways<'a>(
+    content: impl Into<Element<'a, Message>>,
+) -> iced::widget::Scrollable<'a, Message> {
+    scrollable(content)
+        .direction(scrollable::Direction::Horizontal(scrollbar()))
+        .style(style::scrollbar)
+}
+
+/// A surface scrolled sideways under no rail at all, which is what the
+/// reference's own tab strip scrolls under.
+// reference: tab-scroll
+pub fn hidden<'a>(
+    content: impl Into<Element<'a, Message>>,
+) -> iced::widget::Scrollable<'a, Message> {
+    let bare = scrollable::Scrollbar::default()
+        .width(style::drawn(Drawn::ZERO))
+        .scroller_width(style::drawn(Drawn::ZERO))
+        .margin(style::drawn(Drawn::ZERO));
+    scrollable(content).direction(scrollable::Direction::Horizontal(bare))
+}
+
+/// The reference's tab strip: its tabs shoulder to shoulder at the middle of
+/// the page, in the bolder face and the tighter line box the strip writes,
+/// scrolled sideways under no bar and no scroller where they do not fit.
+/// Every tab presses, including the one being shown, so every tab lights under
+/// the pointer the way the reference's own hover rule lights it.
+// reference: control-tab
+// reference: tab-strip
+// reference: tab-strip-centred
+// reference: tab-scroll
+pub fn tabs<'a>(
+    viewport: Viewport,
+    entries: impl IntoIterator<Item = Entry>,
+) -> Element<'a, Message> {
+    let strip = row(entries.into_iter().map(|entry| {
+        let face: fn(&iced::Theme, iced::widget::button::Status) -> iced::widget::button::Style =
+            match entry.showing {
+                Showing::Shown => style::tab_shown,
+                Showing::Offered(_) => style::tab_offered,
+            };
+        button(tinted(
+            strings::lookup(entry.label),
+            typeface::tab(viewport),
+            typeface::TAB_WEIGHT,
+            typeface::TAB_LEADING,
+            iced::widget::text::default,
+        ))
+        .padding(style::padding(space::tab_pad(viewport)))
+        .style(face)
+        .on_press(pressed(entry.showing))
+        .into()
+    }));
+    container(hidden(strip)).center_x(Fill).into()
+}
+
+/// The reference's `.localnav`: its controls abutting in one group at the
+/// page's leading edge, each laid over the one before it, the group's radius
+/// at its two ends, over the room the row reserves under itself.
+// reference: control-localnav
+// reference: control-localnav-group
+// reference: localnav-row
+pub fn localnav<'a>(entries: impl IntoIterator<Item = Entry>) -> Element<'a, Message> {
+    let mut entries = entries.into_iter().enumerate().peekable();
+    let group = row(std::iter::from_fn(move || {
+        let (at, entry) = entries.next()?;
+        let ends = match (at == 0, entries.peek().is_none()) {
+            (true, true) => style::Ends::Both,
+            (true, false) => style::Ends::Leading,
+            (false, true) => style::Ends::Trailing,
+            (false, false) => style::Ends::Neither,
+        };
+        let face: fn(
+            &iced::Theme,
+            iced::widget::button::Status,
+            style::Ends,
+        ) -> iced::widget::button::Style = match entry.showing {
+            Showing::Shown => style::localnav_shown,
+            Showing::Offered(_) => style::localnav_offered,
+        };
+        let label = strings::lookup(entry.label);
+        Some(
+            button(prose(label, typeface::BODY))
+                .padding(style::padding(space::LOCALNAV_PAD))
+                .style(move |theme, status| face(theme, status, ends))
+                .on_press(pressed(entry.showing))
+                .into(),
+        )
+    }))
+    .spacing(style::drawn(space::LOCALNAV_OVERLAP.drawn()));
+    column![
+        group,
+        Space::new().height(style::drawn(space::LOCALNAV_BOTTOM.drawn())),
+    ]
+    .into()
+}
+
+/// One segment of the top toolbar's group: what it reads, and whether the
+/// screen is already showing what it names.
+#[derive(Debug, Clone)]
+pub struct Segment {
+    pub label: Text,
+    pub showing: Showing,
+}
+
+/// MUI's `ToggleButtonGroup` at its small size: the segments in one bar, each
+/// laid over the edge of the one before it, the group's radius falling at its
+/// two ends alone.
+// reference: mui-toggle-button
+// reference: mui-toggle-group
+pub fn toggles<'a>(
+    segments: impl IntoIterator<Item = Segment>,
+    band: Band,
+) -> Element<'a, Message> {
+    let mut segments = segments.into_iter().enumerate().peekable();
+    row(std::iter::from_fn(move || {
+        let (at, segment) = segments.next()?;
+        let ends = match (at == 0, segments.peek().is_none()) {
+            (true, true) => style::Ends::Both,
+            (true, false) => style::Ends::Leading,
+            (false, true) => style::Ends::Trailing,
+            (false, false) => style::Ends::Neither,
+        };
+        let face: fn(
+            &iced::Theme,
+            iced::widget::button::Status,
+            style::Ends,
+            Band,
+        ) -> iced::widget::button::Style = match segment.showing {
+            Showing::Shown => style::toggle_shown,
+            Showing::Offered(_) => style::toggle_offered,
+        };
+        Some(
+            button(tinted(
+                strings::lookup(segment.label),
+                typeface::TOGGLE,
+                typeface::Weight::Regular,
+                typeface::TOGGLE_LEADING,
+                iced::widget::text::default,
+            ))
+            .padding(style::drawn(space::TOGGLE_PAD.drawn(band)))
+            .style(move |theme, status| face(theme, status, ends, band))
+            .on_press(pressed(segment.showing))
+            .into(),
+        )
+    }))
+    .spacing(style::drawn(space::TOGGLE_OVERLAP.drawn(band)))
+    .into()
+}
+
+/// The metadata manager's own page: its parts stacked in a sidebar with the
+/// one being shown in the accent, the rule down that sidebar's trailing edge,
+/// the gutter the reference leaves beside it and the part shown, at the two
+/// widths the reference writes; on a narrower page the part shown alone, and
+/// the parts alone while no part is shown.
+// reference: metadata-tree
+// reference: metadata-sidebar
+// reference: metadata-sidebar-wide
+// reference: metadata-sidebar-hidden
+// reference: metadata-sidebar-selected
+pub fn editor<'a>(
+    parts: impl IntoIterator<Item = Entry>,
+    body: Option<Element<'a, Message>>,
+    viewport: Viewport,
+) -> Element<'a, Message> {
+    let stacked: Element<'a, Message> = column(parts.into_iter().map(|entry| {
+        let face: fn(&iced::Theme, iced::widget::button::Status) -> iced::widget::button::Style =
+            match entry.showing {
+                Showing::Shown => style::tree_shown,
+                Showing::Offered(_) => style::tree_offered,
+            };
+        button(prose(strings::lookup(entry.label), typeface::BODY))
+            .padding(style::padding(space::LIST_ITEM_PAD))
+            .width(Fill)
+            .style(face)
+            .on_press(pressed(entry.showing))
+            .into()
+    }))
+    .into();
+
+    if !viewport.matches(space::EDITOR_BESIDE_AT) {
+        return match body {
+            Some(body) => body,
+            None => stacked,
+        };
+    }
+    let shown: Element<'a, Message> = match body {
+        Some(body) => body,
+        None => Space::new().into(),
+    };
+    let (sidebar, gap, content) = match viewport.matches(space::EDITOR_WIDE_AT) {
+        true => (
+            space::EDITOR_SIDEBAR_WIDE,
+            space::EDITOR_GAP_WIDE,
+            space::EDITOR_CONTENT_WIDE,
+        ),
+        false => (
+            space::EDITOR_SIDEBAR,
+            space::EDITOR_GAP,
+            space::EDITOR_CONTENT,
+        ),
+    };
+    row![
+        container(stacked).width(Length::FillPortion(portion(sidebar))),
+        container(Space::new())
+            .width(style::drawn(space::EDITOR_RULE.drawn(viewport.band())))
+            .height(Fill)
+            .style(style::editor_rule),
+        Space::new().width(Length::FillPortion(portion(gap))),
+        container(shown).width(Length::FillPortion(portion(content))),
+    ]
+    .into()
+}
+
+/// One destination the navigation drawer reaches: the glyph it stands behind,
+/// what it is labelled, and whether the drawer is showing what it names.
+#[derive(Debug, Clone)]
+pub struct Link {
+    pub glyph: Icon,
+    pub label: Text,
+    pub showing: Showing,
+}
+
+/// Whether a group is standing over the destinations it holds.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Held {
+    Shown,
+    Hidden,
+}
+
+/// One row of the navigation drawer: a destination, or the group of
+/// destinations standing under its own glyph and label.
+#[derive(Debug, Clone)]
+pub enum Rung {
+    Reached(Link),
+    Group {
+        glyph: Icon,
+        label: Text,
+        /// What pressing the group's own row sends, which opens it or closes
+        /// it.
+        press: Message,
+        showing: Held,
+        held: Vec<Link>,
+    },
+}
+
+/// One row of the drawer, its glyph in the slot the reference stands one in.
+fn rung<'a>(
+    glyph: Icon,
+    label: Text,
+    press: Message,
+    face: fn(&iced::Theme, iced::widget::button::Status) -> iced::widget::button::Style,
+    trailing: Option<Icon>,
+    band: Band,
+) -> Element<'a, Message> {
+    let mut parts = vec![
+        container(crate::icon::icon(glyph, typeface::LIST_ICON))
+            .width(style::drawn(space::DRAWER_GLYPH.drawn(band)))
+            .into(),
+        container(prose(strings::lookup(label), typeface::BODY))
+            .width(Fill)
+            .into(),
+    ];
+    if let Some(trailing) = trailing {
+        parts.push(crate::icon::icon(trailing, typeface::LIST_ICON));
+    }
+    button(row(parts))
+        .width(Fill)
+        .padding(style::inset(space::DRAWER_ENTRY_PAD, band))
+        .style(face)
+        .on_press(press)
+        .into()
+}
+
+/// The face a destination carries, which is the accent where the drawer is
+/// showing what it names.
+fn face(
+    showing: &Showing,
+) -> fn(&iced::Theme, iced::widget::button::Status) -> iced::widget::button::Style {
+    match showing {
+        Showing::Shown => style::drawer_shown,
+        Showing::Offered(_) => style::drawer_offered,
+    }
+}
+
+/// The reference's navigation drawer: its rows in one column on its own
+/// surface, the row whose screen is shown carrying the accent, a group
+/// carrying the glyph that says which way it opens, and the rows a group holds
+/// standing at the group's own inset while it is open.
+// reference: drawer-paper
+// reference: drawer-entry
+// reference: dashboard-list-icon-slot
+pub fn drawer<'a>(rungs: impl IntoIterator<Item = Rung>, band: Band) -> Element<'a, Message> {
+    let mut rows: Vec<Element<'a, Message>> = Vec::new();
+    for standing in rungs {
+        match standing {
+            Rung::Reached(link) => rows.push(rung(
+                link.glyph,
+                link.label,
+                pressed(link.showing.clone()),
+                face(&link.showing),
+                None,
+                band,
+            )),
+            Rung::Group {
+                glyph,
+                label,
+                press,
+                showing,
+                held,
+            } => {
+                let arrow = match showing {
+                    Held::Shown => Icon::ExpandLess,
+                    Held::Hidden => Icon::ExpandMore,
+                };
+                rows.push(rung(
+                    glyph,
+                    label,
+                    press,
+                    style::drawer_offered,
+                    Some(arrow),
+                    band,
+                ));
+                if showing == Held::Shown {
+                    for link in held {
+                        rows.push(
+                            container(rung(
+                                link.glyph,
+                                link.label,
+                                pressed(link.showing.clone()),
+                                face(&link.showing),
+                                None,
+                                band,
+                            ))
+                            .padding(
+                                iced::Padding::ZERO
+                                    .left(style::drawn(space::DRAWER_NESTED.drawn(band))),
+                            )
+                            .into(),
+                        );
+                    }
+                }
+            }
+        }
+    }
+    container(scrolled(column(rows)))
+        .width(style::drawn(space::DRAWER.drawn(band)))
+        .height(Fill)
+        .padding(iced::Padding::ZERO.bottom(style::drawn(space::DRAWER_BOTTOM.drawn())))
+        .style(style::drawer)
+        .into()
+}
+
+/// A section's title over its body, the title padded above by the one length
+/// `.sectionTitleContainer-cards` gives it.
 // reference: section-title-cards
 pub fn section<'a>(
     title: impl Into<Cow<'a, str>>,
     body: Element<'a, Message>,
 ) -> Element<'a, Message> {
     column![
-        container(prose(title, typeface::HEADING_2)).padding(
-            iced::Padding::ZERO
-                .top(style::drawn(space::SECTION_TITLE_TOP.drawn()))
-                .bottom(style::drawn(space::SECTION_TITLE_BOTTOM.drawn()))
-        ),
+        container(prose(title, typeface::HEADING_2))
+            .padding(iced::Padding::ZERO.top(style::drawn(space::SECTION_TITLE_TOP.drawn()))),
         body,
     ]
     .into()
@@ -468,7 +873,7 @@ pub fn posters<'a>(
     images: &'a Cache,
     overflow: Overflow,
 ) -> Element<'a, Message> {
-    scrollable(
+    scrolled(
         grid(cards(card, items, room, images, overflow))
             .columns(card.across(room).count())
             .spacing(style::drawn(space::GUTTER.drawn())),
@@ -499,9 +904,14 @@ pub fn library_tile<'a>(
 /// reference writes is exact to.
 const PORTIONS: u16 = 10_000;
 
+/// `share` of what it is laid in, as iced's own fill portions.
+fn portion(share: Share) -> u16 {
+    style::drawn(share.of(Drawn::of(f32::from(PORTIONS)))) as u16
+}
+
 /// A bar filled to `elapsed`, which is how far through a program `now` is.
 pub fn elapsed_bar<'a>(elapsed: Share) -> Element<'a, Message> {
-    let filled = style::drawn(elapsed.of(Drawn::of(f32::from(PORTIONS)))) as u16;
+    let filled = portion(elapsed);
     container(
         row![
             container(Space::new())
@@ -577,20 +987,25 @@ pub fn on_now_row<'a>(
             channel_card(channel, room, now, handle)
         });
 
-    scrollable(row(cards).spacing(style::drawn(space::GUTTER.drawn())))
-        .direction(scrollable::Direction::Horizontal(
-            scrollable::Scrollbar::default(),
-        ))
-        .into()
+    sideways(row(cards).spacing(style::drawn(space::GUTTER.drawn()))).into()
+}
+
+/// Which control ends a failure report.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Ending {
+    /// Dismisses the report, the session standing.
+    Dismissed,
+    /// Opens a fresh login screen, which is what a session that is gone ends
+    /// with.
+    SignedInAgain,
 }
 
 /// One failure report as it is shown: its sentence, the Jellyfin server's own
 /// message beneath it as quoted server output under the `serverSaid` label,
-/// and the control that dismisses it.
-/// Private, so the only failure text any screen can render is the log's.
-fn failure<'a>(failure: &'a crate::failure::Failure) -> Element<'a, Message> {
+/// and the control that ends it.
+pub fn reported<'a>(failure: &'a crate::failure::Failure, ending: Ending) -> Element<'a, Message> {
     let mut shown = column![prose(failure.sentence.clone(), typeface::BODY)]
-        .spacing(style::drawn(space::GUTTER.drawn()));
+        .spacing(style::drawn(space::BLOCK_GAP.drawn()));
     if let Some(server) = &failure.server {
         shown = shown
             .push(prose(
@@ -599,40 +1014,17 @@ fn failure<'a>(failure: &'a crate::failure::Failure) -> Element<'a, Message> {
             ))
             .push(prose(format!("> {server}"), typeface::SECONDARY));
     }
+    let (label, press) = match ending {
+        Ending::Dismissed => (Text::FailureDismiss, Message::FailureDismissed),
+        Ending::SignedInAgain => (Text::FailureSignInAgain, Message::SignInAgain),
+    };
     shown = shown.push(
-        button(prose(strings::lookup(Text::FailureDismiss), typeface::BODY))
+        button(prose(strings::lookup(label), typeface::BODY))
             .style(style::raised)
-            .on_press(Message::FailureDismissed),
+            .on_press(press),
     );
     container(shown)
-        .padding(style::drawn(space::GUTTER.drawn()))
-        .width(Length::Fill)
-        .into()
-}
-
-/// The terminal stage's screen: the failure that ended the session, over the
-/// control that returns to a fresh login screen.
-pub fn lost<'a>(failure: &'a crate::failure::Failure) -> Element<'a, Message> {
-    let mut shown = column![prose(failure.sentence.clone(), typeface::BODY)]
-        .spacing(style::drawn(space::GUTTER.drawn()));
-    if let Some(server) = &failure.server {
-        shown = shown
-            .push(prose(
-                strings::lookup(Text::ServerSaid),
-                typeface::SECONDARY,
-            ))
-            .push(prose(format!("> {server}"), typeface::SECONDARY));
-    }
-    shown = shown.push(
-        button(prose(
-            strings::lookup(Text::FailureSignInAgain),
-            typeface::BODY,
-        ))
-        .style(style::raised)
-        .on_press(Message::SignInAgain),
-    );
-    container(shown)
-        .padding(style::drawn(space::GUTTER.drawn()))
+        .padding(style::padding(space::PAGE_PAD))
         .width(Length::Fill)
         .into()
 }
@@ -645,9 +1037,9 @@ pub fn shell<'a>(
     listing: Listing,
     body: Element<'a, Message>,
 ) -> Element<'a, Message> {
-    let mut page = column![].spacing(style::drawn(space::GUTTER.drawn()));
+    let mut page = column![].spacing(style::drawn(space::SECTION_GAP.drawn()));
     if let Some(showing) = failures.showing() {
-        page = page.push(self::failure(showing));
+        page = page.push(reported(showing, Ending::Dismissed));
     }
     page = page.push(
         button(prose(strings::lookup(Text::FailuresOpen), typeface::BODY))
@@ -659,8 +1051,8 @@ pub fn shell<'a>(
     );
     if listing == Listing::Open {
         let mut listed = column![prose(strings::lookup(Text::FailuresTitle), typeface::BODY)]
-            .spacing(style::drawn(space::GUTTER.drawn()))
-            .padding(style::drawn(space::GUTTER.drawn()));
+            .spacing(style::drawn(space::SECTION_GAP.drawn()))
+            .padding(style::padding(space::PAGE_PAD));
         if failures.raised().is_empty() {
             listed = listed.push(prose(strings::lookup(Text::FailuresEmpty), typeface::BODY));
         }
@@ -671,7 +1063,7 @@ pub fn shell<'a>(
             }
             listed = listed.push(one.spacing(style::drawn(space::BLOCK_GAP.drawn())));
         }
-        page = page.push(scrollable(listed));
+        page = page.push(scrolled(listed));
     }
     page.push(body).into()
 }
@@ -683,22 +1075,20 @@ pub enum Listing {
     Closed,
 }
 
-/// The nav row — with controls opening `/settings`, `/remote` and, for a user
-/// whose access allows it, `/syncplay` — the off-snapshot warning, the group
-/// indicator and the waiting indicator while membership lasts, the live-updates
-/// indicator while `live` is down, above `body`.
+/// The nav row above `body`, both inside the page's own padding: the page's
+/// own above and below, and `page_side`'s share at each edge.
 /// `nav` is `Settings` while a settings route is on top, which is what the
 /// settings column replaces; Back and Logout stand either way.
+// reference: page-padded
+// reference: page-side
 pub fn chrome<'a>(
     session: &'a Session,
     back: Back,
     nav: Nav,
-    live: live::Link,
-    group: Option<&'a Joined>,
     viewport: Viewport,
     body: Element<'a, Message>,
 ) -> Element<'a, Message> {
-    let mut controls = row![].spacing(style::drawn(space::GUTTER.drawn()));
+    let mut controls = row![].spacing(style::drawn(space::CONTROL_GAP.drawn()));
 
     if back == Back::Offered {
         controls = controls.push(
@@ -725,7 +1115,7 @@ pub fn chrome<'a>(
                 button(prose(strings::lookup(Text::NavSettings), typeface::BODY))
                     .style(style::flat)
                     .on_press(Message::Navigated(Route::Settings {
-                        screen: crate::screen::settings::Screen::Profile,
+                        screen: crate::screen::settings::Screen::Menu,
                     })),
             )
             .push(
@@ -764,47 +1154,94 @@ pub fn chrome<'a>(
         );
     }
 
-    let mut page = column![controls]
-        .spacing(style::drawn(space::GUTTER.drawn()))
-        .padding(style::drawn(space::GUTTER.drawn()));
+    let side = style::drawn(space::page_side(viewport.canvas()));
+    let page = column![controls]
+        .spacing(style::drawn(space::SECTION_GAP.drawn()))
+        .padding(style::padding(space::PAGE_PAD).left(side).right(side));
 
+    page.push(body).into()
+}
+
+/// One notice as the reference draws one: a card carrying its header over its
+/// sentence, or its sentence alone where a notice has no header, on a surface
+/// no narrower than `.toast`'s own floor and as wide as its content asks.
+// reference: toast-face
+pub fn toast<'a>(header: Option<String>, sentence: String) -> Element<'a, Message> {
+    let mut written = column![Space::new().width(style::drawn(space::TOAST_MIN_INSIDE.drawn()))];
+    if let Some(header) = header {
+        written = written.push(prose(header, typeface::TOAST));
+    }
+    container(written.push(prose(sentence, typeface::TOAST)))
+        .padding(style::padding(space::TOAST_PAD))
+        .style(style::toast)
+        .into()
+}
+
+/// `notices` standing over `body` at the foot of its leading edge, at the gap
+/// the reference leaves between two of them and the container's own inset.
+/// `body` alone where nothing is raised.
+// reference: toast-container
+pub fn toasted<'a>(
+    body: Element<'a, Message>,
+    notices: impl IntoIterator<Item = Element<'a, Message>>,
+) -> Element<'a, Message> {
+    let mut raised = notices.into_iter().peekable();
+    if raised.peek().is_none() {
+        return body;
+    }
+    let stack = container(column(raised).spacing(style::drawn(space::TOAST_GAP.drawn())))
+        .padding(
+            iced::Padding::ZERO
+                .left(style::drawn(space::TOAST_INSET.drawn()))
+                .bottom(style::drawn(space::TOAST_INSET.drawn())),
+        )
+        .align_bottom(Fill);
+    iced::widget::stack![body, stack].into()
+}
+
+/// Every notice the session itself raises: read-only access, a server whose
+/// version the snapshot does not name, the group being followed, that group
+/// waiting, and live updates being down.
+pub fn notices<'a>(
+    session: &'a Session,
+    group: Option<&'a Joined>,
+    live: live::Link,
+) -> Vec<Element<'a, Message>> {
+    let mut raised = Vec::new();
     if session.read_only {
-        page = page.push(self::banner(
+        raised.push(toast(
+            None,
             strings::lookup(Text::DashboardReadOnly).to_string(),
         ));
     }
-
     if session.off_snapshot() {
-        page = page.push(self::banner(strings::format(
-            Text::WarningOffSnapshot,
-            &[&session.server_version, &session.snapshot_version],
-        )));
+        raised.push(toast(
+            None,
+            strings::format(
+                Text::WarningOffSnapshot,
+                &[&session.server_version, &session.snapshot_version],
+            ),
+        ));
     }
-
     if let Some(joined) = group {
-        page = page.push(self::banner(
+        raised.push(toast(
+            None,
             strings::lookup(Text::SyncPlayActive).to_string(),
         ));
         if joined.waiting() {
-            page = page.push(self::banner(
+            raised.push(toast(
+                None,
                 strings::lookup(Text::SyncPlayWaiting).to_string(),
             ));
         }
     }
-
     if live.down() {
-        page = page.push(self::banner(
+        raised.push(toast(
+            None,
             strings::lookup(Text::LiveUnavailable).to_string(),
         ));
     }
-
-    page.push(container(body).padding(iced::Padding {
-        top: 0.0,
-        right: style::drawn(space::page_side(viewport.canvas())),
-        bottom: 0.0,
-        left: style::drawn(space::page_side(viewport.canvas())),
-    }))
-    .into()
+    raised
 }
 
 /// Whether the chrome offers the control that steps back.
@@ -822,19 +1259,23 @@ pub enum Nav {
     Settings,
 }
 
-/// A form, held to the reference's own cap on a page wide enough for it, and
-/// centered in whatever page it is drawn on.
+/// A column of rows held to the width the reference caps a form and
+/// `.readOnlyContent` at and centred in the page it is drawn on, its rows at
+/// the margin `gap` each carries under itself. The page's own padding belongs
+/// to the page, not to the column.
 // reference: page-bottom
 // reference: page-centering
-pub fn form<'a>(viewport: Viewport, rows: Vec<Element<'a, Message>>) -> Element<'a, Message> {
-    let held = column(rows)
-        .spacing(style::drawn(space::FIELD_GAP.drawn()))
-        .padding(style::drawn(space::PAD.drawn()));
-    let capped = match viewport.matches(space::FORM_WIDTH_AT) {
+pub fn capped<'a>(
+    viewport: Viewport,
+    gap: style::Length,
+    rows: impl IntoIterator<Item = Element<'a, Message>>,
+) -> Element<'a, Message> {
+    let held = container(column(rows).spacing(style::drawn(gap.drawn())));
+    let held = match viewport.matches(space::FORM_WIDTH_AT) {
         true => held.max_width(style::drawn(space::FORM_WIDTH.drawn())),
         false => held,
     };
-    container(capped).center_x(Fill).into()
+    container(held).center_x(Fill).into()
 }
 
 /// The reference's `.paper-icon-button-light`: a disc carrying a glyph and no
@@ -913,6 +1354,7 @@ pub fn indicated<'a>(control: Element<'a, Message>, band: Band) -> Element<'a, M
             strings::lookup(Text::FilterIndicator),
             typeface::INDICATOR,
             typeface::Weight::Bold,
+            typeface::LINE_HEIGHT,
         ))
         .center_x(circle)
         .center_y(circle)
@@ -962,6 +1404,8 @@ pub enum Secrecy {
 /// `.fieldDescription` beneath it.
 // reference: control-input
 // reference: control-field
+// reference: control-input-label
+// reference: control-field-description
 pub fn field<'a>(
     label: Text,
     value: &'a str,
@@ -978,17 +1422,184 @@ pub fn field<'a>(
         .on_input(edited)
         .on_submit(submitted);
 
-    let mut held = column![
-        tinted(strings::lookup(label), typeface::BODY, style::label),
-        typed
+    let mut held = column![labelled(label, typed.into())];
+    if let Some(sentence) = description {
+        held = held.push(self::description(sentence, space::DESCRIPTION_INSET));
+    }
+    held.into()
+}
+
+/// `.fieldDescription`: the sentence the reference writes under a control, in
+/// the secondary lettering, at the inset the control it stands under gives it.
+// reference: field-description
+// reference: scheme-secondary-text
+pub fn description<'a>(sentence: Text, inset: style::Length) -> Element<'a, Message> {
+    container(tinted(
+        strings::lookup(sentence),
+        typeface::SECONDARY,
+        typeface::Weight::Regular,
+        typeface::LINE_HEIGHT,
+        style::description,
+    ))
+    .padding(
+        iced::Padding::ZERO
+            .top(style::drawn(space::DESCRIPTION_GAP.drawn()))
+            .left(style::drawn(inset.drawn())),
+    )
+    .into()
+}
+
+/// `.inputLabel`, `.selectLabel` and `.checkboxListLabel`: the name the
+/// reference writes over the control it addresses.
+// reference: control-input-label
+// reference: control-select-label
+// reference: control-checkbox-list-label
+pub fn labelled<'a>(label: Text, control: Element<'a, Message>) -> Element<'a, Message> {
+    column![
+        container(tinted(
+            strings::lookup(label),
+            typeface::BODY,
+            typeface::Weight::Regular,
+            typeface::LINE_HEIGHT,
+            style::label,
+        ))
+        .padding(iced::Padding::ZERO.bottom(style::drawn(space::LABEL_GAP.drawn()))),
+        control,
     ]
-    .spacing(style::drawn(space::BLOCK_GAP.drawn()));
-    if let Some(description) = description {
-        held = held.push(tinted(
-            strings::lookup(description),
-            typeface::SECONDARY,
-            style::description,
-        ));
+    .into()
+}
+
+// the closed field is `.emby-select`, its chevron laid over the trailing edge
+// rather than drawn inside the field's own padding
+// the reference places that chevron by an absolute offset from the top of the
+// label; here it is centred against the field
+// the label is never repainted while the field is open, which the reference
+// does through `.selectLabelFocused`
+// nothing is drawn in the field when no offered option carries `held`
+// reference: control-select
+// reference: control-select-container
+// reference: control-select-label
+// reference: control-select-arrow
+// reference: control-select-description
+pub fn select<'a, T>(
+    label: Text,
+    description: Option<Text>,
+    offered: Vec<Choice<T>>,
+    held: &T,
+    chosen: impl Fn(T) -> Message + 'a,
+) -> Element<'a, Message>
+where
+    T: Clone + PartialEq + 'a,
+{
+    for choice in &offered {
+        crate::fonts::observed(&choice.label, typeface::Weight::Regular);
+    }
+    let standing = offered.iter().find(|choice| &choice.value == held).cloned();
+    let field = iced::widget::pick_list(offered, standing, move |choice| chosen(choice.value))
+        .style(style::select)
+        .menu_style(style::menu)
+        .handle(iced::widget::pick_list::Handle::None)
+        .font(style::font(typeface::Weight::Regular))
+        .text_size(style::drawn(typeface::FIELD.drawn()))
+        .text_line_height(style::leading(typeface::LINE_HEIGHT))
+        .padding(style::padding(space::SELECT_PAD))
+        .width(Fill);
+    let chevron = container(crate::icon::icon(
+        Icon::KeyboardArrowDown,
+        typeface::SELECT_ARROW,
+    ))
+    .padding(iced::Padding::ZERO.right(style::drawn(space::SELECT_ARROW_INSET.drawn())))
+    .align_right(Fill)
+    .center_y(Fill);
+
+    let mut held = column![labelled(label, iced::widget::stack![field, chevron].into())];
+    if let Some(sentence) = description {
+        held = held.push(self::description(sentence, space::DESCRIPTION_INSET));
+    }
+    held.into()
+}
+
+// the box is centred against the label, where the reference offsets it three
+// pixels from the top of the label's own line box
+// reference: control-checkbox
+// reference: control-checkbox-label
+// reference: control-checkbox-container
+// reference: control-checkbox-description
+// reference: control-checkbox-mark
+pub fn flag<'a>(
+    label: impl Into<Cow<'a, str>>,
+    description: Option<Text>,
+    held: bool,
+    toggled: impl Fn(bool) -> Message + 'a,
+) -> Element<'a, Message> {
+    let written = label.into();
+    crate::fonts::observed(&written, typeface::Weight::Regular);
+    let outline = iced::widget::checkbox(held)
+        .label(written)
+        .on_toggle(toggled)
+        .size(style::drawn(space::CHECKBOX.drawn()))
+        .spacing(style::drawn(space::CHECKBOX_GAP.drawn()))
+        .font(style::font(typeface::Weight::Regular))
+        .text_size(style::drawn(typeface::BODY.drawn()))
+        .text_line_height(style::leading(typeface::LINE_HEIGHT))
+        .style(style::checkbox);
+    let outline = match Icon::Check
+        .glyph()
+        .and_then(crate::fonts::Codepoint::character)
+    {
+        Some(mark) => outline.icon(iced::widget::checkbox::Icon {
+            font: style::ICONS,
+            code_point: mark,
+            size: Some(iced::Pixels(style::drawn(typeface::CHECKBOX_MARK.drawn()))),
+            line_height: style::leading(typeface::LINE_HEIGHT),
+            shaping: iced::widget::text::Shaping::Advanced,
+        }),
+        None => outline,
+    };
+
+    let standing = style::drawn(space::CHECKBOX_ROW.drawn());
+    let mut stacked = column![container(outline).center_y(standing)];
+    if let Some(sentence) = description {
+        stacked = stacked.push(self::description(sentence, space::CHECKBOX_INSET));
+    }
+    stacked.into()
+}
+
+/// `.verticalSection`: its `h2.sectionTitle` over its rows, the rows at the
+/// margin the reference leaves under a field.
+// reference: section-vertical
+// reference: section-title
+// reference: control-field
+pub fn fields<'a>(
+    title: Text,
+    rows: impl IntoIterator<Item = Element<'a, Message>>,
+) -> Element<'a, Message> {
+    column![
+        container(prose(strings::lookup(title), typeface::HEADING_2))
+            .padding(iced::Padding::ZERO.bottom(style::drawn(space::SECTION_GAP.drawn()))),
+        column(rows).spacing(style::drawn(space::FIELD_GAP.drawn())),
+    ]
+    .into()
+}
+
+/// `.emby-button`: a control at the reference's own padding, no wider than
+/// what it carries.
+// reference: control-button
+pub fn control<'a>(
+    label: impl Into<Cow<'a, str>>,
+    press: Option<Message>,
+    emphasis: Emphasis,
+) -> Element<'a, Message> {
+    let face: fn(&iced::Theme, iced::widget::button::Status) -> iced::widget::button::Style =
+        match emphasis {
+            Emphasis::Submit => style::submit,
+            Emphasis::Raised => style::raised,
+        };
+    let mut held = button(prose(label, typeface::BODY))
+        .style(face)
+        .padding(style::padding(space::BUTTON_PAD));
+    if let Some(message) = press {
+        held = held.on_press(message);
     }
     held.into()
 }
@@ -1053,7 +1664,7 @@ pub fn block<'a>(
 /// tenths of it wide.
 // reference: center-message
 pub fn centered<'a>(sentence: String) -> Element<'a, Message> {
-    let held = style::drawn(space::CENTER_MESSAGE.of(Drawn::of(f32::from(PORTIONS)))) as u16;
+    let held = portion(space::CENTER_MESSAGE);
     let beside = (PORTIONS - held) / 2;
     row![
         Space::new().width(Length::FillPortion(beside)),
@@ -1067,25 +1678,6 @@ pub fn centered<'a>(sentence: String) -> Element<'a, Message> {
             .center_x(Fill),
         Space::new().width(Length::FillPortion(beside)),
     ]
-    .into()
-}
-
-/// One sentence shown above a screen.
-pub fn banner<'a>(message: String) -> Element<'a, Message> {
-    container(prose(message, typeface::BODY))
-        .padding(style::drawn(space::GUTTER.drawn()))
-        .width(Length::Fill)
-        .into()
-}
-
-/// The transient notice a `DisplayMessage` renders: its header, then its text.
-pub fn message<'a>(notice: &'a Notice) -> Element<'a, Message> {
-    column![
-        prose(notice.header.clone(), typeface::BODY),
-        prose(notice.text.clone(), typeface::BODY)
-    ]
-    .spacing(style::drawn(space::GUTTER.drawn()))
-    .padding(style::drawn(space::GUTTER.drawn()))
     .into()
 }
 
@@ -1108,9 +1700,9 @@ pub fn leaving<'a>() -> Element<'a, Message> {
             .style(style::raised)
             .on_press(Message::StayHere),
         ]
-        .spacing(style::drawn(space::GUTTER.drawn())),
+        .spacing(style::drawn(space::CONTROL_GAP.drawn())),
     ]
-    .spacing(style::drawn(space::GUTTER.drawn()))
-    .padding(style::drawn(space::GUTTER.drawn()))
+    .spacing(style::drawn(space::BLOCK_GAP.drawn()))
+    .padding(style::padding(space::PAGE_PAD))
     .into()
 }

@@ -1,4 +1,5 @@
 asset	source	sha256
+jellium-web/branding/avatar.png	src/assets/img/avatar.png	f17147e92d8fd55bcdd088dafb054c5018911a87dd1ba4be250773d34ccba465
 jellium-web/branding/banner-light.png	node_modules/@jellyfin/ux-web/banner-light.png	ec1f8120bcad24956c1efa14acb2b8e031c6327717d413b188946314424b9e13
 jellium-web/branding/favicons/favicon.ico	node_modules/@jellyfin/ux-web/favicons/favicon.ico	2d01a6171b7ef8ffb8d1f6f9c24a9b9dc8c0186c6fbd653760ff7a34b626f8e8
 jellium-web/branding/favicons/touchicon.png	node_modules/@jellyfin/ux-web/favicons/touchicon.png	c346ac6eb60df8f65c1cdbe3fb32c57dfc22e1420abc43d2696b081884b44a21
@@ -1109,5 +1110,5 @@ jellium-web/fonts/served/noto-sans-tc-98-400-normal.woff2	node_modules/@fontsour
 jellium-web/fonts/served/noto-sans-tc-98-700-normal.woff2	node_modules/@fontsource/noto-sans-tc/files/noto-sans-tc-98-700-normal.woff2	0c5b9819d9568967e5f0330a755e1abe834995a3e93167ef3cee9dfed8d94e70
 jellium-web/fonts/served/noto-sans-tc-99-400-normal.woff2	node_modules/@fontsource/noto-sans-tc/files/noto-sans-tc-99-400-normal.woff2	6e11f50cd2f729029bd54cdaf2956199f50d1ea9bf19e979af23ee15a74660ca
 jellium-web/fonts/served/noto-sans-tc-99-700-normal.woff2	node_modules/@fontsource/noto-sans-tc/files/noto-sans-tc-99-700-normal.woff2	9088c5aafc44d6b5ce0a210f46746c5c85bc94d2e8ebc89abeca3f3153330423
-jellium-web/icons/material.tsv	node_modules/material-design-icons-iconfont/dist/fonts/MaterialIcons-Regular.json	03b53a8d2c915deb68795f73aaad7509f6f0fc1f1d11a6e017a6d3c8942eb3d4
+jellium-web/icons/material.tsv	node_modules/material-design-icons-iconfont/dist/fonts/MaterialIcons-Regular.json	e57ca2079e7f8ec2c45db3ebfa7153e4c5a9962d4314aa2cee220e1fb85198cb
 reference/breakpoints.tsv	src	9923f65ac34a259ae066390ee6e2150ee7cf709593333a03c4fb5b5dd6cea14e

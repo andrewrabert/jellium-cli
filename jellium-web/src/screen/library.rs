@@ -2,7 +2,7 @@ use std::collections::HashSet;
 use std::rc::Rc;
 
 use iced::Element;
-use iced::widget::{button, column, row};
+use iced::widget::column;
 use jellium_model::facets::{Facet, Facets};
 use jellium_model::paged::Paged;
 use jellium_model::sort::Sort;
@@ -16,10 +16,9 @@ use crate::error::Answer;
 use crate::images::{self, Cache};
 use crate::route::{Listing, Route};
 use crate::screen::browse::{self, Browse};
-use crate::style::{self, Viewport, space, typeface};
-use crate::text::{self as strings, Text};
+use crate::style::{self, Viewport, space};
+use crate::text::Text;
 use crate::widget;
-use crate::widget::prose;
 
 /// A library tab named without what its list carries, which is what the strip
 /// draws and what a collection type offers.
@@ -314,18 +313,19 @@ pub fn view<'a>(
         return column![].into();
     };
     let shown = state.tab.kind();
-    let strip = row(state.tabs.iter().map(|kind| {
-        let mut control =
-            button(prose(strings::lookup(kind.label()), typeface::BODY)).style(style::flat);
-        if *kind != shown {
-            control = control.on_press(Message::Navigated(Route::Library {
-                id,
-                tab: Box::new(kind.tab(Sort::default())),
-            }));
-        }
-        control.into()
-    }))
-    .spacing(style::drawn(space::GUTTER.drawn()));
+    let strip = widget::tabs(
+        viewport,
+        state.tabs.iter().map(|kind| widget::Entry {
+            label: kind.label(),
+            showing: match *kind == shown {
+                true => widget::Showing::Shown,
+                false => widget::Showing::Offered(Message::Navigated(Route::Library {
+                    id,
+                    tab: Box::new(kind.tab(Sort::default())),
+                })),
+            },
+        }),
+    );
 
     let body = match &state.body {
         Body::Browse(browse) | Body::Rows(browse) => browse::view(browse, viewport, images),
@@ -342,8 +342,8 @@ pub fn view<'a>(
     };
 
     column![strip, body]
-        .spacing(style::drawn(space::GUTTER.drawn()))
-        .padding(style::drawn(space::GUTTER.drawn()))
+        .spacing(style::drawn(space::SECTION_GAP.drawn()))
+        .padding(style::padding(space::PAGE_PAD))
         .into()
 }
 

@@ -39,7 +39,7 @@ pub fn view(state: &State) -> Element<'_, Message> {
                 typeface::BODY
             ),
         ]
-        .spacing(style::drawn(space::GUTTER.drawn())),
+        .spacing(style::drawn(space::CONTROL_GAP.drawn())),
         row![
             checkbox(state.access.enable_automatic_port_mapping)
                 .on_toggle(|on| Message::SetupAction(Action::Edited(Edit::PortMapping(on)))),
@@ -48,8 +48,8 @@ pub fn view(state: &State) -> Element<'_, Message> {
                 typeface::BODY
             ),
         ]
-        .spacing(style::drawn(space::GUTTER.drawn())),
+        .spacing(style::drawn(space::CONTROL_GAP.drawn())),
     ]
-    .spacing(style::drawn(space::GUTTER.drawn()))
+    .spacing(style::drawn(space::SECTION_GAP.drawn()))
     .into()
 }

@@ -1,7 +1,7 @@
 use std::collections::HashSet;
 use std::rc::Rc;
 
-use iced::widget::{Space, button, column, container, image, row, scrollable, stack};
+use iced::widget::{Space, button, column, container, image, row, stack};
 use iced::{Element, Fill};
 use jellium_model::item::{self, Mark};
 use jellyfin_api::types::{BaseItemDto, BaseItemKind};
@@ -265,7 +265,7 @@ struct Head<'a> {
 // reference: detail-name-container
 // reference: detail-misc
 fn head<'a>(item: &'a BaseItemDto, viewport: Viewport, images: &'a Cache) -> Head<'a> {
-    let mut actions = row![].spacing(style::drawn(space::GUTTER.drawn()));
+    let mut actions = row![].spacing(style::drawn(space::CONTROL_GAP.drawn()));
     for control in play_controls(item, viewport) {
         actions = actions.push(control);
     }
@@ -294,7 +294,7 @@ fn head<'a>(item: &'a BaseItemDto, viewport: Viewport, images: &'a Cache) -> Hea
             ));
     }
 
-    let mut lines = column![].spacing(style::drawn(space::GUTTER.drawn()));
+    let mut lines = column![].spacing(style::drawn(space::SECTION_GAP.drawn()));
     if let Some(overview) = &item.overview {
         lines = lines
             .push(prose(
@@ -448,8 +448,8 @@ pub fn view<'a>(
     };
 
     let mut page = column![]
-        .spacing(style::drawn(space::GUTTER.drawn()))
-        .padding(style::drawn(space::GUTTER.drawn()));
+        .spacing(style::drawn(space::SECTION_GAP.drawn()))
+        .padding(style::padding(space::PAGE_PAD));
 
     if !state.children.is_empty() {
         page = page
@@ -475,7 +475,7 @@ pub fn view<'a>(
                 .style(style::raised)
                 .on_press(Message::Navigated(crate::route::Route::Metadata {
                     item: id,
-                    part: crate::screen::metadata::Part::Fields,
+                    part: None,
                 })),
         );
     }
@@ -493,7 +493,7 @@ pub fn view<'a>(
         ));
     }
 
-    scrollable(column![drawn, page]).into()
+    crate::widget::scrolled(column![drawn, page]).into()
 }
 
 pub fn images(state: &State) -> HashSet<images::Key> {

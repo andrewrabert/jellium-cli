@@ -27,7 +27,7 @@ pub struct State {
 #[derive(Debug, Clone)]
 pub struct Adding {
     pub name: String,
-    pub content_type: Choice,
+    pub content_type: Choice<String>,
     pub paths: Vec<String>,
     /// The directory the browser stands in, and what it holds.
     pub browsing: Option<String>,
@@ -76,7 +76,7 @@ fn browser(adding: &Adding) -> Element<'_, Message> {
             .on_press(Message::SetupAction(Action::BrowseUp)),
             prose(adding.browsing.clone().unwrap_or_default(), typeface::BODY),
         ]
-        .spacing(style::drawn(space::GUTTER.drawn())),
+        .spacing(style::drawn(space::CONTROL_GAP.drawn())),
     ]
     .spacing(style::drawn(space::BLOCK_GAP.drawn()));
 
@@ -94,7 +94,7 @@ fn browser(adding: &Adding) -> Element<'_, Message> {
                     .style(style::raised)
                     .on_press(Message::SetupAction(Action::AddPath(path))),
             ]
-            .spacing(style::drawn(space::GUTTER.drawn())),
+            .spacing(style::drawn(space::CONTROL_GAP.drawn())),
         );
     }
     container(listing).width(Fill).into()
@@ -112,7 +112,7 @@ fn dialog(adding: &Adding) -> Element<'_, Message> {
         )
         .width(Fill),
     ]
-    .spacing(style::drawn(space::GUTTER.drawn()));
+    .spacing(style::drawn(space::BLOCK_GAP.drawn()));
 
     for (index, path) in adding.paths.iter().enumerate() {
         page = page.push(
@@ -122,7 +122,7 @@ fn dialog(adding: &Adding) -> Element<'_, Message> {
                     .style(style::raised)
                     .on_press(Message::SetupAction(Action::RemovePath(index))),
             ]
-            .spacing(style::drawn(space::GUTTER.drawn())),
+            .spacing(style::drawn(space::CONTROL_GAP.drawn())),
         );
     }
 
@@ -152,7 +152,7 @@ fn dialog(adding: &Adding) -> Element<'_, Message> {
             .style(style::raised)
             .on_press(Message::SetupAction(Action::Adding(false))),
         ]
-        .spacing(style::drawn(space::GUTTER.drawn())),
+        .spacing(style::drawn(space::CONTROL_GAP.drawn())),
     );
     container(page).width(Fill).into()
 }
@@ -167,7 +167,7 @@ pub fn view(state: &State) -> Element<'_, Message> {
             typeface::SECONDARY
         ),
     ]
-    .spacing(style::drawn(space::GUTTER.drawn()));
+    .spacing(style::drawn(space::SECTION_GAP.drawn()));
 
     for folder in &state.folders {
         let name = folder.name.clone().unwrap_or_default();
@@ -190,7 +190,7 @@ pub fn view(state: &State) -> Element<'_, Message> {
                 .style(style::submit)
                 .on_press(Message::SetupAction(Action::RenameLibrary { name: typed })),
             ]
-            .spacing(style::drawn(space::GUTTER.drawn()))
+            .spacing(style::drawn(space::CONTROL_GAP.drawn()))
             .into(),
             None => row![
                 container(prose(name.clone(), typeface::BODY)).width(Fill),
@@ -211,7 +211,7 @@ pub fn view(state: &State) -> Element<'_, Message> {
                     name: name.clone()
                 })),
             ]
-            .spacing(style::drawn(space::GUTTER.drawn()))
+            .spacing(style::drawn(space::CONTROL_GAP.drawn()))
             .into(),
         };
         page = page.push(shown);

@@ -130,6 +130,21 @@ impl Form {
         self.edited.insert(field.key().to_owned(), held);
     }
 
+    /// What `field`'s flag holds now, which is false unless it holds `true`.
+    pub fn flagged(&self, field: Field) -> bool {
+        self.edited
+            .get(field.key())
+            .or_else(|| self.read.get(field.key()))
+            .and_then(serde_json::Value::as_bool)
+            .unwrap_or(false)
+    }
+
+    /// Records an edit setting `field`'s flag to `on`.
+    pub fn flag(&mut self, field: Field, on: bool) {
+        self.edited
+            .insert(field.key().to_owned(), serde_json::Value::Bool(on));
+    }
+
     /// Records an edit against `key` directly, for the structured values no
     /// `Field` shape covers: the people array, the provider-id object and the
     /// locked-fields array.

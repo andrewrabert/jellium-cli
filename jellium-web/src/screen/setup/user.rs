@@ -51,7 +51,7 @@ pub fn view(state: &State) -> Element<'_, Message> {
             .secure(true)
             .on_input(|typed| Message::SetupAction(Action::Edited(Edit::Confirmation(typed)))),
     ]
-    .spacing(style::drawn(space::GUTTER.drawn()));
+    .spacing(style::drawn(space::FIELD_GAP.drawn()));
 
     if state.user.password != state.confirmation {
         page = page.push(prose(

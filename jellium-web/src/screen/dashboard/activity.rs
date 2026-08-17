@@ -1,22 +1,32 @@
 //! The activity log, fetched a page at a time as its window moves.
 
-use iced::widget::{button, column, row};
-use iced::{Element, Fill};
+use std::collections::BTreeMap;
+
+use iced::Element;
+use iced::widget::button;
 
 use crate::app::Message;
 use crate::error::Answer;
-use crate::style::{self, Drawn, space, typeface};
-use crate::text::{self as strings, Text};
-use crate::widget::{line, prose};
+use crate::icon::{self, Icon};
+use crate::route::Route;
+use crate::style::{self, Band, Viewport, space, typeface};
+use crate::text::Text;
+use crate::widget::table::{self, Column, Holding, Table};
+use crate::widget::{Segment, Showing};
 use crate::window;
 use jellium_model::paged::Paged;
 use jellium_protocol::ActivityEntry;
+
+use super::frame;
 
 /// The activity log, fetched a page at a time as its window moves.
 #[derive(Debug, Clone)]
 pub struct State {
     pub entries: Paged<ActivityEntry>,
     pub window: window::Window,
+    /// The name each user the log names is drawn under, which is what the
+    /// reference's own user column reads from.
+    pub users: BTreeMap<uuid::Uuid, String>,
     /// True while only entries naming a user are shown, false while only those
     /// naming none are, and nothing while all are.
     pub with_user: Option<bool>,
@@ -25,22 +35,30 @@ pub struct State {
 pub async fn load(
     api: std::rc::Rc<crate::api::Api>,
     with_user: Option<bool>,
-    height: Drawn,
+    viewport: Viewport,
 ) -> Answer<State> {
     Answer::of(async {
         let (rows, total) = api
             .activity(0, Paged::<ActivityEntry>::PAGE as i32, with_user)
             .await
             .bubbled()?;
+        let users = api
+            .users()
+            .await
+            .bubbled()?
+            .into_iter()
+            .filter_map(|user| Some((user.id?, user.name?)))
+            .collect();
         let mut entries = Paged::new(total);
         entries.filled(0..rows.len(), rows);
         Ok(State {
             entries,
             window: window::Window::new(
                 window::Id::Activity,
-                Drawn::of(style::drawn(space::LIST_ROW.drawn())),
-                height,
+                space::table_row(viewport.band()),
+                viewport.canvas().height(),
             ),
+            users,
             with_user,
         })
     })
@@ -70,54 +88,122 @@ pub fn filled(state: &mut State, page: std::ops::Range<usize>, rows: Vec<Activit
     state.entries.filled(page, rows);
 }
 
-/// Each entry's time, name, short overview, type and user, and the filter.
-pub fn view<'a>(state: &'a State) -> Element<'a, Message> {
-    let mut filters = row![].spacing(style::drawn(space::GUTTER.drawn()));
-    for (label, wanted) in [
+/// Whether the log is showing entries naming a user, which is what stands the
+/// reference's own user column.
+fn naming_users(with_user: Option<bool>) -> bool {
+    with_user != Some(false)
+}
+
+/// The toolbar's three-segment group over a table of the entry's time, its
+/// level, the user it names, its name, its overview, its type, and the control
+/// that opens the item it names.
+// reference: table-activity-columns
+// reference: table-activity-view
+pub fn view<'a>(state: &'a State, band: Band) -> frame::Filling<'a> {
+    let segments = [
         (Text::ActivityAll, None),
         (Text::ActivityWithUser, Some(true)),
         (Text::ActivityWithoutUser, Some(false)),
-    ] {
-        let control = button(prose(strings::lookup(label), typeface::BODY)).style(style::flat);
-        filters = filters.push(if state.with_user == wanted {
-            control
-        } else {
-            control.on_press(Message::DashboardAction(super::Action::Filtered(wanted)))
+    ]
+    .map(|(label, wanted)| Segment {
+        label,
+        showing: match state.with_user == wanted {
+            true => Showing::Shown,
+            false => Showing::Offered(Message::DashboardAction(super::Action::Filtered(wanted))),
+        },
+    });
+
+    let mut columns = vec![
+        Column {
+            label: Some(Text::ColumnTime),
+            width: space::ACTIVITY_TIME,
+            holding: Holding::Written,
+        },
+        Column {
+            label: Some(Text::ColumnLevel),
+            width: space::ACTIVITY_LEVEL,
+            holding: Holding::Written,
+        },
+    ];
+    if naming_users(state.with_user) {
+        columns.push(Column {
+            label: Some(Text::ColumnUser),
+            width: space::ACTIVITY_USER,
+            holding: Holding::Written,
         });
     }
+    columns.extend([
+        Column {
+            label: Some(Text::ColumnName),
+            width: space::ACTIVITY_NAME,
+            holding: Holding::Written,
+        },
+        Column {
+            label: Some(Text::ColumnOverview),
+            width: space::ACTIVITY_OVERVIEW,
+            holding: Holding::Written,
+        },
+        Column {
+            label: Some(Text::ColumnType),
+            width: space::ACTIVITY_TYPE,
+            holding: Holding::Written,
+        },
+        Column {
+            label: None,
+            width: space::ACTIVITY_ACTIONS,
+            holding: Holding::Display,
+        },
+    ]);
 
-    column![
-        prose(strings::lookup(Text::ActivityTitle), typeface::HEADING_2),
-        filters,
-        window::list(state.window, state.entries.len(), |index| {
-            match state.entries.row(index) {
-                Some(entry) => column![
-                    line(
-                        format!("{} · {}", stamped(entry.at), entry.name),
-                        typeface::BODY,
-                        typeface::Weight::Regular,
-                    ),
-                    line(
-                        format!("{} · {} · {}", entry.overview, entry.kind, entry.user_name),
-                        typeface::BODY,
-                        typeface::Weight::Regular,
-                    ),
-                ]
-                .into(),
-                None => prose("", typeface::BODY),
-            }
-        }),
-    ]
-    .spacing(style::drawn(space::GUTTER.drawn()))
-    .padding(style::drawn(space::GUTTER.drawn()))
-    .width(Fill)
-    .height(Fill)
-    .into()
+    frame::Filling::Tabled {
+        subtitle: None,
+        table: Table {
+            toolbar: vec![crate::widget::toggles(segments, band)],
+            columns,
+            window: state.window,
+            rows: state.entries.len(),
+            cells: Box::new(move |index| cells(state, index)),
+        },
+    }
 }
 
-/// One entry's time, as the local clock reads it.
+/// One entry's cells, in the order the reference's own columns stand.
+// reference: table-activity-columns
+fn cells<'a>(state: &'a State, index: usize) -> Vec<Element<'a, Message>> {
+    let Some(entry) = state.entries.row(index) else {
+        return Vec::new();
+    };
+    let mut written = vec![
+        table::written(stamped(entry.at)),
+        table::written(entry.severity.clone()),
+    ];
+    if naming_users(state.with_user) {
+        written.push(table::written(
+            entry
+                .user
+                .and_then(|user| state.users.get(&user))
+                .cloned()
+                .unwrap_or_default(),
+        ));
+    }
+    written.extend([
+        table::written(entry.name.clone()),
+        table::written(entry.overview.clone()),
+        table::written(entry.kind.clone()),
+        match entry.item {
+            Some(item) => button(icon::icon(Icon::PermMedia, typeface::ICON_BUTTON))
+                .style(style::icon_control)
+                .on_press(Message::Navigated(Route::Detail { id: item }))
+                .into(),
+            None => iced::widget::Space::new().into(),
+        },
+    ]);
+    written
+}
+
+/// One entry's time, which the wire carries as milliseconds since the epoch.
 fn stamped(at: i64) -> String {
     chrono::DateTime::from_timestamp_millis(at)
-        .map(|at| at.format("%Y-%m-%d %H:%M").to_string())
+        .map(table::stamped)
         .unwrap_or_default()
 }

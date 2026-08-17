@@ -171,7 +171,7 @@ pub fn activity_entry(
             .map(|severity| severity.to_string())
             .unwrap_or_default(),
         user: entry.user_id.filter(|user| !user.is_nil()),
-        user_name: String::new(),
+        item: entry.item_id.as_deref().and_then(|id| id.parse().ok()),
         at: entry.date.map(|at| at.timestamp_millis()).unwrap_or(0),
     })
 }

@@ -16,8 +16,8 @@ use crate::widget::prose;
 pub struct State {
     /// The whole startup configuration, read on entry and written back whole.
     pub configuration: jellium_protocol::SetupConfiguration,
-    pub languages: Vec<Choice>,
-    pub countries: Vec<Choice>,
+    pub languages: Vec<Choice<String>>,
+    pub countries: Vec<Choice<String>>,
 }
 
 pub async fn load(api: std::rc::Rc<crate::api::Api>) -> Answer<State> {
@@ -55,7 +55,7 @@ pub async fn load(api: std::rc::Rc<crate::api::Api>) -> Answer<State> {
     .await
 }
 
-fn chosen(options: &[Choice], held: &str) -> Option<Choice> {
+fn chosen(options: &[Choice<String>], held: &str) -> Option<Choice<String>> {
     options.iter().find(|choice| choice.value == held).cloned()
 }
 
@@ -80,6 +80,6 @@ pub fn view(state: &State) -> Element<'_, Message> {
         )
         .width(Fill),
     ]
-    .spacing(style::drawn(space::GUTTER.drawn()))
+    .spacing(style::drawn(space::FIELD_GAP.drawn()))
     .into()
 }

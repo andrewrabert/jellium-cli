@@ -130,7 +130,7 @@ fn typed<'a>(label: Text, field: Field, held: &'a str) -> Element<'a, Message> {
             )
             .padding(style::drawn(space::CONTROL_GAP.drawn())),
     ]
-    .spacing(style::drawn(space::GUTTER.drawn()))
+    .spacing(style::drawn(space::CONTROL_GAP.drawn()))
     .align_y(iced::Alignment::Center)
     .into()
 }
@@ -157,7 +157,7 @@ pub fn view<'a>(
             &state.provider_id
         ),
     ]
-    .spacing(style::drawn(space::GUTTER.drawn()));
+    .spacing(style::drawn(space::FIELD_GAP.drawn()));
 
     if !read_only {
         page = page.push(
@@ -188,7 +188,7 @@ pub fn view<'a>(
                     )),
                     prose(strings::lookup(Text::MetadataReplaceImages), typeface::BODY),
                 ]
-                .spacing(style::drawn(space::GUTTER.drawn()))
+                .spacing(style::drawn(space::CONTROL_GAP.drawn()))
                 .align_y(iced::Alignment::Center),
                 row![
                     button(prose(strings::lookup(Text::MetadataApply), typeface::BODY))
@@ -198,9 +198,9 @@ pub fn view<'a>(
                         .style(style::raised)
                         .on_press(Message::MetadataAction(Outer::Identify(Action::Cancel))),
                 ]
-                .spacing(style::drawn(space::GUTTER.drawn())),
+                .spacing(style::drawn(space::CONTROL_GAP.drawn())),
             ]
-            .spacing(style::drawn(space::GUTTER.drawn())),
+            .spacing(style::drawn(space::BLOCK_GAP.drawn())),
         );
         return page.into();
     }
@@ -247,7 +247,7 @@ pub fn view<'a>(
             );
         }
 
-        page = page.push(row![poster, summary].spacing(style::drawn(space::GUTTER.drawn())));
+        page = page.push(row![poster, summary].spacing(style::drawn(space::SECTION_GAP.drawn())));
     }
 
     page.into()

@@ -112,7 +112,12 @@ fn read_entry(
             .map(|severity| severity.to_string())
             .unwrap_or_default(),
         user: entry.user_id.filter(|user| !user.is_nil()),
-        user_name: String::new(),
+        item: entry.item_id.as_deref().and_then(|id| {
+            let Ok(item) = crate::failure::unraised::read(id) else {
+                return None;
+            };
+            Some(item)
+        }),
         at: entry.date.map(|at| at.timestamp_millis()).unwrap_or(0),
     })
 }
@@ -1447,12 +1452,15 @@ impl Api {
         .await
     }
 
-    pub async fn playlist_sharing(&self, playlist: Uuid) -> Answer<Sharing> {
+    pub async fn playlist_sharing(
+        &self,
+        playlist: Uuid,
+    ) -> Answer<crate::screen::playlists::Sharing> {
         Answer::of(async {
             let held = self.client.get_playlist(&playlist).await?;
             let shares = self.client.get_playlist_users(&playlist).await?;
             let users = self.users().await.or_default(Text::FailureUsersUnread);
-            Ok(Sharing {
+            Ok(crate::screen::playlists::Sharing {
                 open: held.open_access.unwrap_or(false),
                 users: shares
                     .into_iter()
@@ -2619,13 +2627,6 @@ const MIX_LIMIT: i32 = 200;
 pub struct Entries {
     pub entries: Vec<crate::screen::playlists::Entry>,
     pub total: i32,
-}
-
-/// A playlist's sharing model as the server holds it.
-#[derive(Default)]
-pub struct Sharing {
-    pub open: bool,
-    pub users: Vec<crate::screen::playlists::Shared>,
 }
 
 /// What `/Users/{id}/Password` takes.
