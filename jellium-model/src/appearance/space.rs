@@ -5,7 +5,7 @@ use chrono::TimeDelta;
 
 use super::scheme::{self, Color};
 use super::typeface;
-use super::{Breakpoint, Canvas, Css, Drawn, Length, Query, Share, Viewport};
+use super::{Breakpoint, Canvas, Css, Drawn, Length, Orientation, Query, Share, Viewport};
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Padding {
@@ -252,6 +252,41 @@ pub fn guide_minute(viewport: Viewport) -> Drawn {
 // reference: guide-channel
 pub fn guide_channel(viewport: Viewport) -> Drawn {
     stepped(viewport, GUIDE_CHANNEL, &GUIDE_CHANNEL_STEPS).of(viewport.canvas().width())
+}
+
+/// One percent of the page's height, which is the other unit the reference
+/// writes a viewport share in.
+const fn vh(count: u32) -> Share {
+    Share::per_ten_thousand(count * 100)
+}
+
+/// The frame the scrub preview draws in, as tall as the page allows it.
+// reference: osd-preview
+const PREVIEW: Share = vh(20);
+
+/// A portrait page gives the frame a share of its width instead.
+// reference: osd-preview
+const PREVIEW_PORTRAIT: Share = vw(30);
+
+/// A landscape page no taller than this gives the frame a larger share of its
+/// height.
+// reference: osd-preview
+const PREVIEW_SHORT: Query = Query::MaxHeight(Breakpoint::em(50.0));
+
+// reference: osd-preview
+const PREVIEW_SHORT_SIDE: Share = vh(30);
+
+/// The scrub preview's frame, `.chapterThumb`, which is a share of the viewport
+/// rather than a card: 20vh, 30vw in portrait, and 30vh in a landscape page no
+/// taller than 50em.
+// reference: osd-preview
+pub fn preview(viewport: Viewport) -> Drawn {
+    let canvas = viewport.canvas();
+    match (viewport.orientation(), viewport.matches(PREVIEW_SHORT)) {
+        (Orientation::Portrait, _) => PREVIEW_PORTRAIT.of(canvas.width()),
+        (Orientation::Landscape, true) => PREVIEW_SHORT_SIDE.of(canvas.height()),
+        (Orientation::Landscape, false) => PREVIEW.of(canvas.height()),
+    }
 }
 
 /// The page padding, which is a share of the page rather than an em, and a

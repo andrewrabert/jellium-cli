@@ -24,6 +24,7 @@ const ARMS: &[&str] = &[
     "turned(",
     "landscape(",
     "vw(",
+    "vh(",
 ];
 
 /// A value that is its unit's identity or its zero, written as its own
