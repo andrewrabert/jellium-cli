@@ -262,7 +262,7 @@ const FILTER_END: Share = Share::per_ten_thousand(500);
 
 /// The page a dialog takes the first pair of ends on.
 // reference: filter-dialog
-const FILTER_TALL: Query = Query::MinHeight(Breakpoint::em(37.5));
+const FILTER_TALL: Query = Query::MinHeight(Breakpoint::pixels(600));
 
 /// The filter surface stands as tall as the reference's own `.dynamicFilterDialog`:
 /// the page less a tenth at the top and a quarter at the bottom where

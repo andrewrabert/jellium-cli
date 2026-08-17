@@ -14,17 +14,16 @@ fn workspace_root() -> PathBuf {
 /// The oracle a value is allowed to cite in place of a ported rule.
 const ORACLE: &str = "reference/breakpoints.tsv";
 
-/// The calls that build one arm of a ladder, which is what makes a private
-/// table of arms a value this gate reads.
-const ARMS: &[&str] = &[
-    "step(",
-    "share(",
-    "share_landscape(",
-    "arm(",
-    "turned(",
-    "landscape(",
-    "Share::units(",
-];
+/// The standards a value of the measurement system's own machinery is allowed
+/// to rest on. A value enters that bucket only by someone adding its standard
+/// here, which is what keeps the bucket from meaning "not otherwise
+/// classifiable".
+const STANDARDS: &[&str] = &["ieee-754", "css-initial-font-size"];
+
+/// The types a bare scalar is written in. Every ported appearance value carries
+/// a measurement type instead, so a number taken from a stylesheet cannot reach
+/// the machinery bucket without first shedding its type.
+const SCALARS: &[&str] = &["f32", "f64", "u8", "u16", "u32", "u64", "usize", "i32"];
 
 /// A value that is its unit's identity or its zero, written as its own
 /// initializer: the unit rather than anything taken from the reference.
@@ -43,22 +42,49 @@ fn identity_or_zero(initializer: &str) -> bool {
     UNITS.iter().any(|unit| initializer.trim() == *unit)
 }
 
+/// Which of the four buckets a value falls in. A value falling in none of them
+/// is what the residue check fails on.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Bucket {
+    /// It cites a ported row or the oracle.
+    Cited,
+    /// It is built from constants that cite.
+    Derived,
+    /// It is its unit's identity or its zero.
+    Identity,
+    /// It is the measurement system's own machinery, resting on a standard
+    /// outside the reference.
+    Machinery,
+}
+
 /// One `const` item of the appearance module.
 #[derive(Debug)]
 struct Value {
     name: String,
     at: String,
+    written: String,
     initializer: String,
     cited: Vec<String>,
     oracle: bool,
+    standard: Option<String>,
     exported: bool,
 }
 
 impl Value {
-    /// Whether this is a value this gate reads: one the module exports, or a
-    /// private table of ladder arms.
-    fn read(&self) -> bool {
-        self.exported || ARMS.iter().any(|call| self.initializer.contains(call))
+    /// The bucket this falls in, and None where the four do not account for it.
+    fn bucket(&self) -> Option<Bucket> {
+        if let Some(standard) = &self.standard {
+            let named = STANDARDS.contains(&standard.as_str());
+            let bare = SCALARS.contains(&self.written.as_str());
+            return (named && bare).then_some(Bucket::Machinery);
+        }
+        if !self.cited.is_empty() || self.oracle {
+            return Some(Bucket::Cited);
+        }
+        if self.derived() {
+            return Some(Bucket::Derived);
+        }
+        identity_or_zero(&self.initializer).then_some(Bucket::Identity)
     }
 
     /// Whether the value is built from other constants, and so inherits their
@@ -109,9 +135,14 @@ fn appearance(root: &Path) -> Vec<Value> {
             if declaration.starts_with("fn ") {
                 continue;
             }
-            let Some((name, _)) = declaration.split_once(':') else {
+            let Some((name, typed)) = declaration.split_once(':') else {
                 continue;
             };
+            let written = typed
+                .split_once('=')
+                .map_or(typed, |(written, _)| written)
+                .trim()
+                .to_owned();
 
             let mut initializer = String::new();
             let mut at = index;
@@ -133,12 +164,25 @@ fn appearance(root: &Path) -> Vec<Value> {
 
             let mut cited = Vec::new();
             let mut oracle = false;
+            let mut standard = None;
             let mut above = index;
             while above > 0 && lines[above - 1].trim_start().starts_with("//") {
                 above -= 1;
                 let comment = lines[above].trim_start();
                 if let Some(rest) = comment.strip_prefix("// reference:") {
                     cited.push(
+                        rest.trim_start()
+                            .chars()
+                            .take_while(|value| {
+                                value.is_ascii_lowercase()
+                                    || value.is_ascii_digit()
+                                    || *value == '-'
+                            })
+                            .collect(),
+                    );
+                }
+                if let Some(rest) = comment.strip_prefix("// standard:") {
+                    standard = Some(
                         rest.trim_start()
                             .chars()
                             .take_while(|value| {
@@ -160,9 +204,11 @@ fn appearance(root: &Path) -> Vec<Value> {
             values.push(Value {
                 name: name.trim().to_owned(),
                 at: format!("{named}:{}", index + 1),
+                written,
                 initializer,
                 cited,
                 oracle,
+                standard,
                 exported,
             });
         }
@@ -206,7 +252,7 @@ fn every_appearance_value_carries_a_provenance_row() {
 
     let mut uncited = Vec::new();
     let mut unknown = Vec::new();
-    for value in values.iter().filter(|value| value.read()) {
+    for value in &values {
         for construct in &value.cited {
             if !rows.contains_key(construct) {
                 unknown.push(format!(
@@ -215,18 +261,14 @@ fn every_appearance_value_carries_a_provenance_row() {
                 ));
             }
         }
-        if value.cited.is_empty()
-            && !value.oracle
-            && !value.derived()
-            && !identity_or_zero(&value.initializer)
-        {
+        if value.bucket().is_none() {
             uncited.push(format!("{} ({})", value.at, value.name));
         }
     }
     assert!(unknown.is_empty(), "citations with no row: {unknown:#?}");
     assert!(
         uncited.is_empty(),
-        "appearance values citing neither a ported row nor the oracle: {uncited:#?}"
+        "appearance values no bucket accounts for: {uncited:#?}"
     );
 }
 
@@ -311,7 +353,7 @@ fn spellings(initializer: &str) -> Vec<(String, Vec<String>)> {
                     ));
                 }
             }
-            ("css", "of") => {
+            ("breakpoint", "pixels") | ("css", "of") => {
                 if let Ok(px) = arguments.parse::<f64>()
                     && px != 0.0
                 {
@@ -447,8 +489,12 @@ fn every_cited_span_holds_the_value_that_cites_it() {
     let mut spans: BTreeMap<String, String> = BTreeMap::new();
     let mut absent = Vec::new();
 
-    for value in appearance(&root).iter().filter(|value| value.read()) {
-        if value.derived() || value.cited.is_empty() {
+    for value in &appearance(&root) {
+        let Some(bucket) = value.bucket() else {
+            absent.push(format!("{} ({}) falls in no bucket", value.at, value.name));
+            continue;
+        };
+        if bucket == Bucket::Machinery || value.derived() || value.cited.is_empty() {
             continue;
         }
         let mut held = String::new();

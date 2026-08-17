@@ -405,7 +405,10 @@ pub struct PerRow {
     rate: f64,
 }
 
-/// The decimals a double carries, which is as far as a written percent can go.
+/// The decimals a written percent can go to before it stops naming a double.
+// standard: ieee-754 — a binary64 round-trips through seventeen decimal digits,
+// which is what the request ladder's arms are rendered to when they are
+// compared against the oracle's own text
 const WRITTEN_DIGITS: usize = 17;
 
 /// The decimals `reference/breakpoints.tsv` writes its `requested` column to.

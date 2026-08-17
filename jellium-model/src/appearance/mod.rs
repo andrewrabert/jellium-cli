@@ -170,8 +170,11 @@ impl Ratio {
     }
 }
 
-/// The base every design length and every breakpoint is written over, which is
-/// the root size a browser starts at.
+/// The base every design length and every breakpoint is written over.
+// standard: css-initial-font-size — a media query resolves an em against the
+// initial font size rather than the root's, and sixteen css pixels is that size
+// in every engine this client runs on; it is the base the reference's own em
+// values are written over and the reference never writes it
 const BASE: f32 = 16.0;
 
 /// A number as css writes it: the fewest decimals that carry it.
@@ -226,6 +229,13 @@ impl Breakpoint {
         Breakpoint {
             css: (em * BASE) as u32,
         }
+    }
+
+    /// The same threshold where the reference writes one in css pixels rather
+    /// than in em, as `.dynamicFilterDialog`'s `min-height: 600px` does, so a
+    /// threshold is spelt here the way the reference spells it.
+    pub const fn pixels(css: u32) -> Breakpoint {
+        Breakpoint { css }
     }
 
     pub fn css(self) -> Css {
