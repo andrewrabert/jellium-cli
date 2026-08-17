@@ -828,56 +828,68 @@ fn info<'a>(
 }
 
 /// The bar's centred group: the controls that step through the queue, the one
-/// that stops it, and the reading it has reached.
+/// that stops it, and the reading it has reached; the stop and the reading go
+/// as the page narrows.
 // reference: bar-centre
 // reference: bar-markup-centre
 // reference: bar-time
-fn centre<'a>(playing: &'a Playing, _viewport: Viewport) -> Element<'a, Message> {
+// reference: bar-shed-time
+fn centre<'a>(playing: &'a Playing, viewport: Viewport) -> Element<'a, Message> {
     let paused = match playing.paused {
         true => Icon::PlayArrow,
         false => Icon::Pause,
     };
-    row![
-        acting(
-            Icon::SkipPrevious,
-            typeface::BAR_ICON,
-            Text::PlayerPrevious,
-            Action::Previous
-        ),
-        acting(
-            paused,
-            typeface::BAR_ICON,
-            Text::PlayerPlay,
-            Action::TogglePlay
-        ),
-        acting(
+    let mut controls = row![acting(
+        Icon::SkipPrevious,
+        typeface::BAR_ICON,
+        Text::PlayerPrevious,
+        Action::Previous
+    )]
+    .align_y(iced::Center);
+    controls = controls.push(acting(
+        paused,
+        typeface::BAR_ICON,
+        Text::PlayerPlay,
+        Action::TogglePlay,
+    ));
+    if !viewport.matches(space::BAR_TIME_AT) {
+        controls = controls.push(acting(
             Icon::Stop,
             typeface::BAR_ICON,
             Text::PlayerStop,
-            Action::Leave
-        ),
-        acting(
-            Icon::SkipNext,
-            typeface::BAR_ICON,
-            Text::PlayerNext,
-            Action::Next
-        ),
-        container(prose(clock(playing.shown()), typeface::BAR_TEXT))
-            .padding(iced::Padding::ZERO.left(style::drawn(space::BAR_TIME_INSET.drawn()))),
-    ]
-    .align_y(iced::Center)
-    .into()
+            Action::Leave,
+        ));
+    }
+    controls = controls.push(acting(
+        Icon::SkipNext,
+        typeface::BAR_ICON,
+        Text::PlayerNext,
+        Action::Next,
+    ));
+    if !viewport.matches(space::BAR_TIME_AT) {
+        controls = controls.push(
+            container(prose(clock(playing.shown()), typeface::BAR_TEXT))
+                .padding(iced::Padding::ZERO.left(style::drawn(space::BAR_TIME_INSET.drawn()))),
+        );
+    }
+    controls.into()
 }
 
 /// The bar's trailing group: volume, the queue's own two controls, what
 /// favourites the item, and the surfaces it opens. It draws no control that
-/// plays and pauses, which is what the desktop layout takes out of it.
+/// plays and pauses, which is what the desktop layout takes out of it, and it
+/// drops the favourite control, then repeat and shuffle, then the volume
+/// slider, then the control that mutes, as the page narrows.
 // reference: bar-right
 // reference: bar-markup-right
 // reference: bar-markup-queue
 // reference: bar-markup-rating
 // reference: bar-rating
 // reference: bar-layout-desktop
+// reference: bar-shed-rating
+// reference: bar-shed-queue
+// reference: bar-shed-volume
+// reference: bar-shed-mute
 fn trailing<'a>(
     playing: &'a Playing,
     sync_play: SyncAccess,
@@ -897,41 +909,50 @@ fn trailing<'a>(
         true => (Icon::Favorite, Text::PlayerUnfavorite),
         false => (Icon::FavoriteBorder, Text::PlayerFavorite),
     };
-    let mut controls = row![
-        acting(muting, typeface::BAR_ICON, mute, Action::ToggleMute),
-        volume_slider(device, viewport),
-        acting(
-            repeating,
-            typeface::BAR_ICON,
-            repeat_label(repeat),
-            Action::CycleRepeat
-        ),
-        acting(
-            Icon::Shuffle,
-            typeface::BAR_ICON,
-            Text::QueueShuffle,
-            Action::ToggleShuffle
-        ),
-        acting(
+
+    let mut controls = row![].align_y(iced::Center);
+    if !viewport.matches(space::BAR_MUTE_AT) {
+        controls = controls.push(acting(muting, typeface::BAR_ICON, mute, Action::ToggleMute));
+    }
+    if !viewport.matches(space::BAR_VOLUME_AT) {
+        controls = controls.push(volume_slider(device));
+    }
+    if !viewport.matches(space::BAR_QUEUE_AT) {
+        controls = controls
+            .push(acting(
+                repeating,
+                typeface::BAR_ICON,
+                repeat_label(repeat),
+                Action::CycleRepeat,
+            ))
+            .push(acting(
+                Icon::Shuffle,
+                typeface::BAR_ICON,
+                Text::QueueShuffle,
+                Action::ToggleShuffle,
+            ));
+    }
+    if !viewport.matches(space::BAR_RATING_AT) {
+        controls = controls.push(acting(
             favouring,
             typeface::BAR_ICON,
             favourite,
-            Action::ToggleFavorite
-        ),
-        crate::widget::icon_button(
+            Action::ToggleFavorite,
+        ));
+    }
+    controls = controls
+        .push(crate::widget::icon_button(
             Icon::Queue,
             typeface::BAR_ICON,
             Text::PlayerQueue,
             Message::Navigated(Route::Queue),
-        ),
-        crate::widget::icon_button(
+        ))
+        .push(crate::widget::icon_button(
             Icon::Cast,
             typeface::BAR_ICON,
             Text::PlayerRemote,
             Message::Navigated(Route::Remote),
-        ),
-    ]
-    .align_y(iced::Center);
+        ));
     if sync_play != SyncAccess::None {
         controls = controls.push(crate::widget::icon_button(
             Icon::Groups,
@@ -947,7 +968,7 @@ fn trailing<'a>(
 /// stands apart from the control that mutes rather than beside it.
 // reference: bar-volume
 // reference: bar-markup-right
-fn volume_slider<'a>(device: crate::prefs::Device, _viewport: Viewport) -> Element<'a, Message> {
+fn volume_slider<'a>(device: crate::prefs::Device) -> Element<'a, Message> {
     let handle = slider(0.0..=1.0_f32, device.volume, |value| {
         Message::PlayerAction(Action::SetVolume(value))
     })
@@ -965,6 +986,15 @@ fn position<'a>(scrubber: Element<'a, Message>, _viewport: Viewport) -> Element<
         .width(Fill)
         .height(style::drawn(space::BAR_SLIDER_RISE.drawn()))
         .into()
+}
+
+/// The centred group, absent where the page is too narrow to carry it.
+// reference: bar-shed-centre
+fn centred<'a>(playing: &'a Playing, viewport: Viewport) -> Option<Element<'a, Message>> {
+    match viewport.matches(space::BAR_CENTRE_AT) {
+        true => None,
+        false => Some(centre(playing, viewport)),
+    }
 }
 
 /// The bar drawn under every screen while audio plays here, while a radio
@@ -992,7 +1022,7 @@ pub fn bar<'a>(
                 None,
                 viewport,
             ),
-            Some(centre(playing, viewport)),
+            centred(playing, viewport),
             self::trailing(playing, sync_play, device, viewport),
         ),
         Transport::Remote(bound) => (
@@ -1017,7 +1047,7 @@ pub fn bar<'a>(
                 None,
                 viewport,
             ),
-            Some(centre(playing, viewport)),
+            centred(playing, viewport),
             self::trailing(playing, sync_play, device, viewport),
         ),
     };

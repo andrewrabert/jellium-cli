@@ -254,17 +254,37 @@ pub const BAR_VOLUME_SLIDER: Length = Length::em(9.0);
 // reference: bar-info
 const BAR_INFO: Share = Share::per_ten_thousand(4000);
 
-/// The steps it takes as the page narrows, in the order the cascade resolves
-/// them: the 80em rule is written before the 60em one, so the whole of the bar
-/// stands where both apply.
+/// Where the bar drops the control that favourites what is playing.
+// reference: bar-shed-rating
+pub const BAR_RATING_AT: Query = Query::MaxWidth(Breakpoint::em(70.0));
+
+/// Where it drops the repeat and shuffle controls.
+// reference: bar-shed-queue
+pub const BAR_QUEUE_AT: Query = Query::MaxWidth(Breakpoint::em(66.0));
+
+/// Where it drops the reading and the control that stops playback.
 // reference: bar-shed-time
+pub const BAR_TIME_AT: Query = Query::MaxWidth(Breakpoint::em(80.0));
+
+/// Where the whole centred group goes.
+// reference: bar-shed-centre
+pub const BAR_CENTRE_AT: Query = Query::MaxWidth(Breakpoint::em(56.0));
+
+/// Where the volume slider goes.
 // reference: bar-shed-volume
+pub const BAR_VOLUME_AT: Query = Query::MaxWidth(Breakpoint::em(60.0));
+
+/// Where the control that mutes goes.
+// reference: bar-shed-mute
+pub const BAR_MUTE_AT: Query = Query::MaxWidth(Breakpoint::em(24.0));
+
+/// The steps `.nowPlayingBarInfoContainer` takes as the page narrows, in the
+/// order the cascade resolves them: the rule that sheds the reading is written
+/// before the one that sheds the volume slider, so the whole of the bar stands
+/// where both apply.
 const BAR_INFO_STEPS: [(Query, Share); 2] = [
-    (
-        Query::MaxWidth(Breakpoint::em(80.0)),
-        Share::per_ten_thousand(4500),
-    ),
-    (Query::MaxWidth(Breakpoint::em(60.0)), Share::WHOLE),
+    (BAR_TIME_AT, Share::per_ten_thousand(4500)),
+    (BAR_VOLUME_AT, Share::WHOLE),
 ];
 
 /// `.nowPlayingBarInfoContainer`'s share of the bar: two fifths, widening to
