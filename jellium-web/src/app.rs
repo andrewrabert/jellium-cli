@@ -4,6 +4,7 @@ use std::time::Duration;
 
 use iced::widget::{center, column};
 use iced::{Element, Subscription, Task, Theme};
+use jellium_model::item::Mark;
 use jellium_protocol::{
     Event, Feed, Group, Marked, Notice, PlaybackRefused, Quality, Report, Session, SessionStatus,
     Standing, Target,
@@ -258,8 +259,8 @@ pub enum Message {
     ),
     SearchEdited(String),
     SearchSubmitted,
-    PlayedToggled(Uuid, bool),
-    FavoriteToggled(Uuid, bool),
+    PlayedToggled(Uuid, Mark),
+    FavoriteToggled(Uuid, Mark),
     UserDataUpdated(Uuid, Answer<UserItemDataDto>),
     PlayPressed(player::Intent),
     /// A start resolved from a play control, a Live TV selection or an
@@ -1693,22 +1694,23 @@ impl Jellium {
                 };
                 self.replace(Route::Search { term })
             }
-            Message::PlayedToggled(id, played) => {
-                let Some(signed) = self.signed() else {
-                    return Task::none();
-                };
-                let api = signed.api.clone();
-                Task::perform(async move { api.set_played(id, played).await }, move |r| {
-                    Message::UserDataUpdated(id, r)
-                })
-            }
-            Message::FavoriteToggled(id, favorite) => {
+            Message::PlayedToggled(id, mark) => {
                 let Some(signed) = self.signed() else {
                     return Task::none();
                 };
                 let api = signed.api.clone();
                 Task::perform(
-                    async move { api.set_favorite(id, favorite).await },
+                    async move { api.set_played(id, mark.set()).await },
+                    move |r| Message::UserDataUpdated(id, r),
+                )
+            }
+            Message::FavoriteToggled(id, mark) => {
+                let Some(signed) = self.signed() else {
+                    return Task::none();
+                };
+                let api = signed.api.clone();
+                Task::perform(
+                    async move { api.set_favorite(id, mark.set()).await },
                     move |r| Message::UserDataUpdated(id, r),
                 )
             }

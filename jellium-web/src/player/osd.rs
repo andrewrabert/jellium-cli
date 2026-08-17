@@ -4,6 +4,7 @@ use std::time::Duration;
 use iced::widget::Space;
 use iced::widget::{button, column, container, image, row, scrollable, slider, stack};
 use iced::{Element, Fill, Length};
+use jellium_model::item::{self, Mark};
 use jellium_protocol::{Method, Quality, Repeat, Subtitles, SyncAccess};
 
 use crate::app::Message;
@@ -905,9 +906,9 @@ fn trailing<'a>(
         true => (Icon::VolumeOff, Text::PlayerUnmute),
         false => (Icon::VolumeUp, Text::PlayerMute),
     };
-    let (favouring, favourite) = match playing.favourited() {
-        true => (Icon::Favorite, Text::PlayerUnfavorite),
-        false => (Icon::FavoriteBorder, Text::PlayerFavorite),
+    let (favouring, favourite) = match item::favorited(&playing.item) {
+        Mark::Set => (Icon::Favorite, Text::PlayerUnfavorite),
+        Mark::Cleared => (Icon::FavoriteBorder, Text::PlayerFavorite),
     };
 
     let mut controls = row![].align_y(iced::Center);
@@ -979,13 +980,15 @@ fn volume_slider<'a>(device: crate::prefs::Device) -> Element<'a, Message> {
         .into()
 }
 
-/// The position slider, drawn in the strip that straddles the bar's top edge.
+// the reference lifts `.nowPlayingBarPositionContainer` 0.56em over the bar so
+// its handle straddles the top edge, and iced takes no negative offset
+// this client stacks the slider under the two groups instead, flush with that
+// edge, which keeps the bar 4.2em tall and keeps the groups clickable over it
+// the handle therefore sits half its own height inside the bar rather than
+// centred on the edge
 // reference: bar-position
-fn position<'a>(scrubber: Element<'a, Message>, _viewport: Viewport) -> Element<'a, Message> {
-    container(scrubber)
-        .width(Fill)
-        .height(style::drawn(space::BAR_SLIDER_RISE.drawn()))
-        .into()
+fn position<'a>(scrubber: Element<'a, Message>) -> Element<'a, Message> {
+    container(scrubber).width(Fill).align_top(Fill).into()
 }
 
 /// The centred group, absent where the page is too narrow to carry it.
@@ -1066,13 +1069,14 @@ pub fn bar<'a>(
     .align_y(iced::Center)
     .height(style::drawn(space::BAR.drawn()));
 
-    let top: Element<'a, Message> = match centred {
-        Some(centred) => stack![groups, container(centred).center_x(Fill).center_y(Fill),].into(),
-        None => groups.into(),
-    };
+    let mut layers = stack![position(scrubber), groups];
+    if let Some(centred) = centred {
+        layers = layers.push(container(centred).center_x(Fill).center_y(Fill));
+    }
 
-    column![position(scrubber, viewport), top]
+    layers
         .width(Length::Fill)
+        .height(style::drawn(space::BAR.drawn()))
         .into()
 }
 

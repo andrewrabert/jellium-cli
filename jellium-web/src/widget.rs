@@ -7,6 +7,7 @@ pub use line::Line;
 
 use iced::widget::{Space, button, column, container, grid, image, row, scrollable, text};
 use iced::{Element, Fill, Length};
+use jellium_model::item;
 use jellium_protocol::{Notice, Session, SyncAccess};
 use jellyfin_api::types::BaseItemDto;
 
@@ -376,7 +377,6 @@ pub fn poster<'a>(
     let Some(id) = item.id.filter(|_| overflow == Overflow::Offered) else {
         return control.into();
     };
-    let held = item.user_data.as_ref();
     column![
         control,
         button(prose(strings::lookup(Text::OverflowOpen), typeface::BODY))
@@ -384,8 +384,8 @@ pub fn poster<'a>(
             .on_press(Message::OverflowAction(
                 crate::screen::overflow::Action::Open {
                     item: id,
-                    played: held.and_then(|held| held.played).unwrap_or(false),
-                    favorite: held.and_then(|held| held.is_favorite).unwrap_or(false),
+                    played: item::played(item),
+                    favorite: item::favorited(item),
                 }
             )),
     ]

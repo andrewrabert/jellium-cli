@@ -1,5 +1,6 @@
 use iced::widget::{button, column, row, text_input};
 use iced::{Element, Task};
+use jellium_model::item::Mark;
 use jellyfin_api::types::BaseItemDto;
 use uuid::Uuid;
 
@@ -16,8 +17,8 @@ use crate::widget::prose;
 #[derive(Debug, Clone)]
 pub struct Open {
     pub item: Uuid,
-    pub played: bool,
-    pub favorite: bool,
+    pub played: Mark,
+    pub favorite: Mark,
     /// The picker open over the menu, and `None` while the menu itself shows.
     pub filing: Option<Filing>,
 }
@@ -45,17 +46,17 @@ pub enum Action {
     /// without a second read.
     Open {
         item: Uuid,
-        played: bool,
-        favorite: bool,
+        played: Mark,
+        favorite: Mark,
     },
     Close,
     MarkPlayed {
         item: Uuid,
-        played: bool,
+        played: Mark,
     },
     Favorite {
         item: Uuid,
-        favorite: bool,
+        favorite: Mark,
     },
     /// Opens the picker, which loads what the server holds.
     AddTo {
@@ -92,10 +93,9 @@ pub fn view<'a>(
     let Some(filing) = &open.filing else {
         let mut menu = column![
             button(prose(
-                strings::lookup(if open.played {
-                    Text::OverflowMarkUnplayed
-                } else {
-                    Text::OverflowMarkPlayed
+                strings::lookup(match open.played {
+                    Mark::Set => Text::OverflowMarkUnplayed,
+                    Mark::Cleared => Text::OverflowMarkPlayed,
                 })
                 .to_owned(),
                 typeface::BODY
@@ -103,13 +103,12 @@ pub fn view<'a>(
             .style(style::flat)
             .on_press(Message::OverflowAction(Action::MarkPlayed {
                 item,
-                played: !open.played,
+                played: open.played.flipped(),
             })),
             button(prose(
-                strings::lookup(if open.favorite {
-                    Text::OverflowUnfavorite
-                } else {
-                    Text::OverflowFavorite
+                strings::lookup(match open.favorite {
+                    Mark::Set => Text::OverflowUnfavorite,
+                    Mark::Cleared => Text::OverflowFavorite,
                 })
                 .to_owned(),
                 typeface::BODY
@@ -117,7 +116,7 @@ pub fn view<'a>(
             .style(style::flat)
             .on_press(Message::OverflowAction(Action::Favorite {
                 item,
-                favorite: !open.favorite,
+                favorite: open.favorite.flipped(),
             })),
             button(prose(
                 strings::lookup(Text::OverflowAddToCollection),

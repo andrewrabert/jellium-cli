@@ -3,6 +3,7 @@ use std::rc::Rc;
 
 use iced::Element;
 use iced::widget::{button, column, row, scrollable};
+use jellium_model::item::{self, Mark};
 use jellyfin_api::types::{BaseItemDto, BaseItemKind};
 use uuid::Uuid;
 
@@ -54,20 +55,6 @@ fn children_heading(kind: Option<BaseItemKind>) -> Text {
     }
 }
 
-fn played(item: &BaseItemDto) -> bool {
-    item.user_data
-        .as_ref()
-        .and_then(|data| data.played)
-        .unwrap_or(false)
-}
-
-fn favorite(item: &BaseItemDto) -> bool {
-    item.user_data
-        .as_ref()
-        .and_then(|data| data.is_favorite)
-        .unwrap_or(false)
-}
-
 fn heading(item: &BaseItemDto) -> String {
     match (
         &item.series_name,
@@ -89,7 +76,7 @@ fn heading(item: &BaseItemDto) -> String {
 /// True when the server stored a position for an item that is not marked
 /// played, which is what Resume begins from.
 fn resumable(item: &BaseItemDto) -> bool {
-    !played(item)
+    item::played(item) == Mark::Cleared
         && item
             .user_data
             .as_ref()
@@ -205,26 +192,27 @@ pub fn view<'a>(
         actions = actions.push(control);
     }
     if let Some(id) = item.id {
-        let mark = if played(item) {
-            Text::DetailMarkUnplayed
-        } else {
-            Text::DetailMarkPlayed
+        let mark = match item::played(item) {
+            Mark::Set => Text::DetailMarkUnplayed,
+            Mark::Cleared => Text::DetailMarkPlayed,
         };
-        let star = if favorite(item) {
-            Text::DetailUnfavorite
-        } else {
-            Text::DetailFavorite
+        let star = match item::favorited(item) {
+            Mark::Set => Text::DetailUnfavorite,
+            Mark::Cleared => Text::DetailFavorite,
         };
         actions = actions
             .push(
                 button(prose(strings::lookup(mark), typeface::BODY))
                     .style(style::raised)
-                    .on_press(Message::PlayedToggled(id, !played(item))),
+                    .on_press(Message::PlayedToggled(id, item::played(item).flipped())),
             )
             .push(
                 button(prose(strings::lookup(star), typeface::BODY))
                     .style(style::raised)
-                    .on_press(Message::FavoriteToggled(id, !favorite(item))),
+                    .on_press(Message::FavoriteToggled(
+                        id,
+                        item::favorited(item).flipped(),
+                    )),
             );
 
         if session.administrator && !session.read_only {

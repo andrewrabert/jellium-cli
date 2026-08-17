@@ -1,7 +1,7 @@
 //! The `BaseItemDto` fields the metadata manager edits, written through one
 //! `form::Form` so a save preserves every field no control covers.
 
-use jellyfin_api::types::{BaseItemKind, MetadataField};
+use jellyfin_api::types::{BaseItemDto, BaseItemKind, MetadataField};
 
 use crate::form::{Field, Form};
 
@@ -282,6 +282,51 @@ pub fn set_locked(item: &mut Form, lock: MetadataField, locked: bool) {
         LOCKED,
         serde_json::Value::Array(held.into_iter().map(serde_json::Value::String).collect()),
     );
+}
+
+/// Whether a user mark stands on an item or is off it.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Mark {
+    Set,
+    Cleared,
+}
+
+impl Mark {
+    /// What the server's own field carries, which is the one site a mark
+    /// becomes a scalar.
+    pub fn set(self) -> bool {
+        match self {
+            Mark::Set => true,
+            Mark::Cleared => false,
+        }
+    }
+
+    /// The mark the opposite of this one, which is what a control that toggles
+    /// asks for.
+    pub fn flipped(self) -> Mark {
+        match self {
+            Mark::Set => Mark::Cleared,
+            Mark::Cleared => Mark::Set,
+        }
+    }
+}
+
+/// The mark the server's own field carries, absent where it holds nothing.
+fn mark(held: Option<bool>) -> Mark {
+    match held {
+        Some(true) => Mark::Set,
+        Some(false) | None => Mark::Cleared,
+    }
+}
+
+/// Whether the user has played this item.
+pub fn played(item: &BaseItemDto) -> Mark {
+    mark(item.user_data.as_ref().and_then(|data| data.played))
+}
+
+/// Whether the user has favorited it.
+pub fn favorited(item: &BaseItemDto) -> Mark {
+    mark(item.user_data.as_ref().and_then(|data| data.is_favorite))
 }
 
 #[cfg(test)]

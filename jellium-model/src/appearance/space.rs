@@ -220,11 +220,6 @@ pub const BAR_ART: Length = Length::em(4.2);
 // reference: bar-art
 pub const BAR_ART_HEIGHT: Share = Share::per_ten_thousand(7000);
 
-/// How far `.nowPlayingBarPositionContainer` stands above the bar's top edge,
-/// which is the strip the position slider is drawn in.
-// reference: bar-position
-pub const BAR_SLIDER_RISE: Length = Length::em(0.56);
-
 /// `.nowPlayingBarText`'s own margins.
 // reference: bar-text
 pub const BAR_TEXT_MARGIN: Padding = Padding {

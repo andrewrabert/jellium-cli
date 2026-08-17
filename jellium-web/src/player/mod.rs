@@ -269,15 +269,6 @@ pub struct Playing {
 }
 
 impl Playing {
-    /// Whether the item playing carries the user's favourite mark.
-    pub fn favourited(&self) -> bool {
-        self.item
-            .user_data
-            .as_ref()
-            .and_then(|data| data.is_favorite)
-            .unwrap_or(false)
-    }
-
     /// The position the display draws: the one being dragged to while the
     /// scrub handle is held, and the element's otherwise.
     pub fn shown(&self) -> Duration {
@@ -1237,7 +1228,10 @@ pub fn act(signed: &mut Signed, action: Action, viewport: Viewport) -> Task<Mess
         Action::Stirred => Task::none(),
         Action::Record => live::record(signed),
         Action::ToggleFavorite => match playing.item.id {
-            Some(id) => Task::done(Message::FavoriteToggled(id, !playing.favourited())),
+            Some(id) => Task::done(Message::FavoriteToggled(
+                id,
+                jellium_model::item::favorited(&playing.item).flipped(),
+            )),
             None => Task::none(),
         },
         Action::TogglePlay => {
