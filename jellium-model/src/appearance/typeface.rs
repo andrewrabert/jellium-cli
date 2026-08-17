@@ -60,6 +60,10 @@ pub const BAR_ICON: Length = ICON_BUTTON.times(Ratio::thousandths(1200));
 // reference: filter-indicator
 pub const INDICATOR: Length = BODY.times(Ratio::thousandths(600));
 
+/// `.detailButton-icon`.
+// reference: detail-button-icon
+pub const DETAIL_ICON: Length = Length::em(1.6);
+
 /// `.searchfields-icon`, the one glyph the search field stands beside.
 // reference: search-icon
 pub const SEARCH_ICON: Length = Length::em(2.0);

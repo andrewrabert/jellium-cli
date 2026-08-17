@@ -3,7 +3,9 @@ audiotrack	E3A1
 autorenew	E863
 book	E865
 cast	E307
+check	E5CA
 closed_caption	E01C
+explore	E87A
 fast_forward	E01F
 fast_rewind	E020
 favorite	E87D
@@ -25,6 +27,7 @@ queue	E03C
 quiz	F04C
 repeat	E040
 repeat_one	E041
+replay	E042
 search	E8B6
 settings	E8B8
 shuffle	E043

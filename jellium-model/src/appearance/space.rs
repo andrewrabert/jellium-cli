@@ -442,6 +442,32 @@ pub const DETAIL_POSTER_RISE: Length = RIBBON.times(Ratio::thousandths(1800));
 // reference: detail-poster
 pub const DETAIL_POSTER_INSET: Share = PAGE_SIDE;
 
+/// The gap above and below the row of detail buttons.
+// reference: detail-buttons
+pub const DETAIL_BUTTONS: Length = Length::em(1.0);
+
+/// The gap under that row in the stacked arrangement.
+// reference: detail-centred
+pub const DETAIL_BUTTONS_BOTTOM: Length = Length::em(0.5);
+
+/// One detail button's padding.
+// reference: detail-button
+pub const DETAIL_BUTTON_PAD: Padding = Padding {
+    top: Length::em(0.7),
+    right: Length::em(0.7),
+    bottom: Length::em(0.7),
+    left: Length::em(0.7),
+};
+
+/// The steps `.detailButton`'s sides take as the page widens, in the order the
+/// cascade resolves them.
+// reference: detail-button-pad
+const DETAIL_BUTTON_SIDES: [(Query, Length); 3] = [
+    (Query::MinWidth(Breakpoint::em(29.0)), Length::em(0.75)),
+    (Query::MinWidth(Breakpoint::em(32.0)), Length::em(0.8)),
+    (Query::MinWidth(Breakpoint::em(35.0)), Length::em(0.85)),
+];
+
 /// The gap under the page's own head.
 // reference: detail-secondary
 pub const DETAIL_BODY_TOP: Length = Length::em(1.25);
@@ -657,6 +683,18 @@ pub fn preview(viewport: Viewport) -> Css {
         (Orientation::Landscape, true) => PREVIEW_SHORT_SIDE.of(viewport.height()),
         (Orientation::Landscape, false) => PREVIEW.of(viewport.height()),
     }
+}
+
+/// The sides of that padding as the page widens.
+// reference: detail-button-pad
+pub fn detail_button_side(viewport: Viewport) -> Drawn {
+    let mut standing = DETAIL_BUTTON_PAD.right;
+    for (at, side) in DETAIL_BUTTON_SIDES {
+        if viewport.matches(at) {
+            standing = side;
+        }
+    }
+    standing.drawn()
 }
 
 /// The page padding, which is a share of the page rather than an em, and a

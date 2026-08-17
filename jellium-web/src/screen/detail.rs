@@ -10,6 +10,7 @@ use uuid::Uuid;
 use crate::api::Api;
 use crate::app::Message;
 use crate::error::Answer;
+use crate::icon::Icon;
 use crate::images::{self, Cache, Kind};
 use crate::player::Intent;
 use crate::style::space::Room;
@@ -84,18 +85,40 @@ fn resumable(item: &BaseItemDto) -> bool {
             .is_some_and(|ticks| ticks > 0)
 }
 
-fn intent_button<'a>(label: Text, intent: Intent) -> Element<'a, Message> {
-    button(prose(strings::lookup(label), typeface::BODY))
-        .style(style::raised)
-        .on_press(Message::PlayPressed(intent))
-        .into()
+/// One button in the row under the name: a glyph over nothing, at the padding
+/// the page's width writes.
+// reference: detail-button
+// reference: detail-button-icon
+// reference: detail-markup-play
+fn detail_button<'a>(
+    glyph: Icon,
+    label: Text,
+    press: Message,
+    viewport: Viewport,
+) -> Element<'a, Message> {
+    let side = style::drawn(space::detail_button_side(viewport));
+    let control = button(crate::icon::icon(glyph, typeface::DETAIL_ICON))
+        .style(style::flat)
+        .padding(
+            style::padding(space::DETAIL_BUTTON_PAD)
+                .left(side)
+                .right(side),
+        )
+        .on_press(press);
+    iced::widget::tooltip(
+        control,
+        prose(strings::lookup(label), typeface::BODY),
+        iced::widget::tooltip::Position::Top,
+    )
+    .style(style::dialog)
+    .into()
 }
 
 /// Play, and Resume when the item has a stored position and is not marked
 /// played, for a movie, episode, music video or song.
 /// Play All and Shuffle for a series, season, album or artist.
 /// Instant Mix for a song, album or artist.
-fn play_controls<'a>(item: &BaseItemDto) -> Vec<Element<'a, Message>> {
+fn play_controls<'a>(item: &BaseItemDto, viewport: Viewport) -> Vec<Element<'a, Message>> {
     let Some(id) = item.id else {
         return Vec::new();
     };
@@ -107,20 +130,24 @@ fn play_controls<'a>(item: &BaseItemDto) -> Vec<Element<'a, Message>> {
             | BaseItemKind::MusicVideo
             | BaseItemKind::Audio,
         ) => {
-            controls.push(intent_button(
+            controls.push(detail_button(
+                Icon::PlayArrow,
                 Text::DetailPlay,
-                Intent::Item {
+                Message::PlayPressed(Intent::Item {
                     item: id,
                     resume: false,
-                },
+                }),
+                viewport,
             ));
             if resumable(item) {
-                controls.push(intent_button(
+                controls.push(detail_button(
+                    Icon::Replay,
                     Text::DetailResume,
-                    Intent::Item {
+                    Message::PlayPressed(Intent::Item {
                         item: id,
                         resume: true,
-                    },
+                    }),
+                    viewport,
                 ));
             }
         }
@@ -130,19 +157,23 @@ fn play_controls<'a>(item: &BaseItemDto) -> Vec<Element<'a, Message>> {
             | BaseItemKind::MusicAlbum
             | BaseItemKind::MusicArtist,
         ) => {
-            controls.push(intent_button(
+            controls.push(detail_button(
+                Icon::PlayArrow,
                 Text::DetailPlayAll,
-                Intent::All {
+                Message::PlayPressed(Intent::All {
                     item: id,
                     shuffle: false,
-                },
+                }),
+                viewport,
             ));
-            controls.push(intent_button(
+            controls.push(detail_button(
+                Icon::Shuffle,
                 Text::DetailShuffle,
-                Intent::All {
+                Message::PlayPressed(Intent::All {
                     item: id,
                     shuffle: true,
-                },
+                }),
+                viewport,
             ));
         }
         _ => {}
@@ -152,9 +183,11 @@ fn play_controls<'a>(item: &BaseItemDto) -> Vec<Element<'a, Message>> {
         item.type_,
         Some(BaseItemKind::Audio | BaseItemKind::MusicAlbum | BaseItemKind::MusicArtist)
     ) {
-        controls.push(intent_button(
+        controls.push(detail_button(
+            Icon::Explore,
             Text::DetailInstantMix,
-            Intent::Mix { item: id },
+            Message::PlayPressed(Intent::Mix { item: id }),
+            viewport,
         ));
     }
 
@@ -238,9 +271,10 @@ fn head<'a>(
     session: &'a jellium_protocol::Session,
 ) -> Head<'a> {
     let mut actions = row![].spacing(style::drawn(space::GUTTER.drawn()));
-    for control in play_controls(item) {
+    for control in play_controls(item, viewport) {
         actions = actions.push(control);
     }
+    // reference: detail-markup-marks
     if let Some(id) = item.id {
         let mark = match item::played(item) {
             Mark::Set => Text::DetailMarkUnplayed,
@@ -251,58 +285,51 @@ fn head<'a>(
             Mark::Cleared => Text::DetailFavorite,
         };
         actions = actions
-            .push(
-                button(prose(strings::lookup(mark), typeface::BODY))
-                    .style(style::raised)
-                    .on_press(Message::PlayedToggled(id, item::played(item).flipped())),
-            )
-            .push(
-                button(prose(strings::lookup(star), typeface::BODY))
-                    .style(style::raised)
-                    .on_press(Message::FavoriteToggled(
-                        id,
-                        item::favorited(item).flipped(),
-                    )),
-            );
+            .push(detail_button(
+                Icon::Check,
+                mark,
+                Message::PlayedToggled(id, item::played(item).flipped()),
+                viewport,
+            ))
+            .push(detail_button(
+                Icon::Favorite,
+                star,
+                Message::FavoriteToggled(id, item::favorited(item).flipped()),
+                viewport,
+            ));
 
         if session.administrator && !session.read_only {
             actions = actions
-                .push(
-                    button(prose(
-                        strings::lookup(Text::DetailRefreshMetadata),
-                        typeface::BODY,
-                    ))
-                    .style(style::raised)
-                    .on_press(Message::RefreshItem {
+                .push(detail_button(
+                    Icon::Autorenew,
+                    Text::DetailRefreshMetadata,
+                    Message::RefreshItem {
                         item: id,
                         replace: false,
                         recursive: true,
-                    }),
-                )
-                .push(
-                    button(prose(
-                        strings::lookup(Text::DetailRefreshReplace),
-                        typeface::BODY,
-                    ))
-                    .style(style::raised)
-                    .on_press(Message::RefreshItem {
+                    },
+                    viewport,
+                ))
+                .push(detail_button(
+                    Icon::Autorenew,
+                    Text::DetailRefreshReplace,
+                    Message::RefreshItem {
                         item: id,
                         replace: true,
                         recursive: true,
-                    }),
-                )
-                .push(
-                    button(prose(
-                        strings::lookup(Text::DetailRefreshScanMode),
-                        typeface::BODY,
-                    ))
-                    .style(style::raised)
-                    .on_press(Message::RefreshItem {
+                    },
+                    viewport,
+                ))
+                .push(detail_button(
+                    Icon::Autorenew,
+                    Text::DetailRefreshScanMode,
+                    Message::RefreshItem {
                         item: id,
                         replace: false,
                         recursive: false,
-                    }),
-                );
+                    },
+                    viewport,
+                ));
         }
     }
 
@@ -355,7 +382,11 @@ fn ribboned<'a>(head: Head<'a>, viewport: Viewport) -> Element<'a, Message> {
             row![
                 Space::new().width(lead),
                 container(head.name).width(Fill),
-                head.buttons,
+                container(head.buttons).padding(
+                    iced::Padding::ZERO
+                        .top(style::drawn(space::DETAIL_BUTTONS.drawn()))
+                        .bottom(style::drawn(space::DETAIL_BUTTONS.drawn()))
+                ),
                 Space::new().width(trail),
             ]
             .align_y(iced::Center)
@@ -400,9 +431,16 @@ fn stacked<'a>(head: Head<'a>, viewport: Viewport) -> Element<'a, Message> {
         Space::new().height(style::drawn(space::BACKDROP_TOP.drawn())),
         banner,
         container(
-            column![head.name, head.buttons]
-                .align_x(iced::Center)
-                .width(Fill)
+            column![
+                head.name,
+                container(head.buttons).padding(
+                    iced::Padding::ZERO
+                        .top(style::drawn(space::DETAIL_BUTTONS.drawn()))
+                        .bottom(style::drawn(space::DETAIL_BUTTONS_BOTTOM.drawn()))
+                ),
+            ]
+            .align_x(iced::Center)
+            .width(Fill)
         )
         .padding(style::padding(space::RIBBON_PAD).left(side).right(side)),
         container(container(head.lines).center_x(Fill)).padding(
