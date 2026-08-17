@@ -17,7 +17,6 @@ use crate::images::{self, Cache};
 use crate::route::Listing;
 use crate::style::{self, Drawn, Viewport, card, space, typeface};
 use crate::text::{self as strings, Text};
-use crate::theme;
 use crate::widget;
 use crate::widget::prose;
 
@@ -282,7 +281,7 @@ fn narrowing<'a>(label: String, on: bool, narrow: Narrow) -> Element<'a, Message
     .into()
 }
 
-fn filter_surface<'a>(browse: &'a Browse) -> Element<'a, Message> {
+fn filter_surface<'a>(browse: &'a Browse, viewport: Viewport) -> Element<'a, Message> {
     let facets = &browse.listing.facets;
     let choices = &browse.choices;
 
@@ -379,7 +378,9 @@ fn filter_surface<'a>(browse: &'a Browse) -> Element<'a, Message> {
         ));
     }
 
-    scrollable(surface).height(theme::RAIL_HEIGHT).into()
+    scrollable(surface)
+        .height(style::drawn(space::filter_surface(viewport)))
+        .into()
 }
 
 /// The heading with the total item count, the sort surface, the filter surface
@@ -405,7 +406,7 @@ pub fn view<'a>(browse: &'a Browse, viewport: Viewport, images: &'a Cache) -> El
     .padding(style::drawn(space::GUTTER.drawn()));
 
     if browse.filtering {
-        page = page.push(filter_surface(browse));
+        page = page.push(filter_surface(browse, viewport));
     }
     if browse.listing.sort.by_name() {
         page = page.push(letter_jump());

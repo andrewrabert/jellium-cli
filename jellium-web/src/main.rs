@@ -27,7 +27,6 @@ mod screen;
 mod settings;
 mod style;
 mod text;
-mod theme;
 mod widget;
 mod window;
 
