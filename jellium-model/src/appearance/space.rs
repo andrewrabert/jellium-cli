@@ -192,12 +192,6 @@ pub const PROGRESS: Length = Length::em(0.28);
 // reference: guide-row
 pub const GUIDE_ROW: Length = Length::em(4.42);
 
-/// One percent of the page's width, which is the unit the reference's guide is
-/// written in.
-const fn vw(count: u32) -> Share {
-    Share::per_ten_thousand(count * 100)
-}
-
 /// The last step of a viewport-unit ladder the page reaches, and `base` where
 /// it reaches none, which is the order the cascade resolves them in.
 fn stepped(viewport: Viewport, base: Share, steps: &[(Query, Share)]) -> Share {
@@ -211,24 +205,24 @@ fn stepped(viewport: Viewport, base: Share, steps: &[(Query, Share)]) -> Share {
 }
 
 // reference: guide-strip
-const GUIDE_STRIP: Share = vw(1800);
+const GUIDE_STRIP: Share = Share::units(1800.0);
 
 // reference: guide-strip
 const GUIDE_STRIP_STEPS: [(Query, Share); 3] = [
-    (Query::MinWidth(Breakpoint::em(37.5)), vw(1400)),
-    (Query::MinWidth(Breakpoint::em(50.0)), vw(1200)),
-    (Query::MinWidth(Breakpoint::em(80.0)), vw(810)),
+    (Query::MinWidth(Breakpoint::em(37.5)), Share::units(1400.0)),
+    (Query::MinWidth(Breakpoint::em(50.0)), Share::units(1200.0)),
+    (Query::MinWidth(Breakpoint::em(80.0)), Share::units(810.0)),
 ];
 
 // reference: guide-channel
-const GUIDE_CHANNEL: Share = vw(24);
+const GUIDE_CHANNEL: Share = Share::units(24.0);
 
 // reference: guide-channel
 const GUIDE_CHANNEL_STEPS: [(Query, Share); 4] = [
-    (Query::MinWidth(Breakpoint::em(31.25)), vw(16)),
-    (Query::MinWidth(Breakpoint::em(37.5)), vw(16)),
-    (Query::MinWidth(Breakpoint::em(50.0)), vw(14)),
-    (Query::MinWidth(Breakpoint::em(80.0)), vw(12)),
+    (Query::MinWidth(Breakpoint::em(31.25)), Share::units(16.0)),
+    (Query::MinWidth(Breakpoint::em(37.5)), Share::units(16.0)),
+    (Query::MinWidth(Breakpoint::em(50.0)), Share::units(14.0)),
+    (Query::MinWidth(Breakpoint::em(80.0)), Share::units(12.0)),
 ];
 
 /// The stretch of time the guide's strip spans.
@@ -254,19 +248,13 @@ pub fn guide_channel(viewport: Viewport) -> Drawn {
     stepped(viewport, GUIDE_CHANNEL, &GUIDE_CHANNEL_STEPS).of(viewport.canvas().width())
 }
 
-/// One percent of the page's height, which is the other unit the reference
-/// writes a viewport share in.
-const fn vh(count: u32) -> Share {
-    Share::per_ten_thousand(count * 100)
-}
-
 /// The frame the scrub preview draws in, as tall as the page allows it.
 // reference: osd-preview
-const PREVIEW: Share = vh(20);
+const PREVIEW: Share = Share::units(20.0);
 
 /// A portrait page gives the frame a share of its width instead.
 // reference: osd-preview
-const PREVIEW_PORTRAIT: Share = vw(30);
+const PREVIEW_PORTRAIT: Share = Share::units(30.0);
 
 /// A landscape page no taller than this gives the frame a larger share of its
 /// height.
@@ -274,7 +262,7 @@ const PREVIEW_PORTRAIT: Share = vw(30);
 const PREVIEW_SHORT: Query = Query::MaxHeight(Breakpoint::em(50.0));
 
 // reference: osd-preview
-const PREVIEW_SHORT_SIDE: Share = vh(30);
+const PREVIEW_SHORT_SIDE: Share = Share::units(30.0);
 
 /// The scrub preview's frame, `.chapterThumb`, which is a share of the viewport
 /// rather than a card: 20vh, 30vw in portrait, and 30vh in a landscape page no

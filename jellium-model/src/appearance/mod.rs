@@ -74,6 +74,13 @@ impl Share {
         }
     }
 
+    /// A count of the reference's viewport units, which are one share whichever
+    /// axis it is taken of; the axis is the caller's, written as
+    /// `of(canvas.width())` or `of(canvas.height())`.
+    pub const fn units(count: f32) -> Share {
+        Share::per_ten_thousand((count * 100.0) as u32)
+    }
+
     /// The share `part` is of `whole`, clamped to the whole, and none of it
     /// where `whole` is zero.
     pub fn part(part: i64, whole: i64) -> Share {

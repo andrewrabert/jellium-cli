@@ -23,8 +23,7 @@ const ARMS: &[&str] = &[
     "arm(",
     "turned(",
     "landscape(",
-    "vw(",
-    "vh(",
+    "Share::units(",
 ];
 
 /// A value that is its unit's identity or its zero, written as its own
@@ -331,6 +330,17 @@ fn spellings(initializer: &str) -> Vec<(String, Vec<String>)> {
                     found.push((
                         format!("{percent}%"),
                         vec![format!("{percent}%"), format!("{percent}vw")],
+                    ));
+                }
+            }
+            ("share", "units") => {
+                if let Ok(count) = arguments.parse::<f64>()
+                    && count != 0.0
+                {
+                    let count = trimmed(count);
+                    found.push((
+                        format!("{count}vw"),
+                        vec![format!("{count}vw"), format!("{count}vh")],
                     ));
                 }
             }
