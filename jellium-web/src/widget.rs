@@ -149,6 +149,25 @@ fn boxed<'a>(
     .into()
 }
 
+/// An image at a card's pitch with its shape's aspect and nothing under it.
+// reference: card-container
+pub fn tile<'a>(
+    card: card::Card,
+    viewport: Viewport,
+    face: Option<image::Handle>,
+) -> Element<'a, Message> {
+    let width = style::drawn(inside(card, viewport));
+    let height = style::drawn(card.shape().aspect().of(inside(card, viewport)));
+    match face {
+        Some(handle) => container(image(handle).width(width))
+            .width(width)
+            .height(height)
+            .style(style::card_padder)
+            .into(),
+        None => Space::new().width(width).height(height).into(),
+    }
+}
+
 /// A library item's card: its poster, its name and its subtitle, which is
 /// `Footer::NameAndSubtitle` and `Bottom::Padded` always, so neither is a
 /// parameter.

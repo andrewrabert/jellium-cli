@@ -14,9 +14,8 @@ use crate::player::remote::{self, Bound};
 use crate::player::scrub::scrub;
 use crate::player::{Action, Menu, Playing};
 use crate::route::Route;
-use crate::style::{self, Viewport, space, typeface};
+use crate::style::{self, Viewport, card, space, typeface};
 use crate::text::{self as strings, Text};
-use crate::theme;
 use crate::widget::prose;
 
 const VOLUME_WIDTH: f32 = 96.0;
@@ -98,7 +97,11 @@ fn repeat_label(repeat: Repeat) -> Text {
 }
 
 /// The chapter menu: each chapter's name over its chapter image.
-pub fn chapters<'a>(playing: &'a Playing, images: &'a Cache) -> Vec<Element<'a, Message>> {
+pub fn chapters<'a>(
+    playing: &'a Playing,
+    images: &'a Cache,
+    viewport: Viewport,
+) -> Vec<Element<'a, Message>> {
     playing
         .plan
         .chapters
@@ -113,13 +116,8 @@ pub fn chapters<'a>(playing: &'a Playing, images: &'a Cache) -> Vec<Element<'a, 
                     index: numbered,
                 })
             });
-            let thumbnail: Element<'a, Message> = match handle {
-                Some(held) => iced::widget::image(held).width(theme::CARD_WIDTH).into(),
-                None => iced::widget::Space::new()
-                    .width(theme::CARD_WIDTH)
-                    .height(theme::CARD_WIDTH * 0.56)
-                    .into(),
-            };
+            let thumbnail =
+                crate::widget::tile(card::Card::Rail(card::Rail::Backdrop), viewport, handle);
             button(
                 iced::widget::column![thumbnail, prose(chapter.name.clone(), typeface::BODY)]
                     .spacing(style::drawn(space::BLOCK_GAP.drawn())),
@@ -133,7 +131,11 @@ pub fn chapters<'a>(playing: &'a Playing, images: &'a Cache) -> Vec<Element<'a, 
         .collect()
 }
 
-fn menu<'a>(playing: &'a Playing, images: &'a Cache) -> Option<Element<'a, Message>> {
+fn menu<'a>(
+    playing: &'a Playing,
+    images: &'a Cache,
+    viewport: Viewport,
+) -> Option<Element<'a, Message>> {
     let entries: Vec<Element<'a, Message>> = match playing.menu? {
         Menu::Audio => playing
             .plan
@@ -173,7 +175,7 @@ fn menu<'a>(playing: &'a Playing, images: &'a Cache) -> Option<Element<'a, Messa
                     .into()
             })
             .collect(),
-        Menu::Chapters => chapters(playing, images),
+        Menu::Chapters => chapters(playing, images, viewport),
         Menu::Version => playing
             .plan
             .sources
@@ -519,7 +521,7 @@ pub fn view<'a>(
 
     let mut page = column![body, Space::new().height(Fill)].height(Fill);
 
-    if let Some(menu) = menu(playing, images) {
+    if let Some(menu) = menu(playing, images, viewport) {
         page = page.push(menu);
     } else {
         page = page.push(prose(quality_label(quality), typeface::SECONDARY));

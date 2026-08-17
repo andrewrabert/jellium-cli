@@ -7,11 +7,10 @@ use jellyfin_api::types::{BaseItemKind, RemoteSearchResult};
 use crate::app::Message;
 use crate::images::Foreign;
 use crate::text::{self as strings, Text};
-use crate::theme;
 
 use super::Action as Outer;
-use crate::style::{self, space, typeface};
-use crate::widget::prose;
+use crate::style::{self, Viewport, card, space, typeface};
+use crate::widget::{self, prose};
 
 /// The item kinds the Jellyfin server offers a remote search for.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -137,7 +136,12 @@ fn typed<'a>(label: Text, field: Field, held: &'a str) -> Element<'a, Message> {
 
 /// Each candidate with its poster, name, year, overview and the provider that
 /// returned it; a poster is addressed by the handle the local server minted.
-pub fn view<'a>(state: &'a State, foreign: &'a Foreign, read_only: bool) -> Element<'a, Message> {
+pub fn view<'a>(
+    state: &'a State,
+    viewport: Viewport,
+    foreign: &'a Foreign,
+    read_only: bool,
+) -> Element<'a, Message> {
     let mut page = column![
         typed(Text::MetadataIdentifyName, Field::Name, &state.name),
         typed(Text::MetadataIdentifyYear, Field::Year, &state.year),
@@ -198,17 +202,14 @@ pub fn view<'a>(state: &'a State, foreign: &'a Foreign, read_only: bool) -> Elem
     }
 
     for (at, candidate) in state.candidates.iter().enumerate() {
-        let poster: Element<'a, Message> = match candidate
-            .image_url
-            .as_deref()
-            .and_then(|handle| foreign.handle(handle))
-        {
-            Some(held) => iced::widget::image(held).width(theme::CARD_WIDTH).into(),
-            None => iced::widget::Space::new()
-                .width(theme::CARD_WIDTH)
-                .height(theme::CARD_WIDTH * 1.5)
-                .into(),
-        };
+        let poster = widget::tile(
+            card::Card::Wall(card::Shape::Portrait),
+            viewport,
+            candidate
+                .image_url
+                .as_deref()
+                .and_then(|handle| foreign.handle(handle)),
+        );
 
         let mut summary = column![
             prose(

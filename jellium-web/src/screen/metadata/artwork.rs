@@ -8,11 +8,10 @@ use uuid::Uuid;
 use crate::app::Message;
 use crate::images::{self, Cache, Foreign};
 use crate::text::{self as strings, Text};
-use crate::theme;
 
 use super::Action as Outer;
-use crate::style::{self, space, typeface};
-use crate::widget::prose;
+use crate::style::{self, Viewport, card, space, typeface};
+use crate::widget::{self, prose};
 
 /// The image kinds the metadata manager uploads, replaces and removes; no other
 /// kind carries a control.
@@ -128,6 +127,7 @@ fn held_of(state: &State, kind: Kind) -> Vec<(Option<i32>, &ImageInfo)> {
 /// and the remote picker whose thumbnails are addressed by minted handles.
 pub fn view<'a>(
     state: &'a State,
+    viewport: Viewport,
     images: &'a Cache,
     foreign: &'a Foreign,
     item: Uuid,
@@ -157,18 +157,15 @@ pub fn view<'a>(
             .align_y(iced::Alignment::Center);
 
         for (position, (index, _)) in held.into_iter().enumerate() {
-            let handle = images.handle(images::Key {
-                item,
-                kind: kind.cached(),
-                index,
-            });
-            let drawn: Element<'a, Message> = match handle {
-                Some(held) => iced::widget::image(held).width(theme::CARD_WIDTH).into(),
-                None => iced::widget::Space::new()
-                    .width(theme::CARD_WIDTH)
-                    .height(theme::CARD_WIDTH * 0.6)
-                    .into(),
-            };
+            let drawn = widget::tile(
+                card::Card::Wall(card::Shape::Backdrop),
+                viewport,
+                images.handle(images::Key {
+                    item,
+                    kind: kind.cached(),
+                    index,
+                }),
+            );
 
             let mut cell = column![drawn].spacing(style::drawn(space::BLOCK_GAP.drawn()));
             if !read_only {
@@ -241,18 +238,15 @@ pub fn view<'a>(
     );
 
     let found = row(state.remote.iter().enumerate().map(|(at, remote)| {
-        let drawn: Element<'a, Message> = match remote
-            .thumbnail_url
-            .as_deref()
-            .or(remote.url.as_deref())
-            .and_then(|handle| foreign.handle(handle))
-        {
-            Some(held) => iced::widget::image(held).width(theme::CARD_WIDTH).into(),
-            None => iced::widget::Space::new()
-                .width(theme::CARD_WIDTH)
-                .height(theme::CARD_WIDTH * 0.6)
-                .into(),
-        };
+        let drawn = widget::tile(
+            card::Card::Wall(card::Shape::Backdrop),
+            viewport,
+            remote
+                .thumbnail_url
+                .as_deref()
+                .or(remote.url.as_deref())
+                .and_then(|handle| foreign.handle(handle)),
+        );
         column![
             drawn,
             button(prose(

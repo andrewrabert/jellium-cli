@@ -16,7 +16,7 @@ use crate::api::Api;
 use crate::app::{Message, Signed};
 use crate::error::{Answer, Operation};
 use crate::images::{self, Cache, Foreign};
-use crate::style::{self, space, typeface};
+use crate::style::{self, Viewport, space, typeface};
 use crate::text::{self as strings, Text};
 use crate::widget::prose;
 
@@ -153,6 +153,7 @@ pub async fn load(api: Rc<Api>, item: Uuid, part: Part) -> Answer<State> {
 /// read-only.
 pub fn view<'a>(
     state: &'a State,
+    viewport: Viewport,
     images: &'a Cache,
     foreign: &'a Foreign,
     read_only: bool,
@@ -182,8 +183,8 @@ pub fn view<'a>(
         ]
         .spacing(style::drawn(space::GUTTER.drawn()))
         .into(),
-        Part::Identify => identify::view(&state.identify, foreign, read_only),
-        Part::Images => artwork::view(&state.artwork, images, foreign, id, read_only),
+        Part::Identify => identify::view(&state.identify, viewport, foreign, read_only),
+        Part::Images => artwork::view(&state.artwork, viewport, images, foreign, id, read_only),
         Part::Locks => locks(state, read_only),
         Part::ContentType => content_type(state, read_only),
         Part::Deletion => deletion(state, read_only),

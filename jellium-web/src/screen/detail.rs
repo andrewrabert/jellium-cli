@@ -11,9 +11,8 @@ use crate::app::Message;
 use crate::error::Answer;
 use crate::images::{self, Cache, Kind};
 use crate::player::Intent;
-use crate::style::{self, Viewport, space, typeface};
+use crate::style::{self, Viewport, card, space, typeface};
 use crate::text::{self as strings, Text};
-use crate::theme;
 use crate::widget;
 use crate::widget::prose;
 
@@ -187,18 +186,17 @@ pub fn view<'a>(
         false => widget::Overflow::Offered,
     };
 
-    let poster: Element<'a, Message> = match item.id.and_then(|id| {
-        images.handle(images::Key {
-            item: id,
-            kind: Kind::Primary,
-            index: None,
-        })
-    }) {
-        Some(handle) => iced::widget::image(handle)
-            .width(theme::CARD_WIDTH * 1.5)
-            .into(),
-        None => prose("", typeface::BODY),
-    };
+    let poster = widget::tile(
+        card::Card::Wall(card::Shape::Portrait),
+        viewport,
+        item.id.and_then(|id| {
+            images.handle(images::Key {
+                item: id,
+                kind: Kind::Primary,
+                index: None,
+            })
+        }),
+    );
 
     let mut actions = row![].spacing(style::drawn(space::GUTTER.drawn()));
     for control in play_controls(item) {

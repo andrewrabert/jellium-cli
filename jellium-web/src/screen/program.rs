@@ -2,7 +2,7 @@ use std::collections::HashSet;
 use std::rc::Rc;
 
 use chrono::{DateTime, Utc};
-use iced::widget::{Space, button, column, container, image, row};
+use iced::widget::{button, column, container, row};
 use iced::{Element, Fill};
 
 use crate::api::Api;
@@ -11,10 +11,9 @@ use crate::error::Answer;
 use crate::images::{self, Cache};
 use crate::livetv::Program;
 use crate::screen::livetv::Action;
-use crate::style::{self, space, typeface};
+use crate::style::{self, Viewport, card, space, typeface};
 use crate::text::{self as strings, Text};
-use crate::theme;
-use crate::widget::prose;
+use crate::widget::{self, prose};
 
 #[derive(Debug, Clone)]
 pub struct State {
@@ -48,13 +47,19 @@ fn badge<'a>(label: Text) -> Element<'a, Message> {
 /// overview, its image, its genres and its live, new, premiere and repeat
 /// flags, with Record, Record Series and Cancel according to the timers
 /// covering it, and Play while it is airing.
-pub fn view<'a>(state: &'a State, now: DateTime<Utc>, images: &'a Cache) -> Element<'a, Message> {
+pub fn view<'a>(
+    state: &'a State,
+    viewport: Viewport,
+    now: DateTime<Utc>,
+    images: &'a Cache,
+) -> Element<'a, Message> {
     let program = &state.program;
 
-    let art: Element<'a, Message> = match images.handle(key(program)) {
-        Some(handle) => image(handle).width(theme::CARD_WIDTH).into(),
-        None => Space::new().width(theme::CARD_WIDTH).into(),
-    };
+    let art = widget::tile(
+        card::Card::Wall(card::Shape::Backdrop),
+        viewport,
+        images.handle(key(program)),
+    );
 
     let mut flags = row![].spacing(style::drawn(space::CONTROL_GAP.drawn()));
     if program.live {

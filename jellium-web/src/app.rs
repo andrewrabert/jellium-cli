@@ -2915,6 +2915,7 @@ impl Jellium {
                     }
                     View::Metadata(state) => crate::screen::metadata::view(
                         state,
+                        self.viewport,
                         &self.images,
                         &signed.foreign,
                         read_only,
@@ -2966,7 +2967,9 @@ impl Jellium {
                         crate::screen::settings::view(state, signed, &self.images)
                     }
                     View::Unavailable => center(iced::widget::Space::new()).into(),
-                    View::Program(state) => program::view(state, chrono::Utc::now(), &self.images),
+                    View::Program(state) => {
+                        program::view(state, self.viewport, chrono::Utc::now(), &self.images)
+                    }
                 };
 
                 let mut page = column![widget::chrome(
