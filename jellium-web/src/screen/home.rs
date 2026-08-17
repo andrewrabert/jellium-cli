@@ -10,10 +10,10 @@ use crate::app::Message;
 use crate::error::Answer;
 use crate::images::{self, Cache};
 use crate::livetv::Channel;
-use crate::style::{self, Viewport, card, space, typeface};
+use crate::route::Route;
+use crate::style::{self, Viewport, card, space};
 use crate::text::{self as strings, Text};
 use crate::widget;
-use crate::widget::prose;
 
 /// The most channels the on-now row shows.
 pub const ON_NOW: i32 = 20;
@@ -29,9 +29,6 @@ pub struct State {
     /// The user's favourite channels first and then channels in number order,
     /// capped at `ON_NOW`; the trouble stands in the row's place.
     pub on_now: Vec<Channel>,
-    /// True when the server offers a collections view, which is what puts the
-    /// Collections destination in the library list.
-    pub collections_view: bool,
 }
 
 /// One Latest row.
@@ -68,9 +65,6 @@ pub async fn load(api: Rc<Api>) -> Answer<State> {
         Ok(State {
             continue_watching: api.continue_watching().await.bubbled()?,
             next_up: api.next_up().await.bubbled()?,
-            collections_view: libraries
-                .iter()
-                .any(|library| library.collection_type == Some(CollectionType::Boxsets)),
             libraries,
             latest,
             on_now: Vec::new(),
@@ -141,6 +135,22 @@ pub fn resumed(items: &[BaseItemDto]) -> Vec<(Option<MediaType>, Vec<&BaseItemDt
     }
     groups.sort_by_key(|(media, _)| sectioned(*media));
     groups
+}
+
+/// The screen a library tile opens, which the view's own collection type
+/// decides: a box-set view opens the Collections screen and a playlist view the
+/// Playlists screen, both of which this client draws itself, and every other
+/// view opens the library screen its id names. A view carrying no id opens
+/// nothing.
+fn opens(library: &BaseItemDto) -> Option<Route> {
+    match library.collection_type {
+        Some(CollectionType::Boxsets) => Some(Route::Collections),
+        Some(CollectionType::Playlists) => Some(Route::Playlists),
+        _ => Some(Route::Library {
+            id: library.id?,
+            tab: Box::new(crate::screen::library::Tab::Items(Box::default())),
+        }),
+    }
 }
 
 /// The on-now row above the existing rows, the library list in the arrangement's
@@ -215,19 +225,23 @@ pub fn view<'a>(
         .filter_map(|id| state.libraries.iter().find(|it| it.id == Some(*id)))
         .collect();
     if !libraries.is_empty() {
-        page = page.push(prose(
-            strings::lookup(Text::HomeLibraries),
-            typeface::HEADING_2,
+        page = page.push(widget::section(
+            strings::lookup(Text::HomeMyMedia),
+            widget::wall(
+                card::Card::LIBRARY,
+                viewport,
+                libraries
+                    .iter()
+                    .filter_map(|library| {
+                        Some(widget::library_tile(
+                            library,
+                            viewport,
+                            Message::Navigated(opens(library)?),
+                        ))
+                    })
+                    .collect(),
+            ),
         ));
-        let mut destinations = Vec::new();
-        if live_tv {
-            destinations.push(widget::Destination::LiveTv);
-        }
-        if state.collections_view {
-            destinations.push(widget::Destination::Collections);
-        }
-        destinations.push(widget::Destination::Playlists);
-        page = page.push(widget::library_row(libraries, &destinations));
     }
 
     scrollable(page).into()

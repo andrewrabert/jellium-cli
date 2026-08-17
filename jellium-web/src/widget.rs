@@ -251,6 +251,34 @@ pub fn picker<'a>(
     .into()
 }
 
+/// Cards broken into rows of `card.across(viewport)` and left-aligned, which is
+/// the reference's `.vertical-wrap` without the `.centered` only the login
+/// pickers carry.
+// reference: card-container
+pub fn wall<'a>(
+    card: card::Card,
+    viewport: Viewport,
+    cards: Vec<Element<'a, Message>>,
+) -> Element<'a, Message> {
+    let across = card.across(viewport).count();
+    let mut rows: Vec<Vec<Element<'a, Message>>> = Vec::new();
+    for held in cards {
+        if rows.last().is_none_or(|last| last.len() == across) {
+            rows.push(Vec::new());
+        }
+        rows.last_mut()
+            .expect("a row stands open once one is pushed")
+            .push(held);
+    }
+    let gutter = style::drawn(space::GUTTER.drawn());
+    column(
+        rows.into_iter()
+            .map(|held| row(held).spacing(gutter).into()),
+    )
+    .spacing(gutter)
+    .into()
+}
+
 /// The banner the reference draws where a page carries no logo of its own, in
 /// the slot its own rule gives it.
 // reference: scheme-logo
@@ -417,81 +445,22 @@ pub fn posters<'a>(
     .into()
 }
 
-/// One destination the library row offers beside the libraries themselves.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum Destination {
-    LiveTv,
-    Collections,
-    Playlists,
-}
-
-impl Destination {
-    fn label(self) -> Text {
-        match self {
-            Destination::LiveTv => Text::HomeLiveTv,
-            Destination::Collections => Text::NavCollections,
-            Destination::Playlists => Text::NavPlaylists,
-        }
-    }
-
-    fn route(self) -> Route {
-        match self {
-            Destination::LiveTv => Route::LiveTv {
-                tab: crate::screen::livetv::Tab::Guide,
-            },
-            Destination::Collections => Route::Collections,
-            Destination::Playlists => Route::Playlists,
-        }
-    }
-}
-
-/// The libraries, with the destinations offered beside them: a Live TV entry
-/// ahead of them, and Collections and Playlists after.
-pub fn library_row<'a>(
-    libraries: impl IntoIterator<Item = &'a BaseItemDto>,
-    destinations: &[Destination],
+/// A library's tile: its icon over its centered, elided name, on the card the
+/// reference's own My Media section draws.
+// reference: home-library-tiles
+pub fn library_tile<'a>(
+    library: &'a BaseItemDto,
+    viewport: Viewport,
+    press: Message,
 ) -> Element<'a, Message> {
-    let ahead: Vec<Element<'a, Message>> = destinations
-        .iter()
-        .filter(|destination| **destination == Destination::LiveTv)
-        .map(|destination| offered(*destination))
-        .collect();
-    let entries = libraries.into_iter().filter_map(|library| {
-        let id = library.id?;
-        Some(
-            button(prose(
-                library.name.clone().unwrap_or_default(),
-                typeface::BODY,
-            ))
-            .style(style::flat)
-            .on_press(Message::Navigated(Route::Library {
-                id,
-                tab: Box::new(crate::screen::library::Tab::Items(Box::default())),
-            }))
-            .into(),
-        )
-    });
-    let after: Vec<Element<'a, Message>> = destinations
-        .iter()
-        .filter(|destination| **destination != Destination::LiveTv)
-        .map(|destination| offered(*destination))
-        .collect();
-
-    scrollable(
-        row(ahead.into_iter().chain(entries).chain(after))
-            .spacing(style::drawn(space::GUTTER.drawn())),
+    card(
+        card::Card::LIBRARY,
+        viewport,
+        Face::Icon(crate::icon::Icon::library(library.collection_type)),
+        library.name.clone().unwrap_or_default(),
+        card::Bottom::Flush,
+        press,
     )
-    .direction(scrollable::Direction::Horizontal(
-        scrollable::Scrollbar::default(),
-    ))
-    .into()
-}
-
-fn offered<'a>(destination: Destination) -> Element<'a, Message> {
-    button(prose(strings::lookup(destination.label()), typeface::BODY))
-        .style(style::flat)
-        .on_press(Message::Navigated(destination.route()))
-        .into()
 }
 
 /// The portions a bar is divided into, which is the resolution a share the

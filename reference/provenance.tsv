@@ -172,3 +172,7 @@ scheme-logo	src/themes/dark/theme.scss	36	38	3a6ac2d126e23451c5f410af79fb85dfbfe
 home-resume	src/components/homesections/sections/resume.ts	49	56	b9ddd7ee057de70cf1745f143ae0285d56fa8702abc569eb3a72ccfa1042ea07	ported
 home-next-up	src/components/homesections/sections/nextUp.ts	44	48	09591e4f49a230ea8201fe4f5d56f6e463a2c88231182978561aac8bda23a1b6	ported
 home-latest	src/components/homesections/sections/recentlyAdded.ts	57	65	e5d138a3f6da64314ace4e12c146e45d64934ddb9074e8c8b498cc5da7e5910f	ported
+home-library-tiles	src/components/homesections/sections/libraryTiles.ts	17	40	057c32e2b5588ee94084f3c9d6045dc37e7cd40a4c84edac48e3fb862a0acbab	ported
+library-icon	src/utils/image.ts	98	120	da18aaf36836943cf9b13d8fc244275500013a107dc3658d5aa7c7e9baf646ed	ported
+library-icon-channels	src/utils/image.ts	121	122	47d2d4e05ddb5900b7f359f63c9899659dac6180d504ba5f1d53335085c814c1	dead
+library-icon-unknown	src/utils/image.ts	123	128	747a6878a352f04209fadd66ad6926855cc29a143657785131fb02b352df606f	ported

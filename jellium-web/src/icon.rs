@@ -2,6 +2,7 @@
 //! becomes a codepoint.
 
 use iced::Element;
+use jellyfin_api::types::CollectionType;
 
 use crate::app::Message;
 use crate::failure::unraised;
@@ -38,11 +39,43 @@ macro_rules! icons {
 }
 
 icons! {
+    Book => "book",
+    Folder => "folder",
+    LiveTv => "live_tv",
+    Movie => "movie",
+    MusicNote => "music_note",
+    MusicVideo => "music_video",
     Person => "person",
+    Photo => "photo",
+    Queue => "queue",
+    Quiz => "quiz",
     Storage => "storage",
+    Theaters => "theaters",
+    Tv => "tv",
+    VideoLibrary => "video_library",
 }
 
 impl Icon {
+    /// The glyph a library draws, which its own collection type decides.
+    // reference: library-icon
+    // reference: library-icon-unknown
+    pub fn library(collection: Option<CollectionType>) -> Icon {
+        match collection {
+            Some(CollectionType::Movies) => Icon::Movie,
+            Some(CollectionType::Music) => Icon::MusicNote,
+            Some(CollectionType::Homevideos | CollectionType::Photos) => Icon::Photo,
+            Some(CollectionType::Livetv) => Icon::LiveTv,
+            Some(CollectionType::Tvshows) => Icon::Tv,
+            Some(CollectionType::Trailers) => Icon::Theaters,
+            Some(CollectionType::Musicvideos) => Icon::MusicVideo,
+            Some(CollectionType::Books) => Icon::Book,
+            Some(CollectionType::Boxsets) => Icon::VideoLibrary,
+            Some(CollectionType::Playlists) => Icon::Queue,
+            None => Icon::Quiz,
+            Some(CollectionType::Folders | CollectionType::Unknown) => Icon::Folder,
+        }
+    }
+
     /// The codepoint the table records for the ligature, and None where it
     /// holds no row for it.
     pub fn glyph(self) -> Option<Codepoint> {

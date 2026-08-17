@@ -38,8 +38,12 @@ const WEIGHTS = ['400', '700'];
 
 // The Material Icons ligatures jellium-web/src/icon.rs names. A ligature here
 // with no `Icon` variant, or a variant with no ligature here, is a failure of
-// jellium-cli/tests/appearance.rs.
-const ICONS = ['person', 'storage'];
+// the_icon_table_and_the_variants_agree in that file.
+const ICONS = [
+    'book', 'folder', 'live_tv', 'movie', 'music_note', 'music_video',
+    'person', 'photo', 'queue', 'quiz', 'storage', 'theaters', 'tv',
+    'video_library'
+];
 
 const BRANDING = [
     ['jellium-web/branding/banner-light.png', 'node_modules/@jellyfin/ux-web/banner-light.png'],

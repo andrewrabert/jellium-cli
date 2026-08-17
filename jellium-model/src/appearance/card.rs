@@ -335,6 +335,11 @@ impl Card {
     // reference: home-next-up
     pub const NEXT_UP: Card = Card::Rail(Rail::Backdrop);
 
+    /// The card a library tile draws on, the My Media section wrapping its
+    /// tiles rather than scrolling them.
+    // reference: home-library-tiles
+    pub const LIBRARY: Card = Card::Wall(Shape::Backdrop);
+
     /// The card a library's latest row draws on, which the library's own
     /// collection type decides.
     // reference: home-latest
