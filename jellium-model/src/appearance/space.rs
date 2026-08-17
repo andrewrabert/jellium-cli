@@ -213,8 +213,54 @@ pub const LIST_ROW: Length = LIST_BODY_PAD
 pub const BAR: Length = Length::em(4.2);
 
 /// The now-playing bar's cover art, which is as wide as the bar is tall.
-// reference: bar-image
+// reference: bar-art
 pub const BAR_ART: Length = Length::em(4.2);
+
+/// `.nowPlayingImage`'s share of the bar's height.
+// reference: bar-art
+pub const BAR_ART_HEIGHT: Share = Share::per_ten_thousand(7000);
+
+/// How far `.nowPlayingBarPositionContainer` stands above the bar's top edge,
+/// which is the strip the position slider is drawn in.
+// reference: bar-position
+pub const BAR_SLIDER_RISE: Length = Length::em(0.56);
+
+/// `.nowPlayingBarText`'s own margins.
+// reference: bar-text
+pub const BAR_TEXT_MARGIN: Padding = Padding {
+    top: Length::em(0.0),
+    right: Length::em(1.0),
+    bottom: Length::em(0.0),
+    left: Length::em(0.5),
+};
+
+/// `.nowPlayingBarRight`'s margin against the edge of the bar.
+// reference: bar-right
+pub const BAR_RIGHT_MARGIN: Length = Length::em(0.5);
+
+/// `.nowPlayingBarInfoContainer`'s share of the bar at rest.
+// reference: bar-info
+const BAR_INFO: Share = Share::per_ten_thousand(4000);
+
+/// The steps it takes as the page narrows, in the order the cascade resolves
+/// them: the 80em rule is written before the 60em one, so the whole of the bar
+/// stands where both apply.
+// reference: bar-shed-time
+// reference: bar-shed-volume
+const BAR_INFO_STEPS: [(Query, Share); 2] = [
+    (
+        Query::MaxWidth(Breakpoint::em(80.0)),
+        Share::per_ten_thousand(4500),
+    ),
+    (Query::MaxWidth(Breakpoint::em(60.0)), Share::WHOLE),
+];
+
+/// `.nowPlayingBarInfoContainer`'s share of the bar: two fifths, widening to
+/// nine twentieths and then to the whole of it as the page narrows.
+// reference: bar-info
+pub fn bar_info(viewport: Viewport) -> Share {
+    stepped(viewport, BAR_INFO, &BAR_INFO_STEPS)
+}
 
 /// The slider's own track, `.mdl-slider-background-flex`, rather than the
 /// `::-ms-track` pseudo-element beside it that no browser here renders.

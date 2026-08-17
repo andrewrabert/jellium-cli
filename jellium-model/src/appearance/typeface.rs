@@ -48,6 +48,10 @@ pub const ICON_BUTTON: Length = Length::em(1.669_565_2);
 // reference: card-icon
 pub const CARD_ICON: Length = Length::em(5.0);
 
+/// `.nowPlayingBarText`, which the bar writes smaller than the body.
+// reference: bar-text
+pub const BAR_TEXT: Length = BODY.times(Ratio::thousandths(920));
+
 /// `.filterIndicator`'s lettering, 60% of the control it sits on.
 // reference: filter-indicator
 pub const INDICATOR: Length = BODY.times(Ratio::thousandths(600));

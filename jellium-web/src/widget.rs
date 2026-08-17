@@ -843,10 +843,11 @@ pub fn form<'a>(viewport: Viewport, rows: Vec<Element<'a, Message>>) -> Element<
 // reference: control-icon-glyph
 pub fn icon_button<'a>(
     glyph: crate::icon::Icon,
+    size: style::Length,
     label: Text,
     press: Message,
 ) -> Element<'a, Message> {
-    let control = button(crate::icon::icon(glyph, typeface::ICON_BUTTON))
+    let control = button(crate::icon::icon(glyph, size))
         .style(style::icon_control)
         .padding(style::drawn(space::ICON_BUTTON_PAD.drawn()))
         .on_press(press);
@@ -870,11 +871,13 @@ pub fn osd_header<'a>(sync_play: SyncAccess) -> Element<'a, Message> {
     let mut controls = row![
         icon_button(
             Icon::ArrowBack,
+            typeface::ICON_BUTTON,
             Text::PlayerLeave,
             Message::PlayerAction(crate::player::Action::Leave),
         ),
         icon_button(
             Icon::Cast,
+            typeface::ICON_BUTTON,
             Text::PlayerRemote,
             Message::Navigated(crate::route::Route::Remote),
         ),
@@ -884,6 +887,7 @@ pub fn osd_header<'a>(sync_play: SyncAccess) -> Element<'a, Message> {
     if sync_play != SyncAccess::None {
         controls = controls.push(icon_button(
             Icon::Groups,
+            typeface::ICON_BUTTON,
             Text::PlayerSyncPlay,
             Message::Navigated(crate::route::Route::SyncPlay),
         ));

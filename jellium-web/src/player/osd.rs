@@ -2,7 +2,7 @@ use std::collections::HashSet;
 use std::time::Duration;
 
 use iced::widget::Space;
-use iced::widget::{button, column, container, image, row, scrollable, slider};
+use iced::widget::{button, column, container, image, row, scrollable, slider, stack};
 use iced::{Element, Fill, Length};
 use jellium_protocol::{Method, Quality, Repeat, Subtitles, SyncAccess};
 
@@ -32,16 +32,13 @@ fn clock(position: Duration) -> String {
     }
 }
 
-/// Which surface a transport row is drawn on, which is what decides the
-/// controls it carries.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum Surface {
-    Osd,
-    Bar,
-}
-
 fn acting<'a>(glyph: crate::icon::Icon, label: Text, action: Action) -> Element<'a, Message> {
-    crate::widget::icon_button(glyph, label, Message::PlayerAction(action))
+    crate::widget::icon_button(
+        glyph,
+        typeface::ICON_BUTTON,
+        label,
+        Message::PlayerAction(action),
+    )
 }
 
 fn opening<'a>(glyph: crate::icon::Icon, label: Text, menu: Menu) -> Element<'a, Message> {
@@ -365,7 +362,6 @@ fn between<'a>(
 // reference: osd-fullscreen
 fn transport<'a>(
     playing: &'a Playing,
-    surface: Surface,
     sync_play: SyncAccess,
     device: crate::prefs::Device,
     viewport: Viewport,
@@ -403,7 +399,7 @@ fn transport<'a>(
     }
     controls = controls.push(acting(Icon::SkipNext, Text::PlayerNext, Action::Next));
 
-    if surface == Surface::Osd && !viewport.matches(space::OSD_ENDS_AT) {
+    if !viewport.matches(space::OSD_ENDS_AT) {
         controls = controls.push(
             container(prose(
                 strings::format(Text::PlayerEndsAt, &[&clock(ends_at(playing))]),
@@ -454,29 +450,30 @@ fn transport<'a>(
         .push(acting(repeating, repeat_label(repeat), Action::CycleRepeat))
         .push(crate::widget::icon_button(
             Icon::Queue,
+            typeface::ICON_BUTTON,
             Text::PlayerQueue,
             Message::Navigated(Route::Queue),
         ))
         .push(crate::widget::icon_button(
             Icon::Cast,
+            typeface::ICON_BUTTON,
             Text::PlayerRemote,
             Message::Navigated(Route::Remote),
         ));
     if sync_play != SyncAccess::None {
         controls = controls.push(crate::widget::icon_button(
             Icon::Groups,
+            typeface::ICON_BUTTON,
             Text::PlayerSyncPlay,
             Message::Navigated(Route::SyncPlay),
         ));
     }
 
-    if surface == Surface::Osd {
-        let (fullscreen, label) = match playing.fullscreen {
-            true => (Icon::FullscreenExit, Text::PlayerExitFullscreen),
-            false => (Icon::Fullscreen, Text::PlayerFullscreen),
-        };
-        controls = controls.push(acting(fullscreen, label, Action::ToggleFullscreen));
-    }
+    let (fullscreen, label) = match playing.fullscreen {
+        true => (Icon::FullscreenExit, Text::PlayerExitFullscreen),
+        false => (Icon::Fullscreen, Text::PlayerFullscreen),
+    };
+    controls = controls.push(acting(fullscreen, label, Action::ToggleFullscreen));
 
     container(controls)
         .padding(iced::Padding {
@@ -709,13 +706,9 @@ pub fn view<'a>(
 
     panel = match playing.live.as_ref() {
         Some(live) => panel.push(live_transport(playing, live, chrono::Utc::now())),
-        None => panel.push(elapsed(playing, viewport)).push(transport(
-            playing,
-            Surface::Osd,
-            sync_play,
-            device,
-            viewport,
-        )),
+        None => panel
+            .push(elapsed(playing, viewport))
+            .push(transport(playing, sync_play, device, viewport)),
     };
 
     column![
@@ -750,8 +743,116 @@ fn bottom<'a>(controls: Element<'a, Message>) -> Element<'a, Message> {
     .into()
 }
 
+/// The bar's leading group: the item's art at the bar's own height, and its
+/// name in the share of the bar the page's width gives it.
+// reference: bar-info
+// reference: bar-art
+// reference: bar-text
+fn info<'a>(
+    art: Element<'a, Message>,
+    heading: String,
+    viewport: Viewport,
+) -> Element<'a, Message> {
+    let framed = container(art)
+        .width(style::drawn(space::BAR_ART.drawn()))
+        .height(style::drawn(space::BAR_ART_HEIGHT.of(space::BAR.drawn())));
+    container(
+        row![
+            framed,
+            container(prose(heading, typeface::BAR_TEXT))
+                .padding(style::padding(space::BAR_TEXT_MARGIN))
+                .width(Fill),
+        ]
+        .align_y(iced::Center),
+    )
+    .width(style::drawn(
+        space::bar_info(viewport).of(viewport.canvas().width()),
+    ))
+    .height(Fill)
+    .into()
+}
+
+/// The bar's centred group: the controls that step through the queue, and the
+/// reading it has reached.
+// reference: bar-centre
+// reference: bar-markup-centre
+fn centre<'a>(playing: &'a Playing, _viewport: Viewport) -> Element<'a, Message> {
+    let paused = match playing.paused {
+        true => Icon::PlayArrow,
+        false => Icon::Pause,
+    };
+    row![
+        acting(Icon::SkipPrevious, Text::PlayerPrevious, Action::Previous),
+        acting(paused, Text::PlayerPlay, Action::TogglePlay),
+        acting(Icon::SkipNext, Text::PlayerNext, Action::Next),
+        prose(clock(playing.shown()), typeface::BAR_TEXT),
+    ]
+    .align_y(iced::Center)
+    .into()
+}
+
+/// The bar's trailing group: volume, the queue's own two controls, and the
+/// surfaces it opens. It draws no control that plays and pauses, which is what
+/// the desktop layout takes out of it.
+// reference: bar-right
+// reference: bar-markup-right
+// reference: bar-markup-queue
+// reference: bar-layout-desktop
+fn trailing<'a>(
+    playing: &'a Playing,
+    sync_play: SyncAccess,
+    device: crate::prefs::Device,
+    viewport: Viewport,
+) -> Element<'a, Message> {
+    let repeat = playing.queue.repeat();
+    let repeating = match repeat {
+        Repeat::One => Icon::RepeatOne,
+        Repeat::Off | Repeat::All => Icon::Repeat,
+    };
+    let mut controls = row![
+        volume(device, viewport),
+        acting(repeating, repeat_label(repeat), Action::CycleRepeat),
+        acting(Icon::Shuffle, Text::QueueShuffle, Action::ToggleShuffle),
+        crate::widget::icon_button(
+            Icon::Queue,
+            typeface::ICON_BUTTON,
+            Text::PlayerQueue,
+            Message::Navigated(Route::Queue),
+        ),
+        crate::widget::icon_button(
+            Icon::Cast,
+            typeface::ICON_BUTTON,
+            Text::PlayerRemote,
+            Message::Navigated(Route::Remote),
+        ),
+    ]
+    .align_y(iced::Center);
+    if sync_play != SyncAccess::None {
+        controls = controls.push(crate::widget::icon_button(
+            Icon::Groups,
+            typeface::ICON_BUTTON,
+            Text::PlayerSyncPlay,
+            Message::Navigated(Route::SyncPlay),
+        ));
+    }
+    controls.into()
+}
+
+/// The position slider, drawn in the strip that straddles the bar's top edge.
+// reference: bar-position
+fn position<'a>(scrubber: Element<'a, Message>, _viewport: Viewport) -> Element<'a, Message> {
+    container(scrubber)
+        .width(Fill)
+        .height(style::drawn(space::BAR_SLIDER_RISE.drawn()))
+        .into()
+}
+
 /// The bar drawn under every screen while audio plays here, while a radio
-/// channel plays, and while a remote target is bound.
+/// channel plays, and while a remote target is bound: the position slider
+/// across its top edge, and under it the item at the leading edge, the
+/// transport centred over the whole bar, and everything else against the
+/// trailing edge.
+// reference: bar-markup
 pub fn bar<'a>(
     transport: Transport<'a>,
     sync_play: SyncAccess,
@@ -759,7 +860,7 @@ pub fn bar<'a>(
     images: &'a Cache,
     viewport: Viewport,
 ) -> Element<'a, Message> {
-    let (art_key, heading, scrubber, controls) = match transport {
+    let (art_key, heading, scrubber, centred, trailing) = match transport {
         Transport::Local(playing) => (
             self::art_key(playing),
             title(playing),
@@ -771,12 +872,14 @@ pub fn bar<'a>(
                 None,
                 viewport,
             ),
-            self::transport(playing, Surface::Bar, sync_play, device, viewport),
+            Some(centre(playing, viewport)),
+            self::trailing(playing, sync_play, device, viewport),
         ),
         Transport::Remote(bound) => (
             remote_art_key(bound),
             remote_title(bound),
             remote_scrub(bound),
+            None,
             remote_transport(bound),
         ),
         Transport::Group(playing, joined) => (
@@ -794,32 +897,33 @@ pub fn bar<'a>(
                 None,
                 viewport,
             ),
-            self::transport(playing, Surface::Bar, sync_play, device, viewport),
+            Some(centre(playing, viewport)),
+            self::trailing(playing, sync_play, device, viewport),
         ),
     };
 
     let art: Element<'a, Message> = match art_key.and_then(|key| images.handle(key)) {
-        Some(handle) => image(handle)
-            .width(style::drawn(space::BAR_ART.drawn()))
-            .into(),
-        None => Space::new()
-            .width(style::drawn(space::BAR_ART.drawn()))
-            .into(),
+        Some(handle) => image(handle).width(Fill).height(Fill).into(),
+        None => Space::new().into(),
     };
 
-    let details = column![prose(heading, typeface::BODY), scrubber]
-        .spacing(style::drawn(space::BLOCK_GAP.drawn()))
-        .width(Fill);
+    let groups = row![
+        info(art, heading, viewport),
+        Space::new().width(Fill),
+        container(trailing)
+            .padding(iced::Padding::ZERO.right(style::drawn(space::BAR_RIGHT_MARGIN.drawn()))),
+    ]
+    .align_y(iced::Center)
+    .height(style::drawn(space::BAR.drawn()));
 
-    container(
-        row![art, details, controls]
-            .spacing(style::drawn(space::ICON_GAP.drawn()))
-            .align_y(iced::Center),
-    )
-    .padding(style::drawn(space::ICON_GAP.drawn()))
-    .width(Length::Fill)
-    .height(style::drawn(space::BAR.drawn()))
-    .into()
+    let top: Element<'a, Message> = match centred {
+        Some(centred) => stack![groups, container(centred).center_x(Fill).center_y(Fill),].into(),
+        None => groups.into(),
+    };
+
+    column![position(scrubber, viewport), top]
+        .width(Length::Fill)
+        .into()
 }
 
 fn remote_art_key(bound: &Bound) -> Option<images::Key> {

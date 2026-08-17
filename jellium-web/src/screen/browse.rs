@@ -341,13 +341,19 @@ fn paging<'a>(browse: &Browse) -> Element<'a, Message> {
     };
     let filters = widget::icon_button(
         Icon::FilterAlt,
+        typeface::ICON_BUTTON,
         Text::FilterIndicator,
         pressing(Opened::Filters),
     );
 
     row![
         prose(sentence, typeface::BODY),
-        widget::icon_button(Icon::SortByAlpha, Text::LibrarySort, pressing(Opened::Sort)),
+        widget::icon_button(
+            Icon::SortByAlpha,
+            typeface::ICON_BUTTON,
+            Text::LibrarySort,
+            pressing(Opened::Sort)
+        ),
         match browse.listing.facets.is_empty() {
             true => filters,
             false => widget::indicated(filters, browse.viewport.band()),
