@@ -8,6 +8,10 @@ fn content_type(path: &Path) -> &'static str {
         Some("css") => "text/css; charset=utf-8",
         Some("json") => "application/json",
         Some("ttf") => "font/ttf",
+        Some("png") => "image/png",
+        Some("ico") => "image/vnd.microsoft.icon",
+        Some("woff2") => "font/woff2",
+        Some("tsv") => "text/tab-separated-values; charset=utf-8",
         _ => "application/octet-stream",
     }
 }
@@ -52,6 +56,9 @@ fn main() {
     println!("cargo::rerun-if-changed=../jellium-web/strings");
     println!("cargo::rerun-if-changed=../jellium-web/js");
     println!("cargo::rerun-if-changed=../jellium-web/vendor");
+    println!("cargo::rerun-if-changed=../jellium-web/branding");
+    println!("cargo::rerun-if-changed=../jellium-web/fonts");
+    println!("cargo::rerun-if-changed=../jellium-web/icons");
     println!("cargo::rerun-if-changed=../jellium-web/index.html");
     println!("cargo::rerun-if-changed=../jellium-web/boot.js");
     println!("cargo::rerun-if-changed=../jellium-web/boot.css");
