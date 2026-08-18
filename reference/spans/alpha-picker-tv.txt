@@ -1,0 +1,3 @@
+.alphaPicker-vertical.alphaPicker-tv {
+    font-size: 86%;
+}

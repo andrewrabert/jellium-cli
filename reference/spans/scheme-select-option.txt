@@ -1,0 +1,4 @@
+.emby-select-withcolor > option {
+    color: inherit;
+    background: #222;
+}

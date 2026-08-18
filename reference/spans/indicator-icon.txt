@@ -1,0 +1,5 @@
+.indicatorIcon {
+    width: auto;
+    height: auto;
+    font-size: 1.6em;
+}

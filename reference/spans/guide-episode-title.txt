@@ -1,0 +1,8 @@
+                if ((program.EpisodeTitle && programOptions.showEpisodeTitle)) {
+                    html += '<div class="guideProgramSecondaryInfo">';
+
+                    if (program.EpisodeTitle && programOptions.showEpisodeTitle) {
+                        html += '<span class="programSecondaryTitle">' + escapeHtml(program.EpisodeTitle) + '</span>';
+                    }
+                    html += '</div>';
+                }

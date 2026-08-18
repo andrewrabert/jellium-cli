@@ -1,0 +1,7 @@
+.verticalSection-extrabottompadding {
+    margin-bottom: 2.7em;
+}
+
+.layout-mobile .verticalSection-extrabottompadding {
+    margin-bottom: 1em;
+}

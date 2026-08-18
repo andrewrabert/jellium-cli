@@ -1,0 +1,6 @@
+                <button is="paper-icon-button-light" class="btnAirPlay hide autoSize" title="${AirPlay}">
+                    <span class="xlargePaperIconButton material-icons airplay" aria-hidden="true"></span>
+                </button>
+                <button is="paper-icon-button-light" class="btnPip hide autoSize" title="${PictureInPicture}">
+                    <span class="xlargePaperIconButton material-icons picture_in_picture_alt" aria-hidden="true"></span>
+                </button>

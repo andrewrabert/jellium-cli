@@ -1,0 +1,15 @@
+    if (!data?.length) {
+        return (
+            <div className='noItemsMessage centerMessage'>
+                {globalize.translate('SearchResultsEmpty', query)}
+                {collectionType && (
+                    <div>
+                        <Link
+                            className='emby-button'
+                            to={`/search?query=${encodeURIComponent(query || '')}`}
+                        >{globalize.translate('RetryWithGlobalSearch')}</Link>
+                    </div>
+                )}
+            </div>
+        );
+    }

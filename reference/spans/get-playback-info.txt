@@ -1,0 +1,70 @@
+    const itemId = item.Id;
+
+    const query = {
+        UserId: apiClient.getCurrentUserId(),
+        StartTimeTicks: options.startPosition || 0
+    };
+
+    const api = toApi(apiClient);
+    const mediaInfoApi = getMediaInfoApi(api);
+
+    if (options.isPlayback) {
+        query.IsPlayback = true;
+        query.AutoOpenLiveStream = true;
+    } else {
+        query.IsPlayback = false;
+        query.AutoOpenLiveStream = false;
+    }
+
+    if (options.audioStreamIndex != null) {
+        query.AudioStreamIndex = options.audioStreamIndex;
+    }
+    if (options.subtitleStreamIndex != null) {
+        query.SubtitleStreamIndex = options.subtitleStreamIndex;
+    }
+    if (options.secondarySubtitleStreamIndex != null) {
+        query.SecondarySubtitleStreamIndex = options.secondarySubtitleStreamIndex;
+    }
+    if (options.enableDirectPlay != null) {
+        query.EnableDirectPlay = options.enableDirectPlay;
+    }
+    if (options.enableDirectStream != null) {
+        query.EnableDirectStream = options.enableDirectStream;
+    }
+    if (options.allowVideoStreamCopy != null) {
+        query.AllowVideoStreamCopy = options.allowVideoStreamCopy;
+    }
+    if (options.allowAudioStreamCopy != null) {
+        query.AllowAudioStreamCopy = options.allowAudioStreamCopy;
+    }
+    if (mediaSourceId) {
+        query.MediaSourceId = mediaSourceId;
+    }
+    if (liveStreamId) {
+        query.LiveStreamId = liveStreamId;
+    }
+    if (options.maxBitrate) {
+        query.MaxStreamingBitrate = options.maxBitrate;
+    }
+    if (player.enableMediaProbe && !player.enableMediaProbe(item)) {
+        query.EnableMediaProbe = false;
+    }
+
+    // lastly, enforce player overrides for special situations
+    if (query.EnableDirectStream !== false
+        && player.supportsPlayMethod && !player.supportsPlayMethod('DirectStream', item)
+    ) {
+        query.EnableDirectStream = false;
+    }
+
+    if (player.getDirectPlayProtocols) {
+        query.DirectPlayProtocols = player.getDirectPlayProtocols();
+    }
+
+    query.AlwaysBurnInSubtitleWhenTranscoding = appSettings.alwaysBurnInSubtitleWhenTranscoding();
+
+    query.DeviceProfile = deviceProfile;
+
+    const res = await mediaInfoApi.getPostedPlaybackInfo({ itemId: itemId, playbackInfoDto: query });
+    return res.data;
+}

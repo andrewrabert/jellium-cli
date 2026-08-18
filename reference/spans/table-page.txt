@@ -1,0 +1,25 @@
+            <Box
+                className='content-primary'
+                sx={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    height: '100%'
+                }}
+            >
+                <Stack
+                    spacing={2}
+                    sx={{
+                        marginBottom: 1
+                    }}
+                >
+                    <Typography variant='h1'>
+                        {title}
+                    </Typography>
+                    {subtitle && (
+                        <Typography>
+                            {subtitle}
+                        </Typography>
+                    )}
+                </Stack>
+                <MaterialReactTable table={table} />
+            </Box>

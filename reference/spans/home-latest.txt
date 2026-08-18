@@ -1,0 +1,9 @@
+        const cardLayout = false;
+        let shape;
+        if (itemType === 'Channel' || viewType === 'movies' || viewType === 'books' || viewType === 'tvshows') {
+            shape = getPortraitShape(enableOverflow);
+        } else if (viewType === 'music' || viewType === 'homevideos') {
+            shape = getSquareShape(enableOverflow);
+        } else {
+            shape = getBackdropShape(enableOverflow);
+        }

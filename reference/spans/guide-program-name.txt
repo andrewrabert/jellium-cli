@@ -1,0 +1,12 @@
+.guideProgramName {
+    padding: 0 0.7em 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    align-items: center;
+    display: flex;
+    position: relative;
+    flex-grow: 1;
+    contain: layout style paint;
+
+    /* transition: transform 60ms ease-out; */
+}

@@ -1,0 +1,22 @@
+.cardText {
+    padding: 0.06em 0.5em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+
+    [dir="ltr"] & {
+        text-align: left;
+    }
+
+    [dir="rtl"] & {
+        text-align: right;
+    }
+}
+
+.dialog .cardText {
+    text-overflow: initial;
+}
+
+.cardText-secondary {
+    font-size: 86%;
+}

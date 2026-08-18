@@ -1,0 +1,8 @@
+    // Tabbed pages
+    .withTabs .content-primary {
+        padding-top: 6.5rem;
+
+        @media all and (min-width: $mui-bp-lg) {
+            padding-top: 3.25rem;
+        }
+    }

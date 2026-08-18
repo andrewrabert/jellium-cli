@@ -1,0 +1,5 @@
+@media all and (max-width: 75em) {
+    .lnkSibling {
+        display: none !important;
+    }
+}

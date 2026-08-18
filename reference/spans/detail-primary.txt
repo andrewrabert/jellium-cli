@@ -1,0 +1,3 @@
+.detailPagePrimaryContainer {
+    position: relative;
+}

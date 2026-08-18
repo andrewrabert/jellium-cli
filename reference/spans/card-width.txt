@@ -1,0 +1,31 @@
+.bannerCard {
+    width: 100%;
+}
+
+.backdropCard {
+    width: 100%;
+}
+
+.smallBackdropCard {
+    width: 50%;
+}
+
+.squareCard {
+    width: 50%;
+}
+
+.portraitCard {
+    width: 33.333333333333333333333333333333%;
+}
+
+.mixedPortraitCard {
+    width: 12em;
+}
+
+.mixedSquareCard {
+    width: 18em;
+}
+
+.mixedBackdropCard {
+    width: 32em;
+}

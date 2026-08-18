@@ -1,0 +1,16 @@
+
+function renderActiveRecordings(context, promise) {
+    promise.then(function (result) {
+        renderRecordings(context.querySelector('#activeRecordings'), result.Items, {
+            shape: enableScrollX() ? 'autooverflow' : 'auto',
+            defaultShape: getBackdropShape(enableScrollX()),
+            showParentTitle: false,
+            showParentTitleOrTitle: true,
+            showTitle: true,
+            showAirTime: true,
+            showAirEndTime: true,
+            showChannelName: true,
+            coverImage: true,
+            overlayText: false,
+            overlayMoreButton: true
+        });

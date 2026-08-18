@@ -1,0 +1,23 @@
+    return (
+        <ListItem
+            disablePadding
+            secondaryAction={
+                <IconButton onClick={task.State == 'Running' ? handleStopTask : handleStartTask}>
+                    {task.State == 'Running' ? <Stop /> : <PlayArrow />}
+                </IconButton>
+            }
+        >
+            <ListItemLink to={`/dashboard/tasks/${task.Id}`}>
+                <ListItemAvatar>
+                    <Avatar sx={{ bgcolor: 'primary.main' }}>
+                        <AccessTimeIcon sx={{ color: '#fff' }} />
+                    </Avatar>
+                </ListItemAvatar>
+                <ListItemText
+                    primary={<Typography variant='h3'>{task.Name}</Typography>}
+                    secondary={task.State == 'Running' ? <TaskProgress task={task} /> : <TaskLastRan task={task} />}
+                    disableTypography
+                />
+            </ListItemLink>
+        </ListItem>
+    );

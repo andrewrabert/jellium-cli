@@ -1,0 +1,9 @@
+            let imageUrl = 'assets/img/avatar.png';
+            if (user.PrimaryImageTag) {
+                imageUrl = window.ApiClient.getUserImageUrl(user.Id, {
+                    tag: user.PrimaryImageTag,
+                    type: 'Primary'
+                });
+            }
+            const userImage = (page.querySelector('#image') as HTMLDivElement);
+            userImage.style.backgroundImage = 'url(' + imageUrl + ')';

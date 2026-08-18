@@ -1,0 +1,119 @@
+@media (min-width: 25em) {
+    .backdropCard {
+        width: 50%;
+    }
+}
+
+@media (min-width: 31.25em) {
+    .smallBackdropCard {
+        width: 33.333333333333333333333333333333%;
+    }
+
+    .squareCard,
+    .portraitCard {
+        width: 33.333333333333333333333333333333%;
+    }
+}
+
+@media (min-width: 43.75em) {
+    .squareCard,
+    .portraitCard {
+        width: 25%;
+    }
+}
+
+@media (min-width: 48.125em) {
+    .backdropCard {
+        width: 33.333333333333333333333333333333%;
+    }
+}
+
+@media (min-width: 50em) {
+    .bannerCard {
+        width: 50%;
+    }
+
+    .squareCard,
+    .portraitCard {
+        width: 20%;
+    }
+
+    .smallBackdropCard {
+        width: 25%;
+    }
+}
+
+@media (min-width: 62.5em) {
+    .smallBackdropCard {
+        width: 20%;
+    }
+}
+
+@media (min-width: 75em) {
+    .backdropCard {
+        width: 25%;
+    }
+
+    .squareCard,
+    .portraitCard {
+        width: 16.666666666666666666666666666667%;
+    }
+
+    .bannerCard {
+        width: 33.333333333333333333333333333333%;
+    }
+
+    .smallBackdropCard {
+        width: 16.666666666666666666666666666667%;
+    }
+}
+
+@media (min-width: 87.5em) {
+    .squareCard,
+    .portraitCard {
+        width: 14.285714285714285714285714285714%;
+    }
+
+    .smallBackdropCard {
+        width: 14.285714285714285714285714285714%;
+    }
+}
+
+@media (min-width: 100em) {
+    .smallBackdropCard {
+        width: 12.5%;
+    }
+
+    .backdropCard {
+        width: 20%;
+    }
+
+    .squareCard,
+    .portraitCard {
+        width: 12.5%;
+    }
+}
+
+@media (min-width: 120em) {
+    .squareCard,
+    .portraitCard {
+        width: 11.111111111111111111111111111111%;
+    }
+}
+
+@media (min-width: 131.25em) {
+    .bannerCard {
+        width: 25%;
+    }
+
+    .squareCard,
+    .portraitCard {
+        width: 10%;
+    }
+}
+
+@media (min-width: 156.25em) {
+    .backdropCard {
+        width: 16.666666666666666666666666666667%;
+    }
+}

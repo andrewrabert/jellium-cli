@@ -1,0 +1,8 @@
+        function getDeliveryMethod(subtitleStream) {
+            // This will be null for internal subs for local items
+            if (subtitleStream.DeliveryMethod) {
+                return subtitleStream.DeliveryMethod;
+            }
+
+            return subtitleStream.IsExternal ? 'External' : 'Embed';
+        }

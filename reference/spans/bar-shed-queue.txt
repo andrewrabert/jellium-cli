@@ -1,0 +1,9 @@
+@media all and (max-width: 66em) {
+    .toggleRepeatButton {
+        display: none !important;
+    }
+
+    .nowPlayingBar .btnShuffleQueue {
+        display: none !important;
+    }
+}

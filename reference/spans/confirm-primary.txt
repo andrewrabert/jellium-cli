@@ -1,0 +1,5 @@
+    items.push({
+        name: options.confirmText || globalize.translate('ButtonOk'),
+        id: 'ok',
+        type: options.primary === 'delete' ? 'delete' : 'submit'
+    });

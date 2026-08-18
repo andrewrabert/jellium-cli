@@ -1,0 +1,4 @@
+.cardTextCentered,
+.cardTextCentered > .textActionButton {
+    text-align: center !important;
+}

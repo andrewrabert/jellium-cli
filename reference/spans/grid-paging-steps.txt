@@ -1,0 +1,4 @@
+        if (showControls) {
+            html += '<button is="paper-icon-button-light" class="btnPreviousPage autoSize" ' + (startIndex ? '' : 'disabled') + '><span class="material-icons arrow_back" aria-hidden="true"></span></button>';
+            html += '<button is="paper-icon-button-light" class="btnNextPage autoSize" ' + (startIndex + limit >= totalRecordCount ? 'disabled' : '') + '><span class="material-icons arrow_forward" aria-hidden="true"></span></button>';
+        }

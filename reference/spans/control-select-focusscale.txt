@@ -1,0 +1,9 @@
+.emby-select-focusscale {
+    transition: transform 180ms ease-out !important;
+    transform-origin: center center;
+}
+
+.emby-select-focusscale:focus {
+    transform: scale(1.04);
+    z-index: 1;
+}

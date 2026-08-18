@@ -1,0 +1,17 @@
+        function changeStreamToUrl(apiClient, player, playSessionId, streamInfo) {
+            const playerData = getPlayerData(player);
+
+            playerData.isChangingStream = true;
+
+            if (playerData.streamInfo && playSessionId) {
+                apiClient.stopActiveEncodings(playSessionId).then(function () {
+                    // Stop the first transcoding afterwards because the player may still send requests to the original url
+                    const afterSetSrc = function () {
+                        apiClient.stopActiveEncodings(playSessionId);
+                    };
+                    setSrcIntoPlayer(apiClient, player, streamInfo).then(afterSetSrc, afterSetSrc);
+                });
+            } else {
+                setSrcIntoPlayer(apiClient, player, streamInfo);
+            }
+        }

@@ -1,0 +1,5 @@
+.layout-desktop ::-webkit-scrollbar,
+.layout-tv ::-webkit-scrollbar {
+    width: 0.4em;
+    height: 0.4em;
+}

@@ -1,0 +1,3 @@
+.emby-input + .fieldDescription {
+    margin-top: 0.25em;
+}

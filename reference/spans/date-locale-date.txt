@@ -1,0 +1,30 @@
+export function toLocaleDateString(date, options) {
+    if (!date) {
+        throw new Error('date cannot be null');
+    }
+
+    options = options || {};
+
+    if (toLocaleTimeStringSupportsLocales) {
+        const currentLocale = globalize.getCurrentDateTimeLocale();
+
+        if (currentLocale) {
+            return date.toLocaleDateString(currentLocale, options);
+        }
+    }
+
+    // This is essentially a hard-coded polyfill
+    const optionList = getOptionList(options);
+    if (optionList.length === 1 && optionList[0].name === 'weekday') {
+        const weekday = [];
+        weekday[0] = 'Sun';
+        weekday[1] = 'Mon';
+        weekday[2] = 'Tue';
+        weekday[3] = 'Wed';
+        weekday[4] = 'Thu';
+        weekday[5] = 'Fri';
+        weekday[6] = 'Sat';
+        return weekday[date.getDay()];
+    }
+
+    return date.toLocaleDateString();

@@ -1,0 +1,16 @@
+.osdControls {
+    pointer-events: all;
+    flex-grow: 1;
+    padding: 0 0.8em;
+}
+
+.videoOsdBottom .buttons {
+    padding: 0.25em 0 0;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+
+    [dir="rtl"] & {
+        flex-direction: row-reverse;
+    }
+}

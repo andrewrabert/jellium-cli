@@ -1,0 +1,6 @@
+    props: {
+      fontSize: 'medium'
+    },
+    style: {
+      fontSize: theme.typography?.pxToRem?.(24) || '1.5rem'
+    }

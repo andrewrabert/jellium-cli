@@ -1,0 +1,34 @@
+        // Enable (delete) row actions
+        enableRowActions: true,
+        positionActionsColumn: 'last',
+        displayColumnDefOptions: {
+            'mrt-row-actions': {
+                header: '',
+                size: 25
+            }
+        },
+
+        renderTopToolbarCustomActions: () => (
+            <Button
+                startIcon={<AddIcon />}
+                onClick={showNewKeyPopup}
+            >
+                {globalize.translate('HeaderNewApiKey')}
+            </Button>
+        ),
+
+        renderRowActions: ({ row }) => {
+            return (
+                <Box sx={{ display: 'flex' }}>
+                    <Tooltip title={globalize.translate('ButtonRevoke')}>
+                        <IconButton
+                            color='error'
+                            // eslint-disable-next-line react/jsx-no-bind
+                            onClick={() => row.original?.AccessToken && onRevokeKey(row.original.AccessToken)}
+                        >
+                            <DeleteIcon />
+                        </IconButton>
+                    </Tooltip>
+                </Box>
+            );
+        }

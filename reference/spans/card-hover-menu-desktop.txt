@@ -1,0 +1,5 @@
+    let additionalCardContent = '';
+
+    if (layoutManager.desktop && !options.disableHoverMenu) {
+        additionalCardContent += getHoverMenuHtml(item, action);
+    }

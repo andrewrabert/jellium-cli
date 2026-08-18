@@ -1,0 +1,21 @@
+.videoOsdBottom {
+    bottom: 0;
+    left: 0;
+    right: 0;
+    position: fixed;
+    background: linear-gradient(0deg, rgba(16, 16, 16, 0.75) 0%, rgba(16, 16, 16, 0) 100%);
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+    padding-top: 7.5em;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    will-change: opacity;
+    transition: opacity 0.3s ease-out;
+    color: #fff;
+    user-select: none;
+    -webkit-touch-callout: none;
+    pointer-events: none;
+
+    @include conditional-max(padding-bottom, 1.75em, env(safe-area-inset-bottom));
+}

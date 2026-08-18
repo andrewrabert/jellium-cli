@@ -1,0 +1,8 @@
+            const renderStartMs = Math.max(startDateLocalMs, startMs);
+            let startPercent = (startDateLocalMs - startMs) / msPerDay;
+            startPercent *= 100;
+            startPercent = Math.max(startPercent, 0);
+
+            const renderEndMs = Math.min(endDateLocalMs, endMs);
+            let endPercent = (renderEndMs - renderStartMs) / msPerDay;
+            endPercent *= 100;

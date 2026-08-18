@@ -1,0 +1,5 @@
+.detailButton-icon {
+    font-size: 1.6em !important;
+    width: 1em;
+    height: 1em;
+}

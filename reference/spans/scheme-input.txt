@@ -1,0 +1,12 @@
+.emby-input,
+.emby-textarea {
+    color: inherit;
+    background: #292929;
+    border: 0.16em solid #292929;
+    border-radius: 0.2em;
+}
+
+.emby-input:focus,
+.emby-textarea:focus {
+    border-color: #00a4dc;
+}

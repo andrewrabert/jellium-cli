@@ -37,12 +37,15 @@ static-page:
     cargo run -p jellium-model --example boot-css > jellium-web/boot.css
     cargo run -p jellium-model --example index-html > jellium-web/index.html
 
+# Rewrite reference/spans from a checkout of the pinned revision
+spans checkout:
+    node tools/reference/spans.mjs "$1"
+
 # Fail when the tree has drifted from a checkout of the pinned revision
-pinned checkout: (reference checkout)
+pinned checkout: (reference checkout) (spans checkout)
     git ls-files --error-unmatch jellium-web/reference/jellyfin-web.mjs
-    git diff --exit-code jellium-web/reference
-    JELLYFIN_WEB_REFERENCE="$1" \
-    JELLYFIN_APICLIENT_REFERENCE="$1/node_modules/jellyfin-apiclient" \
+    git ls-files --error-unmatch reference/spans
+    git diff --exit-code jellium-web/reference reference/spans
     cargo test -p jellium-reference
 
 # Build the Jellium Web bundle

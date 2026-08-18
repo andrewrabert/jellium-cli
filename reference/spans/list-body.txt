@@ -1,0 +1,9 @@
+.listItemBody {
+    flex-grow: 1;
+    padding: 0.85em 0.75em;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    flex-direction: column;
+    vertical-align: middle;
+    justify-content: center;
+}

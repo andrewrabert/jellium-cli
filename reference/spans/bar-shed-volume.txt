@@ -1,0 +1,9 @@
+@media all and (max-width: 60em) {
+    .nowPlayingBarRight .nowPlayingBarVolumeSliderContainer {
+        display: none !important;
+    }
+
+    .nowPlayingBarInfoContainer {
+        width: 100%;
+    }
+}

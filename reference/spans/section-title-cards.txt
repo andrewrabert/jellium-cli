@@ -1,0 +1,15 @@
+.sectionTitleContainer-cards {
+    margin: 0;
+    padding-top: 1.25em;
+}
+
+div:not(.sectionTitleContainer-cards) > .sectionTitle-cards {
+    margin: 0;
+    padding-top: 0.5em;
+    padding-bottom: 0.2em;
+}
+
+.layout-mobile :not(.sectionTitleContainer-cards) > .sectionTitle-cards {
+    margin: 0;
+    padding-top: 0.5em;
+}

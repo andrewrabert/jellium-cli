@@ -1,0 +1,9 @@
+.sectionTitleContainer {
+    margin: 1.25em 0;
+}
+
+.sectionTitleContainer > .sectionTitle {
+    margin: 0;
+    display: inline-block;
+    vertical-align: middle;
+}

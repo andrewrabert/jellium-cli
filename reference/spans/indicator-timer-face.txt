@@ -1,0 +1,7 @@
+.timerIndicator {
+    color: #cb272a;
+}
+
+.timerIndicator-inactive {
+    color: #888;
+}

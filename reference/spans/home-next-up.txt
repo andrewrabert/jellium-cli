@@ -1,0 +1,5 @@
+        return cardBuilder.getCardsHtml({
+            items: items,
+            preferThumb: true,
+            inheritThumb: !useEpisodeImages,
+            shape: getBackdropShape(enableOverflow),

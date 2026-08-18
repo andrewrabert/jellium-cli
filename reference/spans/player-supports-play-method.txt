@@ -1,0 +1,5 @@
+    if (query.EnableDirectStream !== false
+        && player.supportsPlayMethod && !player.supportsPlayMethod('DirectStream', item)
+    ) {
+        query.EnableDirectStream = false;
+    }

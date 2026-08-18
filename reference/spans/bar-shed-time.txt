@@ -1,0 +1,10 @@
+@media all and (max-width: 80em) {
+    .nowPlayingBarCenter .nowPlayingBarCurrentTime,
+    .nowPlayingBarCenter .stopButton {
+        display: none !important;
+    }
+
+    .nowPlayingBarInfoContainer {
+        width: 45%;
+    }
+}

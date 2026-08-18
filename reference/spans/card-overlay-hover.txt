@@ -1,0 +1,10 @@
+.cardOverlayButton-hover {
+    opacity: 0;
+    transition: 0.2s;
+    background: transparent;
+    padding: 0.25em;
+}
+
+.cardOverlayButtonIcon-hover {
+    background: transparent !important;
+}

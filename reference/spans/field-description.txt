@@ -1,0 +1,9 @@
+.fieldDescription {
+    padding-left: 0.15em;
+    font-weight: 400;
+    white-space: normal !important;
+
+    + .fieldDescription {
+        margin-top: 0.3em;
+    }
+}

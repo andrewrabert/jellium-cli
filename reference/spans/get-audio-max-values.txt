@@ -1,0 +1,26 @@
+function getAudioMaxValues(deviceProfile) {
+    // TODO - this could vary per codec and should be done on the server using the entire profile
+    let maxAudioSampleRate = null;
+    let maxAudioBitDepth = null;
+    let maxAudioBitrate = null;
+
+    deviceProfile.CodecProfiles.forEach(codecProfile => {
+        if (codecProfile.Type === 'Audio') {
+            (codecProfile.Conditions || []).forEach(condition => {
+                if (condition.Condition === 'LessThanEqual' && condition.Property === 'AudioBitDepth') {
+                    maxAudioBitDepth = condition.Value;
+                } else if (condition.Condition === 'LessThanEqual' && condition.Property === 'AudioSampleRate') {
+                    maxAudioSampleRate = condition.Value;
+                } else if (condition.Condition === 'LessThanEqual' && condition.Property === 'AudioBitrate') {
+                    maxAudioBitrate = condition.Value;
+                }
+            });
+        }
+    });
+
+    return {
+        maxAudioSampleRate: maxAudioSampleRate,
+        maxAudioBitDepth: maxAudioBitDepth,
+        maxAudioBitrate: maxAudioBitrate
+    };
+}

@@ -1,0 +1,8 @@
+      props: {
+        size: 'large',
+        variant: 'contained'
+      },
+      style: {
+        padding: '8px 22px',
+        fontSize: theme.typography.pxToRem(15)
+      }

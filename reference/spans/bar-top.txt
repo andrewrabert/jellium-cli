@@ -1,0 +1,8 @@
+.nowPlayingBarTop {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    height: 4.2em;
+    position: relative;
+    justify-content: center;
+}

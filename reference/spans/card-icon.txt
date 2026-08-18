@@ -1,0 +1,4 @@
+.cardImageIcon {
+    font-size: 5em;
+    color: inherit;
+}

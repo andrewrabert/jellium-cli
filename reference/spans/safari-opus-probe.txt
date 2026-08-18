@@ -1,0 +1,1 @@
+    const safariSupportsOpus = browser.safari && browser.versionMajor >= 17 && !!document.createElement('audio').canPlayType('audio/x-caf; codecs="opus"').replace(/no/, '');

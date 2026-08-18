@@ -1,0 +1,3 @@
+.checkboxOutline {
+    border-color: currentColor;
+}

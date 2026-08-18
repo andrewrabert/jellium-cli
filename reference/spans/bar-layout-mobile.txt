@@ -1,0 +1,3 @@
+.layout-mobile .nowPlayingBarRight button:not(.playPauseButton, .nextTrackButton) {
+    display: none;
+}

@@ -1,0 +1,36 @@
+        function getPlaybackMediaSource(player, apiClient, deviceProfile, item, mediaSourceId, options) {
+            options.isPlayback = true;
+
+            return getPlaybackInfo(player, apiClient, item, deviceProfile, mediaSourceId, null, options).then(function (playbackInfoResult) {
+                if (validatePlaybackInfoResult(self, playbackInfoResult)) {
+                    return getOptimalMediaSource(apiClient, item, playbackInfoResult.MediaSources).then(function (mediaSource) {
+                        if (mediaSource) {
+                            if (mediaSource.RequiresOpening && !mediaSource.LiveStreamId) {
+                                options.audioStreamIndex = null;
+                                options.subtitleStreamIndex = null;
+
+                                return getLiveStream(player, apiClient, item, playbackInfoResult.PlaySessionId, deviceProfile, mediaSource, options).then(function (openLiveStreamResult) {
+                                    return supportsDirectPlay(apiClient, item, openLiveStreamResult.MediaSource).then(function (result) {
+                                        openLiveStreamResult.MediaSource.enableDirectPlay = result;
+                                        return openLiveStreamResult.MediaSource;
+                                    });
+                                });
+                            } else {
+                                if (item.AlbumId != null) {
+                                    return apiClient.getItem(apiClient.getCurrentUserId(), item.AlbumId).then(function(result) {
+                                        mediaSource.albumNormalizationGain = result.NormalizationGain;
+                                        return mediaSource;
+                                    });
+                                }
+                                return mediaSource;
+                            }
+                        } else {
+                            showPlaybackInfoErrorMessage(self, `PlaybackError.${MediaError.NO_MEDIA_ERROR}`);
+                            return Promise.reject();
+                        }
+                    });
+                } else {
+                    return Promise.reject();
+                }
+            });
+        }

@@ -1,0 +1,7 @@
+            <TablePage
+                id='apiKeysPage'
+                title={globalize.translate('HeaderApiKeys')}
+                subtitle={globalize.translate('HeaderApiKeysHelp')}
+                className='mainAnimatedPage type-interior'
+                table={table}
+            />

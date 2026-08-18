@@ -1,0 +1,8 @@
+        return cardBuilder.getCardsHtml({
+            items: items,
+            preferThumb: true,
+            inheritThumb: !useEpisodeImages,
+            shape: (mediaType === 'Book') ?
+                getPortraitShape(enableOverflow) :
+                getBackdropShape(enableOverflow),
+            overlayText: false,

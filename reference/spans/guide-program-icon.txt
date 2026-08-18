@@ -1,0 +1,16 @@
+.programIcon {
+    height: 1em;
+    width: 1em;
+    font-size: 1.6em;
+    color: #ddd;
+    flex-shrink: 0;
+    flex-grow: 0;
+
+    [dir="ltr"] & {
+        margin-left: 0.5em;
+    }
+
+    [dir="rtl"] & {
+        margin-right: 0.5em;
+    }
+}

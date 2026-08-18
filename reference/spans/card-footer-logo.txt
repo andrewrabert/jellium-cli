@@ -1,0 +1,16 @@
+    let logoUrl;
+    const logoHeight = 40;
+
+    if (options.showChannelLogo && item.ChannelPrimaryImageTag) {
+        logoUrl = apiClient.getScaledImageUrl(item.ChannelId, {
+            type: 'Primary',
+            height: logoHeight,
+            tag: item.ChannelPrimaryImageTag
+        });
+    } else if (options.showLogo && item.ParentLogoImageTag) {
+        logoUrl = apiClient.getScaledImageUrl(item.ParentLogoItemId, {
+            type: 'Logo',
+            height: logoHeight,
+            tag: item.ParentLogoImageTag
+        });
+    }

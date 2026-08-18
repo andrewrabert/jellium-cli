@@ -1,0 +1,4 @@
+.material-icons {
+    /* Fix font ligatures on older WebOS versions */
+    font-feature-settings: "liga";
+}

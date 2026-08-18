@@ -1,0 +1,28 @@
+div[data-role=controlgroup] a[data-role=button] {
+    display: inline-block !important;
+    margin: 0 !important;
+    box-shadow: none !important;
+    border-radius: 0;
+}
+
+div[data-role=controlgroup] a[data-role=button]:first-child {
+    border-bottom-left-radius: 0.3125em;
+    border-top-left-radius: 0.3125em;
+}
+
+div[data-role=controlgroup] a[data-role=button]:last-child {
+    border-bottom-right-radius: 0.3125em;
+    border-top-right-radius: 0.3125em;
+}
+
+div[data-role=controlgroup] a[data-role=button] + a[data-role=button] {
+    [dir="ltr"] & {
+        border-left-width: 0 !important;
+        margin: 0 0 0 -0.4em !important;
+    }
+
+    [dir="rtl"] & {
+        border-right-width: 0 !important;
+        margin: 0 -0.4em 0 0 !important;
+    }
+}

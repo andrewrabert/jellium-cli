@@ -1,0 +1,6 @@
+      setColor(palette.LinearProgress, 'primaryBg', safeDarken(palette.primary.main, 0.5));
+      setColor(palette.LinearProgress, 'secondaryBg', safeDarken(palette.secondary.main, 0.5));
+      setColor(palette.LinearProgress, 'errorBg', safeDarken(palette.error.main, 0.5));
+      setColor(palette.LinearProgress, 'infoBg', safeDarken(palette.info.main, 0.5));
+      setColor(palette.LinearProgress, 'successBg', safeDarken(palette.success.main, 0.5));
+      setColor(palette.LinearProgress, 'warningBg', safeDarken(palette.warning.main, 0.5));

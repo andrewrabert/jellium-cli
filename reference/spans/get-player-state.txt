@@ -1,0 +1,62 @@
+        self.getPlayerState = function (player, item, mediaSource) {
+            player = player || self._currentPlayer;
+
+            if (!player) {
+                throw new Error('player cannot be null');
+            }
+
+            if (!enableLocalPlaylistManagement(player) && player.getPlayerState) {
+                return player.getPlayerState();
+            }
+
+            item = item || self.currentItem(player);
+            mediaSource = mediaSource || self.currentMediaSource(player);
+
+            const state = {
+                PlayState: {}
+            };
+
+            if (player) {
+                state.PlayState.VolumeLevel = player.getVolume();
+                state.PlayState.IsMuted = player.isMuted();
+                state.PlayState.IsPaused = player.paused();
+                state.PlayState.RepeatMode = self.getRepeatMode(player);
+                state.PlayState.ShuffleMode = self.getQueueShuffleMode(player);
+                state.PlayState.MaxStreamingBitrate = self.getMaxStreamingBitrate(player);
+
+                state.PlayState.PositionTicks = getCurrentTicks(player);
+                state.PlayState.PlaybackStartTimeTicks = self.playbackStartTime(player);
+                state.PlayState.PlaybackRate = self.getPlaybackRate(player);
+
+                state.PlayState.SubtitleStreamIndex = self.getSubtitleStreamIndex(player);
+                state.PlayState.SecondarySubtitleStreamIndex = self.getSecondarySubtitleStreamIndex(player);
+                state.PlayState.AudioStreamIndex = self.getAudioStreamIndex(player);
+                state.PlayState.BufferedRanges = self.getBufferedRanges(player);
+
+                state.PlayState.PlayMethod = self.playMethod(player);
+
+                if (mediaSource) {
+                    state.PlayState.LiveStreamId = mediaSource.LiveStreamId;
+                }
+                state.PlayState.PlaySessionId = self.playSessionId(player);
+                state.PlayState.PlaylistItemId = self.getCurrentPlaylistItemId(player);
+            }
+
+            if (mediaSource) {
+                state.PlayState.MediaSourceId = mediaSource.Id;
+
+                state.NowPlayingItem = {
+                    RunTimeTicks: mediaSource.RunTimeTicks
+                };
+
+                state.PlayState.CanSeek = (mediaSource.RunTimeTicks || 0) > 0 || canPlayerSeek(player);
+            }
+
+            if (item) {
+                state.NowPlayingItem = getNowPlayingItemForReporting(player, item, mediaSource);
+            }
+
+            state.MediaSource = mediaSource;
+
+            return state;
+        };

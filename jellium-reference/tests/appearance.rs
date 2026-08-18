@@ -1,15 +1,11 @@
 //! The gate over `jellium-model/src/appearance`: every value it holds names the
 //! rule it came from, and the rule it names carries that value.
 
+use jellium_reference::register::{Construct, Kind, Register};
+use jellium_reference::spans::Spans;
+use jellium_reference::tree::{self, Extension};
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
-
-fn workspace_root() -> PathBuf {
-    Path::new(env!("CARGO_MANIFEST_DIR"))
-        .parent()
-        .expect("the package directory sits inside the workspace")
-        .to_path_buf()
-}
 
 /// The oracle a value is allowed to cite in place of a ported rule.
 const ORACLE: &str = "reference/breakpoints.tsv";
@@ -48,7 +44,7 @@ struct Value {
     written: String,
     initializer: String,
     measures: Vec<Measure>,
-    cited: Vec<String>,
+    cited: Vec<Construct>,
     oracle: bool,
     standard: Option<String>,
     exported: bool,
@@ -157,17 +153,8 @@ fn appearance(root: &Path) -> Vec<Value> {
             while above > 0 && lines[above - 1].trim_start().starts_with("//") {
                 above -= 1;
                 let comment = lines[above].trim_start();
-                if let Some(rest) = comment.strip_prefix("// reference:") {
-                    cited.push(
-                        rest.trim_start()
-                            .chars()
-                            .take_while(|value| {
-                                value.is_ascii_lowercase()
-                                    || value.is_ascii_digit()
-                                    || *value == '-'
-                            })
-                            .collect(),
-                    );
+                if let Some(construct) = Construct::cited(comment) {
+                    cited.push(construct);
                 }
                 if let Some(rest) = comment.strip_prefix("// standard:") {
                     standard = Some(
@@ -205,34 +192,15 @@ fn appearance(root: &Path) -> Vec<Value> {
     values
 }
 
-/// The `construct` and span of every ported row of `reference/provenance.tsv`.
-fn ported(root: &Path) -> BTreeMap<String, (PathBuf, usize, usize)> {
-    let text = std::fs::read_to_string(root.join("reference/provenance.tsv"))
-        .expect("reference/provenance.tsv is readable");
-    text.lines()
-        .skip(1)
-        .filter(|line| !line.is_empty())
-        .filter_map(|line| {
-            let fields: Vec<&str> = line.split('\t').collect();
-            if fields.get(5) != Some(&"ported") {
-                return None;
-            }
-            Some((
-                fields[0].to_owned(),
-                (
-                    PathBuf::from(fields[1]),
-                    fields[2].parse().ok()?,
-                    fields[3].parse().ok()?,
-                ),
-            ))
-        })
-        .collect()
+fn register(root: &Path) -> Register {
+    Register::read(root).unwrap_or_else(|error| panic!("{error}"))
 }
 
 #[test]
 fn every_appearance_value_carries_a_provenance_row() {
-    let root = workspace_root();
-    let rows = ported(&root);
+    let root = tree::workspace_root();
+    let register = register(&root);
+    let ported = register.constructs(Kind::Ported);
     let values = appearance(&root);
     assert!(
         values.iter().any(|value| value.exported),
@@ -243,7 +211,7 @@ fn every_appearance_value_carries_a_provenance_row() {
     let mut unknown = Vec::new();
     for value in &values {
         for construct in &value.cited {
-            if !rows.contains_key(construct) {
+            if !ported.contains(construct) {
                 unknown.push(format!(
                     "{} cites {construct}, which no ported row names",
                     value.at
@@ -259,15 +227,6 @@ fn every_appearance_value_carries_a_provenance_row() {
         uncited.is_empty(),
         "appearance values no bucket accounts for: {uncited:#?}"
     );
-}
-
-/// The checkout named by `JELLYFIN_WEB_REFERENCE`, and None where it is unset.
-fn checkout() -> Option<PathBuf> {
-    let named = std::env::var("JELLYFIN_WEB_REFERENCE").ok()?;
-    if named.is_empty() {
-        return None;
-    }
-    Some(PathBuf::from(named))
 }
 
 /// Whether two characters standing side by side belong to one value, which is
@@ -395,7 +354,7 @@ enum Measure {
     Identity,
 }
 
-/// A span of the pinned checkout: its text flattened, and every count it
+/// A span of the pinned reference: its text flattened, and every count it
 /// writes.
 struct Span {
     text: String,
@@ -727,8 +686,7 @@ fn color(arguments: &str) -> Option<String> {
     ))
 }
 
-/// The gate over the reading above, which runs whether or not a checkout is
-/// named.
+/// The gate over the reading this file does before it measures anything.
 #[test]
 fn a_span_carries_a_value_only_where_it_writes_it() {
     assert_eq!(flattened("padding: 0.4em .25em"), "padding:.4em.25em");
@@ -761,13 +719,12 @@ fn a_span_carries_a_value_only_where_it_writes_it() {
 
 #[test]
 fn every_cited_span_holds_the_value_that_cites_it() {
-    let root = workspace_root();
-    let Some(checkout) = checkout() else {
-        return;
-    };
-    let rows = ported(&root);
-    let mut spans: BTreeMap<String, Span> = BTreeMap::new();
+    let root = tree::workspace_root();
+    let register = register(&root);
+    let committed = Spans::read(&root).unwrap_or_else(|error| panic!("{error}"));
+    let mut spans: BTreeMap<Construct, Span> = BTreeMap::new();
     let mut absent = Vec::new();
+    let mut measured = 0usize;
 
     for value in &appearance(&root) {
         let Some(bucket) = value.bucket() else {
@@ -781,17 +738,13 @@ fn every_cited_span_holds_the_value_that_cites_it() {
             if spans.contains_key(construct) {
                 continue;
             }
-            let (path, first, last) = rows
-                .get(construct)
+            let row = register
+                .row(construct)
                 .unwrap_or_else(|| panic!("{construct} has a ported row"));
-            let source = checkout.join(path);
-            let text = std::fs::read_to_string(&source)
-                .unwrap_or_else(|_| panic!("{} is readable", source.display()));
-            let lines: Vec<&str> = text.split('\n').collect();
-            spans.insert(
-                construct.clone(),
-                Span::of(&lines[*first - 1..*last].join("\n")),
-            );
+            let text = committed
+                .text(&row.construct)
+                .unwrap_or_else(|| panic!("{construct} stands under a reference/spans file"));
+            spans.insert(construct.clone(), Span::of(text));
         }
         for measure in &value.measures {
             let Measure::Spelt { named, spellings } = measure else {
@@ -803,6 +756,7 @@ fn every_cited_span_holds_the_value_that_cites_it() {
                     .iter()
                     .any(|construct| spans[construct].carries(spelling))
             });
+            measured += 1;
             if !carried {
                 absent.push(format!(
                     "{} ({}) takes {named}, which {:?} does not carry",
@@ -815,34 +769,16 @@ fn every_cited_span_holds_the_value_that_cites_it() {
         absent.is_empty(),
         "values whose cited spans do not carry them: {absent:#?}"
     );
+    assert!(
+        measured > 0,
+        "no appearance value was measured against a cited span"
+    );
 }
 
 /// The four spellings a text size, a line box and a gap reach iced through,
 /// named rather than matched on a word boundary, so this gate's scope is its
 /// own.
 const GAPS: &[&str] = &[".size(", ".line_height(", ".spacing(", ".padding("];
-
-/// Every `.rs` file under a directory, sorted.
-fn sources(directory: &Path) -> Vec<PathBuf> {
-    let mut found = Vec::new();
-    let mut pending = vec![directory.to_path_buf()];
-    while let Some(at) = pending.pop() {
-        let entries = match std::fs::read_dir(&at) {
-            Ok(entries) => entries,
-            Err(_) => continue,
-        };
-        for entry in entries {
-            let path = entry.expect("the entry is readable").path();
-            if path.is_dir() {
-                pending.push(path);
-            } else if path.extension().and_then(|value| value.to_str()) == Some("rs") {
-                found.push(path);
-            }
-        }
-    }
-    found.sort();
-    found
-}
 
 /// The argument a call opens at `at` begins with, with the whitespace and the
 /// line breaks before it gone.
@@ -852,9 +788,9 @@ fn argument(text: &str, at: usize) -> Option<char> {
 
 #[test]
 fn no_literal_reaches_a_text_size_or_a_gap() {
-    let root = workspace_root();
+    let root = tree::workspace_root();
     let directory = root.join("jellium-web/src");
-    let files = sources(&directory);
+    let files = tree::files_under(&directory, &[Extension::RUST]);
     assert!(
         !files.is_empty(),
         "no source was read out of jellium-web/src"
@@ -904,9 +840,9 @@ const LENGTHS: &[&str] = &[
 
 #[test]
 fn no_literal_reaches_a_drawn_length() {
-    let root = workspace_root();
+    let root = tree::workspace_root();
     let directory = root.join("jellium-web/src");
-    let files = sources(&directory);
+    let files = tree::files_under(&directory, &[Extension::RUST]);
     assert!(
         !files.is_empty(),
         "no source was read out of jellium-web/src"
@@ -974,9 +910,9 @@ fn chained(text: &str, at: usize) -> Option<usize> {
 
 #[test]
 fn every_button_carries_a_style() {
-    let root = workspace_root();
+    let root = tree::workspace_root();
     let directory = root.join("jellium-web/src");
-    let files = sources(&directory);
+    let files = tree::files_under(&directory, &[Extension::RUST]);
     assert!(
         !files.is_empty(),
         "no source was read out of jellium-web/src"

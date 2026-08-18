@@ -1,0 +1,14 @@
+export const DEFAULT_TABLE_OPTIONS: Partial<MRT_TableOptions<MRT_RowData>> = {
+    // Enable custom features
+    enableColumnPinning: true,
+    enableColumnResizing: true,
+
+    // Sticky header/footer
+    enableStickyFooter: true,
+    enableStickyHeader: true,
+    muiTableContainerProps: {
+        sx: {
+            maxHeight: 'calc(100% - 7rem)' // 2 x 3.5rem for header and footer
+        }
+    }
+};

@@ -1,0 +1,24 @@
+function getAirTimeText(item, showAirDateTime, showAirEndTime) {
+    let airTimeText = '';
+
+    if (item.StartDate) {
+        try {
+            let date = datetime.parseISO8601Date(item.StartDate);
+
+            if (showAirDateTime) {
+                airTimeText += datetime.toLocaleDateString(date, { weekday: 'short', month: 'short', day: 'numeric' }) + ' ';
+            }
+
+            airTimeText += datetime.getDisplayTime(date);
+
+            if (item.EndDate && showAirEndTime) {
+                date = datetime.parseISO8601Date(item.EndDate);
+                airTimeText += ' - ' + datetime.getDisplayTime(date);
+            }
+        } catch (e) {
+            console.error('error parsing date: ' + item.StartDate, e);
+        }
+    }
+
+    return airTimeText;
+}

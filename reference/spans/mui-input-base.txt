@@ -1,0 +1,13 @@
+})(memoTheme(({
+  theme
+}) => ({
+  ...theme.typography.body1,
+  color: (theme.vars || theme).palette.text.primary,
+  lineHeight: '1.4375em',
+  // 23px
+  boxSizing: 'border-box',
+  // Prevent padding issue with fullWidth.
+  position: 'relative',
+  cursor: 'text',
+  display: 'inline-flex',
+  alignItems: 'center',

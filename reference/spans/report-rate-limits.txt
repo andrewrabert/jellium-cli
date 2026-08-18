@@ -1,0 +1,4 @@
+const reportRateLimits = {
+    timeupdate: 10000,
+    volumechange: 3000
+};

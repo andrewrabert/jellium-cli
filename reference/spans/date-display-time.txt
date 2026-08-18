@@ -1,0 +1,21 @@
+export function getDisplayTime(date) {
+    if (!date) {
+        throw new Error('date cannot be null');
+    }
+
+    if (typeof date === 'string') {
+        try {
+            date = parseISO8601Date(date, true);
+        } catch {
+            return date;
+        }
+    }
+
+    if (toLocaleTimeStringSupportsLocales) {
+        return toLocaleTimeString(date, {
+
+            hour: 'numeric',
+            minute: '2-digit'
+
+        });
+    }

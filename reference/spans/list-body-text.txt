@@ -1,0 +1,7 @@
+.listItemBodyText {
+    margin: 0;
+    padding: 0.1em 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-weight: 400;
+}

@@ -1,0 +1,2 @@
+    const subtitleBurninSetting = appSettings.get('subtitleburnin');
+    const subtitleRenderPgsSetting = appSettings.get('subtitlerenderpgs') === 'true';

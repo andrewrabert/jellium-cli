@@ -1,0 +1,10 @@
+@media all and (max-width: 31.25em) {
+    .mobileDetails .itemMiscInfo {
+        text-align: center;
+        justify-content: center;
+    }
+
+    .itemMiscInfo .endsAt {
+        display: none;
+    }
+}

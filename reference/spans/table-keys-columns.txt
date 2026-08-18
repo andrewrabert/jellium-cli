@@ -1,0 +1,20 @@
+    const columns = useMemo<MRT_ColumnDef<AuthenticationInfo>[]>(() => [
+        {
+            id: 'ApiKey',
+            accessorKey: 'AccessToken',
+            header: globalize.translate('HeaderApiKey'),
+            size: 300
+        },
+        {
+            id: 'AppName',
+            accessorKey: 'AppName',
+            header: globalize.translate('HeaderApp')
+        },
+        {
+            id: 'DateIssued',
+            accessorFn: item => item.DateCreated ? parseISO(item.DateCreated) : undefined,
+            Cell: DateTimeCell,
+            header: globalize.translate('HeaderDateIssued'),
+            filterVariant: 'datetime-range'
+        }
+    ], []);

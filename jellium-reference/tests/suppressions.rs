@@ -1,44 +1,9 @@
+use jellium_reference::tree::{self, Extension};
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 
-fn workspace_root() -> PathBuf {
-    Path::new(env!("CARGO_MANIFEST_DIR"))
-        .parent()
-        .expect("the package directory sits inside the workspace")
-        .to_path_buf()
-}
-
-fn ignored(name: &str) -> bool {
-    matches!(name, "target" | ".git")
-}
-
-fn files_under(root: &Path, extension: &str) -> Vec<PathBuf> {
-    let mut found = Vec::new();
-    let mut pending = vec![root.to_path_buf()];
-    while let Some(directory) = pending.pop() {
-        let entries = std::fs::read_dir(&directory).expect("the directory is readable");
-        for entry in entries {
-            let path = entry.expect("the entry is readable").path();
-            let name = match path.file_name().and_then(|name| name.to_str()) {
-                Some(name) => name,
-                None => continue,
-            };
-            if ignored(name) {
-                continue;
-            }
-            if path.is_dir() {
-                pending.push(path);
-            } else if path.extension().and_then(|value| value.to_str()) == Some(extension) {
-                found.push(path);
-            }
-        }
-    }
-    found.sort();
-    found
-}
-
 fn named_under(root: &Path, file_name: &str) -> Vec<PathBuf> {
-    files_under(root, "toml")
+    tree::files_under(root, &[Extension::TOML])
         .into_iter()
         .filter(|path| path.file_name().and_then(|name| name.to_str()) == Some(file_name))
         .collect()
@@ -47,7 +12,7 @@ fn named_under(root: &Path, file_name: &str) -> Vec<PathBuf> {
 /// Every `.rs` file in the repository this test can reach.
 fn sources(root: &Path) -> Vec<PathBuf> {
     let itself = root.join("jellium-reference/tests/suppressions.rs");
-    files_under(root, "rs")
+    tree::files_under(root, &[Extension::RUST])
         .into_iter()
         .filter(|path| path != &itself)
         .collect()
@@ -296,7 +261,7 @@ fn every_lint_stands_at_the_level_the_toolchain_sets() {
     let innocent = "// #[allow(dead_code)]\nconst QUOTED: &str = \"#[allow(dead_code)]\";\n#[derive(Debug)]\n#[deny(clippy::allow_attributes)]\nstruct Clean;\n";
     assert!(suppressions(innocent).is_empty());
 
-    let root = workspace_root();
+    let root = tree::workspace_root();
     let mut sites = Vec::new();
     for path in sources(&root) {
         let text = std::fs::read_to_string(&path).expect("the source is readable");
@@ -314,7 +279,7 @@ fn no_manifest_allows_a_lint() {
     let lowered = "[lints.clippy]\ntoo_many_arguments = \"allow\"\n";
     assert_eq!(allowances(lowered), vec!["lints.clippy.too_many_arguments"]);
 
-    let root = workspace_root();
+    let root = tree::workspace_root();
     let mut sites = Vec::new();
     for path in named_under(&root, "Cargo.toml") {
         let manifest = std::fs::read_to_string(&path).expect("the manifest is readable");
@@ -375,7 +340,7 @@ fn clippy_configuration_only_adds_obligations() {
         BTreeSet::from(["core::mem::swap"])
     );
 
-    let root = workspace_root();
+    let root = tree::workspace_root();
     let configurations = named_under(&root, "clippy.toml");
     let shown: Vec<String> = configurations
         .iter()
@@ -413,10 +378,12 @@ fn no_command_line_lowers_a_lint() {
         "        run: Compress-Archive -Path release"
     ));
 
-    let root = workspace_root();
+    let root = tree::workspace_root();
     let mut commands = vec![root.join("justfile")];
-    commands.extend(files_under(&root.join(".github"), "yml"));
-    commands.extend(files_under(&root.join(".github"), "yaml"));
+    commands.extend(tree::files_under(
+        &root.join(".github"),
+        &[Extension::YML, Extension::YAML],
+    ));
     commands.extend(named_under(&root, "config.toml"));
 
     let mut sites = Vec::new();
@@ -438,7 +405,7 @@ const FAILURE_DOOR: &str = "jellium-web/src/failure.rs";
 /// Every site in `jellium-web/src` outside `door` that names `spelling`, as
 /// repository-relative `path:line`.
 fn spelled_outside_the_door(door: &str, spelling: &str) -> Vec<String> {
-    let root = workspace_root();
+    let root = tree::workspace_root();
     let door = root.join(door);
     let mut sites = Vec::new();
     for path in sources(&root.join("jellium-web/src")) {

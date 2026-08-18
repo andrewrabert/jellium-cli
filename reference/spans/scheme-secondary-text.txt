@@ -1,0 +1,10 @@
+.cardText-secondary,
+.fieldDescription,
+.guide-programNameCaret,
+.listItem .secondary,
+.nowPlayingBarSecondaryText,
+.programSecondaryTitle,
+.secondaryText {
+    color: #999;
+    color: rgba(255, 255, 255, 0.5);
+}

@@ -1,0 +1,4 @@
+.nowPlayingBarPositionSlider::-webkit-slider-thumb {
+    width: 1.2em !important;
+    height: 1.2em !important;
+}

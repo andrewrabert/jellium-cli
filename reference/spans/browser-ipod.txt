@@ -1,0 +1,1 @@
+    browser.iOS = browser.ipad || browser.iphone || browser.ipod;

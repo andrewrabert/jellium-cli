@@ -1,0 +1,15 @@
+        default:
+            return [
+                BaseItemKind.Movie,
+                BaseItemKind.Series,
+                BaseItemKind.Episode,
+                BaseItemKind.Playlist,
+                BaseItemKind.MusicAlbum,
+                BaseItemKind.Audio,
+                BaseItemKind.TvChannel,
+                BaseItemKind.PhotoAlbum,
+                BaseItemKind.Photo,
+                BaseItemKind.AudioBook,
+                BaseItemKind.Book,
+                BaseItemKind.BoxSet
+            ];

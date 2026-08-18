@@ -1,0 +1,30 @@
+function getOptimalMediaSource(apiClient, item, versions) {
+    const promises = versions.map(function (v) {
+        return supportsDirectPlay(apiClient, item, v);
+    });
+
+    if (!promises.length) {
+        return Promise.reject();
+    }
+
+    return Promise.all(promises).then(function (results) {
+        for (let i = 0, length = versions.length; i < length; i++) {
+            versions[i].enableDirectPlay = results[i] || false;
+        }
+        let optimalVersion = versions.filter(function (v) {
+            return v.enableDirectPlay;
+        })[0];
+
+        if (!optimalVersion) {
+            optimalVersion = versions.filter(function (v) {
+                return v.SupportsDirectStream;
+            })[0];
+        }
+
+        optimalVersion = optimalVersion || versions.filter(function (s) {
+            return s.SupportsTranscoding;
+        })[0];
+
+        return optimalVersion || versions[0];
+    });
+}

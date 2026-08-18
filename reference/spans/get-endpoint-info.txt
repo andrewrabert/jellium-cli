@@ -1,0 +1,12 @@
+    getEndpointInfo() {
+        const savedValue = this._endPointInfo;
+        if (savedValue) {
+            return Promise.resolve(savedValue);
+        }
+
+        const instance = this;
+        return this.getJSON(this.getUrl('System/Endpoint')).then((endPointInfo) => {
+            setSavedEndpointInfo(instance, endPointInfo);
+            return endPointInfo;
+        });
+    }

@@ -1,0 +1,18 @@
+}) => (
+    <ResponsiveDrawer
+        open={open}
+        onClose={onClose}
+        onOpen={onOpen}
+    >
+        <List disablePadding>
+            <ListItem disablePadding>
+                <DrawerHeaderLink />
+            </ListItem>
+        </List>
+        <ServerDrawerSection />
+        <DevicesDrawerSection />
+        <LiveTvDrawerSection />
+        <PluginDrawerSection />
+        <AdvancedDrawerSection />
+    </ResponsiveDrawer>
+);

@@ -1,0 +1,9 @@
+.timerIcon,
+.seriesTimerIcon {
+    color: #c33 !important;
+}
+
+.seriesTimerIcon-inactive {
+    color: inherit !important;
+    opacity: 0.7;
+}

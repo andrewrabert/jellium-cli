@@ -1,0 +1,25 @@
+@use '../../styles/mixins' as *;
+
+.alphaPicker {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-self: center;
+}
+
+.alphaPicker-vertical {
+    line-height: 1;
+}
+
+.alphaPicker-fixed {
+    position: fixed;
+
+    @include conditional-max(bottom, 5.5em, env(safe-area-inset-bottom));
+}
+
+.alphaPickerRow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: row;
+}

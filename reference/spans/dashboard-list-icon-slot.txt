@@ -1,0 +1,23 @@
+        MuiListItemIcon: {
+            styleOverrides: {
+                root: {
+                    minWidth: LIST_ICON_WIDTH
+                }
+            }
+        },
+        MuiListSubheader: {
+            styleOverrides: {
+                root: {
+                    // NOTE: Added for drawer subheaders, but maybe it won't work in other cases?
+                    backgroundColor: 'inherit',
+                    position: 'initial'
+                }
+            }
+        },
+        MuiListItemText: {
+            styleOverrides: {
+                inset: {
+                    paddingLeft: LIST_ICON_WIDTH
+                }
+            }
+        }

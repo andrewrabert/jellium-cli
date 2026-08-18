@@ -1,0 +1,11 @@
+    let platformMatch = /(ipad)/.exec(ua)
+        || /(iphone)/.exec(ua)
+        || /(windows)/.exec(ua)
+        || /(android)/.exec(ua)
+        || /(titanos)/.exec(ua)
+        || [];
+
+    let browser = match[1] || '';
+
+    if (browser === 'edge') {
+        platformMatch = [''];

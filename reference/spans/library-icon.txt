@@ -1,0 +1,23 @@
+export function getLibraryIcon(library: CollectionType | string | null | undefined) {
+    switch (library) {
+        case CollectionType.Movies:
+            return 'movie';
+        case CollectionType.Music:
+            return 'music_note';
+        case CollectionType.Homevideos:
+        case CollectionType.Photos:
+            return 'photo';
+        case CollectionType.Livetv:
+            return 'live_tv';
+        case CollectionType.Tvshows:
+            return 'tv';
+        case CollectionType.Trailers:
+            return 'theaters';
+        case CollectionType.Musicvideos:
+            return 'music_video';
+        case CollectionType.Books:
+            return 'book';
+        case CollectionType.Boxsets:
+            return 'video_library';
+        case CollectionType.Playlists:
+            return 'queue';

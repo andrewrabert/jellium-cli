@@ -1,0 +1,8 @@
+.guideChannelNumber {
+    padding-left: 1em;
+    max-width: 30%;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    font-weight: normal;
+    margin: 0;
+}

@@ -1,0 +1,66 @@
+    const userColumn: MRT_ColumnDef<ActivityLogEntry>[] = useMemo(() =>
+        (activityView === ActivityView.System) ? [] : [{
+            id: 'User',
+            accessorFn: row => row.UserId && users[row.UserId]?.Name,
+            header: globalize.translate('LabelUser'),
+            size: 75,
+            Cell: UserCell,
+            enableResizing: false,
+            muiTableBodyCellProps: {
+                align: 'center'
+            },
+            filterVariant: 'multi-select',
+            filterSelectOptions: userNames
+        }], [ activityView, userNames, users, UserCell ]);
+
+    const columns = useMemo<MRT_ColumnDef<ActivityLogEntry>[]>(() => [
+        {
+            id: 'Date',
+            accessorFn: row => row.Date ? parseISO(row.Date) : undefined,
+            header: globalize.translate('LabelTime'),
+            size: 160,
+            Cell: DateTimeCell,
+            filterVariant: 'datetime-range'
+        },
+        {
+            accessorKey: 'Severity',
+            header: globalize.translate('LabelLevel'),
+            size: 90,
+            Cell: LogLevelCell,
+            enableResizing: false,
+            muiTableBodyCellProps: {
+                align: 'center'
+            },
+            filterVariant: 'multi-select',
+            filterSelectOptions: Object.values(LogLevel).map(level => globalize.translate(`LogLevel.${level}`))
+        },
+        ...userColumn,
+        {
+            accessorKey: 'Name',
+            header: globalize.translate('LabelName'),
+            size: 270
+        },
+        {
+            id: 'Overview',
+            accessorFn: row => row.ShortOverview || row.Overview,
+            header: globalize.translate('LabelOverview'),
+            size: 170,
+            Cell: OverviewCell
+        },
+        {
+            accessorKey: 'Type',
+            header: globalize.translate('LabelType'),
+            size: 150
+        },
+        {
+            id: 'Actions',
+            accessorFn: row => row.ItemId,
+            header: '',
+            size: 60,
+            Cell: ActionsCell,
+            enableColumnActions: false,
+            enableColumnFilter: false,
+            enableResizing: false,
+            enableSorting: false
+        }
+    ], [ userColumn ]);

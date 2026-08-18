@@ -1,0 +1,30 @@
+const UserCardBox: FunctionComponent<IProps> = ({ user = {} }: IProps) => {
+    let cssClass = 'card squareCard scalableCard squareCard-scalable';
+
+    if (user.Policy?.IsDisabled) {
+        cssClass += ' grayscale';
+    }
+
+    let imgUrl;
+
+    if (user.PrimaryImageTag && user.Id) {
+        imgUrl = window.ApiClient.getUserImageUrl(user.Id, {
+            width: 300,
+            tag: user.PrimaryImageTag,
+            type: 'Primary'
+        });
+    }
+
+    let imageClass = 'cardImage';
+
+    if (user.Policy?.IsDisabled) {
+        imageClass += ' disabledUser';
+    }
+
+    const lastSeen = getLastSeenText(user.LastActivityDate);
+
+    const renderImgUrl = imgUrl ?
+        <div className={imageClass} style={{ backgroundImage: `url(${imgUrl})` }} /> :
+        <div className={`${imageClass} ${getDefaultBackgroundClass(user.Name)} flex align-items-center justify-content-center`}>
+            <span className='material-icons cardImageIcon person' aria-hidden='true'></span>
+        </div>;

@@ -1,0 +1,7 @@
+.detailButton,
+.itemLinks,
+.listPaging,
+.sectionTabs,
+.viewSettings {
+    text-align: center;
+}

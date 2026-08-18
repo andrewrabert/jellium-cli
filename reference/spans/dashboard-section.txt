@@ -1,0 +1,9 @@
+.dashboardSection {
+    flex-shrink: 0;
+    margin: 0 0 2em;
+}
+
+.dashboardSection h3 {
+    margin-top: 0.5em;
+    margin-bottom: 0.5em;
+}

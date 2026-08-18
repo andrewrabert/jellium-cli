@@ -1,0 +1,23 @@
+.listItem {
+    background: transparent;
+    border: 0;
+    outline: none !important;
+    color: inherit;
+    vertical-align: middle;
+    font-family: inherit;
+    font-size: inherit;
+    margin: 0;
+    align-items: center;
+    cursor: pointer;
+    overflow: hidden;
+
+    [dir="ltr"] & {
+        text-align: left;
+        padding: 0.25em 0.25em 0.25em 0.5em;
+    }
+
+    [dir="rtl"] & {
+        text-align: right;
+        padding: 0.25em 0.5em 0.25em 0.25em;
+    }
+}

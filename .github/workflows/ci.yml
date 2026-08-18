@@ -48,22 +48,26 @@ jobs:
           path: web-dist
       - run: echo "JELLIUM_WEB_DIST=$PWD/web-dist" >> "$GITHUB_ENV"
         shell: bash
+      - id: pinned
+        run: printf 'commit=%s\n' "$(head -1 reference/PINNED | cut -f2)" >> "$GITHUB_OUTPUT"
       - uses: actions/checkout@v4
         with:
           repository: jellyfin/jellyfin-web
-          ref: 35c0793ece3adbd247eab290ae1effab851f3d37
+          ref: ${{ steps.pinned.outputs.commit }}
           path: jellyfin-web
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - run: git ls-files --error-unmatch jellium-web/reference/jellyfin-web.mjs
-      - run: node tools/reference/slice.mjs jellyfin-web
-      - run: git diff --exit-code jellium-web/reference
-      - run: cargo test -p jellium-cli --test provenance
-        env:
-          JELLYFIN_WEB_REFERENCE: jellyfin-web
+          cache: npm
+          cache-dependency-path: jellyfin-web/package-lock.json
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: just
+      - run: npm ci --omit=dev --ignore-scripts
+        working-directory: jellyfin-web
+      - run: just pinned jellyfin-web
+      - run: just suppressions
       - run: cargo fmt --all --check
-      - run: cargo test -p jellium-cli --test suppressions
       - run: cargo clippy --all-targets -- -D warnings
       - run: cargo test
 

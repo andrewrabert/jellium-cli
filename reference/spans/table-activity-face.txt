@@ -1,0 +1,5 @@
+    // NOTE: We need to provide a custom theme due to a MRT bug causing the initial theme to always be used
+    // https://github.com/KevinVandy/material-react-table/issues/1429
+    const mrtTheme = useMemo<Partial<MRT_Theme>>(() => ({
+        baseBackgroundColor: theme.palette.background.paper
+    }), [ theme ]);

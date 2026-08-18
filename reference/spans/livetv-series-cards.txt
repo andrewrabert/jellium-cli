@@ -1,0 +1,15 @@
+    const html = cardBuilder.getCardsHtml({
+        items: timers,
+        shape: 'auto',
+        defaultShape: 'portrait',
+        showTitle: true,
+        cardLayout: false,
+        preferThumb: 'auto',
+        coverImage: true,
+        overlayText: false,
+        showSeriesTimerTime: true,
+        showSeriesTimerChannel: true,
+        centerText: true,
+        overlayMoreButton: true,
+        lines: 3
+    });

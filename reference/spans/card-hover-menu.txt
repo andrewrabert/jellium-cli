@@ -1,0 +1,33 @@
+function getHoverMenuHtml(item, action) {
+    let html = '';
+
+    html += '<div class="cardOverlayContainer itemAction" data-action="' + action + '">';
+
+    const btnCssClass = 'cardOverlayButton cardOverlayButton-hover itemAction paper-icon-button-light';
+
+    if (playbackManager.canPlay(item)) {
+        html += `<button is="paper-icon-button-light" class="${btnCssClass} cardOverlayFab-primary" data-action="resume" title="${globalize.translate('Play')}"><span class="material-icons cardOverlayButtonIcon cardOverlayButtonIcon-hover play_arrow" aria-hidden="true"></span></button>`;
+    }
+
+    html += '<div class="cardOverlayButton-br flex">';
+
+    const userData = item.UserData || {};
+
+    if (itemHelper.canMarkPlayed(item)) {
+        import('../../elements/emby-playstatebutton/emby-playstatebutton');
+        html += '<button is="emby-playstatebutton" type="button" data-action="none" class="' + btnCssClass + '" data-id="' + item.Id + '" data-serverid="' + item.ServerId + '" data-itemtype="' + item.Type + '" data-played="' + (userData.Played) + '"><span class="material-icons cardOverlayButtonIcon cardOverlayButtonIcon-hover check" aria-hidden="true"></span></button>';
+    }
+
+    if (itemHelper.canRate(item)) {
+        const likes = userData.Likes == null ? '' : userData.Likes;
+
+        import('../../elements/emby-ratingbutton/emby-ratingbutton');
+        html += '<button is="emby-ratingbutton" type="button" data-action="none" class="' + btnCssClass + '" data-id="' + item.Id + '" data-serverid="' + item.ServerId + '" data-itemtype="' + item.Type + '" data-likes="' + likes + '" data-isfavorite="' + (userData.IsFavorite) + '"><span class="material-icons cardOverlayButtonIcon cardOverlayButtonIcon-hover favorite" aria-hidden="true"></span></button>';
+    }
+
+    html += `<button is="paper-icon-button-light" class="${btnCssClass}" data-action="menu" title="${globalize.translate('ButtonMore')}"><span class="material-icons cardOverlayButtonIcon cardOverlayButtonIcon-hover more_vert" aria-hidden="true"></span></button>`;
+    html += '</div>';
+    html += '</div>';
+
+    return html;
+}

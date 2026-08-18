@@ -1,0 +1,6 @@
+.visualCardBox .blurhash-canvas,
+.visualCardBox .cardContent,
+.visualCardBox .cardOverlayContainer {
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+}

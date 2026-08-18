@@ -1,0 +1,6 @@
+@media all and (max-width: 43em) {
+    .videoOsdBottom .volumeButtons,
+    .osdMediaStatus span {
+        display: none !important;
+    }
+}

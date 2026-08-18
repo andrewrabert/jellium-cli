@@ -1,0 +1,7 @@
+    allowedAudioChannels(val) {
+        if (val !== undefined) {
+            return this.set('allowedAudioChannels', val, false);
+        }
+
+        return this.get('allowedAudioChannels', false) || '-1';
+    }

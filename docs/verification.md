@@ -72,7 +72,6 @@ in order. A section passes only when every line in it holds.
 - The queue view opens from the now-playing bar, lists what is upcoming,
   removes an item, and its back control returns to what was open with playback
   undisturbed.
-- The queue view lists what is upcoming, and an item can be removed.
 - An item removed from the queue stays gone after shuffle is toggled on and off
   again.
 - Shuffle reshuffles only what has not played, and toggling it off restores the
@@ -87,7 +86,10 @@ in order. A section passes only when every line in it holds.
   mute, audio, subtitle and quality selection, version selection, previous and
   next while the queue holds more than one item, the chapter list and
   fullscreen.
-- The audio controls offer that set minus fullscreen, subtitles and quality.
+- The audio controls offer play, scrub, elapsed time, previous and next
+  whatever the queue holds, stop, volume with mute, repeat, shuffle, favourite,
+  the queue view, cast, and watch-together where the server grants SyncPlay,
+  and no subtitle, quality or fullscreen control.
 - Space, `k`, the arrows, `f`, `m`, `n`, `p` and Escape drive the player.
 - One drag of the scrub bar produces one seek and one progress report.
 - Every control answers within 100 milliseconds.
@@ -749,12 +751,16 @@ in order. A section passes only when every line in it holds.
   to link against.
 - `cargo test -p jellium-cli web::playback::requests` counts what each step of
   the playback chain puts on the wire against the stub upstream.
-- `just pinned <jellyfin-web-checkout>` rewrites `jellium-web/reference` from
-  the checkout and fails on any difference, and fails on any provenance row
-  whose lines no longer digest to the recorded hash. Its `git ls-files` guard
-  refuses an untracked slice, so this command answers only once
-  `jellium-web/reference/jellyfin-web.mjs` and `environment.mjs` are committed;
-  before that commit it reports the tree broken when the tree is not.
+- `just pinned <jellyfin-web-checkout>` rewrites `jellium-web/reference` and
+  `reference/spans` from the checkout and fails on any difference. Its
+  `git ls-files` guard refuses an untracked slice or an untracked span, so this
+  command answers only once `jellium-web/reference/jellyfin-web.mjs`,
+  `environment.mjs` and `reference/spans` are committed; before that commit it
+  reports the tree broken when the tree is not.
+- `cargo test -p jellium-reference` digests every row of
+  `reference/provenance.tsv` against the span committed under `reference/spans`
+  and takes no checkout, so a row whose lines, count or hash have drifted fails
+  on a fresh clone.
 - A 4K HDR HEVC title on Firefox plays: the network panel shows one
   `POST /Items/{id}/PlaybackInfo` and no unprofiled `GET`.
 - Starting a title with twenty-eight subtitle streams issues at most one
@@ -822,8 +828,9 @@ Run against a real browser at 360x800, 800x360, 768x1024 and 1920x1080.
   the row so subtitles, audio, volume and settings stand at the trailing edge,
   full screen last.
 - The video display's control row carries no shuffle, repeat, queue, cast or
-  watch-together control, and cast and watch-together stand once each in its
-  header.
+  watch-together control, its header stands cast once, and watch-together
+  stands once in that header where the server grants SyncPlay and nowhere where
+  it does not.
 - The video display drops the ends-at text at 75em and narrower, the two seek
   controls at 50em and narrower and the volume control at 43em and narrower, and
   stands its controls shoulder to shoulder at 33.75em and narrower.

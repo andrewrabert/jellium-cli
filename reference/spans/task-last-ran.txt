@@ -1,0 +1,14 @@
+            return (
+                <Typography sx={{ lineHeight: '1.2rem', color: 'text.secondary' }} variant='body1'>
+                    {globalize.translate('LabelScheduledTaskLastRan', lastRan, timeTaken)}
+
+                    {lastResultStatus == 'Failed' && <Typography display='inline' color='error'>{` (${globalize.translate('LabelFailed')})`}</Typography>}
+                    {lastResultStatus == 'Cancelled' && <Typography display='inline' color='blue'>{` (${globalize.translate('LabelCancelled')})`}</Typography>}
+                    {lastResultStatus == 'Aborted' && <Typography display='inline' color='error'>{` (${globalize.translate('LabelAbortedByServerShutdown')})`}</Typography>}
+                </Typography>
+            );
+        }
+    } else {
+        return (
+            <Typography sx={{ color: 'text.secondary' }}>{globalize.translate('LabelStopping')}</Typography>
+        );

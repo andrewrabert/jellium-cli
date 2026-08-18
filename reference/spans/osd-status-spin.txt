@@ -1,0 +1,3 @@
+.osdMediaStatus .animate {
+    animation: spin-clockwise 4s linear infinite;
+}

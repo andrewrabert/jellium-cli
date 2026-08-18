@@ -1,0 +1,1 @@
+export const isUsingLiveTvNaming = (itemType: string | null | undefined): boolean => itemType === 'Program' || itemType === 'Timer' || itemType === 'Recording';

@@ -1,0 +1,15 @@
+})(memoTheme(({
+  theme
+}) => ({
+  display: 'inline-flex',
+  alignItems: 'center',
+  cursor: 'pointer',
+  // For correct alignment with the text.
+  verticalAlign: 'middle',
+  WebkitTapHighlightColor: 'transparent',
+  marginLeft: -11,
+  marginRight: 16,
+  // used for row presentation of radio/checkbox
+  [`&.${formControlLabelClasses.disabled}`]: {
+    cursor: 'default'
+  },

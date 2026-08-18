@@ -1,0 +1,13 @@
+function getDeviceId() {
+    if (!deviceId) {
+        const key = '_deviceId2';
+
+        deviceId = appSettings.get(key);
+
+        if (!deviceId) {
+            deviceId = generateDeviceId();
+            appSettings.set(key, deviceId);
+        }
+    }
+
+    return deviceId;

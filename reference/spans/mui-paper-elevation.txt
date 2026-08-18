@@ -1,0 +1,8 @@
+  const {
+    className,
+    component = 'div',
+    elevation = 1,
+    square = false,
+    variant = 'elevation',
+    ...other
+  } = props;

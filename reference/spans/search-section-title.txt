@@ -1,0 +1,32 @@
+export function getTitleFromType(type: BaseItemKind) {
+    switch (type) {
+        case BaseItemKind.Movie:
+            return 'Movies';
+        case BaseItemKind.Series:
+            return 'Shows';
+        case BaseItemKind.Episode:
+            return 'Episodes';
+        case BaseItemKind.Playlist:
+            return 'Playlists';
+        case BaseItemKind.MusicAlbum:
+            return 'Albums';
+        case BaseItemKind.Audio:
+            return 'Songs';
+        case BaseItemKind.LiveTvProgram:
+            return 'Programs';
+        case BaseItemKind.TvChannel:
+            return 'Channels';
+        case BaseItemKind.PhotoAlbum:
+            return 'HeaderPhotoAlbums';
+        case BaseItemKind.Photo:
+            return 'Photos';
+        case BaseItemKind.AudioBook:
+            return 'HeaderAudioBooks';
+        case BaseItemKind.Book:
+            return 'Books';
+        case BaseItemKind.BoxSet:
+            return 'Collections';
+        default:
+            return '';
+    }
+}

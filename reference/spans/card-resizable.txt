@@ -1,0 +1,12 @@
+export const isResizable = (windowWidth: number): boolean => {
+    const screen = window.screen;
+    if (screen) {
+        const screenWidth = screen.availWidth;
+
+        if ((screenWidth - windowWidth) > 20) {
+            return true;
+        }
+    }
+
+    return false;
+};

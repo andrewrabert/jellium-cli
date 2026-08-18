@@ -1,0 +1,7 @@
+export const resolveCardBoxCssClasses = (opts: { cardLayout: boolean, hasOuterCardFooter: boolean }): string => {
+    return classNames({
+        'cardBox': true,
+        'visualCardBox': opts.cardLayout,
+        'cardBox-bottompadded': opts.hasOuterCardFooter && !opts.cardLayout
+    });
+};

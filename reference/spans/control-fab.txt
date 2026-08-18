@@ -1,0 +1,9 @@
+.fab {
+    display: inline-flex;
+    border-radius: 50%;
+    padding: 0.6em;
+    box-sizing: border-box;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}

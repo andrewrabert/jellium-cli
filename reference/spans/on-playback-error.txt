@@ -1,0 +1,37 @@
+        function onPlaybackError(e, error) {
+            const player = this;
+            error = error || {};
+
+            const errorType = error.type;
+
+            console.warn('[playbackmanager] onPlaybackError:', e, error);
+
+            const streamInfo = error.streamInfo || getPlayerData(player).streamInfo;
+
+            if (streamInfo?.url) {
+                const isAlreadyFallbacking = streamInfo.url.toLowerCase().includes('transcodereasons');
+                const currentlyPreventsVideoStreamCopy = streamInfo.url.toLowerCase().indexOf('allowvideostreamcopy=false') !== -1;
+                const currentlyPreventsAudioStreamCopy = streamInfo.url.toLowerCase().indexOf('allowaudiostreamcopy=false') !== -1;
+
+                // Auto switch to transcoding
+                if (enablePlaybackRetryWithTranscoding(streamInfo, errorType, currentlyPreventsVideoStreamCopy, currentlyPreventsAudioStreamCopy)) {
+                    const startTime = getCurrentTicks(player) || streamInfo.playerStartPositionTicks;
+                    const isRemoteSource = streamInfo.item.LocationType === 'Remote';
+                    // force transcoding and only allow remuxing for remote source like liveTV, but only for initial trial
+                    const tryVideoStreamCopy = isRemoteSource && !isAlreadyFallbacking;
+
+                    changeStream(player, startTime, {
+                        EnableDirectPlay: false,
+                        EnableDirectStream: tryVideoStreamCopy,
+                        AllowVideoStreamCopy: tryVideoStreamCopy,
+                        AllowAudioStreamCopy: currentlyPreventsAudioStreamCopy || currentlyPreventsVideoStreamCopy ? false : null
+                    });
+
+                    return;
+                }
+            }
+
+            Events.trigger(self, 'playbackerror', [errorType]);
+
+            onPlaybackStopped.call(player, e, `.${errorType}`);
+        }

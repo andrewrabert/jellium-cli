@@ -1,0 +1,8 @@
+.detailButton {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    margin: 0 !important;
+    padding: 0.7em 0.7em !important;
+}

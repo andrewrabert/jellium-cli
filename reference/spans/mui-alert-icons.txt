@@ -1,0 +1,14 @@
+const defaultIconMapping = {
+  success: /*#__PURE__*/_jsx(SuccessOutlinedIcon, {
+    fontSize: "inherit"
+  }),
+  warning: /*#__PURE__*/_jsx(ReportProblemOutlinedIcon, {
+    fontSize: "inherit"
+  }),
+  error: /*#__PURE__*/_jsx(ErrorOutlineIcon, {
+    fontSize: "inherit"
+  }),
+  info: /*#__PURE__*/_jsx(InfoOutlinedIcon, {
+    fontSize: "inherit"
+  })
+};

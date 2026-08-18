@@ -1,0 +1,4 @@
+    html += '<a is="emby-linkbutton" href="' + appRouter.getRouteUrl('livetv', {
+        serverId,
+        section: 'programs'
+    }) + '" class="raised"><span>' + globalize.translate('Programs') + '</span></a>';

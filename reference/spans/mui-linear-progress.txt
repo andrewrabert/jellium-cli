@@ -1,0 +1,60 @@
+const LinearProgressRoot = styled('span', {
+  name: 'MuiLinearProgress',
+  slot: 'Root',
+  overridesResolver: (props, styles) => {
+    const {
+      ownerState
+    } = props;
+    return [styles.root, styles[`color${capitalize(ownerState.color)}`], styles[ownerState.variant]];
+  }
+})(memoTheme(({
+  theme
+}) => ({
+  position: 'relative',
+  overflow: 'hidden',
+  display: 'block',
+  height: 4,
+  // Fix Safari's bug during composition of different paint.
+  zIndex: 0,
+  '@media print': {
+    colorAdjust: 'exact'
+  },
+  variants: [...Object.entries(theme.palette).filter(createSimplePaletteValueFilter()).map(([color]) => ({
+    props: {
+      color
+    },
+    style: {
+      backgroundColor: getColorShade(theme, color)
+    }
+  })), {
+    props: ({
+      ownerState
+    }) => ownerState.color === 'inherit' && ownerState.variant !== 'buffer',
+    style: {
+      '&::before': {
+        content: '""',
+        position: 'absolute',
+        left: 0,
+        top: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: 'currentColor',
+        opacity: 0.3
+      }
+    }
+  }, {
+    props: {
+      variant: 'buffer'
+    },
+    style: {
+      backgroundColor: 'transparent'
+    }
+  }, {
+    props: {
+      variant: 'query'
+    },
+    style: {
+      transform: 'rotate(180deg)'
+    }
+  }]
+})));

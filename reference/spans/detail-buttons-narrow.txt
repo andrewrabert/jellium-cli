@@ -1,0 +1,11 @@
+.layout-mobile [dir="ltr"] .mainDetailButtons {
+    margin-left: 0;
+
+    @include header-poster-padding;
+
+    // The buttons row is full width on small screens
+    @media all and (max-width: 32em) {
+        margin-bottom: 0;
+        padding-left: 0;
+    }
+}

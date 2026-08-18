@@ -1,0 +1,10 @@
+.pageTitleWithLogo {
+    background-position: left center;
+    background-size: contain;
+    background-repeat: no-repeat;
+    width: 13.2em;
+
+    [dir='rtl'] & {
+        background-position: right center;
+    }
+}

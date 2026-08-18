@@ -1,0 +1,30 @@
+    setRequestHeaders(headers) {
+        const currentServerInfo = this.serverInfo();
+        const appName = this._appName;
+        const accessToken = currentServerInfo.AccessToken;
+
+        const values = [];
+
+        if (appName) {
+            values.push(`Client="${appName}"`);
+        }
+
+        if (this._deviceName) {
+            values.push(`Device="${this._deviceName}"`);
+        }
+
+        if (this._deviceId) {
+            values.push(`DeviceId="${this._deviceId}"`);
+        }
+
+        if (this._appVersion) {
+            values.push(`Version="${this._appVersion}"`);
+        }
+
+        if (accessToken) {
+            values.push(`Token="${accessToken}"`);
+        }
+
+        if (values.length) {
+            headers['Authorization'] = `MediaBrowser ${values.join(', ')}`;
+        }

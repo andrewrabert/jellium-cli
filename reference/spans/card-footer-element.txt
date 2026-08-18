@@ -1,0 +1,14 @@
+    const addRightTextMargin = flags.isOuterFooter && options.cardLayout && !options.centerText && options.cardFooterAside !== 'none' && layoutManager.mobile;
+
+    html += getCardTextLines(lines, cssClass, !options.overlayText, flags.isOuterFooter, options.cardLayout, addRightTextMargin, options.lines);
+
+    if (progressHtml) {
+        html += progressHtml;
+    }
+
+    if (html && (!flags.isOuterFooter || urls.logoUrl || options.cardLayout)) {
+        html = '<div class="' + footerClass + '">' + html;
+
+        //cardFooter
+        html += '</div>';
+    }

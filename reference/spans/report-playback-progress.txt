@@ -1,0 +1,82 @@
+    reportPlaybackProgress(options) {
+        if (!options) {
+            throw new Error('null options');
+        }
+
+        const eventName = options.EventName || 'timeupdate';
+        let reportRateLimitTime = reportRateLimits[eventName] || 0;
+
+        const now = new Date().getTime();
+        const msSinceLastReport = now - (this.lastPlaybackProgressReport || 0);
+        const newPositionTicks = options.PositionTicks;
+
+        if (msSinceLastReport < reportRateLimitTime && eventName === 'timeupdate' && newPositionTicks != null) {
+            const expectedReportTicks = 1e4 * msSinceLastReport + (this.lastPlaybackProgressReportTicks || 0);
+            if (Math.abs(newPositionTicks - expectedReportTicks) >= 5e7) reportRateLimitTime = 0;
+        }
+
+        const delay = Math.max(0, reportRateLimitTime - msSinceLastReport);
+
+        this.lastPlaybackProgressOptions = options;
+
+        if (this.reportPlaybackProgressPromiseDelay) {
+            if (reportRateLimitTime < this.reportPlaybackProgressTimeout) {
+                this.reportPlaybackProgressTimeout = reportRateLimitTime;
+                this.reportPlaybackProgressPromiseDelay.reset(delay);
+            }
+
+            return this.reportPlaybackProgressPromise;
+        }
+
+        const resetPromise = () => {
+            delete this.lastPlaybackProgressOptions;
+            delete this.reportPlaybackProgressTimeout;
+            delete this.reportPlaybackProgressPromise;
+            delete this.reportPlaybackProgressPromiseDelay;
+            delete this.reportPlaybackProgressReset;
+        };
+
+        const sendReport = () => {
+            this.lastPlaybackProgressReport = new Date().getTime();
+            this.lastPlaybackProgressReportTicks = this.lastPlaybackProgressOptions.PositionTicks;
+
+            const url = this.getUrl('Sessions/Playing/Progress');
+
+            return this.ajax({
+                type: 'POST',
+                data: JSON.stringify(this.lastPlaybackProgressOptions),
+                contentType: 'application/json',
+                url: url
+            });
+        };
+
+        const promiseDelay = new PromiseDelay(delay);
+
+        let cancelled = false;
+
+        const promise = promiseDelay.promise()
+            .catch(() => {
+                cancelled = true;
+            })
+            .then(() => {
+                if (cancelled) return Promise.resolve();
+                return sendReport();
+            })
+            .finally(() => {
+                resetPromise();
+            });
+
+        this.reportPlaybackProgressTimeout = reportRateLimitTime;
+        this.reportPlaybackProgressPromise = promise;
+        this.reportPlaybackProgressPromiseDelay = promiseDelay;
+        this.reportPlaybackProgressReset = (resolve) => {
+            if (resolve) {
+                promiseDelay.resolve();
+            } else {
+                promiseDelay.reject();
+            }
+            return promise;
+        };
+
+        return promise;
+    }

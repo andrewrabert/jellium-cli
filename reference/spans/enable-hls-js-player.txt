@@ -1,0 +1,35 @@
+export function enableHlsJsPlayer(runTimeTicks, mediaType) {
+    if (window.MediaSource == null) {
+        return false;
+    }
+
+    // hls.js is only in beta. needs more testing.
+    if (browser.iOS) {
+        return false;
+    }
+
+    // The native players on these devices support seeking live streams, no need to use hls.js here
+    if (browser.tizen || browser.web0s) {
+        return false;
+    }
+
+    if (canPlayNativeHls()) {
+        // Android Webview's native HLS has performance and compatiblity issues
+        if (browser.android && (mediaType === 'Audio' || mediaType === 'Video')) {
+            return true;
+        }
+
+        // Chromium 141+ brings native HLS support that does not support switching HDR/SDR playlists.
+        // Always use hls.js to avoid falling back to transcoding from remuxing and client side tone-mapping.
+        if (browser.chrome || browser.edgeChromium || browser.opera) {
+            return true;
+        }
+
+        // simple playback should use the native support
+        if (runTimeTicks) {
+            return false;
+        }
+    }
+
+    return true;
+}

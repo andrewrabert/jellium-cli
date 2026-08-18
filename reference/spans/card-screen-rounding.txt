@@ -1,0 +1,14 @@
+    }
+
+    if (!options.width) {
+        let screenWidth = dom.getWindowSize().innerWidth;
+        const screenHeight = dom.getWindowSize().innerHeight;
+
+        if (isResizable(screenWidth)) {
+            const roundScreenTo = 100;
+            screenWidth = Math.floor(screenWidth / roundScreenTo) * roundScreenTo;
+        }
+
+        options.width = getImageWidth(options.shape, screenWidth, screenWidth > (screenHeight * 1.3));
+    }
+}

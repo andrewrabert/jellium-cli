@@ -1,0 +1,36 @@
+    const columns = useMemo<MRT_ColumnDef<DeviceInfoDto>[]>(() => [
+        {
+            id: 'DateLastActivity',
+            accessorFn: row => row.DateLastActivity ? parseISO(row.DateLastActivity) : undefined,
+            header: globalize.translate('LastActive'),
+            size: 160,
+            Cell: DateTimeCell,
+            filterVariant: 'datetime-range',
+            enableEditing: false
+        },
+        {
+            id: 'Name',
+            accessorFn: row => row.CustomName || row.Name,
+            header: globalize.translate('LabelDevice'),
+            size: 200,
+            Cell: DeviceNameCell
+        },
+        {
+            id: 'App',
+            accessorFn: row => [row.AppName, row.AppVersion]
+                .filter(v => !!v) // filter missing values
+                .join(' '),
+            header: globalize.translate('LabelAppName'),
+            size: 200,
+            enableEditing: false
+        },
+        {
+            accessorKey: 'LastUserName',
+            header: globalize.translate('LabelUser'),
+            size: 120,
+            enableEditing: false,
+            Cell: UserCell,
+            filterVariant: 'multi-select',
+            filterSelectOptions: userNames
+        }
+    ], [ UserCell, userNames ]);

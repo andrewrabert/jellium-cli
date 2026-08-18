@@ -1,0 +1,22 @@
+function getAudioStreamUrl(item, transcodingProfile, directPlayContainers, apiClient, startPosition, maxValues) {
+    const url = 'Audio/' + item.Id + '/universal';
+
+    startingPlaySession++;
+    return apiClient.getUrl(url, {
+        UserId: apiClient.getCurrentUserId(),
+        DeviceId: apiClient.deviceId(),
+        MaxStreamingBitrate: maxValues.maxAudioBitrate || maxValues.maxBitrate,
+        Container: directPlayContainers,
+        TranscodingContainer: transcodingProfile.Container || null,
+        TranscodingProtocol: transcodingProfile.Protocol || null,
+        AudioCodec: transcodingProfile.AudioCodec,
+        MaxAudioSampleRate: maxValues.maxAudioSampleRate,
+        MaxAudioBitDepth: maxValues.maxAudioBitDepth,
+        ApiKey: apiClient.accessToken(),
+        PlaySessionId: startingPlaySession,
+        StartTimeTicks: startPosition || 0,
+        EnableRedirection: true,
+        EnableRemoteMedia: appHost.supports(AppFeature.RemoteAudio),
+        EnableAudioVbrEncoding: transcodingProfile.EnableAudioVbrEncoding
+    });
+}

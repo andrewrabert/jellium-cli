@@ -1,0 +1,6 @@
+    const profile = {
+        MaxStreamingBitrate: bitrateSetting,
+        MaxStaticBitrate: 100000000,
+        MusicStreamingTranscodingBitrate: Math.min(bitrateSetting, 384000),
+        DirectPlayProfiles: []
+    };

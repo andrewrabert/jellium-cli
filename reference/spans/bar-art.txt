@@ -1,0 +1,8 @@
+.nowPlayingBar .nowPlayingImage {
+    background-position: center center;
+    background-repeat: no-repeat;
+    background-size: contain;
+    height: 70%;
+    width: 4.2em;
+    flex-shrink: 0;
+}

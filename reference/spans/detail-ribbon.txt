@@ -1,0 +1,32 @@
+.detailRibbon {
+    display: flex;
+    align-items: center;
+    align-content: center;
+    z-index: 2;
+
+    .layout-mobile & {
+        display: block;
+        position: relative;
+        padding: 0.5rem 5%;
+    }
+
+    .layout-desktop & {
+        position: relative;
+        margin-top: -7.2em;
+        height: 7.2em;
+    }
+
+    .layout-tv & {
+        display: block;
+    }
+
+    .layout-desktop [dir="rtl"] &,
+    .layout-tv [dir="rtl"] & {
+        padding-right: 32.45vw;
+    }
+
+    .layout-desktop [dir="ltr"] &,
+    .layout-tv [dir="ltr"] & {
+        padding-left: 32.45vw;
+    }
+}

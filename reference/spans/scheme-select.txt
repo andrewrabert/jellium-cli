@@ -1,0 +1,5 @@
+.emby-select-withcolor {
+    color: inherit;
+    background: #292929;
+    border: 0.07em solid #292929;
+}

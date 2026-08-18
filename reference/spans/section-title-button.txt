@@ -1,0 +1,11 @@
+.sectionTitleButton {
+    flex-shrink: 0;
+
+    [dir="ltr"] & {
+        margin-left: 1.5em !important;
+    }
+
+    [dir="rtl"] & {
+        margin-right: 1.5em !important;
+    }
+}

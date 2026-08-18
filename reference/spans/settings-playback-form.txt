@@ -1,0 +1,33 @@
+<form style="margin: 0 auto;">
+    <div class="verticalSection verticalSection-extrabottompadding">
+        <h2 class="sectionTitle">
+            ${HeaderAudioSettings}
+        </h2>
+
+        <div class="selectContainer">
+            <select is="emby-select" id="selectAllowedAudioChannels" label="${LabelAllowedAudioChannels}">
+                <option value="-1">${Auto}</option>
+                <option value="1">${LabelSelectMono}</option>
+                <option value="2">${LabelSelectStereo}</option>
+                <option value="6">5.1 ${LabelSelectAudioChannels}</option>
+                <option value="8">7.1 ${LabelSelectAudioChannels}</option>
+            </select>
+        </div>
+
+        <div class="selectContainer">
+            <select is="emby-select" id="selectAudioLanguage" label="${LabelAudioLanguagePreference}"></select>
+        </div>
+
+        <label class="checkboxContainer">
+            <input type="checkbox" is="emby-checkbox" class="chkPlayDefaultAudioTrack" />
+            <span>${LabelPlayDefaultAudioTrack}</span>
+        </label>
+
+        <div class="checkboxContainer checkboxContainer-withDescription">
+            <label>
+                <input type="checkbox" is="emby-checkbox" class="chkDisableVbrAudioEncoding" />
+                <span>${LabelDisableVbrAudioEncoding}</span>
+            </label>
+            <div class="fieldDescription checkboxFieldDescription">${DisableVbrAudioEncodingHelp}</div>
+        </div>
+    </div>

@@ -1,0 +1,29 @@
+const LiveTvDrawerSection = () => {
+    return (
+        <List
+            aria-labelledby='livetv-subheader'
+            subheader={
+                <ListSubheader component='div' id='livetv-subheader'>
+                    {globalize.translate('LiveTV')}
+                </ListSubheader>
+            }
+        >
+            <ListItem disablePadding>
+                <ListItemLink to='/dashboard/livetv'>
+                    <ListItemIcon>
+                        <LiveTv />
+                    </ListItemIcon>
+                    <ListItemText primary={globalize.translate('LiveTV')} />
+                </ListItemLink>
+            </ListItem>
+            <ListItem disablePadding>
+                <ListItemLink to='/dashboard/livetv/recordings'>
+                    <ListItemIcon>
+                        <Dvr />
+                    </ListItemIcon>
+                    <ListItemText primary={globalize.translate('HeaderDVR')} />
+                </ListItemLink>
+            </ListItem>
+        </List>
+    );
+};

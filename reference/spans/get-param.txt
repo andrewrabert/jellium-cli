@@ -1,0 +1,13 @@
+function getParam(name, url) {
+    // eslint-disable-next-line sonarjs/single-char-in-character-classes
+    name = name.replace(/[[]/, '\\[').replace(/[\]]/, '\\]');
+    const regexS = '[\\?&]' + name + '=([^&#]*)';
+    const regex = new RegExp(regexS, 'i');
+
+    const results = regex.exec(url);
+    if (results == null) {
+        return '';
+    } else {
+        return decodeURIComponent(results[1].replace(/\+/g, ' '));
+    }
+}

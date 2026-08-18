@@ -1,0 +1,34 @@
+let recoverDecodingErrorDate;
+let recoverSwapAudioCodecDate;
+export function handleHlsJsMediaError(instance, reject) {
+    const hlsPlayer = instance._hlsPlayer;
+
+    if (!hlsPlayer) {
+        return;
+    }
+
+    let now = Date.now();
+
+    if (window.performance?.now) {
+        now = performance.now();
+    }
+
+    if (!recoverDecodingErrorDate || (now - recoverDecodingErrorDate) > 3000) {
+        recoverDecodingErrorDate = now;
+        console.debug('try to recover media Error ...');
+        hlsPlayer.recoverMediaError();
+    } else if (!recoverSwapAudioCodecDate || (now - recoverSwapAudioCodecDate) > 3000) {
+        recoverSwapAudioCodecDate = now;
+        console.debug('try to swap Audio Codec and recover media Error ...');
+        hlsPlayer.swapAudioCodec();
+        hlsPlayer.recoverMediaError();
+    } else {
+        console.error('cannot recover, last media error recovery failed ...');
+
+        if (reject) {
+            reject();
+        } else {
+            onErrorInternal(instance, MediaError.FATAL_HLS_ERROR);
+        }
+    }
+}

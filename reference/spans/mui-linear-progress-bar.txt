@@ -1,0 +1,48 @@
+const LinearProgressBar1 = styled('span', {
+  name: 'MuiLinearProgress',
+  slot: 'Bar1',
+  overridesResolver: (props, styles) => {
+    const {
+      ownerState
+    } = props;
+    return [styles.bar, styles.bar1, styles[`barColor${capitalize(ownerState.color)}`], (ownerState.variant === 'indeterminate' || ownerState.variant === 'query') && styles.bar1Indeterminate, ownerState.variant === 'determinate' && styles.bar1Determinate, ownerState.variant === 'buffer' && styles.bar1Buffer];
+  }
+})(memoTheme(({
+  theme
+}) => ({
+  width: '100%',
+  position: 'absolute',
+  left: 0,
+  bottom: 0,
+  top: 0,
+  transition: 'transform 0.2s linear',
+  transformOrigin: 'left',
+  variants: [{
+    props: {
+      color: 'inherit'
+    },
+    style: {
+      backgroundColor: 'currentColor'
+    }
+  }, ...Object.entries(theme.palette).filter(createSimplePaletteValueFilter()).map(([color]) => ({
+    props: {
+      color
+    },
+    style: {
+      backgroundColor: (theme.vars || theme).palette[color].main
+    }
+  })), {
+    props: {
+      variant: 'determinate'
+    },
+    style: {
+      transition: `transform .${TRANSITION_DURATION}s linear`
+    }
+  }, {
+    props: {
+      variant: 'buffer'
+    },
+    style: {
+      zIndex: 1,
+      transition: `transform .${TRANSITION_DURATION}s linear`
+    }

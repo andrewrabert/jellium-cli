@@ -1,0 +1,5 @@
+export default function isLastDayOfMonth(dirtyDate) {
+  requiredArgs(1, arguments);
+  var date = toDate(dirtyDate);
+  return endOfDay(date).getTime() === endOfMonth(date).getTime();
+}

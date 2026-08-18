@@ -1,0 +1,31 @@
+  }
+})(memoTheme(({
+  theme
+}) => ({
+  backgroundColor: (theme.vars || theme).palette.background.paper,
+  color: (theme.vars || theme).palette.text.primary,
+  transition: theme.transitions.create('box-shadow'),
+  variants: [{
+    props: ({
+      ownerState
+    }) => !ownerState.square,
+    style: {
+      borderRadius: theme.shape.borderRadius
+    }
+  }, {
+    props: {
+      variant: 'outlined'
+    },
+    style: {
+      border: `1px solid ${(theme.vars || theme).palette.divider}`
+    }
+  }, {
+    props: {
+      variant: 'elevation'
+    },
+    style: {
+      boxShadow: 'var(--Paper-shadow)',
+      backgroundImage: 'var(--Paper-overlay)'
+    }
+  }]
+})));

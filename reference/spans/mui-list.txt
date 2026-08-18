@@ -1,0 +1,31 @@
+const ListRoot = styled('ul', {
+  name: 'MuiList',
+  slot: 'Root',
+  overridesResolver: (props, styles) => {
+    const {
+      ownerState
+    } = props;
+    return [styles.root, !ownerState.disablePadding && styles.padding, ownerState.dense && styles.dense, ownerState.subheader && styles.subheader];
+  }
+})({
+  listStyle: 'none',
+  margin: 0,
+  padding: 0,
+  position: 'relative',
+  variants: [{
+    props: ({
+      ownerState
+    }) => !ownerState.disablePadding,
+    style: {
+      paddingTop: 8,
+      paddingBottom: 8
+    }
+  }, {
+    props: ({
+      ownerState
+    }) => ownerState.subheader,
+    style: {
+      paddingTop: 0
+    }
+  }]
+});

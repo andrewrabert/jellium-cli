@@ -1,0 +1,11 @@
+.detailPageSecondaryContainer {
+    padding-top: 1.25em;
+
+    .layout-desktop & {
+        flex-grow: 1;
+    }
+
+    .layout-mobile & {
+        padding-top: 1em;
+    }
+}

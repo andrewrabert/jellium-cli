@@ -1,0 +1,12 @@
+.listItemImage {
+    width: 4em;
+    height: 4em;
+    min-width: 2.78em;
+    min-height: 2.78em;
+    background-repeat: no-repeat;
+    background-size: cover;
+    flex-shrink: 0;
+    background-position: center center;
+    position: relative;
+    display: flex;
+}

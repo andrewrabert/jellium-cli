@@ -1,0 +1,9 @@
+    if (browser.tizen) {
+        try {
+            const isTizenUhd = webapis.productinfo.isUdPanelSupported();
+            isTizenFhd = !isTizenUhd;
+            console.debug('isTizenFhd = ' + isTizenFhd);
+        } catch (error) {
+            console.error('isUdPanelSupported() error code = ' + error.code);
+        }
+    }

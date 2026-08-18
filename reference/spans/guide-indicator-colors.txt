@@ -1,0 +1,14 @@
+.newTvProgram {
+    background: #38c;
+    color: #fff;
+}
+
+.liveTvProgram {
+    background: #c33;
+    color: #fff;
+}
+
+.premiereTvProgram {
+    background: #ef6c00;
+    color: #fff;
+}

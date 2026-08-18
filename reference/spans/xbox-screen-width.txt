@@ -1,0 +1,1 @@
+    let maxVideoWidth = browser.xboxOne ? window.screen?.width : null;

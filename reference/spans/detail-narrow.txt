@@ -1,0 +1,23 @@
+@media all and (max-width: 62.5em) {
+    .detailPageWrapperContainer {
+        position: relative;
+    }
+
+    .layout-desktop .itemBackdrop {
+        height: 40vh;
+    }
+
+    .layout-desktop .detailPageWrapperContainer,
+    .layout-tv .detailPageWrapperContainer {
+        margin-top: 0.1em;
+    }
+
+    .layout-desktop .detailImageContainer .card,
+    .layout-tv .detailImageContainer .card {
+        top: 10%;
+    }
+
+    .btnPlaySimple {
+        display: none !important;
+    }
+}

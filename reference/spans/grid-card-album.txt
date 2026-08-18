@@ -1,0 +1,12 @@
+            } else {
+                html = cardBuilder.getCardsHtml({
+                    items: result.Items,
+                    shape: 'square',
+                    context: 'music',
+                    showTitle: true,
+                    showParentTitle: true,
+                    lazy: true,
+                    centerText: true,
+                    overlayPlayButton: true
+                });
+            }

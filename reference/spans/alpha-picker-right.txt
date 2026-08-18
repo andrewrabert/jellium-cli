@@ -1,0 +1,21 @@
+.alphaPicker-fixed-right {
+    [dir="ltr"] & {
+        @include conditional-max(right, 0.4em, env(safe-area-inset-right));
+    }
+
+    [dir="rtl"] & {
+        @include conditional-max(left, 0.4em, env(safe-area-inset-left));
+    }
+}
+
+@media all and (min-width: 62.5em) {
+    .alphaPicker-fixed-right {
+        [dir="ltr"] & {
+            @include conditional-max(right, 1em, env(safe-area-inset-right));
+        }
+
+        [dir="rtl"] & {
+            @include conditional-max(left, 1em, env(safe-area-inset-left));
+        }
+    }
+}

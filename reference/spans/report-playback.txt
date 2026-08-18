@@ -1,0 +1,26 @@
+function reportPlayback(playbackManagerInstance, state, player, reportPlaylist, serverId, method, progressEventName) {
+    if (!serverId) {
+        // Not a server item
+        // We can expand on this later and possibly report them
+        Events.trigger(playbackManagerInstance, 'reportplayback', [false]);
+        return;
+    }
+
+    const info = Object.assign({}, state.PlayState);
+    info.ItemId = state.NowPlayingItem.Id;
+
+    if (progressEventName) {
+        info.EventName = progressEventName;
+    }
+
+    if (reportPlaylist) {
+        addPlaylistToPlaybackReport(playbackManagerInstance, info, player, serverId);
+    }
+
+    const apiClient = ServerConnections.getApiClient(serverId);
+    const reportPlaybackPromise = apiClient[method](info);
+    // Notify that report has been sent
+    reportPlaybackPromise.then(() => {
+        Events.trigger(playbackManagerInstance, 'reportplayback', [true]);
+    });
+}

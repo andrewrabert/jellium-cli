@@ -1,0 +1,21 @@
+    if (['auto', 'autohome', 'autooverflow', 'autoVertical'].includes(options.shape)) {
+        const requestedShape = options.shape;
+        options.shape = null;
+
+        if (primaryImageAspectRatio) {
+            if (primaryImageAspectRatio >= 3) {
+                options.shape = 'banner';
+                options.coverImage = true;
+            } else if (primaryImageAspectRatio >= 1.33) {
+                options.shape = getBackdropShape(requestedShape === 'autooverflow');
+            } else if (primaryImageAspectRatio > 0.8) {
+                options.shape = getSquareShape(requestedShape === 'autooverflow');
+            } else {
+                options.shape = getPortraitShape(requestedShape === 'autooverflow');
+            }
+        }
+
+        if (!options.shape) {
+            options.shape = options.defaultShape || getSquareShape(requestedShape === 'autooverflow');
+        }
+    }

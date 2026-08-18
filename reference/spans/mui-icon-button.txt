@@ -1,0 +1,64 @@
+const IconButtonRoot = styled(ButtonBase, {
+  name: 'MuiIconButton',
+  slot: 'Root',
+  overridesResolver: (props, styles) => {
+    const {
+      ownerState
+    } = props;
+    return [styles.root, ownerState.loading && styles.loading, ownerState.color !== 'default' && styles[`color${capitalize(ownerState.color)}`], ownerState.edge && styles[`edge${capitalize(ownerState.edge)}`], styles[`size${capitalize(ownerState.size)}`]];
+  }
+})(memoTheme(({
+  theme
+}) => ({
+  textAlign: 'center',
+  flex: '0 0 auto',
+  fontSize: theme.typography.pxToRem(24),
+  padding: 8,
+  borderRadius: '50%',
+  color: (theme.vars || theme).palette.action.active,
+  transition: theme.transitions.create('background-color', {
+    duration: theme.transitions.duration.shortest
+  }),
+  variants: [{
+    props: props => !props.disableRipple,
+    style: {
+      '--IconButton-hoverBg': theme.vars ? `rgba(${theme.vars.palette.action.activeChannel} / ${theme.vars.palette.action.hoverOpacity})` : alpha(theme.palette.action.active, theme.palette.action.hoverOpacity),
+      '&:hover': {
+        backgroundColor: 'var(--IconButton-hoverBg)',
+        // Reset on touch devices, it doesn't add specificity
+        '@media (hover: none)': {
+          backgroundColor: 'transparent'
+        }
+      }
+    }
+  }, {
+    props: {
+      edge: 'start'
+    },
+    style: {
+      marginLeft: -12
+    }
+  }, {
+    props: {
+      edge: 'start',
+      size: 'small'
+    },
+    style: {
+      marginLeft: -3
+    }
+  }, {
+    props: {
+      edge: 'end'
+    },
+    style: {
+      marginRight: -12
+    }
+  }, {
+    props: {
+      edge: 'end',
+      size: 'small'
+    },
+    style: {
+      marginRight: -3
+    }
+  }]

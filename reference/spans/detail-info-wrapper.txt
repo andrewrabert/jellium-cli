@@ -1,0 +1,19 @@
+.infoWrapper {
+    min-width: 0;
+    max-width: 100%;
+    flex: 1 0 0;
+
+    .layout-mobile & {
+        @media all and (max-width: 32em) {
+            position: relative;
+        }
+    }
+
+    .layout-mobile [dir="ltr"] & {
+        @include header-poster-padding;
+    }
+
+    .layout-mobile [dir="rtl"] & {
+        @include header-poster-padding-rtl;
+    }
+}

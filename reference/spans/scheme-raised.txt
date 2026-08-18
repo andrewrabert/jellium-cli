@@ -1,0 +1,9 @@
+.raised {
+    background: #303030;
+    color: rgba(255, 255, 255, 0.87);
+}
+
+.fab:focus,
+.raised:focus {
+    background: #383838;
+}

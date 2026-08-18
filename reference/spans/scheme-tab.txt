@@ -1,0 +1,15 @@
+.emby-tab-button {
+    color: #999;
+}
+
+.emby-tab-button-active {
+    color: #fff;
+}
+
+.emby-tab-button.show-focus:focus {
+    color: #00a4dc;
+}
+
+.emby-tab-button:hover {
+    color: #00a4dc;
+}

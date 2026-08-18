@@ -1,0 +1,7 @@
+    maxVideoWidth(val) {
+        if (val !== undefined) {
+            return this.set('maxVideoWidth', val.toString());
+        }
+
+        return parseInt(this.get('maxVideoWidth') || '0', 10) || 0;
+    }

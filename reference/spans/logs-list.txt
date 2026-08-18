@@ -1,0 +1,24 @@
+    return (
+        <List sx={{ bgcolor: 'background.paper' }}>
+            {logs.map(log => {
+                return (
+                    <ListItem key={log.Name} disablePadding>
+                        <ListItemLink to={`/dashboard/logs/${log.Name}`}>
+                            <ListItemText
+                                primary={log.Name}
+                                secondary={getDate(log)}
+                                slotProps={{
+                                    primary: {
+                                        variant: 'h3'
+                                    },
+                                    secondary: {
+                                        variant: 'body1'
+                                    }
+                                }}
+                            />
+                        </ListItemLink>
+                    </ListItem>
+                );
+            })}
+        </List>
+    );
