@@ -44,12 +44,16 @@ impl fmt::Display for Construct {
     }
 }
 
-/// A construct this client reaches, or one the reference reaches and this
-/// client never observes.
+/// A construct this client draws, one the reference draws and this client does
+/// not, or one this client is to draw and does not yet.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Kind {
     Ported,
     Dead,
+    /// A construct this client is to draw and does not yet. Nothing cites it
+    /// until the port lands, and its value lives in its committed span rather
+    /// than in any constant.
+    Owed,
 }
 
 impl Kind {
@@ -57,6 +61,7 @@ impl Kind {
         match word {
             "ported" => Some(Kind::Ported),
             "dead" => Some(Kind::Dead),
+            "owed" => Some(Kind::Owed),
             _ => None,
         }
     }
@@ -274,10 +279,9 @@ impl fmt::Display for Malformed {
                 formatter,
                 "reference/provenance.tsv:{line} has no sha256 digest"
             ),
-            Malformed::Kind { line } => write!(
-                formatter,
-                "reference/provenance.tsv:{line} is neither ported nor dead"
-            ),
+            Malformed::Kind { line } => {
+                write!(formatter, "reference/provenance.tsv:{line} names no kind")
+            }
             Malformed::Twice {
                 construct,
                 first,

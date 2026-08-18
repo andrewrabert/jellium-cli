@@ -4,7 +4,7 @@
 use jellium_reference::register::{Construct, Kind, Register};
 use jellium_reference::spans::Spans;
 use jellium_reference::tree::{self, Extension};
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 use std::path::Path;
 
 /// The oracle a value is allowed to cite in place of a ported rule.
@@ -40,6 +40,10 @@ enum Bucket {
 #[derive(Debug)]
 struct Value {
     name: String,
+    /// The module a reader qualifies the value with, which is the declaring
+    /// file's stem and what tells `scheme::SECONDARY` from
+    /// `typeface::SECONDARY`.
+    module: String,
     at: String,
     written: String,
     initializer: String,
@@ -97,6 +101,11 @@ fn appearance(root: &Path) -> Vec<Value> {
     for file in files {
         let text = std::fs::read_to_string(&file).expect("the module is readable");
         let lines: Vec<&str> = text.lines().collect();
+        let module = file
+            .file_stem()
+            .and_then(|stem| stem.to_str())
+            .expect("the module is a named rust file")
+            .to_owned();
         let named = file
             .strip_prefix(root)
             .expect("the module sits under the workspace")
@@ -173,6 +182,7 @@ fn appearance(root: &Path) -> Vec<Value> {
 
             values.push(Value {
                 name: name.trim().to_owned(),
+                module: module.clone(),
                 at: format!("{named}:{}", index + 1),
                 written,
                 measures: measures(&initializer),
@@ -221,6 +231,82 @@ fn every_appearance_value_carries_a_provenance_row() {
     assert!(
         uncited.is_empty(),
         "appearance values no bucket accounts for: {uncited:#?}"
+    );
+}
+
+/// Whether a character stands inside a name.
+fn inside(value: char) -> bool {
+    value.is_alphanumeric() || value == '_'
+}
+
+/// Whether `text` names `value`: an occurrence of its name bounded by
+/// characters no name carries, standing after neither the `pub const` that
+/// declares it nor a path into one of `modules` other than its own.
+fn names(text: &str, modules: &BTreeSet<&str>, value: &Value) -> bool {
+    text.match_indices(&value.name).any(|(at, found)| {
+        let before = text[..at].chars().next_back();
+        let after = text[at + found.len()..].chars().next();
+        if before.is_some_and(inside) || after.is_some_and(inside) {
+            return false;
+        }
+        let head = text[..at].trim_end();
+        if head.ends_with("const") {
+            return false;
+        }
+        let Some(path) = head.strip_suffix("::") else {
+            return true;
+        };
+        let qualifier: String = path
+            .chars()
+            .rev()
+            .take_while(|value| inside(*value))
+            .collect::<Vec<char>>()
+            .into_iter()
+            .rev()
+            .collect();
+        !modules.contains(qualifier.as_str()) || qualifier == value.module
+    })
+}
+
+/// Every exported appearance value is named by something other than its own
+/// declaration.
+/// rustc's `dead_code` never reaches an exported item, so without this a ported
+/// value nothing draws stands in the tree unseen.
+/// A mention qualified by another appearance module names that module's value
+/// of the same name and not this one.
+/// The guard package is not read, so the names this file spells count for
+/// nothing.
+#[test]
+fn every_exported_appearance_value_is_read() {
+    let root = tree::workspace_root();
+    let values = appearance(&root);
+    assert!(
+        values.iter().any(|value| value.exported),
+        "no value was read out of jellium-model/src/appearance"
+    );
+    let modules: BTreeSet<&str> = values.iter().map(|value| value.module.as_str()).collect();
+
+    let guard = tree::guard(&root);
+    let sources = tree::files_under(&root, &[Extension::RUST]);
+    assert!(!sources.is_empty(), "no source was read out of the tree");
+    let texts: Vec<String> = sources
+        .into_iter()
+        .filter(|path| !path.starts_with(&guard))
+        .map(|path| {
+            std::fs::read_to_string(&path)
+                .unwrap_or_else(|error| panic!("{} does not read: {error}", path.display()))
+        })
+        .collect();
+
+    let unread: Vec<String> = values
+        .iter()
+        .filter(|value| value.exported)
+        .filter(|value| !texts.iter().any(|text| names(text, &modules, value)))
+        .map(|value| format!("{} ({})", value.at, value.name))
+        .collect();
+    assert!(
+        unread.is_empty(),
+        "exported appearance values nothing reads: {unread:#?}"
     );
 }
 

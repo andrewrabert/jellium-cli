@@ -8,7 +8,7 @@ use iced::{Element, Fill};
 
 use super::{Action, LiveTvTab, Screen, Section};
 use crate::app::Message;
-use crate::style::{self, Viewport, space, typeface};
+use crate::style::{self, Css, Viewport, space, typeface};
 use crate::text::{self as strings, Text};
 use crate::widget::{self, Held, Link, Rung, Showing};
 
@@ -158,12 +158,15 @@ pub enum Filling<'a> {
         subtitle: Option<Text>,
         table: widget::table::Table<'a>,
     },
-    /// A screen heading its own content with `.sectionTitleContainer` rather
-    /// than the dashboard's own `h1`, which fills the page whole.
+    /// A screen heading its own content rather than carrying the dashboard's,
+    /// which fills the page whole and scrolls itself.
     Whole(Element<'a, Message>),
     /// A stack the page holds to the width the reference caps a `<form>` and a
-    /// `.readOnlyContent` box at.
-    Capped(Vec<Element<'a, Message>>),
+    /// `.readOnlyContent` box at, standing `above` down the page.
+    Capped {
+        above: Option<Css>,
+        rows: Vec<Element<'a, Message>>,
+    },
 }
 
 /// The page every dashboard screen stands in: the drawer beside the content on
@@ -199,7 +202,7 @@ pub fn frame<'a>(
             )
             .into()
         }
-        Filling::Capped(rows) => {
+        Filling::Capped { above, rows } => {
             let mut stacked = titled(typeface::Rank::First);
             stacked.extend(rows);
             let held = column(stacked).spacing(style::drawn(space::DASHBOARD_GAP.drawn(layout)));
@@ -207,7 +210,10 @@ pub fn frame<'a>(
                 true => container(held).max_width(style::drawn(space::FORM_WIDTH.drawn())),
                 false => container(held),
             };
-            widget::scrolled(container(capped).width(Fill)).into()
+            let room = above.map_or(iced::Padding::ZERO, |above| {
+                iced::Padding::ZERO.top(style::drawn(above.drawn(layout)))
+            });
+            widget::scrolled(container(capped).width(Fill).padding(room)).into()
         }
         Filling::Tabled { subtitle, table } => {
             let mut standing = titled(typeface::Rank::First);

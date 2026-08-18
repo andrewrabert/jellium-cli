@@ -1,6 +1,7 @@
 //! The server's log files, and the tail of the one a viewer shows.
 
 use iced::Element;
+use iced::widget::column;
 use jellium_model::form::{Field, Form};
 
 use super::frame;
@@ -194,5 +195,8 @@ pub fn viewer<'a>(held: &'a Viewer, layout: Layout) -> frame::Filling<'a> {
         .into(),
         layout,
     ));
-    frame::Filling::Stacked(page)
+    frame::Filling::Whole(
+        widget::scrolled(column(page).spacing(style::drawn(space::VIEWER_GAP.drawn(layout))))
+            .into(),
+    )
 }

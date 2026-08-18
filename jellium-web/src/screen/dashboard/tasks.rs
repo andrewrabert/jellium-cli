@@ -226,7 +226,10 @@ pub fn view<'a>(
         );
     }
 
-    frame::Filling::Stacked(page)
+    frame::Filling::Capped {
+        above: Some(space::TASKS_TOP),
+        rows: page,
+    }
 }
 
 /// One task: its description, its last execution's status and duration, and

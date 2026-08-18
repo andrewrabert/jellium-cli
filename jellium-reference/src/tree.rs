@@ -27,6 +27,12 @@ pub fn workspace_root() -> PathBuf {
         .to_path_buf()
 }
 
+/// The package the gates live in, which guards the port and takes part in none
+/// of it, so the names its own text spells cite nothing.
+pub fn guard(root: &Path) -> PathBuf {
+    root.join("jellium-reference")
+}
+
 /// The build output and the history, which carry no source of this tree's own.
 fn unread(name: &str) -> bool {
     matches!(name, "target" | ".git")

@@ -214,9 +214,6 @@ pub const ACCENT_FOCUS: Color = Color::rgb(0x0c, 0xb0, 0xe8);
 pub const ANCHOR: Color = Color::rgb(0x00, 0xa4, 0xdc);
 
 // reference: scheme-anchors
-pub const SECONDARY: Color = Color::rgb(0xaa, 0x5c, 0xc3);
-
-// reference: scheme-anchors
 pub const ERROR: Color = Color::rgb(0xc6, 0x28, 0x28);
 
 // reference: scheme-delete
@@ -269,14 +266,10 @@ pub const SHADOW: Color = Color::rgba(0x00, 0x00, 0x00, Alpha::thousandths(370))
 // reference: scheme-header-transparent
 pub const HEADER: Color = Color::rgba(0x00, 0x00, 0x00, Alpha::thousandths(400));
 
-// reference: scheme-backdrop-scrim
-pub const BACKDROP_SCRIM: Color = Color::rgba(0x00, 0x00, 0x00, Alpha::thousandths(860));
-
+/// A list row under the pointer. The span's other rule paints a row that holds
+/// focus, which is a state no control on this canvas carries.
 // reference: scheme-list-state
 pub const LIST_HOVER: Color = Color::rgb(0x24, 0x24, 0x24);
-
-// reference: scheme-list-state
-pub const LIST_FOCUS: Color = Color::rgb(0x33, 0x33, 0x33);
 
 // reference: scheme-toast
 pub const TOAST: Color = Color::rgb(0x30, 0x30, 0x30);

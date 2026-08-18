@@ -396,6 +396,8 @@ in order. A section passes only when every line in it holds.
 - A task's triggers are added and removed and written back as the whole list.
 - `ScheduledTasksInfo` updates the task list in place, and a progress change
   appears within 1 second.
+- The task list stands clear of the top of the page, and on a wide window its
+  categories stop short of the right edge rather than running to it.
 
 ## Logs and activity
 
@@ -404,6 +406,8 @@ in order. A section passes only when every line in it holds.
   file's full size; the browser's network panel shows no more than 2 MiB
   delivered.
 - A log file the server does not hold produces text naming it.
+- In an open log, the file's name, the sentence about the tail and the panel
+  holding the lines stand closer together than the rows of the logs screen do.
 - The activity log builds widgets only for the entries shown, fetches a page at
   a time as the window moves, shows each entry's time, name, short overview,
   type and user, and filters by whether an entry names a user.

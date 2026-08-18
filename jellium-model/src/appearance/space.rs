@@ -295,9 +295,6 @@ pub const PAGE_PAD: Padding = Padding {
     left: Length::em(0.0),
 };
 
-// reference: login-disclaimer
-pub const DISCLAIMER_GAP: Length = Length::em(2.0);
-
 // reference: page-bottom
 pub const PAGE_BOTTOM: Length = Length::em(5.0);
 

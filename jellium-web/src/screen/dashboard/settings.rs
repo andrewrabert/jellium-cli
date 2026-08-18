@@ -214,5 +214,5 @@ pub fn view<'a>(state: &'a State, read_only: bool, viewport: Viewport) -> frame:
         });
     }
 
-    frame::Filling::Capped(rows)
+    frame::Filling::Capped { above: None, rows }
 }

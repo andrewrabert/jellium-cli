@@ -95,7 +95,7 @@ scrollbar-size	src/themes/dark/theme.scss	455	459	e393831ff8215692a43144bfd40739
 scheme-text	src/themes/dark/theme.scss	6	10	ccf6badf40277bf665fca40a5f147298d60bc5c25a2b3f49cdc83052b183f264	ported
 scheme-header-transparent	src/themes/dark/theme.scss	27	30	e13bedfeac0bc49fbada559602831c754783d74cd913b211baa7554505787f16	ported
 scheme-background	src/themes/dark/theme.scss	44	50	ffe64cfafd73227f6b3b0b03aa0de97ca5cdd1a8bbb18914afcecdb327abfbed	ported
-scheme-backdrop-scrim	src/themes/dark/theme.scss	52	54	6334c94d9af8d8138a58c71b0c4556e987a9343bc9555034a936dbef884af3ec	ported
+scheme-backdrop-scrim	src/themes/dark/theme.scss	52	54	6334c94d9af8d8138a58c71b0c4556e987a9343bc9555034a936dbef884af3ec	dead
 scheme-raised	src/themes/dark/theme.scss	73	81	6a97d807f8fd751350a41c2a27e481c15475a639d72b69efce13a3eec4a0973c	ported
 scheme-submit	src/themes/dark/theme.scss	83	91	bb9ac30c05ab3eefb743f3f077aea102becd521469979f5a5cdfbeac70861929	ported
 scheme-button-link	src/themes/dark/theme.scss	253	255	e67d629e4322010c4f5d236b5af04650cb0bf633b1395ebc414e5002c9e3b972	ported
@@ -263,7 +263,7 @@ card-width-ladder	src/components/cardbuilder/card.scss	534	652	1ee2ec72e4a392b3d
 card-rail-ladder	src/components/cardbuilder/card.scss	666	799	3de92ad0f8f0e71eba3bdc2c28016cdbdabf33167030559c74f3b725de0fe8ee	ported
 card-background-index	src/components/cardbuilder/cardBuilderUtils.ts	132	155	83625e0c7a57f86181c64a2aecab7872d084b8e0e0552bf3b17f648e84b22c8f	ported
 card-count-ladder	src/components/cardbuilder/cardBuilderUtils.ts	192	317	65a373fdbca9ab97ad21c3256e427c05f3fc85e38b55fc8484ce90586a084d9d	ported
-login-disclaimer	src/controllers/session/login/login.scss	1	26	7082c7c4e9983ab430ba2bb2a0699383219be84536c811fae7f210c5b241c5ee	ported
+login-disclaimer	src/controllers/session/login/login.scss	1	26	7082c7c4e9983ab430ba2bb2a0699383219be84536c811fae7f210c5b241c5ee	owed
 dialog-fullscreen	src/components/dialogHelper/dialoghelper.scss	115	135	76dcde0540783a115a192bd74a35b3b689d1cdd2ddb8fc3f8c86221d70e64b68	ported
 scheme-dialog-backdrop	src/components/dialogHelper/dialoghelper.scss	142	158	67962f638bb5c0dd9fa64b250c305c105b72302b08fb3a00cf990ad90700cca5	ported
 face-base-bold-cyrillic	src/styles/noto-sans/base-700-normal.scss	10	15	ac3cedbce70cabd48e4275ac18c47062c5ec84d4b27795e8f4f8f2fef19e44e0	ported
