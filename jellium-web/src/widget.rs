@@ -441,13 +441,17 @@ pub struct Hovered {
 
 /// What one card carries: what its frame stands, the name its background is
 /// picked from and whose glyphs it draws, the channel logo its footer carries,
-/// the timer its indicators mark, what pressing it opens, and its hover menu.
+/// the timer its indicators mark, how far through its own program it is, what
+/// pressing it opens, and its hover menu.
 #[derive(Debug, Clone)]
 pub struct Poster {
     pub face: Option<Face>,
     pub name: String,
     pub logo: Option<image::Handle>,
     pub timer: Option<Recording>,
+    /// What `.innerCardFooter`'s bar reads across the foot of the card's
+    /// image, and `None` where the card marks no progress.
+    pub elapsed: Option<Share>,
     pub press: Option<Message>,
     pub hovered: Hovered,
 }
@@ -478,6 +482,18 @@ fn marked<'a>(frame: Element<'a, Message>, recording: Option<Recording>) -> Elem
             .align_right(Fill),
     ]
     .into()
+}
+
+/// `.innerCardFooter.fullInnerCardFooter.innerCardFooterClear`: the elapsed bar
+/// laid across the foot of a card's image, and the frame alone where the card
+/// marks no progress.
+// reference: card-inner-footer
+// reference: progress-bar
+fn progressed<'a>(frame: Element<'a, Message>, elapsed: Option<Share>) -> Element<'a, Message> {
+    let Some(elapsed) = elapsed else {
+        return frame;
+    };
+    iced::widget::stack![frame, container(elapsed_bar(elapsed)).align_bottom(Fill)].into()
 }
 
 /// The scrim the reference raises over a card's image while the pointer is
@@ -584,12 +600,15 @@ pub fn card<'a>(
 
     let frame = hovered(
         marked(
-            framed(
-                drawing.card,
-                room,
-                poster.face,
-                &poster.name,
-                drawing.backing,
+            progressed(
+                framed(
+                    drawing.card,
+                    room,
+                    poster.face,
+                    &poster.name,
+                    drawing.backing,
+                ),
+                poster.elapsed,
             ),
             poster.timer,
         ),
@@ -717,6 +736,7 @@ pub fn poster<'a>(
             name: name.clone(),
             logo: None,
             timer: None,
+            elapsed: None,
             press: item.id.map(|id| Message::Navigated(opens(item, id))),
             hovered: Hovered {
                 plays: None,
@@ -1194,6 +1214,7 @@ pub fn library_tile<'a>(
             name,
             logo: None,
             timer: None,
+            elapsed: None,
             press: Some(press),
             hovered: Hovered::default(),
         },
@@ -1247,6 +1268,20 @@ pub fn elapsed_bar<'a>(elapsed: Share) -> Element<'a, Message> {
     .into()
 }
 
+/// The box the On Now row's cards stand in: an outer footer and no paper, on
+/// the backdrop rail the section's own `defaultShape` names, its lines set
+/// where `centerText` sets them.
+// reference: card-box-classes
+// reference: livetv-program-sections
+pub const ON_NOW: card::Drawing = card::Drawing {
+    card: card::Card::Rail(card::Rail::Backdrop),
+    footer: card::Footer::NameAndSubtitle,
+    backing: card::Backing::Padder,
+    footing: card::Footing::Bare,
+    setting: card::Setting::Centred,
+    bottom: card::Bottom::Padded,
+};
+
 /// One on-now card: the channel's logo, its number, and its current program's
 /// title with an elapsed bar, on the card the reference's on-now rail draws.
 pub fn channel_card<'a>(
@@ -1255,51 +1290,33 @@ pub fn channel_card<'a>(
     now: chrono::DateTime<chrono::Utc>,
     image: Option<image::Handle>,
 ) -> Element<'a, Message> {
-    let on_now = card::Card::Rail(card::Rail::Backdrop);
-    let width = style::drawn(inside(on_now, room));
     let name = format!("{} {}", channel.number, channel.name);
-    let frame = framed(
-        on_now,
+    let said = channel
+        .current
+        .as_ref()
+        .map(|program| program.title.clone())
+        .unwrap_or_default();
+    let written = name.clone();
+    card(
+        ON_NOW,
         room,
-        image.map(Face::Image),
-        &name,
-        card::Backing::Padder,
-    );
-    let mut body = column![boxed(
-        on_now,
-        room,
-        frame,
-        Some(footed(
-            vec![
-                named(name),
-                beneath(
-                    channel
-                        .current
-                        .as_ref()
-                        .map(|program| program.title.clone())
-                        .unwrap_or_default(),
-                ),
-            ],
-            card::Setting::Centred,
-            card::Footing::Bare,
-            None,
-            None,
-            room.viewport().layout(),
-        )),
-        card::Backing::Padder,
-    )]
-    .width(width);
-
-    if let Some(program) = &channel.current {
-        body = body.push(elapsed_bar(program.elapsed(now)));
-    }
-
-    button(body)
-        .style(style::flat)
-        .on_press(Message::LiveTvAction(
-            crate::screen::livetv::Action::PlayChannel(channel.id),
-        ))
-        .into()
+        Poster {
+            face: image.map(Face::Image),
+            name,
+            logo: None,
+            timer: None,
+            elapsed: channel.current.as_ref().map(|program| program.elapsed(now)),
+            press: Some(Message::LiveTvAction(
+                crate::screen::livetv::Action::PlayChannel(channel.id),
+            )),
+            hovered: Hovered::default(),
+        },
+        move |line| match line {
+            card::Line::Name => written.clone(),
+            card::Line::Subtitle => said.clone(),
+            _ => String::new(),
+        },
+    )
 }
 
 /// The channels on now, capped at `home::ON_NOW`, the section that holds them
@@ -1319,13 +1336,13 @@ pub fn on_now_row<'a>(
                     item: channel.id,
                     kind: Kind::Primary,
                     index: None,
-                    card: card::Card::Rail(card::Rail::Backdrop),
+                    card: ON_NOW.card,
                 })
                 .clone();
             channel_card(channel, room, now, handle)
         });
 
-    sideways(row(cards).spacing(style::drawn(space::GUTTER.drawn()))).into()
+    scroller(ON_NOW, room, cards)
 }
 
 /// Which control ends a failure report.

@@ -638,4 +638,6 @@ settings-playback-remembered	src/components/playbackSettings/playbackSettings.te
 settings-subtitles-mode	src/components/subtitlesettings/subtitlesettings.template.html	7	24	5d0fbe446bea65b5d2a8b82951314889fe7cb0b978b82ca8b2253a5887f21031	ported
 card-image-banner	src/components/cardbuilder/cardBuilder.js	286	288	3ab0368af867b0974b0b8c4f8954d76f32d0e94a0e54cf34b51fce24410393b0	ported
 card-image-inherited	src/components/cardbuilder/cardBuilder.js	327	378	7defd1c5779d7afee79f20a27f030de320de9a86f6ff71a8a7ff869a021e74fb	ported
+card-inner-footer	src/components/cardbuilder/cardBuilder.js	945	950	9a3ffd7607290baa676fe9cec8d8bd5ea472a22beade0fa4933cf4ffd9bbc0d9	ported
 item-type-icon	src/utils/image.ts	130	161	412090ae234c0d40c8fb8642b8b85291b873c5ded577542ef8bdddd35eddda27	ported
+livetv-program-sections	src/utils/sections.ts	160	192	a626c52974aff7d11a47d6d229b30853951bd587ba33991823320ab8d348d8d6	ported

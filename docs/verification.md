@@ -919,3 +919,7 @@ browser with a touch screen, each at its own size.
   thumb.
 - The browser's network panel shows no image request for an item carrying no
   image tag of any kind.
+- The On Now row scrolls sideways at one backdrop rail card's own height, and
+  its foot lines up with the Next Up row's below it.
+- An On Now card's elapsed bar stands inside its image at the foot rather than
+  under the card's name.

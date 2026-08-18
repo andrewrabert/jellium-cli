@@ -85,6 +85,7 @@ fn entry<'a>(
             name: name.clone(),
             logo: None,
             timer: current.as_ref().and_then(crate::livetv::Program::recording),
+            elapsed: None,
             press: None,
             hovered: Hovered {
                 plays: Some(Message::LiveTvAction(Action::PlayChannel(channel.id))),

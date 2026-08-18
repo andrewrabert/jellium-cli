@@ -158,6 +158,7 @@ fn entry<'a>(timer: &'a SeriesTimerInfoDto, room: Room) -> Element<'a, Message> 
             name: name.clone(),
             logo: None,
             timer: Some(crate::livetv::Recording::Series),
+            elapsed: None,
             press: None,
             hovered: Hovered {
                 plays: None,

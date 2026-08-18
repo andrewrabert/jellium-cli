@@ -295,13 +295,11 @@ pub fn images(state: &State, arrangement: &Arrangement) -> HashSet<images::Key> 
             card::Card::latest(row.library.collection_type),
         ));
     }
-    {
-        keys.extend(state.on_now.iter().map(|channel| images::Key {
-            item: channel.id,
-            kind: images::Kind::Primary,
-            index: None,
-            card: card::Card::Rail(card::Rail::Backdrop),
-        }));
-    }
+    keys.extend(state.on_now.iter().map(|channel| images::Key {
+        item: channel.id,
+        kind: images::Kind::Primary,
+        index: None,
+        card: widget::ON_NOW.card,
+    }));
     keys
 }

@@ -71,6 +71,7 @@ fn picker<'a>(state: &'a super::State, viewport: Viewport) -> Option<Element<'a,
                     name: user.name.clone(),
                     logo: None,
                     timer: None,
+                    elapsed: None,
                     press: Some(Message::LoginAction(Action::Pick {
                         user: user.id,
                         name: user.name.clone(),

@@ -1,0 +1,33 @@
+export const getProgramSections = (): Section[] => {
+    const cardOptions = {
+        inheritThumb: false,
+        shape: CardShape.AutoOverflow,
+        defaultShape: CardShape.BackdropOverflow,
+        centerText: true,
+        coverImage: true,
+        overlayText: false,
+        lazy: true,
+        showAirTime: true
+    };
+
+    return [
+        {
+            name: 'HeaderOnNow',
+            itemTypes: 'Programs',
+            apiMethod: SectionApiMethod.RecommendedPrograms,
+            type: SectionType.ActivePrograms,
+            parametersOptions: {
+                isAiring: true
+            },
+            cardOptions: {
+                showParentTitle: true,
+                showTitle: true,
+                showAirDateTime: false,
+                showAirEndTime: true,
+                overlayPlayButton: true,
+                overlayMoreButton: false,
+                overlayInfoButton: false,
+                preferThumb: 'auto',
+                ...cardOptions
+            }
+        },

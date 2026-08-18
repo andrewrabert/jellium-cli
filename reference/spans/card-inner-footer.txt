@@ -1,0 +1,6 @@
+    } else if (progressHtml) {
+        innerCardFooter += '<div class="innerCardFooter fullInnerCardFooter innerCardFooterClear">';
+        innerCardFooter += progressHtml;
+        innerCardFooter += '</div>';
+
+        progressHtml = '';

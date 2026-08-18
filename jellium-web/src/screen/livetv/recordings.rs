@@ -141,6 +141,7 @@ fn entry<'a>(
                 .timer_id
                 .as_ref()
                 .map(|_| crate::livetv::Recording::Once),
+            elapsed: None,
             press: None,
             hovered: Hovered {
                 plays: item

@@ -149,6 +149,7 @@ fn active<'a>(
             name: name.clone(),
             logo: None,
             timer: Some(crate::livetv::Recording::Once),
+            elapsed: None,
             press: None,
             hovered: Hovered::default(),
         },
@@ -191,6 +192,7 @@ fn timed<'a>(
                 Some(_) => crate::livetv::Recording::Series,
                 None => crate::livetv::Recording::Once,
             }),
+            elapsed: None,
             press: None,
             hovered: Hovered {
                 plays: None,
