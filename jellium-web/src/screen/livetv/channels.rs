@@ -4,6 +4,7 @@ use std::rc::Rc;
 use iced::widget::{button, column, row};
 use iced::{Element, Fill};
 use jellium_model::item::Mark;
+use jellium_protocol::Session;
 
 use super::{Action, clock};
 use crate::api::Api;
@@ -12,10 +13,11 @@ use crate::error::Answer;
 use crate::icon::Icon;
 use crate::images::{self, Cache};
 use crate::livetv::Channel;
+use crate::screen::overflow;
 use crate::style::space::Room;
 use crate::style::{self, card, space, typeface};
 use crate::text::{self as strings, Text};
-use crate::widget::{self, Control, Face, Hovered, Poster, prose};
+use crate::widget::{self, Control, Face, Hovered, Overlaid, Poster, prose};
 use crate::window;
 
 #[derive(Debug, Clone)]
@@ -36,6 +38,7 @@ pub const CARD: card::Drawing = card::Drawing {
     footing: card::Footing::Padded,
     setting: card::Setting::Leading,
     bottom: card::Bottom::Flush,
+    touch: card::Touch::Menu,
 };
 
 pub async fn load(
@@ -73,11 +76,16 @@ fn key(channel: &Channel) -> images::Key {
 fn entry<'a>(
     channel: &'a Channel,
     room: Room,
+    session: &Session,
+    now: chrono::DateTime<chrono::Utc>,
     logo: Option<iced::widget::image::Handle>,
 ) -> Element<'a, Message> {
     // reference: card-display-name
     let name = format!("{} {}", channel.number, channel.name);
     let current = channel.current.clone();
+    let offered = overflow::commands(overflow::Subject::Channel(channel), session, None, now);
+    let menu = (!offered.is_empty())
+        .then_some(Message::OverflowAction(overflow::Action::Open { offered }));
     widget::card(
         CARD,
         room,
@@ -90,7 +98,7 @@ fn entry<'a>(
             press: None,
             hovered: Hovered {
                 plays: Some(Message::LiveTvAction(Action::PlayChannel(channel.id))),
-                controls: vec![Control {
+                controls: std::iter::once(Control {
                     glyph: match channel.favorite {
                         Mark::Set => Icon::Favorite,
                         Mark::Cleared => Icon::FavoriteBorder,
@@ -104,8 +112,16 @@ fn entry<'a>(
                         channel.id,
                         channel.favorite.flipped(),
                     )),
-                }],
+                })
+                .chain(menu.clone().map(|press| Control {
+                    glyph: Icon::MoreVert,
+                    tint: style::Tint::Plain,
+                    label: Text::OverflowOpen,
+                    press,
+                }))
+                .collect(),
             },
+            overlaid: Overlaid { plays: None, menu },
         },
         move |line| match line {
             card::Line::Name => name.clone(),
@@ -130,7 +146,13 @@ fn entry<'a>(
 
 /// The TV and radio filter above a windowed wall of cards, each carrying the
 /// channel's logo, number, name and current programme.
-pub fn view<'a>(state: &'a State, images: &'a Cache, room: Room) -> Element<'a, Message> {
+pub fn view<'a>(
+    state: &'a State,
+    images: &'a Cache,
+    room: Room,
+    session: &'a Session,
+    now: chrono::DateTime<chrono::Utc>,
+) -> Element<'a, Message> {
     use jellyfin_api::types::ChannelType;
 
     let filter = row![
@@ -166,7 +188,7 @@ pub fn view<'a>(state: &'a State, images: &'a Cache, room: Room) -> Element<'a, 
         state.channels.len(),
         move |index| {
             let channel = &state.channels[index];
-            entry(channel, room, images.handle(key(channel)))
+            entry(channel, room, session, now, images.handle(key(channel)))
         },
     );
 

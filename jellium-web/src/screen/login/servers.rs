@@ -20,6 +20,7 @@ const SAVED: card::Drawing = card::Drawing {
     footing: card::Footing::Padded,
     setting: card::Setting::Centred,
     bottom: card::Bottom::Flush,
+    touch: card::Touch::Withheld,
 };
 
 /// One saved server's card: the reference's own square server card, with what
@@ -49,6 +50,7 @@ fn saved<'a>(
                 server: saved.server.clone(),
             })),
             hovered: widget::Hovered::default(),
+            overlaid: widget::Overlaid::default(),
         },
         move |line| match line {
             card::Line::Name => said.clone(),

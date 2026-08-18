@@ -1,0 +1,3 @@
+    if (flags.isOuterFooter && options.cardLayout && layoutManager.mobile && options.cardFooterAside !== 'none') {
+        html += `<button is="paper-icon-button-light" class="itemAction btnCardOptions cardText-secondary" data-action="menu" title="${globalize.translate('ButtonMore')}"><span class="material-icons more_vert" aria-hidden="true"></span></button>`;
+    }

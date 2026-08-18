@@ -49,6 +49,7 @@ icons! {
     Audiotrack => "audiotrack",
     Autorenew => "autorenew",
     Book => "book",
+    Cancel => "cancel",
     Cast => "cast",
     Check => "check",
     CheckBox => "check_box",

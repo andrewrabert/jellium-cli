@@ -1133,14 +1133,6 @@ impl Api {
         .await
     }
 
-    pub async fn delete_recording(&self, recording: Uuid) -> Answer<()> {
-        Answer::of(async {
-            self.client.delete_recording(&recording).await?;
-            Ok(())
-        })
-        .await
-    }
-
     /// The scheduled timers, ordered by start time.
     pub async fn timers(&self) -> Answer<Vec<TimerInfoDto>> {
         Answer::of(async {

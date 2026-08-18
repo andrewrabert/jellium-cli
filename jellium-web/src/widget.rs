@@ -267,8 +267,8 @@ fn carded<'a>(
 
 /// `.cardFooter`: the lines a card writes under its image, set where `setting`
 /// sets them, inside the footer's own padding where it stands in it, with the
-/// channel logo at its leading edge and `trailing` on its trailing edge at the
-/// drop the reference gives it.
+/// channel logo at its leading edge and `trailing` on its trailing edge, each
+/// caller standing its own control where its own rule stands it.
 // reference: card-footer
 // reference: card-footer-logo
 // reference: card-footer-logo-face
@@ -279,7 +279,6 @@ fn footed<'a>(
     footing: card::Footing,
     logo: Option<image::Handle>,
     trailing: Option<Element<'a, Message>>,
-    layout: Layout,
 ) -> Element<'a, Message> {
     let written = column(lines).width(Fill).align_x(match setting {
         card::Setting::Centred => iced::alignment::Horizontal::Center,
@@ -287,13 +286,7 @@ fn footed<'a>(
     });
     let held: Element<'a, Message> = match trailing {
         None => written.into(),
-        Some(control) => row![
-            written,
-            container(control).padding(
-                iced::Padding::ZERO.top(style::drawn(space::USER_CARD_MENU_TOP.drawn(layout)))
-            ),
-        ]
-        .into(),
+        Some(control) => row![written, control].into(),
     };
     let held: Element<'a, Message> = match logo {
         None => held,
@@ -448,10 +441,23 @@ pub struct Hovered {
     pub controls: Vec<Control>,
 }
 
+/// `.cardOverlayButton-br`: what the reference lays on a card's image on a
+/// mobile layout, each control behind its own predicate.
+// reference: card-overlay-buttons
+#[derive(Debug, Clone, Default)]
+pub struct Overlaid {
+    /// What playing this card sends, and `None` where the item withholds the
+    /// control.
+    pub plays: Option<Message>,
+    /// What opening this card's menu sends, and `None` where the item offers
+    /// no command at all.
+    pub menu: Option<Message>,
+}
+
 /// What one card carries: what its frame stands, the name its background is
 /// picked from and whose glyphs it draws, the channel logo its footer carries,
 /// the timer its indicators mark, how far through its own program it is, what
-/// pressing it opens, and its hover menu.
+/// pressing it opens, its hover menu, and what it offers under a finger.
 #[derive(Debug, Clone)]
 pub struct Poster {
     pub face: Option<Face>,
@@ -463,6 +469,88 @@ pub struct Poster {
     pub elapsed: Option<Share>,
     pub press: Option<Message>,
     pub hovered: Hovered,
+    pub overlaid: Overlaid,
+}
+
+/// One control of a card's mobile overlay, at the box and padding
+/// `.cardOverlayButton` gives one.
+// reference: card-overlay-button
+// reference: card-overlay-button-icon
+fn overlay_control<'a>(icon: Icon, press: Message) -> Element<'a, Message> {
+    let glyph = style::drawn(space::CARD_OVERLAY_GLYPH.drawn());
+    button(
+        container(crate::icon::icon(icon, typeface::CARD_OVERLAY_ICON))
+            .center_x(glyph)
+            .center_y(glyph),
+    )
+    .style(move |theme, status| style::card_overlay_control(theme, status, style::Tint::Plain))
+    .padding(style::drawn(space::CARD_OVERLAY_PAD.drawn()))
+    .on_press(press)
+    .into()
+}
+
+/// `.cardOverlayButton-br`: the controls the reference lays on a card's image
+/// on a mobile layout and on no other, the play control where the section's
+/// own option stands it and the more control where the section asks for the
+/// menu on a card standing off the paper.
+// reference: card-overlay-buttons
+// reference: card-overlay-button
+// reference: card-overlay-button-icon
+fn overlaid<'a>(
+    frame: Element<'a, Message>,
+    overlaid: Overlaid,
+    touch: card::Touch,
+    backing: card::Backing,
+) -> Element<'a, Message> {
+    let off_paper = backing == card::Backing::Padder;
+    let laid = match touch {
+        card::Touch::Plays => overlaid
+            .plays
+            .map(|press| overlay_control(Icon::PlayArrow, press)),
+        card::Touch::Unset => overlaid
+            .plays
+            .filter(|_| off_paper)
+            .map(|press| overlay_control(Icon::PlayArrow, press)),
+        card::Touch::Menu => overlaid
+            .menu
+            .filter(|_| off_paper)
+            .map(|press| overlay_control(Icon::MoreVert, press)),
+        card::Touch::Withheld => None,
+    };
+    match laid {
+        None => frame,
+        Some(control) => iced::widget::stack![
+            frame,
+            container(control).align_right(Fill).align_bottom(Fill),
+        ]
+        .into(),
+    }
+}
+
+/// `btnCardOptions`: the control the reference floats on the trailing edge of a
+/// `cardLayout` card's outer footer on a mobile layout, and nothing where the
+/// section withholds it.
+// reference: card-footer-menu
+// reference: card-options-button
+fn aside<'a>(
+    menu: Option<Message>,
+    touch: card::Touch,
+    backing: card::Backing,
+) -> Option<Element<'a, Message>> {
+    if touch != card::Touch::Menu || backing != card::Backing::Paper {
+        return None;
+    }
+    Some(
+        container(icon_button(
+            Icon::MoreVert,
+            typeface::ICON_BUTTON,
+            None,
+            menu?,
+        ))
+        .padding(iced::Padding::ZERO.bottom(style::drawn(space::CARD_OPTIONS_BOTTOM.drawn())))
+        .align_bottom(Fill)
+        .into(),
+    )
 }
 
 /// The glyph of the timer covering a guide cell.
@@ -539,11 +627,7 @@ fn hovered<'a>(
     frame: Element<'a, Message>,
     hovered: Hovered,
     backing: card::Backing,
-    layout: Layout,
 ) -> Element<'a, Message> {
-    if layout != Layout::Desktop {
-        return frame;
-    }
     if hovered.plays.is_none() && hovered.controls.is_empty() {
         return frame;
     }
@@ -638,33 +722,39 @@ pub fn card<'a>(
     let mut drawn: Vec<Element<'a, Message>> = lines.next().map(named).into_iter().collect();
     drawn.extend(lines.map(beneath));
 
-    let layout = room.viewport().layout();
-    let frame = hovered(
-        marked(
-            progressed(
-                framed(
-                    drawing.card,
-                    room,
-                    poster.face,
-                    &poster.name,
-                    drawing.backing,
-                ),
-                poster.elapsed,
+    let stood = marked(
+        progressed(
+            framed(
+                drawing.card,
+                room,
+                poster.face,
+                &poster.name,
+                drawing.backing,
             ),
-            poster.timer,
+            poster.elapsed,
         ),
-        poster.hovered,
-        drawing.backing,
-        layout,
+        poster.timer,
     );
+    let (frame, trailing) = match room.viewport().layout() {
+        Layout::Desktop => (hovered(stood, poster.hovered, drawing.backing), None),
+        Layout::Mobile => (
+            overlaid(
+                stood,
+                poster.overlaid.clone(),
+                drawing.touch,
+                drawing.backing,
+            ),
+            aside(poster.overlaid.menu, drawing.touch, drawing.backing),
+        ),
+        Layout::Television => (stood, None),
+    };
     let footer = (!drawn.is_empty()).then(|| {
         footed(
             drawn,
             drawing.setting,
             drawing.footing,
             poster.logo,
-            None,
-            layout,
+            trailing,
         )
     });
     let body = reserving(
@@ -794,12 +884,15 @@ pub fn poster<'a>(
         collection,
         now,
     );
-    if !offered.is_empty() {
+    let menu = (!offered.is_empty()).then_some(Message::OverflowAction(
+        crate::screen::overflow::Action::Open { offered },
+    ));
+    if let Some(press) = menu.clone() {
         controls.push(Control {
             glyph: Icon::MoreVert,
             tint: style::Tint::Plain,
             label: Text::OverflowOpen,
-            press: Message::OverflowAction(crate::screen::overflow::Action::Open { offered }),
+            press,
         });
     }
     let plays = item.id.filter(|_| item::playable(item, now)).map(|id| {
@@ -818,7 +911,14 @@ pub fn poster<'a>(
             timer: None,
             elapsed: None,
             press: item.id.map(|id| Message::Navigated(opens(item, id))),
-            hovered: Hovered { plays, controls },
+            hovered: Hovered {
+                plays: plays.clone(),
+                controls,
+            },
+            overlaid: Overlaid {
+                plays: plays.filter(|_| item::overlay_playable(item)),
+                menu,
+            },
         },
         move |line| match line {
             card::Line::Name => name.clone(),
@@ -1301,6 +1401,7 @@ pub fn library_tile<'a>(
             elapsed: None,
             press: Some(press),
             hovered: Hovered::default(),
+            overlaid: Overlaid::default(),
         },
         move |line| match line {
             card::Line::Name => said.clone(),
@@ -1320,6 +1421,8 @@ pub const TILE: card::Drawing = card::Drawing {
     footing: card::Footing::Bare,
     setting: card::Setting::Centred,
     bottom: card::Bottom::Padded,
+    // reference: home-library-tiles
+    touch: card::Touch::Unset,
 };
 
 /// The portions a bar is divided into, which is the resolution a share the
@@ -1365,6 +1468,8 @@ pub const ON_NOW: card::Drawing = card::Drawing {
     footing: card::Footing::Bare,
     setting: card::Setting::Centred,
     bottom: card::Bottom::Padded,
+    // reference: livetv-program-sections
+    touch: card::Touch::Plays,
 };
 
 /// One on-now card: the channel's logo, its number, and its current program's
@@ -1396,6 +1501,7 @@ pub fn channel_card<'a>(
                 crate::screen::livetv::Action::PlayChannel(channel.id),
             )),
             hovered: Hovered::default(),
+            overlaid: Overlaid::default(),
         },
         move |line| match line {
             card::Line::Name => written.clone(),
@@ -1841,13 +1947,18 @@ pub fn user_card<'a>(
             card::Setting::Leading,
             card::Footing::Padded,
             None,
-            Some(icon_button(
-                Icon::MoreVert,
-                typeface::ICON_BUTTON,
-                None,
-                menu,
-            )),
-            room.viewport().layout(),
+            Some(
+                container(icon_button(
+                    Icon::MoreVert,
+                    typeface::ICON_BUTTON,
+                    None,
+                    menu,
+                ))
+                .padding(iced::Padding::ZERO.top(style::drawn(
+                    space::USER_CARD_MENU_TOP.drawn(room.viewport().layout()),
+                )))
+                .into(),
+            ),
         )),
         card::Backing::Paper,
     )

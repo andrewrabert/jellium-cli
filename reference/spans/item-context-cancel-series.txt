@@ -1,0 +1,7 @@
+    if ((item.Type === 'SeriesTimer') && user.Policy.EnableLiveTvManagement && options.cancelTimer !== false) {
+        commands.push({
+            name: globalize.translate('CancelSeries'),
+            id: 'cancelseriestimer',
+            icon: 'cancel'
+        });
+    }

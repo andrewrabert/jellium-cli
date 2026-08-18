@@ -2,8 +2,9 @@ use std::collections::HashSet;
 use std::rc::Rc;
 
 use iced::Element;
+use jellium_model::item;
+use jellium_protocol::Session;
 use jellyfin_api::types::BaseItemDto;
-use uuid::Uuid;
 
 use super::Action;
 use crate::api::Api;
@@ -11,11 +12,12 @@ use crate::app::Message;
 use crate::error::Answer;
 use crate::icon::Icon;
 use crate::images::{self, Cache};
+use crate::screen::overflow;
 use crate::style::card::Aspect;
 use crate::style::space::Room;
 use crate::style::{self, card};
 use crate::text::{self as strings, Text};
-use crate::widget::{self, Control, Face, Hovered, Poster};
+use crate::widget::{self, Control, Face, Hovered, Overlaid, Poster};
 use crate::window;
 
 #[derive(Debug, Clone)]
@@ -57,6 +59,7 @@ fn card(recordings: &[BaseItemDto]) -> card::Drawing {
         footing: card::Footing::Bare,
         setting: card::Setting::Centred,
         bottom: card::Bottom::Padded,
+        touch: card::Touch::Unset,
     }
 }
 
@@ -87,46 +90,6 @@ fn key(item: &BaseItemDto, card: card::Card) -> Option<images::Key> {
     })
 }
 
-/// The control that stops the timer writing an in-progress recording.
-fn stop(timer: &str) -> Control {
-    Control {
-        glyph: Icon::Stop,
-        tint: style::Tint::Plain,
-        label: Text::RecordingsStop,
-        press: Message::LiveTvAction(Action::StopRecording(timer.to_string())),
-    }
-}
-
-/// The control that carries out a delete already asked for.
-fn confirm(id: Uuid) -> Control {
-    Control {
-        glyph: Icon::Check,
-        tint: style::Tint::Plain,
-        label: Text::RecordingsDeleteConfirm,
-        press: Message::LiveTvAction(Action::ConfirmDelete(id)),
-    }
-}
-
-/// The control that abandons a delete already asked for.
-fn keep() -> Control {
-    Control {
-        glyph: Icon::Close,
-        tint: style::Tint::Plain,
-        label: Text::RecordingsDeleteCancel,
-        press: Message::LiveTvAction(Action::CloseDelete),
-    }
-}
-
-/// The control that asks for a delete.
-fn delete(id: Uuid) -> Control {
-    Control {
-        glyph: Icon::Delete,
-        tint: style::Tint::Plain,
-        label: Text::RecordingsDelete,
-        press: Message::LiveTvAction(Action::Delete(id)),
-    }
-}
-
 /// One recording's card: its poster over its name, its episode title and the
 /// year it was made.
 // reference: livetv-recordings-cards
@@ -134,10 +97,14 @@ fn entry<'a>(
     item: &'a BaseItemDto,
     drawing: card::Drawing,
     room: Room,
-    confirming: Option<Uuid>,
+    session: &Session,
+    now: chrono::DateTime<chrono::Utc>,
     art: Option<iced::widget::image::Handle>,
 ) -> Element<'a, Message> {
     let name = item.name.clone().unwrap_or_default();
+    let offered = overflow::commands(overflow::Subject::Item(item), session, None, now);
+    let menu = (!offered.is_empty())
+        .then_some(Message::OverflowAction(overflow::Action::Open { offered }));
     widget::card(
         drawing,
         room,
@@ -152,12 +119,23 @@ fn entry<'a>(
                 plays: item
                     .id
                     .map(|id| Message::LiveTvAction(Action::PlayRecording(id))),
-                controls: match (writing(item), item.id) {
-                    (Some(timer), _) => vec![stop(timer)],
-                    (None, Some(id)) if confirming == Some(id) => vec![confirm(id), keep()],
-                    (None, Some(id)) => vec![delete(id)],
-                    (None, None) => Vec::new(),
-                },
+                controls: menu
+                    .clone()
+                    .map(|press| Control {
+                        glyph: Icon::MoreVert,
+                        tint: style::Tint::Plain,
+                        label: Text::OverflowOpen,
+                        press,
+                    })
+                    .into_iter()
+                    .collect(),
+            },
+            overlaid: Overlaid {
+                plays: item
+                    .id
+                    .filter(|_| item::overlay_playable(item))
+                    .map(|id| Message::LiveTvAction(Action::PlayRecording(id))),
+                menu,
             },
         },
         move |line| match line {
@@ -179,9 +157,10 @@ fn entry<'a>(
 // reference: livetv-recordings-latest
 pub fn view<'a>(
     state: &'a State,
-    confirming: Option<Uuid>,
     images: &'a Cache,
     room: Room,
+    session: &'a Session,
+    now: chrono::DateTime<chrono::Utc>,
 ) -> Element<'a, Message> {
     if state.recordings.is_empty() {
         return widget::centered(strings::lookup(Text::RecordingsEmpty).to_string());
@@ -198,7 +177,8 @@ pub fn view<'a>(
                     item,
                     state.drawing,
                     room,
-                    confirming,
+                    session,
+                    now,
                     key(item, state.drawing.card).and_then(|key| images.handle(key)),
                 )
             },

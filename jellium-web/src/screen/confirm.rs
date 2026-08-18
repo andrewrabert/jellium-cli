@@ -119,6 +119,16 @@ pub enum Destructive {
     DeleteProvider {
         id: String,
     },
+    /// `cancelTimerWithConfirmation`.
+    // reference: recording-cancel-confirm
+    CancelTimer {
+        timer: String,
+    },
+    /// `cancelSeriesTimerWithConfirmation`.
+    // reference: recording-cancel-confirm
+    CancelSeriesTimer {
+        timer: String,
+    },
     RemoveUserImage {
         id: Uuid,
     },
@@ -154,6 +164,8 @@ impl Destructive {
             | Destructive::RevokeKey { .. }
             | Destructive::DeleteTuner { .. }
             | Destructive::DeleteProvider { .. }
+            | Destructive::CancelTimer { .. }
+            | Destructive::CancelSeriesTimer { .. }
             | Destructive::RemoveUserImage { .. }
             | Destructive::UninstallPlugin { .. }
             | Destructive::AuthorizeQuickConnect { .. }
@@ -177,6 +189,8 @@ impl Destructive {
             | Destructive::RevokeKey { .. }
             | Destructive::DeleteTuner { .. }
             | Destructive::DeleteProvider { .. }
+            | Destructive::CancelTimer { .. }
+            | Destructive::CancelSeriesTimer { .. }
             | Destructive::RemoveUserImage { .. }
             | Destructive::UninstallPlugin { .. } => Consequence::Removes,
             Destructive::StopTask { .. }
@@ -272,6 +286,12 @@ impl Pending {
             }
             Destructive::DeleteProvider { .. } => {
                 strings::format(Text::ConfirmDeleteProvider, &[&self.object])
+            }
+            Destructive::CancelTimer { .. } => {
+                strings::format(Text::ConfirmCancelRecording, &[&self.object])
+            }
+            Destructive::CancelSeriesTimer { .. } => {
+                strings::format(Text::ConfirmCancelSeries, &[&self.object])
             }
             Destructive::RemoveUserImage { .. } => {
                 strings::format(Text::ConfirmRemoveUserImage, &[&self.object])

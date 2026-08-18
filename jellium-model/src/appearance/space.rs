@@ -384,6 +384,10 @@ pub const CARD_FOOTER_LOGO_IMAGE: Share = Share::per_ten_thousand(7000);
 // reference: card-footer-logo-face
 pub const CARD_FOOTER_LOGO_INSET: Length = Length::em(4.0);
 
+/// The floor `.btnCardOptions` stands on inside a card's outer footer.
+// reference: card-options-button
+pub const CARD_OPTIONS_BOTTOM: Length = Length::em(0.25);
+
 /// `.cardIndicators`' own inset from the top trailing corner of a card's
 /// image.
 // reference: card-indicators

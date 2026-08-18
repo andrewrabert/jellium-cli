@@ -133,6 +133,8 @@ fn wall(collection: Option<CollectionType>, aspect: Option<Aspect>) -> card::Dra
         footing: card::Footing::Bare,
         setting: card::Setting::Centred,
         bottom: card::Bottom::Padded,
+        // reference: grid-card
+        touch: card::Touch::Plays,
     }
 }
 

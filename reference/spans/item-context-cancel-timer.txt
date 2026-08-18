@@ -1,0 +1,15 @@
+    if ((item.Type === 'Timer') && user.Policy.EnableLiveTvManagement && options.cancelTimer !== false) {
+        commands.push({
+            name: globalize.translate('CancelRecording'),
+            id: 'canceltimer',
+            icon: 'cancel'
+        });
+    }
+
+    if ((item.Type === 'Recording' && item.Status === 'InProgress') && user.Policy.EnableLiveTvManagement && options.cancelTimer !== false) {
+        commands.push({
+            name: globalize.translate('CancelRecording'),
+            id: 'canceltimer',
+            icon: 'cancel'
+        });
+    }

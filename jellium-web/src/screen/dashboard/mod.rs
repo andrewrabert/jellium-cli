@@ -2064,6 +2064,8 @@ pub fn act(signed: &mut Signed, action: Action, viewport: Viewport) -> Task<Mess
             let object = pending.object;
             match pending.action {
                 crate::screen::confirm::Destructive::AuthorizeQuickConnect { .. }
+                | crate::screen::confirm::Destructive::CancelTimer { .. }
+                | crate::screen::confirm::Destructive::CancelSeriesTimer { .. }
                 | crate::screen::confirm::Destructive::DeleteItem { .. } => Task::none(),
                 crate::screen::confirm::Destructive::Restart => {
                     Task::perform(async move { api.restart().await }, move |outcome| {

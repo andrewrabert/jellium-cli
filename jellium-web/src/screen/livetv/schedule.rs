@@ -3,19 +3,21 @@ use std::rc::Rc;
 
 use iced::widget::{column, container};
 use iced::{Element, Fill};
+use jellium_protocol::Session;
 use jellyfin_api::types::{BaseItemDto, TimerInfoDto};
 
-use super::{Action, clock};
+use super::clock;
 use crate::api::Api;
 use crate::app::Message;
 use crate::error::Answer;
 use crate::icon::Icon;
 use crate::images::{self, Cache};
+use crate::screen::overflow;
 use crate::style::card::Aspect;
 use crate::style::space::Room;
 use crate::style::{self, card, space, typeface};
 use crate::text::{self as strings, Text};
-use crate::widget::{self, Control, Face, Hovered, Poster, prose};
+use crate::widget::{self, Control, Face, Hovered, Overlaid, Poster, prose};
 
 #[derive(Debug, Clone)]
 pub struct State {
@@ -45,6 +47,7 @@ fn active_card(recordings: &[BaseItemDto]) -> card::Drawing {
         footing: card::Footing::Bare,
         setting: card::Setting::Centred,
         bottom: card::Bottom::Padded,
+        touch: card::Touch::Menu,
     }
 }
 
@@ -57,6 +60,7 @@ pub const TIMER_CARD: card::Drawing = card::Drawing {
     footing: card::Footing::Padded,
     setting: card::Setting::Leading,
     bottom: card::Bottom::Flush,
+    touch: card::Touch::Withheld,
 };
 
 pub async fn load(api: Rc<Api>) -> Answer<State> {
@@ -142,9 +146,14 @@ fn active<'a>(
     item: &'a BaseItemDto,
     drawing: card::Drawing,
     room: Room,
+    session: &Session,
+    now: chrono::DateTime<chrono::Utc>,
     art: Option<iced::widget::image::Handle>,
 ) -> Element<'a, Message> {
     let name = item.name.clone().unwrap_or_default();
+    let offered = overflow::commands(overflow::Subject::Item(item), session, None, now);
+    let menu = (!offered.is_empty())
+        .then_some(Message::OverflowAction(overflow::Action::Open { offered }));
     widget::card(
         drawing,
         room,
@@ -155,7 +164,20 @@ fn active<'a>(
             timer: crate::livetv::Recording::covering(item),
             elapsed: None,
             press: None,
-            hovered: Hovered::default(),
+            hovered: Hovered {
+                plays: None,
+                controls: menu
+                    .clone()
+                    .map(|press| Control {
+                        glyph: Icon::MoreVert,
+                        tint: style::Tint::Plain,
+                        label: Text::OverflowOpen,
+                        press,
+                    })
+                    .into_iter()
+                    .collect(),
+            },
+            overlaid: Overlaid { plays: None, menu },
         },
         move |line| match line {
             card::Line::ParentTitle => name.clone(),
@@ -175,6 +197,8 @@ fn active<'a>(
 fn timed<'a>(
     timer: &'a TimerInfoDto,
     room: Room,
+    session: &Session,
+    now: chrono::DateTime<chrono::Utc>,
     art: Option<iced::widget::image::Handle>,
     logo: Option<iced::widget::image::Handle>,
 ) -> Element<'a, Message> {
@@ -185,6 +209,9 @@ fn timed<'a>(
         .unwrap_or_default();
     let episode = program.and_then(|held| held.episode_title.clone());
     let times = airtime(timer.start_date, timer.end_date);
+    let offered = overflow::commands(overflow::Subject::Timer(timer), session, None, now);
+    let menu = (!offered.is_empty())
+        .then_some(Message::OverflowAction(overflow::Action::Open { offered }));
     widget::card(
         TIMER_CARD,
         room,
@@ -197,18 +224,18 @@ fn timed<'a>(
             press: None,
             hovered: Hovered {
                 plays: None,
-                controls: timer
-                    .id
+                controls: menu
                     .clone()
-                    .map(|id| Control {
-                        glyph: Icon::Delete,
+                    .map(|press| Control {
+                        glyph: Icon::MoreVert,
                         tint: style::Tint::Plain,
-                        label: Text::ScheduleCancel,
-                        press: Message::LiveTvAction(Action::CancelTimer(id)),
+                        label: Text::OverflowOpen,
+                        press,
                     })
                     .into_iter()
                     .collect(),
             },
+            overlaid: Overlaid { plays: None, menu },
         },
         move |line| match line {
             card::Line::ParentTitle => name.clone(),
@@ -224,14 +251,27 @@ fn timed<'a>(
 /// group has no heading.
 // reference: schedule-groups
 // reference: section-title-cards
-fn grouped<'a>(day: Day<'a>, room: Room, images: &'a Cache) -> Element<'a, Message> {
+fn grouped<'a>(
+    day: Day<'a>,
+    room: Room,
+    images: &'a Cache,
+    session: &'a Session,
+    now: chrono::DateTime<chrono::Utc>,
+) -> Element<'a, Message> {
     let cards = widget::wall(
         TIMER_CARD.card,
         room,
         card::Wrap::Leading,
-        day.timers
-            .iter()
-            .map(|timer| timed(timer, room, program_art(timer, images), logo(timer, images))),
+        day.timers.iter().map(|timer| {
+            timed(
+                timer,
+                room,
+                session,
+                now,
+                program_art(timer, images),
+                logo(timer, images),
+            )
+        }),
     );
     match day.named {
         None => cards,
@@ -264,7 +304,13 @@ fn program_key(timer: &TimerInfoDto) -> Option<images::Key> {
 /// The active recordings under their own title, then the timers grouped by the
 /// day they start on, all in one scroll.
 // reference: livetv-tab-markup
-pub fn view<'a>(state: &'a State, images: &'a Cache, room: Room) -> Element<'a, Message> {
+pub fn view<'a>(
+    state: &'a State,
+    images: &'a Cache,
+    room: Room,
+    session: &'a Session,
+    now: chrono::DateTime<chrono::Utc>,
+) -> Element<'a, Message> {
     if state.active.is_empty() && state.timers.is_empty() {
         return widget::centered(strings::lookup(Text::ScheduleEmpty).to_string());
     }
@@ -281,6 +327,8 @@ pub fn view<'a>(state: &'a State, images: &'a Cache, room: Room) -> Element<'a, 
                         item,
                         state.drawing,
                         room,
+                        session,
+                        now,
                         item.id
                             .and_then(|id| images.handle(key(id, state.drawing.card))),
                     )
@@ -289,7 +337,7 @@ pub fn view<'a>(state: &'a State, images: &'a Cache, room: Room) -> Element<'a, 
         ));
     }
     for day in days(&state.timers) {
-        page = page.push(grouped(day, room, images));
+        page = page.push(grouped(day, room, images, session, now));
     }
     widget::scrolled(page).height(Fill).into()
 }

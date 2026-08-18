@@ -2,7 +2,7 @@ use iced::widget::{button, column, row, text_input};
 use iced::{Element, Task};
 use jellium_model::item::{self, Mark, Replace, Scope};
 use jellium_protocol::Session;
-use jellyfin_api::types::BaseItemDto;
+use jellyfin_api::types::{BaseItemDto, SeriesTimerInfoDto, TimerInfoDto};
 use uuid::Uuid;
 
 use crate::app::{Message, Signed};
@@ -14,10 +14,14 @@ use crate::text::{self as strings, Text};
 use crate::widget::prose;
 use crate::widget::sheet::{Entry, Item, sheet};
 
-/// What a card's menu was opened on, which is what the reference fetches by the
+/// What a card's menu was opened on, which is what `getItem` fetches by the
 /// card's own type before `getCommands` reads it.
+// reference: shortcut-item
 pub enum Subject<'a> {
     Item(&'a BaseItemDto),
+    Channel(&'a crate::livetv::Channel),
+    Timer(&'a TimerInfoDto),
+    SeriesTimer(&'a SeriesTimerInfoDto),
 }
 
 /// One command `getCommands` pushes, carrying what running it takes.
@@ -27,6 +31,10 @@ pub enum Subject<'a> {
 #[derive(Debug, Clone, PartialEq)]
 pub enum Command {
     Play(crate::player::Intent),
+    /// `play` on a channel, which the reference tunes rather than resolves.
+    PlayChannel {
+        channel: Uuid,
+    },
     MarkPlayed {
         item: Uuid,
         played: Mark,
@@ -42,6 +50,18 @@ pub enum Command {
     RemoveFrom {
         collection: Uuid,
         item: Uuid,
+    },
+    /// `canceltimer`, which the reference raises its own confirmation for.
+    // reference: item-context-cancel-timer
+    CancelTimer {
+        timer: String,
+        name: String,
+    },
+    /// `cancelseriestimer`, likewise.
+    // reference: item-context-cancel-series
+    CancelSeriesTimer {
+        timer: String,
+        name: String,
     },
     /// `delete`, which the reference raises `deleteHelper`'s confirmation for.
     Delete {
@@ -59,7 +79,7 @@ impl Command {
     /// What the sheet writes this command as.
     pub fn label(&self) -> Text {
         match self {
-            Command::Play(_) => Text::MenuPlay,
+            Command::Play(_) | Command::PlayChannel { .. } => Text::MenuPlay,
             Command::MarkPlayed { played, .. } => match played {
                 Mark::Set => Text::OverflowMarkPlayed,
                 Mark::Cleared => Text::OverflowMarkUnplayed,
@@ -73,6 +93,8 @@ impl Command {
                 Into::Playlist => Text::OverflowAddToPlaylist,
             },
             Command::RemoveFrom { .. } => Text::OverflowRemoveFromCollection,
+            Command::CancelTimer { .. } => Text::MenuCancelRecording,
+            Command::CancelSeriesTimer { .. } => Text::MenuCancelSeries,
             Command::Delete { .. } => Text::MenuDeleteMedia,
             Command::Refresh { replace, scope, .. } => match (replace, scope) {
                 (Replace::Missing, Scope::Tree) => Text::DetailRefreshMetadata,
@@ -85,7 +107,7 @@ impl Command {
     /// `actionSheet`'s own glyph for this command.
     pub fn glyph(&self) -> Icon {
         match self {
-            Command::Play(_) => Icon::PlayArrow,
+            Command::Play(_) | Command::PlayChannel { .. } => Icon::PlayArrow,
             Command::MarkPlayed { .. } => Icon::Check,
             Command::Favorite { favorite, .. } => match favorite {
                 Mark::Set => Icon::Favorite,
@@ -93,6 +115,7 @@ impl Command {
             },
             Command::AddTo { .. } => Icon::PlaylistAdd,
             Command::RemoveFrom { .. } => Icon::PlaylistRemove,
+            Command::CancelTimer { .. } | Command::CancelSeriesTimer { .. } => Icon::Cancel,
             Command::Delete { .. } => Icon::Delete,
             Command::Refresh { .. } => Icon::Refresh,
         }
@@ -107,7 +130,20 @@ impl Command {
                 Destructive::DeleteItem { id: *item },
                 name.clone(),
             )),
+            Command::CancelTimer { timer, name } => Some(Pending::of(
+                Destructive::CancelTimer {
+                    timer: timer.clone(),
+                },
+                name.clone(),
+            )),
+            Command::CancelSeriesTimer { timer, name } => Some(Pending::of(
+                Destructive::CancelSeriesTimer {
+                    timer: timer.clone(),
+                },
+                name.clone(),
+            )),
             Command::Play(_)
+            | Command::PlayChannel { .. }
             | Command::MarkPlayed { .. }
             | Command::Favorite { .. }
             | Command::AddTo { .. }
@@ -125,13 +161,45 @@ impl Command {
 // reference: item-can-play
 // reference: item-can-mark-played
 // reference: item-can-rate
+// reference: item-context-cancel-timer
+// reference: item-context-cancel-series
 pub fn commands(
     subject: Subject<'_>,
     session: &Session,
     collection: Option<Uuid>,
     now: chrono::DateTime<chrono::Utc>,
 ) -> Vec<Command> {
-    let Subject::Item(item) = subject;
+    let item = match subject {
+        Subject::Item(item) => item,
+        Subject::Channel(channel) => {
+            return vec![Command::PlayChannel {
+                channel: channel.id,
+            }];
+        }
+        Subject::Timer(timer) => {
+            let (Some(id), true) = (timer.id.clone(), manageable(session)) else {
+                return Vec::new();
+            };
+            return vec![Command::CancelTimer {
+                timer: id,
+                name: timer
+                    .program_info
+                    .as_ref()
+                    .and_then(|held| held.name.clone())
+                    .or_else(|| timer.name.clone())
+                    .unwrap_or_default(),
+            }];
+        }
+        Subject::SeriesTimer(timer) => {
+            let (Some(id), true) = (timer.id.clone(), manageable(session)) else {
+                return Vec::new();
+            };
+            return vec![Command::CancelSeriesTimer {
+                timer: id,
+                name: timer.name.clone().unwrap_or_default(),
+            }];
+        }
+    };
     let mut offered = Vec::new();
     let Some(id) = item.id else {
         return offered;
@@ -172,6 +240,14 @@ pub fn commands(
             item: id,
         });
     }
+    if let Some(timer) =
+        crate::screen::livetv::recordings::writing(item).filter(|_| manageable(session))
+    {
+        offered.push(Command::CancelTimer {
+            timer: timer.to_string(),
+            name: item.name.clone().unwrap_or_default(),
+        });
+    }
     if item.can_delete == Some(true) {
         offered.push(Command::Delete {
             item: id,
@@ -192,6 +268,13 @@ pub fn commands(
         }
     }
     offered
+}
+
+/// Whether this session may cancel a timer, which is what the reference gates
+/// both cancel commands on.
+// reference: item-context-cancel-timer
+fn manageable(session: &Session) -> bool {
+    session.live_tv.allowed()
 }
 
 /// The menu open now; at most one is open.
@@ -314,6 +397,9 @@ pub fn view<'a>(open: &'a Open, viewport: Viewport) -> Element<'a, Message> {
 fn run(signed: &mut Signed, offered: Vec<Command>, command: Command) -> Task<Message> {
     match command {
         Command::Play(intent) => Task::done(Message::PlayPressed(intent)),
+        Command::PlayChannel { channel } => Task::done(Message::LiveTvAction(
+            crate::screen::livetv::Action::PlayChannel(channel),
+        )),
         Command::MarkPlayed { item, played } => Task::done(Message::PlayedToggled(item, played)),
         Command::Favorite { item, favorite } => {
             Task::done(Message::FavoriteToggled(item, favorite))
@@ -343,6 +429,10 @@ fn run(signed: &mut Signed, offered: Vec<Command>, command: Command) -> Task<Mes
         Command::RemoveFrom { collection, item } => Task::done(Message::CollectionAction(
             crate::screen::collections::Action::Remove { collection, item },
         )),
+        Command::CancelTimer { timer, .. } => carried(signed, Destructive::CancelTimer { timer }),
+        Command::CancelSeriesTimer { timer, .. } => {
+            carried(signed, Destructive::CancelSeriesTimer { timer })
+        }
         Command::Delete { item, .. } => carried(signed, Destructive::DeleteItem { id: item }),
         Command::Refresh {
             item,
@@ -365,6 +455,12 @@ fn carried(signed: &mut Signed, action: Destructive) -> Task<Message> {
                 Message::Wrote(Operation::ItemDelete, wrote)
             })
         }
+        Destructive::CancelTimer { timer } => Task::done(Message::LiveTvAction(
+            crate::screen::livetv::Action::CancelTimer(timer),
+        )),
+        Destructive::CancelSeriesTimer { timer } => Task::done(Message::LiveTvAction(
+            crate::screen::livetv::Action::CancelSeriesTimer(timer),
+        )),
         _ => Task::none(),
     }
 }

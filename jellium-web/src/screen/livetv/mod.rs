@@ -81,8 +81,6 @@ pub struct State {
     pub body: Body,
     /// The series options being edited, drawn over the tab.
     pub editing: Option<series::Editing>,
-    /// The recording a Delete has asked about.
-    pub confirming: Option<Uuid>,
 }
 
 /// Every control the Live TV screen and the on-now row resolve to.
@@ -110,12 +108,6 @@ pub enum Action {
     CancelTimer(String),
     CancelSeriesTimer(String),
     PlayRecording(Uuid),
-    /// Asks about deleting a completed recording, and deletes it.
-    Delete(Uuid),
-    ConfirmDelete(Uuid),
-    CloseDelete,
-    /// Cancels the timer writing an in-progress recording.
-    StopRecording(String),
     /// Moves the guide one screen in time.
     Step(guide::Step),
     /// Moves the guide to a date.
@@ -144,7 +136,6 @@ pub async fn load(api: Rc<Api>, tab: Tab, room: Room) -> Answer<State> {
             tab,
             body,
             editing: None,
-            confirming: None,
         })
     })
     .await
@@ -156,6 +147,7 @@ pub fn view<'a>(
     now: DateTime<Utc>,
     images: &'a Cache,
     viewport: Viewport,
+    session: &'a jellium_protocol::Session,
 ) -> Element<'a, Message> {
     if let Some(editing) = &state.editing {
         return series::options(editing, viewport);
@@ -175,10 +167,10 @@ pub fn view<'a>(
     let room = Room::content(viewport);
     let body = match &state.body {
         Body::Guide(guide) => guide::view(guide, now, images, viewport),
-        Body::Channels(channels) => channels::view(channels, images, room),
-        Body::Recordings(held) => recordings::view(held, state.confirming, images, room),
-        Body::Schedule(schedule) => schedule::view(schedule, images, room),
-        Body::Series(series) => series::view(series, room),
+        Body::Channels(channels) => channels::view(channels, images, room, session, now),
+        Body::Recordings(held) => recordings::view(held, images, room, session, now),
+        Body::Schedule(schedule) => schedule::view(schedule, images, room, session, now),
+        Body::Series(series) => series::view(series, room, session, now),
     };
 
     column![
@@ -259,7 +251,6 @@ pub fn act(signed: &mut Signed, action: Action, viewport: Viewport) -> Task<Mess
                         tab: Tab::Channels,
                         body: Body::Channels(channels),
                         editing: None,
-                        confirming: None,
                     }))
                 },
             )
@@ -273,7 +264,6 @@ pub fn act(signed: &mut Signed, action: Action, viewport: Viewport) -> Task<Mess
                         tab: Tab::Channels,
                         body: Body::Channels(channels),
                         editing: None,
-                        confirming: None,
                     }))
                 },
             )
@@ -349,7 +339,7 @@ pub fn act(signed: &mut Signed, action: Action, viewport: Viewport) -> Task<Mess
             }
             Task::none()
         }
-        Action::CancelTimer(timer) | Action::StopRecording(timer) => {
+        Action::CancelTimer(timer) => {
             Task::perform(async move { api.cancel_timer(&timer).await }, |outcome| {
                 Message::Wrote(Operation::Timer, outcome)
             })
@@ -369,27 +359,6 @@ pub fn act(signed: &mut Signed, action: Action, viewport: Viewport) -> Task<Mess
                     },
                 ),
                 Message::Resolved,
-            )
-        }
-        Action::Delete(recording) => {
-            if let Some(state) = showing(signed) {
-                state.confirming = Some(recording);
-            }
-            Task::none()
-        }
-        Action::CloseDelete => {
-            if let Some(state) = showing(signed) {
-                state.confirming = None;
-            }
-            Task::none()
-        }
-        Action::ConfirmDelete(recording) => {
-            if let Some(state) = showing(signed) {
-                state.confirming = None;
-            }
-            Task::perform(
-                async move { api.delete_recording(recording).await },
-                |outcome| Message::Wrote(Operation::Recording, outcome),
             )
         }
         Action::Step(step) => {

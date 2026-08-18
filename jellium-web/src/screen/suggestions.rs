@@ -25,6 +25,8 @@ const RAIL: card::Drawing = card::Drawing {
     footing: card::Footing::Bare,
     setting: card::Setting::Centred,
     bottom: card::Bottom::Padded,
+    // reference: suggestions-latest-cards
+    touch: card::Touch::Plays,
 };
 
 /// The rails a Suggestions tab shows: the server's suggestions, and on a movie

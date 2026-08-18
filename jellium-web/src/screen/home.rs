@@ -28,6 +28,10 @@ fn railed(card: card::Card) -> card::Drawing {
         footing: card::Footing::Bare,
         setting: card::Setting::Centred,
         bottom: card::Bottom::Padded,
+        // reference: home-resume
+        // reference: home-next-up
+        // reference: home-latest
+        touch: card::Touch::Plays,
     }
 }
 

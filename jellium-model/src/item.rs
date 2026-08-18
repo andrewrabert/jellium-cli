@@ -403,6 +403,18 @@ pub fn playable(item: &BaseItemDto, now: chrono::DateTime<chrono::Utc>) -> bool 
     matches!(item.media_type, Some(MediaType::Video | MediaType::Audio))
 }
 
+/// Whether the mobile overlay's own play control stands for this item where
+/// the section left its option unset: a video that is no placeholder, is not
+/// virtual unless it is a programme, and is not a person.
+// reference: card-overlay-buttons
+pub fn overlay_playable(item: &BaseItemDto) -> bool {
+    item.media_type == Some(MediaType::Video)
+        && item.is_place_holder != Some(true)
+        && (item.location_type != Some(LocationType::Virtual)
+            || item.type_ == Some(BaseItemKind::Program))
+        && item.type_ != Some(BaseItemKind::Person)
+}
+
 /// Whether the played mark stands on it.
 // a programme carries none
 // video that is not a channel carries one

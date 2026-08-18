@@ -32,6 +32,8 @@ fn wall(aspect: Option<Aspect>) -> card::Drawing {
         footing: card::Footing::Bare,
         setting: card::Setting::Centred,
         bottom: card::Bottom::Padded,
+        // reference: list-poster-options
+        touch: card::Touch::Menu,
     }
 }
 

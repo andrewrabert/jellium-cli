@@ -2,6 +2,7 @@ use std::rc::Rc;
 
 use iced::widget::{button, checkbox, column, container, row};
 use iced::{Element, Fill};
+use jellium_protocol::Session;
 use jellyfin_api::types::{DayOfWeek, DayPattern, KeepUntil, SeriesTimerInfoDto};
 
 use super::{Action, clock};
@@ -9,10 +10,11 @@ use crate::api::Api;
 use crate::app::Message;
 use crate::error::Answer;
 use crate::icon::Icon;
+use crate::screen::overflow;
 use crate::style::space::Room;
 use crate::style::{self, Viewport, card, space, typeface};
 use crate::text::{self as strings, Text};
-use crate::widget::{self, Control, Hovered, Poster, prose};
+use crate::widget::{self, Control, Hovered, Overlaid, Poster, prose};
 use crate::window;
 
 #[derive(Debug, Clone)]
@@ -33,6 +35,7 @@ pub const CARD: card::Drawing = card::Drawing {
     footing: card::Footing::Bare,
     setting: card::Setting::Centred,
     bottom: card::Bottom::Padded,
+    touch: card::Touch::Menu,
 };
 
 /// The series options being edited, and whether confirming creates or updates.
@@ -137,7 +140,12 @@ pub async fn load(api: Rc<Api>, room: Room) -> Answer<State> {
 /// string id, which no image the cache holds is keyed by, so the card draws
 /// none.
 // reference: livetv-series-cards
-fn entry<'a>(timer: &'a SeriesTimerInfoDto, room: Room) -> Element<'a, Message> {
+fn entry<'a>(
+    timer: &'a SeriesTimerInfoDto,
+    room: Room,
+    session: &Session,
+    now: chrono::DateTime<chrono::Utc>,
+) -> Element<'a, Message> {
     let name = timer.name.clone().unwrap_or_default();
     let at = match timer.record_any_time {
         Some(true) => strings::lookup(Text::SeriesTimerAnytime).to_string(),
@@ -150,6 +158,9 @@ fn entry<'a>(timer: &'a SeriesTimerInfoDto, room: Room) -> Element<'a, Message> 
             None => strings::lookup(Text::SeriesTimerOneChannel).to_string(),
         },
     };
+    let offered = overflow::commands(overflow::Subject::SeriesTimer(timer), session, None, now);
+    let menu = (!offered.is_empty())
+        .then_some(Message::OverflowAction(overflow::Action::Open { offered }));
     widget::card(
         CARD,
         room,
@@ -162,24 +173,25 @@ fn entry<'a>(timer: &'a SeriesTimerInfoDto, room: Room) -> Element<'a, Message> 
             press: None,
             hovered: Hovered {
                 plays: None,
-                controls: match timer.id.clone() {
-                    Some(id) => vec![
-                        Control {
-                            glyph: Icon::Edit,
-                            tint: style::Tint::Plain,
-                            label: Text::SeriesEdit,
-                            press: Message::LiveTvAction(Action::EditSeries(id.clone())),
-                        },
-                        Control {
-                            glyph: Icon::Delete,
-                            tint: style::Tint::Plain,
-                            label: Text::SeriesCancel,
-                            press: Message::LiveTvAction(Action::CancelSeriesTimer(id)),
-                        },
-                    ],
-                    None => Vec::new(),
-                },
+                controls: timer
+                    .id
+                    .clone()
+                    .map(|id| Control {
+                        glyph: Icon::Edit,
+                        tint: style::Tint::Plain,
+                        label: Text::SeriesEdit,
+                        press: Message::LiveTvAction(Action::EditSeries(id)),
+                    })
+                    .into_iter()
+                    .chain(menu.clone().map(|press| Control {
+                        glyph: Icon::MoreVert,
+                        tint: style::Tint::Plain,
+                        label: Text::OverflowOpen,
+                        press,
+                    }))
+                    .collect(),
             },
+            overlaid: Overlaid { plays: None, menu },
         },
         move |line| match line {
             card::Line::Name => name.clone(),
@@ -192,7 +204,12 @@ fn entry<'a>(timer: &'a SeriesTimerInfoDto, room: Room) -> Element<'a, Message> 
 
 /// A windowed wall of centred portrait cards, each writing its name, the time
 /// it records at and the channel it records from.
-pub fn view<'a>(state: &'a State, room: Room) -> Element<'a, Message> {
+pub fn view<'a>(
+    state: &'a State,
+    room: Room,
+    session: &'a Session,
+    now: chrono::DateTime<chrono::Utc>,
+) -> Element<'a, Message> {
     if state.timers.is_empty() {
         return widget::centered(strings::lookup(Text::SeriesEmpty).to_string());
     }
@@ -200,7 +217,7 @@ pub fn view<'a>(state: &'a State, room: Room) -> Element<'a, Message> {
         state.grid,
         card::Wrap::Centred,
         state.timers.len(),
-        move |index| entry(&state.timers[index], room),
+        move |index| entry(&state.timers[index], room, session, now),
     )
 }
 

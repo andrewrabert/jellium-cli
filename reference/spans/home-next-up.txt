@@ -3,3 +3,13 @@
             preferThumb: true,
             inheritThumb: !useEpisodeImages,
             shape: getBackdropShape(enableOverflow),
+            overlayText: false,
+            showTitle: true,
+            showParentTitle: true,
+            lazy: true,
+            overlayPlayButton: true,
+            context: 'home',
+            centerText: !cardLayout,
+            allowBottomPadding: !enableOverflow,
+            cardLayout: cardLayout
+        });

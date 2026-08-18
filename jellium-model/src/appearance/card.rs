@@ -1144,10 +1144,31 @@ fn written(footer: Footer, footing: Footing) -> Drawn {
     }
 }
 
+/// What a card offers on a mobile layout, which is what the section's own
+/// `getCardsHtml` call sets.
+// reference: card-overlay-buttons
+// reference: card-footer-menu
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Touch {
+    /// `overlayPlayButton: true`: the control that plays, whatever the item's
+    /// own media type.
+    Plays,
+    /// Every overlay option left unset, which the reference answers with the
+    /// control that plays where the item's own media type is video and the
+    /// card stands off the paper.
+    Unset,
+    /// `overlayMoreButton: true` on a card standing off the paper, and a
+    /// `cardLayout` card leaving `cardFooterAside` unset: the control that
+    /// opens the item's menu.
+    Menu,
+    /// `overlayPlayButton: false`, and `cardFooterAside: 'none'`: neither.
+    Withheld,
+}
+
 /// One `getCardsHtml` call's own card: the shape it draws at, the lines its
 /// footer writes, whether `cardLayout` stands its box on the scheme's paper,
-/// where `centerText` sets its footer's lines, and whether its box reserves
-/// the margin under itself.
+/// where `centerText` sets its footer's lines, whether its box reserves the
+/// margin under itself, and what it offers under a finger.
 // reference: card-box-classes
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Drawing {
@@ -1157,6 +1178,7 @@ pub struct Drawing {
     pub footing: Footing,
     pub setting: Setting,
     pub bottom: Bottom,
+    pub touch: Touch,
 }
 
 impl Drawing {

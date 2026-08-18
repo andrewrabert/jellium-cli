@@ -1,0 +1,13 @@
+                html = cardBuilder.getCardsHtml({
+                    items: result.Items,
+                    shape: 'overflowBackdrop',
+                    showTitle: true,
+                    displayAsSpecial: item.Type == 'Season' && item.IndexNumber,
+                    playFromHere: true,
+                    overlayText: true,
+                    lazy: true,
+                    showDetailsMenu: true,
+                    overlayPlayButton: true,
+                    allowBottomPadding: !scrollX,
+                    includeParentInfoInTitle: false
+                });

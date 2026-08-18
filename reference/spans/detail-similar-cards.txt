@@ -1,0 +1,14 @@
+            html += cardBuilder.getCardsHtml({
+                items: result.Items,
+                shape: 'autooverflow',
+                showParentTitle: item.Type == 'MusicAlbum',
+                centerText: true,
+                showTitle: true,
+                context: context,
+                lazy: true,
+                showDetailsMenu: true,
+                coverImage: item.Type == 'MusicAlbum' || item.Type == 'MusicArtist',
+                overlayPlayButton: true,
+                overlayText: false,
+                showYear: item.Type === 'Movie' || item.Type === 'Trailer' || item.Type === 'Series'
+            });

@@ -212,6 +212,8 @@ pub fn card(section: Section, aspect: Option<Aspect>) -> card::Drawing {
         footing: card::Footing::Bare,
         setting: card::Setting::Centred,
         bottom: card::Bottom::Flush,
+        // reference: search-section-cards
+        touch: card::Touch::Unset,
     }
 }
 

@@ -30,6 +30,8 @@ const CHILDREN: card::Drawing = card::Drawing {
     footing: card::Footing::Bare,
     setting: card::Setting::Centred,
     bottom: card::Bottom::Padded,
+    // reference: detail-children-cards
+    touch: card::Touch::Plays,
 };
 
 /// The card the rail of items alike draws on.
@@ -41,6 +43,8 @@ const ALIKE: card::Drawing = card::Drawing {
     footing: card::Footing::Bare,
     setting: card::Setting::Centred,
     bottom: card::Bottom::Padded,
+    // reference: detail-similar-cards
+    touch: card::Touch::Plays,
 };
 
 #[derive(Debug, Clone)]

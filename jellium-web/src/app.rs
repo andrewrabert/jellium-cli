@@ -3009,9 +3009,13 @@ impl Jellium {
                         signed.session.sync_play,
                         self.viewport,
                     ),
-                    View::LiveTv(state) => {
-                        livetv::view(state, chrono::Utc::now(), &self.images, self.viewport)
-                    }
+                    View::LiveTv(state) => livetv::view(
+                        state,
+                        chrono::Utc::now(),
+                        &self.images,
+                        self.viewport,
+                        session,
+                    ),
                     View::Dashboard(state) => dashboard::view(
                         state,
                         &signed.session,

@@ -42,7 +42,8 @@ const WEIGHTS = ['400', '700'];
 // the_icon_table_and_the_variants_agree in that file.
 const ICONS = [
     'access_time', 'add', 'album', 'analytics', 'arrow_back', 'arrow_drop_down',
-    'article', 'audiotrack', 'autorenew', 'book', 'cast', 'check', 'check_box',
+    'article', 'audiotrack', 'autorenew', 'book', 'cancel', 'cast', 'check',
+    'check_box',
     'check_box_outline_blank', 'check_circle_outline', 'close', 'closed_caption',
     'dashboard', 'delete', 'devices',
     'dvr', 'edit', 'expand_less', 'expand_more', 'explore', 'extension',

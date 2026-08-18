@@ -286,9 +286,9 @@ home-sections	src/types/homeSectionType.ts	16	27	de9cf89b4d6bfc1310265bfe610793e
 home-live-tv	src/components/homesections/sections/liveTv.ts	69	80	19b00f07ceecb5fc4f8546203323397990754b8e181114cd779b27f27f54405f	ported
 home-live-tv-programs	src/components/homesections/sections/liveTv.ts	81	84	c48d47c7171e9beba71f1b0f881e59eb4297413854c51403977aa84d63c43f9b	dead
 home-live-tv-sections	src/components/homesections/sections/liveTv.ts	86	114	8e9557ec944c03c151501469a35e1dac4dfd0d25bd8208115eda873245bd2c01	ported
-home-resume	src/components/homesections/sections/resume.ts	49	56	b9ddd7ee057de70cf1745f143ae0285d56fa8702abc569eb3a72ccfa1042ea07	ported
-home-next-up	src/components/homesections/sections/nextUp.ts	44	48	09591e4f49a230ea8201fe4f5d56f6e463a2c88231182978561aac8bda23a1b6	ported
-home-latest	src/components/homesections/sections/recentlyAdded.ts	57	65	e5d138a3f6da64314ace4e12c146e45d64934ddb9074e8c8b498cc5da7e5910f	ported
+home-resume	src/components/homesections/sections/resume.ts	49	68	83fa5086c4c46038a999741c73c4e9d1957d86ba373495406e99a6b92722e9a1	ported
+home-next-up	src/components/homesections/sections/nextUp.ts	44	58	3e8b0681c89ed2c1464f987328c07b91ba194929199216e28a3456513a3f9608	ported
+home-latest	src/components/homesections/sections/recentlyAdded.ts	57	83	70edbffbc38b7449361952d200132686967784be65895d92e63a564ca308c336	ported
 home-library-tiles	src/components/homesections/sections/libraryTiles.ts	17	40	057c32e2b5588ee94084f3c9d6045dc37e7cd40a4c84edac48e3fb862a0acbab	ported
 library-icon	src/utils/image.ts	98	120	da18aaf36836943cf9b13d8fc244275500013a107dc3658d5aa7c7e9baf646ed	ported
 library-icon-channels	src/utils/image.ts	121	122	47d2d4e05ddb5900b7f359f63c9899659dac6180d504ba5f1d53335085c814c1	dead
@@ -297,6 +297,7 @@ grid-card	src/controllers/movies/movies.js	169	179	aac3f33e1d539188f180998e20e44
 grid-card-series	src/controllers/shows/tvshows.js	155	166	ec0eec5cc0101af488cb8f726c388a56d7f61681a8305736f76c977d970d8ea4	ported
 grid-card-album	src/controllers/music/musicalbums.js	144	155	6dfd4714afdcf507a54bacea4b79226557b37d9d1581009f45439a494787391b	ported
 grid-card-auto	src/controllers/list.js	552	554	404b56d2c92d9e4a1d2ea07dc6b0d9d9b645f5bc5b18b8d252e2860e19a86a18	ported
+list-poster-options	src/controllers/list.js	556	570	54292d3ed4864ef1a562ace52b49c988a2cc099195e54980c62d391a11c3d4ae	ported
 card-auto-shape	src/components/cardbuilder/cardBuilder.js	83	103	bd180854586aa0cb21ea5de3b4eea1a6881a6c68079906eb0b516df56416e8ce	ported
 primary-aspect	src/components/images/imageLoader.js	178	234	b50fd3873b67e23dadc07cfd384cb1e5eb139529e171004583ee7d1af262b920	ported
 grid-paging	src/scripts/libraryBrowser.js	41	57	e0cedb96304236517a998cc7579f61049144ca9da535acd7e729c8812292c52e	ported
@@ -325,6 +326,9 @@ search-results	src/apps/stable/features/search/components/SearchResults.tsx	45	6
 search-section-order	src/apps/stable/features/search/constants/sectionSortOrder.ts	1	18	72271cc881b635384b28c915d8d2584a1f4e73c60825ff60f1d92bf50b93bec8	ported
 search-section-title	src/apps/stable/features/search/utils/search.ts	77	108	e550a71d805aef46b4f402317ccf645f74d9073f4c14dc096df5cac1218d19b3	ported
 search-section-cards	src/apps/stable/features/search/utils/search.ts	48	75	8cbaadb2ac3a3319cdba164d0a5fc2e5c54f4dcd3dce7166ec63f380969c882b	ported
+detail-children-cards	src/controllers/itemDetails/index.js	1439	1451	039d1f6bc055126a71b21770c5fbc45a4bd61fbbc7864159703ab4b324496483	ported
+detail-similar-cards	src/controllers/itemDetails/index.js	1275	1288	16c5927480bc560e5a8f12b469c29ed7c6ad428ab451b5a7f4e04a60f2d6e1b1	ported
+suggestions-latest-cards	src/controllers/movies/moviesrecommended.js	40	49	0be20bc95804145d535ebae9288410dd11f5ee8cba241323dbfd254a3fe05707	ported
 search-section-kinds	src/apps/stable/features/search/utils/search.ts	125	139	408c335b04378d87a392f0f3818661df0b81b7c716aff589e8cd61a7c0d4a356	ported
 search-section-scoped	src/apps/stable/features/search/utils/search.ts	111	124	c2629ff37a6a30fbcdbbc15e161abf548b5520ea1ed661f4df907e7ba8464670	dead
 search-sections-listed	src/apps/stable/features/search/api/useSearchItems.ts	42	85	e9f834df8c87562ea7d589c0a5d050f5065ac701edb3a740d6e9be7b133c5ba8	ported
@@ -359,6 +363,10 @@ detail-markup-marks	src/controllers/itemDetails/index.html	67	77	16201f05a9d916a
 detail-refresh	src/components/itemContextMenu.js	299	304	0c25d3844bea9e43fdb6c927d0363749f0377b959e9e89eec71efaee9d1ebfd8	ported
 item-context-play	src/components/itemContextMenu.js	44	57	1bdb0eea30ab7ef9da04f6c8c08f7b5ca9a626bef2cd3c5a5f1eed35e9feb01b	ported
 item-context-delete	src/components/itemContextMenu.js	208	214	442d09c962021144382de4f21e09e23ca9404af759bbcb98f97a69c352b9046b	ported
+item-context-cancel-timer	src/components/itemContextMenu.js	158	172	7359cca38570822fdb62dab8d507aa9fc0e260857a8f7eaa2cbd2491cfd15d74	ported
+item-context-cancel-series	src/components/itemContextMenu.js	174	180	5ac0f9b83e8266d41a21cfb0d35b6790d96c3777438e27dcb20f96597915c483	ported
+recording-cancel-confirm	src/components/recordingcreator/recordinghelper.js	31	70	5d274d5deacc026700a528886e9c40d5afb9dbd3b89e17f326782c6691831589	ported
+shortcut-item	src/components/shortcuts.js	80	95	852949edd5635626d08a36894837d62065248ba2639b37c1ca522e0ad627e3f4	ported
 delete-confirm	src/scripts/deleteHelper.js	14	31	3002578adab5511e9a1720c81a3c2fcab362a206bd37de35b4beebc0f81be31c	ported
 control-tab	src/elements/emby-tabs/emby-tabs.scss	1	22	c8811f369c6a7b2aa0ab0c2b6be973fb5306a39ef201c7f04cc7eb5c725c03cf	ported
 tab-scroll	src/elements/emby-tabs/emby-tabs.js	120	153	add0f5c44c6ea1886093fa6b30f449bec4517d8e99ec4ec4722b09142f0206bd	ported
@@ -574,9 +582,11 @@ card-overlay-container	src/components/cardbuilder/card.scss	818	836	84aa98401b97
 card-overlay-shown	src/components/cardbuilder/card.scss	856	862	7a5d2597bb1e23db628936ad2a903ad1c91746ef1cc804df2ecdd2dad4ece4f1	ported
 card-overlay-button	src/components/cardbuilder/card.scss	445	464	e719d43410a295466974d9b231d96f4f8f8fa56b05cbb5d1884babf3fcd376d7	ported
 card-overlay-button-icon	src/components/cardbuilder/card.scss	466	475	2f96044109b7ed6e3b914c91cffbc87138ee7b699aa0b20df47365345e678a71	ported
+card-footer-menu	src/components/cardbuilder/cardBuilder.js	516	518	3fb1a9218f9c7e98f561a25a15595d1899e425b3db90547758cd2c9cc6beceab	ported
+card-options-button	src/components/cardbuilder/card.scss	136	142	11d2346358f6fde6987b1dac442b159f9d2bb3fff782cb88c0c3662ba28ff06e	ported
 card-overlay-hover	src/components/cardbuilder/card.scss	845	854	8345c206d93ac0c030c407c134d954fbce75f085f35417ec241719fa2ab7a92f	ported
 card-overlay-fab	src/components/cardbuilder/card.scss	864	875	9360c02c1770ba8f90fb2aefd0040f3a03ac1b6daa670aff09ebdf1305ef1f32	ported
-card-overlay-buttons	src/components/cardbuilder/cardBuilder.js	978	999	7f8b08e69170575b1adc3d93985f29411af005af55d41a2a88b197b61b657956	owed
+card-overlay-buttons	src/components/cardbuilder/cardBuilder.js	978	999	7f8b08e69170575b1adc3d93985f29411af005af55d41a2a88b197b61b657956	ported
 card-indicators	src/components/cardbuilder/card.scss	406	421	6dd905c1ebdb559bc5e43151889fd4155e7cc2832ef6c06e596277e48728b812	ported
 indicator-timer	src/components/indicators/indicators.js	106	128	ea51be630abd964dc644ab9b32d357e3631529bfa60399fd2227bd5aaf4216f7	ported
 indicator-timer-face	src/components/indicators/indicators.scss	40	46	7bad9a4d5e29009e49e1ad7ea53833b1ae1c678eafa67c9ea3ecf1cd0115d5cc	ported

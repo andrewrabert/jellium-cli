@@ -44,6 +44,7 @@ const PICKED: card::Drawing = card::Drawing {
     footing: card::Footing::Padded,
     setting: card::Setting::Centred,
     bottom: card::Bottom::Padded,
+    touch: card::Touch::Withheld,
 };
 
 /// The users the server offers, each on the square card the reference draws,
@@ -77,6 +78,7 @@ fn picker<'a>(state: &'a super::State, viewport: Viewport) -> Option<Element<'a,
                         name: user.name.clone(),
                     })),
                     hovered: widget::Hovered::default(),
+                    overlaid: widget::Overlaid::default(),
                 },
                 move |line| match line {
                     card::Line::Name => said.clone(),
