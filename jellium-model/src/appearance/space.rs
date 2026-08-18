@@ -77,6 +77,18 @@ pub struct Slot {
     pub height: Length,
 }
 
+/// One element drawn over the foot of another, which is the negative margin
+/// and the relative offset the reference writes beside it.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct Overlap {
+    /// How far the covering element's own top stands over the covered
+    /// element's foot.
+    pub raised: Length,
+    /// How much of its own height the covering element hands back to whatever
+    /// follows the pair.
+    pub shed: Length,
+}
+
 /// The width a page lays its content inside, with the viewport that width was
 /// measured in, so a card is never a share of anything wider than the box it
 /// is drawn in.
@@ -1565,6 +1577,15 @@ pub const BACKDROP_TOP: Length = Length::em(3.0);
 // reference: detail-ribbon
 pub const RIBBON: Length = Length::em(7.2);
 
+/// The ribbon over the backdrop: its whole height above the backdrop's foot,
+/// so its own foot lands on that foot and the pair keeps the backdrop's
+/// height.
+// reference: detail-ribbon
+pub const RIBBON_OVERLAP: Overlap = Overlap {
+    raised: RIBBON,
+    shed: Length::em(0.0),
+};
+
 /// The room the ribbon and the page's own content leave for the poster beside
 /// them.
 // reference: detail-ribbon — 32.45vw
@@ -1580,8 +1601,14 @@ pub const RIBBON_PAD: Padding = Padding {
     left: Length::em(0.0),
 };
 
-/// The share of the page the stacked arrangement insets by.
-// reference: detail-ribbon
+/// The ribbon's own content in the stacked arrangement, which is the page less
+/// the two sides `.padded-left` and `.padded-right` write over the ribbon's
+/// own shorthand.
+// reference: page-side
+const RIBBON_CONTENT: Share = Share::WHOLE.less(PAGE_SIDE).less(PAGE_SIDE);
+
+/// The share of the page the primary content insets by in the stacked
+/// arrangement.
 // reference: detail-content
 pub const DETAIL_SIDE: Share = Share::per_ten_thousand(500);
 
@@ -1606,10 +1633,38 @@ pub const DETAIL_POSTER_RISE: Length = RIBBON.times(Ratio::thousandths(1800));
 // reference: detail-poster-arms
 pub const DETAIL_POSTER_INSET: Share = PAGE_SIDE;
 
+/// Its inset in the stacked arrangement on a page wide enough to leave it one.
+// reference: detail-poster-arms
+const DETAIL_POSTER_STACKED_INSET: Share = Share::per_ten_thousand(500);
+
 /// Where a page stops raising the poster over the ribbon, the raising and the
 /// reference's own lowering being alternatives that never compose.
 // reference: detail-narrow
 pub const DETAIL_POSTER_LOWERED_AT: Query = Query::MaxWidth(Breakpoint::em(62.5));
+
+/// Where the poster stands flush inside the ribbon and the row of buttons
+/// stops leaving it room.
+// reference: detail-poster-arms
+// reference: detail-buttons-narrow
+pub const DETAIL_NARROW: Query = Query::MaxWidth(Breakpoint::em(32.0));
+
+/// The room the stacked head leaves the poster beside the item's name.
+// reference: detail-head-inset
+const DETAIL_HEAD_INSET: Share = Share::per_ten_thousand(3750);
+
+/// The steps that room takes as the page widens, in the order the cascade
+/// resolves them; the reference writes each as one card of the poster wall,
+/// spelt out to thirty digits.
+// reference: detail-head-inset
+const DETAIL_HEAD_INSET_STEPS: [(Query, Across); 7] = [
+    (Query::MinWidth(Breakpoint::em(43.75)), Across::cards(4)),
+    (Query::MinWidth(Breakpoint::em(50.0)), Across::cards(5)),
+    (Query::MinWidth(Breakpoint::em(75.0)), Across::cards(6)),
+    (Query::MinWidth(Breakpoint::em(87.5)), Across::cards(7)),
+    (Query::MinWidth(Breakpoint::em(100.0)), Across::cards(8)),
+    (Query::MinWidth(Breakpoint::em(120.0)), Across::cards(9)),
+    (Query::MinWidth(Breakpoint::em(131.25)), Across::cards(10)),
+];
 
 /// The gap above and below the row of detail buttons.
 // reference: detail-buttons
@@ -1617,7 +1672,7 @@ pub const DETAIL_BUTTONS: Length = Length::em(1.0);
 
 /// The gap under that row in the stacked arrangement.
 // reference: detail-centred
-pub const DETAIL_BUTTONS_BOTTOM: Length = Length::em(0.5);
+const DETAIL_BUTTONS_BOTTOM: Length = Length::em(0.5);
 
 /// One detail button's padding.
 // reference: detail-button
@@ -1946,6 +2001,71 @@ pub fn detail_button_side(viewport: Viewport) -> Drawn {
         }
     }
     standing.drawn()
+}
+
+/// The poster over the ribbon: the ribbon's height and four fifths again over
+/// the ribbon's foot, and on a page the reference lowers the poster on
+/// instead, that same length shed from the foot of the pair.
+// reference: detail-poster-arms
+// reference: detail-narrow
+pub fn detail_poster_overlap(viewport: Viewport) -> Overlap {
+    match viewport.matches(DETAIL_POSTER_LOWERED_AT) {
+        true => Overlap {
+            raised: Length::em(0.0),
+            shed: DETAIL_POSTER_RISE,
+        },
+        false => Overlap {
+            raised: DETAIL_POSTER_RISE,
+            shed: Length::em(0.0),
+        },
+    }
+}
+
+/// The poster's inset from the leading edge of the page in the stacked
+/// arrangement: the page's own side where the poster stands flush inside the
+/// ribbon, and a twentieth of the page above that width.
+// reference: detail-poster-arms
+// reference: page-side
+pub fn detail_poster_stacked_inset(viewport: Viewport) -> Drawn {
+    match viewport.matches(DETAIL_NARROW) {
+        true => page_side(viewport.canvas()),
+        false => DETAIL_POSTER_STACKED_INSET.of(viewport.canvas().width()),
+    }
+}
+
+/// The room the stacked head leaves the poster beside the item's name: three
+/// eighths of the ribbon's own content, and one card of the poster wall as the
+/// page widens.
+// reference: detail-head-inset
+pub fn detail_head_inset(viewport: Viewport) -> Drawn {
+    let content = RIBBON_CONTENT.of(viewport.canvas().width());
+    let mut standing = DETAIL_HEAD_INSET.of(content);
+    for (at, across) in DETAIL_HEAD_INSET_STEPS {
+        if viewport.matches(at) {
+            standing = across.pitch(content);
+        }
+    }
+    standing
+}
+
+/// That room under the row of buttons, which the narrowest pages give up so
+/// the row stands the width of the ribbon.
+// reference: detail-buttons-narrow
+pub fn detail_buttons_inset(viewport: Viewport) -> Drawn {
+    match viewport.matches(DETAIL_NARROW) {
+        true => Drawn::ZERO,
+        false => detail_head_inset(viewport),
+    }
+}
+
+/// The gap under that row, which the narrowest pages close.
+// reference: detail-centred
+// reference: detail-buttons-narrow
+pub fn detail_buttons_bottom(viewport: Viewport) -> Drawn {
+    match viewport.matches(DETAIL_NARROW) {
+        true => Drawn::ZERO,
+        false => DETAIL_BUTTONS_BOTTOM.drawn(),
+    }
 }
 
 /// The page padding, which is a share of the page rather than an em, and a

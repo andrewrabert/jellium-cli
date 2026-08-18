@@ -17,6 +17,7 @@ use crate::style::space::Room;
 use crate::style::{self, Band, Drawn, Viewport, card, space, typeface};
 use crate::text::{self as strings, Text};
 use crate::widget;
+use crate::widget::overlap::Overlapping;
 use crate::widget::prose;
 
 /// The card a detail page's children draw on, over the two lines a wall writes
@@ -348,57 +349,32 @@ fn head<'a>(item: &'a BaseItemDto, viewport: Viewport, images: &'a Cache) -> Hea
 // reference: detail-content
 fn ribboned<'a>(head: Head<'a>, viewport: Viewport) -> Element<'a, Message> {
     let canvas = viewport.canvas();
-    let tall = space::backdrop(viewport);
-    let ribbon = space::RIBBON.drawn();
-    // the reference lowers the poster by a tenth of its containing block at
-    // this width rather than raising it over the ribbon, and this client
-    // constrains the poster in width alone, as the reference's own image is
-    // drawn, so no height exists here to take a tenth of
-    // this client leaves the poster unraised on such a page instead, which
-    // keeps the two offsets alternatives as the reference writes them
-    // the poster therefore stands a tenth of its own height above where the
-    // reference draws it on a page no wider than 62.5em
-    // reference: detail-narrow
-    let rise = match viewport.matches(space::DETAIL_POSTER_LOWERED_AT) {
-        true => Drawn::ZERO,
-        false => space::DETAIL_POSTER_RISE.drawn(),
-    };
     let lead = style::drawn(space::RIBBON_INSET.of(canvas.width()));
     let trail = style::drawn(space::DETAIL_TRAIL.of(canvas.width()));
+    let buttons = style::drawn(space::DETAIL_BUTTONS.drawn());
 
-    // the reference lifts the ribbon 7.2em over the backdrop and the poster a
-    // further 12.96em over the ribbon, and iced takes no negative offset
-    // this client stands both over the backdrop instead: the ribbon on its
-    // foot, and the poster's own top on what the rise leaves above that foot
-    let cleared = Drawn::of((tall.count() - ribbon.count() - rise.count()).max(0.0));
+    let ribbon = container(
+        row![
+            Space::new().width(lead),
+            container(head.name).width(Fill),
+            container(head.buttons).padding(iced::Padding::ZERO.top(buttons).bottom(buttons)),
+            Space::new().width(trail),
+        ]
+        .align_y(iced::Center)
+        .height(style::drawn(space::RIBBON.drawn())),
+    );
 
-    let banner = stack![
-        head.backdrop,
-        container(
-            row![
-                Space::new().width(lead),
-                container(head.name).width(Fill),
-                container(head.buttons).padding(
-                    iced::Padding::ZERO
-                        .top(style::drawn(space::DETAIL_BUTTONS.drawn()))
-                        .bottom(style::drawn(space::DETAIL_BUTTONS.drawn()))
-                ),
-                Space::new().width(trail),
-            ]
-            .align_y(iced::Center)
-            .height(style::drawn(ribbon))
-        )
-        .height(Fill)
-        .align_y(iced::Bottom),
-        container(row![
-            Space::new().width(style::drawn(space::DETAIL_POSTER_INSET.of(canvas.width()))),
-            head.poster,
-        ])
-        .padding(iced::Padding::ZERO.top(style::drawn(cleared))),
+    let poster = row![
+        Space::new().width(style::drawn(space::DETAIL_POSTER_INSET.of(canvas.width()))),
+        head.poster,
     ];
 
     column![
-        banner,
+        Overlapping::new(
+            Overlapping::new(head.backdrop, ribbon.into(), space::RIBBON_OVERLAP).into(),
+            poster.into(),
+            space::detail_poster_overlap(viewport),
+        ),
         container(row![
             Space::new().width(lead),
             container(head.lines).width(Fill),
@@ -414,36 +390,46 @@ fn ribboned<'a>(head: Head<'a>, viewport: Viewport) -> Element<'a, Message> {
 // reference: detail-centred
 // reference: detail-misc-narrow
 fn stacked<'a>(head: Head<'a>, viewport: Viewport) -> Element<'a, Message> {
-    let side = style::drawn(space::DETAIL_SIDE.of(viewport.canvas().width()));
+    let canvas = viewport.canvas();
+    let ribbon = style::drawn(space::page_side(canvas));
+    let body = style::drawn(space::DETAIL_SIDE.of(canvas.width()));
 
     let banner = stack![
         head.backdrop,
-        container(row![Space::new().width(side), head.poster])
-            .height(Fill)
-            .align_y(iced::Bottom),
+        container(row![
+            Space::new().width(style::drawn(space::detail_poster_stacked_inset(viewport))),
+            head.poster,
+        ])
+        .height(Fill)
+        .align_y(iced::Bottom),
     ];
 
     column![
         Space::new().height(style::drawn(space::BACKDROP_TOP.drawn())),
         banner,
-        container(
-            column![
-                head.name,
-                container(head.buttons).padding(
+        container(column![
+            container(head.name)
+                .width(Fill)
+                .align_x(iced::Center)
+                .padding(
+                    iced::Padding::ZERO.left(style::drawn(space::detail_head_inset(viewport)))
+                ),
+            container(head.buttons)
+                .width(Fill)
+                .align_x(iced::Center)
+                .padding(
                     iced::Padding::ZERO
                         .top(style::drawn(space::DETAIL_BUTTONS.drawn()))
-                        .bottom(style::drawn(space::DETAIL_BUTTONS_BOTTOM.drawn()))
+                        .bottom(style::drawn(space::detail_buttons_bottom(viewport)))
+                        .left(style::drawn(space::detail_buttons_inset(viewport)))
                 ),
-            ]
-            .align_x(iced::Center)
-            .width(Fill)
-        )
-        .padding(style::padding(space::RIBBON_PAD).left(side).right(side)),
+        ])
+        .padding(style::padding(space::RIBBON_PAD).left(ribbon).right(ribbon)),
         container(container(head.lines).center_x(Fill)).padding(
             iced::Padding::ZERO
                 .top(style::drawn(space::DETAIL_BODY_TOP_STACKED.drawn()))
-                .left(side)
-                .right(side)
+                .left(body)
+                .right(body)
         ),
     ]
     .into()

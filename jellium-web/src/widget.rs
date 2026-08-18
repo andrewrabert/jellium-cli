@@ -1,6 +1,7 @@
 mod line;
 pub mod list;
 pub mod mui;
+pub mod overlap;
 pub mod table;
 
 use std::borrow::Cow;

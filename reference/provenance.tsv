@@ -323,6 +323,8 @@ detail-parent-name	src/styles/librarybrowser.scss	657	664	72c0b04343a9b04e3c33c9
 detail-name-container	src/styles/librarybrowser.scss	722	726	d8f05099864ab1d79236b8cfa716e8ff7579b685b27d719ed23377e6b7fcd5dc	ported
 detail-misc	src/styles/librarybrowser.scss	728	742	35911f539468fafea3567ee9add9ab323f11cb461e894421b816644cf5ab8d0b	ported
 detail-centred	src/styles/librarybrowser.scss	744	756	f9bb20ae57c7991142ac32e6def5013f62971becadf2e07c50dc2ce1eafafdad	ported
+detail-head-inset	src/styles/librarybrowser.scss	5	34	10a6cbcb19cabb2a9bcd841a384e40b825ab7c9d7a938b6ef15c24bcf851f5a7	ported
+detail-buttons-narrow	src/styles/librarybrowser.scss	758	768	70290f525c662a434c293d21c591f1d96db2c03ee80ba194242031397c07e2d8	ported
 detail-ribbon	src/styles/librarybrowser.scss	794	825	6027127e70e26945d7f88b81da85bf4930d5d0e509f682a5e2055175665bd310	ported
 detail-info-wrapper	src/styles/librarybrowser.scss	827	845	8652821c6fc792de96a0c02c3093b32f138e25411b60233609c180760935f2b3	ported
 detail-primary	src/styles/librarybrowser.scss	852	854	7aabd521a7e0f8a3daeb0a2e5fbaca05b22466ca3a68ffdae546f8c1046db567	ported
