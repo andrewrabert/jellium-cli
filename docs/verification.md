@@ -913,17 +913,22 @@ browser with a touch screen, each at its own size.
   rail and 15.6% for a square or portrait rail.
 - A television browser asks for a portrait or square card's image at a sixth of
   the page width and a backdrop card's at a quarter, at every window width.
-- A library card under the pointer raises a scrim carrying a play disc at its
-  middle and the played mark, the rating control and the more control in that
-  order at its trailing foot.
+- On a desktop browser a library card under the pointer raises a scrim carrying
+  a play disc at its middle and the played mark, the rating control and the more
+  control in that order at its trailing foot.
+- A phone and a television browser raise no scrim over any card: a library grid,
+  a home rail, a search result, a genre wall and every Live TV tab draw none.
+- A search result raises that same scrim, and a genre, studio, network, artist
+  or album-artist card raises it carrying the more control alone.
 - That scrim carries no play disc on an item the server holds no file for, no
   played mark on a programme or a channel, and no rating control on a
   programme, a library or a channel.
 - A card whose item is marked played draws its check in #cc3333 and one whose
-  item is a favourite draws its heart in #cc3333, both drawing in the scrim's
-  own lettering otherwise, and pressing either changes the colour without a
-  reload.
-- Under `--read-only` that scrim carries the play disc alone.
+  item is a favourite draws a filled heart in #cc3333, both drawing in the
+  scrim's own lettering otherwise, and pressing either changes the colour
+  without a reload.
+- Under `--read-only` that scrim carries the play disc alone, on a library grid,
+  a search result and a genre card alike.
 - A Live TV recording card raises a play control under the pointer, one still
   being written included.
 - The search field stands a 2em magnifier before its 1.1em field, gapped a

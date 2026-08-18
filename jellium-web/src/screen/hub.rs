@@ -130,6 +130,7 @@ pub fn view<'a>(
     viewport: Viewport,
     images: &'a Cache,
     now: chrono::DateTime<chrono::Utc>,
+    writes: widget::Writes,
 ) -> Element<'a, Message> {
     let count = state.entries.len();
     column![crate::window::grid(
@@ -144,7 +145,7 @@ pub fn view<'a>(
                     Room::content(viewport),
                     images,
                     now,
-                    widget::Writes::Withheld,
+                    writes,
                 );
                 match opens(state, entry) {
                     Some(route) => button(card)

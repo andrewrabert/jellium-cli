@@ -308,7 +308,7 @@ pub fn view<'a>(
     viewport: Viewport,
     images: &'a Cache,
     now: chrono::DateTime<chrono::Utc>,
-    read_only: bool,
+    writes: widget::Writes,
 ) -> Element<'a, Message> {
     let Some(id) = state.library.id else {
         return column![].into();
@@ -330,17 +330,10 @@ pub fn view<'a>(
 
     let body = match &state.body {
         Body::Browse(browse) | Body::Rows(browse) => browse::view(browse, viewport, images, now),
-        Body::Suggestions(held) => crate::screen::suggestions::view(
-            held,
-            viewport,
-            images,
-            now,
-            match read_only {
-                true => widget::Writes::Withheld,
-                false => widget::Writes::Offered,
-            },
-        ),
-        Body::Hub(held) => crate::screen::hub::view(held, viewport, images, now),
+        Body::Suggestions(held) => {
+            crate::screen::suggestions::view(held, viewport, images, now, writes)
+        }
+        Body::Hub(held) => crate::screen::hub::view(held, viewport, images, now, writes),
     };
 
     column![strip, body]

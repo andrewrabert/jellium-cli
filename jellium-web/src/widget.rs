@@ -190,6 +190,16 @@ pub enum Writes {
     Withheld,
 }
 
+impl Writes {
+    /// What the session offers: nothing where it is read-only.
+    pub fn of(session: &Session) -> Writes {
+        match session.read_only {
+            true => Writes::Withheld,
+            false => Writes::Offered,
+        }
+    }
+}
+
 /// What a card draws where its image goes: the image itself, or the glyph the
 /// reference's own `.cardImageIcon` stands in with.
 #[derive(Debug, Clone)]
@@ -427,6 +437,26 @@ pub struct Control {
     pub press: Message,
 }
 
+/// `emby-ratingbutton`: the rating control a card's scrim carries, in the
+/// reference's own red where the item is a favourite and in the scrim's own
+/// lettering where it is not.
+// reference: rating-button-state
+// reference: scheme-rating-mark
+pub fn rating(favorite: Mark, press: Message) -> Control {
+    Control {
+        glyph: Icon::Favorite,
+        tint: match favorite {
+            Mark::Set => style::Tint::Favorite,
+            Mark::Cleared => style::Tint::Plain,
+        },
+        label: match favorite {
+            Mark::Set => Text::CardFavorite,
+            Mark::Cleared => Text::CardAddToFavorites,
+        },
+        press,
+    }
+}
+
 /// `.cardOverlayContainer`: what the reference lays over a card's image while
 /// the pointer is over it, the control that plays at its middle and the rest
 /// in `.cardOverlayButton-br`'s group at its trailing foot.
@@ -494,8 +524,8 @@ fn progressed<'a>(frame: Element<'a, Message>, elapsed: Option<Share>) -> Elemen
 }
 
 /// The scrim the reference raises over a card's image while the pointer is
-/// over it: the fab that plays at its middle, and the card's own controls in
-/// one group at its trailing foot.
+/// over it, on the desktop layout and on no other: the fab that plays at its
+/// middle, and the card's own controls in one group at its trailing foot.
 // reference: card-hover-menu
 // reference: card-hover-menu-desktop
 // reference: card-overlay-shown
@@ -506,7 +536,11 @@ fn hovered<'a>(
     frame: Element<'a, Message>,
     hovered: Hovered,
     backing: card::Backing,
+    layout: Layout,
 ) -> Element<'a, Message> {
+    if layout != Layout::Desktop {
+        return frame;
+    }
     if hovered.plays.is_none() && hovered.controls.is_empty() {
         return frame;
     }
@@ -601,6 +635,7 @@ pub fn card<'a>(
     let mut drawn: Vec<Element<'a, Message>> = lines.next().map(named).into_iter().collect();
     drawn.extend(lines.map(beneath));
 
+    let layout = room.viewport().layout();
     let frame = hovered(
         marked(
             progressed(
@@ -617,6 +652,7 @@ pub fn card<'a>(
         ),
         poster.hovered,
         drawing.backing,
+        layout,
     );
     let footer = (!drawn.is_empty()).then(|| {
         footed(
@@ -625,7 +661,7 @@ pub fn card<'a>(
             drawing.footing,
             poster.logo,
             None,
-            room.viewport().layout(),
+            layout,
         )
     });
     let body = reserving(
@@ -742,18 +778,10 @@ pub fn poster<'a>(
             });
         }
         if item::ratable(item) {
-            controls.push(Control {
-                glyph: Icon::Favorite,
-                tint: match favorite {
-                    Mark::Set => style::Tint::Favorite,
-                    Mark::Cleared => style::Tint::Plain,
-                },
-                label: match favorite {
-                    Mark::Set => Text::CardFavorite,
-                    Mark::Cleared => Text::CardAddToFavorites,
-                },
-                press: Message::FavoriteToggled(id, favorite.flipped()),
-            });
+            controls.push(rating(
+                favorite,
+                Message::FavoriteToggled(id, favorite.flipped()),
+            ));
         }
         controls.push(Control {
             glyph: Icon::MoreVert,

@@ -524,10 +524,7 @@ async fn filtered_load(
 pub fn load(signed: &Signed, route: &Route, viewport: Viewport) -> Task<Message> {
     let api: Rc<Api> = signed.api.clone();
     let reachable = signed.session.live_tv.allowed();
-    let writes = match signed.session.read_only {
-        true => widget::Writes::Withheld,
-        false => widget::Writes::Offered,
-    };
+    let writes = widget::Writes::of(&signed.session);
     match route.clone() {
         Route::Home => Task::perform(home::load(api), Message::HomeLoaded),
         Route::Library { id, tab } => Task::perform(
@@ -2874,6 +2871,7 @@ impl Jellium {
             }
             Stage::Signed(signed) => {
                 let read_only = signed.session.read_only;
+                let writes = widget::Writes::of(&signed.session);
                 if let Some(playing) = signed.playing.as_ref()
                     && playing.video()
                 {
@@ -2929,17 +2927,14 @@ impl Jellium {
                         chrono::Utc::now(),
                         self.viewport,
                         &self.images,
-                        match read_only {
-                            true => widget::Writes::Withheld,
-                            false => widget::Writes::Offered,
-                        },
+                        writes,
                     ),
                     View::Library(state) => library::view(
                         state,
                         self.viewport,
                         &self.images,
                         chrono::Utc::now(),
-                        read_only,
+                        writes,
                     ),
                     View::Detail(state) => detail::view(
                         state,
@@ -2948,9 +2943,13 @@ impl Jellium {
                         chrono::Utc::now(),
                         &signed.session,
                     ),
-                    View::Search(state) => {
-                        search::view(state, self.viewport, &self.images, chrono::Utc::now())
-                    }
+                    View::Search(state) => search::view(
+                        state,
+                        self.viewport,
+                        &self.images,
+                        chrono::Utc::now(),
+                        writes,
+                    ),
                     View::Filtered(browse) => crate::screen::browse::view(
                         browse,
                         self.viewport,

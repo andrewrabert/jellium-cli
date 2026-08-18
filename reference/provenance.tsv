@@ -573,6 +573,7 @@ card-overlay-button	src/components/cardbuilder/card.scss	445	464	e719d43410a2954
 card-overlay-button-icon	src/components/cardbuilder/card.scss	466	475	2f96044109b7ed6e3b914c91cffbc87138ee7b699aa0b20df47365345e678a71	ported
 card-overlay-hover	src/components/cardbuilder/card.scss	845	854	8345c206d93ac0c030c407c134d954fbce75f085f35417ec241719fa2ab7a92f	ported
 card-overlay-fab	src/components/cardbuilder/card.scss	864	875	9360c02c1770ba8f90fb2aefd0040f3a03ac1b6daa670aff09ebdf1305ef1f32	ported
+card-overlay-buttons	src/components/cardbuilder/cardBuilder.js	978	999	7f8b08e69170575b1adc3d93985f29411af005af55d41a2a88b197b61b657956	owed
 card-indicators	src/components/cardbuilder/card.scss	406	421	6dd905c1ebdb559bc5e43151889fd4155e7cc2832ef6c06e596277e48728b812	ported
 indicator-timer	src/components/indicators/indicators.js	106	128	ea51be630abd964dc644ab9b32d357e3631529bfa60399fd2227bd5aaf4216f7	ported
 indicator-timer-face	src/components/indicators/indicators.scss	40	46	7bad9a4d5e29009e49e1ad7ea53833b1ae1c678eafa67c9ea3ecf1cd0115d5cc	ported
@@ -659,6 +660,7 @@ library-options-metadata-readers-single	src/components/libraryoptionseditor/libr
 item-can-play	src/components/playback/playbackmanager.js	1024	1046	d5ef324b3a6d2b6f1b2e6c0142f4449a6bdeea8a46ef56b9ea94dfa90673fcf6	ported
 item-can-mark-played	src/components/itemHelper.js	249	272	7ee5c7c385cfdca5f7c7c4ea9c6335b288a2d4127a196f711b42b55c07bbe3ae	ported
 item-can-rate	src/components/itemHelper.js	274	282	2910f7820c2247adefd0b68131ee7057fc8bcfb144cf31ad12619684ed343f7a	ported
+rating-button-state	src/elements/emby-ratingbutton/emby-ratingbutton.js	54	88	54fa2f6f152f863b108cf64d97b13e0694153d0a5ca6b9bb3bd545462d68b92b	ported
 scheme-rating-mark	src/themes/dark/theme.scss	425	427	edf007864f7ad7d875d415c07a8bc89c23cd8b70c3d40b895919a98f1e3710a1	ported
 scheme-played-mark	src/themes/dark/theme.scss	434	436	4e091f18024dd514d99279d2a27317a06d9bbdf402795859e8f1c6e3b1998304	ported
 action-sheet	src/components/actionSheet/actionSheet.scss	1	8	847f642c3568a66eb03fcb1efafcee6a394a4e6873b1f83f2b343706edfdfa08	ported
