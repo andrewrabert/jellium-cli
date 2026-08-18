@@ -20,7 +20,7 @@ fn through(part: Duration, whole: Duration) -> Share {
 }
 
 fn portion(share: Share) -> u16 {
-    style::drawn(share.of(Drawn::of(f32::from(PORTIONS)))).round() as u16
+    style::drawn(share.of(Drawn::of(f64::from(PORTIONS)))).round() as u16
 }
 
 fn bar<'a>(filled: Share, fill: fn(&iced::Theme) -> container::Style) -> Element<'a, Message> {

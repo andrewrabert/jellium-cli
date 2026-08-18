@@ -11,7 +11,12 @@ use jellium_model::guide::Standing;
 
 /// The one site a ported length becomes a number iced takes.
 pub fn drawn(length: Drawn) -> f32 {
-    length.count()
+    length.count() as f32
+}
+
+/// The one site a number iced reports becomes a ported length.
+pub fn measured(count: f32) -> Drawn {
+    Drawn::of(f64::from(count))
 }
 
 pub fn color(color: scheme::Color) -> iced::Color {
@@ -19,7 +24,7 @@ pub fn color(color: scheme::Color) -> iced::Color {
         color.red(),
         color.green(),
         color.blue(),
-        color.alpha().fraction(),
+        color.alpha().fraction() as f32,
     )
 }
 
@@ -102,7 +107,7 @@ pub const ICONS: iced::Font = iced::Font::with_name(ICON_FAMILY);
 pub fn leading(leading: typeface::Leading) -> iced::widget::text::LineHeight {
     match leading {
         typeface::Leading::Factor(factor) => {
-            iced::widget::text::LineHeight::Relative(factor.factor())
+            iced::widget::text::LineHeight::Relative(factor.factor() as f32)
         }
         typeface::Leading::Length(length) => {
             iced::widget::text::LineHeight::Absolute(drawn(length.drawn()).into())
@@ -110,9 +115,9 @@ pub fn leading(leading: typeface::Leading) -> iced::widget::text::LineHeight {
     }
 }
 
-/// The canvas scale the layout draws at, which is what resolves every em.
+/// The one site the layout's root becomes the scale iced draws the canvas at.
 pub fn scale(layout: Layout) -> f32 {
-    layout.root().factor()
+    layout.root().factor() as f32
 }
 
 /// The page itself, which the reference paints in the scheme's background and

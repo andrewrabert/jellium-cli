@@ -10,25 +10,32 @@ pub mod scheme;
 pub mod space;
 pub mod typeface;
 
+/// The count rounded to the nearest whole, which is the unit this module holds
+/// a decimal the reference wrote in.
+// every count this module scales is at or above nothing
+const fn nearest(count: f64) -> u32 {
+    (count + 0.5) as u32
+}
+
 /// A page measurement in css pixels, which is what the browser reports and what
 /// every media query tests against a 16px em.
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
 pub struct Css {
-    count: f32,
+    count: f64,
 }
 
 impl Css {
-    pub const fn of(count: f32) -> Css {
+    pub const fn of(count: f64) -> Css {
         Css { count }
     }
 
     /// A length a script or a MUI style declaration writes as a bare number,
     /// which the DOM reads as a count of css pixels.
-    pub const fn unitless(count: f32) -> Css {
+    pub const fn unitless(count: f64) -> Css {
         Css { count }
     }
 
-    pub fn count(self) -> f32 {
+    pub fn count(self) -> f64 {
         self.count
     }
 
@@ -57,22 +64,28 @@ impl Css {
 /// A length the canvas draws in, which is every length a layout measures.
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
 pub struct Drawn {
-    count: f32,
+    count: f64,
 }
 
 impl Drawn {
     pub const ZERO: Drawn = Drawn::of(0.0);
 
-    pub const fn of(count: f32) -> Drawn {
+    pub const fn of(count: f64) -> Drawn {
         Drawn { count }
     }
 
-    pub fn count(self) -> f32 {
+    pub fn count(self) -> f64 {
         self.count
     }
 
     pub fn plus(self, other: Drawn) -> Drawn {
         Drawn::of(self.count + other.count)
+    }
+
+    /// The plain difference, which stands below nothing where `other` is the
+    /// longer.
+    pub const fn less(self, other: Drawn) -> Drawn {
+        Drawn::of(self.count - other.count)
     }
 
     pub fn times(self, ratio: Ratio) -> Drawn {
@@ -97,11 +110,12 @@ impl Share {
         }
     }
 
-    /// A count of the reference's viewport units, which are one share whichever
-    /// axis it is taken of; the axis is the caller's, written as
-    /// `of(canvas.width())` or `of(canvas.height())`.
-    pub const fn units(count: f32) -> Share {
-        Share::per_ten_thousand((count * 100.0) as u32)
+    /// The nearest ten-thousandth to the count of the reference's viewport
+    /// units the stylesheet wrote, which are one share whichever axis it is
+    /// taken of; the axis is the caller's, written as `of(canvas.width())` or
+    /// `of(canvas.height())`.
+    pub const fn units(count: f64) -> Share {
+        Share::per_ten_thousand(nearest(count * 100.0))
     }
 
     /// The share `part` is of `whole`, clamped to the whole, and none of it
@@ -125,13 +139,13 @@ impl Share {
     /// a canvas length; it cannot mix them and it is not a way around
     /// `Css::drawn` being the only crossing.
     pub fn of<M: Measure>(self, length: M) -> M {
-        length.scaled(self.per_ten_thousand as f32 / 10_000.0)
+        length.scaled(self.per_ten_thousand as f64 / 10_000.0)
     }
 
     /// This as the count out of a hundred, which is what the reading beside a
     /// progress bar writes.
-    pub fn percent(self) -> f32 {
-        self.per_ten_thousand as f32 / 100.0
+    pub fn percent(self) -> f64 {
+        self.per_ten_thousand as f64 / 100.0
     }
 }
 
@@ -148,17 +162,17 @@ mod sealed {
 
     pub trait Scaled {
         /// This length multiplied by `factor`, in the measurement it already is.
-        fn scaled(self, factor: f32) -> Self;
+        fn scaled(self, factor: f64) -> Self;
     }
 
     impl Scaled for Css {
-        fn scaled(self, factor: f32) -> Css {
+        fn scaled(self, factor: f64) -> Css {
             Css::of(self.count * factor)
         }
     }
 
     impl Scaled for Drawn {
-        fn scaled(self, factor: f32) -> Drawn {
+        fn scaled(self, factor: f64) -> Drawn {
             Drawn::of(self.count * factor)
         }
     }
@@ -205,7 +219,7 @@ impl Across {
 
     /// The pitch this count leaves each card in `width`.
     pub fn pitch(self, width: Drawn) -> Drawn {
-        Drawn::of(width.count() / self.cards as f32)
+        Drawn::of(width.count() / self.cards as f64)
     }
 }
 
@@ -218,8 +232,8 @@ pub struct Columns {
 
 impl Columns {
     /// A count, never zero.
-    pub const fn twelfths(count: f32) -> Columns {
-        let tenths = (count * 10.0) as u32;
+    pub const fn twelfths(count: f64) -> Columns {
+        let tenths = nearest(count * 10.0);
         Columns {
             tenths: if tenths == 0 { 1 } else { tenths },
         }
@@ -248,19 +262,22 @@ impl Ratio {
 
     /// A ratio the reference writes as a percentage, which is how a root font
     /// size is written.
-    pub const fn percent(percent: f32) -> Ratio {
+    pub const fn percent(percent: f64) -> Ratio {
         Ratio {
-            thousandths: (percent * 10.0) as u16,
+            thousandths: nearest(percent * 10.0) as u16,
         }
     }
 
-    pub const fn factor(self) -> f32 {
-        self.thousandths as f32 / 1000.0
+    /// The double nearest the decimal the reference wrote, which is the double
+    /// the reference's own literal parses to.
+    pub const fn factor(self) -> f64 {
+        self.thousandths as f64 / 1000.0
     }
 
-    /// This ratio taken `other` of.
+    /// This ratio taken `other` of, to the nearest thousandth, which the
+    /// reference leaves unquantised.
     pub const fn times(self, other: Ratio) -> Ratio {
-        Ratio::thousandths((self.thousandths as f32 * other.factor()) as u16)
+        Ratio::thousandths(nearest(self.thousandths as f64 * other.factor()) as u16)
     }
 }
 
@@ -276,8 +293,8 @@ impl Elevation {
         Elevation { steps }
     }
 
-    pub fn count(self) -> f32 {
-        self.steps as f32
+    pub fn count(self) -> f64 {
+        self.steps as f64
     }
 }
 
@@ -286,10 +303,10 @@ impl Elevation {
 // initial font size rather than the root's, and sixteen css pixels is that size
 // in every engine this client runs on; it is the base the reference's own em
 // values are written over and the reference never writes it
-const BASE: f32 = 16.0;
+const BASE: f64 = 16.0;
 
 /// A number as css writes it: the fewest decimals that carry it.
-fn trimmed(count: f32) -> String {
+fn trimmed(count: f64) -> String {
     let written = format!("{count:.4}");
     written
         .trim_end_matches('0')
@@ -300,11 +317,11 @@ fn trimmed(count: f32) -> String {
 /// A design length, written in the reference's em over a 16px base.
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
 pub struct Length {
-    em: f32,
+    em: f64,
 }
 
 impl Length {
-    pub const fn em(em: f32) -> Length {
+    pub const fn em(em: f64) -> Length {
         Length { em }
     }
 
@@ -366,9 +383,9 @@ pub struct Breakpoint {
 impl Breakpoint {
     /// Sixteen to the em, whatever the layout's root is, because that is what a
     /// media query measures.
-    pub const fn em(em: f32) -> Breakpoint {
+    pub const fn em(em: f64) -> Breakpoint {
         Breakpoint {
-            css: (em * BASE) as u32,
+            css: nearest(em * BASE),
         }
     }
 
@@ -380,7 +397,7 @@ impl Breakpoint {
     }
 
     pub fn css(self) -> Css {
-        Css::of(self.css as f32)
+        Css::of(self.css as f64)
     }
 }
 

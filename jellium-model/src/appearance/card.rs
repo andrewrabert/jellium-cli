@@ -229,7 +229,7 @@ impl<T: Copy> Ladder<T> {
     }
 }
 
-const fn step<T>(at: f32, held: T) -> Step<T> {
+const fn step<T>(at: f64, held: T) -> Step<T> {
     Step {
         at: Some(Query::MinWidth(Breakpoint::em(at))),
         orientation: None,
@@ -237,7 +237,7 @@ const fn step<T>(at: f32, held: T) -> Step<T> {
     }
 }
 
-const fn landscape<T>(at: Option<f32>, held: T) -> Step<T> {
+const fn landscape<T>(at: Option<f64>, held: T) -> Step<T> {
     Step {
         at: match at {
             Some(em) => Some(Query::MinWidth(Breakpoint::em(em))),
@@ -347,11 +347,11 @@ fn measured(card: Card, room: Room) -> Drawn {
     }
 }
 
-const fn units(at: f32, count: f32) -> Step<Share> {
+const fn units(at: f64, count: f64) -> Step<Share> {
     step(at, Share::units(count))
 }
 
-const fn units_landscape(at: Option<f32>, count: f32) -> Step<Share> {
+const fn units_landscape(at: Option<f64>, count: f64) -> Step<Share> {
     landscape(at, Share::units(count))
 }
 
@@ -677,6 +677,12 @@ impl Card {
         }
     }
 
+    /// The card's own width inside its pitch, the pitch reserving the gutter
+    /// its `.cardBox` margin makes.
+    pub fn inside(self, room: Room) -> Drawn {
+        self.width(room).less(space::GUTTER.drawn())
+    }
+
     /// Cards a row holds.
     // a wall card counts across the box the page lays it in
     // a rail card counts across the viewport, which is `Math.floor(100 / vw)`
@@ -793,10 +799,12 @@ impl PerRow {
         format!("{:.*}", REQUESTED_DECIMALS, self.rate)
     }
 
-    /// `Math.round(width / rate)`, which is `getImageWidth`.
+    /// `Math.round(width / rate)`, which is `getImageWidth`, on the very double
+    /// the reference divides, with nothing narrower standing between the
+    /// division and the rounding.
     // reference: card-image-width
     pub fn fill(self, width: Css) -> Fill {
-        Fill::of(Css::of((f64::from(width.count()) / self.rate) as f32))
+        Fill::of(Css::of(width.count() / self.rate))
     }
 }
 
@@ -877,7 +885,7 @@ impl Request {
     }
 }
 
-const fn arm(at: f32, held: PerRow) -> Arm {
+const fn arm(at: f64, held: PerRow) -> Arm {
     Arm {
         turned: Turned::Either,
         at: Some(Css::of(at)),
@@ -885,7 +893,7 @@ const fn arm(at: f32, held: PerRow) -> Arm {
     }
 }
 
-const fn turned(at: Option<f32>, held: PerRow) -> Arm {
+const fn turned(at: Option<f64>, held: PerRow) -> Arm {
     Arm {
         turned: Turned::Landscape,
         at: match at {
@@ -1096,11 +1104,10 @@ impl Drawing {
     /// The pitch one card occupies down the page, gutter included.
     pub fn row(self, room: Room) -> Drawn {
         let gutter = space::GUTTER.drawn();
-        let inside = Drawn::of(self.card.width(room).count() - gutter.count());
         self.card
             .shape()
             .aspect()
-            .of(inside)
+            .of(self.card.inside(room))
             .plus(written(self.footer, self.footing))
             .plus(reserved(self.bottom, room.viewport()))
             .plus(gutter)

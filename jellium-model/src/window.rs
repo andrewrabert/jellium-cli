@@ -195,7 +195,7 @@ impl Grid {
 
     /// The offset that puts the row holding cell `index` at the top.
     pub fn resting(self, index: usize) -> Drawn {
-        Drawn::of((index / self.columns()) as f32 * self.row().count())
+        Drawn::of((index / self.columns()) as f64 * self.row().count())
     }
 }
 
@@ -216,7 +216,7 @@ mod tests {
     const ROW_HEIGHT: Drawn = Drawn::of(64.0);
 
     /// The content box a page `width` css pixels wide lays its cards in.
-    fn page(width: f32) -> Room {
+    fn page(width: f64) -> Room {
         Room::content(Viewport::new(
             Css::of(width),
             Css::of(1000.0),
@@ -226,7 +226,7 @@ mod tests {
 
     /// A window over `ROW_HEIGHT` rows in a viewport `rows` rows tall,
     /// scrolled `scrolled` rows down.
-    fn window(rows: f32, scrolled: f32) -> Window {
+    fn window(rows: f64, scrolled: f64) -> Window {
         let mut window = Window::new(Id::Guide, ROW_HEIGHT, Drawn::of(rows * ROW_HEIGHT.count()));
         window.scrolled(Scrolled {
             id: Id::Guide,
@@ -271,7 +271,7 @@ mod tests {
 
     /// A grid five cells across in a viewport `rows` rows tall, scrolled
     /// `scrolled` rows down.
-    fn grid(rows: f32, scrolled: f32) -> Grid {
+    fn grid(rows: f64, scrolled: f64) -> Grid {
         let room = page(1440.0);
         let mut grid = Grid::new(Id::Browse, cell(room), ROW_HEIGHT, room);
         grid.scrolled(Scrolled {

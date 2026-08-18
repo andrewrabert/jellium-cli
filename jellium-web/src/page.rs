@@ -9,11 +9,7 @@ pub fn viewport(layout: Layout) -> Option<Viewport> {
     let window = web_sys::window()?;
     let width = failure::called(Call::WindowInnerWidth, window.inner_width())?.as_f64()?;
     let height = failure::called(Call::WindowInnerHeight, window.inner_height())?.as_f64()?;
-    Some(Viewport::new(
-        Css::of(width as f32),
-        Css::of(height as f32),
-        layout,
-    ))
+    Some(Viewport::new(Css::of(width), Css::of(height), layout))
 }
 
 /// What the display offers, from `screen.availWidth`, which is what decides
@@ -23,7 +19,7 @@ pub fn screen() -> Option<Screen> {
     let window = web_sys::window()?;
     let screen = failure::called(Call::WindowScreen, window.screen())?;
     let available = failure::called(Call::ScreenAvailWidth, screen.avail_width())?;
-    Some(Screen::new(Css::of(available as f32)))
+    Some(Screen::new(Css::of(f64::from(available))))
 }
 
 /// The origin every same-origin url is built on, and the empty string where the

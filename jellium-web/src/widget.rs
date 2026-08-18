@@ -188,12 +188,6 @@ pub enum Overflow {
     Withheld,
 }
 
-/// The card's own width inside its pitch, the pitch reserving the gutter its
-/// `.cardBox` margin makes.
-fn inside(card: card::Card, room: Room) -> Drawn {
-    Drawn::of(card.width(room).count() - space::GUTTER.drawn().count())
-}
-
 /// What a card draws where its image goes: the image itself, or the glyph the
 /// reference's own `.cardImageIcon` stands in with.
 #[derive(Debug, Clone)]
@@ -238,8 +232,8 @@ fn framed<'a>(
     name: &str,
     backing: card::Backing,
 ) -> Element<'a, Message> {
-    let width = style::drawn(inside(card, room));
-    let height = style::drawn(card.shape().aspect().of(inside(card, room)));
+    let width = style::drawn(card.inside(room));
+    let height = style::drawn(card.shape().aspect().of(card.inside(room)));
     let background = scheme::card_background(name);
     let painted = move |theme: &iced::Theme| style::card_face(theme, background, backing);
     let padder = move |theme: &iced::Theme| style::card_padder(theme, backing);
@@ -342,7 +336,7 @@ fn boxed<'a>(
     footer: Option<Element<'a, Message>>,
     backing: card::Backing,
 ) -> Element<'a, Message> {
-    let width = style::drawn(inside(card, room));
+    let width = style::drawn(card.inside(room));
     let held = match footer {
         None => column![framed],
         Some(footer) => column![framed, footer],
@@ -409,8 +403,8 @@ fn reserving<'a>(
 /// An image at a card's pitch with its shape's aspect and nothing under it.
 // reference: card-container
 pub fn tile<'a>(card: card::Card, room: Room, face: Option<image::Handle>) -> Element<'a, Message> {
-    let width = style::drawn(inside(card, room));
-    let height = style::drawn(card.shape().aspect().of(inside(card, room)));
+    let width = style::drawn(card.inside(room));
+    let height = style::drawn(card.shape().aspect().of(card.inside(room)));
     match face {
         Some(handle) => container(image(handle).width(width))
             .width(width)
@@ -1244,7 +1238,7 @@ const PORTIONS: u16 = 10_000;
 
 /// `share` of what it is laid in, as iced's own fill portions.
 fn portion(share: Share) -> u16 {
-    style::drawn(share.of(Drawn::of(f32::from(PORTIONS)))) as u16
+    style::drawn(share.of(Drawn::of(f64::from(PORTIONS)))) as u16
 }
 
 /// A bar filled to `elapsed`, which is how far through a program `now` is.

@@ -15,15 +15,14 @@ use std::collections::BTreeSet;
 use jellium_model::appearance::card::{Card, Mixed, PerRow, Rail, Shape};
 use jellium_model::appearance::space::Room;
 use jellium_model::appearance::{
-    Across, Breakpoint, Css, Dialog, HEIGHTS, Layout, Letters, Orientation, Ratio, Screen,
-    Viewport, WIDTHS,
+    Across, Css, Dialog, HEIGHTS, Layout, Letters, Orientation, Ratio, Screen, Viewport, WIDTHS,
 };
 
 /// One row of the oracle, naming the whole viewport it was resolved at.
 struct Row {
     kind: String,
-    width: f32,
-    height: f32,
+    width: f64,
+    height: f64,
     shape: String,
     orientation: String,
     percent: f64,
@@ -31,7 +30,7 @@ struct Row {
     requested: String,
     fill: u32,
     layout: String,
-    root: f32,
+    root: f64,
     letters: String,
     dialog: String,
 }
@@ -86,7 +85,7 @@ impl Row {
             Card::Wall(_) => room.width(),
             Card::Rail(_) => room.viewport().canvas().width(),
         };
-        100.0 * self.card().width(room).count() as f64 / against.count() as f64
+        100.0 * self.card().width(room).count() / against.count()
     }
 }
 
@@ -142,6 +141,10 @@ fn dialoged(dialog: Dialog) -> &'static str {
     }
 }
 
+/// How far a share this client computes may stand from the oracle's own
+/// column, which is the six decimals the oracle writes that column to.
+const WRITTEN_APART: f64 = 1e-6;
+
 /// The relative distance between two shares, which is how a percentage read
 /// from the oracle is compared with one the module computes.
 fn apart(held: f64, want: f64) -> f64 {
@@ -159,7 +162,7 @@ fn every_width_threshold_lands_where_the_reference_puts_it() {
         assert_eq!(named(viewport.orientation()), row.orientation, "{at}");
         assert_eq!(row.drawn().root(), Ratio::percent(row.root), "{at}");
         assert_eq!(row.card().across(row.room()).count(), row.across, "{at}");
-        assert!(apart(row.share(), row.percent) < 1e-3, "{at}");
+        assert!(apart(row.share(), row.percent) < WRITTEN_APART, "{at}");
     }
 }
 
@@ -170,7 +173,7 @@ fn every_rail_width_lands_where_the_reference_puts_it() {
     assert!(!rail.is_empty());
     for row in rail {
         let at = format!("{}x{} {}", row.width, row.height, row.shape);
-        assert!(apart(row.share(), row.percent) < 1e-3, "{at}");
+        assert!(apart(row.share(), row.percent) < WRITTEN_APART, "{at}");
         assert_eq!(row.card().across(row.room()).count(), row.across, "{at}");
     }
 }
@@ -228,8 +231,8 @@ fn a_wall_row_holds_the_count_the_percentage_names() {
             "{at}"
         );
         let box_width = room.width().count();
-        let laid = row.card().width(room).count() * across.count() as f32;
-        assert!((laid - box_width).abs() < box_width * 1e-5, "{at}");
+        let laid = row.card().width(room).count() * across.count() as f64;
+        assert!((laid - box_width).abs() < box_width * 1e-12, "{at}");
     }
 }
 
@@ -359,7 +362,7 @@ fn a_boundary_pixel_falls_on_the_side_the_stylesheet_puts_it() {
 
 /// The thresholds the oracle walked, recovered from the pairs of rows it wrote
 /// at each one: a threshold and the pixel below it.
-fn walked(rows: &[Row], kind: &str, axis: impl Fn(&Row) -> f32) -> Vec<f32> {
+fn walked(rows: &[Row], kind: &str, axis: impl Fn(&Row) -> f64) -> Vec<f64> {
     let every: BTreeSet<i64> = rows
         .iter()
         .filter(|row| row.kind == kind)
@@ -368,23 +371,23 @@ fn walked(rows: &[Row], kind: &str, axis: impl Fn(&Row) -> f32) -> Vec<f32> {
     every
         .iter()
         .filter(|at| every.contains(&(*at - 1)))
-        .map(|at| *at as f32)
+        .map(|at| *at as f64)
         .collect()
 }
 
 #[test]
 fn the_threshold_tables_are_the_ones_the_stylesheets_test() {
     let rows = oracle();
-    let held: Vec<f32> = WIDTHS.iter().map(|at| at.css().count()).collect();
+    let held: Vec<f64> = WIDTHS.iter().map(|at| at.css().count()).collect();
     assert_eq!(walked(&rows, "width", |row| row.width), held);
-    let held: Vec<f32> = HEIGHTS.iter().map(|at| at.css().count()).collect();
-    assert_eq!(walked(&rows, "height", |row| row.height), held);
-    let ascending: Vec<Breakpoint> = {
-        let mut sorted = WIDTHS.to_vec();
-        sorted.sort_by(|one, two| one.css().count().total_cmp(&two.css().count()));
+    let ascending = {
+        let mut sorted = held.clone();
+        sorted.sort_by(f64::total_cmp);
         sorted
     };
-    assert_eq!(ascending, WIDTHS.to_vec());
+    assert_eq!(ascending, held);
+    let held: Vec<f64> = HEIGHTS.iter().map(|at| at.css().count()).collect();
+    assert_eq!(walked(&rows, "height", |row| row.height), held);
 }
 
 #[test]

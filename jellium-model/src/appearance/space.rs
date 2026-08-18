@@ -1207,7 +1207,7 @@ const MENU_CAP: Cap = Cap {
 // reference: mui-menu-paper
 pub fn menu_height(options: usize, viewport: Viewport) -> Drawn {
     let layout = viewport.layout();
-    let stacked = Drawn::of(filled_row(layout).count() * options as f32);
+    let stacked = Drawn::of(filled_row(layout).count() * options as f64);
     MENU_CAP.holds(stacked, viewport.canvas().height(), layout)
 }
 
@@ -1761,13 +1761,13 @@ fn guide_strip(viewport: Viewport) -> Drawn {
 /// One minute of the guide, which is its strip over the day it spans.
 // reference: guide-strip
 fn guide_minute(viewport: Viewport) -> Drawn {
-    Drawn::of(guide_strip(viewport).count() / GUIDE_SPAN.num_minutes() as f32)
+    Drawn::of(guide_strip(viewport).count() / GUIDE_SPAN.num_minutes() as f64)
 }
 
 /// How far across the guide's strip a stretch of time reaches.
 // reference: guide-strip
 pub fn guide_across(spanning: TimeDelta, viewport: Viewport) -> Drawn {
-    Drawn::of(guide_minute(viewport).count() * spanning.num_minutes() as f32)
+    Drawn::of(guide_minute(viewport).count() * spanning.num_minutes() as f64)
 }
 
 /// The guide's channel column, 24vw stepping to 16vw, 14vw and 12vw.

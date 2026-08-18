@@ -186,7 +186,7 @@ mod tests {
         assert_eq!(chapter_at(&[], Duration::from_secs(1)), None);
     }
 
-    fn rendered(width: f32) -> card::Fill {
+    fn rendered(width: f64) -> card::Fill {
         card::Fill::of(crate::appearance::Css::of(width))
     }
 

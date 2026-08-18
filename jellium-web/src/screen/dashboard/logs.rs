@@ -66,9 +66,7 @@ pub async fn open(
             tail,
             window: window::Window::new(
                 window::Id::Log,
-                Drawn::of(style::drawn(
-                    typeface::LINE_HEIGHT.of(typeface::BODY).drawn(),
-                )),
+                typeface::LINE_HEIGHT.of(typeface::BODY).drawn(),
                 height,
             ),
         })

@@ -92,8 +92,8 @@ pub fn grid<'a>(
         .on_scroll(move |viewport| {
             Message::Scrolled(Scrolled {
                 id,
-                offset: Drawn::of(viewport.absolute_offset().y),
-                extent: Drawn::of(viewport.bounds().height),
+                offset: style::measured(viewport.absolute_offset().y),
+                extent: style::measured(viewport.bounds().height),
             })
         })
         .height(Fill)
@@ -128,8 +128,8 @@ pub fn list<'a>(
         .on_scroll(move |viewport| {
             Message::Scrolled(Scrolled {
                 id,
-                offset: Drawn::of(viewport.absolute_offset().y),
-                extent: Drawn::of(viewport.bounds().height),
+                offset: style::measured(viewport.absolute_offset().y),
+                extent: style::measured(viewport.bounds().height),
             })
         })
         .height(Fill)
@@ -160,8 +160,8 @@ pub fn rail<'a>(
         .on_scroll(move |viewport| {
             Message::Scrolled(Scrolled {
                 id,
-                offset: Drawn::of(viewport.absolute_offset().x),
-                extent: Drawn::of(viewport.bounds().width),
+                offset: style::measured(viewport.absolute_offset().x),
+                extent: style::measured(viewport.bounds().width),
             })
         })
         .into()

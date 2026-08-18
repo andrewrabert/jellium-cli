@@ -2,7 +2,7 @@
 //! A construct carrying both a measure and a colour is named the same here and
 //! in `space`; the module names which of the two a constant is.
 
-use super::{Elevation, Ratio};
+use super::{Elevation, Ratio, nearest};
 
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
 pub struct Alpha {
@@ -21,8 +21,8 @@ impl Alpha {
         Alpha { thousandths: count }
     }
 
-    pub fn fraction(self) -> f32 {
-        self.thousandths as f32 / 1000.0
+    pub fn fraction(self) -> f64 {
+        self.thousandths as f64 / 1000.0
     }
 
     /// A sum past the whole is refused where it is written.
@@ -70,11 +70,11 @@ impl Color {
         Color::rgba(self.red, self.green, self.blue, alpha)
     }
 
-    /// This colour at `ratio` of its own alpha, which is what a css `opacity`
-    /// leaves of what an element inherits.
+    /// The nearest thousandth of the alpha this leaves, css compositing an
+    /// opacity without truncating it.
     pub const fn faded(self, ratio: Ratio) -> Color {
         self.at(Alpha::thousandths(
-            (self.alpha.thousandths as f32 * ratio.factor()) as u16,
+            nearest(self.alpha.thousandths as f64 * ratio.factor()) as u16,
         ))
     }
 
@@ -83,9 +83,9 @@ impl Color {
     pub const fn darkened(self, coefficient: Ratio) -> Color {
         let kept = 1.0 - coefficient.factor();
         Color::rgba(
-            (self.red as f32 * kept) as u8,
-            (self.green as f32 * kept) as u8,
-            (self.blue as f32 * kept) as u8,
+            (self.red as f64 * kept) as u8,
+            (self.green as f64 * kept) as u8,
+            (self.blue as f64 * kept) as u8,
             self.alpha,
         )
     }
@@ -96,9 +96,9 @@ impl Color {
     pub const fn lightened(self, coefficient: Ratio) -> Color {
         let raise = coefficient.factor();
         Color::rgba(
-            (self.red as f32 + (255.0 - self.red as f32) * raise) as u8,
-            (self.green as f32 + (255.0 - self.green as f32) * raise) as u8,
-            (self.blue as f32 + (255.0 - self.blue as f32) * raise) as u8,
+            (self.red as f64 + (255.0 - self.red as f64) * raise) as u8,
+            (self.green as f64 + (255.0 - self.green as f64) * raise) as u8,
+            (self.blue as f64 + (255.0 - self.blue as f64) * raise) as u8,
             self.alpha,
         )
     }
@@ -107,7 +107,7 @@ impl Color {
     /// background color under it.
     pub fn over(self, beneath: Color) -> Color {
         let mixed = |over: u8, under: u8| {
-            (over as f32 * self.alpha.fraction() + under as f32 * (1.0 - self.alpha.fraction()))
+            (over as f64 * self.alpha.fraction() + under as f64 * (1.0 - self.alpha.fraction()))
                 as u8
         };
         Color::rgba(
@@ -134,9 +134,9 @@ impl Color {
 
     /// MUI's `getLuminance()`, to the three digits it truncates at.
     // reference: mui-color-manipulator
-    fn luminance(self) -> f32 {
+    fn luminance(self) -> f64 {
         let channel = |value: u8| {
-            let value = value as f32 / 255.0;
+            let value = value as f64 / 255.0;
             match value <= 0.03928 {
                 true => value / 12.92,
                 false => ((value + 0.055) / 1.055).powf(2.4),

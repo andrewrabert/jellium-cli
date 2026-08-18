@@ -10,7 +10,7 @@ use crate::window;
 
 /// The height `count` rows of `row` occupy.
 fn rows(count: usize, row: Drawn) -> Drawn {
-    Drawn::of(count as f32 * row.count())
+    Drawn::of(count as f64 * row.count())
 }
 
 /// How much time the guide shows at once.
