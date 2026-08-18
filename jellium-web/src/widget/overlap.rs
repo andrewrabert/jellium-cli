@@ -6,18 +6,25 @@ use iced::advanced::widget::{Operation, Tree};
 use iced::advanced::{Clipboard, Layout, Shell, Widget, layout, mouse, overlay, renderer};
 use iced::{Element, Event, Point, Rectangle, Size, Vector};
 
-use crate::style::{self, Drawn, space};
+use crate::style::{self, Drawn, Length, space};
 
-/// One element drawn over the foot of another, standing as tall as the taller
-/// of the two once the covering element has handed back what it sheds.
+/// Which of the covering's own edges is pinned against the covered element.
+enum Anchored {
+    Head { raised: Drawn, shed: Drawn },
+    Foot { lifted: Drawn },
+}
+
+/// One element drawn over the foot of another.
 pub struct Overlapping<'a, Message, Theme, Renderer> {
     covered: Element<'a, Message, Theme, Renderer>,
     covering: Element<'a, Message, Theme, Renderer>,
-    raised: Drawn,
-    shed: Drawn,
+    anchored: Anchored,
 }
 
 impl<'a, Message, Theme, Renderer> Overlapping<'a, Message, Theme, Renderer> {
+    /// The covering's own top over the covered's foot, the pair standing as
+    /// tall as the taller of the two once the covering has handed back what it
+    /// sheds.
     pub fn new(
         covered: Element<'a, Message, Theme, Renderer>,
         covering: Element<'a, Message, Theme, Renderer>,
@@ -26,8 +33,26 @@ impl<'a, Message, Theme, Renderer> Overlapping<'a, Message, Theme, Renderer> {
         Overlapping {
             covered,
             covering,
-            raised: overlap.raised.drawn(),
-            shed: overlap.shed.drawn(),
+            anchored: Anchored::Head {
+                raised: overlap.raised.drawn(),
+                shed: overlap.shed.drawn(),
+            },
+        }
+    }
+
+    /// The covering's own foot over the covered's foot, the pair keeping the
+    /// covered's own height however tall the covering is.
+    pub fn lifted(
+        covered: Element<'a, Message, Theme, Renderer>,
+        covering: Element<'a, Message, Theme, Renderer>,
+        lift: Length,
+    ) -> Overlapping<'a, Message, Theme, Renderer> {
+        Overlapping {
+            covered,
+            covering,
+            anchored: Anchored::Foot {
+                lifted: lift.drawn(),
+            },
         }
     }
 
@@ -73,18 +98,28 @@ where
         let width = covered.size().width;
         let foot = covered.size().height;
 
-        let covering = self
-            .covering
-            .as_widget_mut()
-            .layout(
-                &mut tree.children[1],
-                renderer,
-                &layout::Limits::new(Size::ZERO, Size::new(width, f32::INFINITY)),
-            )
-            .move_to(Point::new(0.0, (foot - style::drawn(self.raised)).max(0.0)));
+        let covering = self.covering.as_widget_mut().layout(
+            &mut tree.children[1],
+            renderer,
+            &layout::Limits::new(Size::ZERO, Size::new(width, f32::INFINITY)),
+        );
 
-        let below = covering.bounds().y + covering.size().height - style::drawn(self.shed);
-        layout::Node::with_children(Size::new(width, foot.max(below)), vec![covered, covering])
+        match self.anchored {
+            Anchored::Head { raised, shed } => {
+                let covering =
+                    covering.move_to(Point::new(0.0, (foot - style::drawn(raised)).max(0.0)));
+                let below = covering.bounds().y + covering.size().height - style::drawn(shed);
+                layout::Node::with_children(
+                    Size::new(width, foot.max(below)),
+                    vec![covered, covering],
+                )
+            }
+            Anchored::Foot { lifted } => {
+                let top = foot - style::drawn(lifted) - covering.size().height;
+                let covering = covering.move_to(Point::new(0.0, top));
+                layout::Node::with_children(Size::new(width, foot), vec![covered, covering])
+            }
+        }
     }
 
     fn operate(

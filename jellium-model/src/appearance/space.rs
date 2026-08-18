@@ -1643,6 +1643,17 @@ pub const DETAIL_POSTER_TELEVISED: Share = Share::per_ten_thousand(500);
 // reference: detail-poster-arms
 const DETAIL_POSTER_RISE: Length = RIBBON.times(Ratio::thousandths(1800));
 
+/// The stacked poster's own foot over the ribbon's foot.
+// reference: detail-poster-arms
+const DETAIL_POSTER_LIFT: Length = Length::em(1.0);
+
+/// The most of the page the poster stands down.
+// reference: detail-poster-arms
+const DETAIL_POSTER_CAP: Cap = Cap {
+    share: Share::units(80.0),
+    offset: Css::of(0.0),
+};
+
 /// The poster's inset from the leading edge beside the ribbon.
 // reference: detail-poster-arms
 pub const DETAIL_POSTER_INSET: Share = PAGE_SIDE;
@@ -2032,6 +2043,31 @@ pub fn detail_poster_overlap(viewport: Viewport) -> Overlap {
             raised: DETAIL_POSTER_RISE,
             shed: Length::em(0.0),
         },
+    }
+}
+
+/// The stacked poster's foot inside the ribbon: an em over the ribbon's own
+/// foot, and flush with the info wrapper's foot on the narrow page the
+/// reference anchors it in instead.
+// reference: detail-poster-arms
+// reference: detail-info-wrapper
+pub fn detail_poster_lift(viewport: Viewport) -> Length {
+    match viewport.matches(DETAIL_NARROW) {
+        true => RIBBON_PAD.bottom,
+        false => DETAIL_POSTER_LIFT,
+    }
+}
+
+/// The poster's drawn height: what its shape asks for, held to four fifths of
+/// the page where the reference caps it, the ribbon arrangement lifting that
+/// cap.
+// reference: detail-poster-arms
+pub fn detail_poster_height(viewport: Viewport, shaped: Drawn) -> Drawn {
+    match viewport.layout() {
+        Layout::Desktop => shaped,
+        layout @ (Layout::Mobile | Layout::Television) => {
+            DETAIL_POSTER_CAP.holds(shaped, viewport.canvas().height(), layout)
+        }
     }
 }
 

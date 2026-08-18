@@ -843,6 +843,13 @@ browser with a touch screen, each at its own size.
 - A desktop browser with a touch screen draws the head beside its poster.
 - A television browser draws item detail with no backdrop, its poster at the
   page's leading edge and the head beside it.
+- On a phone the stacked head's poster hangs below the backdrop and over the
+  block carrying the item's name and its row of buttons, and that name and that
+  row stand to its trailing side rather than beside empty space.
+- On a phone the stacked poster's leading edge stands a twentieth of the window
+  in at 800 wide and 3.3% of the window in at 360 wide.
+- On a phone at 800x360 the stacked poster stands no taller than four fifths of
+  the window and is neither squeezed nor cut to the backdrop's height.
 - The browser tab carries Jellyfin's own favicon.
 - The boot screen stands Jellyfin's splash logo, its banner at a device width of
   992 pixels and wider and its icon narrower, and no lettering of the app's name.

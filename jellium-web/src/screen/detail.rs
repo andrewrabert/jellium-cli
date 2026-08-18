@@ -1,7 +1,7 @@
 use std::collections::HashSet;
 use std::rc::Rc;
 
-use iced::widget::{Space, button, column, container, image, row, stack};
+use iced::widget::{Space, button, column, container, image, row};
 use iced::{Element, Fill};
 use jellium_model::item::{self, Mark};
 use jellyfin_api::types::{BaseItemDto, BaseItemKind};
@@ -241,10 +241,15 @@ fn backdrop<'a>(item: &BaseItemDto, images: &'a Cache, height: Drawn) -> Element
     }
 }
 
-/// The item's primary image at the width its arrangement gives it.
+/// The item's primary image at the width its arrangement gives it, held to the
+/// height the page caps it to and covering that box.
 // reference: detail-image
-fn poster<'a>(item: &BaseItemDto, images: &'a Cache, width: Drawn) -> Element<'a, Message> {
+// reference: detail-poster-arms
+fn poster<'a>(item: &BaseItemDto, images: &'a Cache, viewport: Viewport) -> Element<'a, Message> {
+    let width = poster_width(viewport);
+    let height = space::detail_poster_height(viewport, card::Shape::Portrait.aspect().of(width));
     let width = style::drawn(width);
+    let height = style::drawn(height);
     let face = item.id.and_then(|id| {
         images.handle(images::Key {
             item: id,
@@ -254,11 +259,16 @@ fn poster<'a>(item: &BaseItemDto, images: &'a Cache, width: Drawn) -> Element<'a
         })
     });
     match face {
-        Some(handle) => container(image(handle).width(width))
-            .width(width)
-            .style(|theme| style::card_padder(theme, card::Backing::Padder))
-            .into(),
-        None => Space::new().width(width).into(),
+        Some(handle) => container(
+            image(handle)
+                .width(width)
+                .height(height)
+                .content_fit(iced::ContentFit::Cover),
+        )
+        .width(width)
+        .style(|theme| style::card_padder(theme, card::Backing::Padder))
+        .into(),
+        None => Space::new().width(width).height(height).into(),
     }
 }
 
@@ -331,7 +341,7 @@ fn head<'a>(item: &'a BaseItemDto, viewport: Viewport, images: &'a Cache) -> Hea
 
     Head {
         backdrop: backdrop(item, images, space::backdrop(viewport)),
-        poster: poster(item, images, poster_width(viewport)),
+        poster: poster(item, images, viewport),
         name: column![
             prose(heading(item), typeface::BODY),
             prose(item.name.clone().unwrap_or_default(), typeface::HEADING_1),
@@ -386,28 +396,21 @@ fn ribboned<'a>(head: Head<'a>, viewport: Viewport) -> Element<'a, Message> {
     .into()
 }
 
-/// The same parts stacked and centred, which is what the mobile layout draws.
+/// The same parts stacked and centred, which is what the mobile layout draws,
+/// the poster pinned by its own foot inside the ribbon and the name and the
+/// buttons standing clear of it.
 // reference: detail-info-wrapper
 // reference: detail-centred
 // reference: detail-misc-narrow
+// reference: detail-poster-arms
 fn stacked<'a>(head: Head<'a>, viewport: Viewport) -> Element<'a, Message> {
     let canvas = viewport.canvas();
-    let ribbon = style::drawn(space::page_side(canvas));
+    let side = style::drawn(space::page_side(canvas));
     let body = style::drawn(space::DETAIL_SIDE.of(canvas.width()));
 
-    let banner = stack![
-        head.backdrop,
-        container(row![
-            Space::new().width(style::drawn(space::detail_poster_stacked_inset(viewport))),
-            head.poster,
-        ])
-        .height(Fill)
-        .align_y(iced::Bottom),
-    ];
-
-    column![
+    let ribbon = column![
         Space::new().height(style::drawn(space::BACKDROP_TOP.drawn())),
-        banner,
+        head.backdrop,
         container(column![
             container(head.name)
                 .width(Fill)
@@ -425,7 +428,20 @@ fn stacked<'a>(head: Head<'a>, viewport: Viewport) -> Element<'a, Message> {
                         .left(style::drawn(space::detail_buttons_inset(viewport)))
                 ),
         ])
-        .padding(style::padding(space::RIBBON_PAD).left(ribbon).right(ribbon)),
+        .padding(style::padding(space::RIBBON_PAD).left(side).right(side)),
+    ];
+
+    let poster = row![
+        Space::new().width(style::drawn(space::detail_poster_stacked_inset(viewport))),
+        head.poster,
+    ];
+
+    column![
+        Overlapping::lifted(
+            ribbon.into(),
+            poster.into(),
+            space::detail_poster_lift(viewport),
+        ),
         container(container(head.lines).center_x(Fill)).padding(
             iced::Padding::ZERO
                 .top(style::drawn(space::DETAIL_BODY_TOP_STACKED.drawn()))
