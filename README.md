@@ -109,17 +109,17 @@ under `jellium-web/vendor/`; building the binary needs trunk and no Node.
 This project uses [just](https://github.com/casey/just) as a command runner.
 ```
 Available recipes:
-    assets checkout          # Rewrite jellium-web/fonts, jellium-web/icons and jellium-web/branding from a checkout of the pinned revision
-    build                    # Build the debug release
-    fmt                      # Check formatting in both workspaces
-    list                     # List available recipes
-    pinned checkout          # Fail when the tree has drifted from a checkout of the pinned revision
-    reference checkout       # Rewrite jellium-web/reference from a checkout of the pinned revision
-    run *args                # Run the debug release. Sets JELLYFIN_ENV_FILE to .env if it exists in the repo root
-    spans checkout           # Rewrite reference/spans from a checkout of the pinned revision
-    static-page              # Rewrite jellium-web/boot.css and jellium-web/index.html from the ported appearance values
-    suppressions             # Fail on any lint suppression or strictness-lowering configuration
-    test                     # Run both workspaces' tests
-    web *args                # Run jellium-cli web from the debug build
-    web-bundle               # Build the Jellium Web bundle
+    assets checkout    # Rewrite jellium-web/fonts, jellium-web/icons and jellium-web/branding from a checkout of the pinned revision
+    build              # Build the debug release
+    fmt                # Check formatting in both workspaces
+    list               # List available recipes
+    pinned checkout    # Fail when the tree has drifted from a checkout of the pinned revision
+    reference checkout # Rewrite jellium-web/reference from a checkout of the pinned revision
+    run *args          # Run the debug release. Sets JELLYFIN_ENV_FILE to .env if it exists in the repo root
+    spans checkout     # Rewrite reference/spans from a checkout of the pinned revision
+    static-page        # Rewrite jellium-web/boot.css and jellium-web/index.html from the ported appearance values
+    suppressions       # Fail on any lint suppression or strictness-lowering configuration
+    test               # Run both workspaces' tests
+    web *args          # Run jellium-cli web from the debug build
+    web-bundle         # Build the Jellium Web bundle
 ```

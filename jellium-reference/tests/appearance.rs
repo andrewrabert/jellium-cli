@@ -5,7 +5,7 @@ use jellium_reference::register::{Construct, Kind, Register};
 use jellium_reference::spans::Spans;
 use jellium_reference::tree::{self, Extension};
 use std::collections::BTreeMap;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 /// The oracle a value is allowed to cite in place of a ported rule.
 const ORACLE: &str = "reference/breakpoints.tsv";
@@ -91,12 +91,7 @@ impl Value {
 
 fn appearance(root: &Path) -> Vec<Value> {
     let directory = root.join("jellium-model/src/appearance");
-    let mut files: Vec<PathBuf> = std::fs::read_dir(&directory)
-        .expect("jellium-model/src/appearance is readable")
-        .map(|entry| entry.expect("the entry is readable").path())
-        .filter(|path| path.extension().and_then(|value| value.to_str()) == Some("rs"))
-        .collect();
-    files.sort();
+    let files = tree::files_under(&directory, &[Extension::RUST]);
 
     let mut values = Vec::new();
     for file in files {

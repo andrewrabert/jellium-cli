@@ -154,7 +154,7 @@ impl Room {
 
 /// The margin a `.cardBox` carries on every side.
 // reference: card-box
-pub const CARD_MARGIN: Length = Length::em(0.6);
+const CARD_MARGIN: Length = Length::em(0.6);
 
 pub const GUTTER: Length = CARD_MARGIN.abutting(CARD_MARGIN);
 
@@ -168,12 +168,12 @@ pub const CARD_BOTTOM_NARROW: Length = Length::em(1.2);
 pub const CARD_BOTTOM_AT: Query = Query::MaxWidth(Breakpoint::em(50.0));
 
 // reference: control-button
-pub const CONTROL_MARGIN: Length = Length::em(0.3);
+const CONTROL_MARGIN: Length = Length::em(0.3);
 
 pub const CONTROL_GAP: Length = CONTROL_MARGIN.abutting(CONTROL_MARGIN);
 
 // reference: control-button-block
-pub const BLOCK_MARGIN: Length = Length::em(0.25);
+const BLOCK_MARGIN: Length = Length::em(0.25);
 
 /// Two `.block` controls are block-level siblings in normal flow.
 pub const BLOCK_GAP: Length = BLOCK_MARGIN.collapsing(BLOCK_MARGIN);
@@ -305,7 +305,7 @@ pub const PAGE_BOTTOM: Length = Length::em(5.0);
 pub const PAGE_TOP: Length = Length::em(4.5);
 
 // reference: page-side
-pub const PAGE_SIDE: Share = Share::per_ten_thousand(330);
+const PAGE_SIDE: Share = Share::per_ten_thousand(330);
 
 // reference: page-bottom
 pub const FORM_WIDTH: Length = Length::em(54.0);
@@ -459,7 +459,7 @@ pub const TOAST_RADIUS: Length = Length::em(0.15);
 
 /// The margin one toast carries above and below itself.
 // reference: toast-face
-pub const TOAST_MARGIN: Length = Length::em(0.25);
+const TOAST_MARGIN: Length = Length::em(0.25);
 
 /// `.toastContainer` is a flex column, which collapses nothing.
 pub const TOAST_GAP: Length = TOAST_MARGIN.abutting(TOAST_MARGIN);
@@ -479,7 +479,7 @@ pub const LOGO: Slot = Slot {
 pub const HEADER_PAD: Length = Length::em(0.54);
 
 // reference: list-body
-pub const LIST_BODY_PAD: Padding = Padding {
+const LIST_BODY_PAD: Padding = Padding {
     top: Length::em(0.85),
     right: Length::em(0.75),
     bottom: Length::em(0.85),
@@ -489,7 +489,7 @@ pub const LIST_BODY_PAD: Padding = Padding {
 /// `.listItemBodyText`'s own padding, which is what stands between one line of
 /// a row's body and the next.
 // reference: list-body-text
-pub const LIST_TEXT_PAD: Padding = Padding {
+const LIST_TEXT_PAD: Padding = Padding {
     top: Length::em(0.1),
     right: Length::em(0.0),
     bottom: Length::em(0.1),
@@ -673,7 +673,7 @@ pub const LOCALNAV_BOTTOM: Length = Length::em(2.2);
 /// MUI's own spacing step, which every measure the reference writes as
 /// `spacing(n)` is a count of.
 // reference: mui-spacing
-pub const SPACING_STEP: Css = Css::of(8.0);
+const SPACING_STEP: Css = Css::of(8.0);
 
 /// The rhythm a dashboard screen stacks its content at, which is three steps.
 // reference: dashboard-content
@@ -695,16 +695,16 @@ pub const DRAWER: Css = Css::of(240.0);
 /// MUI's own breakpoints, which every `Grid item`'s ladder is written against
 /// and which the dashboard's overrides declare.
 // reference: dashboard-frame
-pub const SMALL_AT: Query = Query::MinWidth(Breakpoint::pixels(600));
+const SMALL_AT: Query = Query::MinWidth(Breakpoint::pixels(600));
 
 // reference: dashboard-frame
-pub const MEDIUM_AT: Query = Query::MinWidth(Breakpoint::pixels(900));
+const MEDIUM_AT: Query = Query::MinWidth(Breakpoint::pixels(900));
 
 // reference: dashboard-frame
-pub const LARGE_AT: Query = Query::MinWidth(Breakpoint::pixels(1200));
+const LARGE_AT: Query = Query::MinWidth(Breakpoint::pixels(1200));
 
 // reference: dashboard-frame
-pub const EXTRA_AT: Query = Query::MinWidth(Breakpoint::pixels(1536));
+const EXTRA_AT: Query = Query::MinWidth(Breakpoint::pixels(1536));
 
 /// The page the drawer stands beside the content on rather than over it.
 // reference: dashboard-frame
@@ -745,7 +745,7 @@ pub const LIBRARY_CARD: Css = Css::unitless(260.0);
 
 /// `MuiCardContent`'s own padding on every side it writes one.
 // reference: mui-card-content
-pub const CARD_CONTENT_INSET: Css = Css::unitless(16.0);
+const CARD_CONTENT_INSET: Css = Css::unitless(16.0);
 
 /// That padding as `BaseCard` writes it, being the last child
 /// `MuiCardContent` rounds off: its bottom two steps and its trailing side one.
@@ -760,7 +760,7 @@ pub const CARD_CONTENT_PAD: Inset = Inset {
 
 /// The least `MuiCardContent` stands at, border box included.
 // reference: base-card
-pub const CARD_CONTENT_MIN: Css = Css::unitless(50.0);
+const CARD_CONTENT_MIN: Css = Css::unitless(50.0);
 
 /// The same least, inside that padding.
 pub const CARD_CONTENT_MIN_INSIDE: Css = CARD_CONTENT_MIN
@@ -955,7 +955,7 @@ pub const TABLE_TITLE_BOTTOM: Css = SPACING_STEP;
 
 /// The width MRT gives a column whose definition declares none.
 // reference: table-column-default
-pub const TABLE_COLUMN: Css = Css::unitless(180.0);
+const TABLE_COLUMN: Css = Css::unitless(180.0);
 
 /// The narrowest MRT draws any column, whatever its definition declares.
 // reference: table-cell-width
@@ -1080,7 +1080,7 @@ pub const FILLED_RULE: Css = Css::of(1.0);
 
 /// The room a filled select keeps clear at its trailing edge.
 // reference: mui-select-filled
-pub const FILLED_CHEVRON_ROOM: Css = Css::unitless(32.0);
+const FILLED_CHEVRON_ROOM: Css = Css::unitless(32.0);
 
 /// The padding a filled select stands its value at, which is a filled field's
 /// own with its trailing side widened to the room the chevron is laid over.
@@ -1146,7 +1146,7 @@ pub const CONTAINED_PAD: Inset = Inset {
 
 /// The least width MUI draws a button at.
 // reference: mui-button
-pub const CONTAINED_MIN: Css = Css::unitless(64.0);
+const CONTAINED_MIN: Css = Css::unitless(64.0);
 
 /// That floor inside `CONTAINED_PAD`, which is what a contained button's label
 /// is laid against.
@@ -1186,7 +1186,7 @@ pub const ALERT_MESSAGE_PAD: Inset = Inset {
 /// The cap MUI holds a menu's paper under: the page it stands in, and the
 /// offset that leaves a row of that page tappable beyond the menu.
 // reference: mui-menu-paper
-pub const MENU_CAP: Cap = Cap {
+const MENU_CAP: Cap = Cap {
     share: Share::WHOLE,
     offset: Css::of(-96.0),
 };
@@ -1208,7 +1208,7 @@ pub fn menu_height(options: usize, viewport: Viewport) -> Drawn {
 /// lettering MUI writes inside it.
 // reference: mui-filled-input
 // reference: mui-input-base
-pub fn filled_row(layout: Layout) -> Drawn {
+fn filled_row(layout: Layout) -> Drawn {
     FILLED_PAD
         .top
         .drawn(layout)
@@ -1396,30 +1396,30 @@ pub const INDICATOR_INSET: Css = Css::of(2.0);
 
 /// `.alphaPicker-fixed`'s inset from the foot of the page.
 // reference: alpha-picker
-pub const LETTERS_BOTTOM: Length = Length::em(5.5);
+const LETTERS_BOTTOM: Length = Length::em(5.5);
 
 /// The same inset on a short page.
 // reference: alpha-picker-size
-pub const LETTERS_BOTTOM_SHORT: Length = Length::em(5.0);
+const LETTERS_BOTTOM_SHORT: Length = Length::em(5.0);
 
 // reference: alpha-picker-size
-pub const LETTERS_SHORT: Query = Query::MaxHeight(Breakpoint::em(50.0));
+const LETTERS_SHORT: Query = Query::MaxHeight(Breakpoint::em(50.0));
 
 /// `.alphaPicker-fixed-right`'s inset from the edge of the page.
 // reference: alpha-picker-right
-pub const LETTERS_RIGHT: Length = Length::em(0.4);
+const LETTERS_RIGHT: Length = Length::em(0.4);
 
 /// The same inset on a wide page.
 // reference: alpha-picker-right
-pub const LETTERS_RIGHT_ROOMY: Length = Length::em(1.0);
+const LETTERS_RIGHT_ROOMY: Length = Length::em(1.0);
 
 // reference: alpha-picker-right
-pub const LETTERS_ROOMY: Query = Query::MinWidth(Breakpoint::em(62.5));
+const LETTERS_ROOMY: Query = Query::MinWidth(Breakpoint::em(62.5));
 
 /// The share of the page `.padded-right-withalphapicker` keeps clear for the
 /// letter picker.
 // reference: alpha-picker-reserve
-pub const LETTERS_RESERVE: Share = Share::per_ten_thousand(750);
+const LETTERS_RESERVE: Share = Share::per_ten_thousand(750);
 
 /// `.searchFieldsInner`, which the page centres in what it is given.
 // reference: search-field
@@ -1452,7 +1452,7 @@ pub const SUGGESTION_PAD: Padding = Padding {
 };
 
 // reference: control-icon-button
-pub const ICON_MARGIN: Length = Length::em(0.29);
+const ICON_MARGIN: Length = Length::em(0.29);
 
 pub const ICON_GAP: Length = ICON_MARGIN.abutting(ICON_MARGIN);
 
@@ -1565,10 +1565,10 @@ pub const BACKDROP: Share = Share::units(40.0);
 
 /// Its height on a short portrait page.
 // reference: detail-backdrop — 30vh
-pub const BACKDROP_PORTRAIT: Share = Share::units(30.0);
+const BACKDROP_PORTRAIT: Share = Share::units(30.0);
 
 // reference: detail-backdrop
-pub const BACKDROP_PORTRAIT_AT: Query = Query::MaxWidth(Breakpoint::em(40.0));
+const BACKDROP_PORTRAIT_AT: Query = Query::MaxWidth(Breakpoint::em(40.0));
 
 /// What the stacked arrangement leaves above the backdrop.
 // reference: detail-backdrop
@@ -1634,7 +1634,7 @@ pub const DETAIL_POSTER_TELEVISED: Share = Share::per_ten_thousand(500);
 /// How far the poster rises over the ribbon, which is the ribbon's own height
 /// and four fifths again.
 // reference: detail-poster-arms
-pub const DETAIL_POSTER_RISE: Length = RIBBON.times(Ratio::thousandths(1800));
+const DETAIL_POSTER_RISE: Length = RIBBON.times(Ratio::thousandths(1800));
 
 /// The poster's inset from the leading edge beside the ribbon.
 // reference: detail-poster-arms
@@ -1647,13 +1647,13 @@ const DETAIL_POSTER_STACKED_INSET: Share = Share::per_ten_thousand(500);
 /// Where a page stops raising the poster over the ribbon, the raising and the
 /// reference's own lowering being alternatives that never compose.
 // reference: detail-narrow
-pub const DETAIL_POSTER_LOWERED_AT: Query = Query::MaxWidth(Breakpoint::em(62.5));
+const DETAIL_POSTER_LOWERED_AT: Query = Query::MaxWidth(Breakpoint::em(62.5));
 
 /// Where the poster stands flush inside the ribbon and the row of buttons
 /// stops leaving it room.
 // reference: detail-poster-arms
 // reference: detail-buttons-narrow
-pub const DETAIL_NARROW: Query = Query::MaxWidth(Breakpoint::em(32.0));
+const DETAIL_NARROW: Query = Query::MaxWidth(Breakpoint::em(32.0));
 
 /// The room the stacked head leaves the poster beside the item's name.
 // reference: detail-head-inset
@@ -1747,7 +1747,7 @@ const GUIDE_SPAN: TimeDelta = TimeDelta::days(1);
 /// The guide's program strip, which is 1800vw of the page and steps to 1400vw,
 /// 1200vw and 810vw.
 // reference: guide-strip
-pub fn guide_strip(viewport: Viewport) -> Drawn {
+fn guide_strip(viewport: Viewport) -> Drawn {
     stepped(viewport, GUIDE_STRIP, &GUIDE_STRIP_STEPS).of(viewport.canvas().width())
 }
 

@@ -998,6 +998,18 @@ const TABLE_SOURCE: &str = include_str!("../strings/en-us.json");
 #[cfg(test)]
 const BOOT_KEYS: &[&str] = &["bootLoading", "bootWasmFailed", "bootRetry"];
 
+/// Every key in the order the table writes it, which the parsed map does not
+/// carry.
+#[cfg(test)]
+fn written() -> Vec<&'static str> {
+    TABLE_SOURCE
+        .lines()
+        .filter_map(|line| line.trim_start().strip_prefix('"'))
+        .filter_map(|line| line.split_once("\":"))
+        .map(|(key, _)| key)
+        .collect()
+}
+
 fn table() -> &'static serde_json::Map<String, serde_json::Value> {
     static TABLE: OnceLock<serde_json::Map<String, serde_json::Value>> = OnceLock::new();
     TABLE.get_or_init(|| {
@@ -1042,25 +1054,36 @@ mod tests {
 
     use wasm_bindgen_test::wasm_bindgen_test;
 
-    use super::{BOOT_KEYS, Text, table};
+    use super::{BOOT_KEYS, Text, written};
 
-    /// Every variant has a key in the table and every key in the table has a
-    /// variant.
+    /// The table lists the boot shell's keys, then every variant's key in the
+    /// order `text!` declares them, and nothing else.
     #[wasm_bindgen_test]
-    fn the_table_and_the_variants_agree() {
-        let named: HashSet<&str> = Text::ALL
+    fn the_table_holds_every_variant_in_declaration_order() {
+        let expected: Vec<&str> = BOOT_KEYS
             .iter()
-            .map(|text| text.key())
-            .chain(BOOT_KEYS.iter().copied())
+            .copied()
+            .chain(Text::ALL.iter().map(|text| text.key()))
             .collect();
-        let held: HashSet<&str> = table().keys().map(String::as_str).collect();
-        let mut missing: Vec<&str> = named.difference(&held).copied().collect();
-        let mut stray: Vec<&str> = held.difference(&named).copied().collect();
+        let held = written();
+        let named: HashSet<&str> = expected.iter().copied().collect();
+        let carried: HashSet<&str> = held.iter().copied().collect();
+        let mut missing: Vec<&str> = named.difference(&carried).copied().collect();
+        let mut stray: Vec<&str> = carried.difference(&named).copied().collect();
         missing.sort_unstable();
         stray.sort_unstable();
         assert!(
             missing.is_empty() && stray.is_empty(),
             "the string table lacks {missing:?} and holds {stray:?} under no variant"
+        );
+        let misplaced = held
+            .iter()
+            .zip(&expected)
+            .find(|(held, wanted)| held != wanted)
+            .map(|(held, wanted)| format!("{held} stands where {wanted} belongs"));
+        assert!(
+            misplaced.is_none(),
+            "the string table is out of declaration order: {misplaced:?}"
         );
     }
 }

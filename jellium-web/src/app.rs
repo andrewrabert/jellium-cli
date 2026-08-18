@@ -794,8 +794,6 @@ impl Jellium {
         }
     }
 
-    /// Shows `trouble` on the login screen that raised it, entering the stage
-    /// on an empty server list when it is not the one shown.
     /// Drives one login-stage control: every act that reaches the local server
     /// sets `working`, and every act clears what the last one left on screen.
     fn login_act(&mut self, action: login::Action) -> Task<Message> {

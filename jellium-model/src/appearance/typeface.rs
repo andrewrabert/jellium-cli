@@ -59,13 +59,13 @@ pub const HEADING_2: Length = Length::em(1.5);
 pub const HEADING_3: Length = Length::em(1.17);
 
 // reference: mui-typography
-pub const HEADING_1_LEADING: Leading = Leading::Factor(Ratio::thousandths(1167));
+const HEADING_1_LEADING: Leading = Leading::Factor(Ratio::thousandths(1167));
 
 // reference: mui-typography
-pub const HEADING_2_LEADING: Leading = Leading::Factor(Ratio::thousandths(1200));
+const HEADING_2_LEADING: Leading = Leading::Factor(Ratio::thousandths(1200));
 
 // reference: mui-typography
-pub const HEADING_3_LEADING: Leading = Leading::Factor(Ratio::thousandths(1167));
+const HEADING_3_LEADING: Leading = Leading::Factor(Ratio::thousandths(1167));
 
 /// Which of the three heading levels a line is written at.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

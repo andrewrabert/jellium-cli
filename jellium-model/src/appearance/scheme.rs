@@ -207,7 +207,9 @@ pub const ACCENT: Color = Color::rgb(0x00, 0xa4, 0xdc);
 // reference: scheme-submit
 pub const ACCENT_FOCUS: Color = Color::rgb(0x0c, 0xb0, 0xe8);
 
-/// `.button-link`'s own lettering, which the reference draws on no face.
+/// `.button-link`'s own lettering, which the reference draws on no face. The
+/// reference writes this hex in `.button-link` and in `.button-submit` as two
+/// rules that stand apart, so neither constant is written as the other.
 // reference: scheme-button-link
 pub const ANCHOR: Color = Color::rgb(0x00, 0xa4, 0xdc);
 
@@ -573,7 +575,7 @@ pub const EDITOR_RULE: Color = Color::rgb(0x55, 0x55, 0x55);
 pub const INDICATOR: Color = Color::rgb(0x03, 0xa9, 0xf4);
 
 // reference: scheme-card-background
-pub const CARD_BACKGROUNDS: [Color; 5] = [
+const CARD_BACKGROUNDS: [Color; 5] = [
     Color::rgb(0x00, 0x45, 0x5c),
     Color::rgb(0x44, 0xba, 0xe1),
     Color::rgb(0x00, 0xa4, 0xdb),

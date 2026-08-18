@@ -81,8 +81,8 @@ impl Drawn {
 }
 
 /// A share of a containing length, which is how the reference pads a page,
-/// proportions a card and fills a progress bar; every share the reference
-/// writes is exact in hundredths of a percent.
+/// proportions a card and fills a progress bar; a share the reference writes
+/// as a repeating percentage is carried as an `Across` instead.
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
 pub struct Share {
     per_ten_thousand: u32,
@@ -480,13 +480,13 @@ pub enum Dialog {
 }
 
 // reference: letter-jump
-pub const LETTERS_HIDDEN: Query = Query::MaxHeight(Breakpoint::em(31.25));
+const LETTERS_HIDDEN: Query = Query::MaxHeight(Breakpoint::em(31.25));
 
 // reference: dialog-fullscreen
-pub const DIALOG_NARROW: Query = Query::MaxWidth(Breakpoint::em(80.0));
+const DIALOG_NARROW: Query = Query::MaxWidth(Breakpoint::em(80.0));
 
 // reference: dialog-fullscreen
-pub const DIALOG_SHORT: Query = Query::MaxHeight(Breakpoint::em(45.0));
+const DIALOG_SHORT: Query = Query::MaxHeight(Breakpoint::em(45.0));
 
 /// The page as this client draws it: the size the page reports, and the layout
 /// the browser showing it is drawn in.
