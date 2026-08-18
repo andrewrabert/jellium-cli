@@ -1748,8 +1748,8 @@ const GUIDE_CHANNEL_STEPS: [(Query, Share); 4] = [
 ];
 
 /// The stretch of time the guide's strip spans.
-// reference: guide-strip
-const GUIDE_SPAN: TimeDelta = TimeDelta::days(1);
+// reference: guide-day
+const GUIDE_SPAN: TimeDelta = TimeDelta::milliseconds(86_400_000);
 
 /// The guide's program strip, which is 1800vw of the page and steps to 1400vw,
 /// 1200vw and 810vw.

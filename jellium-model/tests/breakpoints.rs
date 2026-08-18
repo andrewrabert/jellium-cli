@@ -191,21 +191,7 @@ fn the_oracle_covers_every_card() {
             (kind.to_owned(), row.shape.clone())
         })
         .collect();
-    let every = [
-        Card::Wall(Shape::Portrait),
-        Card::Wall(Shape::Square),
-        Card::Wall(Shape::Backdrop),
-        Card::Wall(Shape::SmallBackdrop),
-        Card::Wall(Shape::Banner),
-        Card::Wall(Shape::Mixed(Mixed::Portrait)),
-        Card::Wall(Shape::Mixed(Mixed::Square)),
-        Card::Wall(Shape::Mixed(Mixed::Backdrop)),
-        Card::Rail(Rail::Portrait),
-        Card::Rail(Rail::Square),
-        Card::Rail(Rail::Backdrop),
-        Card::Rail(Rail::SmallBackdrop),
-    ];
-    for card in every {
+    for card in Card::all() {
         let held = rows
             .iter()
             .find(|row| row.card() == card)
@@ -348,6 +334,9 @@ fn a_boundary_pixel_falls_on_the_side_the_stylesheet_puts_it() {
         let below = Viewport::new(Css::of(bound - 1.0), Css::of(bound), Layout::Desktop);
         assert!(below.matches(jellium_model::appearance::Query::MaxWidth(*at)));
         assert!(!below.matches(jellium_model::appearance::Query::MinWidth(*at)));
+        let above = Viewport::new(Css::of(bound + 1.0), Css::of(bound), Layout::Desktop);
+        assert!(!above.matches(jellium_model::appearance::Query::MaxWidth(*at)));
+        assert!(above.matches(jellium_model::appearance::Query::MinWidth(*at)));
     }
     for at in HEIGHTS {
         let bound = at.css().count();
@@ -357,11 +346,14 @@ fn a_boundary_pixel_falls_on_the_side_the_stylesheet_puts_it() {
         let below = Viewport::new(Css::of(bound), Css::of(bound - 1.0), Layout::Desktop);
         assert!(below.matches(jellium_model::appearance::Query::MaxHeight(*at)));
         assert!(!below.matches(jellium_model::appearance::Query::MinHeight(*at)));
+        let above = Viewport::new(Css::of(bound), Css::of(bound + 1.0), Layout::Desktop);
+        assert!(!above.matches(jellium_model::appearance::Query::MaxHeight(*at)));
+        assert!(above.matches(jellium_model::appearance::Query::MinHeight(*at)));
     }
 }
 
-/// The thresholds the oracle walked, recovered from the pairs of rows it wrote
-/// at each one: a threshold and the pixel below it.
+/// The thresholds the oracle walked, recovered from the three rows it wrote at
+/// each one: the pixel below, the threshold, and the pixel above.
 fn walked(rows: &[Row], kind: &str, axis: impl Fn(&Row) -> f64) -> Vec<f64> {
     let every: BTreeSet<i64> = rows
         .iter()
@@ -370,7 +362,7 @@ fn walked(rows: &[Row], kind: &str, axis: impl Fn(&Row) -> f64) -> Vec<f64> {
         .collect();
     every
         .iter()
-        .filter(|at| every.contains(&(*at - 1)))
+        .filter(|at| every.contains(&(*at - 1)) && every.contains(&(*at + 1)))
         .map(|at| *at as f64)
         .collect()
 }
@@ -378,14 +370,11 @@ fn walked(rows: &[Row], kind: &str, axis: impl Fn(&Row) -> f64) -> Vec<f64> {
 #[test]
 fn the_threshold_tables_are_the_ones_the_stylesheets_test() {
     let rows = oracle();
-    let held: Vec<f64> = WIDTHS.iter().map(|at| at.css().count()).collect();
+    let mut held: Vec<f64> = WIDTHS.iter().map(|at| at.css().count()).collect();
+    held.extend(Card::all().flat_map(Card::tested).map(Css::count));
+    held.sort_by(f64::total_cmp);
+    held.dedup();
     assert_eq!(walked(&rows, "width", |row| row.width), held);
-    let ascending = {
-        let mut sorted = held.clone();
-        sorted.sort_by(f64::total_cmp);
-        sorted
-    };
-    assert_eq!(ascending, held);
     let held: Vec<f64> = HEIGHTS.iter().map(|at| at.css().count()).collect();
     assert_eq!(walked(&rows, "height", |row| row.height), held);
 }

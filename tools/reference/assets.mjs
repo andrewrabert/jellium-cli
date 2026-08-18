@@ -226,6 +226,19 @@ const QUERY_EM = 16;
 const WIDTH = 'width';
 const HEIGHT = 'height';
 
+// The threshold and the pixel on either side of it, so a `min-` bound is
+// straddled by the pair below it and a `max-` bound by the pair above it.
+const STRADDLE = [-1, 0, 1];
+
+// How far apart two thresholds stand before the pixels straddling one reach
+// the other, which is what keeps a walked pixel from reading as a threshold of
+// its own.
+const APART = 3;
+
+// The width a height row is resolved at, which no walked width falls on, so the
+// row's columns move with its height alone.
+const UNTESTED_WIDTH = 1440;
+
 // The layout `layoutManager.tv` draws in, named as the table's `layout` column
 // writes it.
 const TELEVISION = 'tv';
@@ -339,9 +352,12 @@ function resolved(checkout) {
     return held;
 }
 
-// Every viewport width and every viewport height the resolved stylesheets test,
-// in css pixels, ascending.
-function thresholds(checkout) {
+// Every viewport width and every viewport height the client tests, in css
+// pixels, ascending: what the resolved stylesheets bound, what the dashboard's
+// MUI overrides declare, and the `requested` widths the switches compare a page
+// width against. Refuses two thresholds of one axis standing closer than
+// `APART`.
+function thresholds(checkout, requested) {
     const held = { [WIDTH]: new Set(), [HEIGHT]: new Set() };
     for (const text of resolved(checkout)) {
         for (const [, , axis, count, unit] of text.matchAll(
@@ -358,11 +374,22 @@ function thresholds(checkout) {
     for (const at of muiBreakpoints(checkout)) {
         held[WIDTH].add(at);
     }
+    for (const at of requested) {
+        held[WIDTH].add(at);
+    }
     const ascending = (axis) => {
         if (held[axis].size === 0) {
             throw new Error(`no stylesheet this client resolves tests a viewport ${axis}`);
         }
-        return [...held[axis]].sort((left, right) => left - right);
+        const sorted = [...held[axis]].sort((left, right) => left - right);
+        for (let index = 1; index < sorted.length; index += 1) {
+            if (sorted[index] - sorted[index - 1] < APART) {
+                throw new Error(
+                    `the client tests a ${axis} of ${sorted[index - 1]}px and one of ${sorted[index]}px, which stand closer than the ${APART}px the walk straddles a threshold by`
+                );
+            }
+        }
+        return sorted;
     };
     return { [WIDTH]: ascending(WIDTH), [HEIGHT]: ascending(HEIGHT) };
 }
@@ -667,8 +694,9 @@ function declared(text, name) {
 const TELEVISED_ARM = 'isTV';
 
 // One arm's condition, as a test of the viewport, `wider` being the factor
-// `setCardData` writes.
-function reached(condition, wider) {
+// `setCardData` writes; every count a `screenWidth >= <count>` compares against
+// is added to `tested`.
+function reached(condition, wider, tested) {
     const tests = [];
     for (const part of condition.split('&&').map((one) => one.trim())) {
         if (part === TELEVISED_ARM) {
@@ -685,6 +713,7 @@ function reached(condition, wider) {
             throw new Error(`unread cards-per-row condition: ${JSON.stringify(part)}`);
         }
         const at = Number(wide[1]);
+        tested.add(at);
         tests.push((viewport) => viewport.width >= at);
     }
     return (viewport) => tests.every((holds) => holds(viewport));
@@ -708,8 +737,9 @@ function rate(expression) {
 const ARM_LINE = /^\s*(?:case\b|default\s*:)/;
 
 // Every arm of one `switch (true)`: the television arm the reference tests
-// before all of them, and the steps under it in the source order.
-function arms(source, wider) {
+// before all of them, and the steps under it in the source order; every page
+// width they compare against is added to `tested`.
+function arms(source, wider, tested) {
     const steps = [];
     let televised;
     for (const line of source.split('\n')) {
@@ -732,7 +762,7 @@ function arms(source, wider) {
             televised = { rate: held, answered: false };
             continue;
         }
-        steps.push({ holds: reached(arm[1], wider), rate: held, answered: false });
+        steps.push({ holds: reached(arm[1], wider, tested), rate: held, answered: false });
     }
     if (steps.length === 0) {
         throw new Error(`${CARD_BUILDER_UTILS} holds a switch with no step`);
@@ -740,13 +770,14 @@ function arms(source, wider) {
     return { televised, steps };
 }
 
-// `getPostersPerRow`, read out of the reference rather than transcribed: each
-// shape's own ladder, and the `default` the switch gives a shape it holds no
-// case for.
+// `getPostersPerRow`, read out of the reference: each shape's own ladder, the
+// `default` the switch gives a shape it holds no case for, and every page width
+// any arm of any ladder compares against.
 function requesting(checkout, wider) {
     const text = readFileSync(join(checkout, CARD_BUILDER_UTILS), 'utf8');
     const dispatch = declared(text, 'getPostersPerRow');
     const shapes = new Map();
+    const tested = new Set();
     let otherwise;
     for (const line of dispatch.split('\n')) {
         if (!ARM_LINE.test(line)) {
@@ -754,7 +785,7 @@ function requesting(checkout, wider) {
         }
         const named = /^\s*case '([^']+)':\s*return (\w+)\([^)]*\);\s*$/.exec(line);
         if (named) {
-            shapes.set(named[1], arms(declared(text, named[2]), wider));
+            shapes.set(named[1], arms(declared(text, named[2]), wider, tested));
             continue;
         }
         const fallback = /^\s*default:\s*return ([0-9]+);\s*$/.exec(line);
@@ -766,7 +797,10 @@ function requesting(checkout, wider) {
     if (shapes.size === 0 || otherwise === undefined) {
         throw new Error(`${CARD_BUILDER_UTILS} holds no cards-per-row switch`);
     }
-    return { shapes, otherwise };
+    if (tested.size === 0) {
+        throw new Error(`${CARD_BUILDER_UTILS} holds no cards-per-row arm testing a page width`);
+    }
+    return { shapes, otherwise, tested };
 }
 
 // The arm one shape's ladder answers for a viewport, and marks it answered: the
@@ -891,21 +925,30 @@ function landscape(read) {
             `${WIDTH_REQUEST} writes no getImageWidth call this reader can read a landscape factor out of`
         );
     }
-    return Number(written[1]);
+    const wider = Number(written[1]);
+    if (!(wider > 0)) {
+        throw new Error(
+            `${WIDTH_REQUEST} writes a landscape factor of ${written[1]}, and a page is landscape above a positive multiple of its height`
+        );
+    }
+    return wider;
 }
 
 // Everything the walk reads out of the checkout, read once: the width ladder,
-// the page's own side share, the request ladder, every threshold the resolved
-// stylesheets test, the two queries the row's last columns answer, and each
-// layout beside the root percentage its own rule writes.
+// the page's own side share, the request ladder, the landscape factor that
+// ladder is read with, every threshold the client tests, the two queries the
+// row's last columns answer, and each layout beside the root percentage its own
+// rule writes.
 function reading(checkout) {
     const read = texts(checkout);
     const wider = landscape(read);
+    const dispatch = requesting(checkout, wider);
     return {
         ladder: widths(checkout, CARD_STYLESHEET),
         side: padding(checkout),
-        dispatch: requesting(checkout, wider),
-        tested: thresholds(checkout),
+        dispatch,
+        wider,
+        tested: thresholds(checkout, dispatch.tested),
         letters: queried(read, LETTER_JUMP, ALPHA_PICKER_FIXED),
         dialog: queried(read, DIALOG_FULLSCREEN, DIALOG_FIXED_SIZE),
         layouts: LAYOUTS.map(([layout, construct]) => [layout, rootPercent(read, construct)])
@@ -967,9 +1010,21 @@ function measured(kind, shapes, read, viewport) {
     return rows;
 }
 
-// The width a height row is resolved at, which no rule tests, so the row's
-// columns move with its height alone.
-const UNTESTED_WIDTH = 1440;
+// The heights one width is walked at, ascending and distinct: the tallest page
+// `getImageWidth` still calls landscape and the shortest it calls portrait, and
+// the tallest css calls landscape and the shortest it calls portrait. Refuses a
+// width whose landscape height is not a positive count of css pixels.
+function heights(width, wider) {
+    const tallest = Math.ceil(width / wider) - 1;
+    if (!Number.isInteger(tallest) || tallest < 1) {
+        throw new Error(
+            `a page ${width}px wide is landscape up to a height of ${tallest}, which is no positive count of css pixels`
+        );
+    }
+    return [...new Set([tallest, tallest + 1, width, width + 1])].sort(
+        (left, right) => left - right
+    );
+}
 
 function breakpoints(checkout) {
     const read = reading(checkout);
@@ -992,9 +1047,9 @@ function breakpoints(checkout) {
         'letter_jump',
         'dialog'
     ]);
-    if (tested[WIDTH].includes(UNTESTED_WIDTH)) {
+    if (tested[WIDTH].some((threshold) => STRADDLE.some((step) => threshold + step === UNTESTED_WIDTH))) {
         throw new Error(
-            `a height row is resolved at ${UNTESTED_WIDTH}px, which a stylesheet this client resolves tests`
+            `a height row is resolved at ${UNTESTED_WIDTH}px, which the walk tests as a width`
         );
     }
     for (const [kind, shapes] of [
@@ -1002,28 +1057,24 @@ function breakpoints(checkout) {
         ['rail', RAIL]
     ]) {
         for (const threshold of tested[WIDTH]) {
-            for (const width of [threshold - 1, threshold]) {
-                for (const height of [width * 2, Math.max(200, width / 2)]) {
+            for (const step of STRADDLE) {
+                const width = threshold + step;
+                for (const height of heights(width, read.wider)) {
                     for (const [layout, root] of read.layouts) {
-                        table += measured(
-                            kind,
-                            shapes,
-                            read,
-                            walked(width, height, layout, root)
-                        );
+                        table += measured(kind, shapes, read, walked(width, height, layout, root));
                     }
                 }
             }
         }
     }
     for (const threshold of tested[HEIGHT]) {
-        for (const height of [threshold - 1, threshold]) {
+        for (const step of STRADDLE) {
             for (const [layout, root] of read.layouts) {
                 table += measured(
                     HEIGHT,
                     WALL,
                     read,
-                    walked(UNTESTED_WIDTH, height, layout, root)
+                    walked(UNTESTED_WIDTH, threshold + step, layout, root)
                 );
             }
         }

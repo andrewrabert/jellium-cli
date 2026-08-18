@@ -99,6 +99,9 @@ fn languages(
 /// ceiling and the two skip lengths in the screen's own section; and the
 /// SyncPlay section, which is absent when `sync_play` is `SyncAccess::None`.
 // reference: settings-playback-form
+// reference: settings-subtitles-mode
+// reference: settings-playback-remembered
+// reference: settings-playback-skip
 pub fn sections<'a>(
     state: &'a State,
     held: Held,

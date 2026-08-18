@@ -1,0 +1,7 @@
+        <div class="selectContainer">
+            <select is="emby-select" class="selectSkipForwardLength" label="${LabelSkipForwardLength}"></select>
+        </div>
+
+        <div class="selectContainer">
+            <select is="emby-select" class="selectSkipBackLength" label="${LabelSkipBackLength}"></select>
+        </div>

@@ -48,6 +48,7 @@ struct Value {
     written: String,
     initializer: String,
     measures: Vec<Measure>,
+    residue: String,
     cited: Vec<Construct>,
     oracle: bool,
     standard: Option<String>,
@@ -126,7 +127,7 @@ fn appearance(root: &Path) -> Vec<Value> {
             let Some((name, typed)) = declaration.split_once(':') else {
                 continue;
             };
-            let written = typed
+            let typed_as = typed
                 .split_once('=')
                 .map_or(typed, |(written, _)| written)
                 .trim()
@@ -180,12 +181,14 @@ fn appearance(root: &Path) -> Vec<Value> {
                 }
             }
 
+            let held = written(&initializer);
             values.push(Value {
                 name: name.trim().to_owned(),
                 module: module.clone(),
                 at: format!("{named}:{}", index + 1),
-                written,
-                measures: measures(&initializer),
+                written: typed_as,
+                measures: held.measures,
+                residue: held.residue,
                 initializer,
                 cited,
                 oracle,
@@ -527,15 +530,30 @@ fn trimmed(count: f64) -> String {
         .to_owned()
 }
 
-/// Every value an initializer writes, in the order it writes them; a
-/// constructor no arm names writes none, so a value written in one reaches no
-/// bucket of its own.
-fn measures(initializer: &str) -> Vec<Measure> {
+/// What one initializer writes: every value it names in a measurement
+/// constructor, and the text left standing once those constructors' argument
+/// lists are cut out.
+struct Written {
+    measures: Vec<Measure>,
+    residue: String,
+}
+
+/// The two counts an `Aspect::over` argument list writes.
+fn over(arguments: &str) -> Option<(f64, f64)> {
+    let (wide, tall) = arguments.split_once(',')?;
+    Some((wide.trim().parse().ok()?, tall.trim().parse().ok()?))
+}
+
+/// `initializer` flattened, read for every value its measurement constructors
+/// write, and cut down to what stands outside them.
+fn written(initializer: &str) -> Written {
     let mut found = Vec::new();
     let flat = flattened(initializer);
-    let mut rest = flat.as_str();
-    while let Some(at) = rest.find("::") {
-        let before = &rest[..at];
+    let mut measured = vec![false; flat.len()];
+    let mut base = 0;
+    while let Some(at) = flat[base..].find("::") {
+        let opened = base + at;
+        let before = &flat[..opened];
         let name: String = before
             .chars()
             .rev()
@@ -544,16 +562,18 @@ fn measures(initializer: &str) -> Vec<Measure> {
             .into_iter()
             .rev()
             .collect();
-        let after = &rest[at + 2..];
-        let Some((call, tail)) = after.split_once('(') else {
+        let after = opened + 2;
+        let Some(paren) = flat[after..].find('(') else {
             break;
         };
-        let Some(end) = closing(tail) else {
-            rest = after;
+        let call = &flat[after..after + paren];
+        let list = after + paren + 1;
+        let Some(end) = closing(&flat[list..]) else {
+            base = after;
             continue;
         };
-        let arguments = &tail[..end];
-        rest = after;
+        let arguments = &flat[list..list + end];
+        base = after;
         // every argument is read with its digit separators gone, so
         // `Length::em(1.669_565_2)` is a count and not a name
         let number = arguments.replace('_', "").parse::<f64>();
@@ -564,63 +584,63 @@ fn measures(initializer: &str) -> Vec<Measure> {
             ("length", "em") => {
                 let Ok(em) = number else { continue };
                 if em == 0.0 || em == 1.0 {
-                    Measure::Identity
+                    vec![Measure::Identity]
                 } else {
-                    Measure::Spelt {
+                    vec![Measure::Spelt {
                         named: format!("{}em", trimmed(em)),
                         spellings: vec![
                             Spelling::Measured(Count::of(em, Unit::Em)),
                             Spelling::Measured(Count::of(em, Unit::Rem)),
                             Spelling::Measured(Count::of(em * 100.0, Unit::Percent)),
                         ],
-                    }
+                    }]
                 }
             }
             ("breakpoint", "em") => {
                 let Ok(em) = number else { continue };
-                Measure::Spelt {
+                vec![Measure::Spelt {
                     named: format!("{}em", trimmed(em)),
                     spellings: vec![
                         Spelling::Measured(Count::of(em, Unit::Em)),
                         Spelling::Measured(Count::of(em, Unit::Rem)),
                     ],
-                }
+                }]
             }
             ("breakpoint", "pixels") => {
                 let Ok(px) = number else { continue };
-                Measure::Spelt {
+                vec![Measure::Spelt {
                     named: format!("{}px", trimmed(px)),
                     spellings: vec![Spelling::Measured(Count::of(px, Unit::Pixels))],
-                }
+                }]
             }
             ("css", "of") => {
                 let Ok(px) = number else { continue };
                 if px == 0.0 {
-                    Measure::Identity
+                    vec![Measure::Identity]
                 } else {
-                    Measure::Spelt {
+                    vec![Measure::Spelt {
                         named: format!("{}px", trimmed(px)),
                         spellings: vec![Spelling::Measured(Count::of(px, Unit::Pixels))],
-                    }
+                    }]
                 }
             }
             ("css", "unitless") => {
                 let Ok(px) = number else { continue };
                 if px == 0.0 {
-                    Measure::Identity
+                    vec![Measure::Identity]
                 } else {
-                    Measure::Spelt {
+                    vec![Measure::Spelt {
                         named: trimmed(px),
                         spellings: vec![Spelling::Measured(Count::of(px, Unit::Bare))],
-                    }
+                    }]
                 }
             }
             ("columns", "twelfths") => {
                 let Ok(count) = number else { continue };
-                Measure::Spelt {
+                vec![Measure::Spelt {
                     named: trimmed(count),
                     spellings: vec![Spelling::Measured(Count::of(count, Unit::Bare))],
-                }
+                }]
             }
             // a canvas length is not a css value: its zero is the unit, and the
             // reference writes no other
@@ -629,34 +649,34 @@ fn measures(initializer: &str) -> Vec<Measure> {
                 if count != 0.0 {
                     continue;
                 }
-                Measure::Identity
+                vec![Measure::Identity]
             }
             ("share", "per_ten_thousand") => {
                 let Ok(share) = number else { continue };
                 if share == 0.0 || share == 10_000.0 {
-                    Measure::Identity
+                    vec![Measure::Identity]
                 } else {
-                    Measure::Spelt {
+                    vec![Measure::Spelt {
                         named: format!("{}%", trimmed(share / 100.0)),
                         spellings: vec![
                             Spelling::Measured(Count::of(share / 100.0, Unit::Percent)),
                             Spelling::Measured(Count::of(share / 100.0, Unit::ViewportWidth)),
                         ],
-                    }
+                    }]
                 }
             }
             ("share", "units") => {
                 let Ok(count) = number else { continue };
                 if count == 0.0 {
-                    Measure::Identity
+                    vec![Measure::Identity]
                 } else {
-                    Measure::Spelt {
+                    vec![Measure::Spelt {
                         named: format!("{}vw", trimmed(count)),
                         spellings: vec![
                             Spelling::Measured(Count::of(count, Unit::ViewportWidth)),
                             Spelling::Measured(Count::of(count, Unit::ViewportHeight)),
                         ],
-                    }
+                    }]
                 }
             }
             // a ratio is a multiple of the lettering the rule is written in,
@@ -665,61 +685,137 @@ fn measures(initializer: &str) -> Vec<Measure> {
             ("ratio", "thousandths") => {
                 let Ok(thousandths) = number else { continue };
                 if thousandths == 0.0 || thousandths == 1000.0 {
-                    Measure::Identity
+                    vec![Measure::Identity]
                 } else {
-                    Measure::Spelt {
+                    vec![Measure::Spelt {
                         named: trimmed(thousandths / 1000.0),
                         spellings: vec![
                             Spelling::Measured(Count::of(thousandths / 1000.0, Unit::Bare)),
                             Spelling::Measured(Count::of(thousandths / 1000.0, Unit::Em)),
                             Spelling::Measured(Count::of(thousandths / 10.0, Unit::Percent)),
                         ],
-                    }
+                    }]
                 }
             }
             ("ratio", "percent") => {
                 let Ok(percent) = number else { continue };
                 if percent == 0.0 || percent == 100.0 {
-                    Measure::Identity
+                    vec![Measure::Identity]
                 } else {
-                    Measure::Spelt {
+                    vec![Measure::Spelt {
                         named: format!("{}%", trimmed(percent)),
                         spellings: vec![
                             Spelling::Measured(Count::of(percent, Unit::Percent)),
                             Spelling::Measured(Count::of(percent / 100.0, Unit::Bare)),
                             Spelling::Measured(Count::of(percent / 100.0, Unit::Em)),
                         ],
-                    }
+                    }]
                 }
             }
             ("alpha", "thousandths") => {
                 let Ok(thousandths) = number else { continue };
                 if thousandths == 0.0 || thousandths == 1000.0 {
-                    Measure::Identity
+                    vec![Measure::Identity]
                 } else {
-                    Measure::Spelt {
+                    vec![Measure::Spelt {
                         named: trimmed(thousandths / 1000.0),
                         spellings: vec![Spelling::Measured(Count::of(
                             thousandths / 1000.0,
                             Unit::Bare,
                         ))],
-                    }
+                    }]
                 }
             }
             ("color", "rgb" | "rgba") => {
                 let Some(color) = color(arguments) else {
                     continue;
                 };
-                Measure::Spelt {
+                vec![Measure::Spelt {
                     named: color.clone(),
                     spellings: vec![Spelling::Color(flattened(&color))],
-                }
+                }]
+            }
+            // a count of cards is written as the share one card takes
+            ("across", "cards") => {
+                let Ok(cards) = number else { continue };
+                vec![Measure::Spelt {
+                    named: format!("{}%", trimmed(100.0 / cards)),
+                    spellings: vec![Spelling::Measured(Count::of(100.0 / cards, Unit::Percent))],
+                }]
+            }
+            ("perrow", "cards") => {
+                let Ok(cards) = number else { continue };
+                vec![Measure::Spelt {
+                    named: trimmed(cards),
+                    spellings: vec![Spelling::Measured(Count::of(cards, Unit::Bare))],
+                }]
+            }
+            // an arm the reference writes as `100 / percent` names the percent
+            ("perrow", "percent") => {
+                let Ok(percent) = number else { continue };
+                vec![Measure::Spelt {
+                    named: trimmed(percent),
+                    spellings: vec![Spelling::Measured(Count::of(percent, Unit::Bare))],
+                }]
+            }
+            ("elevation", "steps") => {
+                let Ok(steps) = number else { continue };
+                vec![Measure::Spelt {
+                    named: trimmed(steps),
+                    spellings: vec![Spelling::Measured(Count::of(steps, Unit::Bare))],
+                }]
+            }
+            ("aspect", "of") => {
+                let Ok(ratio) = number else { continue };
+                vec![Measure::Spelt {
+                    named: trimmed(ratio),
+                    spellings: vec![Spelling::Measured(Count::of(ratio, Unit::Bare))],
+                }]
+            }
+            // a ratio the reference writes as a division is two counts
+            ("aspect", "over") => {
+                let Some((wide, tall)) = over(arguments) else {
+                    continue;
+                };
+                vec![
+                    Measure::Spelt {
+                        named: trimmed(wide),
+                        spellings: vec![Spelling::Measured(Count::of(wide, Unit::Bare))],
+                    },
+                    Measure::Spelt {
+                        named: trimmed(tall),
+                        spellings: vec![Spelling::Measured(Count::of(tall, Unit::Bare))],
+                    },
+                ]
+            }
+            ("tolerance", "of") => {
+                let Ok(apart) = number else { continue };
+                vec![Measure::Spelt {
+                    named: trimmed(apart),
+                    spellings: vec![Spelling::Measured(Count::of(apart, Unit::Bare))],
+                }]
+            }
+            ("timedelta", "milliseconds") => {
+                let Ok(count) = number else { continue };
+                vec![Measure::Spelt {
+                    named: trimmed(count),
+                    spellings: vec![Spelling::Measured(Count::of(count, Unit::Bare))],
+                }]
             }
             _ => continue,
         };
-        found.push(measure);
+        measured[list..list + end].fill(true);
+        found.extend(measure);
     }
-    found
+    let residue: String = flat
+        .char_indices()
+        .filter(|(at, _)| !measured[*at])
+        .map(|(_, value)| value)
+        .collect();
+    Written {
+        measures: found,
+        residue,
+    }
 }
 
 /// The offset of the parenthesis that closes the one just opened.
@@ -800,17 +896,18 @@ fn a_span_carries_a_value_only_where_it_writes_it() {
     assert!(sheet.carries(&Spelling::Measured(Count::of(1.669_565_2, Unit::Em))));
 
     assert!(matches!(
-        measures("Length::em(0.6)").as_slice(),
+        written("Length::em(0.6)").measures.as_slice(),
         [Measure::Spelt { named, .. }] if named == "0.6em"
     ));
     assert!(matches!(
-        measures("Length::em(1.0)").as_slice(),
+        written("Length::em(1.0)").measures.as_slice(),
         [Measure::Identity]
     ));
     assert!(matches!(
-        measures("Alpha::thousandths(0)").as_slice(),
+        written("Alpha::thousandths(0)").measures.as_slice(),
         [Measure::Identity]
     ));
+    assert_eq!(written("Length::em(0.6)").residue, "length::em()");
 }
 
 #[test]
@@ -868,6 +965,32 @@ fn every_cited_span_holds_the_value_that_cites_it() {
     assert!(
         measured > 0,
         "no appearance value was measured against a cited span"
+    );
+}
+
+/// A value citing a ported row writes every number it takes inside a
+/// measurement constructor, so no number of a cited value stands where the span
+/// check cannot look for it.
+/// A value resting on a standard or on the oracle writes the measurement
+/// system's own machinery and is outside this.
+#[test]
+fn no_bare_number_reaches_a_cited_appearance_value() {
+    let root = tree::workspace_root();
+    let values = appearance(&root);
+    assert!(
+        values.iter().any(|value| !value.cited.is_empty()),
+        "no appearance value cites a ported row"
+    );
+
+    let bare: Vec<String> = values
+        .iter()
+        .filter(|value| !value.cited.is_empty())
+        .filter(|value| !numbered(&value.residue).is_empty())
+        .map(|value| format!("{} ({}): {}", value.at, value.name, value.residue))
+        .collect();
+    assert!(
+        bare.is_empty(),
+        "cited appearance values writing a number outside a measurement type: {bare:#?}"
     );
 }
 

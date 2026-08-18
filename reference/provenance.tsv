@@ -641,3 +641,5 @@ card-image-inherited	src/components/cardbuilder/cardBuilder.js	327	378	7defd1c57
 card-inner-footer	src/components/cardbuilder/cardBuilder.js	945	950	9a3ffd7607290baa676fe9cec8d8bd5ea472a22beade0fa4933cf4ffd9bbc0d9	ported
 item-type-icon	src/utils/image.ts	130	161	412090ae234c0d40c8fb8642b8b85291b873c5ded577542ef8bdddd35eddda27	ported
 livetv-program-sections	src/utils/sections.ts	160	192	a626c52974aff7d11a47d6d229b30853951bd587ba33991823320ab8d348d8d6	ported
+guide-day	src/components/guide/guide.js	139	139	09f9aaecba322afa4d984caaabfd5b9224905244ef4fad1656e30d00be3c9391	ported
+settings-playback-skip	src/components/playbackSettings/playbackSettings.template.html	152	158	3f658ca669ac337b0de254c1140395026e24f2332e1cfc83ea56aef3e821e1c9	ported

@@ -229,18 +229,18 @@ impl<T: Copy> Ladder<T> {
     }
 }
 
-const fn step<T>(at: f64, held: T) -> Step<T> {
+const fn step<T>(at: Breakpoint, held: T) -> Step<T> {
     Step {
-        at: Some(Query::MinWidth(Breakpoint::em(at))),
+        at: Some(Query::MinWidth(at)),
         orientation: None,
         held,
     }
 }
 
-const fn landscape<T>(at: Option<f64>, held: T) -> Step<T> {
+const fn landscape<T>(at: Option<Breakpoint>, held: T) -> Step<T> {
     Step {
         at: match at {
-            Some(em) => Some(Query::MinWidth(Breakpoint::em(em))),
+            Some(breakpoint) => Some(Query::MinWidth(breakpoint)),
             None => None,
         },
         orientation: Some(Orientation::Landscape),
@@ -248,75 +248,80 @@ const fn landscape<T>(at: Option<f64>, held: T) -> Step<T> {
     }
 }
 
+// reference: card-width
 // reference: card-width-ladder
 const BANNER: Ladder<Across> = Ladder {
     base: Across::cards(1),
     steps: &[
-        step(50.0, Across::cards(2)),
-        step(75.0, Across::cards(3)),
-        step(131.25, Across::cards(4)),
+        step(Breakpoint::em(50.0), Across::cards(2)),
+        step(Breakpoint::em(75.0), Across::cards(3)),
+        step(Breakpoint::em(131.25), Across::cards(4)),
     ],
     televised: None,
 };
 
+// reference: card-width
 // reference: card-width-ladder
 // reference: card-width-televised
 const BACKDROP: Ladder<Across> = Ladder {
     base: Across::cards(1),
     steps: &[
-        step(25.0, Across::cards(2)),
-        step(48.125, Across::cards(3)),
-        step(75.0, Across::cards(4)),
-        step(100.0, Across::cards(5)),
-        step(156.25, Across::cards(6)),
+        step(Breakpoint::em(25.0), Across::cards(2)),
+        step(Breakpoint::em(48.125), Across::cards(3)),
+        step(Breakpoint::em(75.0), Across::cards(4)),
+        step(Breakpoint::em(100.0), Across::cards(5)),
+        step(Breakpoint::em(156.25), Across::cards(6)),
     ],
     televised: Some(Across::cards(4)),
 };
 
+// reference: card-width
 // reference: card-width-ladder
 const SMALL_BACKDROP: Ladder<Across> = Ladder {
     base: Across::cards(2),
     steps: &[
-        step(31.25, Across::cards(3)),
-        step(50.0, Across::cards(4)),
-        step(62.5, Across::cards(5)),
-        step(75.0, Across::cards(6)),
-        step(87.5, Across::cards(7)),
-        step(100.0, Across::cards(8)),
+        step(Breakpoint::em(31.25), Across::cards(3)),
+        step(Breakpoint::em(50.0), Across::cards(4)),
+        step(Breakpoint::em(62.5), Across::cards(5)),
+        step(Breakpoint::em(75.0), Across::cards(6)),
+        step(Breakpoint::em(87.5), Across::cards(7)),
+        step(Breakpoint::em(100.0), Across::cards(8)),
     ],
     televised: None,
 };
 
+// reference: card-width
 // reference: card-width-ladder
 // reference: card-width-televised
 const SQUARE: Ladder<Across> = Ladder {
     base: Across::cards(2),
     steps: &[
-        step(31.25, Across::cards(3)),
-        step(43.75, Across::cards(4)),
-        step(50.0, Across::cards(5)),
-        step(75.0, Across::cards(6)),
-        step(87.5, Across::cards(7)),
-        step(100.0, Across::cards(8)),
-        step(120.0, Across::cards(9)),
-        step(131.25, Across::cards(10)),
+        step(Breakpoint::em(31.25), Across::cards(3)),
+        step(Breakpoint::em(43.75), Across::cards(4)),
+        step(Breakpoint::em(50.0), Across::cards(5)),
+        step(Breakpoint::em(75.0), Across::cards(6)),
+        step(Breakpoint::em(87.5), Across::cards(7)),
+        step(Breakpoint::em(100.0), Across::cards(8)),
+        step(Breakpoint::em(120.0), Across::cards(9)),
+        step(Breakpoint::em(131.25), Across::cards(10)),
     ],
     televised: Some(Across::cards(6)),
 };
 
+// reference: card-width
 // reference: card-width-ladder
 // reference: card-width-televised
 const PORTRAIT: Ladder<Across> = Ladder {
     base: Across::cards(3),
     steps: &[
-        step(31.25, Across::cards(3)),
-        step(43.75, Across::cards(4)),
-        step(50.0, Across::cards(5)),
-        step(75.0, Across::cards(6)),
-        step(87.5, Across::cards(7)),
-        step(100.0, Across::cards(8)),
-        step(120.0, Across::cards(9)),
-        step(131.25, Across::cards(10)),
+        step(Breakpoint::em(31.25), Across::cards(3)),
+        step(Breakpoint::em(43.75), Across::cards(4)),
+        step(Breakpoint::em(50.0), Across::cards(5)),
+        step(Breakpoint::em(75.0), Across::cards(6)),
+        step(Breakpoint::em(87.5), Across::cards(7)),
+        step(Breakpoint::em(100.0), Across::cards(8)),
+        step(Breakpoint::em(120.0), Across::cards(9)),
+        step(Breakpoint::em(131.25), Across::cards(10)),
     ],
     televised: Some(Across::cards(6)),
 };
@@ -347,26 +352,18 @@ fn measured(card: Card, room: Room) -> Drawn {
     }
 }
 
-const fn units(at: f64, count: f64) -> Step<Share> {
-    step(at, Share::units(count))
-}
-
-const fn units_landscape(at: Option<f64>, count: f64) -> Step<Share> {
-    landscape(at, Share::units(count))
-}
-
 // reference: card-rail-ladder
 // reference: card-rail-overrides
 const RAIL_BACKDROP: Ladder<Share> = Ladder {
     base: Share::units(72.0),
     steps: &[
-        units(35.0, 45.5),
-        units(48.125, 30.0),
-        units_landscape(None, 30.0),
-        units_landscape(Some(48.125), 23.1),
-        units(75.0, 23.1),
-        units(100.0, 18.7),
-        units(156.25, 15.6),
+        step(Breakpoint::em(35.0), Share::units(45.5)),
+        step(Breakpoint::em(48.125), Share::units(30.0)),
+        landscape(None, Share::units(30.0)),
+        landscape(Some(Breakpoint::em(48.125)), Share::units(23.1)),
+        step(Breakpoint::em(75.0), Share::units(23.1)),
+        step(Breakpoint::em(100.0), Share::units(18.7)),
+        step(Breakpoint::em(156.25), Share::units(15.6)),
     ],
     televised: Some(Share::units(23.5)),
 };
@@ -376,14 +373,14 @@ const RAIL_BACKDROP: Ladder<Share> = Ladder {
 const RAIL_SMALL_BACKDROP: Ladder<Share> = Ladder {
     base: Share::units(72.0),
     steps: &[
-        units(35.0, 30.0),
-        units(48.125, 30.0),
-        units_landscape(None, 30.0),
-        units_landscape(Some(48.125), 23.1),
-        units_landscape(Some(50.0), 15.5),
-        units(75.0, 23.1),
-        units(100.0, 18.7),
-        units(156.25, 15.6),
+        step(Breakpoint::em(35.0), Share::units(30.0)),
+        step(Breakpoint::em(48.125), Share::units(30.0)),
+        landscape(None, Share::units(30.0)),
+        landscape(Some(Breakpoint::em(48.125)), Share::units(23.1)),
+        landscape(Some(Breakpoint::em(50.0)), Share::units(15.5)),
+        step(Breakpoint::em(75.0), Share::units(23.1)),
+        step(Breakpoint::em(100.0), Share::units(18.7)),
+        step(Breakpoint::em(156.25), Share::units(15.6)),
     ],
     televised: Some(Share::units(18.8)),
 };
@@ -393,15 +390,15 @@ const RAIL_SMALL_BACKDROP: Ladder<Share> = Ladder {
 const RAIL_SQUARE: Ladder<Share> = Ladder {
     base: Share::units(40.0),
     steps: &[
-        units(35.0, 31.2),
-        units(43.75, 23.1),
-        units_landscape(None, 23.1),
-        units(50.0, 18.5),
-        units(75.0, 15.5),
-        units(87.5, 13.3),
-        units(100.0, 11.6),
-        units(120.0, 10.41),
-        units(131.25, 9.3),
+        step(Breakpoint::em(35.0), Share::units(31.2)),
+        step(Breakpoint::em(43.75), Share::units(23.1)),
+        landscape(None, Share::units(23.1)),
+        step(Breakpoint::em(50.0), Share::units(18.5)),
+        step(Breakpoint::em(75.0), Share::units(15.5)),
+        step(Breakpoint::em(87.5), Share::units(13.3)),
+        step(Breakpoint::em(100.0), Share::units(11.6)),
+        step(Breakpoint::em(120.0), Share::units(10.41)),
+        step(Breakpoint::em(131.25), Share::units(9.3)),
     ],
     televised: Some(Share::units(15.6)),
 };
@@ -411,15 +408,15 @@ const RAIL_SQUARE: Ladder<Share> = Ladder {
 const RAIL_PORTRAIT: Ladder<Share> = Ladder {
     base: Share::units(40.0),
     steps: &[
-        units(25.0, 31.2),
-        units(43.75, 23.1),
-        units_landscape(None, 23.1),
-        units(50.0, 18.5),
-        units(75.0, 15.5),
-        units(87.5, 13.3),
-        units(100.0, 11.6),
-        units(120.0, 10.41),
-        units(131.25, 9.3),
+        step(Breakpoint::em(25.0), Share::units(31.2)),
+        step(Breakpoint::em(43.75), Share::units(23.1)),
+        landscape(None, Share::units(23.1)),
+        step(Breakpoint::em(50.0), Share::units(18.5)),
+        step(Breakpoint::em(75.0), Share::units(15.5)),
+        step(Breakpoint::em(87.5), Share::units(13.3)),
+        step(Breakpoint::em(100.0), Share::units(11.6)),
+        step(Breakpoint::em(120.0), Share::units(10.41)),
+        step(Breakpoint::em(131.25), Share::units(9.3)),
     ],
     televised: Some(Share::units(15.6)),
 };
@@ -440,19 +437,40 @@ pub struct Aspect {
     ratio: f64,
 }
 
+/// How far a median may stand from a ratio and still snap onto it.
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
+struct Tolerance {
+    apart: f64,
+}
+
+impl Tolerance {
+    const fn of(apart: f64) -> Tolerance {
+        Tolerance { apart }
+    }
+
+    fn holds(self, one: Aspect, other: Aspect) -> bool {
+        (one.ratio - other.ratio).abs() <= self.apart
+    }
+}
+
 /// The ratios the reference snaps a median onto, each with the distance it
 /// snaps from: 2:3, 16:9, 1:1, 4:3, in the order the reference tests them.
 // reference: primary-aspect
-const SNAPPED: [(f64, f64); 4] = [
-    (2.0 / 3.0, 0.15),
-    (16.0 / 9.0, 0.2),
-    (1.0, 0.15),
-    (4.0 / 3.0, 0.15),
+const SNAPPED: [(Aspect, Tolerance); 4] = [
+    (Aspect::over(2.0, 3.0), Tolerance::of(0.15)),
+    (Aspect::over(16.0, 9.0), Tolerance::of(0.2)),
+    (Aspect::of(1.0), Tolerance::of(0.15)),
+    (Aspect::over(4.0, 3.0), Tolerance::of(0.15)),
 ];
 
 impl Aspect {
     pub const fn of(ratio: f64) -> Aspect {
         Aspect { ratio }
+    }
+
+    /// An aspect the reference writes as one count over another.
+    const fn over(wide: f64, tall: f64) -> Aspect {
+        Aspect { ratio: wide / tall }
     }
 
     pub fn ratio(self) -> f64 {
@@ -474,14 +492,28 @@ impl Aspect {
             0 => (held.get(half.checked_sub(1)?)? + held.get(half)?) / 2.0,
             _ => *held.get(half)?,
         };
-        Some(Aspect::of(
+        let middle = Aspect::of(middle);
+        Some(
             SNAPPED
                 .into_iter()
-                .find(|(onto, apart)| (onto - middle).abs() <= *apart)
+                .find(|(onto, apart)| apart.holds(*onto, middle))
                 .map_or(middle, |(onto, _)| onto),
-        ))
+        )
     }
 }
+
+/// The aspect at or above which items ask for a banner.
+// reference: card-auto-shape
+const BANNER_AT: Aspect = Aspect::of(3.0);
+
+/// The aspect at or above which items ask for a backdrop.
+// reference: card-auto-shape
+const BACKDROP_AT: Aspect = Aspect::of(1.33);
+
+/// The aspect above which items ask for a square and at or below which they ask
+/// for a portrait.
+// reference: card-auto-shape
+const SQUARE_ABOVE: Aspect = Aspect::of(0.8);
 
 impl Shape {
     /// The shape items of this aspect ask for: banner at 3 and wider, backdrop
@@ -492,10 +524,10 @@ impl Shape {
         let Some(aspect) = aspect else {
             return default;
         };
-        match aspect.ratio() {
-            ratio if ratio >= 3.0 => Shape::Banner,
-            ratio if ratio >= 1.33 => Shape::Backdrop,
-            ratio if ratio > 0.8 => Shape::Square,
+        match aspect {
+            held if held >= BANNER_AT => Shape::Banner,
+            held if held >= BACKDROP_AT => Shape::Backdrop,
+            held if held > SQUARE_ABOVE => Shape::Square,
             _ => Shape::Portrait,
         }
     }
@@ -560,6 +592,32 @@ impl Rail {
 }
 
 impl Card {
+    /// Every card this client draws.
+    pub fn all() -> impl Iterator<Item = Card> {
+        [
+            Card::Wall(Shape::Portrait),
+            Card::Wall(Shape::Square),
+            Card::Wall(Shape::Backdrop),
+            Card::Wall(Shape::SmallBackdrop),
+            Card::Wall(Shape::Banner),
+            Card::Wall(Shape::Mixed(Mixed::Portrait)),
+            Card::Wall(Shape::Mixed(Mixed::Square)),
+            Card::Wall(Shape::Mixed(Mixed::Backdrop)),
+            Card::Rail(Rail::Portrait),
+            Card::Rail(Rail::Square),
+            Card::Rail(Rail::Backdrop),
+            Card::Rail(Rail::SmallBackdrop),
+        ]
+        .into_iter()
+    }
+
+    /// Every page width this card's own `getPostersPerRow` switch compares a
+    /// page width against, in the source order the reference tests them.
+    // reference: card-count-ladder
+    pub fn tested(self) -> impl Iterator<Item = Css> {
+        request(self).arms.iter().filter_map(|arm| arm.at)
+    }
+
     /// The card a resumed item draws on, which its own media type decides: a
     /// resumed book is a portrait rail and every other resumed item a backdrop
     /// one.
@@ -885,21 +943,18 @@ impl Request {
     }
 }
 
-const fn arm(at: f64, held: PerRow) -> Arm {
+const fn arm(at: Css, held: PerRow) -> Arm {
     Arm {
         turned: Turned::Either,
-        at: Some(Css::of(at)),
+        at: Some(at),
         held,
     }
 }
 
-const fn turned(at: Option<f64>, held: PerRow) -> Arm {
+const fn turned(at: Option<Css>, held: PerRow) -> Arm {
     Arm {
         turned: Turned::Landscape,
-        at: match at {
-            Some(css) => Some(Css::of(css)),
-            None => None,
-        },
+        at,
         held,
     }
 }
@@ -908,14 +963,14 @@ const fn turned(at: Option<f64>, held: PerRow) -> Arm {
 const REQUEST_PORTRAIT: Request = Request {
     televised: Some(PerRow::percent(16.66666667)),
     arms: &[
-        arm(2200.0, PerRow::cards(10)),
-        arm(1920.0, PerRow::percent(11.1111111111)),
-        arm(1600.0, PerRow::cards(8)),
-        arm(1400.0, PerRow::percent(14.28571428571)),
-        arm(1200.0, PerRow::percent(16.66666667)),
-        arm(800.0, PerRow::cards(5)),
-        arm(700.0, PerRow::cards(4)),
-        arm(500.0, PerRow::percent(33.33333333)),
+        arm(Css::unitless(2200.0), PerRow::cards(10)),
+        arm(Css::unitless(1920.0), PerRow::percent(11.1111111111)),
+        arm(Css::unitless(1600.0), PerRow::cards(8)),
+        arm(Css::unitless(1400.0), PerRow::percent(14.28571428571)),
+        arm(Css::unitless(1200.0), PerRow::percent(16.66666667)),
+        arm(Css::unitless(800.0), PerRow::cards(5)),
+        arm(Css::unitless(700.0), PerRow::cards(4)),
+        arm(Css::unitless(500.0), PerRow::percent(33.33333333)),
     ],
     otherwise: PerRow::percent(33.33333333),
 };
@@ -924,14 +979,14 @@ const REQUEST_PORTRAIT: Request = Request {
 const REQUEST_SQUARE: Request = Request {
     televised: Some(PerRow::percent(16.66666667)),
     arms: &[
-        arm(2200.0, PerRow::cards(10)),
-        arm(1920.0, PerRow::percent(11.1111111111)),
-        arm(1600.0, PerRow::cards(8)),
-        arm(1400.0, PerRow::percent(14.28571428571)),
-        arm(1200.0, PerRow::percent(16.66666667)),
-        arm(800.0, PerRow::cards(5)),
-        arm(700.0, PerRow::cards(4)),
-        arm(500.0, PerRow::percent(33.33333333)),
+        arm(Css::unitless(2200.0), PerRow::cards(10)),
+        arm(Css::unitless(1920.0), PerRow::percent(11.1111111111)),
+        arm(Css::unitless(1600.0), PerRow::cards(8)),
+        arm(Css::unitless(1400.0), PerRow::percent(14.28571428571)),
+        arm(Css::unitless(1200.0), PerRow::percent(16.66666667)),
+        arm(Css::unitless(800.0), PerRow::cards(5)),
+        arm(Css::unitless(700.0), PerRow::cards(4)),
+        arm(Css::unitless(500.0), PerRow::percent(33.33333333)),
     ],
     otherwise: PerRow::cards(2),
 };
@@ -940,9 +995,9 @@ const REQUEST_SQUARE: Request = Request {
 const REQUEST_BANNER: Request = Request {
     televised: None,
     arms: &[
-        arm(2200.0, PerRow::cards(4)),
-        arm(1200.0, PerRow::percent(33.33333333)),
-        arm(800.0, PerRow::cards(2)),
+        arm(Css::unitless(2200.0), PerRow::cards(4)),
+        arm(Css::unitless(1200.0), PerRow::percent(33.33333333)),
+        arm(Css::unitless(800.0), PerRow::cards(2)),
     ],
     otherwise: PerRow::cards(1),
 };
@@ -951,11 +1006,11 @@ const REQUEST_BANNER: Request = Request {
 const REQUEST_BACKDROP: Request = Request {
     televised: Some(PerRow::cards(4)),
     arms: &[
-        arm(2500.0, PerRow::cards(6)),
-        arm(1600.0, PerRow::cards(5)),
-        arm(1200.0, PerRow::cards(4)),
-        arm(770.0, PerRow::cards(3)),
-        arm(420.0, PerRow::cards(2)),
+        arm(Css::unitless(2500.0), PerRow::cards(6)),
+        arm(Css::unitless(1600.0), PerRow::cards(5)),
+        arm(Css::unitless(1200.0), PerRow::cards(4)),
+        arm(Css::unitless(770.0), PerRow::cards(3)),
+        arm(Css::unitless(420.0), PerRow::cards(2)),
     ],
     otherwise: PerRow::cards(1),
 };
@@ -964,12 +1019,12 @@ const REQUEST_BACKDROP: Request = Request {
 const REQUEST_SMALL_BACKDROP: Request = Request {
     televised: None,
     arms: &[
-        arm(1600.0, PerRow::cards(8)),
-        arm(1400.0, PerRow::percent(14.2857142857)),
-        arm(1200.0, PerRow::percent(16.66666667)),
-        arm(1000.0, PerRow::cards(5)),
-        arm(800.0, PerRow::cards(4)),
-        arm(500.0, PerRow::percent(33.33333333)),
+        arm(Css::unitless(1600.0), PerRow::cards(8)),
+        arm(Css::unitless(1400.0), PerRow::percent(14.2857142857)),
+        arm(Css::unitless(1200.0), PerRow::percent(16.66666667)),
+        arm(Css::unitless(1000.0), PerRow::cards(5)),
+        arm(Css::unitless(800.0), PerRow::cards(4)),
+        arm(Css::unitless(500.0), PerRow::percent(33.33333333)),
     ],
     otherwise: PerRow::cards(2),
 };
@@ -987,12 +1042,12 @@ const REQUEST_MIXED: Request = Request {
 const REQUEST_RAIL_PORTRAIT: Request = Request {
     televised: Some(PerRow::percent(15.5)),
     arms: &[
-        turned(Some(1700.0), PerRow::percent(11.6)),
+        turned(Some(Css::unitless(1700.0)), PerRow::percent(11.6)),
         turned(None, PerRow::percent(15.5)),
-        arm(1400.0, PerRow::percent(15.0)),
-        arm(1200.0, PerRow::percent(18.0)),
-        arm(760.0, PerRow::percent(23.0)),
-        arm(400.0, PerRow::percent(31.5)),
+        arm(Css::unitless(1400.0), PerRow::percent(15.0)),
+        arm(Css::unitless(1200.0), PerRow::percent(18.0)),
+        arm(Css::unitless(760.0), PerRow::percent(23.0)),
+        arm(Css::unitless(400.0), PerRow::percent(31.5)),
     ],
     otherwise: PerRow::percent(42.0),
 };
@@ -1001,12 +1056,12 @@ const REQUEST_RAIL_PORTRAIT: Request = Request {
 const REQUEST_RAIL_SQUARE: Request = Request {
     televised: Some(PerRow::percent(15.5)),
     arms: &[
-        turned(Some(1700.0), PerRow::percent(11.6)),
+        turned(Some(Css::unitless(1700.0)), PerRow::percent(11.6)),
         turned(None, PerRow::percent(15.5)),
-        arm(1400.0, PerRow::percent(15.0)),
-        arm(1200.0, PerRow::percent(18.0)),
-        arm(760.0, PerRow::percent(23.0)),
-        arm(540.0, PerRow::percent(31.5)),
+        arm(Css::unitless(1400.0), PerRow::percent(15.0)),
+        arm(Css::unitless(1200.0), PerRow::percent(18.0)),
+        arm(Css::unitless(760.0), PerRow::percent(23.0)),
+        arm(Css::unitless(540.0), PerRow::percent(31.5)),
     ],
     otherwise: PerRow::percent(42.0),
 };
@@ -1015,12 +1070,12 @@ const REQUEST_RAIL_SQUARE: Request = Request {
 const REQUEST_RAIL_BACKDROP: Request = Request {
     televised: Some(PerRow::percent(23.3)),
     arms: &[
-        turned(Some(1700.0), PerRow::percent(18.5)),
+        turned(Some(Css::unitless(1700.0)), PerRow::percent(18.5)),
         turned(None, PerRow::percent(23.3)),
-        arm(1800.0, PerRow::percent(23.5)),
-        arm(1400.0, PerRow::percent(30.0)),
-        arm(760.0, PerRow::percent(40.0)),
-        arm(640.0, PerRow::percent(56.0)),
+        arm(Css::unitless(1800.0), PerRow::percent(23.5)),
+        arm(Css::unitless(1400.0), PerRow::percent(30.0)),
+        arm(Css::unitless(760.0), PerRow::percent(40.0)),
+        arm(Css::unitless(640.0), PerRow::percent(56.0)),
     ],
     otherwise: PerRow::percent(72.0),
 };
@@ -1029,9 +1084,9 @@ const REQUEST_RAIL_BACKDROP: Request = Request {
 const REQUEST_RAIL_SMALL_BACKDROP: Request = Request {
     televised: Some(PerRow::percent(18.9)),
     arms: &[
-        turned(Some(800.0), PerRow::percent(15.5)),
+        turned(Some(Css::unitless(800.0)), PerRow::percent(15.5)),
         turned(None, PerRow::percent(23.3)),
-        arm(540.0, PerRow::percent(30.0)),
+        arm(Css::unitless(540.0), PerRow::percent(30.0)),
     ],
     otherwise: PerRow::percent(72.0),
 };
