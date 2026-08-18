@@ -4,21 +4,35 @@ use iced::widget::{button, checkbox, column, container, row};
 use iced::{Element, Fill};
 use jellyfin_api::types::{DayOfWeek, DayPattern, KeepUntil, SeriesTimerInfoDto};
 
-use super::Action;
+use super::{Action, clock};
 use crate::api::Api;
 use crate::app::Message;
 use crate::error::Answer;
-use crate::style::{self, Drawn, Viewport, space, typeface};
+use crate::icon::Icon;
+use crate::style::space::Room;
+use crate::style::{self, Viewport, card, space, typeface};
 use crate::text::{self as strings, Text};
-use crate::widget::{self, prose};
+use crate::widget::{self, Control, Hovered, Poster, prose};
 use crate::window;
 
 #[derive(Debug, Clone)]
 pub struct State {
     /// Series timers by name.
     pub timers: Vec<SeriesTimerInfoDto>,
-    pub window: window::Window,
+    pub grid: window::Grid,
 }
+
+/// The series tab's own card, at the shape `shape: 'auto'` falls to for items
+/// that report no aspect.
+// reference: livetv-series-cards
+// reference: card-auto-shape
+pub const CARD: card::Drawing = card::Drawing {
+    card: card::Card::Wall(card::Shape::Portrait),
+    footer: card::Footer::SeriesTimer,
+    backing: card::Backing::Padder,
+    setting: card::Setting::Centred,
+    bottom: card::Bottom::Padded,
+};
 
 /// The series options being edited, and whether confirming creates or updates.
 #[derive(Debug, Clone)]
@@ -102,54 +116,88 @@ impl Editing {
     }
 }
 
-/// Every row of the series list: one line and nothing before it.
-const ROW: space::ListRow = space::ListRow::bare(space::Lines::One);
-
-pub async fn load(api: Rc<Api>, height: Drawn) -> Answer<State> {
+pub async fn load(api: Rc<Api>, room: Room) -> Answer<State> {
     Answer::of(async {
         Ok(State {
             timers: api.series_timers().await.bubbled()?,
-            window: window::Window::new(window::Id::Series, ROW.height().drawn(), height),
+            grid: window::Grid::new(
+                window::Id::Series,
+                CARD.card.width(room),
+                CARD.row(room),
+                room,
+            ),
         })
     })
     .await
 }
 
-fn entry<'a>(timer: &'a SeriesTimerInfoDto) -> Element<'a, Message> {
-    widget::list::row(
-        ROW,
-        widget::list::Row {
+/// One series timer's card: its name over the time it records at and the
+/// channel it records from. The reference keys its image by the timer's own
+/// string id, which no image the cache holds is keyed by, so the card draws
+/// none.
+// reference: livetv-series-cards
+fn entry<'a>(timer: &'a SeriesTimerInfoDto, room: Room) -> Element<'a, Message> {
+    let name = timer.name.clone().unwrap_or_default();
+    let at = match timer.record_any_time {
+        Some(true) => strings::lookup(Text::SeriesTimerAnytime).to_string(),
+        _ => timer.start_date.map(clock).unwrap_or_default(),
+    };
+    let channel = match timer.record_any_channel {
+        Some(true) => strings::lookup(Text::SeriesTimerAllChannels).to_string(),
+        _ => match timer.channel_name.clone() {
+            Some(named) => named,
+            None => strings::lookup(Text::SeriesTimerOneChannel).to_string(),
+        },
+    };
+    widget::card(
+        CARD,
+        room,
+        Poster {
             face: None,
-            index: None,
-            title: timer.name.clone().unwrap_or_default().into(),
-            secondary: Vec::new(),
-            press: widget::list::Press::Inert,
-            controls: match timer.id.clone() {
-                Some(id) => vec![
-                    button(prose(strings::lookup(Text::SeriesEdit), typeface::BODY))
-                        .style(style::flat)
-                        .on_press(Message::LiveTvAction(Action::EditSeries(id.clone())))
-                        .into(),
-                    button(prose(strings::lookup(Text::SeriesCancel), typeface::BODY))
-                        .style(style::flat)
-                        .on_press(Message::LiveTvAction(Action::CancelSeriesTimer(id)))
-                        .into(),
-                ],
-                None => Vec::new(),
+            name: name.clone(),
+            logo: None,
+            timer: Some(crate::livetv::Recording::Series),
+            press: None,
+            hovered: Hovered {
+                plays: None,
+                controls: match timer.id.clone() {
+                    Some(id) => vec![
+                        Control {
+                            glyph: Icon::Edit,
+                            label: Text::SeriesEdit,
+                            press: Message::LiveTvAction(Action::EditSeries(id.clone())),
+                        },
+                        Control {
+                            glyph: Icon::Delete,
+                            label: Text::SeriesCancel,
+                            press: Message::LiveTvAction(Action::CancelSeriesTimer(id)),
+                        },
+                    ],
+                    None => Vec::new(),
+                },
             },
+        },
+        move |line| match line {
+            card::Line::Name => name.clone(),
+            card::Line::SeriesTimerTime => at.clone(),
+            card::Line::SeriesTimerChannel => channel.clone(),
+            _ => String::new(),
         },
     )
 }
 
-/// A windowed list of series timers by name, each with a control that opens
-/// its options and one that cancels it, and no sort control.
-pub fn view<'a>(state: &'a State) -> Element<'a, Message> {
+/// A windowed wall of centred portrait cards, each writing its name, the time
+/// it records at and the channel it records from.
+pub fn view<'a>(state: &'a State, room: Room) -> Element<'a, Message> {
     if state.timers.is_empty() {
         return widget::centered(strings::lookup(Text::SeriesEmpty).to_string());
     }
-    window::list(state.window, state.timers.len(), move |index| {
-        entry(&state.timers[index])
-    })
+    window::grid(
+        state.grid,
+        card::Wrap::Centred,
+        state.timers.len(),
+        move |index| entry(&state.timers[index], room),
+    )
 }
 
 /// A number the user edits as text, kept as the number the server carries.

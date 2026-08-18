@@ -305,7 +305,12 @@ pub fn view<'a>(
             Message::DashboardAction(super::Action::UserMenu(Some(id))),
         ))
     });
-    page.push(widget::wall(card::Card::USER, room, cards));
+    page.push(widget::wall(
+        card::Card::USER,
+        room,
+        card::Wrap::Leading,
+        cards,
+    ));
 
     widget::scrolled(column(page)).into()
 }

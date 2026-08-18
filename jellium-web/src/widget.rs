@@ -16,7 +16,7 @@ use crate::app::Message;
 use crate::icon::Icon;
 use crate::images::{self, Cache, Kind};
 use crate::live;
-use crate::livetv::Channel;
+use crate::livetv::{Channel, Recording};
 use crate::player::group::Joined;
 use crate::route::Route;
 use crate::style::space::Room;
@@ -176,23 +176,33 @@ fn framed<'a>(
 }
 
 /// One `.cardText` line, in the padding the reference writes in the em of the
-/// size that line is set in.
+/// size that line is set in, over the top the line's own place in the footer
+/// gives it.
 // reference: card-text
-fn carded<'a>(written: Element<'a, Message>, size: style::Length) -> Element<'a, Message> {
+// reference: card-text-first
+fn carded<'a>(
+    written: Element<'a, Message>,
+    size: style::Length,
+    top: style::Length,
+) -> Element<'a, Message> {
     container(written)
-        .padding(style::padding(space::card_text(size)))
+        .padding(style::padding(space::card_text(size)).top(style::drawn(top.drawn())))
         .into()
 }
 
-/// `.cardFooter`: the lines a card writes under its image inside the footer's
-/// own padding, set where `setting` sets them, with `trailing` on the footer's
-/// trailing edge at the drop the reference gives it.
+/// `.cardFooter`: the lines a card writes under its image, set where `setting`
+/// sets them, inside the footer's own padding where it stands in it, with the
+/// channel logo at its leading edge and `trailing` on its trailing edge at the
+/// drop the reference gives it.
 // reference: card-footer
+// reference: card-footer-logo
+// reference: card-footer-logo-face
 // reference: card-text-centered
-// reference: user-card-box
 fn footed<'a>(
     lines: Vec<Element<'a, Message>>,
     setting: card::Setting,
+    footing: card::Footing,
+    logo: Option<image::Handle>,
     trailing: Option<Element<'a, Message>>,
     band: Band,
 ) -> Element<'a, Message> {
@@ -210,8 +220,25 @@ fn footed<'a>(
         ]
         .into(),
     };
+    let held: Element<'a, Message> = match logo {
+        None => held,
+        Some(handle) => iced::widget::stack![
+            container(held).padding(
+                iced::Padding::ZERO.left(style::drawn(space::CARD_FOOTER_LOGO_INSET.drawn()))
+            ),
+            container(image(handle).width(style::drawn(
+                space::CARD_FOOTER_LOGO_IMAGE.of(space::CARD_FOOTER_LOGO.drawn())
+            )))
+            .center_x(style::drawn(space::CARD_FOOTER_LOGO.drawn()))
+            .center_y(Fill),
+        ]
+        .into(),
+    };
     container(held)
-        .padding(style::padding(space::CARD_FOOTER_PAD))
+        .padding(match footing {
+            card::Footing::Padded => style::padding(space::CARD_FOOTER_PAD),
+            card::Footing::Bare => iced::Padding::ZERO,
+        })
         .width(Fill)
         .style(style::card_footer)
         .into()
@@ -251,6 +278,24 @@ fn named<'a>(name: String) -> Element<'a, Message> {
             typeface::LINE_HEIGHT,
         ),
         typeface::BODY,
+        space::CARD_TEXT_FIRST_TOP,
+    )
+}
+
+/// One line under a card's first, in the secondary lettering `.cardText-secondary`
+/// writes it in.
+// reference: card-text-lines
+fn beneath<'a>(said: String) -> Element<'a, Message> {
+    carded(
+        tinted(
+            said,
+            typeface::SECONDARY,
+            typeface::Weight::Regular,
+            typeface::LINE_HEIGHT,
+            style::description,
+        ),
+        typeface::SECONDARY,
+        space::card_text(typeface::SECONDARY).top,
     )
 }
 
@@ -289,12 +334,207 @@ pub fn tile<'a>(card: card::Card, room: Room, face: Option<image::Handle>) -> El
     }
 }
 
-/// A card sized for `room`: its face over its centered, elided name, drawn
-/// inside its own pitch. `bottom` is what the login picker's cards and the
-/// select-server page's differ by, the reference setting
-/// `.cardBox-bottompadded` on the first and not the second.
-// reference: card-box-bottom
+/// One control the hover menu carries: the glyph it draws, the title it names
+/// itself by, and what pressing it sends.
+#[derive(Debug, Clone)]
+pub struct Control {
+    pub glyph: Icon,
+    pub label: Text,
+    pub press: Message,
+}
+
+/// `.cardOverlayContainer`: what the reference lays over a card's image while
+/// the pointer is over it, the control that plays at its middle and the rest
+/// in `.cardOverlayButton-br`'s group at its trailing foot.
+#[derive(Debug, Clone, Default)]
+pub struct Hovered {
+    pub plays: Option<Message>,
+    pub controls: Vec<Control>,
+}
+
+/// What one card carries: what its frame stands, the name its background is
+/// picked from and whose glyphs it draws, the channel logo its footer carries,
+/// the timer its indicators mark, what pressing it opens, and its hover menu.
+#[derive(Debug, Clone)]
+pub struct Poster {
+    pub face: Option<Face>,
+    pub name: String,
+    pub logo: Option<image::Handle>,
+    pub timer: Option<Recording>,
+    pub press: Option<Message>,
+    pub hovered: Hovered,
+}
+
+/// The glyph of the timer covering an item: a single timer's in the
+/// reference's own red, and a series timer's in the lettering faded.
+// reference: indicator-timer
+// reference: indicator-timer-face
+pub fn timer<'a>(recording: Recording, size: style::Length) -> Element<'a, Message> {
+    match recording {
+        Recording::Once => crate::icon::tinted(Icon::FiberManualRecord, size, style::timer),
+        Recording::Series => crate::icon::tinted(Icon::FiberSmartRecord, size, style::series_timer),
+    }
+}
+
+/// `.cardIndicators`: the timer's glyph laid on the top trailing corner of a
+/// card's image, and nothing where no timer covers the item.
+// reference: card-indicators
+fn marked<'a>(frame: Element<'a, Message>, recording: Option<Recording>) -> Element<'a, Message> {
+    let Some(recording) = recording else {
+        return frame;
+    };
+    let inset = style::drawn(space::CARD_INDICATORS_INSET.drawn());
+    iced::widget::stack![
+        frame,
+        container(timer(recording, typeface::INDICATOR_ICON))
+            .padding(iced::Padding::ZERO.top(inset).right(inset))
+            .align_right(Fill),
+    ]
+    .into()
+}
+
+/// The scrim the reference raises over a card's image while the pointer is
+/// over it: the fab that plays at its middle, and the card's own controls in
+/// one group at its trailing foot.
+// reference: card-hover-menu
+// reference: card-hover-menu-desktop
+// reference: card-overlay-shown
+// reference: card-overlay-fab
+// reference: card-overlay-button
+// reference: card-overlay-button-icon
+fn hovered<'a>(
+    frame: Element<'a, Message>,
+    hovered: Hovered,
+    backing: card::Backing,
+) -> Element<'a, Message> {
+    if hovered.plays.is_none() && hovered.controls.is_empty() {
+        return frame;
+    }
+    let mut layers: Vec<Element<'a, Message>> = vec![
+        container(Space::new())
+            .width(Fill)
+            .height(Fill)
+            .style(move |theme: &iced::Theme| style::card_overlay(theme, backing))
+            .into(),
+    ];
+    if let Some(play) = hovered.plays {
+        let disc = style::drawn(space::CARD_OVERLAY_FAB.drawn());
+        layers.push(
+            container(
+                button(
+                    container(crate::icon::icon(
+                        Icon::PlayArrow,
+                        typeface::CARD_OVERLAY_ICON,
+                    ))
+                    .center_x(disc)
+                    .center_y(disc),
+                )
+                .style(style::card_overlay_fab)
+                .padding(style::drawn(Drawn::ZERO))
+                .on_press(play),
+            )
+            .center_x(Fill)
+            .center_y(Fill)
+            .into(),
+        );
+    }
+    if !hovered.controls.is_empty() {
+        let glyph = style::drawn(space::CARD_OVERLAY_GLYPH.drawn());
+        layers.push(
+            container(row(hovered.controls.into_iter().map(|control| {
+                iced::widget::tooltip(
+                    button(
+                        container(crate::icon::icon(
+                            control.glyph,
+                            typeface::CARD_OVERLAY_ICON,
+                        ))
+                        .center_x(glyph)
+                        .center_y(glyph),
+                    )
+                    .style(style::card_overlay_control)
+                    .padding(style::drawn(space::CARD_OVERLAY_PAD.drawn()))
+                    .on_press(control.press),
+                    prose(strings::lookup(control.label), typeface::BODY),
+                    iced::widget::tooltip::Position::Top,
+                )
+                .style(style::dialog)
+                .into()
+            })))
+            .align_right(Fill)
+            .align_bottom(Fill)
+            .into(),
+        );
+    }
+    iced::widget::hover(frame, iced::widget::Stack::with_children(layers))
+}
+
+/// One card as `buildCard` builds one: its frame over the lines `written`
+/// answers for each line the footer pushes, empty answers dropped and the rest
+/// capped and filled out to what the footer writes.
+// reference: card-box
+// reference: card-visual
+// reference: card-text-lines
+// reference: card-footer-element
 pub fn card<'a>(
+    drawing: card::Drawing,
+    room: Room,
+    poster: Poster,
+    written: impl Fn(card::Line) -> String,
+) -> Element<'a, Message> {
+    let counted = drawing.footer.written();
+    let mut said: Vec<String> = drawing
+        .footer
+        .pushed()
+        .iter()
+        .map(|line| written(*line))
+        .filter(|text| !text.is_empty())
+        .take(counted)
+        .collect();
+    said.resize(counted, String::new());
+    let mut lines = said.into_iter();
+    let mut drawn: Vec<Element<'a, Message>> = lines.next().map(named).into_iter().collect();
+    drawn.extend(lines.map(beneath));
+
+    let frame = hovered(
+        marked(
+            framed(
+                drawing.card,
+                room,
+                poster.face,
+                &poster.name,
+                drawing.backing,
+            ),
+            poster.timer,
+        ),
+        poster.hovered,
+        drawing.backing,
+    );
+    let footer = (!drawn.is_empty()).then(|| {
+        footed(
+            drawn,
+            drawing.setting,
+            drawing.footing(),
+            poster.logo,
+            None,
+            room.viewport().band(),
+        )
+    });
+    let body = reserving(
+        boxed(drawing.card, room, frame, footer, drawing.backing),
+        room,
+        drawing.bottom,
+    );
+    let Some(press) = poster.press else {
+        return body;
+    };
+    button(body).style(style::flat).on_press(press).into()
+}
+
+/// The card the login pages write by hand: its face over its centred name
+/// inside `.cardFooter`'s own padding.
+// reference: select-server-card
+// reference: login-user-card
+pub fn picked<'a>(
     card: card::Card,
     room: Room,
     face: Face,
@@ -310,6 +550,8 @@ pub fn card<'a>(
         Some(footed(
             vec![named(name)],
             card::Setting::Centred,
+            card::Footing::Padded,
+            None,
             None,
             room.viewport().band(),
         )),
@@ -321,37 +563,14 @@ pub fn card<'a>(
         .into()
 }
 
-/// Cards laid out the way the reference's `.vertical-wrap.centered` lays them
-/// out: broken into rows of `card.across(room)` and each row centered, so a
-/// short last row sits under the middle of the one above it.
-// reference: page-centering
-pub fn picker<'a>(
-    card: card::Card,
-    room: Room,
-    cards: impl IntoIterator<Item = Element<'a, Message>>,
-) -> Element<'a, Message> {
-    let across = card.across(room).count();
-    let gutter = style::drawn(space::GUTTER.drawn());
-    let mut cards = cards.into_iter().peekable();
-    column(std::iter::from_fn(move || {
-        cards.peek()?;
-        Some(
-            container(row(cards.by_ref().take(across)).spacing(gutter))
-                .center_x(Fill)
-                .into(),
-        )
-    }))
-    .spacing(gutter)
-    .into()
-}
-
-/// Cards broken into rows of `card.across(room)` and left-aligned, which is
-/// the reference's `.vertical-wrap` without the `.centered` only the login
-/// pickers carry.
+/// Cards broken into rows of `card.across(room)`, each row laid where `wrap`
+/// lays it.
 // reference: card-container
+// reference: page-centering
 pub fn wall<'a>(
     card: card::Card,
     room: Room,
+    wrap: card::Wrap,
     cards: impl IntoIterator<Item = Element<'a, Message>>,
 ) -> Element<'a, Message> {
     let across = card.across(room).count();
@@ -359,7 +578,11 @@ pub fn wall<'a>(
     let mut cards = cards.into_iter().peekable();
     column(std::iter::from_fn(move || {
         cards.peek()?;
-        Some(row(cards.by_ref().take(across)).spacing(gutter).into())
+        let laid = row(cards.by_ref().take(across)).spacing(gutter);
+        Some(match wrap {
+            card::Wrap::Leading => laid.into(),
+            card::Wrap::Centred => container(laid).center_x(Fill).into(),
+        })
     }))
     .spacing(gutter)
     .into()
@@ -405,83 +628,55 @@ pub fn page<'a>(viewport: Viewport, body: Element<'a, Message>) -> Element<'a, M
         .into()
 }
 
-/// A library item's card: its poster over what the section it stands in writes
-/// under it. What the card writes, and whether its box reserves the bottom
-/// margin, are the caller's, because the reference varies both by the section
-/// a card stands in.
+/// A library item's card: its poster, the lines its section writes under it,
+/// and the hover menu's own more control.
 pub fn poster<'a>(
-    card: card::Card,
+    drawing: card::Drawing,
     item: &'a BaseItemDto,
     room: Room,
-    footer: card::Footer,
-    bottom: card::Bottom,
     image: Option<image::Handle>,
     overflow: Overflow,
 ) -> Element<'a, Message> {
     let name = item.name.clone().unwrap_or_default();
-    let frame = framed(
-        card,
+    let said = subtitle(item);
+    let controls = item
+        .id
+        .filter(|_| overflow == Overflow::Offered)
+        .map(|id| Control {
+            glyph: Icon::MoreVert,
+            label: Text::OverflowOpen,
+            press: Message::OverflowAction(crate::screen::overflow::Action::Open {
+                item: id,
+                played: item::played(item),
+                favorite: item::favorited(item),
+            }),
+        })
+        .into_iter()
+        .collect();
+    card(
+        drawing,
         room,
-        image.map(Face::Image),
-        &name,
-        card::Backing::Padder,
-    );
-    let written = match footer {
-        card::Footer::Bare => None,
-        card::Footer::Name => Some(vec![named(name)]),
-        card::Footer::NameAndSubtitle => Some(vec![
-            named(name),
-            carded(
-                tinted(
-                    subtitle(item),
-                    typeface::SECONDARY,
-                    typeface::Weight::Regular,
-                    typeface::LINE_HEIGHT,
-                    style::description,
-                ),
-                typeface::SECONDARY,
-            ),
-        ]),
-    };
-    let body = reserving(
-        boxed(
-            card,
-            room,
-            frame,
-            written
-                .map(|lines| footed(lines, card::Setting::Centred, None, room.viewport().band())),
-            card::Backing::Padder,
-        ),
-        room,
-        bottom,
-    );
-
-    let pressed = item.id.map(|id| Message::Navigated(opens(item, id)));
-    let mut control = button(body).style(style::flat);
-    if let Some(message) = pressed {
-        control = control.on_press(message);
-    }
-
-    let Some(id) = item.id.filter(|_| overflow == Overflow::Offered) else {
-        return control.into();
-    };
-    column![
-        control,
-        button(prose(strings::lookup(Text::OverflowOpen), typeface::BODY))
-            .style(style::flat)
-            .on_press(Message::OverflowAction(
-                crate::screen::overflow::Action::Open {
-                    item: id,
-                    played: item::played(item),
-                    favorite: item::favorited(item),
-                }
-            )),
-    ]
-    .into()
+        Poster {
+            face: image.map(Face::Image),
+            name: name.clone(),
+            logo: None,
+            timer: None,
+            press: item.id.map(|id| Message::Navigated(opens(item, id))),
+            hovered: Hovered {
+                plays: None,
+                controls,
+            },
+        },
+        move |line| match line {
+            card::Line::Name => name.clone(),
+            card::Line::Subtitle => said.clone(),
+            _ => String::new(),
+        },
+    )
 }
 
 fn cards<'a>(
-    card: card::Card,
+    drawing: card::Drawing,
     items: impl IntoIterator<Item = &'a BaseItemDto>,
     room: Room,
     images: &'a Cache,
@@ -491,11 +686,9 @@ fn cards<'a>(
         .into_iter()
         .map(|item| {
             poster(
-                card,
+                drawing,
                 item,
                 room,
-                card::Footer::NameAndSubtitle,
-                card::Bottom::Padded,
                 poster_key(item).and_then(|key| images.handle(key)),
                 overflow,
             )
@@ -508,21 +701,17 @@ fn cards<'a>(
 /// a section's items are as often a group borrowed out of one list as a list of
 /// their own.
 pub fn rail<'a>(
-    card: card::Card,
+    drawing: card::Drawing,
     items: impl IntoIterator<Item = &'a BaseItemDto>,
     room: Room,
     images: &'a Cache,
     overflow: Overflow,
 ) -> Element<'a, Message> {
     sideways(
-        row(cards(card, items, room, images, overflow))
+        row(cards(drawing, items, room, images, overflow))
             .spacing(style::drawn(space::GUTTER.drawn())),
     )
-    .height(style::drawn(card.row(
-        room,
-        card::Footer::NameAndSubtitle,
-        card::Bottom::Padded,
-    )))
+    .height(style::drawn(drawing.row(room)))
     .into()
 }
 
@@ -911,15 +1100,15 @@ pub fn section<'a>(
 /// A wall of posters, laid out at the count the shape's own ladder puts in a
 /// row at this page.
 pub fn posters<'a>(
-    card: card::Card,
+    drawing: card::Drawing,
     items: impl IntoIterator<Item = &'a BaseItemDto>,
     room: Room,
     images: &'a Cache,
     overflow: Overflow,
 ) -> Element<'a, Message> {
     scrolled(
-        grid(cards(card, items, room, images, overflow))
-            .columns(card.across(room).count())
+        grid(cards(drawing, items, room, images, overflow))
+            .columns(drawing.card.across(room).count())
             .spacing(style::drawn(space::GUTTER.drawn())),
     )
     .height(Fill)
@@ -934,15 +1123,39 @@ pub fn library_tile<'a>(
     room: Room,
     press: Message,
 ) -> Element<'a, Message> {
+    let name = library.name.clone().unwrap_or_default();
+    let said = name.clone();
     card(
-        card::Card::LIBRARY,
+        TILE,
         room,
-        Face::Icon(crate::icon::Icon::library(library.collection_type)),
-        library.name.clone().unwrap_or_default(),
-        card::Bottom::Flush,
-        press,
+        Poster {
+            face: Some(Face::Icon(crate::icon::Icon::library(
+                library.collection_type,
+            ))),
+            name,
+            logo: None,
+            timer: None,
+            press: Some(press),
+            hovered: Hovered::default(),
+        },
+        move |line| match line {
+            card::Line::Name => said.clone(),
+            _ => String::new(),
+        },
     )
 }
+
+/// The box `resolveCardBoxCssClasses` gives a card that carries a footer and no
+/// paper, which is what the My Media section's tiles stand on.
+// reference: card-box-classes
+// reference: home-library-tiles
+pub const TILE: card::Drawing = card::Drawing {
+    card: card::Card::LIBRARY,
+    footer: card::Footer::Name,
+    backing: card::Backing::Padder,
+    setting: card::Setting::Centred,
+    bottom: card::Bottom::Padded,
+};
 
 /// The portions a bar is divided into, which is the resolution a share the
 /// reference writes is exact to.
@@ -999,22 +1212,17 @@ pub fn channel_card<'a>(
         Some(footed(
             vec![
                 named(name),
-                carded(
-                    tinted(
-                        channel
-                            .current
-                            .as_ref()
-                            .map(|program| program.title.clone())
-                            .unwrap_or_default(),
-                        typeface::SECONDARY,
-                        typeface::Weight::Regular,
-                        typeface::LINE_HEIGHT,
-                        style::description,
-                    ),
-                    typeface::SECONDARY,
+                beneath(
+                    channel
+                        .current
+                        .as_ref()
+                        .map(|program| program.title.clone())
+                        .unwrap_or_default(),
                 ),
             ],
             card::Setting::Centred,
+            card::Footing::Bare,
+            None,
             None,
             room.viewport().band(),
         )),
@@ -1458,8 +1666,17 @@ pub fn user_card<'a>(
         room,
         button(frame).style(style::flat).on_press(opens).into(),
         Some(footed(
-            vec![named(name), carded(secondary, typeface::SECONDARY)],
+            vec![
+                named(name),
+                carded(
+                    secondary,
+                    typeface::SECONDARY,
+                    space::card_text(typeface::SECONDARY).top,
+                ),
+            ],
             card::Setting::Leading,
+            card::Footing::Padded,
+            None,
             Some(icon_button(
                 Icon::MoreVert,
                 typeface::ICON_BUTTON,

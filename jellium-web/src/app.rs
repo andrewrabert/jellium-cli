@@ -28,7 +28,7 @@ use crate::prefs::Device;
 use crate::route::Route;
 use crate::screen::livetv::{self, guide};
 use crate::screen::program;
-use crate::screen::{dashboard, detail, home, library, login, search};
+use crate::screen::{dashboard, detail, home, hub, library, login, search};
 use crate::style::space::Room;
 use crate::style::{self, Drawn, Viewport, card, space, typeface};
 use crate::text::{self as strings, Text};
@@ -523,7 +523,6 @@ async fn filtered_load(
 /// route a session's policy does not admit issues none either.
 pub fn load(signed: &Signed, route: &Route, viewport: Viewport) -> Task<Message> {
     let api: Rc<Api> = signed.api.clone();
-    let height = viewport.canvas().height();
     let reachable = signed.session.live_tv.allowed();
     let overflow = match signed.session.read_only {
         true => widget::Overflow::Withheld,
@@ -564,9 +563,10 @@ pub fn load(signed: &Signed, route: &Route, viewport: Viewport) -> Task<Message>
             Task::perform(search::load(api, term, viewport), Message::SearchLoaded)
         }
         Route::Queue | Route::Remote | Route::SyncPlay => Task::none(),
-        Route::LiveTv { tab } if reachable => {
-            Task::perform(livetv::load(api, tab, height), Message::LiveTvLoaded)
-        }
+        Route::LiveTv { tab } if reachable => Task::perform(
+            livetv::load(api, tab, Room::content(viewport)),
+            Message::LiveTvLoaded,
+        ),
         Route::Program { id } if reachable => {
             Task::perform(program::load(api, id), Message::ProgramLoaded)
         }
@@ -2112,32 +2112,39 @@ impl Jellium {
                     browse.resized(page);
                 }
                 if let Some(hub) = self.hubbing() {
-                    let wall = card::Card::grid(
-                        None,
-                        card::Aspect::shared(
-                            hub.entries
-                                .held()
-                                .filter_map(|item| item.primary_image_aspect_ratio)
-                                .map(card::Aspect::of),
-                        ),
-                    );
+                    let wall = hub::wall(card::Aspect::shared(
+                        hub.entries
+                            .held()
+                            .filter_map(|item| item.primary_image_aspect_ratio)
+                            .map(card::Aspect::of),
+                    ));
                     let room = Room::content(page);
-                    hub.grid.resized(
-                        room,
-                        wall.width(room),
-                        wall.row(room, card::Footer::NameAndSubtitle, card::Bottom::Padded),
-                    );
+                    hub.grid
+                        .resized(room, wall.card.width(room), wall.row(room));
                 }
                 let Some(signed) = self.signed() else {
                     return Task::none();
                 };
                 if let View::LiveTv(state) = &mut signed.view {
+                    let room = Room::content(page);
                     match &mut state.body {
                         livetv::Body::Guide(held) => held.window.resized(canvas.height()),
-                        livetv::Body::Channels(held) => held.window.resized(canvas.height()),
-                        livetv::Body::Recordings(held) => held.window.resized(canvas.height()),
+                        livetv::Body::Channels(held) => {
+                            let card = livetv::channels::CARD;
+                            held.grid
+                                .resized(room, card.card.width(room), card.row(room));
+                        }
+                        livetv::Body::Recordings(held) => {
+                            let drawn = livetv::recordings::card(&held.recordings);
+                            held.grid
+                                .resized(room, drawn.card.width(room), drawn.row(room));
+                        }
                         livetv::Body::Schedule(_) => {}
-                        livetv::Body::Series(held) => held.window.resized(canvas.height()),
+                        livetv::Body::Series(held) => {
+                            let card = livetv::series::CARD;
+                            held.grid
+                                .resized(room, card.card.width(room), card.row(room));
+                        }
                     }
                 }
                 self.settle();
@@ -2182,10 +2189,10 @@ impl Jellium {
                 } else if let View::LiveTv(state) = &mut signed.view {
                     match &mut state.body {
                         livetv::Body::Guide(held) => held.window.scrolled(scrolled),
-                        livetv::Body::Channels(held) => held.window.scrolled(scrolled),
-                        livetv::Body::Recordings(held) => held.window.scrolled(scrolled),
+                        livetv::Body::Channels(held) => held.grid.scrolled(scrolled),
+                        livetv::Body::Recordings(held) => held.grid.scrolled(scrolled),
                         livetv::Body::Schedule(_) => {}
-                        livetv::Body::Series(held) => held.window.scrolled(scrolled),
+                        livetv::Body::Series(held) => held.grid.scrolled(scrolled),
                     }
                 } else if let View::Dashboard(state) = &mut signed.view {
                     match &mut state.body {

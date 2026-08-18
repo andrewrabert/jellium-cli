@@ -322,6 +322,43 @@ pub const FAB_PAD: Length = Length::em(0.6);
 // reference: section-title-button
 pub const SECTION_TITLE_BUTTON: Length = Length::em(1.5);
 
+/// The top `.cardText-first` gives a footer's first line, which stands where
+/// `.cardText`'s own writes the rest.
+// reference: card-text-first
+pub const CARD_TEXT_FIRST_TOP: Length = Length::em(0.24);
+
+/// `.cardFooterLogo`'s own box, which stands the whole height of the footer at
+/// its leading edge.
+// reference: card-footer-logo-face
+pub const CARD_FOOTER_LOGO: Length = Length::em(4.5);
+
+/// The share of that box the logo is drawn at, centred in it.
+// reference: card-footer-logo-face
+pub const CARD_FOOTER_LOGO_IMAGE: Share = Share::per_ten_thousand(7000);
+
+/// The inset `.cardFooter-withlogo` leaves for it.
+// reference: card-footer-logo-face
+pub const CARD_FOOTER_LOGO_INSET: Length = Length::em(4.0);
+
+/// `.cardIndicators`' own inset from the top trailing corner of a card's
+/// image.
+// reference: card-indicators
+pub const CARD_INDICATORS_INSET: Length = Length::em(0.225);
+
+/// `.cardOverlayButton-hover`'s own padding, in the em of the size that button
+/// is set in.
+// reference: card-overlay-hover
+pub const CARD_OVERLAY_PAD: Length = typeface::CARD_OVERLAY_BUTTON.times(Ratio::thousandths(250));
+
+/// `.cardOverlayButtonIcon`'s own box, in the em of the glyph it holds.
+// reference: card-overlay-button-icon
+pub const CARD_OVERLAY_GLYPH: Length = typeface::CARD_OVERLAY_ICON.times(Ratio::thousandths(1500));
+
+/// `.cardOverlayFab-primary`'s own disc, in the em of the size that control is
+/// set in.
+// reference: card-overlay-fab
+pub const CARD_OVERLAY_FAB: Length = typeface::CARD_OVERLAY_FAB.times(Ratio::thousandths(3000));
+
 // reference: card-footer
 pub const CARD_FOOTER_PAD: Padding = Padding {
     top: Length::em(0.3),

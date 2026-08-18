@@ -42,7 +42,7 @@ const WEIGHTS = ['400', '700'];
 const ICONS = [
     'access_time', 'add', 'analytics', 'arrow_back', 'arrow_drop_down', 'article', 'audiotrack',
     'autorenew', 'book', 'cast', 'check', 'check_box',
-    'check_box_outline_blank', 'check_circle_outline', 'closed_caption',
+    'check_box_outline_blank', 'check_circle_outline', 'close', 'closed_caption',
     'dashboard', 'delete', 'devices',
     'dvr', 'edit', 'expand_less', 'expand_more', 'explore', 'extension',
     'fast_forward', 'fast_rewind', 'favorite', 'favorite_border',

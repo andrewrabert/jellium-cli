@@ -158,7 +158,7 @@ fn windowed(section: Section, items: &[BaseItemDto], viewport: Viewport) -> wind
     let room = Room::content(viewport);
     window::Window::new(
         window::Id::Section(section),
-        card(section, shared(items)).width(room),
+        card(section, shared(items)).card.width(room),
         room.width(),
     )
 }
@@ -198,18 +198,24 @@ pub fn title(section: Section) -> Text {
 }
 
 /// The card this section's items draw on, which is the shape they share except
-/// where the reference fixes it.
+/// where the reference fixes it, over what the section writes under it.
 // reference: search-section-cards
-pub fn card(section: Section, aspect: Option<Aspect>) -> Card {
-    match section {
-        Section::Songs => Card::Rail(Rail::Square),
-        _ => Card::overflowing(aspect),
+pub fn card(section: Section, aspect: Option<Aspect>) -> card::Drawing {
+    card::Drawing {
+        card: match section {
+            Section::Songs => Card::Rail(Rail::Square),
+            _ => Card::overflowing(aspect),
+        },
+        footer: footer(section),
+        backing: card::Backing::Padder,
+        setting: card::Setting::Centred,
+        bottom: card::Bottom::Flush,
     }
 }
 
 /// What this section writes under a card.
 // reference: search-section-cards
-pub fn footer(section: Section) -> card::Footer {
+fn footer(section: Section) -> card::Footer {
     match section {
         Section::Movies
         | Section::Shows
@@ -274,24 +280,18 @@ fn sectioned<'a>(
                 drawn,
                 item,
                 room,
-                footer(results.section),
-                card::Bottom::Flush,
                 widget::poster_key(item).and_then(|key| images.handle(key)),
                 widget::Overflow::Withheld,
             ),
             None => iced::widget::Space::new()
-                .width(style::drawn(drawn.width(room)))
+                .width(style::drawn(drawn.card.width(room)))
                 .into(),
         },
     );
     widget::section(
         strings::lookup(title(results.section)),
         iced::widget::container(rail)
-            .height(style::drawn(drawn.row(
-                room,
-                footer(results.section),
-                card::Bottom::Flush,
-            )))
+            .height(style::drawn(drawn.row(room)))
             .into(),
     )
 }

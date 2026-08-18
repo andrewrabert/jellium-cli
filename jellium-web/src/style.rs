@@ -789,6 +789,57 @@ pub fn card_paper(_theme: &iced::Theme) -> iced::widget::container::Style {
         .shadow(shadow(space::SHADOW))
 }
 
+/// `.cardOverlayContainer`: the scrim over a card's image, squared at the foot
+/// under a card standing on the paper.
+// reference: card-overlay-container
+// reference: card-visual-square
+pub fn card_overlay(
+    _theme: &iced::Theme,
+    backing: card::Backing,
+) -> iced::widget::container::Style {
+    iced::widget::container::Style::default()
+        .background(color(scheme::CARD_OVERLAY))
+        .border(iced::Border {
+            radius: framed(backing),
+            ..iced::Border::default()
+        })
+}
+
+/// `.cardOverlayButton-hover`: a glyph on that scrim carrying no face of its
+/// own.
+// reference: card-overlay-button
+// reference: card-overlay-hover
+pub fn card_overlay_control(
+    _theme: &iced::Theme,
+    _status: iced::widget::button::Status,
+) -> iced::widget::button::Style {
+    iced::widget::button::Style {
+        text_color: color(scheme::ON_CARD_OVERLAY),
+        ..iced::widget::button::Style::default()
+    }
+}
+
+/// `.cardOverlayFab-primary`: the disc at the middle of that scrim.
+// reference: card-overlay-fab
+pub fn card_overlay_fab(
+    _theme: &iced::Theme,
+    _status: iced::widget::button::Status,
+) -> iced::widget::button::Style {
+    iced::widget::button::Style {
+        background: Some(iced::Background::Color(color(scheme::CARD_OVERLAY_FAB))),
+        text_color: color(scheme::ON_CARD_OVERLAY),
+        border: iced::Border {
+            radius: iced::border::Radius::new(drawn(
+                space::CARD_OVERLAY_FAB
+                    .times(Ratio::thousandths(500))
+                    .drawn(),
+            )),
+            ..iced::Border::default()
+        },
+        ..iced::widget::button::Style::default()
+    }
+}
+
 /// What a card writes under its image.
 // reference: card-footer
 pub fn card_footer(_theme: &iced::Theme) -> iced::widget::container::Style {

@@ -505,6 +505,18 @@ pub const PROGRAM_AIRING: Color = Color::rgb(0x1e, 0x1e, 0x1e);
 // reference: scheme-guide-rule
 pub const GUIDE_RULE: Color = Color::rgba(0xff, 0xff, 0xff, Alpha::thousandths(50));
 
+/// `.cardOverlayContainer`'s own scrim.
+// reference: card-overlay-container
+pub const CARD_OVERLAY: Color = Color::rgba(0x00, 0x00, 0x00, Alpha::thousandths(500));
+
+/// The disc `.cardOverlayFab-primary` stands on.
+// reference: card-overlay-fab
+pub const CARD_OVERLAY_FAB: Color = Color::rgba(0x00, 0x00, 0x00, Alpha::thousandths(700));
+
+/// The lettering a control on that scrim is drawn in.
+// reference: card-overlay-button
+pub const ON_CARD_OVERLAY: Color = Color::rgba(0xff, 0xff, 0xff, Alpha::thousandths(760));
+
 /// `.timerIcon`, the glyph a single timer draws on a cell.
 // reference: guide-timer-icon
 pub const TIMER: Color = Color::rgb(0xcc, 0x33, 0x33);

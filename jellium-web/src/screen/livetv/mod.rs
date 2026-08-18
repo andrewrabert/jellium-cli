@@ -17,10 +17,19 @@ use crate::api::Api;
 use crate::app::{Message, Signed};
 use crate::error::{Answer, Operation};
 use crate::images::{self, Cache};
-use crate::style::{self, Drawn, Viewport, space, typeface};
+use crate::style::space::Room;
+use crate::style::{self, Viewport, space, typeface};
 use crate::text::{self as strings, Text};
 use crate::widget::{self, prose};
 use crate::window;
+
+/// A time of day as `getDisplayTime` writes one.
+// reference: card-air-time
+pub fn clock(at: DateTime<Utc>) -> String {
+    DateTime::<chrono::Local>::from(at)
+        .format("%H:%M")
+        .to_string()
+}
 
 /// Which of the five tabs the Live TV screen shows.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
@@ -116,19 +125,19 @@ pub enum Action {
     Open,
 }
 
-/// Loads the tab `tab` names, against a page `height` pixels tall.
-pub async fn load(api: Rc<Api>, tab: Tab, height: Drawn) -> Answer<State> {
+/// Loads the tab `tab` names, against the room `room` lays its cards in.
+pub async fn load(api: Rc<Api>, tab: Tab, room: Room) -> Answer<State> {
     Answer::of(async {
         let body = match tab {
-            Tab::Guide => Body::Guide(guide::load(api, height).await?),
+            Tab::Guide => Body::Guide(guide::load(api, room.viewport().canvas().height()).await?),
             Tab::Channels => Body::Channels(
-                channels::load(api, jellyfin_api::types::ChannelType::Tv, height)
+                channels::load(api, jellyfin_api::types::ChannelType::Tv, room)
                     .await
                     .bubbled()?,
             ),
-            Tab::Recordings => Body::Recordings(recordings::load(api, height).await.bubbled()?),
+            Tab::Recordings => Body::Recordings(recordings::load(api, room).await.bubbled()?),
             Tab::Schedule => Body::Schedule(schedule::load(api).await.bubbled()?),
-            Tab::Series => Body::Series(series::load(api, height).await.bubbled()?),
+            Tab::Series => Body::Series(series::load(api, room).await.bubbled()?),
         };
         Ok(State {
             tab,
@@ -162,12 +171,13 @@ pub fn view<'a>(
         }),
     );
 
+    let room = Room::content(viewport);
     let body = match &state.body {
         Body::Guide(guide) => guide::view(guide, now, images, viewport),
-        Body::Channels(channels) => channels::view(channels, now, images),
-        Body::Recordings(held) => recordings::view(held, state.confirming, images),
-        Body::Schedule(schedule) => schedule::view(schedule),
-        Body::Series(series) => series::view(series),
+        Body::Channels(channels) => channels::view(channels, now, images, room),
+        Body::Recordings(held) => recordings::view(held, state.confirming, images, room),
+        Body::Schedule(schedule) => schedule::view(schedule, images, room),
+        Body::Series(series) => series::view(series, room),
     };
 
     column![
@@ -186,7 +196,8 @@ pub fn images(state: &State) -> HashSet<images::Key> {
         Body::Guide(held) => guide::images(held),
         Body::Channels(held) => channels::images(held),
         Body::Recordings(held) => recordings::images(held),
-        Body::Schedule(_) | Body::Series(_) => HashSet::new(),
+        Body::Schedule(held) => schedule::images(held),
+        Body::Series(_) => HashSet::new(),
     }
 }
 
@@ -210,7 +221,7 @@ fn showing(signed: &mut Signed) -> Option<&mut State> {
 /// moving the scroll position or the order.
 fn reload(signed: &Signed, tab: Tab, viewport: Viewport) -> Task<Message> {
     Task::perform(
-        load(signed.api.clone(), tab, viewport.canvas().height()),
+        load(signed.api.clone(), tab, Room::content(viewport)),
         Message::LiveTvLoaded,
     )
 }
@@ -236,9 +247,9 @@ pub fn act(signed: &mut Signed, action: Action, viewport: Viewport) -> Task<Mess
             move |outcome| Message::Wrote(Operation::Timer, outcome),
         ),
         Action::Kind(kind) => {
-            let height = viewport.canvas().height();
+            let room = Room::content(viewport);
             Task::perform(
-                async move { channels::load(api, kind, height).await },
+                async move { channels::load(api, kind, room).await },
                 |loaded| {
                     Message::LiveTvLoaded(loaded.map(|channels| State {
                         tab: Tab::Channels,

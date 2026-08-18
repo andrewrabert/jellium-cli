@@ -41,11 +41,12 @@ fn picker<'a>(state: &'a super::State, viewport: Viewport) -> Option<Element<'a,
         return None;
     }
     let wall = card::Card::Wall(card::Shape::Square);
-    Some(widget::picker(
+    Some(widget::wall(
         wall,
         Room::content(viewport),
+        card::Wrap::Centred,
         screen.users.iter().map(|user| {
-            widget::card(
+            widget::picked(
                 wall,
                 Room::content(viewport),
                 match state.images.get(&user.id) {

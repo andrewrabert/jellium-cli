@@ -53,6 +53,7 @@ icons! {
     CheckBox => "check_box",
     CheckBoxOutlineBlank => "check_box_outline_blank",
     CheckCircleOutline => "check_circle_outline",
+    Close => "close",
     ClosedCaption => "closed_caption",
     Dashboard => "dashboard",
     Delete => "delete",

@@ -1,4 +1,3 @@
-use std::borrow::Cow;
 use std::collections::HashSet;
 use std::rc::Rc;
 
@@ -6,15 +5,17 @@ use chrono::{DateTime, Utc};
 use iced::widget::{button, column, row};
 use iced::{Element, Fill};
 
-use super::Action;
+use super::{Action, clock};
 use crate::api::Api;
 use crate::app::Message;
 use crate::error::Answer;
+use crate::icon::Icon;
 use crate::images::{self, Cache};
 use crate::livetv::Channel;
-use crate::style::{self, Drawn, space, typeface};
+use crate::style::space::Room;
+use crate::style::{self, card, space, typeface};
 use crate::text::{self as strings, Text};
-use crate::widget::{self, prose};
+use crate::widget::{self, Control, Face, Hovered, Poster, prose};
 use crate::window;
 
 #[derive(Debug, Clone)]
@@ -22,22 +23,35 @@ pub struct State {
     /// Favourites first, then channel-number order.
     pub channels: Vec<Channel>,
     pub kind: jellyfin_api::types::ChannelType,
-    pub window: window::Window,
+    pub grid: window::Grid,
 }
 
-/// Every row of the channels list: its logo over two lines.
-const ROW: space::ListRow = space::ListRow::art(space::Lines::Two);
+/// The channels tab's own card.
+// reference: livetv-channels-cards
+// reference: livetv-tab-markup
+pub const CARD: card::Drawing = card::Drawing {
+    card: card::Card::Wall(card::Shape::Square),
+    footer: card::Footer::Channel,
+    backing: card::Backing::Paper,
+    setting: card::Setting::Leading,
+    bottom: card::Bottom::Flush,
+};
 
 pub async fn load(
     api: Rc<Api>,
     kind: jellyfin_api::types::ChannelType,
-    height: Drawn,
+    room: Room,
 ) -> Answer<State> {
     Answer::of(async {
         Ok(State {
             channels: api.channels(kind, None).await.bubbled()?,
             kind,
-            window: window::Window::new(window::Id::Channels, ROW.height().drawn(), height),
+            grid: window::Grid::new(
+                window::Id::Channels,
+                CARD.card.width(room),
+                CARD.row(room),
+                room,
+            ),
         })
     })
     .await
@@ -51,49 +65,70 @@ fn key(channel: &Channel) -> images::Key {
     }
 }
 
+/// One channel's card: its logo over its number and name, the programme on it
+/// now, and that programme's own times.
+// reference: livetv-channels-cards
 fn entry<'a>(
     channel: &'a Channel,
-    now: DateTime<Utc>,
+    room: Room,
     logo: Option<iced::widget::image::Handle>,
 ) -> Element<'a, Message> {
-    let favourite = match channel.favorite {
-        true => Text::ChannelUnfavorite,
-        false => Text::ChannelFavorite,
-    };
-    widget::list::row(
-        ROW,
-        widget::list::Row {
-            face: Some(widget::list::Face::Art {
-                image: logo,
-                elapsed: channel.current.as_ref().map(|program| program.elapsed(now)),
-            }),
-            index: None,
-            title: format!("{} {}", channel.number, channel.name).into(),
-            secondary: channel
-                .current
-                .iter()
-                .map(|program| Cow::from(program.title.clone()))
-                .collect(),
-            press: widget::list::Press::Body(Message::LiveTvAction(Action::PlayChannel(
-                channel.id,
-            ))),
-            controls: vec![
-                button(prose(strings::lookup(favourite), typeface::BODY))
-                    .style(style::flat)
-                    .on_press(Message::LiveTvAction(Action::Favorited(
-                        channel.id,
-                        !channel.favorite,
-                    )))
-                    .into(),
-            ],
+    // reference: card-display-name
+    let name = format!("{} {}", channel.number, channel.name);
+    let current = channel.current.clone();
+    widget::card(
+        CARD,
+        room,
+        Poster {
+            face: logo.map(Face::Image),
+            name: name.clone(),
+            logo: None,
+            timer: current.as_ref().and_then(crate::livetv::Program::recording),
+            press: None,
+            hovered: Hovered {
+                plays: Some(Message::LiveTvAction(Action::PlayChannel(channel.id))),
+                controls: vec![Control {
+                    glyph: match channel.favorite {
+                        true => Icon::Favorite,
+                        false => Icon::FavoriteBorder,
+                    },
+                    label: match channel.favorite {
+                        true => Text::ChannelUnfavorite,
+                        false => Text::ChannelFavorite,
+                    },
+                    press: Message::LiveTvAction(Action::Favorited(channel.id, !channel.favorite)),
+                }],
+            },
+        },
+        move |line| match line {
+            card::Line::Name => name.clone(),
+            card::Line::CurrentProgram => current
+                .as_ref()
+                .map(|program| program.title.clone())
+                .unwrap_or_default(),
+            // reference: card-air-time
+            card::Line::CurrentProgramTime => current
+                .as_ref()
+                .map(|program| {
+                    strings::format(
+                        Text::ProgramAirtime,
+                        &[&clock(program.start), &clock(program.end)],
+                    )
+                })
+                .unwrap_or_default(),
+            _ => String::new(),
         },
     )
 }
 
-/// The TV and radio filter above a windowed list of rows, each carrying the
-/// channel's number, name, logo, favourite mark and current program with an
-/// elapsed bar, and offering no sort control.
-pub fn view<'a>(state: &'a State, now: DateTime<Utc>, images: &'a Cache) -> Element<'a, Message> {
+/// The TV and radio filter above a windowed wall of cards, each carrying the
+/// channel's logo, number, name and current programme.
+pub fn view<'a>(
+    state: &'a State,
+    _now: DateTime<Utc>,
+    images: &'a Cache,
+    room: Room,
+) -> Element<'a, Message> {
     use jellyfin_api::types::ChannelType;
 
     let filter = row![
@@ -123,12 +158,17 @@ pub fn view<'a>(state: &'a State, now: DateTime<Utc>, images: &'a Cache) -> Elem
         .into();
     }
 
-    let rows = window::list(state.window, state.channels.len(), move |index| {
-        let channel = &state.channels[index];
-        entry(channel, now, images.handle(key(channel)))
-    });
+    let cards = window::grid(
+        state.grid,
+        card::Wrap::Leading,
+        state.channels.len(),
+        move |index| {
+            let channel = &state.channels[index];
+            entry(channel, room, images.handle(key(channel)))
+        },
+    );
 
-    column![filter, rows]
+    column![filter, cards]
         .spacing(style::drawn(space::SECTION_GAP.drawn()))
         .width(Fill)
         .height(Fill)
@@ -137,7 +177,7 @@ pub fn view<'a>(state: &'a State, now: DateTime<Utc>, images: &'a Cache) -> Elem
 
 pub fn images(state: &State) -> HashSet<images::Key> {
     state
-        .window
+        .grid
         .shown(state.channels.len())
         .filter_map(|index| state.channels.get(index))
         .map(key)

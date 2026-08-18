@@ -20,6 +20,19 @@ use crate::style::space::Room;
 use crate::style::{self, Viewport, card};
 use crate::widget;
 
+/// The card a hub's entries draw on, at the shape they share, over the two
+/// lines a grid writes under one.
+// reference: grid-card-auto
+pub fn wall(aspect: Option<Aspect>) -> card::Drawing {
+    card::Drawing {
+        card: Card::grid(None, aspect),
+        footer: card::Footer::NameAndSubtitle,
+        backing: card::Backing::Padder,
+        setting: card::Setting::Centred,
+        bottom: card::Bottom::Padded,
+    }
+}
+
 /// A hub: the values one facet takes across the library that owns it.
 #[derive(Debug, Clone)]
 pub struct State {
@@ -52,15 +65,12 @@ pub async fn load(
             .bubbled()?;
         let mut entries = Paged::new(answered.total.max(0) as usize);
         entries.filled(0..answered.items.len(), answered.items);
-        let wall = Card::grid(
-            None,
-            Aspect::shared(
-                entries
-                    .held()
-                    .filter_map(|item| item.primary_image_aspect_ratio)
-                    .map(Aspect::of),
-            ),
-        );
+        let wall = wall(Aspect::shared(
+            entries
+                .held()
+                .filter_map(|item| item.primary_image_aspect_ratio)
+                .map(Aspect::of),
+        ));
 
         Ok(State {
             facet,
@@ -68,8 +78,8 @@ pub async fn load(
             sort,
             grid: window::Grid::new(
                 window::Id::Browse,
-                wall.width(room),
-                wall.row(room, card::Footer::NameAndSubtitle, card::Bottom::Padded),
+                wall.card.width(room),
+                wall.row(room),
                 room,
             ),
             entries,
@@ -111,26 +121,24 @@ pub fn opens(state: &State, entry: &BaseItemDto) -> Option<Route> {
 
 /// Each entry opens the filtered list narrowed to that value by id.
 pub fn view<'a>(state: &'a State, viewport: Viewport, images: &'a Cache) -> Element<'a, Message> {
-    let wall = Card::grid(
-        None,
-        Aspect::shared(
-            state
-                .entries
-                .held()
-                .filter_map(|item| item.primary_image_aspect_ratio)
-                .map(Aspect::of),
-        ),
-    );
+    let wall = wall(Aspect::shared(
+        state
+            .entries
+            .held()
+            .filter_map(|item| item.primary_image_aspect_ratio)
+            .map(Aspect::of),
+    ));
     let count = state.entries.len();
-    column![crate::window::grid(state.grid, count, move |index| {
-        match state.entries.row(index) {
+    column![crate::window::grid(
+        state.grid,
+        card::Wrap::Leading,
+        count,
+        move |index| match state.entries.row(index) {
             Some(entry) => {
                 let card = widget::poster(
                     wall,
                     entry,
                     Room::content(viewport),
-                    card::Footer::NameAndSubtitle,
-                    card::Bottom::Padded,
                     widget::poster_key(entry).and_then(|key| images.handle(key)),
                     widget::Overflow::Withheld,
                 );
@@ -143,15 +151,11 @@ pub fn view<'a>(state: &'a State, viewport: Viewport, images: &'a Cache) -> Elem
                 }
             }
             None => iced::widget::Space::new()
-                .width(style::drawn(wall.width(Room::content(viewport))))
-                .height(style::drawn(wall.row(
-                    Room::content(viewport),
-                    card::Footer::NameAndSubtitle,
-                    card::Bottom::Padded,
-                )))
+                .width(style::drawn(wall.card.width(Room::content(viewport))))
+                .height(style::drawn(wall.row(Room::content(viewport))))
                 .into(),
         }
-    })]
+    )]
     .into()
 }
 

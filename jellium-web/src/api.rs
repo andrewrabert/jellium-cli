@@ -1075,6 +1075,28 @@ impl Api {
         .await
     }
 
+    /// The recordings the Jellyfin server is writing now.
+    // reference: livetv-schedule-active
+    pub async fn active_recordings(&self) -> Answer<Vec<BaseItemDto>> {
+        Answer::of(async {
+            let fields = fields();
+            let result = self
+                .client
+                .get_recordings(&jellyfin_api::query::GetRecordings {
+                    enable_images: Some(true),
+                    enable_total_record_count: Some(false),
+                    enable_user_data: Some(true),
+                    fields: Some(&fields),
+                    is_in_progress: Some(true),
+                    user_id: Some(&self.user_id),
+                    ..Default::default()
+                })
+                .await?;
+            Ok(result.items)
+        })
+        .await
+    }
+
     pub async fn delete_recording(&self, recording: Uuid) -> Answer<()> {
         Answer::of(async {
             self.client.delete_recording(&recording).await?;

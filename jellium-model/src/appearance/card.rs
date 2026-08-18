@@ -38,15 +38,135 @@ pub enum Bottom {
     Flush,
 }
 
+/// One line a card's footer writes, named by the option in
+/// `getCardFooterText` that pushes it.
+// reference: card-footer-lines
+// reference: card-footer-options
+// reference: card-live-tv-naming
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Line {
+    // `showParentTitle` and `showParentTitleOrTitle`, which the reference
+    // pushes before the name and which an item of a live-tv type answers with
+    // its own name
+    ParentTitle,
+    // the display name, which an item whose name the line above already
+    // carries answers with nothing
+    Name,
+    // the line a section outside Live TV writes under the name, which its own
+    // options push as `showYear` or as `showParentTitle`
+    Subtitle,
+    // `showYear`
+    Year,
+    // `showAirTime` with `showAirEndTime`
+    AirTime,
+    // `showChannelName`
+    ChannelName,
+    // `showCurrentProgram`
+    CurrentProgram,
+    // `showCurrentProgramTime`
+    CurrentProgramTime,
+    // `showSeriesTimerTime`, which an any-time series timer answers with
+    // `Anytime`
+    SeriesTimerTime,
+    // `showSeriesTimerChannel`, which an any-channel series timer answers with
+    // `All channels`
+    SeriesTimerChannel,
+}
+
 /// What a card writes under its image.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Footer {
-    /// No footer, which is what an image-only card draws.
+    /// No line, which is what an image-only card draws.
     Bare,
-    /// One line, which is the login picker's `singleCardText`.
+    /// `showTitle` alone, which is the login picker's `singleCardText` and a
+    /// library tile's.
     Name,
-    /// A name over a secondary line, which is a poster's.
+    /// A name over the line the section under it writes, which is a poster's.
     NameAndSubtitle,
+    /// The channels tab's own: `showTitle`, `showCurrentProgram` and
+    /// `showCurrentProgramTime`.
+    Channel,
+    /// The recordings tab's own: `showParentTitle`, `showTitle` and
+    /// `showYear`, capped at the two lines `lines` writes.
+    Recording,
+    /// A scheduled timer's: `showParentTitleOrTitle`, `showTitle`, and
+    /// `showAirTime` with `showAirEndTime`.
+    Timer,
+    /// An active recording's: a timer's lines with `showChannelName` under
+    /// them.
+    ActiveRecording,
+    /// A series timer's: `showTitle`, `showSeriesTimerTime` and
+    /// `showSeriesTimerChannel`, which is the three lines `lines` writes.
+    SeriesTimer,
+}
+
+impl Footer {
+    /// The lines this footer pushes, in the order `getCardFooterText` pushes
+    /// them.
+    // reference: card-footer-lines
+    // reference: card-footer-options
+    pub fn pushed(self) -> &'static [Line] {
+        match self {
+            Footer::Bare => &[],
+            Footer::Name => &[Line::Name],
+            Footer::NameAndSubtitle => &[Line::Name, Line::Subtitle],
+            Footer::Channel => &[Line::Name, Line::CurrentProgram, Line::CurrentProgramTime],
+            Footer::Recording => &[Line::ParentTitle, Line::Name, Line::Year],
+            Footer::Timer => &[Line::ParentTitle, Line::Name, Line::AirTime],
+            Footer::ActiveRecording => &[
+                Line::ParentTitle,
+                Line::Name,
+                Line::AirTime,
+                Line::ChannelName,
+            ],
+            Footer::SeriesTimer => &[Line::Name, Line::SeriesTimerTime, Line::SeriesTimerChannel],
+        }
+    }
+
+    /// The lines this footer writes: the pushes, capped where `options.lines`
+    /// caps them. A card writes this many lines whatever its own item answers,
+    /// where the reference drops a line no option pushed and lets two cards in
+    /// one run differ in height.
+    // reference: card-text-lines
+    pub fn written(self) -> usize {
+        let capped = match self {
+            Footer::Recording => Some(2),
+            Footer::SeriesTimer => Some(3),
+            Footer::Bare
+            | Footer::Name
+            | Footer::NameAndSubtitle
+            | Footer::Channel
+            | Footer::Timer
+            | Footer::ActiveRecording => None,
+        };
+        let pushed = self.pushed().len();
+        match capped {
+            Some(cap) => pushed.min(cap),
+            None => pushed,
+        }
+    }
+}
+
+/// Whether a card's lines stand inside `.cardFooter`'s own padding, which
+/// `getCardFooterText` writes for a card standing on the paper and which the
+/// login pages write by hand.
+// reference: card-footer-element
+// reference: card-footer-outer
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Footing {
+    Padded,
+    Bare,
+}
+
+/// How a wrapping run of cards lays a row that does not fill it:
+/// `.vertical-wrap` leaves it at the leading edge and `.vertical-wrap.centered`
+/// centres it.
+// reference: card-container
+// reference: page-centering
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Wrap {
+    Leading,
+    Centred,
 }
 
 /// Whether the shadow and the radius fall on the card's whole box, which
@@ -326,12 +446,12 @@ impl Aspect {
 
 impl Shape {
     /// The shape items of this aspect ask for: banner at 3 and wider, backdrop
-    /// at 1.33, square above 0.8, portrait below it.
-    /// `Square` where they share no aspect.
+    /// at 1.33, square above 0.8, portrait below it, and `default` where the
+    /// items share no aspect.
     // reference: card-auto-shape
-    pub fn fitting(aspect: Option<Aspect>) -> Shape {
+    pub fn fitting(aspect: Option<Aspect>, default: Shape) -> Shape {
         let Some(aspect) = aspect else {
-            return Shape::Square;
+            return default;
         };
         match aspect.ratio() {
             ratio if ratio >= 3.0 => Shape::Banner,
@@ -476,7 +596,7 @@ impl Card {
                 | CollectionType::Playlists
                 | CollectionType::Folders,
             )
-            | None => Card::Wall(Shape::fitting(aspect)),
+            | None => Card::Wall(Shape::fitting(aspect, Shape::Square)),
         }
     }
 
@@ -486,7 +606,7 @@ impl Card {
     /// `Rail(Square)` where they share no aspect.
     // reference: card-auto-shape
     pub fn overflowing(aspect: Option<Aspect>) -> Card {
-        match Shape::fitting(aspect) {
+        match Shape::fitting(aspect, Shape::Square) {
             Shape::Portrait => Card::Rail(Rail::Portrait),
             Shape::Backdrop => Card::Rail(Rail::Backdrop),
             Shape::SmallBackdrop => Card::Rail(Rail::SmallBackdrop),
@@ -525,18 +645,6 @@ impl Card {
             return Across::cards(1);
         }
         Across::cards((room.width().count() / width) as u32)
-    }
-
-    /// The pitch one card occupies down the page, gutter included.
-    pub fn row(self, room: Room, footer: Footer, bottom: Bottom) -> Drawn {
-        let gutter = GUTTER.drawn();
-        let inside = Drawn::of(self.width(room).count() - gutter.count());
-        self.shape()
-            .aspect()
-            .of(inside)
-            .plus(written(footer))
-            .plus(reserved(bottom, room.viewport()))
-            .plus(gutter)
     }
 
     /// The arm `getPostersPerRow` answers, which steps at 2200px and 420px
@@ -865,26 +973,77 @@ fn request(card: Card) -> &'static Request {
     }
 }
 
-/// What a card's footer takes down the page, each line counting its own
-/// `.cardText` padding, which the reference writes in the em of the size that
-/// line is set in.
+/// What a card's footer takes down the page: its first line over the top
+/// `.cardText-first` gives it and every line after it in the secondary size,
+/// each counting its own `.cardText` padding, which the reference writes in the
+/// em of the size that line is set in, and the footer's own padding where it
+/// stands inside it.
 // reference: card-footer
 // reference: card-text
-fn written(footer: Footer) -> Drawn {
-    let line = |size: Length| {
-        space::card_text(size)
-            .top
-            .plus(typeface::LINE_HEIGHT.of(size))
+// reference: card-text-first
+// reference: card-text-lines
+fn written(footer: Footer, footing: Footing) -> Drawn {
+    let line = |size: Length, top: Length| {
+        top.plus(typeface::LINE_HEIGHT.of(size))
             .plus(space::card_text(size).bottom)
     };
-    let name = space::CARD_FOOTER_PAD
-        .top
-        .plus(line(typeface::BODY))
-        .plus(space::CARD_FOOTER_PAD.bottom);
-    match footer {
-        Footer::Bare => Drawn::ZERO,
-        Footer::Name => name.drawn(),
-        Footer::NameAndSubtitle => name.plus(line(typeface::SECONDARY)).drawn(),
+    let lines = footer.written();
+    if lines == 0 {
+        return Drawn::ZERO;
+    }
+    let mut stacked = line(typeface::BODY, space::CARD_TEXT_FIRST_TOP);
+    for _ in 1..lines {
+        let size = typeface::SECONDARY;
+        stacked = stacked.plus(line(size, space::card_text(size).top));
+    }
+    match footing {
+        Footing::Bare => stacked.drawn(),
+        Footing::Padded => space::CARD_FOOTER_PAD
+            .top
+            .plus(stacked)
+            .plus(space::CARD_FOOTER_PAD.bottom)
+            .drawn(),
+    }
+}
+
+/// One `getCardsHtml` call's own card: the shape it draws at, the lines its
+/// footer writes, whether `cardLayout` stands its box on the scheme's paper,
+/// where `centerText` sets its footer's lines, and whether its box reserves
+/// the margin under itself.
+// reference: card-box-classes
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct Drawing {
+    pub card: Card,
+    pub footer: Footer,
+    pub backing: Backing,
+    pub setting: Setting,
+    pub bottom: Bottom,
+}
+
+impl Drawing {
+    /// Whether this card's lines stand inside `.cardFooter`'s own padding,
+    /// which `resolveCardBoxCssClasses` gives the card `cardLayout` stands on
+    /// the paper.
+    // reference: card-box-classes
+    // reference: card-footer-outer
+    pub fn footing(self) -> Footing {
+        match self.backing {
+            Backing::Paper => Footing::Padded,
+            Backing::Padder => Footing::Bare,
+        }
+    }
+
+    /// The pitch one card occupies down the page, gutter included.
+    pub fn row(self, room: Room) -> Drawn {
+        let gutter = GUTTER.drawn();
+        let inside = Drawn::of(self.card.width(room).count() - gutter.count());
+        self.card
+            .shape()
+            .aspect()
+            .of(inside)
+            .plus(written(self.footer, self.footing()))
+            .plus(reserved(self.bottom, room.viewport()))
+            .plus(gutter)
     }
 }
 

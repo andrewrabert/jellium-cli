@@ -23,7 +23,7 @@ fn saved<'a>(
         true => saved.server.clone(),
         false => saved.name.clone(),
     };
-    let mut entry = column![widget::card(
+    let mut entry = column![widget::picked(
         card::Card::Rail(card::Rail::Square),
         Room::content(viewport),
         Face::Icon(Icon::Storage),
@@ -74,9 +74,10 @@ pub fn view<'a>(state: &'a super::State, viewport: Viewport) -> Element<'a, Mess
                 typeface::Rank::First,
                 strings::lookup(Text::LoginServersTitle)
             ),
-            widget::picker(
+            widget::wall(
                 card::Card::Rail(card::Rail::Square),
                 Room::content(viewport),
+                card::Wrap::Centred,
                 state
                     .servers
                     .iter()

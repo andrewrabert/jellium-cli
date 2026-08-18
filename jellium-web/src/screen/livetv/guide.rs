@@ -9,9 +9,8 @@ use uuid::Uuid;
 use super::Action;
 use crate::api::Api;
 use crate::app::Message;
-use crate::icon::{Icon, tinted};
 use crate::images::{self, Cache};
-use crate::livetv::{Badge, Channel, Marque, Program, Recording};
+use crate::livetv::{Badge, Channel, Marque, Program};
 use crate::style::{self, Drawn, Viewport, scheme, space, typeface};
 use crate::text::{self as strings, Text};
 use crate::widget::{line, prose};
@@ -85,21 +84,6 @@ fn badge<'a>(badge: Badge) -> Element<'a, Message> {
         .padding(style::padding(space::GUIDE_BADGE_PAD))
         .style(move |theme: &iced::Theme| style::badge(theme, tint))
         .into()
-}
-
-/// The glyph of the timer covering a programme: a single timer's in the
-/// reference's own red, and a series timer's in the cell's own lettering faded.
-// reference: guide-timer-indicator
-// reference: guide-program-icon
-fn mark<'a>(recording: Recording) -> Element<'a, Message> {
-    match recording {
-        Recording::Once => tinted(Icon::FiberManualRecord, typeface::GUIDE_MARK, style::timer),
-        Recording::Series => tinted(
-            Icon::FiberSmartRecord,
-            typeface::GUIDE_MARK,
-            style::series_timer,
-        ),
-    }
 }
 
 /// The rule the guide draws, as wide or as tall as it is laid.
@@ -214,7 +198,7 @@ fn cell<'a>(program: &'a Program, standing: Standing, viewport: Viewport) -> Ele
     if let Some(recording) = program.recording() {
         inside = inside
             .push(Space::new().width(style::drawn(space::GUIDE_MARK_GAP.drawn())))
-            .push(mark(recording));
+            .push(crate::widget::timer(recording, typeface::GUIDE_MARK));
     }
 
     button(row![rule(viewport).height(Fill), inside])

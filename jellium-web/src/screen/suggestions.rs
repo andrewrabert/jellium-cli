@@ -15,6 +15,16 @@ use crate::style::{self, Viewport, card, space};
 use crate::text::{self as strings, Text};
 use crate::widget;
 
+/// The card a suggestions rail draws on.
+// reference: card-box-classes
+const RAIL: card::Drawing = card::Drawing {
+    card: card::Card::Rail(card::Rail::Portrait),
+    footer: card::Footer::NameAndSubtitle,
+    backing: card::Backing::Padder,
+    setting: card::Setting::Centred,
+    bottom: card::Bottom::Padded,
+};
+
 /// The rails a Suggestions tab shows: the server's suggestions, and on a movie
 /// library its movie recommendations as one rail per recommendation.
 /// The suggestions rail is user-scoped, because `/Items/Suggestions` takes no
@@ -77,7 +87,7 @@ pub fn view<'a>(
     let mut page = column![widget::section(
         strings::lookup(Text::LibraryTabSuggestions),
         widget::rail(
-            card::Card::Rail(card::Rail::Portrait),
+            RAIL,
             state.suggestions.iter(),
             Room::content(viewport),
             images,
@@ -90,7 +100,7 @@ pub fn view<'a>(
         page = page.push(widget::section(
             rail.heading.as_str(),
             widget::rail(
-                card::Card::Rail(card::Rail::Portrait),
+                RAIL,
                 rail.items.iter(),
                 Room::content(viewport),
                 images,

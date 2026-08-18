@@ -137,6 +137,26 @@ pub const BAR_TEXT: Length = BODY.times(Ratio::thousandths(920));
 // reference: bar-button
 pub const BAR_ICON: Length = ICON_BUTTON.times(Ratio::thousandths(1200));
 
+/// `.cardOverlayButton`, which the reference writes smaller than the body.
+// reference: card-overlay-button
+pub const CARD_OVERLAY_BUTTON: Length = BODY.times(Ratio::thousandths(880));
+
+/// `.cardOverlayFab-primary`, which the reference writes larger than the
+/// controls beside it.
+// reference: card-overlay-fab
+pub const CARD_OVERLAY_FAB: Length = CARD_OVERLAY_BUTTON.times(Ratio::thousandths(1300));
+
+/// `.cardOverlayButtonIcon`, which the reference writes as 1.66956521739130434
+/// of the control it stands in, the same multiple `.paper-icon-button-light`'s
+/// own glyph takes, in the em of the 88% that control is set in.
+// reference: card-overlay-button
+// reference: card-overlay-button-icon
+pub const CARD_OVERLAY_ICON: Length = ICON_BUTTON.times(Ratio::thousandths(880));
+
+/// `.indicatorIcon`, which a card's own indicators are drawn at.
+// reference: indicator-icon
+pub const INDICATOR_ICON: Length = BODY.times(Ratio::thousandths(1600));
+
 /// `.filterIndicator`'s lettering, 60% of the control it sits on.
 // reference: filter-indicator
 pub const INDICATOR: Length = BODY.times(Ratio::thousandths(600));

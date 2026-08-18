@@ -16,6 +16,19 @@ use crate::style::{Viewport, card};
 use crate::text::{self as strings, Text};
 use crate::widget;
 
+/// One home rail's card: the shape the section asks for, over the two lines a
+/// rail writes under it.
+// reference: card-box-classes
+fn railed(card: card::Card) -> card::Drawing {
+    card::Drawing {
+        card,
+        footer: card::Footer::NameAndSubtitle,
+        backing: card::Backing::Padder,
+        setting: card::Setting::Centred,
+        bottom: card::Bottom::Padded,
+    }
+}
+
 /// The most channels the on-now row shows.
 pub const ON_NOW: i32 = 20;
 
@@ -186,8 +199,9 @@ pub fn view<'a>(
         page = page.push(widget::section(
             strings::lookup(Text::HomeMyMedia),
             widget::wall(
-                card::Card::LIBRARY,
+                widget::TILE.card,
                 Room::content(viewport),
+                card::Wrap::Leading,
                 libraries.iter().filter_map(|library| {
                     Some(widget::library_tile(
                         library,
@@ -204,7 +218,7 @@ pub fn view<'a>(
             page = page.push(widget::section(
                 strings::lookup(Text::HomeContinueWatching),
                 widget::rail(
-                    card::Card::resumed(media),
+                    railed(card::Card::resumed(media)),
                     items,
                     Room::content(viewport),
                     images,
@@ -237,7 +251,7 @@ pub fn view<'a>(
         page = page.push(widget::section(
             strings::lookup(Text::HomeNextUp),
             widget::rail(
-                card::Card::NEXT_UP,
+                railed(card::Card::NEXT_UP),
                 state.next_up.iter(),
                 Room::content(viewport),
                 images,
@@ -249,7 +263,7 @@ pub fn view<'a>(
         page = page.push(widget::section(
             row.library.name.as_deref().unwrap_or_default(),
             widget::rail(
-                card::Card::latest(row.library.collection_type),
+                railed(card::Card::latest(row.library.collection_type)),
                 row.items.iter(),
                 Room::content(viewport),
                 images,

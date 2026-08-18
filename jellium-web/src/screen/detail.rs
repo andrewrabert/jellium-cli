@@ -19,6 +19,27 @@ use crate::text::{self as strings, Text};
 use crate::widget;
 use crate::widget::prose;
 
+/// The card a detail page's children draw on, over the two lines a wall writes
+/// under one.
+// reference: card-box-classes
+const CHILDREN: card::Drawing = card::Drawing {
+    card: card::Card::Wall(card::Shape::Portrait),
+    footer: card::Footer::NameAndSubtitle,
+    backing: card::Backing::Padder,
+    setting: card::Setting::Centred,
+    bottom: card::Bottom::Padded,
+};
+
+/// The card the rail of items alike draws on.
+// reference: card-box-classes
+const ALIKE: card::Drawing = card::Drawing {
+    card: card::Card::Rail(card::Rail::Portrait),
+    footer: card::Footer::NameAndSubtitle,
+    backing: card::Backing::Padder,
+    setting: card::Setting::Centred,
+    bottom: card::Bottom::Padded,
+};
+
 #[derive(Debug, Clone)]
 pub struct State {
     pub item: BaseItemDto,
@@ -458,7 +479,7 @@ pub fn view<'a>(
                 typeface::HEADING_2,
             ))
             .push(widget::posters(
-                card::Card::Wall(card::Shape::Portrait),
+                CHILDREN,
                 state.children.iter(),
                 Room::content(viewport),
                 images,
@@ -484,7 +505,7 @@ pub fn view<'a>(
         page = page.push(widget::section(
             strings::lookup(Text::DetailSimilar),
             widget::rail(
-                card::Card::Rail(card::Rail::Portrait),
+                ALIKE,
                 state.similar.iter(),
                 Room::content(viewport),
                 images,

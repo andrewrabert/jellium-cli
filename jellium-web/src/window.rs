@@ -5,7 +5,7 @@ use iced::widget::{Space, column};
 use iced::{Element, Fill, Task};
 
 use crate::app::Message;
-use crate::style::{self, Drawn, space};
+use crate::style::{self, Drawn, card, space};
 
 pub use jellium_model::window::{Grid, Id, Scrolled, Window};
 
@@ -59,6 +59,7 @@ pub fn resting(id: Id, offset: Drawn) -> Task<Message> {
 /// with only `Grid::built` cells constructed and the rest standing as space.
 pub fn grid<'a>(
     grid: Grid,
+    wrap: card::Wrap,
     count: usize,
     build: impl Fn(usize) -> Element<'a, Message> + 'a,
 ) -> Element<'a, Message> {
@@ -72,9 +73,12 @@ pub fn grid<'a>(
     let rows = cells
         .chunks(columns)
         .map(|row| {
-            iced::widget::row(row.iter().map(|index| build(*index)))
-                .spacing(style::drawn(space::GUTTER.drawn()))
-                .into()
+            let laid = iced::widget::row(row.iter().map(|index| build(*index)))
+                .spacing(style::drawn(space::GUTTER.drawn()));
+            match wrap {
+                card::Wrap::Leading => laid.into(),
+                card::Wrap::Centred => iced::widget::container(laid).center_x(Fill).into(),
+            }
         })
         .collect::<Vec<Element<'a, Message>>>();
 

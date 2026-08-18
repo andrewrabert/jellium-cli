@@ -40,7 +40,7 @@ pub struct Browse {
     collection: Option<CollectionType>,
     /// The card every cell draws, which the items' own aspect settles for a
     /// library whose controller writes no shape.
-    card: Card,
+    card: card::Drawing,
     /// The page these measurements were taken in.
     viewport: Viewport,
     /// Where the grid rested under each sort visited, so returning to a sort
@@ -123,6 +123,19 @@ fn toggled<T: PartialEq>(held: &mut Vec<T>, value: T, membership: Membership) {
     }
 }
 
+/// The card a library grid draws: the shape the library's own controller
+/// writes, over the two lines the grid writes under it.
+// reference: grid-card
+fn wall(collection: Option<CollectionType>, aspect: Option<Aspect>) -> card::Drawing {
+    card::Drawing {
+        card: Card::grid(collection, aspect),
+        footer: card::Footer::NameAndSubtitle,
+        backing: card::Backing::Padder,
+        setting: card::Setting::Centred,
+        bottom: card::Bottom::Padded,
+    }
+}
+
 impl Browse {
     pub fn new(
         id: window::Id,
@@ -132,17 +145,12 @@ impl Browse {
         viewport: Viewport,
         overflow: widget::Overflow,
     ) -> Browse {
-        let drawn = Card::grid(collection, None);
+        let drawn = wall(collection, None);
         let room = Browse::laid(listing.sort, viewport);
         Browse {
             heading,
             listing,
-            grid: window::Grid::new(
-                id,
-                drawn.width(room),
-                drawn.row(room, card::Footer::NameAndSubtitle, card::Bottom::Padded),
-                room,
-            ),
+            grid: window::Grid::new(id, drawn.card.width(room), drawn.row(room), room),
             items: Paged::new(0),
             choices: Choices::default(),
             opened: None,
@@ -171,7 +179,7 @@ impl Browse {
     }
 
     /// The card every cell of this grid draws.
-    pub fn card(&self) -> Card {
+    pub fn card(&self) -> card::Drawing {
         self.card
     }
 
@@ -186,12 +194,8 @@ impl Browse {
     /// Relays the grid at the card and the page standing now.
     fn relaid(&mut self) {
         let room = self.room();
-        self.grid.resized(
-            room,
-            self.card.width(room),
-            self.card
-                .row(room, card::Footer::NameAndSubtitle, card::Bottom::Padded),
-        );
+        self.grid
+            .resized(room, self.card.card.width(room), self.card.row(room));
     }
 
     /// The page the window wants that is neither held nor in flight.
@@ -205,7 +209,7 @@ impl Browse {
 
     pub fn filled(&mut self, page: std::ops::Range<usize>, items: Vec<BaseItemDto>) {
         self.items.filled(page, items);
-        self.card = Card::grid(
+        self.card = wall(
             self.collection,
             Aspect::shared(
                 self.items
@@ -535,24 +539,19 @@ pub fn view<'a>(browse: &'a Browse, viewport: Viewport, images: &'a Cache) -> El
     let count = browse.items.len();
     page = page.push(crate::window::grid(
         browse.grid,
+        card::Wrap::Leading,
         count,
         move |index| match browse.items.row(index) {
             Some(item) => widget::poster(
                 wall,
                 item,
                 room,
-                card::Footer::NameAndSubtitle,
-                card::Bottom::Padded,
                 widget::poster_key(item).and_then(|key| images.handle(key)),
                 browse.overflow,
             ),
             None => iced::widget::Space::new()
-                .width(style::drawn(wall.width(room)))
-                .height(style::drawn(wall.row(
-                    room,
-                    card::Footer::NameAndSubtitle,
-                    card::Bottom::Padded,
-                )))
+                .width(style::drawn(wall.card.width(room)))
+                .height(style::drawn(wall.row(room)))
                 .into(),
         },
     ));
