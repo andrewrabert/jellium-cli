@@ -1,7 +1,8 @@
 //! The gate over `jellium-model/src/appearance`: every value it holds names the
 //! rule it came from, and the rule it names carries that value.
 
-use jellium_reference::register::{Construct, Kind, Register};
+use jellium_reference::construct::Construct;
+use jellium_reference::register::{Kind, Register};
 use jellium_reference::spans::Spans;
 use jellium_reference::tree::{self, Extension};
 use std::collections::{BTreeMap, BTreeSet};

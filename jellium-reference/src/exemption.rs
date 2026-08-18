@@ -1,6 +1,6 @@
 //! `reference/exemptions.tsv`, read.
 
-use crate::register::Construct;
+use crate::construct::Construct;
 use std::collections::{BTreeMap, BTreeSet};
 use std::fmt;
 use std::path::{Path, PathBuf};

@@ -1,6 +1,6 @@
 //! `reference/spans`, read.
 
-use crate::register::Construct;
+use crate::construct::Construct;
 use crate::tree::Extension;
 use std::collections::{BTreeMap, BTreeSet};
 use std::fmt;

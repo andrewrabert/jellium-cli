@@ -7,7 +7,8 @@
 //! recorded hash is a failure, so the pinned reference cannot move under the
 //! port without saying so, and none of it asks for a checkout.
 
-use jellium_reference::register::{Construct, Digest, Kind, Register};
+use jellium_reference::construct::Construct;
+use jellium_reference::register::{Digest, Kind, Register};
 use jellium_reference::spans::Spans;
 use jellium_reference::tree::{self, Extension};
 use std::collections::BTreeSet;

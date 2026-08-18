@@ -1,48 +1,10 @@
 //! `reference/provenance.tsv`, read.
 
+use crate::construct::Construct;
 use sha2::Sha256;
 use std::collections::{BTreeMap, BTreeSet};
 use std::fmt;
 use std::path::{Path, PathBuf};
-
-/// The name a `// reference: <construct>` comment cites and one row carries.
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct Construct(String);
-
-impl Construct {
-    /// A name of lowercase letters, digits and hyphens, and None for any other
-    /// text.
-    pub fn read(text: &str) -> Option<Construct> {
-        let named = !text.is_empty()
-            && text
-                .chars()
-                .all(|value| value.is_ascii_lowercase() || value.is_ascii_digit() || value == '-');
-        named.then(|| Construct(text.to_owned()))
-    }
-
-    /// The name a `// reference:` comment carries, read up to the first
-    /// character no construct carries.
-    pub fn cited(line: &str) -> Option<Construct> {
-        let rest = line.split_once("// reference:")?.1.trim_start();
-        let name: String = rest
-            .chars()
-            .take_while(|value| {
-                value.is_ascii_lowercase() || value.is_ascii_digit() || *value == '-'
-            })
-            .collect();
-        Construct::read(&name)
-    }
-
-    pub fn as_str(&self) -> &str {
-        &self.0
-    }
-}
-
-impl fmt::Display for Construct {
-    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
-        formatter.write_str(&self.0)
-    }
-}
 
 /// A construct this client draws, one the reference draws and this client does
 /// not, or one this client is to draw and does not yet.
@@ -298,18 +260,7 @@ impl std::error::Error for Malformed {}
 
 #[cfg(test)]
 mod tests {
-    use super::{Construct, Digest, Span};
-
-    #[test]
-    fn a_comment_cites_the_name_up_to_the_first_character_no_construct_carries() {
-        assert_eq!(
-            Construct::cited("    // reference: detect-browser — browser.js:245-346")
-                .as_ref()
-                .map(Construct::as_str),
-            Some("detect-browser")
-        );
-        assert_eq!(Construct::cited("    // a plain comment"), None);
-    }
+    use super::{Digest, Span};
 
     #[test]
     fn a_span_that_does_not_ascend_is_refused() {

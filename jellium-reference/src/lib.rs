@@ -13,6 +13,7 @@
 //! This library reads the register, the exemptions, the spans and the tree, and
 //! depends on no part of the tree it guards.
 
+pub mod construct;
 pub mod exemption;
 pub mod register;
 pub mod spans;
