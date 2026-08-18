@@ -51,7 +51,8 @@ pub async fn load(api: std::rc::Rc<crate::api::Api>) -> Answer<State> {
     .await
 }
 
-/// The last `route::TAIL_LIMIT` bytes of `name`, and the file's full length.
+/// The last `jellium_model::log::TAIL_LIMIT` bytes of `name`, and the file's
+/// full length.
 /// A file the server does not hold reads as `Trouble::LogMissing`.
 pub async fn open(
     api: std::rc::Rc<crate::api::Api>,
@@ -76,9 +77,8 @@ pub async fn open(
 }
 
 /// How many bytes read as a size on screen.
-fn sized(bytes: u64) -> String {
-    let mib = bytes as f64 / (1024.0 * 1024.0);
-    format!("{mib:.1} MiB")
+fn sized(bytes: jellium_model::log::Bytes) -> String {
+    strings::format(Text::LogsMebibytes, &[&format!("{:.1}", bytes.mebibytes())])
 }
 
 /// When a file was last written, as the date and the time the reference writes
@@ -158,10 +158,6 @@ pub fn view<'a>(state: &'a State, read_only: bool, viewport: Viewport) -> frame:
     frame::Filling::Stacked(rows)
 }
 
-/// The most of a log file the local server delivers, which is what names the
-/// body a tail.
-const TAIL_LIMIT: u64 = 2 * 1024 * 1024;
-
 /// The file's own name as the page's heading, the sentence naming the tail and
 /// the file's full size, and the lines the window shows, on the paper the
 /// reference stands a log's body on.
@@ -176,7 +172,10 @@ pub fn viewer<'a>(held: &'a Viewer, layout: Layout) -> frame::Filling<'a> {
         page.push(widget::prose(
             strings::format(
                 Text::LogsTail,
-                &[&sized(TAIL_LIMIT), &sized(held.tail.size())],
+                &[
+                    &sized(jellium_model::log::TAIL_LIMIT),
+                    &sized(held.tail.size()),
+                ],
             ),
             typeface::BODY,
         ));

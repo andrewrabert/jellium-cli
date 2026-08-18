@@ -1615,7 +1615,7 @@ mod dashboard_tests {
     }
 
     /// The log body is delivered as its tail, so the browser never receives
-    /// more than `TAIL_LIMIT` of an 8 MiB file.
+    /// more than `jellium_model::log::TAIL_LIMIT` of an 8 MiB file.
     #[tokio::test]
     async fn a_log_body_is_delivered_as_its_tail_and_names_the_full_length() {
         let server = answering(200).await;
@@ -1650,7 +1650,7 @@ mod dashboard_tests {
         let body = axum::body::to_bytes(response.into_body(), usize::MAX)
             .await
             .expect("the delivered body");
-        assert_eq!(body.len(), route::TAIL_LIMIT);
+        assert_eq!(body.len() as u64, jellium_model::log::TAIL_LIMIT.count());
     }
 
     /// A configuration page is fetched for the local server itself, and a name

@@ -2299,7 +2299,10 @@ impl Api {
             };
             let text = response.text().await?;
             let size = size.unwrap_or(text.len() as u64);
-            Ok(jellium_model::log::Tail::of(text, size))
+            Ok(jellium_model::log::Tail::of(
+                text,
+                jellium_model::log::Bytes::of(size),
+            ))
         })
         .await
     }

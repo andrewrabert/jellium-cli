@@ -886,6 +886,7 @@ text! {
     LogsTail => "logsTail",
     LogsSlowResponse => "logsSlowResponse",
     LogsSlowResponseTime => "logsSlowResponseTime",
+    LogsMebibytes => "logsMebibytes",
     ActivityTitle => "activityTitle",
     ActivityWithUser => "activityWithUser",
     ActivityWithoutUser => "activityWithoutUser",

@@ -28,7 +28,7 @@ use crate::app::{Message, Signed};
 use crate::error::{Answer, Operation, Wrote};
 use crate::style::{self, Viewport, space, typeface};
 use crate::text::{self as strings, Text};
-use crate::widget::prose;
+use crate::widget::{self, Choice, Secrecy, prose};
 
 /// Which controls a settings section is drawn with: MUI's, on one of the
 /// dashboard's react routes, or the reference's own, on one of its legacy
@@ -63,22 +63,26 @@ pub struct Control {
     /// The sentence naming it, which a filled field shrinks into its own head
     /// and a box writes beside itself.
     pub label: Text,
-    /// The sentence `MuiFormHelperText` writes under it, and nothing where the
-    /// reference writes none.
-    pub helper: Option<Text>,
+    /// The sentences the reference writes under it, in its order, and nothing
+    /// where it writes none.
+    pub helper: &'static [Text],
     /// What each value it offers reads as, in the order the reference stands
     /// them, and nothing where it offers no closed set.
     pub offered: Option<&'static [Offered]>,
 }
 
 /// One group of a section's controls: the heading the reference writes over
-/// them, the sentence it writes between that heading and them, and the
-/// controls standing under it in the order it stands them.
+/// them, the sentence it writes between that heading and them, the controls
+/// standing under it in the order it stands them, and the sentence it writes
+/// under the whole group.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Group {
     pub heading: Option<Heading>,
+    /// The sentence the reference writes between the heading and the controls.
     pub note: Option<Text>,
     pub controls: &'static [Control],
+    /// The sentence the reference writes under the whole group.
+    pub closing: Option<Text>,
 }
 
 /// The acceleration methods the transcoding screen offers, in the order the
@@ -183,16 +187,17 @@ impl Section {
                         Control {
                             field: Field::Text { key: "ServerName" },
                             label: Text::GeneralServerName,
-                            helper: Some(Text::GeneralServerNameHelp),
+                            helper: &[Text::GeneralServerNameHelp],
                             offered: None,
                         },
                         Control {
                             field: Field::Text { key: "UICulture" },
                             label: Text::GeneralDisplayLanguage,
-                            helper: Some(Text::GeneralDisplayLanguageHelp),
+                            helper: &[Text::GeneralDisplayLanguageHelp],
                             offered: None,
                         },
                     ],
+                    closing: None,
                 },
                 Group {
                     heading: Some(Heading {
@@ -205,9 +210,10 @@ impl Section {
                             key: "MetadataPath",
                         },
                         label: Text::GeneralMetadataPath,
-                        helper: Some(Text::GeneralMetadataPathHelp),
+                        helper: &[Text::GeneralMetadataPathHelp],
                         offered: None,
                     }],
+                    closing: None,
                 },
                 Group {
                     heading: Some(Heading {
@@ -220,9 +226,10 @@ impl Section {
                             key: "QuickConnectAvailable",
                         },
                         label: Text::GeneralQuickConnect,
-                        helper: None,
+                        helper: &[],
                         offered: None,
                     }],
+                    closing: None,
                 },
                 Group {
                     heading: Some(Heading {
@@ -235,9 +242,10 @@ impl Section {
                             key: "LibraryScanFanoutConcurrency",
                         },
                         label: Text::GeneralScanConcurrency,
-                        helper: Some(Text::GeneralScanConcurrencyHelp),
+                        helper: &[Text::GeneralScanConcurrencyHelp],
                         offered: None,
                     }],
+                    closing: None,
                 },
             ],
             Section::Networking => &[
@@ -253,13 +261,13 @@ impl Section {
                                 key: "InternalHttpPort",
                             },
                             label: Text::NetworkingPort,
-                            helper: Some(Text::NetworkingPortHelp),
+                            helper: &[Text::NetworkingPortHelp],
                             offered: None,
                         },
                         Control {
                             field: Field::Text { key: "BaseUrl" },
                             label: Text::NetworkingBaseUrl,
-                            helper: Some(Text::NetworkingBaseUrlHelp),
+                            helper: &[Text::NetworkingBaseUrlHelp],
                             offered: None,
                         },
                         Control {
@@ -267,7 +275,7 @@ impl Section {
                                 key: "LocalNetworkSubnets",
                             },
                             label: Text::NetworkingLanNetworks,
-                            helper: Some(Text::NetworkingLanNetworksHelp),
+                            helper: &[Text::NetworkingLanNetworksHelp],
                             offered: None,
                         },
                         Control {
@@ -275,10 +283,11 @@ impl Section {
                                 key: "KnownProxies",
                             },
                             label: Text::NetworkingKnownProxies,
-                            helper: Some(Text::NetworkingKnownProxiesHelp),
+                            helper: &[Text::NetworkingKnownProxiesHelp],
                             offered: None,
                         },
                     ],
+                    closing: None,
                 },
                 Group {
                     heading: Some(Heading {
@@ -292,7 +301,7 @@ impl Section {
                                 key: "EnableRemoteAccess",
                             },
                             label: Text::NetworkingRemoteAccess,
-                            helper: Some(Text::NetworkingRemoteAccessHelp),
+                            helper: &[Text::NetworkingRemoteAccessHelp],
                             offered: None,
                         },
                         Control {
@@ -300,7 +309,7 @@ impl Section {
                                 key: "RemoteIPFilter",
                             },
                             label: Text::NetworkingRemoteFilter,
-                            helper: Some(Text::NetworkingRemoteFilterHelp),
+                            helper: &[Text::NetworkingRemoteFilterHelp],
                             offered: None,
                         },
                         Control {
@@ -308,10 +317,11 @@ impl Section {
                                 key: "PublicHttpPort",
                             },
                             label: Text::NetworkingPublicPort,
-                            helper: Some(Text::NetworkingPublicPortHelp),
+                            helper: &[Text::NetworkingPublicPortHelp],
                             offered: None,
                         },
                     ],
+                    closing: None,
                 },
                 Group {
                     heading: Some(Heading {
@@ -323,16 +333,17 @@ impl Section {
                         Control {
                             field: Field::Flag { key: "EnableIPv4" },
                             label: Text::NetworkingIpv4,
-                            helper: Some(Text::NetworkingIpv4Help),
+                            helper: &[Text::NetworkingIpv4Help],
                             offered: None,
                         },
                         Control {
                             field: Field::Flag { key: "EnableIPv6" },
                             label: Text::NetworkingIpv6,
-                            helper: Some(Text::NetworkingIpv6Help),
+                            helper: &[Text::NetworkingIpv6Help],
                             offered: None,
                         },
                     ],
+                    closing: None,
                 },
                 Group {
                     heading: Some(Heading {
@@ -345,9 +356,10 @@ impl Section {
                             key: "AutoDiscovery",
                         },
                         label: Text::NetworkingAutoDiscovery,
-                        helper: Some(Text::NetworkingAutoDiscoveryHelp),
+                        helper: &[Text::NetworkingAutoDiscoveryHelp],
                         offered: None,
                     }],
+                    closing: None,
                 },
             ],
             Section::Branding => &[Group {
@@ -359,7 +371,7 @@ impl Section {
                             key: "SplashscreenEnabled",
                         },
                         label: Text::BrandingSplashscreen,
-                        helper: None,
+                        helper: &[],
                         offered: None,
                     },
                     Control {
@@ -367,16 +379,17 @@ impl Section {
                             key: "LoginDisclaimer",
                         },
                         label: Text::BrandingLoginDisclaimer,
-                        helper: Some(Text::BrandingLoginDisclaimerHelp),
+                        helper: &[Text::BrandingLoginDisclaimerHelp],
                         offered: None,
                     },
                     Control {
                         field: Field::Text { key: "CustomCss" },
                         label: Text::BrandingCustomCss,
-                        helper: Some(Text::BrandingCustomCssHelp),
+                        helper: &[Text::BrandingCustomCssHelp],
                         offered: None,
                     },
                 ],
+                closing: None,
             }],
             Section::Resume => &[Group {
                 heading: None,
@@ -387,7 +400,7 @@ impl Section {
                             key: "MinResumePct",
                         },
                         label: Text::ResumeMinimumPercentage,
-                        helper: Some(Text::ResumeMinimumPercentageHelp),
+                        helper: &[Text::ResumeMinimumPercentageHelp],
                         offered: None,
                     },
                     Control {
@@ -395,7 +408,7 @@ impl Section {
                             key: "MaxResumePct",
                         },
                         label: Text::ResumeMaximumPercentage,
-                        helper: Some(Text::ResumeMaximumPercentageHelp),
+                        helper: &[Text::ResumeMaximumPercentageHelp],
                         offered: None,
                     },
                     Control {
@@ -403,7 +416,7 @@ impl Section {
                             key: "MinAudiobookResume",
                         },
                         label: Text::ResumeMinimumAudiobook,
-                        helper: Some(Text::ResumeMinimumAudiobookHelp),
+                        helper: &[Text::ResumeMinimumAudiobookHelp],
                         offered: None,
                     },
                     Control {
@@ -411,7 +424,7 @@ impl Section {
                             key: "MaxAudiobookResume",
                         },
                         label: Text::ResumeMaximumAudiobook,
-                        helper: Some(Text::ResumeMaximumAudiobookHelp),
+                        helper: &[Text::ResumeMaximumAudiobookHelp],
                         offered: None,
                     },
                     Control {
@@ -419,22 +432,24 @@ impl Section {
                             key: "MinResumeDurationSeconds",
                         },
                         label: Text::ResumeMinimumDuration,
-                        helper: Some(Text::ResumeMinimumDurationHelp),
+                        helper: &[Text::ResumeMinimumDurationHelp],
                         offered: None,
                     },
                 ],
+                closing: None,
             }],
             Section::Streaming => &[Group {
                 heading: None,
                 note: None,
                 controls: &[Control {
-                    field: Field::Number {
+                    field: Field::Megabits {
                         key: "RemoteClientBitrateLimit",
                     },
                     label: Text::StreamingBitrateLimit,
-                    helper: Some(Text::StreamingBitrateLimitHelp),
+                    helper: &[Text::StreamingBitrateLimitHelp],
                     offered: None,
                 }],
+                closing: None,
             }],
             Section::Transcoding => &[
                 Group {
@@ -445,9 +460,10 @@ impl Section {
                             key: "HardwareAccelerationType",
                         },
                         label: Text::TranscodingHardwareAcceleration,
-                        helper: Some(Text::TranscodingHardwareAccelerationHelp),
+                        helper: &[Text::TranscodingHardwareAccelerationHelp],
                         offered: Some(ACCELERATION),
                     }],
+                    closing: None,
                 },
                 Group {
                     heading: Some(Heading {
@@ -460,9 +476,10 @@ impl Section {
                             key: "EnableHardwareEncoding",
                         },
                         label: Text::TranscodingEnableHardwareEncoding,
-                        helper: None,
+                        helper: &[],
                         offered: None,
                     }],
+                    closing: None,
                 },
                 Group {
                     heading: Some(Heading {
@@ -475,9 +492,10 @@ impl Section {
                             key: "AllowHevcEncoding",
                         },
                         label: Text::TranscodingAllowHevc,
-                        helper: None,
+                        helper: &[],
                         offered: None,
                     }],
+                    closing: None,
                 },
                 Group {
                     heading: None,
@@ -488,7 +506,7 @@ impl Section {
                                 key: "EnableTonemapping",
                             },
                             label: Text::TranscodingTonemapping,
-                            helper: Some(Text::TranscodingTonemappingHelp),
+                            helper: &[Text::TranscodingTonemappingHelp],
                             offered: None,
                         },
                         Control {
@@ -496,7 +514,7 @@ impl Section {
                                 key: "EncodingThreadCount",
                             },
                             label: Text::TranscodingThreadCount,
-                            helper: Some(Text::TranscodingThreadCountHelp),
+                            helper: &[Text::TranscodingThreadCountHelp],
                             offered: None,
                         },
                         Control {
@@ -504,7 +522,7 @@ impl Section {
                                 key: "TranscodingTempPath",
                             },
                             label: Text::TranscodingPath,
-                            helper: Some(Text::TranscodingPathHelp),
+                            helper: &[Text::TranscodingPathHelp],
                             offered: None,
                         },
                         Control {
@@ -512,7 +530,7 @@ impl Section {
                                 key: "DownMixAudioBoost",
                             },
                             label: Text::TranscodingDownMixBoost,
-                            helper: Some(Text::TranscodingDownMixBoostHelp),
+                            helper: &[Text::TranscodingDownMixBoostHelp],
                             offered: None,
                         },
                         Control {
@@ -520,7 +538,7 @@ impl Section {
                                 key: "EnableThrottling",
                             },
                             label: Text::TranscodingThrottle,
-                            helper: Some(Text::TranscodingThrottleHelp),
+                            helper: &[Text::TranscodingThrottleHelp],
                             offered: None,
                         },
                         Control {
@@ -528,10 +546,11 @@ impl Section {
                                 key: "ThrottleDelaySeconds",
                             },
                             label: Text::TranscodingThrottleDelay,
-                            helper: Some(Text::TranscodingThrottleDelayHelp),
+                            helper: &[Text::TranscodingThrottleDelayHelp],
                             offered: None,
                         },
                     ],
+                    closing: None,
                 },
             ],
             Section::Trickplay => &[Group {
@@ -543,7 +562,7 @@ impl Section {
                             key: "EnableHwAcceleration",
                         },
                         label: Text::TrickplayHardwareDecoding,
-                        helper: None,
+                        helper: &[],
                         offered: None,
                     },
                     Control {
@@ -551,37 +570,37 @@ impl Section {
                             key: "EnableHwEncoding",
                         },
                         label: Text::TrickplayHardwareEncoding,
-                        helper: Some(Text::TrickplayHardwareEncodingHelp),
+                        helper: &[Text::TrickplayHardwareEncodingHelp],
                         offered: None,
                     },
                     Control {
                         field: Field::Number { key: "Interval" },
                         label: Text::TrickplayInterval,
-                        helper: Some(Text::TrickplayIntervalHelp),
+                        helper: &[Text::TrickplayIntervalHelp],
                         offered: None,
                     },
                     Control {
                         field: Field::Number { key: "TileWidth" },
                         label: Text::TrickplayTileWidth,
-                        helper: Some(Text::TrickplayTileWidthHelp),
+                        helper: &[Text::TrickplayTileWidthHelp],
                         offered: None,
                     },
                     Control {
                         field: Field::Number { key: "TileHeight" },
                         label: Text::TrickplayTileHeight,
-                        helper: Some(Text::TrickplayTileHeightHelp),
+                        helper: &[Text::TrickplayTileHeightHelp],
                         offered: None,
                     },
                     Control {
                         field: Field::Number { key: "JpegQuality" },
                         label: Text::TrickplayJpegQuality,
-                        helper: Some(Text::TrickplayJpegQualityHelp),
+                        helper: &[Text::TrickplayJpegQualityHelp],
                         offered: None,
                     },
                     Control {
                         field: Field::Number { key: "Qscale" },
                         label: Text::TrickplayQscale,
-                        helper: Some(Text::TrickplayQscaleHelp),
+                        helper: &[Text::TrickplayQscaleHelp],
                         offered: None,
                     },
                     Control {
@@ -589,10 +608,11 @@ impl Section {
                             key: "ProcessThreads",
                         },
                         label: Text::TrickplayThreads,
-                        helper: Some(Text::TrickplayThreadsHelp),
+                        helper: &[Text::TrickplayThreadsHelp],
                         offered: None,
                     },
                 ],
+                closing: None,
             }],
         }
     }
@@ -649,6 +669,217 @@ impl LiveTvTab {
             LiveTvTab::Mapping => Text::MappingTitle,
             LiveTvTab::Dvr => Text::DvrTitle,
         }
+    }
+}
+
+/// What editing `field` to `value` sends.
+fn edited(field: jellium_model::form::Field, value: String) -> Message {
+    Message::DashboardAction(Action::Edited(field, value))
+}
+
+/// The options a control offers, and the one standing now.
+fn offered(options: &'static [Offered], held: &str) -> (Vec<Choice<&'static str>>, &'static str) {
+    let standing = options
+        .iter()
+        .find(|option| option.value == held)
+        .map(|option| option.value)
+        .unwrap_or_default();
+    let offered = options
+        .iter()
+        .map(|option| Choice {
+            label: strings::lookup(option.label).to_owned(),
+            value: option.value,
+        })
+        .collect();
+    (offered, standing)
+}
+
+/// A control with the sentences the reference writes under it, and the control
+/// alone where it writes none.
+fn under<'a>(
+    control: Element<'a, Message>,
+    sentences: Vec<Element<'a, Message>>,
+) -> Element<'a, Message> {
+    match sentences.is_empty() {
+        true => control,
+        false => column(std::iter::once(control).chain(sentences)).into(),
+    }
+}
+
+/// MUI's own control for `control`, carrying what the form holds for it and
+/// the sentences the reference writes under it.
+fn filled<'a>(
+    control: Control,
+    form: &'a jellium_model::form::Form,
+    viewport: Viewport,
+) -> Element<'a, Message> {
+    use jellium_model::form::Field;
+    let field = control.field;
+    let held = form.value(field);
+    let layout = viewport.layout();
+    let drawn = match control.offered {
+        Some(options) => {
+            let (offered, standing) = self::offered(options, &held);
+            widget::mui::chosen(
+                control.label,
+                None,
+                offered,
+                &standing,
+                move |option: &'static str| edited(field, option.to_owned()),
+                viewport,
+            )
+        }
+        None => match field {
+            Field::Flag { .. } => widget::mui::flag(
+                control.label,
+                None,
+                held == "true",
+                move |on| edited(field, on.to_string()),
+                layout,
+            ),
+            Field::Text { .. }
+            | Field::Number { .. }
+            | Field::Choice { .. }
+            | Field::Lines { .. }
+            | Field::Listed { .. }
+            | Field::Named { .. }
+            | Field::Minutes { .. }
+            | Field::Megabits { .. } => widget::mui::field(
+                control.label,
+                None,
+                &held,
+                move |typed| edited(field, typed),
+                layout,
+            ),
+        },
+    };
+    under(
+        drawn,
+        control
+            .helper
+            .iter()
+            .map(|sentence| widget::mui::helper(*sentence, widget::mui::Helper::Contained, layout))
+            .collect(),
+    )
+}
+
+/// The reference's own control for `control`, which its legacy views draw,
+/// carrying what the form holds for it and the sentences it writes under it.
+fn emby<'a>(control: Control, form: &'a jellium_model::form::Form) -> Element<'a, Message> {
+    use jellium_model::form::Field;
+    let field = control.field;
+    let held = form.value(field);
+    let label = strings::lookup(control.label);
+    let (drawn, inset) = match control.offered {
+        Some(options) => {
+            let (offered, standing) = self::offered(options, &held);
+            (
+                widget::select(
+                    label,
+                    None,
+                    offered,
+                    &standing,
+                    move |option: &'static str| edited(field, option.to_owned()),
+                ),
+                space::DESCRIPTION_INSET,
+            )
+        }
+        None => match field {
+            Field::Flag { .. } => (
+                widget::flag(label, None, held == "true", move |on| {
+                    edited(field, on.to_string())
+                }),
+                space::CHECKBOX_INSET,
+            ),
+            Field::Text { .. }
+            | Field::Number { .. }
+            | Field::Choice { .. }
+            | Field::Lines { .. }
+            | Field::Listed { .. }
+            | Field::Named { .. }
+            | Field::Minutes { .. }
+            | Field::Megabits { .. } => (
+                widget::field(
+                    label,
+                    &held,
+                    None,
+                    move |typed| edited(field, typed),
+                    Message::Unchanged,
+                    Secrecy::Shown,
+                ),
+                space::DESCRIPTION_INSET,
+            ),
+        },
+    };
+    under(
+        drawn,
+        control
+            .helper
+            .iter()
+            .map(|sentence| widget::description(*sentence, inset))
+            .collect(),
+    )
+}
+
+/// The sentence the reference writes beside a whole group, in `dressing`'s own
+/// lettering.
+fn said<'a>(
+    sentence: Text,
+    dressing: Controls,
+    layout: crate::style::Layout,
+) -> Element<'a, Message> {
+    match dressing {
+        Controls::Mui => widget::mui::helper(sentence, widget::mui::Helper::Flush, layout),
+        Controls::Emby => widget::description(sentence, space::DESCRIPTION_INSET),
+    }
+}
+
+/// The groups of one form, each under the heading it carries, drawn with the
+/// controls `dressing` names.
+pub fn controls<'a>(
+    groups: &'static [Group],
+    form: &'a jellium_model::form::Form,
+    dressing: Controls,
+    viewport: Viewport,
+) -> Vec<Element<'a, Message>> {
+    let layout = viewport.layout();
+    let mut standing: Vec<Element<'a, Message>> = Vec::new();
+    for group in groups {
+        if let Some(heading) = group.heading {
+            let title = strings::lookup(heading.title);
+            standing.push(match dressing {
+                Controls::Mui => widget::mui::heading(heading.rank, title),
+                Controls::Emby => widget::heading(heading.rank, title),
+            });
+        }
+        if let Some(note) = group.note {
+            standing.push(said(note, dressing, layout));
+        }
+        standing.extend(group.controls.iter().map(|control| match dressing {
+            Controls::Mui => filled(*control, form, viewport),
+            Controls::Emby => emby(*control, form),
+        }));
+        if let Some(closing) = group.closing {
+            standing.push(said(closing, dressing, layout));
+        }
+    }
+    standing
+}
+
+/// The control that writes a form whole, drawn with the controls `dressing`
+/// names; a form with nothing to write offers no press.
+pub fn save<'a>(
+    dressing: Controls,
+    press: Option<Message>,
+    layout: crate::style::Layout,
+) -> Element<'a, Message> {
+    match dressing {
+        Controls::Mui => widget::mui::contained(Text::DashboardSave, press, layout),
+        Controls::Emby => widget::block(
+            strings::lookup(Text::DashboardSave),
+            press,
+            widget::Emphasis::Submit,
+        ),
     }
 }
 

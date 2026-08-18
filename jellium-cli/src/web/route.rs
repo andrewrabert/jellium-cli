@@ -273,8 +273,8 @@ pub enum Payload {
     /// The body is read up to `OBSERVED_LIMIT`, every name it carries is
     /// recorded under `Observed`, and the bytes are forwarded unchanged.
     Observed(Observed),
-    /// Only the last `TAIL_LIMIT` bytes are delivered, answered `206` with the
-    /// full length in `Content-Range`.
+    /// Only the last `jellium_model::log::TAIL_LIMIT` bytes are delivered,
+    /// answered `206` with the full length in `Content-Range`.
     Tail,
     /// The body is read up to `OBSERVED_LIMIT`, every foreign image url it
     /// carries is recorded under `Observed::Image` and replaced by the handle
@@ -292,9 +292,6 @@ fn is_foreign(value: &str) -> bool {
 
 /// The largest body read whole so its names can be recorded.
 pub const OBSERVED_LIMIT: usize = 1 << 20;
-
-/// The most of a log file the relay delivers.
-pub const TAIL_LIMIT: usize = 2 * 1024 * 1024;
 
 /// The configuration sections the dashboard reads and writes by key.
 static SECTIONS: &[&str] = &[

@@ -861,6 +861,7 @@
   "logsTail": "Showing the last {0} of {1}. The rest of the file is not read.",
   "logsSlowResponse": "Log a warning message if the server was slow to answer",
   "logsSlowResponseTime": "Time in ms after which a response is considered slow",
+  "logsMebibytes": "{0} MiB",
   "activityTitle": "Activity",
   "activityWithUser": "Naming a user",
   "activityWithoutUser": "Naming no user",

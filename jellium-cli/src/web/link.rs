@@ -365,9 +365,9 @@ impl Link {
             .map_err(|e| self.unreachable(e))
     }
 
-    /// Delivers the last `route::TAIL_LIMIT` bytes of the body, answered `206`
-    /// with the full length in `Content-Range` when the body is longer, and
-    /// forwarded whole otherwise.
+    /// Delivers the last `jellium_model::log::TAIL_LIMIT` bytes of the body,
+    /// answered `206` with the full length in `Content-Range` when the body is
+    /// longer, and forwarded whole otherwise.
     async fn tailed(&self, mut response: reqwest::Response) -> Result<Response, Failure> {
         let status = response.status();
         let content_type = response.headers().get(header::CONTENT_TYPE).cloned();
@@ -377,7 +377,7 @@ impl Link {
         while let Some(chunk) = response.chunk().await.map_err(|e| self.unreachable(e))? {
             size += chunk.len() as u64;
             held.extend(chunk.iter().copied());
-            while held.len() > route::TAIL_LIMIT {
+            while held.len() as u64 > jellium_model::log::TAIL_LIMIT.count() {
                 held.pop_front();
             }
         }

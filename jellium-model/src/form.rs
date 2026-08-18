@@ -30,6 +30,14 @@ pub enum Field {
     Named {
         key: &'static str,
     },
+    /// A count of seconds, read and written as whole minutes.
+    Minutes {
+        key: &'static str,
+    },
+    /// A count of bits per second, read and written as megabits per second.
+    Megabits {
+        key: &'static str,
+    },
 }
 
 impl Field {
@@ -41,7 +49,9 @@ impl Field {
             | Field::Choice { key, .. }
             | Field::Lines { key }
             | Field::Listed { key }
-            | Field::Named { key } => key,
+            | Field::Named { key }
+            | Field::Minutes { key }
+            | Field::Megabits { key } => key,
         }
     }
 }
@@ -63,7 +73,9 @@ impl Form {
     }
 
     /// What `field` holds now, rendered as text: the edit made against it when
-    /// there is one, and what the server answered otherwise.
+    /// there is one, and what the server answered otherwise. A field carrying
+    /// a unit the key does not hold is rendered in that unit, and text held
+    /// where a number was expected is rendered as it was typed.
     pub fn value(&self, field: Field) -> String {
         let held = self
             .edited
@@ -90,6 +102,14 @@ impl Form {
                         .join("\n")
                 })
                 .unwrap_or_default(),
+            Field::Minutes { .. } => match held.as_f64() {
+                Some(seconds) => ((seconds / SECONDS_A_MINUTE) as i64).to_string(),
+                None => rendered(held),
+            },
+            Field::Megabits { .. } => match held.as_f64() {
+                Some(bits) => (bits / BITS_A_MEGABIT).to_string(),
+                None => rendered(held),
+            },
             _ => rendered(held),
         }
     }
@@ -123,6 +143,14 @@ impl Form {
                     .map(|line| serde_json::json!({ "Name": line }))
                     .collect(),
             ),
+            Field::Minutes { .. } => match value.parse::<i64>() {
+                Ok(minutes) => serde_json::Value::from(minutes * SECONDS_A_MINUTE as i64),
+                Err(_) => serde_json::Value::String(value),
+            },
+            Field::Megabits { .. } => match value.parse::<f64>() {
+                Ok(megabits) => serde_json::Value::from((megabits * BITS_A_MEGABIT) as i64),
+                Err(_) => serde_json::Value::String(value),
+            },
             Field::Text { .. } | Field::Choice { .. } | Field::Listed { .. } => {
                 serde_json::Value::String(value)
             }
@@ -196,6 +224,14 @@ impl Form {
     }
 }
 
+/// How many seconds a minute holds, which is what a `Minutes` field divides by
+/// to read and multiplies by to write.
+const SECONDS_A_MINUTE: f64 = 60.0;
+
+/// How many bits a megabit holds, which is what a `Megabits` field divides by
+/// to read and multiplies by to write.
+const BITS_A_MEGABIT: f64 = 1_000_000.0;
+
 /// One json value as a control renders it: a string as itself, so no quoting
 /// reaches a text field, and anything else as its json text.
 fn rendered(value: &serde_json::Value) -> String {
@@ -215,6 +251,40 @@ mod tests {
     const ENABLED: Field = Field::Flag { key: "Enabled" };
     const PATHS: Field = Field::Lines { key: "Paths" };
     const STUDIOS: Field = Field::Named { key: "Studios" };
+    const PADDING: Field = Field::Minutes {
+        key: "PrePaddingSeconds",
+    };
+    const BITRATE: Field = Field::Megabits {
+        key: "RemoteClientBitrateLimit",
+    };
+
+    #[test]
+    fn a_count_of_seconds_reads_and_writes_as_whole_minutes() {
+        let mut form = Form::of(serde_json::json!({"PrePaddingSeconds": 600}));
+        assert_eq!(form.value(PADDING), "10");
+        form.edit(PADDING, "3".to_owned());
+        assert_eq!(form.written()["PrePaddingSeconds"], serde_json::json!(180));
+    }
+
+    #[test]
+    fn a_count_of_bits_reads_and_writes_as_megabits() {
+        let mut form = Form::of(serde_json::json!({"RemoteClientBitrateLimit": 5_000_000}));
+        assert_eq!(form.value(BITRATE), "5");
+        form.edit(BITRATE, "0.25".to_owned());
+        assert_eq!(
+            form.written()["RemoteClientBitrateLimit"],
+            serde_json::json!(250_000)
+        );
+    }
+
+    #[test]
+    fn a_unit_that_does_not_parse_is_held_as_it_was_typed() {
+        let mut form = Form::of(serde_json::json!({}));
+        form.edit(PADDING, "soon".to_owned());
+        assert_eq!(form.value(PADDING), "soon");
+        form.edit(BITRATE, "fast".to_owned());
+        assert_eq!(form.value(BITRATE), "fast");
+    }
 
     fn section() -> serde_json::Value {
         serde_json::json!({
