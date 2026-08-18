@@ -618,6 +618,8 @@ pub enum Action {
     Write(Written),
     /// One bridge payload a configuration frame raised.
     Bridged(String),
+    /// Opens the menu one account's card offers, and closes it.
+    UserMenu(Option<Uuid>),
 }
 
 /// Loads the screen `screen` names, against the page `viewport` measures.
@@ -680,6 +682,7 @@ pub async fn load(
 pub fn view<'a>(
     state: &'a State,
     session: &'a jellium_protocol::Session,
+    images: &'a crate::images::Cache,
     viewport: Viewport,
 ) -> Element<'a, Message> {
     let filling: frame::Filling<'a> = match state.confirming.as_ref() {
@@ -692,10 +695,10 @@ pub fn view<'a>(
             Body::Settings(held) => {
                 frame::Filling::Stacked(settings::view(held, session.read_only))
             }
-            Body::Users(held) => frame::Filling::Stacked(match state.screen {
-                Screen::UserNew => users::new(held),
-                _ => users::view(held, session.read_only, session.user_id),
-            }),
+            Body::Users(held) => match state.screen {
+                Screen::UserNew => frame::Filling::Stacked(users::new(held)),
+                _ => frame::Filling::Whole(users::view(held, session.read_only, images, viewport)),
+            },
             Body::User(held) => {
                 frame::Filling::Stacked(users::one(held, session.read_only, session.user_id))
             }
@@ -958,6 +961,15 @@ pub fn act(signed: &mut Signed, action: Action, viewport: Viewport) -> Task<Mess
         Action::Ask(pending) => {
             if let Some(state) = shown_mut(signed) {
                 state.confirming = Some(pending);
+                if let Body::Users(held) = &mut state.body {
+                    held.menu = None;
+                }
+            }
+            Task::none()
+        }
+        Action::UserMenu(open) => {
+            if let Some(Body::Users(held)) = shown_mut(signed).map(|state| &mut state.body) {
+                held.menu = open;
             }
             Task::none()
         }
@@ -1549,6 +1561,14 @@ fn shown_mut(signed: &mut Signed) -> Option<&mut State> {
     match &mut signed.view {
         crate::app::View::Dashboard(state) => Some(state.as_mut()),
         _ => None,
+    }
+}
+
+/// The images the shown dashboard screen draws.
+pub fn images(state: &State) -> std::collections::HashSet<crate::images::Key> {
+    match &state.body {
+        Body::Users(held) => users::images(held),
+        _ => std::collections::HashSet::new(),
     }
 }
 

@@ -49,6 +49,23 @@ pub enum Footer {
     NameAndSubtitle,
 }
 
+/// Whether the shadow and the radius fall on the card's whole box, which
+/// `.visualCardBox` stands on the scheme's own paper behind image and footer
+/// alike, or on the frame its image stands in alone.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Backing {
+    Padder,
+    Paper,
+}
+
+/// Where a card's footer sets its lines: `.cardTextCentered` centres them and
+/// `.cardText` alone leaves them at the leading edge.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Setting {
+    Centred,
+    Leading,
+}
+
 /// One block of a ladder: the query it answers, and the value it sets.
 struct Step<T> {
     at: Option<Query>,
@@ -395,6 +412,10 @@ impl Card {
             | None => Card::Rail(Rail::Backdrop),
         }
     }
+
+    /// The card `UserCardBox` is built on.
+    // reference: user-card
+    pub const USER: Card = Card::Wall(Shape::Square);
 
     /// The card the next-up section draws on.
     // reference: home-next-up
@@ -844,19 +865,26 @@ fn request(card: Card) -> &'static Request {
     }
 }
 
-/// What a card's footer takes down the page.
+/// What a card's footer takes down the page, each line counting its own
+/// `.cardText` padding, which the reference writes in the em of the size that
+/// line is set in.
 // reference: card-footer
+// reference: card-text
 fn written(footer: Footer) -> Drawn {
+    let line = |size: Length| {
+        space::card_text(size)
+            .top
+            .plus(typeface::LINE_HEIGHT.of(size))
+            .plus(space::card_text(size).bottom)
+    };
     let name = space::CARD_FOOTER_PAD
         .top
-        .plus(typeface::LINE_HEIGHT.of(typeface::BODY))
+        .plus(line(typeface::BODY))
         .plus(space::CARD_FOOTER_PAD.bottom);
     match footer {
         Footer::Bare => Drawn::ZERO,
         Footer::Name => name.drawn(),
-        Footer::NameAndSubtitle => name
-            .plus(typeface::LINE_HEIGHT.of(typeface::SECONDARY))
-            .drawn(),
+        Footer::NameAndSubtitle => name.plus(line(typeface::SECONDARY)).drawn(),
     }
 }
 

@@ -70,7 +70,7 @@ pub fn sections<'a>(
                 widget::icon_button(
                     Icon::KeyboardArrowUp,
                     typeface::ICON_BUTTON,
-                    Text::HomeMoveUp,
+                    Some(Text::HomeMoveUp),
                     Message::SettingsAction(Action::MoveLibrary {
                         id,
                         toward: jellium_model::user::Toward::Earlier,
@@ -79,7 +79,7 @@ pub fn sections<'a>(
                 widget::icon_button(
                     Icon::KeyboardArrowDown,
                     typeface::ICON_BUTTON,
-                    Text::HomeMoveDown,
+                    Some(Text::HomeMoveDown),
                     Message::SettingsAction(Action::MoveLibrary {
                         id,
                         toward: jellium_model::user::Toward::Later,

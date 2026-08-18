@@ -342,7 +342,7 @@ fn paging<'a>(browse: &Browse) -> Element<'a, Message> {
     let filters = widget::icon_button(
         Icon::FilterAlt,
         typeface::ICON_BUTTON,
-        Text::FilterIndicator,
+        Some(Text::FilterIndicator),
         pressing(Opened::Filters),
     );
 
@@ -351,7 +351,7 @@ fn paging<'a>(browse: &Browse) -> Element<'a, Message> {
         widget::icon_button(
             Icon::SortByAlpha,
             typeface::ICON_BUTTON,
-            Text::LibrarySort,
+            Some(Text::LibrarySort),
             pressing(Opened::Sort)
         ),
         match browse.listing.facets.is_empty() {

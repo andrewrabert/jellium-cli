@@ -230,7 +230,7 @@ fn poster<'a>(item: &BaseItemDto, images: &'a Cache, width: Drawn) -> Element<'a
     match face {
         Some(handle) => container(image(handle).width(width))
             .width(width)
-            .style(style::card_padder)
+            .style(|theme| style::card_padder(theme, card::Backing::Padder))
             .into(),
         None => Space::new().width(width).into(),
     }

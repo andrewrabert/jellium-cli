@@ -278,6 +278,31 @@ pub fn submit(
     faced(scheme::ACCENT, scheme::ON_ACCENT)
 }
 
+/// `.fab.submit`: the submit face on the disc `border-radius: 50%` draws
+/// around a glyph at the fab's own padding.
+// reference: control-fab
+// reference: scheme-submit
+pub fn fab(
+    theme: &iced::Theme,
+    status: iced::widget::button::Status,
+) -> iced::widget::button::Style {
+    let face = submit(theme, status);
+    let disc = iced::border::Radius::new(drawn(
+        typeface::BUTTON_ICON
+            .plus(space::FAB_PAD)
+            .plus(space::FAB_PAD)
+            .times(Ratio::thousandths(500))
+            .drawn(),
+    ));
+    iced::widget::button::Style {
+        border: iced::Border {
+            radius: disc,
+            ..face.border
+        },
+        ..face
+    }
+}
+
 /// The reference's `.button-delete`, which it gives the control that removes
 /// something and lights no differently where it is reached.
 // reference: scheme-delete
@@ -602,29 +627,72 @@ pub fn editor_rule(_theme: &iced::Theme) -> iced::widget::container::Style {
     iced::widget::container::Style::default().background(color(scheme::EDITOR_RULE))
 }
 
+/// The corners a card's frame is rounded at, which a `.visualCardBox` squares
+/// at the foot so the footer under it carries the box's own radius alone.
+// reference: card-visual-square
+fn framed(backing: card::Backing) -> iced::border::Radius {
+    match backing {
+        card::Backing::Padder => radius(),
+        card::Backing::Paper => radius().bottom(0.0),
+    }
+}
+
+/// The shadow a card's frame drops, which a `.visualCardBox` carries on its
+/// whole box instead.
+// reference: card-shadow
+// reference: card-visual
+fn dropped(backing: card::Backing) -> iced::Shadow {
+    match backing {
+        card::Backing::Padder => shadow(space::SHADOW),
+        card::Backing::Paper => iced::Shadow::default(),
+    }
+}
+
 /// The frame a card's image sits in, which the reference fills with
-/// `.cardPadder`'s own color behind an image that has not arrived.
+/// `.cardPadder`'s own color behind an image that has not arrived and leaves
+/// clear inside a `.visualCardBox`, square at the foot of one.
 // reference: card-container
-pub fn card_padder(_theme: &iced::Theme) -> iced::widget::container::Style {
-    iced::widget::container::Style::default()
-        .background(color(scheme::CARD_PADDER))
+// reference: card-visual-square
+pub fn card_padder(_theme: &iced::Theme, backing: card::Backing) -> iced::widget::container::Style {
+    let held = iced::widget::container::Style::default()
         .border(iced::Border {
-            radius: radius(),
+            radius: framed(backing),
             ..iced::Border::default()
         })
-        .shadow(shadow(space::SHADOW))
+        .shadow(dropped(backing));
+    match backing {
+        card::Backing::Padder => held.background(color(scheme::CARD_PADDER)),
+        card::Backing::Paper => held,
+    }
 }
 
 /// A card drawing no image, which the reference gives one of five backgrounds
 /// chosen from the item's own name.
 // reference: card-container
 // reference: card-shadow
+// reference: card-visual-square
 pub fn card_face(
     _theme: &iced::Theme,
     background: scheme::Color,
+    backing: card::Backing,
 ) -> iced::widget::container::Style {
     iced::widget::container::Style::default()
         .background(color(background))
+        .border(iced::Border {
+            radius: framed(backing),
+            ..iced::Border::default()
+        })
+        .shadow(dropped(backing))
+}
+
+/// `.visualCardBox`: the scheme's own paper behind a card's image and its
+/// footer alike, carrying the radius and the shadow the frame carries
+/// otherwise.
+// reference: card-visual
+// reference: scheme-visual-card
+pub fn card_paper(_theme: &iced::Theme) -> iced::widget::container::Style {
+    iced::widget::container::Style::default()
+        .background(color(scheme::SURFACE))
         .border(iced::Border {
             radius: radius(),
             ..iced::Border::default()

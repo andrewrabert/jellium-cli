@@ -159,6 +159,9 @@ pub enum Filling<'a> {
         subtitle: Option<Text>,
         table: widget::table::Table<'a>,
     },
+    /// A screen heading its own content with `.sectionTitleContainer` rather
+    /// than the dashboard's own `h1`, which fills the page whole.
+    Whole(Element<'a, Message>),
 }
 
 /// The page every dashboard screen stands in: the drawer beside the content on
@@ -200,6 +203,7 @@ pub fn frame<'a>(
             .height(Fill)
             .into()
         }
+        Filling::Whole(content) => content,
     };
     let primary = container(filled).width(Fill).height(Fill).padding(
         iced::Padding::ZERO

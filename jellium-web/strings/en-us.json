@@ -385,7 +385,7 @@
   "usersParental": "Parental control",
   "usersImageUpload": "Upload an image",
   "usersImageRemove": "Remove the image",
-  "usersOwnAccount": "This is your own account, so it cannot be deleted here.",
+  "usersLastSeen": "Last seen {0}",
   "usersOwnAdministrator": "Your own administrator access cannot be removed here.",
   "librariesTitle": "Libraries",
   "librariesCreate": "Create a library",

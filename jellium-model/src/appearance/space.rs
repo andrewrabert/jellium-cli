@@ -80,6 +80,23 @@ impl Room {
         }
     }
 
+    /// The canvas less the drawer where the page is wide enough to stand one
+    /// beside the content, and less `.content-primary`'s own side padding at
+    /// each edge.
+    // reference: dashboard-frame
+    // reference: dashboard-content-side
+    pub fn dashboard(viewport: Viewport) -> Room {
+        let beside = match viewport.matches(DRAWER_BESIDE_AT) {
+            true => DRAWER.drawn(viewport.band()).count(),
+            false => 0.0,
+        };
+        let side = DASHBOARD_SIDE.drawn().count();
+        Room {
+            viewport,
+            width: Drawn::of((viewport.canvas().width().count() - beside - side * 2.0).max(0.0)),
+        }
+    }
+
     pub fn viewport(self) -> Viewport {
         self.viewport
     }
@@ -267,12 +284,43 @@ pub const INPUT_PAD: Padding = Padding {
 };
 
 // reference: card-text
-pub const CARD_TEXT_PAD: Padding = Padding {
-    top: Length::em(0.06),
-    right: Length::em(0.5),
-    bottom: Length::em(0.06),
-    left: Length::em(0.5),
-};
+const CARD_TEXT_ENDS: Ratio = Ratio::thousandths(60);
+
+// reference: card-text
+const CARD_TEXT_SIDE: Ratio = Ratio::thousandths(500);
+
+/// `.cardText`'s own padding, in the em of the size the line it holds is set
+/// in.
+// reference: card-text
+pub const fn card_text(size: Length) -> Padding {
+    Padding {
+        top: size.times(CARD_TEXT_ENDS),
+        right: size.times(CARD_TEXT_SIDE),
+        bottom: size.times(CARD_TEXT_ENDS),
+        left: size.times(CARD_TEXT_SIDE),
+    }
+}
+
+// reference: users-card-secondary
+const SECONDARY_LINES: Ratio = Ratio::thousandths(3000);
+
+/// The floor `.localUsers` puts under a card's secondary line, which is three
+/// of that line's own em.
+pub const USER_CARD_SECONDARY: Length = typeface::SECONDARY.times(SECONDARY_LINES);
+
+/// The drop `UserCardBox` gives the control it floats on its footer's trailing
+/// edge.
+// reference: user-card-box
+pub const USER_CARD_MENU_TOP: Css = Css::of(5.0);
+
+/// `.fab`'s own padding, which is what rounds it into a disc.
+// reference: control-fab
+pub const FAB_PAD: Length = Length::em(0.6);
+
+/// The margin `.sectionTitleButton` leaves between a section's title and the
+/// control beside it.
+// reference: section-title-button
+pub const SECTION_TITLE_BUTTON: Length = Length::em(1.5);
 
 // reference: card-footer
 pub const CARD_FOOTER_PAD: Padding = Padding {

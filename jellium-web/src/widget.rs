@@ -137,27 +137,29 @@ pub enum Face {
     Icon(Icon),
 }
 
-/// A card as the reference draws one: its face in the shape's own aspect over
-/// its centered footer, both held to the card's width inside its pitch.
+/// The frame a card's image stands in, at the card's width inside its pitch
+/// and its shape's own aspect: the image, the glyph `.cardImageIcon` stands in
+/// with over the background the name picks, or that background alone while
+/// nothing has arrived.
 // reference: card-container
-// reference: card-text-centered
-fn boxed<'a>(
+// reference: card-content
+fn framed<'a>(
     card: card::Card,
     room: Room,
     face: Option<Face>,
-    footer: card::Footer,
-    name: String,
-    subtitle: Option<String>,
+    name: &str,
+    backing: card::Backing,
 ) -> Element<'a, Message> {
     let width = style::drawn(inside(card, room));
     let height = style::drawn(card.shape().aspect().of(inside(card, room)));
-    let background = scheme::card_background(&name);
-    let painted = move |theme: &iced::Theme| style::card_face(theme, background);
-    let drawn_face: Element<'a, Message> = match face {
+    let background = scheme::card_background(name);
+    let painted = move |theme: &iced::Theme| style::card_face(theme, background, backing);
+    let padder = move |theme: &iced::Theme| style::card_padder(theme, backing);
+    match face {
         Some(Face::Image(handle)) => container(image(handle).width(width))
             .width(width)
             .height(height)
-            .style(style::card_padder)
+            .style(padder)
             .into(),
         Some(Face::Icon(drawn)) => container(crate::icon::icon(drawn, typeface::CARD_ICON))
             .center_x(width)
@@ -169,38 +171,86 @@ fn boxed<'a>(
             .height(height)
             .style(painted)
             .into(),
-    };
-
-    if footer == card::Footer::Bare {
-        return column![drawn_face].width(width).into();
     }
+}
 
-    let mut written = column![line(
-        name,
-        typeface::BODY,
-        typeface::Weight::Regular,
-        typeface::LINE_HEIGHT
-    )]
-    .align_x(iced::Center)
+/// One `.cardText` line, in the padding the reference writes in the em of the
+/// size that line is set in.
+// reference: card-text
+fn carded<'a>(written: Element<'a, Message>, size: style::Length) -> Element<'a, Message> {
+    container(written)
+        .padding(style::padding(space::card_text(size)))
+        .into()
+}
+
+/// `.cardFooter`: the lines a card writes under its image inside the footer's
+/// own padding, set where `setting` sets them, with `trailing` on the footer's
+/// trailing edge at the drop the reference gives it.
+// reference: card-footer
+// reference: card-text-centered
+// reference: user-card-box
+fn footed<'a>(
+    lines: Vec<Element<'a, Message>>,
+    setting: card::Setting,
+    trailing: Option<Element<'a, Message>>,
+    band: Band,
+) -> Element<'a, Message> {
+    let written = column(lines).width(Fill).align_x(match setting {
+        card::Setting::Centred => iced::alignment::Horizontal::Center,
+        card::Setting::Leading => iced::alignment::Horizontal::Left,
+    });
+    let held: Element<'a, Message> = match trailing {
+        None => written.into(),
+        Some(control) => row![
+            written,
+            container(control).padding(
+                iced::Padding::ZERO.top(style::drawn(space::USER_CARD_MENU_TOP.drawn(band)))
+            ),
+        ]
+        .into(),
+    };
+    container(held)
+        .padding(style::padding(space::CARD_FOOTER_PAD))
+        .width(Fill)
+        .style(style::card_footer)
+        .into()
+}
+
+/// A card's frame over its footer, held to the card's own width and standing
+/// on the backing its box carries.
+// reference: card-box
+// reference: card-visual
+fn boxed<'a>(
+    card: card::Card,
+    room: Room,
+    framed: Element<'a, Message>,
+    footer: Option<Element<'a, Message>>,
+    backing: card::Backing,
+) -> Element<'a, Message> {
+    let width = style::drawn(inside(card, room));
+    let held = match footer {
+        None => column![framed],
+        Some(footer) => column![framed, footer],
+    }
     .width(width);
-    if let Some(subtitle) = subtitle.filter(|_| footer == card::Footer::NameAndSubtitle) {
-        written = written.push(line(
-            subtitle,
-            typeface::SECONDARY,
+    match backing {
+        card::Backing::Padder => held.into(),
+        card::Backing::Paper => container(held).width(width).style(style::card_paper).into(),
+    }
+}
+
+/// A card's own name, as its footer's first `.cardText` line writes it.
+// reference: card-text
+fn named<'a>(name: String) -> Element<'a, Message> {
+    carded(
+        line(
+            name,
+            typeface::BODY,
             typeface::Weight::Regular,
             typeface::LINE_HEIGHT,
-        ));
-    }
-
-    column![
-        drawn_face,
-        container(written)
-            .padding(style::padding(space::CARD_FOOTER_PAD))
-            .width(width)
-            .style(style::card_footer),
-    ]
-    .width(width)
-    .into()
+        ),
+        typeface::BODY,
+    )
 }
 
 /// The margin `.cardBox-bottompadded` reserves under a card, which the
@@ -232,7 +282,7 @@ pub fn tile<'a>(card: card::Card, room: Room, face: Option<image::Handle>) -> El
         Some(handle) => container(image(handle).width(width))
             .width(width)
             .height(height)
-            .style(style::card_padder)
+            .style(|theme| style::card_padder(theme, card::Backing::Padder))
             .into(),
         None => Space::new().width(width).height(height).into(),
     }
@@ -251,13 +301,18 @@ pub fn card<'a>(
     bottom: card::Bottom,
     press: Message,
 ) -> Element<'a, Message> {
+    let name = name.into().into_owned();
     let body = boxed(
         card,
         room,
-        Some(face),
-        card::Footer::Name,
-        name.into().into_owned(),
-        None,
+        framed(card, room, Some(face), &name, card::Backing::Padder),
+        Some(footed(
+            vec![named(name)],
+            card::Setting::Centred,
+            None,
+            room.viewport().band(),
+        )),
+        card::Backing::Padder,
     );
     button(reserving(body, room, bottom))
         .style(style::flat)
@@ -362,14 +417,39 @@ pub fn poster<'a>(
     image: Option<image::Handle>,
     overflow: Overflow,
 ) -> Element<'a, Message> {
+    let name = item.name.clone().unwrap_or_default();
+    let frame = framed(
+        card,
+        room,
+        image.map(Face::Image),
+        &name,
+        card::Backing::Padder,
+    );
+    let written = match footer {
+        card::Footer::Bare => None,
+        card::Footer::Name => Some(vec![named(name)]),
+        card::Footer::NameAndSubtitle => Some(vec![
+            named(name),
+            carded(
+                tinted(
+                    subtitle(item),
+                    typeface::SECONDARY,
+                    typeface::Weight::Regular,
+                    typeface::LINE_HEIGHT,
+                    style::description,
+                ),
+                typeface::SECONDARY,
+            ),
+        ]),
+    };
     let body = reserving(
         boxed(
             card,
             room,
-            image.map(Face::Image),
-            footer,
-            item.name.clone().unwrap_or_default(),
-            Some(subtitle(item)),
+            frame,
+            written
+                .map(|lines| footed(lines, card::Setting::Centred, None, room.viewport().band())),
+            card::Backing::Padder,
         ),
         room,
         bottom,
@@ -940,16 +1020,41 @@ pub fn channel_card<'a>(
 ) -> Element<'a, Message> {
     let on_now = card::Card::Rail(card::Rail::Backdrop);
     let width = style::drawn(inside(on_now, room));
-    let mut body = column![boxed(
+    let name = format!("{} {}", channel.number, channel.name);
+    let frame = framed(
         on_now,
         room,
         image.map(Face::Image),
-        card::Footer::NameAndSubtitle,
-        format!("{} {}", channel.number, channel.name),
-        channel
-            .current
-            .as_ref()
-            .map(|program| program.title.clone()),
+        &name,
+        card::Backing::Padder,
+    );
+    let mut body = column![boxed(
+        on_now,
+        room,
+        frame,
+        Some(footed(
+            vec![
+                named(name),
+                carded(
+                    tinted(
+                        channel
+                            .current
+                            .as_ref()
+                            .map(|program| program.title.clone())
+                            .unwrap_or_default(),
+                        typeface::SECONDARY,
+                        typeface::Weight::Regular,
+                        typeface::LINE_HEIGHT,
+                        style::description,
+                    ),
+                    typeface::SECONDARY,
+                ),
+            ],
+            card::Setting::Centred,
+            None,
+            room.viewport().band(),
+        )),
+        card::Backing::Padder,
     )]
     .width(width);
 
@@ -1278,19 +1383,41 @@ pub fn capped<'a>(
     container(held).center_x(Fill).into()
 }
 
-/// The reference's `.paper-icon-button-light`: a disc carrying a glyph and no
-/// face of its own, naming itself where the reference writes a title.
+/// `.paper-icon-button-light`: a disc carrying a glyph and no face of its own,
+/// naming itself where the reference writes a title and standing bare where it
+/// writes none.
 // reference: control-icon-button
 // reference: control-icon-glyph
 pub fn icon_button<'a>(
     glyph: crate::icon::Icon,
     size: style::Length,
-    label: Text,
+    label: Option<Text>,
     press: Message,
 ) -> Element<'a, Message> {
     let control = button(crate::icon::icon(glyph, size))
         .style(style::icon_control)
         .padding(style::drawn(space::ICON_BUTTON_PAD.drawn()))
+        .on_press(press);
+    let Some(label) = label else {
+        return control.into();
+    };
+    iced::widget::tooltip(
+        control,
+        prose(strings::lookup(label), typeface::BODY),
+        iced::widget::tooltip::Position::Top,
+    )
+    .style(style::dialog)
+    .into()
+}
+
+/// `.fab.submit`: a glyph on the submit face's disc, naming itself where the
+/// reference writes a title.
+// reference: control-fab
+// reference: type-button-icon
+pub fn fab<'a>(glyph: crate::icon::Icon, label: Text, press: Message) -> Element<'a, Message> {
+    let control = button(crate::icon::icon(glyph, typeface::BUTTON_ICON))
+        .style(style::fab)
+        .padding(style::drawn(space::FAB_PAD.drawn()))
         .on_press(press);
     iced::widget::tooltip(
         control,
@@ -1299,6 +1426,86 @@ pub fn icon_button<'a>(
     )
     .style(style::dialog)
     .into()
+}
+
+/// `.sectionTitleContainer`: an `h2.sectionTitle` with the control the section
+/// carries beside it, at the margin the container leaves above and below and
+/// the margin `.sectionTitleButton` leaves beside the title.
+// reference: section-title
+// reference: section-title-button
+pub fn titled<'a>(
+    title: impl Into<Cow<'a, str>>,
+    control: Option<Element<'a, Message>>,
+) -> Element<'a, Message> {
+    let written = heading(title);
+    let held = match control {
+        None => row![written],
+        Some(control) => {
+            row![written, control].spacing(style::drawn(space::SECTION_TITLE_BUTTON.drawn()))
+        }
+    }
+    .align_y(iced::Center);
+    container(held)
+        .padding(
+            iced::Padding::ZERO
+                .top(style::drawn(space::SECTION_GAP.drawn()))
+                .bottom(style::drawn(space::SECTION_GAP.drawn())),
+        )
+        .into()
+}
+
+/// One account's card as `UserCardBox` draws one: the image the server holds
+/// for it, or `.cardImageIcon`'s own person over the background its name
+/// picks, the whole box on the scheme's paper, and under it the account's name
+/// over when it was last seen, both at the leading edge with the overflow
+/// control on the trailing one.
+// the image alone is the control, which is where the reference puts its link
+// the reference greys a disabled account's card through a css filter, which
+// this canvas does not apply
+// reference: user-card
+// reference: user-card-box
+pub fn user_card<'a>(
+    room: Room,
+    name: String,
+    last_seen: Option<String>,
+    face: Option<image::Handle>,
+    opens: Message,
+    menu: Message,
+) -> Element<'a, Message> {
+    let card = card::Card::USER;
+    let frame = framed(
+        card,
+        room,
+        Some(face.map_or(Face::Icon(Icon::Person), Face::Image)),
+        &name,
+        card::Backing::Paper,
+    );
+    let secondary: Element<'a, Message> = container(tinted(
+        last_seen.unwrap_or_default(),
+        typeface::SECONDARY,
+        typeface::Weight::Regular,
+        typeface::LINE_HEIGHT,
+        style::description,
+    ))
+    .height(style::drawn(space::USER_CARD_SECONDARY.drawn()))
+    .into();
+    boxed(
+        card,
+        room,
+        button(frame).style(style::flat).on_press(opens).into(),
+        Some(footed(
+            vec![named(name), carded(secondary, typeface::SECONDARY)],
+            card::Setting::Leading,
+            Some(icon_button(
+                Icon::MoreVert,
+                typeface::ICON_BUTTON,
+                None,
+                menu,
+            )),
+            room.viewport().band(),
+        )),
+        card::Backing::Paper,
+    )
 }
 
 /// The header standing over the top of the video: the control that leaves, and
@@ -1313,13 +1520,13 @@ pub fn osd_header<'a>(sync_play: SyncAccess) -> Element<'a, Message> {
         icon_button(
             Icon::ArrowBack,
             typeface::ICON_BUTTON,
-            Text::PlayerLeave,
+            Some(Text::PlayerLeave),
             Message::PlayerAction(crate::player::Action::Leave),
         ),
         icon_button(
             Icon::Cast,
             typeface::ICON_BUTTON,
-            Text::PlayerRemote,
+            Some(Text::PlayerRemote),
             Message::Navigated(crate::route::Route::Remote),
         ),
     ]
@@ -1329,7 +1536,7 @@ pub fn osd_header<'a>(sync_play: SyncAccess) -> Element<'a, Message> {
         controls = controls.push(icon_button(
             Icon::Groups,
             typeface::ICON_BUTTON,
-            Text::PlayerSyncPlay,
+            Some(Text::PlayerSyncPlay),
             Message::Navigated(crate::route::Route::SyncPlay),
         ));
     }

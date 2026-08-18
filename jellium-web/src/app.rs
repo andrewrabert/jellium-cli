@@ -393,7 +393,7 @@ impl Signed {
             View::Program(state) => program::images(state),
             View::Queue => HashSet::new(),
             View::Remote => crate::screen::remote::images(self.remote.as_ref()),
-            View::Dashboard(_) => HashSet::new(),
+            View::Dashboard(state) => crate::screen::dashboard::images(state),
             View::Settings(state) => match &state.body {
                 crate::screen::settings::Body::Profile(profile) => {
                     crate::screen::settings::profile::images(profile)
@@ -2985,7 +2985,7 @@ impl Jellium {
                         livetv::view(state, chrono::Utc::now(), &self.images, self.viewport)
                     }
                     View::Dashboard(state) => {
-                        dashboard::view(state, &signed.session, self.viewport)
+                        dashboard::view(state, &signed.session, &self.images, self.viewport)
                     }
                     View::Settings(state) => {
                         crate::screen::settings::view(state, signed, &self.images, self.viewport)

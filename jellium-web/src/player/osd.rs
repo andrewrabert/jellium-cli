@@ -39,7 +39,7 @@ fn acting<'a>(
     label: Text,
     action: Action,
 ) -> Element<'a, Message> {
-    crate::widget::icon_button(glyph, size, label, Message::PlayerAction(action))
+    crate::widget::icon_button(glyph, size, Some(label), Message::PlayerAction(action))
 }
 
 fn opening<'a>(glyph: crate::icon::Icon, label: Text, menu: Menu) -> Element<'a, Message> {
@@ -488,20 +488,20 @@ fn transport<'a>(
         .push(crate::widget::icon_button(
             Icon::Queue,
             typeface::ICON_BUTTON,
-            Text::PlayerQueue,
+            Some(Text::PlayerQueue),
             Message::Navigated(Route::Queue),
         ))
         .push(crate::widget::icon_button(
             Icon::Cast,
             typeface::ICON_BUTTON,
-            Text::PlayerRemote,
+            Some(Text::PlayerRemote),
             Message::Navigated(Route::Remote),
         ));
     if sync_play != SyncAccess::None {
         controls = controls.push(crate::widget::icon_button(
             Icon::Groups,
             typeface::ICON_BUTTON,
-            Text::PlayerSyncPlay,
+            Some(Text::PlayerSyncPlay),
             Message::Navigated(Route::SyncPlay),
         ));
     }
@@ -947,20 +947,20 @@ fn trailing<'a>(
         .push(crate::widget::icon_button(
             Icon::Queue,
             typeface::BAR_ICON,
-            Text::PlayerQueue,
+            Some(Text::PlayerQueue),
             Message::Navigated(Route::Queue),
         ))
         .push(crate::widget::icon_button(
             Icon::Cast,
             typeface::BAR_ICON,
-            Text::PlayerRemote,
+            Some(Text::PlayerRemote),
             Message::Navigated(Route::Remote),
         ));
     if sync_play != SyncAccess::None {
         controls = controls.push(crate::widget::icon_button(
             Icon::Groups,
             typeface::BAR_ICON,
-            Text::PlayerSyncPlay,
+            Some(Text::PlayerSyncPlay),
             Message::Navigated(Route::SyncPlay),
         ));
     }

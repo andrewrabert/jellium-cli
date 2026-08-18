@@ -1,23 +1,25 @@
 //! The users the server holds, and the one user a user screen edits.
 
 use iced::Element;
-use iced::widget::{button, row, text_input};
+use iced::widget::{button, column, text_input};
 use uuid::Uuid;
 
 use crate::app::Message;
 use crate::error::Answer;
-use crate::style::{self, space, typeface};
+use crate::style::{self, Viewport, card, space, typeface};
 use crate::text::{self as strings, Text};
-use crate::widget::{self, line, prose};
+use crate::widget::{self, prose};
 use jellium_model::form::{Field, Form};
 
-/// Every user on the server, and what a new one is being named.
+/// Every user on the server, what a new one is being named, and the account
+/// whose card menu is open.
 #[derive(Debug, Clone)]
 pub struct State {
     pub users: Vec<jellyfin_api::types::UserDto>,
     /// The name and password typed for a new user.
     pub naming: String,
     pub password: String,
+    pub menu: Option<Uuid>,
 }
 
 pub async fn load(api: std::rc::Rc<crate::api::Api>) -> Answer<State> {
@@ -26,6 +28,7 @@ pub async fn load(api: std::rc::Rc<crate::api::Api>) -> Answer<State> {
             users: api.users().await.bubbled()?,
             naming: String::new(),
             password: String::new(),
+            menu: None,
         })
     })
     .await
@@ -180,64 +183,131 @@ pub fn new<'a>(state: &'a State) -> Vec<Element<'a, Message>> {
     ]
 }
 
-/// The user list, and the control that creates one.
-pub fn view<'a>(state: &'a State, read_only: bool, own: Uuid) -> Vec<Element<'a, Message>> {
-    let mut page: Vec<Element<'a, Message>> = Vec::new();
+/// The image key one account's card draws.
+// reference: user-card
+fn image_key(id: Uuid) -> crate::images::Key {
+    crate::images::Key {
+        item: id,
+        kind: crate::images::Kind::User,
+        index: None,
+    }
+}
 
+/// The image every account with one draws on its card.
+// reference: user-card
+pub fn images(state: &State) -> std::collections::HashSet<crate::images::Key> {
+    state
+        .users
+        .iter()
+        .filter(|user| user.primary_image_tag.is_some())
+        .filter_map(|user| user.id)
+        .map(image_key)
+        .collect()
+}
+
+/// The four commands `showUserMenu` offers for one account: the three screens
+/// it reaches, each behind the sheet's own glyph, and the deletion, which is
+/// absent under read-only.
+// the reference floats these rows over the card in an action sheet; here they
+// stand in the page under the title
+// reference: user-menu
+fn menu<'a>(state: &'a State, open: Uuid, read_only: bool) -> Element<'a, Message> {
+    let name = state
+        .users
+        .iter()
+        .find(|user| user.id == Some(open))
+        .and_then(|user| user.name.clone())
+        .unwrap_or_default();
+    let reaches = |glyph, label: Text, tab| widget::list::Row {
+        face: Some(widget::list::Face::Glyph(glyph)),
+        index: None,
+        title: strings::lookup(label).into(),
+        secondary: Vec::new(),
+        press: widget::list::Press::Whole(Message::DashboardAction(super::Action::Open(
+            super::Screen::User { id: open, tab },
+        ))),
+        controls: Vec::new(),
+    };
+    let mut rows = vec![
+        reaches(
+            crate::icon::Icon::ModeEdit,
+            Text::UsersProfile,
+            super::UserTab::Profile,
+        ),
+        reaches(
+            crate::icon::Icon::Lock,
+            Text::UsersAccess,
+            super::UserTab::Access,
+        ),
+        reaches(
+            crate::icon::Icon::Person,
+            Text::UsersParental,
+            super::UserTab::Parental,
+        ),
+    ];
     if !read_only {
-        page.push(
-            button(prose(strings::lookup(Text::UsersCreate), typeface::BODY))
-                .style(style::raised)
-                .on_press(Message::DashboardAction(super::Action::Open(
-                    super::Screen::UserNew,
-                )))
-                .into(),
-        );
-    }
-
-    for user in &state.users {
-        let Some(id) = user.id else {
-            continue;
-        };
-        let name = user.name.clone().unwrap_or_default();
-        let mut held = row![
-            button(line(
-                name.clone(),
-                typeface::BODY,
-                typeface::Weight::Regular,
-                typeface::LINE_HEIGHT,
-            ))
-            .style(style::link)
-            .on_press(Message::DashboardAction(super::Action::Open(
-                super::Screen::User {
-                    id,
-                    tab: super::UserTab::Profile,
-                }
+        rows.push(widget::list::Row {
+            face: Some(widget::list::Face::Glyph(crate::icon::Icon::Delete)),
+            index: None,
+            title: strings::lookup(Text::UsersDelete).into(),
+            secondary: Vec::new(),
+            press: widget::list::Press::Whole(Message::DashboardAction(super::Action::Ask(
+                crate::screen::confirm::Pending::of(
+                    crate::screen::confirm::Destructive::DeleteUser { id: open },
+                    name,
+                ),
             ))),
-        ]
-        .spacing(style::drawn(space::CONTROL_GAP.drawn()));
+            controls: Vec::new(),
+        });
+    }
+    widget::list::listed(space::ListRow::glyph(space::Lines::One), rows)
+}
 
-        if id == own {
-            held = held.push(prose(
-                strings::lookup(Text::UsersOwnAccount),
-                typeface::BODY,
-            ));
-        } else if !read_only {
-            held = held.push(
-                button(prose(strings::lookup(Text::UsersDelete), typeface::BODY))
-                    .style(style::raised)
-                    .on_press(Message::DashboardAction(super::Action::Ask(
-                        crate::screen::confirm::Pending::of(
-                            crate::screen::confirm::Destructive::DeleteUser { id },
-                            name,
-                        ),
-                    ))),
-            );
-        }
-        page.push(held.into());
+/// The section title with the control that adds an account, the commands the
+/// open card's menu offers, and the accounts as `UserCardBox` draws them.
+// reference: users-grid
+pub fn view<'a>(
+    state: &'a State,
+    read_only: bool,
+    images: &'a crate::images::Cache,
+    viewport: Viewport,
+) -> Element<'a, Message> {
+    let room = space::Room::dashboard(viewport);
+    let adds = match read_only {
+        true => None,
+        false => Some(widget::fab(
+            crate::icon::Icon::Add,
+            Text::UsersCreate,
+            Message::DashboardAction(super::Action::Open(super::Screen::UserNew)),
+        )),
+    };
+
+    let mut page: Vec<Element<'a, Message>> =
+        vec![widget::titled(strings::lookup(Text::UsersTitle), adds)];
+    if let Some(open) = state.menu {
+        page.push(menu(state, open, read_only));
     }
 
-    page
+    let cards = state.users.iter().filter_map(|user| {
+        let id = user.id?;
+        Some(widget::user_card(
+            room,
+            user.name.clone().unwrap_or_default(),
+            user.last_activity_date
+                .map(|at| strings::format(Text::UsersLastSeen, &[&widget::table::stamped(at)])),
+            user.primary_image_tag
+                .as_ref()
+                .and_then(|_| images.handle(image_key(id))),
+            Message::DashboardAction(super::Action::Open(super::Screen::User {
+                id,
+                tab: super::UserTab::Profile,
+            })),
+            Message::DashboardAction(super::Action::UserMenu(Some(id))),
+        ))
+    });
+    page.push(widget::wall(card::Card::USER, room, cards));
+
+    widget::scrolled(column(page)).into()
 }
 
 /// One user's four panels: profile, library and device access, parental
