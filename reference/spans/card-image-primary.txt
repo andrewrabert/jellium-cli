@@ -1,0 +1,3 @@
+    } else if (item.ImageTags?.Primary && (item.Type !== 'Episode' || item.ChildCount !== 0)) {
+        imgType = 'Primary';
+        imgTag = item.ImageTags.Primary;

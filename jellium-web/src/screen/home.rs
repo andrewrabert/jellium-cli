@@ -190,23 +190,18 @@ pub fn view<'a>(
 
     let mut page = column![];
 
-    let ids: Vec<uuid::Uuid> = state.libraries.iter().filter_map(|it| it.id).collect();
-    let shown = jellium_model::user::arranged(&ids, &arrangement.order, &arrangement.hidden);
-    let libraries: Vec<&BaseItemDto> = shown
-        .iter()
-        .filter_map(|id| state.libraries.iter().find(|it| it.id == Some(*id)))
-        .collect();
+    let libraries = shown(state, arrangement);
     if !libraries.is_empty() {
         page = page.push(widget::section(
             strings::lookup(Text::HomeMyMedia),
-            widget::wall(
-                widget::TILE.card,
+            widget::scroller(
+                widget::TILE,
                 Room::content(viewport),
-                card::Wrap::Leading,
                 libraries.iter().filter_map(|library| {
                     Some(widget::library_tile(
                         library,
                         Room::content(viewport),
+                        widget::poster_key(library).and_then(|key| images.handle(key)),
                         Message::Navigated(opens(library)?),
                     ))
                 }),
@@ -275,8 +270,19 @@ pub fn view<'a>(
     crate::widget::scrolled(page).into()
 }
 
-pub fn images(state: &State) -> HashSet<images::Key> {
-    let mut keys = widget::card_images(&state.continue_watching);
+/// The library views My Media draws: the arrangement's own order, with the
+/// views it hides dropped.
+pub fn shown<'a>(state: &'a State, arrangement: &Arrangement) -> Vec<&'a BaseItemDto> {
+    let ids: Vec<uuid::Uuid> = state.libraries.iter().filter_map(|it| it.id).collect();
+    jellium_model::user::arranged(&ids, &arrangement.order, &arrangement.hidden)
+        .iter()
+        .filter_map(|id| state.libraries.iter().find(|it| it.id == Some(*id)))
+        .collect()
+}
+
+pub fn images(state: &State, arrangement: &Arrangement) -> HashSet<images::Key> {
+    let mut keys = widget::card_images(shown(state, arrangement));
+    keys.extend(widget::card_images(&state.continue_watching));
     keys.extend(widget::card_images(&state.next_up));
     for row in &state.latest {
         keys.extend(widget::card_images(&row.items));

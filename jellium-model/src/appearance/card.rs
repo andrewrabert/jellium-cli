@@ -316,72 +316,84 @@ fn wall(shape: Shape) -> &'static Ladder<Across> {
     }
 }
 
-const fn share(at: f32, per_ten_thousand: u32) -> Step<Share> {
-    step(at, Share::per_ten_thousand(per_ten_thousand))
+/// The box a card's own ladder measures against: a wall card's share is of the
+/// box the page lays it in, and a rail card's is of the viewport, the
+/// reference writing its rail ladder in `vw`.
+// reference: card-width-ladder
+// reference: card-rail-ladder
+fn measured(card: Card, room: Room) -> Drawn {
+    match card {
+        Card::Wall(_) => room.width(),
+        Card::Rail(_) => room.viewport().canvas().width(),
+    }
 }
 
-const fn share_landscape(at: Option<f32>, per_ten_thousand: u32) -> Step<Share> {
-    landscape(at, Share::per_ten_thousand(per_ten_thousand))
+const fn units(at: f32, count: f32) -> Step<Share> {
+    step(at, Share::units(count))
+}
+
+const fn units_landscape(at: Option<f32>, count: f32) -> Step<Share> {
+    landscape(at, Share::units(count))
 }
 
 // reference: card-rail-ladder
 const RAIL_BACKDROP: Ladder<Share> = Ladder {
-    base: Share::per_ten_thousand(7200),
+    base: Share::units(72.0),
     steps: &[
-        share(35.0, 4550),
-        share(48.125, 3000),
-        share_landscape(None, 3000),
-        share_landscape(Some(48.125), 2310),
-        share(75.0, 2310),
-        share(100.0, 1870),
-        share(156.25, 1560),
+        units(35.0, 45.5),
+        units(48.125, 30.0),
+        units_landscape(None, 30.0),
+        units_landscape(Some(48.125), 23.1),
+        units(75.0, 23.1),
+        units(100.0, 18.7),
+        units(156.25, 15.6),
     ],
 };
 
 // reference: card-rail-ladder
 const RAIL_SMALL_BACKDROP: Ladder<Share> = Ladder {
-    base: Share::per_ten_thousand(7200),
+    base: Share::units(72.0),
     steps: &[
-        share(35.0, 3000),
-        share(48.125, 3000),
-        share_landscape(None, 3000),
-        share_landscape(Some(48.125), 2310),
-        share_landscape(Some(50.0), 1550),
-        share(75.0, 2310),
-        share(100.0, 1870),
-        share(156.25, 1560),
+        units(35.0, 30.0),
+        units(48.125, 30.0),
+        units_landscape(None, 30.0),
+        units_landscape(Some(48.125), 23.1),
+        units_landscape(Some(50.0), 15.5),
+        units(75.0, 23.1),
+        units(100.0, 18.7),
+        units(156.25, 15.6),
     ],
 };
 
 // reference: card-rail-ladder
 const RAIL_SQUARE: Ladder<Share> = Ladder {
-    base: Share::per_ten_thousand(4000),
+    base: Share::units(40.0),
     steps: &[
-        share(35.0, 3120),
-        share(43.75, 2310),
-        share_landscape(None, 2310),
-        share(50.0, 1850),
-        share(75.0, 1550),
-        share(87.5, 1330),
-        share(100.0, 1160),
-        share(120.0, 1041),
-        share(131.25, 930),
+        units(35.0, 31.2),
+        units(43.75, 23.1),
+        units_landscape(None, 23.1),
+        units(50.0, 18.5),
+        units(75.0, 15.5),
+        units(87.5, 13.3),
+        units(100.0, 11.6),
+        units(120.0, 10.41),
+        units(131.25, 9.3),
     ],
 };
 
 // reference: card-rail-ladder
 const RAIL_PORTRAIT: Ladder<Share> = Ladder {
-    base: Share::per_ten_thousand(4000),
+    base: Share::units(40.0),
     steps: &[
-        share(25.0, 3120),
-        share(43.75, 2310),
-        share_landscape(None, 2310),
-        share(50.0, 1850),
-        share(75.0, 1550),
-        share(87.5, 1330),
-        share(100.0, 1160),
-        share(120.0, 1041),
-        share(131.25, 930),
+        units(25.0, 31.2),
+        units(43.75, 23.1),
+        units_landscape(None, 23.1),
+        units(50.0, 18.5),
+        units(75.0, 15.5),
+        units(87.5, 13.3),
+        units(100.0, 11.6),
+        units(120.0, 10.41),
+        units(131.25, 9.3),
     ],
 };
 
@@ -541,10 +553,11 @@ impl Card {
     // reference: home-next-up
     pub const NEXT_UP: Card = Card::Rail(Rail::Backdrop);
 
-    /// The card a library tile draws on, the My Media section wrapping its
-    /// tiles rather than scrolling them.
+    /// The card a library tile draws on, the My Media section scrolling its
+    /// tiles sideways because `enableScrollX` answers true and nothing else.
     // reference: home-library-tiles
-    pub const LIBRARY: Card = Card::Wall(Shape::Backdrop);
+    // reference: home-scroll-x
+    pub const LIBRARY: Card = Card::Rail(Rail::Backdrop);
 
     /// The card a library's latest row draws on, which the library's own
     /// collection type decides.
@@ -623,17 +636,23 @@ impl Card {
     }
 
     /// The pitch one card occupies, gutter included.
+    // a wall card's pitch is a share of the box the page lays it in
+    // a rail card's pitch is a share of the viewport, whatever box holds it
     pub fn width(self, room: Room) -> Drawn {
         match self {
             Card::Wall(shape) => match shape.fixed() {
                 Some(width) => width.drawn(),
                 None => wall(shape).resolved(room.viewport()).pitch(room.width()),
             },
-            Card::Rail(rail) => rail_ladder(rail).resolved(room.viewport()).of(room.width()),
+            Card::Rail(rail) => rail_ladder(rail)
+                .resolved(room.viewport())
+                .of(measured(self, room)),
         }
     }
 
     /// Cards a row holds.
+    // a wall card counts across the box the page lays it in
+    // a rail card counts across the viewport, which is `Math.floor(100 / vw)`
     pub fn across(self, room: Room) -> Across {
         if let Card::Wall(shape) = self
             && shape.fixed().is_none()
@@ -644,7 +663,7 @@ impl Card {
         if width <= 0.0 {
             return Across::cards(1);
         }
-        Across::cards((room.width().count() / width) as u32)
+        Across::cards((measured(self, room).count() / width) as u32)
     }
 
     /// The arm `getPostersPerRow` answers, which steps at 2200px and 420px

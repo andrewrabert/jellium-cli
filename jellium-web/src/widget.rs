@@ -86,7 +86,13 @@ impl<T> std::fmt::Display for Choice<T> {
     }
 }
 
+// the key the item's own primary image is fetched under
+// None where the item carries no primary image tag and where it carries no id
 pub fn poster_key(item: &BaseItemDto) -> Option<images::Key> {
+    let tags = item.image_tags.as_ref()?;
+    if !tags.contains_key(Kind::Primary.as_str()) {
+        return None;
+    }
     Some(images::Key {
         item: item.id?,
         kind: Kind::Primary,
@@ -94,8 +100,8 @@ pub fn poster_key(item: &BaseItemDto) -> Option<images::Key> {
     })
 }
 
-pub fn card_images(items: &[BaseItemDto]) -> HashSet<images::Key> {
-    items.iter().filter_map(poster_key).collect()
+pub fn card_images<'a>(items: impl IntoIterator<Item = &'a BaseItemDto>) -> HashSet<images::Key> {
+    items.into_iter().filter_map(poster_key).collect()
 }
 
 /// The route a card opens: a collection and a playlist each have their own
@@ -668,6 +674,19 @@ fn cards<'a>(
         .collect()
 }
 
+/// `emby-scroller`: a run of cards scrolled sideways at the height one card of
+/// `drawing` pitches down the page.
+// reference: card-container
+pub fn scroller<'a>(
+    drawing: card::Drawing,
+    room: Room,
+    cards: impl IntoIterator<Item = Element<'a, Message>>,
+) -> Element<'a, Message> {
+    sideways(row(cards).spacing(style::drawn(space::GUTTER.drawn())))
+        .height(style::drawn(drawing.row(room)))
+        .into()
+}
+
 /// A rail of cards, scrolled sideways under whatever title the section it
 /// stands in carries. Items arrive as an iterator rather than a slice, because
 /// a section's items are as often a group borrowed out of one list as a list of
@@ -679,12 +698,7 @@ pub fn rail<'a>(
     images: &'a Cache,
     overflow: Overflow,
 ) -> Element<'a, Message> {
-    sideways(
-        row(cards(drawing, items, room, images, overflow))
-            .spacing(style::drawn(space::GUTTER.drawn())),
-    )
-    .height(style::drawn(drawing.row(room)))
-    .into()
+    scroller(drawing, room, cards(drawing, items, room, images, overflow))
 }
 
 /// Whether a navigation is showing what one of its entries names, and what
@@ -1087,12 +1101,17 @@ pub fn posters<'a>(
     .into()
 }
 
-/// A library's tile: its icon over its centered, elided name, on the card the
-/// reference's own My Media section draws.
+/// A library's tile: the view's own image, or its collection's glyph over the
+/// background its name picks where the cache holds no image for it, over its
+/// centred, elided name.
 // reference: home-library-tiles
+// reference: card-image-primary
+// reference: card-no-image
+// reference: card-default-glyph
 pub fn library_tile<'a>(
     library: &'a BaseItemDto,
     room: Room,
+    image: Option<image::Handle>,
     press: Message,
 ) -> Element<'a, Message> {
     let name = library.name.clone().unwrap_or_default();
@@ -1101,9 +1120,10 @@ pub fn library_tile<'a>(
         TILE,
         room,
         Poster {
-            face: Some(Face::Icon(crate::icon::Icon::library(
-                library.collection_type,
-            ))),
+            face: Some(match image {
+                Some(handle) => Face::Image(handle),
+                None => Face::Icon(crate::icon::Icon::library(library.collection_type)),
+            }),
             name,
             logo: None,
             timer: None,

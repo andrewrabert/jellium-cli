@@ -379,7 +379,7 @@ impl Signed {
     fn wanted_images(&self) -> HashSet<images::Key> {
         match &self.view {
             View::Loading => HashSet::new(),
-            View::Home(state) => home::images(state),
+            View::Home(state) => home::images(state, &self.arrangement),
             View::Library(state) => library::images(state),
             View::Detail(state) => detail::images(state),
             View::Search(state) => search::images(state),

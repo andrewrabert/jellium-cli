@@ -585,3 +585,7 @@ dashboard-library-card	src/apps/dashboard/features/libraries/components/LibraryC
 dashboard-plugin-card	src/apps/dashboard/features/plugins/components/PluginCard.tsx	25	31	f4c37d1fec627f981f9de0048c1cd29c636c6958b7777e140fce628af62c7fa1	ported
 dashboard-libraries-grid	src/apps/dashboard/routes/libraries/index.tsx	85	100	ffc8ef8596e5eb28008d8447cf872ba0d33a3ed844fe88d6331f035736f9c492	ported
 dashboard-plugins-grid	src/apps/dashboard/routes/plugins/index.tsx	231	249	dfeae6d3055dcaa95091ca660e264efaa3b9528e83c7f2b361dc51a92b6c380c	ported
+home-scroll-x	src/components/homesections/homesections.js	179	181	bf4fb48d2f280915b92a80552a60831a91ce6de8a5c8cf8980af736e6925d86b	ported
+card-image-primary	src/components/cardbuilder/cardBuilder.js	315	317	0e6f2199ed318c4994807370b78ff5573b924bef12391c83c462bdf632fd61f0	ported
+card-no-image	src/components/cardbuilder/cardBuilder.js	1077	1079	e073c8b004efbdf8c98a2f28ff167c1d244394512b86ff9fdba95f1de1d6a1a9	ported
+card-default-glyph	src/components/cardbuilder/cardBuilder.js	1188	1201	25103ff064d929c4d9ce4cb2b7e19dfc12b690b2fbe6cad4c11b0d38060d1c56	ported

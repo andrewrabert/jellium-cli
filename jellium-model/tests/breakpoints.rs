@@ -72,11 +72,16 @@ impl Row {
         }
     }
 
-    /// The share of the content box one card's pitch takes, as a percentage,
-    /// which is the quantity the `percent` column carries.
+    /// The share of its own measurement one card's pitch takes, as a
+    /// percentage: the content box for a wall card, the viewport for a rail
+    /// card, which is the quantity the `percent` column carries.
     fn share(&self) -> f64 {
         let room = self.room();
-        100.0 * self.card().width(room).count() as f64 / room.width().count() as f64
+        let against = match self.card() {
+            Card::Wall(_) => room.width(),
+            Card::Rail(_) => room.viewport().canvas().width(),
+        };
+        100.0 * self.card().width(room).count() as f64 / against.count() as f64
     }
 }
 

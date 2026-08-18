@@ -831,7 +831,16 @@ browser with a touch screen, each at its own size.
 - The next-up row draws backdrop cards.
 - The latest row of a movie library draws portrait cards and of a music library
   square ones.
-- Every home row but My Media scrolls sideways rather than wrapping.
+- A library the server holds an image for draws that image on its tile, and the
+  browser's network panel shows no image request for a library it holds none
+  for.
+- Every home row, My Media included, scrolls sideways rather than wrapping.
+- A home rail's card takes its width from the whole window rather than from the
+  page inside it: at 1920 wide a next-up card spans 18.7% of the window and a
+  latest movie card 10.41%; at 768 wide, 45.5% and 23.1%; at 800 wide, 23.1%
+  and 18.5%; at 360 wide, 72% and 40%.
+- My Media's tiles take the backdrop rail's own widths, so one spans 18.7% of
+  the window at 1920 wide, 45.5% at 768, 23.1% at 800 and 72% at 360.
 - A library card under the pointer raises a scrim carrying the more control at
   its trailing foot.
 - A Live TV recording card raises a play control under the pointer, one still

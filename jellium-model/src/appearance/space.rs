@@ -90,8 +90,8 @@ pub struct Overlap {
 }
 
 /// The width a page lays its content inside, with the viewport that width was
-/// measured in, so a card is never a share of anything wider than the box it
-/// is drawn in.
+/// measured in, so a card sized as a share of the page and a card sized in
+/// viewport units each have the length its own ladder is written against.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Room {
     viewport: Viewport,
