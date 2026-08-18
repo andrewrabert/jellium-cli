@@ -18,6 +18,8 @@ use iced::widget::{
 };
 use iced::{Element, Fill, Length};
 use jellium_model::construct::Construct;
+#[cfg(test)]
+use jellium_model::construct::Page;
 use jellium_model::item::{self, Mark};
 use jellium_protocol::{Session, SyncAccess};
 use jellyfin_api::types::{BaseItemDto, BaseItemKind};
@@ -34,6 +36,14 @@ use crate::route::Route;
 use crate::style::space::Room;
 use crate::style::{self, Drawn, Layout, Share, Viewport, card, scheme, scroll, space, typeface};
 use crate::text::{self as strings, Text};
+
+/// The reference pages this module draws, which is every page: the fixed header
+/// and the navigation drawer stand under all of them, and the rails and section
+/// containers below stand on whichever page calls for one.
+/// Read by the construct gate out of this file's own source, and by nothing at
+/// runtime, so it stands under `#[cfg(test)]` beside `Text::ALL` and its like.
+#[cfg(test)]
+pub const DRAWS: &[Page] = Page::ALL;
 
 /// Wrapping text, which is what a server's own disclaimer is. Every string the
 /// client draws passes here, so the coverage it needs is observed once. A
@@ -2712,4 +2722,18 @@ pub fn leaving<'a>() -> Element<'a, Message> {
     .spacing(style::drawn(space::BLOCK_GAP.drawn()))
     .padding(style::padding(space::PAGE_PAD))
     .into()
+}
+
+#[cfg(test)]
+mod tests {
+    use wasm_bindgen_test::wasm_bindgen_test;
+
+    use super::DRAWS;
+
+    /// This module's chrome stands on every page of the reference, so its own
+    /// `DRAWS` names every page the generated vocabulary declares.
+    #[wasm_bindgen_test]
+    fn the_chrome_stands_on_every_page() {
+        assert!(!DRAWS.is_empty(), "the vocabulary declares no page");
+    }
 }

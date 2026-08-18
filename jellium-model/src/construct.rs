@@ -60,6 +60,44 @@ pub enum PageClass {
 }
 
 impl Page {
+    /// Every page of the pinned reference, which is what a module drawing the
+    /// chrome every page stands under names itself as.
+    pub const ALL: &'static [Page] = &[
+        Page::Addserver,
+        Page::Branding,
+        Page::Details,
+        Page::Forgotpassword,
+        Page::Forgotpasswordpin,
+        Page::Home,
+        Page::LibrariesDisplay,
+        Page::LibrariesMetadata,
+        Page::LibrariesNfo,
+        Page::List,
+        Page::Livetv,
+        Page::LivetvRecordings,
+        Page::Login,
+        Page::Logs,
+        Page::Lyrics,
+        Page::Movies,
+        Page::Music,
+        Page::Mypreferencescontrols,
+        Page::Mypreferencesdisplay,
+        Page::Mypreferenceshome,
+        Page::Mypreferencesplayback,
+        Page::Mypreferencessubtitles,
+        Page::Queue,
+        Page::Quickconnect,
+        Page::Selectserver,
+        Page::Tv,
+        Page::Userprofile,
+        Page::Users,
+        Page::UsersAccess,
+        Page::UsersAdd,
+        Page::UsersPassword,
+        Page::UsersProfile,
+        Page::Video,
+    ];
+
     /// The class the page's own root element carries.
     /// Generated with the enum: the generator reads the class list off each
     /// page's root element and emits one match arm per page, so no arm is

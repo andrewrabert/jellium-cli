@@ -490,8 +490,11 @@ impl View {
         match self {
             View::Home(_) => crate::screen::home::DRAWS,
             View::Favorites(_) => crate::screen::favorites::DRAWS,
+            View::LiveTv(state) => match state.body {
+                livetv::Body::Programs(_) => crate::screen::livetv::programs::DRAWS,
+                _ => &[],
+            },
             View::Loading
-            | View::LiveTv(_)
             | View::Library(_)
             | View::Detail(_)
             | View::Search(_)

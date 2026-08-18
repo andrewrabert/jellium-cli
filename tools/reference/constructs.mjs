@@ -1473,6 +1473,12 @@ pub enum PageClass {
 }
 
 impl Page {
+    /// Every page of the pinned reference, which is what a module drawing the
+    /// chrome every page stands under names itself as.
+    pub const ALL: &'static [Page] = &[
+${names.map((page) => `        Page::${variant(page)},`).join('\n')}
+    ];
+
     /// The class the page's own root element carries.
     /// Generated with the enum: the generator reads the class list off each
     /// page's root element and emits one match arm per page, so no arm is

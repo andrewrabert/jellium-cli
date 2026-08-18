@@ -99,7 +99,7 @@ pub fn sites(root: &Path) -> Vec<Site> {
             }
             let drawn = drawn(&at, &text);
             let own = own(&text);
-            let pages = pages(&text);
+            let pages = pages(&text, root);
             let names = if pages.is_empty() && own.is_empty() {
                 Names::Caller
             } else if pages.is_empty() {
@@ -151,18 +151,51 @@ fn listed(text: &str) -> Option<&str> {
     Some(&text[at..end])
 }
 
-/// The reference pages a module's own `DRAWS` names.
-fn pages(text: &str) -> Vec<Page> {
+/// What a module writes where it draws every page of the reference rather than
+/// a list of its own.
+const EVERY: &str = "ALL";
+
+/// Where the generated vocabulary declares every page.
+const VOCABULARY: &str = "jellium-model/src/construct.rs";
+
+/// The reference pages a module's own `DRAWS` names, `Page::ALL` naming every
+/// page the generated vocabulary declares.
+fn pages(text: &str, root: &Path) -> Vec<Page> {
     let Some(at) = text.find(DRAWS) else {
         return Vec::new();
     };
     let Some(end) = text[at..].find(';') else {
         return Vec::new();
     };
-    text[at..at + end]
+    let named: Vec<String> = text[at..at + end]
         .split("Page::")
         .skip(1)
         .filter_map(named)
+        .collect();
+    if named.iter().any(|word| word == EVERY) {
+        return every(root);
+    }
+    named
+        .into_iter()
+        .filter_map(|word| Page::named(&word))
+        .collect()
+}
+
+/// Every page the generated vocabulary declares.
+fn every(root: &Path) -> Vec<Page> {
+    let Ok(text) = std::fs::read_to_string(root.join(VOCABULARY)) else {
+        return Vec::new();
+    };
+    let Some(at) = text.find("pub enum Page {") else {
+        return Vec::new();
+    };
+    let Some(end) = text[at..].find('}') else {
+        return Vec::new();
+    };
+    text[at..at + end]
+        .lines()
+        .skip(1)
+        .filter_map(|line| named(line.trim()))
         .filter_map(|word| Page::named(&word))
         .collect()
 }

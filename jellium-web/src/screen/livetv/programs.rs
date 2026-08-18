@@ -5,7 +5,7 @@ use std::rc::Rc;
 
 use iced::Element;
 use iced::widget::column;
-use jellium_model::construct::Construct;
+use jellium_model::construct::{Construct, Page};
 use jellium_model::livetv::Section;
 use jellium_protocol::Session;
 use jellyfin_api::types::BaseItemDto;
@@ -19,6 +19,9 @@ use crate::style::space::Room;
 use crate::style::{self, Viewport, card, space};
 use crate::text::{self as strings, Text};
 use crate::widget;
+
+/// The reference pages this screen draws.
+pub const DRAWS: &[Page] = &[Page::Livetv];
 
 /// One rail of the Programs tab: the section's own card shape over the two
 /// lines a programme rail writes.
