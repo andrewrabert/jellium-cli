@@ -770,39 +770,53 @@ in order. A section passes only when every line in it holds.
 
 Run against a real browser at 360x800, 800x360, 768x1024 and 1920x1080.
 
-- The page background is #101010 before the canvas paints and after, with no
-  flash at the handoff.
-- The browser tab shows Jellyfin's favicon, and the header shows its banner in
-  a slot 13.2em wide.
-- Body text is Noto Sans, headings are its regular weight, and no button label
-  is upper-cased.
-- Every button on every screen carries the reference's face: a submit in
-  `#00a4dc`, a raised one in `#303030`, a flat one transparent, and a link
-  underlined on hover.
-- No viewport width produces a horizontal page scrollbar, and no control is cut
-  off by the viewport edge.
-- The select-server page centers its cards, and a card's name longer than the
-  card ends in an ellipsis on one line.
-- The login page shows the user picker above the manual form, and both are
-  centered with the page padded 3.3% at each side.
-- At exactly 600px wide the type is 90% of 16px, at 601px it is 93%, measured
-  by the height of a heading.
-- A library item whose title is Japanese, Korean or Chinese draws in the
-  fallback lettering and then, once its face registers, in Noto Sans.
-- A title in Cyrillic, Greek, Vietnamese or Devanagari draws in Noto Sans at
-  once, with no fetch.
-- A bold Cyrillic title draws in Noto Sans Bold, which the reference's own
-  inverted `U+0700-045F` range denies a browser, and fetches nothing.
-- With the network panel open, loading a page of Latin titles fetches no font
-  file.
-- The home screen's sections stand in the reference's order: My Media, then
-  what is resumed, then Live TV and On Now, then Next Up, then the latest in
-  each library.
-- A library tile draws its own icon — a reel for movies, a set for shows, a
-  note for music — and its name on one line under it.
+- The select-server page and the login page each stand Jellyfin's own banner in a
+  header slot 13.2em wide.
+- No viewport width produces a horizontal page scrollbar.
+- Body text draws in Noto Sans, and every heading draws in that face at its
+  regular weight.
+- No control's label is upper-cased.
+- A submit control stands on #00a4dc and a raised control on #303030.
+- The select-server page centres its cards, each a square card carrying the
+  storage glyph over a centred name, and a name wider than its card ends in an
+  ellipsis on one line.
+- The login page's user cards and its sign-in form each stand centred in a page
+  padded 3.30% at each side.
+- A title in Cyrillic, Greek, Vietnamese or Devanagari draws in Noto Sans.
+- A title in Japanese, Korean or Chinese draws in the Noto Sans family for its
+  script, fetched from this origin, and a second title that same face covers
+  fetches nothing.
+- The home screen's sections stand in the reference's order: My Media, then what
+  is resumed, then Live TV and On Now, then Next Up, then the latest in each
+  library.
+- A library the server holds no image for draws its collection's own glyph —
+  movie for a movie library, tv for a show library, music_note for a music
+  library — over its name, centred on one line.
 - A resumed episode draws on a backdrop card and a resumed book on a portrait
   one.
+- The next-up row draws backdrop cards.
 - The latest row of a movie library draws portrait cards and of a music library
   square ones.
-- Each rail scrolls sideways with a partial card at its edge rather than
-  shrinking its cards.
+- Every home row but My Media scrolls sideways rather than wrapping.
+- A library card under the pointer raises a scrim carrying the more control at
+  its trailing foot.
+- A Live TV recording card raises a play control under the pointer, one still
+  being written included.
+- The search field stands a 2em magnifier before its 1.1em field at a 0.25em gap,
+  the two capped together at a 60em measure centred in the page.
+- The now-playing bar is 4.2em tall, and its artwork 4.2em wide and 70% of the
+  bar's height.
+- The video display stands previous, rewind, play, fast forward and next against
+  the panel's leading edge with the ends-at text after them, and a spacer pushes
+  subtitles, audio, volume and settings to the trailing edge, full screen last.
+- The video display drops the ends-at text at 75em and narrower, the two seek
+  controls at 50em and narrower and the volume control at 43em and narrower, and
+  stands its controls shoulder to shoulder at 33.75em and narrower.
+- On the logs screen and on the general settings, transcoding and trickplay
+  screens, a checkbox draws one glyph: an outlined box while it is cleared and a
+  box filled in #00a4dc while it is set, with a disc behind it under the pointer.
+- On the Networking screen and on the user's own Display, Home and Playback
+  settings screens, a checkbox draws an outlined box edged in the page's own
+  lettering while it is cleared and filled with #00a4dc while it is set.
+- The activity log draws its user column in the All and User views and drops it
+  in System.
