@@ -1783,7 +1783,9 @@ pub fn skin_header<'a>(
             Construct::HeaderHomeButton,
             Icon::Home,
             Text::NavHome,
-            Message::Navigated(Route::Home),
+            Message::Navigated(Route::Home {
+                tab: crate::screen::home::Tab::Home,
+            }),
         ))
         .push(control(
             Construct::MainDrawerButton,
@@ -1934,7 +1936,9 @@ pub fn main_drawer<'a>(
         Icon::Home,
         Some(Text::NavHome),
         Cow::Borrowed(strings::lookup(Text::NavHome)),
-        Message::Navigated(Route::Home),
+        Message::Navigated(Route::Home {
+            tab: crate::screen::home::Tab::Home
+        }),
     )]
     .spacing(style::drawn(space::BLOCK_GAP.drawn()));
 

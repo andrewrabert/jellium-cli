@@ -988,6 +988,81 @@ impl Api {
 
     /// The channels of `kind`, favourites first and then in channel-number
     /// order, each carrying its current program, in one request.
+    /// One section of the reference's Favorites tab, in one request: that
+    /// section's own route and item kinds, favourites only, recursive, box sets
+    /// uncollapsed, virtual locations excluded, ascending by series name then
+    /// name.
+    // reference: favorites-query
+    pub async fn favorites(
+        &self,
+        section: jellium_model::favorites::Section,
+        limit: jellium_model::paged::Limit,
+    ) -> Answer<Vec<BaseItemDto>> {
+        use jellium_model::favorites::Asked;
+        Answer::of(async {
+            let fields = vec![jellyfin_api::types::ItemFields::PrimaryImageAspectRatio];
+            let favourite = vec![jellyfin_api::types::ItemFilter::IsFavorite];
+            let sorted = vec![
+                jellyfin_api::types::ItemSortBy::SeriesSortName,
+                jellyfin_api::types::ItemSortBy::SortName,
+            ];
+            let ascending = vec![jellyfin_api::types::SortOrder::Ascending];
+            let kinds = match section.asked() {
+                Asked::Items(kind) => vec![kind],
+                Asked::Artists | Asked::People => Vec::new(),
+            };
+            let result = match section.asked() {
+                Asked::Artists => {
+                    self.client
+                        .get_artists(&jellyfin_api::query::GetArtists {
+                            enable_total_record_count: Some(false),
+                            fields: Some(&fields),
+                            filters: Some(&favourite),
+                            limit: Some(limit.count()),
+                            sort_by: Some(&sorted),
+                            sort_order: Some(&ascending),
+                            user_id: Some(&self.user_id),
+                            ..Default::default()
+                        })
+                        .await?
+                }
+                Asked::People => {
+                    self.client
+                        .get_persons(&jellyfin_api::query::GetPersons {
+                            fields: Some(&fields),
+                            filters: Some(&favourite),
+                            limit: Some(limit.count()),
+                            user_id: Some(&self.user_id),
+                            ..Default::default()
+                        })
+                        .await?
+                }
+                Asked::Items(_) => {
+                    self.client
+                        .get_items(&jellyfin_api::query::GetItems {
+                            collapse_box_set_items: Some(false),
+                            enable_total_record_count: Some(false),
+                            exclude_location_types: Some(&vec![
+                                jellyfin_api::types::LocationType::Virtual,
+                            ]),
+                            fields: Some(&fields),
+                            filters: Some(&favourite),
+                            include_item_types: Some(&kinds),
+                            limit: Some(limit.count()),
+                            recursive: Some(true),
+                            sort_by: Some(&sorted),
+                            sort_order: Some(&ascending),
+                            user_id: Some(&self.user_id),
+                            ..Default::default()
+                        })
+                        .await?
+                }
+            };
+            Ok(result.items)
+        })
+        .await
+    }
+
     /// One section of the reference's Programs tab, in one request:
     /// `/LiveTv/Programs/Recommended` with `IsAiring` for On Now, and
     /// `/LiveTv/Programs` with `HasAired` false and the section's own flags for

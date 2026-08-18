@@ -141,6 +141,7 @@ pub enum View {
     Loading,
     LiveTv(Box<livetv::State>),
     Home(Box<home::State>),
+    Favorites(Box<crate::screen::favorites::State>),
     Library(Box<library::State>),
     Detail(Box<detail::State>),
     Search(Box<search::State>),
@@ -231,6 +232,7 @@ pub enum Message {
     Navigated(Route),
     WentBack,
     HomeLoaded(Answer<home::State>),
+    FavoritesLoaded(Answer<crate::screen::favorites::State>),
     LibraryLoaded(Answer<library::State>),
     DetailLoaded(Answer<detail::State>),
     SearchLoaded(Answer<search::State>),
@@ -398,6 +400,7 @@ impl Signed {
         let mut held = match &self.view {
             View::Loading => images::Wanted::new(),
             View::Home(state) => home::images(state, &self.arrangement),
+            View::Favorites(state) => crate::screen::favorites::images(state),
             View::Library(state) => library::images(state),
             View::Detail(state) => detail::images(state),
             View::Search(state) => search::images(state),
@@ -460,7 +463,8 @@ impl Signed {
             | View::Playlists(_)
             | View::Playlist(_)
             | View::Metadata(_)
-            | View::MetadataRoot => Vec::new(),
+            | View::MetadataRoot
+            | View::Favorites(_) => Vec::new(),
             View::Queue
             | View::Remote
             | View::SyncPlay
@@ -485,6 +489,7 @@ impl View {
     fn draws(&self) -> &'static [jellium_model::construct::Page] {
         match self {
             View::Home(_) => crate::screen::home::DRAWS,
+            View::Favorites(_) => crate::screen::favorites::DRAWS,
             View::Loading
             | View::LiveTv(_)
             | View::Library(_)
@@ -571,7 +576,15 @@ pub fn load(signed: &Signed, route: &Route, viewport: Viewport) -> Task<Message>
     let api: Rc<Api> = signed.api.clone();
     let reachable = signed.session.live_tv.allowed();
     match route.clone() {
-        Route::Home => Task::perform(home::load(api), Message::HomeLoaded),
+        Route::Home {
+            tab: crate::screen::home::Tab::Home,
+        } => Task::perform(home::load(api), Message::HomeLoaded),
+        Route::Home {
+            tab: crate::screen::home::Tab::Favorites,
+        } => Task::perform(
+            crate::screen::favorites::load(api),
+            Message::FavoritesLoaded,
+        ),
         Route::Library { id, tab } => Task::perform(
             library::load(api, id, *tab, viewport),
             Message::LibraryLoaded,
@@ -777,7 +790,9 @@ impl Jellium {
                     rails: std::collections::HashMap::new(),
                     session,
                     api,
-                    history: vec![Route::Home],
+                    history: vec![Route::Home {
+                        tab: crate::screen::home::Tab::Home,
+                    }],
                     view: View::Loading,
                     overflow: None,
                     confirming: None,
@@ -829,7 +844,13 @@ impl Jellium {
                         },
                         Message::PreferencesLoaded,
                     ),
-                    load(signed, &Route::Home, viewport),
+                    load(
+                        signed,
+                        &Route::Home {
+                            tab: crate::screen::home::Tab::Home,
+                        },
+                        viewport,
+                    ),
                 ])
             }
         }
@@ -1477,10 +1498,18 @@ impl Jellium {
                     return Task::none();
                 }
                 signed.history.pop();
-                let route = signed.route().cloned().unwrap_or(Route::Home);
+                let route = signed.route().cloned().unwrap_or(Route::Home {
+                    tab: crate::screen::home::Tab::Home,
+                });
                 signed.view = staged(&route, signed.session.live_tv);
                 let telling = watching(signed, &route);
                 Task::batch([telling, load(signed, &route, viewport)])
+            }
+            Message::FavoritesLoaded(answered) => {
+                match answered.or_none(Text::FailureFavoritesUnread) {
+                    Some(state) => self.loaded(View::Favorites(Box::new(state))),
+                    None => Task::none(),
+                }
             }
             Message::HomeLoaded(answered) => {
                 let Some(state) = answered.or_none(Text::FailureHomeUnread) else {
@@ -2404,7 +2433,9 @@ impl Jellium {
                         play_session: playing.plan.play_session.clone(),
                     });
                 }
-                let route = signed.route().cloned().unwrap_or(Route::Home);
+                let route = signed.route().cloned().unwrap_or(Route::Home {
+                    tab: crate::screen::home::Tab::Home,
+                });
                 let watching = watching(signed, &route);
                 let loading = load(signed, &route, viewport);
                 if signed.group.is_some() {
@@ -2549,10 +2580,14 @@ impl Jellium {
                 if !unreachable.is_empty() {
                     signed.history.retain(|route| !unreachable.contains(route));
                     if signed.history.is_empty() {
-                        signed.history.push(Route::Home);
+                        signed.history.push(Route::Home {
+                            tab: crate::screen::home::Tab::Home,
+                        });
                     }
                     signed.leaving = None;
-                    let route = signed.route().cloned().unwrap_or(Route::Home);
+                    let route = signed.route().cloned().unwrap_or(Route::Home {
+                        tab: crate::screen::home::Tab::Home,
+                    });
                     signed.view = staged(&route, signed.session.live_tv);
                     let telling = watching(signed, &route);
                     return Task::batch([refreshed, telling, load(signed, &route, viewport)]);
@@ -2575,13 +2610,17 @@ impl Jellium {
                     .history
                     .retain(|route| !matches!(route, Route::Dashboard { .. }));
                 if signed.history.is_empty() {
-                    signed.history.push(Route::Home);
+                    signed.history.push(Route::Home {
+                        tab: crate::screen::home::Tab::Home,
+                    });
                 }
                 signed.leaving = None;
                 crate::failure::raise(crate::error::stated(
                     strings::lookup(Text::FailureDemoted).to_string(),
                 ));
-                let route = signed.route().cloned().unwrap_or(Route::Home);
+                let route = signed.route().cloned().unwrap_or(Route::Home {
+                    tab: crate::screen::home::Tab::Home,
+                });
                 signed.view = staged(&route, signed.session.live_tv);
                 let telling = watching(signed, &route);
                 Task::batch([refreshed, telling, load(signed, &route, viewport)])
@@ -2698,7 +2737,7 @@ impl Jellium {
         };
         let wanted = match &signed.view {
             View::Metadata(state) => crate::screen::metadata::handles(state),
-            View::MetadataRoot => HashSet::new(),
+            View::MetadataRoot | View::Favorites(_) => HashSet::new(),
             _ => HashSet::new(),
         };
         signed.foreign.retain(&wanted);
@@ -3082,9 +3121,21 @@ impl Jellium {
                     View::MetadataRoot => {
                         crate::screen::metadata::root(signed.libraries(), self.viewport)
                     }
+                    View::Favorites(state) => crate::screen::favorites::view(
+                        state,
+                        chrono::Utc::now(),
+                        self.viewport,
+                        &self.images,
+                        session,
+                    ),
                     View::Unavailable => center(iced::widget::Space::new()).into(),
                 };
 
+                let body = match &signed.view {
+                    View::Home(_) => column![home::tabs(home::Tab::Home), body].into(),
+                    View::Favorites(_) => column![home::tabs(home::Tab::Favorites), body].into(),
+                    _ => body,
+                };
                 let body = crate::construct::page(signed.view.draws(), self.viewport, body);
                 let mut page = column![
                     widget::skin_header(
@@ -3306,6 +3357,7 @@ fn library_changed(
         View::Detail(_)
         | View::Loading
         | View::LiveTv(_)
+        | View::Favorites(_)
         | View::Metadata(_)
         | View::MetadataRoot
         | View::Playlist(_)

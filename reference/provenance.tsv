@@ -721,3 +721,5 @@ blurhash-punch	src/components/common/Image.tsx	42	44	d1c684ce5b98197fbcc5afa1642
 blurhash-canvas	src/components/images/imageLoader.js	29	48	5a9ea1aceffac232808975ec82e674a7a528e9c5b73188a1dc6bb1823b2573b7	ported
 programs-query	src/controllers/livetv/livetvsuggested.js	19	131	6538c3830364ac5516321cb11944f513f4476af5da8b2c83aa3ca47d2536f3ad	ported
 programs-shapes	src/controllers/livetv/livetvsuggested.js	133	156	e08492444878aebe6fe4371f8e5c5b9183589b2a62b4ef93ccca60a067fcace6	ported
+favorites-query	src/controllers/favorites.js	176	203	cfa27f51ca7282587732859b57dc9074b8f74a890b6ff0edcd35254c36619026	ported
+favorites-shapes	src/controllers/favorites.js	20	174	4f29441845dcfc98d5011a38a12f1ca183171038532238d2efa7e74c6b390236	ported

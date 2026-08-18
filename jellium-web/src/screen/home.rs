@@ -37,6 +37,46 @@ fn titled<'a>(said: Text) -> Element<'a, Message> {
     )
 }
 
+/// Which of the reference's two home tabs is shown.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum Tab {
+    #[default]
+    Home,
+    Favorites,
+}
+
+impl Tab {
+    pub const ALL: [Tab; 2] = [Tab::Home, Tab::Favorites];
+
+    pub fn label(self) -> Text {
+        match self {
+            Tab::Home => Text::HomeTabHome,
+            Tab::Favorites => Text::HomeTabFavorites,
+        }
+    }
+}
+
+/// `.headerTabs`: the reference's own two-tab strip over the home page, each
+/// tab opening the route it names.
+pub fn tabs<'a>(shown: Tab) -> Element<'a, Message> {
+    construct::silent(
+        Construct::HeaderTabs,
+        iced::widget::row(Tab::ALL.into_iter().map(|tab| {
+            construct::navigation(
+                Construct::HeaderTabs,
+                Some(tab.label()),
+                match tab == shown {
+                    true => Message::Unchanged,
+                    false => Message::Navigated(Route::Home { tab }),
+                },
+                widget::prose(strings::lookup(tab.label()), style::typeface::HEADING_2),
+            )
+        }))
+        .spacing(style::drawn(style::space::CONTROL_GAP.drawn()))
+        .into(),
+    )
+}
+
 /// The reference pages this screen draws.
 pub const DRAWS: &[Page] = &[Page::Home];
 

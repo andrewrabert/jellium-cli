@@ -5,7 +5,9 @@ use jellium_model::sort::Sort;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Route {
-    Home,
+    Home {
+        tab: crate::screen::home::Tab,
+    },
     /// The library screen: the library, and the tab shown with what that tab
     /// carries.
     Library {

@@ -3,6 +3,7 @@ pub mod collections;
 pub mod confirm;
 pub mod dashboard;
 pub mod detail;
+pub mod favorites;
 pub mod home;
 pub mod hub;
 pub mod library;

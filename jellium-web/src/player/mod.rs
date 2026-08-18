@@ -1490,7 +1490,11 @@ pub fn controlled(signed: &mut Signed, control: Control, viewport: Viewport) -> 
     }
 
     match control {
-        Control::GoHome => return Task::done(Message::Navigated(Route::Home)),
+        Control::GoHome => {
+            return Task::done(Message::Navigated(Route::Home {
+                tab: crate::screen::home::Tab::Home,
+            }));
+        }
         Control::GoToSearch => {
             return Task::done(Message::Navigated(Route::Search {
                 term: String::new(),
@@ -1571,11 +1575,15 @@ pub fn leave(signed: &mut Signed, viewport: Viewport) -> Task<Message> {
     }
     drop(playing);
 
-    let route = signed.history.last().cloned().unwrap_or(Route::Home);
+    let route = signed.history.last().cloned().unwrap_or(Route::Home {
+        tab: crate::screen::home::Tab::Home,
+    });
     if matches!(route, Route::Queue) {
         signed.history.pop();
     }
-    let route = signed.history.last().cloned().unwrap_or(Route::Home);
+    let route = signed.history.last().cloned().unwrap_or(Route::Home {
+        tab: crate::screen::home::Tab::Home,
+    });
     signed.view = crate::app::staged(&route, signed.session.live_tv);
     Task::batch([
         Task::perform(

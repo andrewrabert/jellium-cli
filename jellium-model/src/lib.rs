@@ -3,6 +3,7 @@ pub mod bridge;
 pub mod construct;
 pub mod distance;
 pub mod facets;
+pub mod favorites;
 pub mod form;
 pub mod guide;
 pub mod item;
