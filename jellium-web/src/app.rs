@@ -3097,11 +3097,13 @@ impl Jellium {
     /// open, the live tick while a channel plays, the page's resizes, and the
     /// event socket's signals for the whole signed-in session.
     pub fn subscription(&self) -> Subscription<Message> {
+        let layout = self.viewport.layout();
         let everywhere = Subscription::batch([
             crate::failure::reports().map(Message::Failed),
             crate::fonts::wants().map(Message::FontWanted),
             iced::window::resize_events()
-                .filter_map(|_| crate::page::viewport().map(Message::Resized)),
+                .with(layout)
+                .filter_map(|(layout, _)| crate::page::viewport(layout).map(Message::Resized)),
         ]);
         let Stage::Signed(signed) = &self.stage else {
             if let Stage::Login(state) = &self.stage {
@@ -3169,9 +3171,9 @@ impl Jellium {
         style::theme()
     }
 
-    /// The band's root size, which is what resolves every design length.
+    /// The layout's root size, which is what resolves every design length.
     pub fn scale_factor(&self) -> f32 {
-        crate::style::scale(self.viewport.band())
+        crate::style::scale(self.viewport.layout())
     }
 }
 

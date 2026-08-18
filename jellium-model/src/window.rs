@@ -211,13 +211,17 @@ pub struct Scrolled {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::appearance::{Css, Viewport};
+    use crate::appearance::{Css, Layout, Viewport};
 
     const ROW_HEIGHT: Drawn = Drawn::of(64.0);
 
     /// The content box a page `width` css pixels wide lays its cards in.
     fn page(width: f32) -> Room {
-        Room::content(Viewport::new(Css::of(width), Css::of(1000.0)))
+        Room::content(Viewport::new(
+            Css::of(width),
+            Css::of(1000.0),
+            Layout::Desktop,
+        ))
     }
 
     /// A window over `ROW_HEIGHT` rows in a viewport `rows` rows tall,

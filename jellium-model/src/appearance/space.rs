@@ -8,7 +8,7 @@ use chrono::TimeDelta;
 use super::scheme::{self, Color};
 use super::typeface;
 use super::{
-    Across, Band, Breakpoint, Canvas, Cap, Columns, Css, Drawn, Length, Letters, Orientation,
+    Across, Breakpoint, Canvas, Cap, Columns, Css, Drawn, Layout, Length, Letters, Orientation,
     Query, Ratio, Share, Viewport,
 };
 
@@ -133,7 +133,7 @@ impl Room {
     // reference: dashboard-content-side
     pub fn dashboard(viewport: Viewport) -> Room {
         let beside = match viewport.matches(DRAWER_BESIDE_AT) {
-            true => DRAWER.drawn(viewport.band()).count(),
+            true => DRAWER.drawn(viewport.layout()).count(),
             false => 0.0,
         };
         let side = DASHBOARD_SIDE.drawn().count();
@@ -254,11 +254,12 @@ const SECTION_BOTTOM_MOBILE: Length = Length::em(1.0);
 
 /// The margin `.verticalSection-extrabottompadding` leaves under a section,
 /// which the reference cuts on a mobile page.
+// the television layout writes no rule of its own and keeps the desktop margin
 // reference: section-vertical
-pub fn section_bottom(band: Band) -> Length {
-    match band {
-        Band::Mobile => SECTION_BOTTOM_MOBILE,
-        Band::Desktop => SECTION_BOTTOM,
+pub fn section_bottom(layout: Layout) -> Length {
+    match layout {
+        Layout::Mobile => SECTION_BOTTOM_MOBILE,
+        Layout::Desktop | Layout::Television => SECTION_BOTTOM,
     }
 }
 
@@ -1032,26 +1033,26 @@ pub const TOGGLE_OVERLAP: Css = Css::unitless(-1.0);
 /// at this density.
 // reference: table-body-cell
 // reference: mui-table-cell
-pub fn table_row(band: Band) -> Drawn {
+pub fn table_row(layout: Layout) -> Drawn {
     TABLE_CELL_PAD
         .top
         .plus(typeface::BODY_2_LEADING.of(typeface::BODY_2))
         .plus(TABLE_CELL_PAD.bottom)
         .drawn()
-        .plus(TABLE_CELL_RULE.drawn(band))
+        .plus(TABLE_CELL_RULE.drawn(layout))
 }
 
 /// The head row's own height, which is the head cell's padding and that same
 /// rule around the line box MUI writes for a head cell.
 // reference: table-head-cell
 // reference: mui-table-cell
-pub fn table_head(band: Band) -> Drawn {
+pub fn table_head(layout: Layout) -> Drawn {
     TABLE_HEAD_PAD
         .top
         .plus(typeface::TABLE_HEAD_LEADING.of(typeface::BODY_2))
         .plus(TABLE_HEAD_PAD.bottom)
         .drawn()
-        .plus(TABLE_CELL_RULE.drawn(band))
+        .plus(TABLE_CELL_RULE.drawn(layout))
 }
 
 /// `MuiFilledInput`'s own padding around its value, which MUI writes as the
@@ -1198,32 +1199,32 @@ pub const MENU_CAP: Cap = Cap {
 // reference: mui-input-base
 // reference: mui-menu-paper
 pub fn menu_height(options: usize, viewport: Viewport) -> Drawn {
-    let band = viewport.band();
-    let stacked = Drawn::of(filled_row(band).count() * options as f32);
-    MENU_CAP.holds(stacked, viewport.canvas().height(), band)
+    let layout = viewport.layout();
+    let stacked = Drawn::of(filled_row(layout).count() * options as f32);
+    MENU_CAP.holds(stacked, viewport.canvas().height(), layout)
 }
 
 /// The height a filled field stands: its own padding around one line of the
 /// lettering MUI writes inside it.
 // reference: mui-filled-input
 // reference: mui-input-base
-pub fn filled_row(band: Band) -> Drawn {
+pub fn filled_row(layout: Layout) -> Drawn {
     FILLED_PAD
         .top
-        .drawn(band)
+        .drawn(layout)
         .plus(typeface::FILLED_LEADING.of(typeface::BODY).drawn())
-        .plus(FILLED_PAD.bottom.drawn(band))
+        .plus(FILLED_PAD.bottom.drawn(layout))
 }
 
 /// The height a row of checkboxes pitches at: `MuiCheckbox`'s padding around
 /// MUI's own medium glyph.
 // reference: mui-switch-base
 // reference: mui-svg-icon
-pub fn check_row(band: Band) -> Drawn {
+pub fn check_row(layout: Layout) -> Drawn {
     CHECK_PAD
-        .drawn(band)
+        .drawn(layout)
         .plus(typeface::CONTROL_GLYPH.drawn())
-        .plus(CHECK_PAD.drawn(band))
+        .plus(CHECK_PAD.drawn(layout))
 }
 
 /// `.listItem`'s own padding, which the reference writes wider at the leading
@@ -1625,6 +1626,11 @@ pub const DETAIL_POSTER: Share = Share::units(25.0);
 // reference: detail-poster-arms — 30vw
 pub const DETAIL_POSTER_STACKED: Share = Share::units(30.0);
 
+/// The poster's inset from the page's leading edge in the televised
+/// arrangement.
+// reference: detail-poster-arms
+pub const DETAIL_POSTER_TELEVISED: Share = Share::per_ten_thousand(500);
+
 /// How far the poster rises over the ribbon, which is the ribbon's own height
 /// and four fifths again.
 // reference: detail-poster-arms
@@ -1765,8 +1771,8 @@ pub fn guide_channel(viewport: Viewport) -> Drawn {
 
 /// What a guide row stands in over the rule at the foot of it.
 // reference: guide-row
-pub fn guide_standing(band: Band) -> Drawn {
-    Drawn::of(GUIDE_ROW.drawn().count() - GUIDE_RULE.drawn(band).count())
+pub fn guide_standing(layout: Layout) -> Drawn {
+    Drawn::of(GUIDE_ROW.drawn().count() - GUIDE_RULE.drawn(layout).count())
 }
 
 /// `.guideChannelImage`'s width: two fifths of the channel header, and seven
@@ -1966,7 +1972,7 @@ const PREVIEW_SHORT_SIDE: Share = Share::units(30.0);
 /// The scrub preview's frame, `.chapterThumb`, which is a share of the viewport
 /// rather than a card: 20vh, 30vw in portrait, and 30vh in a landscape page no
 /// taller than 50em. It is a page measurement because it is both drawn and
-/// asked for: the frame draws at `preview(viewport).drawn(viewport.band())` and
+/// asked for: the frame draws at `preview(viewport).drawn(viewport.layout())` and
 /// the tile is asked for at `Fill::of(preview(viewport))`.
 // reference: osd-preview
 pub fn preview(viewport: Viewport) -> Css {

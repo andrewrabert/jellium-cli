@@ -64,7 +64,7 @@ fn offered(options: &'static [Offered], held: &str) -> (Vec<Choice<&'static str>
 fn filled<'a>(control: Control, form: &'a Form, viewport: Viewport) -> Element<'a, Message> {
     let field = control.field;
     let held = form.value(field);
-    let band = viewport.band();
+    let layout = viewport.layout();
     match control.offered {
         Some(options) => {
             let (offered, standing) = self::offered(options, &held);
@@ -83,7 +83,7 @@ fn filled<'a>(control: Control, form: &'a Form, viewport: Viewport) -> Element<'
                 control.helper,
                 held == "true",
                 move |on| edited(field, on.to_string()),
-                band,
+                layout,
             ),
             Field::Text { .. }
             | Field::Number { .. }
@@ -95,7 +95,7 @@ fn filled<'a>(control: Control, form: &'a Form, viewport: Viewport) -> Element<'
                 control.helper,
                 &held,
                 move |typed| edited(field, typed),
-                band,
+                layout,
             ),
         },
     }
@@ -103,7 +103,7 @@ fn filled<'a>(control: Control, form: &'a Form, viewport: Viewport) -> Element<'
 
 /// One group of a MUI section: its heading, then its controls.
 fn group<'a>(group: Group, form: &'a Form, viewport: Viewport) -> Vec<Element<'a, Message>> {
-    let band = viewport.band();
+    let layout = viewport.layout();
     let mut standing: Vec<Element<'a, Message>> = Vec::new();
     if let Some(heading) = group.heading {
         standing.push(widget::mui::heading(
@@ -112,7 +112,11 @@ fn group<'a>(group: Group, form: &'a Form, viewport: Viewport) -> Vec<Element<'a
         ));
     }
     if let Some(note) = group.note {
-        standing.push(widget::mui::helper(note, widget::mui::Helper::Flush, band));
+        standing.push(widget::mui::helper(
+            note,
+            widget::mui::Helper::Flush,
+            layout,
+        ));
     }
     standing.extend(
         group
@@ -181,7 +185,7 @@ fn fieldset<'a>(group: Group, form: &'a Form) -> Element<'a, Message> {
 // reference: dashboard-content
 pub fn view<'a>(state: &'a State, read_only: bool, viewport: Viewport) -> frame::Filling<'a> {
     let controls = state.section.controls();
-    let band = viewport.band();
+    let layout = viewport.layout();
     let mut rows: Vec<Element<'a, Message>> = Vec::new();
 
     for held in state.section.groups() {
@@ -192,7 +196,7 @@ pub fn view<'a>(state: &'a State, read_only: bool, viewport: Viewport) -> frame:
     }
 
     if state.saved {
-        rows.push(widget::mui::succeeded(Text::DashboardSaved, band));
+        rows.push(widget::mui::succeeded(Text::DashboardSaved, layout));
     }
 
     if !read_only {
@@ -201,7 +205,7 @@ pub fn view<'a>(state: &'a State, read_only: bool, viewport: Viewport) -> frame:
             .dirty()
             .then_some(Message::DashboardAction(super::Action::Save));
         rows.push(match controls {
-            Controls::Mui => widget::mui::contained(Text::DashboardSave, press, band),
+            Controls::Mui => widget::mui::contained(Text::DashboardSave, press, layout),
             Controls::Emby => widget::block(
                 strings::lookup(Text::DashboardSave),
                 press,

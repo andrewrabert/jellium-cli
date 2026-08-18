@@ -46,6 +46,9 @@ pub const DESKTOP_ROOT: Ratio = Ratio::thousandths(930);
 // reference: type-mobile-root
 pub const MOBILE_ROOT: Ratio = Ratio::thousandths(900);
 
+// reference: type-tv-root
+pub const TELEVISION_ROOT: Ratio = Ratio::thousandths(1250);
+
 // reference: type-root
 pub const HEADING_1: Length = Length::em(1.8);
 

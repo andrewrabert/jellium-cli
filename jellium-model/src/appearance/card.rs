@@ -664,7 +664,11 @@ impl Card {
     pub fn image_width(self, viewport: Viewport, screen: Option<Screen>) -> Fill {
         let resizable = screen.is_some_and(|screen| screen.resizable(viewport));
         let asked = match resizable {
-            true => Viewport::new(rounded(viewport.width()), viewport.height()),
+            true => Viewport::new(
+                rounded(viewport.width()),
+                viewport.height(),
+                viewport.layout(),
+            ),
             false => viewport,
         };
         self.requested(asked).fill(asked.width())

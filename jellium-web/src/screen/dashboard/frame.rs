@@ -183,7 +183,7 @@ pub fn frame<'a>(
     filling: Filling<'a>,
     viewport: Viewport,
 ) -> Element<'a, Message> {
-    let band = viewport.band();
+    let layout = viewport.layout();
     let titled = |rank| -> Vec<Element<'a, Message>> {
         title
             .map(|title| widget::mui::heading(rank, strings::lookup(title)))
@@ -195,14 +195,14 @@ pub fn frame<'a>(
             let mut stacked = titled(typeface::Rank::First);
             stacked.extend(content);
             widget::scrolled(
-                column(stacked).spacing(style::drawn(space::DASHBOARD_GAP.drawn(band))),
+                column(stacked).spacing(style::drawn(space::DASHBOARD_GAP.drawn(layout))),
             )
             .into()
         }
         Filling::Capped(rows) => {
             let mut stacked = titled(typeface::Rank::First);
             stacked.extend(rows);
-            let held = column(stacked).spacing(style::drawn(space::DASHBOARD_GAP.drawn(band)));
+            let held = column(stacked).spacing(style::drawn(space::DASHBOARD_GAP.drawn(layout)));
             let capped = match viewport.matches(space::FORM_WIDTH_AT) {
                 true => container(held).max_width(style::drawn(space::FORM_WIDTH.drawn())),
                 false => container(held),
@@ -215,9 +215,9 @@ pub fn frame<'a>(
                 standing.push(widget::prose(strings::lookup(subtitle), typeface::BODY));
             }
             column![
-                column(standing).spacing(style::drawn(space::TABLE_TITLE_GAP.drawn(band))),
-                Space::new().height(style::drawn(space::TABLE_TITLE_BOTTOM.drawn(band))),
-                widget::table::drawn(table, band),
+                column(standing).spacing(style::drawn(space::TABLE_TITLE_GAP.drawn(layout))),
+                Space::new().height(style::drawn(space::TABLE_TITLE_BOTTOM.drawn(layout))),
+                widget::table::drawn(table, layout),
             ]
             .height(Fill)
             .into()
@@ -235,7 +235,7 @@ pub fn frame<'a>(
     if !viewport.matches(space::DRAWER_BESIDE_AT) {
         return primary.into();
     }
-    row![widget::drawer(drawer(shown, opened), band), primary]
+    row![widget::drawer(drawer(shown, opened), layout), primary]
         .width(Fill)
         .height(Fill)
         .into()

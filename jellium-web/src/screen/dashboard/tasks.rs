@@ -7,7 +7,7 @@ use super::frame;
 use crate::app::Message;
 use crate::error::Answer;
 use crate::icon::Icon;
-use crate::style::{self, Band, Share, space, typeface};
+use crate::style::{self, Layout, Share, space, typeface};
 use crate::text::{self as strings, Text};
 use crate::widget::{self, Showing, prose};
 
@@ -185,7 +185,7 @@ pub fn view<'a>(
     state: &'a State,
     read_only: bool,
     now: chrono::DateTime<chrono::Utc>,
-    band: Band,
+    layout: Layout,
 ) -> frame::Filling<'a> {
     let mut categories: std::collections::BTreeMap<&'a str, Vec<&'a jellium_protocol::TaskState>> =
         std::collections::BTreeMap::new();
@@ -218,10 +218,10 @@ pub fn view<'a>(
                         ))),
                         trailing: (!read_only).then(|| control(task)),
                     }),
-                    band,
+                    layout,
                 ),
             ]
-            .spacing(style::drawn(space::CATEGORY_GAP.drawn(band)))
+            .spacing(style::drawn(space::CATEGORY_GAP.drawn(layout)))
             .into(),
         );
     }

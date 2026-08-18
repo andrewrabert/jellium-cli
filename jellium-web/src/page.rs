@@ -1,15 +1,19 @@
 //! What the page reports about itself, read from the window that reports it.
 
 use crate::failure::{self, Call};
-use crate::style::{Css, Screen, Viewport};
+use crate::style::{Css, Layout, Screen, Viewport};
 
 /// The page's own size, from `window.innerWidth` and `window.innerHeight`,
 /// which report css pixels; `None` where the page reports none.
-pub fn viewport() -> Option<Viewport> {
+pub fn viewport(layout: Layout) -> Option<Viewport> {
     let window = web_sys::window()?;
     let width = failure::called(Call::WindowInnerWidth, window.inner_width())?.as_f64()?;
     let height = failure::called(Call::WindowInnerHeight, window.inner_height())?.as_f64()?;
-    Some(Viewport::new(Css::of(width as f32), Css::of(height as f32)))
+    Some(Viewport::new(
+        Css::of(width as f32),
+        Css::of(height as f32),
+        layout,
+    ))
 }
 
 /// What the display offers, from `screen.availWidth`, which is what decides

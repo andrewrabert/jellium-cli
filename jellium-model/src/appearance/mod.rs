@@ -48,9 +48,9 @@ impl Css {
         Length::em(self.count / BASE)
     }
 
-    /// The canvas length this measures, which is this over the band's root.
-    pub fn drawn(self, band: Band) -> Drawn {
-        Drawn::of(self.count / band.root().factor())
+    /// The canvas length this measures, which is this over the layout's root.
+    pub fn drawn(self, layout: Layout) -> Drawn {
+        Drawn::of(self.count / layout.root().factor())
     }
 }
 
@@ -178,8 +178,8 @@ impl Cap {
     /// `held` under this cap of `whole`, which is what a `max-height` does to
     /// the height a box would otherwise stand at; nothing where the cap falls
     /// under nothing.
-    pub fn holds(self, held: Drawn, whole: Drawn, band: Band) -> Drawn {
-        let cap = self.share.of(whole).plus(self.offset.drawn(band));
+    pub fn holds(self, held: Drawn, whole: Drawn, layout: Layout) -> Drawn {
+        let cap = self.share.of(whole).plus(self.offset.drawn(layout));
         Drawn::of(held.count().min(cap.count()).max(0.0))
     }
 }
@@ -348,7 +348,7 @@ impl Length {
 }
 
 /// A viewport width or height the pinned stylesheets test against, fixed to a
-/// 16px base and never scaled by the band; every threshold the reference writes
+/// 16px base and never scaled by the layout; every threshold the reference writes
 /// is a whole number of css pixels, so it is held as one.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Breakpoint {
@@ -356,7 +356,7 @@ pub struct Breakpoint {
 }
 
 impl Breakpoint {
-    /// Sixteen to the em, whatever the band's root is, because that is what a
+    /// Sixteen to the em, whatever the layout's root is, because that is what a
     /// media query measures.
     pub const fn em(em: f32) -> Breakpoint {
         Breakpoint {
@@ -427,18 +427,22 @@ pub const HEIGHTS: &[Breakpoint] = &[
     Breakpoint::em(50.0),
 ];
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum Band {
+/// Which of the three layouts jellyfin-web draws in, which the reference
+/// carries as a class on the root element and never as a media query.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum Layout {
     Mobile,
     Desktop,
+    Television,
 }
 
-impl Band {
-    /// The root size the band draws at, as a ratio of the 16px base.
+impl Layout {
+    /// The root size the layout draws at, as a ratio of the 16px base.
     pub fn root(self) -> Ratio {
         match self {
-            Band::Mobile => typeface::MOBILE_ROOT,
-            Band::Desktop => typeface::DESKTOP_ROOT,
+            Layout::Mobile => typeface::MOBILE_ROOT,
+            Layout::Desktop => typeface::DESKTOP_ROOT,
+            Layout::Television => typeface::TELEVISION_ROOT,
         }
     }
 }
@@ -475,9 +479,6 @@ pub enum Dialog {
     Fullscreen,
 }
 
-// reference: band-threshold
-pub const BAND: Query = Query::MaxWidth(Breakpoint::em(37.5));
-
 // reference: letter-jump
 pub const LETTERS_HIDDEN: Query = Query::MaxHeight(Breakpoint::em(31.25));
 
@@ -487,16 +488,22 @@ pub const DIALOG_NARROW: Query = Query::MaxWidth(Breakpoint::em(80.0));
 // reference: dialog-fullscreen
 pub const DIALOG_SHORT: Query = Query::MaxHeight(Breakpoint::em(45.0));
 
-/// The page's own size, as the page reports it.
+/// The page as this client draws it: the size the page reports, and the layout
+/// the browser showing it is drawn in.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Viewport {
     width: Css,
     height: Css,
+    layout: Layout,
 }
 
 impl Viewport {
-    pub fn new(width: Css, height: Css) -> Viewport {
-        Viewport { width, height }
+    pub fn new(width: Css, height: Css, layout: Layout) -> Viewport {
+        Viewport {
+            width,
+            height,
+            layout,
+        }
     }
 
     pub fn width(self) -> Css {
@@ -509,10 +516,10 @@ impl Viewport {
 
     /// The same page as the canvas draws it, which is every layout's measure.
     pub fn canvas(self) -> Canvas {
-        let band = self.band();
+        let layout = self.layout;
         Canvas {
-            width: self.width.drawn(band),
-            height: self.height.drawn(band),
+            width: self.width.drawn(layout),
+            height: self.height.drawn(layout),
         }
     }
 
@@ -526,11 +533,8 @@ impl Viewport {
         }
     }
 
-    pub fn band(self) -> Band {
-        match self.matches(BAND) {
-            true => Band::Mobile,
-            false => Band::Desktop,
-        }
+    pub fn layout(self) -> Layout {
+        self.layout
     }
 
     /// Landscape when the width is at least the height.
@@ -581,7 +585,7 @@ impl Screen {
     }
 }
 
-/// The page as the canvas draws it: its css size over the band's root.
+/// The page as the canvas draws it: its css size over the layout's root.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Canvas {
     width: Drawn,

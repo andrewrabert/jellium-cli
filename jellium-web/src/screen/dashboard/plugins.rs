@@ -196,7 +196,7 @@ pub fn view<'a>(
                     ))),
                     action: None,
                 },
-                viewport.band(),
+                viewport.layout(),
             ))
         }),
         viewport,

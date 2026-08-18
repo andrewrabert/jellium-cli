@@ -56,8 +56,8 @@ fn ticks<'a>(
     chapters: &'a [Chapter],
     viewport: Viewport,
 ) -> Element<'a, Message> {
-    let band = viewport.band();
-    let mark = style::drawn(space::SLIDER_MARKER_HEIGHT.drawn(band));
+    let layout = viewport.layout();
+    let mark = style::drawn(space::SLIDER_MARKER_HEIGHT.drawn(layout));
     let mut lane = row![].height(mark);
     let mut taken = 0u16;
     for chapter in chapters {
@@ -70,7 +70,7 @@ fn ticks<'a>(
             .push(Space::new().width(Length::FillPortion(at - taken)))
             .push(
                 container(Space::new().width(Fill))
-                    .width(style::drawn(space::SLIDER_MARKER_WIDTH.drawn(band)))
+                    .width(style::drawn(space::SLIDER_MARKER_WIDTH.drawn(layout)))
                     .height(mark)
                     .style(tick_style),
             );
@@ -131,7 +131,7 @@ pub fn scrub<'a>(
         return measured.into();
     };
 
-    let frame = style::drawn(space::preview(viewport).drawn(viewport.band()));
+    let frame = style::drawn(space::preview(viewport).drawn(viewport.layout()));
     iced::widget::column![iced::widget::image(shown).width(frame), measured,]
         .spacing(style::drawn(space::BLOCK_GAP.drawn()))
         .into()

@@ -14,7 +14,7 @@ use crate::icon::Icon;
 use crate::images::{self, Cache, Kind};
 use crate::player::Intent;
 use crate::style::space::Room;
-use crate::style::{self, Band, Drawn, Viewport, card, space, typeface};
+use crate::style::{self, Drawn, Layout, Viewport, card, space, typeface};
 use crate::text::{self as strings, Text};
 use crate::widget;
 use crate::widget::overlap::Overlapping;
@@ -260,14 +260,13 @@ fn poster<'a>(item: &BaseItemDto, images: &'a Cache, width: Drawn) -> Element<'a
     }
 }
 
-/// A quarter of the page beside the ribbon and three tenths of it over the
-/// backdrop, which is the one measure the two arrangements disagree on before
-/// they are laid out.
+/// A quarter of the page beside the ribbon and beside the televised poster,
+/// and three tenths of it over the backdrop.
 // reference: detail-poster-arms
 fn poster_width(viewport: Viewport) -> Drawn {
-    match viewport.band() {
-        Band::Desktop => space::DETAIL_POSTER,
-        Band::Mobile => space::DETAIL_POSTER_STACKED,
+    match viewport.layout() {
+        Layout::Desktop | Layout::Television => space::DETAIL_POSTER,
+        Layout::Mobile => space::DETAIL_POSTER_STACKED,
     }
     .of(viewport.canvas().width())
 }
@@ -282,7 +281,7 @@ struct Head<'a> {
 }
 
 /// The parts the reference's own primary container holds, drawn once and
-/// placed by whichever arrangement the band names.
+/// placed by whichever arrangement the layout names.
 // reference: detail-markup
 // reference: detail-primary
 // reference: detail-parent-name
@@ -342,7 +341,7 @@ fn head<'a>(item: &'a BaseItemDto, viewport: Viewport, images: &'a Cache) -> Hea
 }
 
 /// The backdrop, the poster over it, the ribbon carrying the name, the item's
-/// own lines and the row of buttons: side by side on the desktop band.
+/// own lines and the row of buttons: side by side on the desktop layout.
 // reference: detail-markup
 // reference: detail-ribbon
 // reference: detail-poster
@@ -385,7 +384,7 @@ fn ribboned<'a>(head: Head<'a>, viewport: Viewport) -> Element<'a, Message> {
     .into()
 }
 
-/// The same parts stacked and centred, which is what the mobile band draws.
+/// The same parts stacked and centred, which is what the mobile layout draws.
 // reference: detail-info-wrapper
 // reference: detail-centred
 // reference: detail-misc-narrow
@@ -435,7 +434,34 @@ fn stacked<'a>(head: Head<'a>, viewport: Viewport) -> Element<'a, Message> {
     .into()
 }
 
-/// The item drawn in the arrangement its band names, and under it what the
+/// The parts with no backdrop, the poster standing at the page's own leading
+/// edge, and the ribbon and the body padded to clear it.
+// reference: detail-backdrop
+// reference: detail-ribbon
+// reference: detail-poster-arms
+// reference: detail-content
+fn televised<'a>(head: Head<'a>, viewport: Viewport) -> Element<'a, Message> {
+    let canvas = viewport.canvas();
+    let edge = style::drawn(space::DETAIL_POSTER_TELEVISED.of(canvas.width()));
+    let beside = style::drawn(space::RIBBON_INSET.of(canvas.width()));
+    let trail = style::drawn(space::DETAIL_TRAIL.of(canvas.width()));
+    let buttons = style::drawn(space::DETAIL_BUTTONS.drawn());
+
+    row![
+        container(row![Space::new().width(edge), head.poster]).width(beside),
+        column![
+            head.name,
+            container(head.buttons).padding(iced::Padding::ZERO.top(buttons).bottom(buttons)),
+            container(head.lines)
+                .padding(iced::Padding::ZERO.top(style::drawn(space::DETAIL_BODY_TOP.drawn()))),
+        ]
+        .width(Fill),
+        Space::new().width(trail),
+    ]
+    .into()
+}
+
+/// The item drawn in the arrangement its layout names, and under it what the
 /// server holds beneath the item: its children, its similar rail and — for an
 /// administrator alone — the way into its metadata.
 pub fn view<'a>(
@@ -451,9 +477,10 @@ pub fn view<'a>(
     };
 
     let head = head(item, viewport, images);
-    let drawn = match viewport.band() {
-        Band::Desktop => ribboned(head, viewport),
-        Band::Mobile => stacked(head, viewport),
+    let drawn = match viewport.layout() {
+        Layout::Desktop => ribboned(head, viewport),
+        Layout::Mobile => stacked(head, viewport),
+        Layout::Television => televised(head, viewport),
     };
 
     let mut page = column![]

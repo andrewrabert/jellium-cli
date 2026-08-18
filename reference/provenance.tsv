@@ -50,6 +50,8 @@ get-playback-media-source	src/components/playback/playbackmanager.js	2941	2976	9
 set-subtitle-stream-index	src/components/playback/playbackmanager.js	1509	1566	d2aa6d4f914108b343809e14f2d9a97ec5625a3f62030af0b85520e26346cdc3	ported
 app-name	src/components/apphost.js	10	10	13141024c002b64cf3ff3d9ed6130e4188ec3b72a8e777693d4c63ae4fe44929	ported
 get-device-name	src/components/apphost.js	151	172	e309fb0a15529c1a203da2e3a269d845bb204921152603eb997f6221b11ef073	ported
+layout-default	src/components/apphost.js	184	186	3823c06ea7c256057a82c6048f250fd32caf6bf1c464a96a2e9a9289a5d71756	ported
+layout-auto	src/components/layoutManager.js	53	62	39793aea9cc669dd1a904cf7e7f7444b51bd909dae53948e97badf6aeb11431f	ported
 app-version	package.json	3	3	c8612bef0346c70554ad182face8760a562e479d2a9da98b012099c598b6fc12	ported
 generate-device-id	src/components/apphost.js	124	134	b99411fb2dd1c09f7e0815fe9c37dfcd57f061d162bb28095e0992aa3ce0050d	ported
 get-device-id	src/components/apphost.js	136	148	8b96d99e553c2e7a952694306537ac3bd2854421143fedb5cd6f26b565c0e1f5	ported
@@ -115,6 +117,7 @@ scheme-guide-focus	src/themes/dark/theme.scss	388	392	531b81da75fff488d40fe045df
 timeslot-scrollbar	src/themes/dark/theme.scss	467	469	e9759ed3e5c2f53c06ec50669d686aa24cd746c3e7217131a092f4130e8c001b	dead
 scheme-anchors	src/themes/defaults.ts	7	30	d73689c6be39372715f73e4c877277b438695556008ed427091db30767c9a549	ported
 type-root	src/styles/fonts.scss	6	23	4d75d6108496fa6acd3bbc05f9754a6f4c0b9785a0dd5de25dbe114c03c7bde3	ported
+type-tv-root	src/styles/fonts.scss	43	47	7d0fc369d49dfe8bdf295e88e8ec891f64b1fb3cbf3888f18b4463cd596d6842	ported
 type-mobile-root	src/styles/fonts.scss	49	51	7ef46ab7183a574d30215b2fa6fe4e2b690cfa1e72170527d99f15a910698200	ported
 type-line-height	src/styles/site.scss	38	44	c2f110f176b9564ac90ca0f2c82d0fa08ec348e65e6a20261589349bde7ca05c	ported
 type-button-icon	src/elements/emby-button/emby-button.scss	59	62	9eff769abc7399c0dcce919acbb3ec9e271b5911f55e1f5097b4839be8895f4a	ported
@@ -242,7 +245,7 @@ section-title-button	src/styles/librarybrowser.scss	1319	1329	f2f8c9c07d74298ad9
 splash-logo	src/styles/site.scss	17	36	0720b5fbb0e0b0b28991354f80bd085277fcf51d1501e1f2fcb3eb12628052fd	ported
 document-icons	src/index.html	18	20	9206fa573540f58b9b840eb7a573af920d71d5cc7ed2bfc2748fe20d8e6adbf4	ported
 splash-markup	src/index.html	89	91	7a199d6bbaaf93ed8569a0be9e420d9be2122451fe2a750c86c12d4dc084cadd	ported
-band-threshold	src/styles/librarybrowser.scss	422	426	97b6d00bf260b8803f27b275fdc3f81792e87b73e1d2e49968aa6b6321cd2726	ported
+header-selected-player	src/styles/librarybrowser.scss	417	426	efc13c49ac965bd12a9c4cebb6cffda035aa33ef11c8f1bd9a378175e1052faa	dead
 card-aspect	src/components/cardbuilder/card.scss	58	86	2f24399449711db454e202f61f52aa44006d7e0a1426499eb582632a472db75e	ported
 card-box	src/components/cardbuilder/card.scss	88	99	ced046c031cf3e217e29d8c1335e74665df2594b235a3e7962896192bb885419	ported
 card-box-bottom	src/components/cardbuilder/card.scss	120	128	23197c4c6e619a63ff78e1c3556721dc10564e5558b55f33dd05dc16f044a55e	ported

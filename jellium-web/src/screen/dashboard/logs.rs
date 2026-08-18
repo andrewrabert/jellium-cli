@@ -6,7 +6,7 @@ use jellium_model::form::{Field, Form};
 use super::frame;
 use crate::app::Message;
 use crate::error::Answer;
-use crate::style::{self, Band, Drawn, Viewport, space, typeface};
+use crate::style::{self, Drawn, Layout, Viewport, space, typeface};
 use crate::text::{self as strings, Text};
 use crate::widget::{self, line};
 use crate::window;
@@ -105,26 +105,26 @@ fn edited(field: Field, value: String) -> Message {
 // reference: date-locale-date
 // reference: date-display-time
 pub fn view<'a>(state: &'a State, read_only: bool, viewport: Viewport) -> frame::Filling<'a> {
-    let band = viewport.band();
+    let layout = viewport.layout();
     let mut rows: Vec<Element<'a, Message>> = vec![
         widget::mui::flag(
             Text::LogsSlowResponse,
             None,
             state.form.flagged(SLOW_RESPONSE),
             move |on| edited(SLOW_RESPONSE, on.to_string()),
-            band,
+            layout,
         ),
         widget::mui::field(
             Text::LogsSlowResponseTime,
             None,
             &state.form.value(SLOW_RESPONSE_THRESHOLD),
             move |typed| edited(SLOW_RESPONSE_THRESHOLD, typed),
-            band,
+            layout,
         ),
     ];
 
     if state.saved {
-        rows.push(widget::mui::succeeded(Text::DashboardSaved, band));
+        rows.push(widget::mui::succeeded(Text::DashboardSaved, layout));
     }
 
     if !read_only {
@@ -132,7 +132,7 @@ pub fn view<'a>(state: &'a State, read_only: bool, viewport: Viewport) -> frame:
             .form
             .dirty()
             .then_some(Message::DashboardAction(super::Action::Save));
-        rows.push(widget::mui::contained(Text::DashboardSave, press, band));
+        rows.push(widget::mui::contained(Text::DashboardSave, press, layout));
     }
 
     rows.push(widget::mui::listed(
@@ -151,7 +151,7 @@ pub fn view<'a>(state: &'a State, read_only: bool, viewport: Viewport) -> frame:
                 trailing: None,
             }
         }),
-        band,
+        layout,
     ));
 
     frame::Filling::Stacked(rows)
@@ -165,7 +165,7 @@ const TAIL_LIMIT: u64 = 2 * 1024 * 1024;
 /// the file's full size, and the lines the window shows, on the paper the
 /// reference stands a log's body on.
 // reference: logs-viewer
-pub fn viewer<'a>(held: &'a Viewer, band: Band) -> frame::Filling<'a> {
+pub fn viewer<'a>(held: &'a Viewer, layout: Layout) -> frame::Filling<'a> {
     let mut page: Vec<Element<'a, Message>> = vec![widget::mui::heading(
         typeface::Rank::First,
         held.name.clone(),
@@ -190,9 +190,9 @@ pub fn viewer<'a>(held: &'a Viewer, band: Band) -> frame::Filling<'a> {
                 typeface::LINE_HEIGHT,
             )
         }))
-        .padding(style::drawn(space::VIEWER_PAD.drawn(band)))
+        .padding(style::drawn(space::VIEWER_PAD.drawn(layout)))
         .into(),
-        band,
+        layout,
     ));
     frame::Filling::Stacked(page)
 }

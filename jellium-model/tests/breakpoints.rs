@@ -10,7 +10,8 @@ use std::collections::BTreeSet;
 use jellium_model::appearance::card::{Card, Mixed, PerRow, Rail, Shape};
 use jellium_model::appearance::space::Room;
 use jellium_model::appearance::{
-    Across, Band, Breakpoint, Css, Dialog, HEIGHTS, Letters, Orientation, Screen, Viewport, WIDTHS,
+    Across, Breakpoint, Css, Dialog, HEIGHTS, Layout, Letters, Orientation, Screen, Viewport,
+    WIDTHS,
 };
 
 /// One row of the oracle, naming the whole viewport it was resolved at.
@@ -24,15 +25,25 @@ struct Row {
     across: usize,
     requested: String,
     fill: u32,
-    band: String,
+    layout: String,
     root: f64,
     letters: String,
     dialog: String,
 }
 
 impl Row {
+    /// The layout the row's own column names.
+    fn drawn(&self) -> Layout {
+        match self.layout.as_str() {
+            "mobile" => Layout::Mobile,
+            "desktop" => Layout::Desktop,
+            "tv" => Layout::Television,
+            named => panic!("the oracle names a layout this port has none of: {named}"),
+        }
+    }
+
     fn viewport(&self) -> Viewport {
-        Viewport::new(Css::of(self.width), Css::of(self.height))
+        Viewport::new(Css::of(self.width), Css::of(self.height), self.drawn())
     }
 
     /// The box the page lays this row's card in.
@@ -75,7 +86,7 @@ fn oracle() -> Vec<Row> {
     let header = lines.next().expect("the oracle carries a header");
     assert_eq!(
         header,
-        "kind\twidth\theight\tshape\torientation\tpercent\tacross\trequested\tfill\tband\troot\tletter_jump\tdialog"
+        "kind\twidth\theight\tshape\torientation\tpercent\tacross\trequested\tfill\tlayout\troot\tletter_jump\tdialog"
     );
     lines
         .map(|line| {
@@ -91,7 +102,7 @@ fn oracle() -> Vec<Row> {
                 across: field[6].parse().expect("a count"),
                 requested: field[7].to_owned(),
                 fill: field[8].parse().expect("a requested width"),
-                band: field[9].to_owned(),
+                layout: field[9].to_owned(),
                 root: field[10].parse().expect("a root size"),
                 letters: field[11].to_owned(),
                 dialog: field[12].to_owned(),
@@ -104,13 +115,6 @@ fn named(orientation: Orientation) -> &'static str {
     match orientation {
         Orientation::Portrait => "portrait",
         Orientation::Landscape => "landscape",
-    }
-}
-
-fn banded(band: Band) -> &'static str {
-    match band {
-        Band::Mobile => "mobile",
-        Band::Desktop => "desktop",
     }
 }
 
@@ -143,9 +147,8 @@ fn every_width_threshold_lands_where_the_reference_puts_it() {
         let viewport = row.viewport();
         let at = format!("{}x{} {}", row.width, row.height, row.shape);
         assert_eq!(named(viewport.orientation()), row.orientation, "{at}");
-        assert_eq!(banded(viewport.band()), row.band, "{at}");
         assert!(
-            (viewport.band().root().factor() as f64 - row.root / 1000.0).abs() < 1e-6,
+            (row.drawn().root().factor() as f64 - row.root / 1000.0).abs() < 1e-6,
             "{at}"
         );
         assert_eq!(row.card().across(row.room()).count(), row.across, "{at}");
@@ -301,7 +304,7 @@ fn an_arm_becomes_a_count_only_where_its_digits_allow_it() {
 /// answers.
 #[test]
 fn a_resizable_page_rounds_its_width_before_asking() {
-    let viewport = Viewport::new(Css::of(1450.0), Css::of(900.0));
+    let viewport = Viewport::new(Css::of(1450.0), Css::of(900.0), Layout::Desktop);
     let card = Card::Wall(Shape::Portrait);
     let inside = Screen::new(Css::of(1920.0));
     let filling = Screen::new(Css::of(1450.0));
@@ -329,19 +332,19 @@ fn every_height_threshold_lands_where_the_reference_puts_it() {
 fn a_boundary_pixel_falls_on_the_side_the_stylesheet_puts_it() {
     for at in WIDTHS {
         let bound = at.css().count();
-        let exactly = Viewport::new(Css::of(bound), Css::of(bound));
+        let exactly = Viewport::new(Css::of(bound), Css::of(bound), Layout::Desktop);
         assert!(exactly.matches(jellium_model::appearance::Query::MaxWidth(*at)));
         assert!(exactly.matches(jellium_model::appearance::Query::MinWidth(*at)));
-        let below = Viewport::new(Css::of(bound - 1.0), Css::of(bound));
+        let below = Viewport::new(Css::of(bound - 1.0), Css::of(bound), Layout::Desktop);
         assert!(below.matches(jellium_model::appearance::Query::MaxWidth(*at)));
         assert!(!below.matches(jellium_model::appearance::Query::MinWidth(*at)));
     }
     for at in HEIGHTS {
         let bound = at.css().count();
-        let exactly = Viewport::new(Css::of(bound), Css::of(bound));
+        let exactly = Viewport::new(Css::of(bound), Css::of(bound), Layout::Desktop);
         assert!(exactly.matches(jellium_model::appearance::Query::MaxHeight(*at)));
         assert!(exactly.matches(jellium_model::appearance::Query::MinHeight(*at)));
-        let below = Viewport::new(Css::of(bound), Css::of(bound - 1.0));
+        let below = Viewport::new(Css::of(bound), Css::of(bound - 1.0), Layout::Desktop);
         assert!(below.matches(jellium_model::appearance::Query::MaxHeight(*at)));
         assert!(!below.matches(jellium_model::appearance::Query::MinHeight(*at)));
     }
@@ -379,8 +382,8 @@ fn the_threshold_tables_are_the_ones_the_stylesheets_test() {
 
 #[test]
 fn orientation_follows_the_viewports_own_aspect_ratio() {
-    let wider = Viewport::new(Css::of(801.0), Css::of(800.0));
-    let narrower = Viewport::new(Css::of(799.0), Css::of(800.0));
+    let wider = Viewport::new(Css::of(801.0), Css::of(800.0), Layout::Desktop);
+    let narrower = Viewport::new(Css::of(799.0), Css::of(800.0), Layout::Desktop);
     assert_eq!(wider.orientation(), Orientation::Landscape);
     assert_eq!(narrower.orientation(), Orientation::Portrait);
 }

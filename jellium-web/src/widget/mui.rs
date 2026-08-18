@@ -8,7 +8,7 @@ use iced::{Element, Fill};
 use super::{Choice, Showing, line, portion, pressed, prose, tinted};
 use crate::app::Message;
 use crate::icon::{self, Icon};
-use crate::style::{self, Band, Css, Share, Viewport, space, typeface};
+use crate::style::{self, Css, Layout, Share, Viewport, space, typeface};
 use crate::text::{self as strings, Text};
 
 /// One line of the heading ladder `DEFAULT_THEME_OPTIONS` sets: its size from
@@ -87,18 +87,18 @@ pub struct Row<'a> {
 /// The disc `MuiListItemAvatar` stands in its own slot, with the glyph on it.
 // reference: mui-avatar
 // reference: mui-list-item-avatar
-fn disc<'a>(glyph: Icon, band: Band) -> Element<'a, Message> {
+fn disc<'a>(glyph: Icon, layout: Layout) -> Element<'a, Message> {
     container(
         container(icon::tinted(
             glyph,
             typeface::CONTROL_GLYPH,
             style::on_avatar,
         ))
-        .center_x(style::drawn(space::AVATAR.drawn(band)))
-        .center_y(style::drawn(space::AVATAR.drawn(band)))
-        .style(move |theme| style::avatar(theme, band)),
+        .center_x(style::drawn(space::AVATAR.drawn(layout)))
+        .center_y(style::drawn(space::AVATAR.drawn(layout)))
+        .style(move |theme| style::avatar(theme, layout)),
     )
-    .width(style::drawn(space::LIST_AVATAR_SLOT.drawn(band)))
+    .width(style::drawn(space::LIST_AVATAR_SLOT.drawn(layout)))
     .into()
 }
 
@@ -108,7 +108,7 @@ fn disc<'a>(glyph: Icon, band: Band) -> Element<'a, Message> {
 fn said<'a>(
     primary: Primary<'a>,
     beneath: Option<Beneath<'a>>,
-    band: Band,
+    layout: Layout,
 ) -> Element<'a, Message> {
     let title = match primary {
         Primary::Said(content) => prose(content, typeface::BODY),
@@ -135,11 +135,11 @@ fn said<'a>(
                 typeface::TASK_LAST_RAN_LEADING,
                 style::muted,
             ),
-            Beneath::Running(share) => progress(share, band),
+            Beneath::Running(share) => progress(share, layout),
         });
     }
     container(lines)
-        .padding(style::inset(margin, band))
+        .padding(style::inset(margin, layout))
         .width(Fill)
         .into()
 }
@@ -156,32 +156,32 @@ fn said<'a>(
 // reference: mui-list-secondary-action
 // reference: dashboard-list-icon-slot
 // reference: drawer-server
-pub fn row<'a>(row: Row<'a>, band: Band) -> Element<'a, Message> {
+pub fn row<'a>(row: Row<'a>, layout: Layout) -> Element<'a, Message> {
     let mut parts: Vec<Element<'a, Message>> = Vec::new();
-    let mut pad = style::inset(space::LIST_ROW_PAD, band);
+    let mut pad = style::inset(space::LIST_ROW_PAD, layout);
     match row.lead {
         Some(Lead::Glyph(glyph)) => parts.push(
             container(icon::icon(glyph, typeface::LIST_ICON))
-                .width(style::drawn(space::LIST_ICON_SLOT.drawn(band)))
+                .width(style::drawn(space::LIST_ICON_SLOT.drawn(layout)))
                 .into(),
         ),
-        Some(Lead::Avatar(glyph)) => parts.push(disc(glyph, band)),
+        Some(Lead::Avatar(glyph)) => parts.push(disc(glyph, layout)),
         Some(Lead::Nested) => {
-            pad.left = style::drawn(space::DRAWER_NESTED.drawn(band));
+            pad.left = style::drawn(space::DRAWER_NESTED.drawn(layout));
             parts.push(
                 Space::new()
-                    .width(style::drawn(space::LIST_ICON_SLOT.drawn(band)))
+                    .width(style::drawn(space::LIST_ICON_SLOT.drawn(layout)))
                     .into(),
             );
         }
         None => {}
     }
-    parts.push(said(row.primary, row.beneath, band));
+    parts.push(said(row.primary, row.beneath, layout));
     if let Some(glyph) = row.within {
         parts.push(icon::icon(glyph, typeface::LIST_ICON));
     }
     if row.trailing.is_some() {
-        pad.right += style::drawn(space::LIST_ROW_ACTION.drawn(band));
+        pad.right += style::drawn(space::LIST_ROW_ACTION.drawn(layout));
     }
 
     let held = iced::widget::row(parts).align_y(iced::Center);
@@ -208,8 +208,8 @@ pub fn row<'a>(row: Row<'a>, band: Band) -> Element<'a, Message> {
         return standing;
     };
     let control = button(icon::icon(trailing.glyph, typeface::CONTROL_GLYPH))
-        .padding(style::drawn(space::ICON_BUTTON_PAD.drawn(band)))
-        .style(move |theme, status| style::icon_button(theme, status, band))
+        .padding(style::drawn(space::ICON_BUTTON_PAD.drawn(layout)))
+        .style(move |theme, status| style::icon_button(theme, status, layout))
         .on_press(trailing.press);
     let named: Element<'a, Message> = match trailing.label {
         Some(label) => iced::widget::tooltip(
@@ -224,7 +224,9 @@ pub fn row<'a>(row: Row<'a>, band: Band) -> Element<'a, Message> {
     stack![
         standing,
         container(named)
-            .padding(iced::Padding::ZERO.right(style::drawn(space::LIST_ACTION_INSET.drawn(band))))
+            .padding(
+                iced::Padding::ZERO.right(style::drawn(space::LIST_ACTION_INSET.drawn(layout)))
+            )
             .align_right(Fill)
             .center_y(Fill),
     ]
@@ -233,9 +235,9 @@ pub fn row<'a>(row: Row<'a>, band: Band) -> Element<'a, Message> {
 
 /// `MuiList` on `background.paper`: its own padding around the rows it holds.
 // reference: mui-list
-pub fn listed<'a>(rows: impl IntoIterator<Item = Row<'a>>, band: Band) -> Element<'a, Message> {
-    container(column(rows.into_iter().map(|held| row(held, band))))
-        .padding(style::inset(space::LIST_PAD, band))
+pub fn listed<'a>(rows: impl IntoIterator<Item = Row<'a>>, layout: Layout) -> Element<'a, Message> {
+    container(column(rows.into_iter().map(|held| row(held, layout))))
+        .padding(style::inset(space::LIST_PAD, layout))
         .width(Fill)
         .style(style::list_surface)
         .into()
@@ -246,8 +248,8 @@ pub fn listed<'a>(rows: impl IntoIterator<Item = Row<'a>>, band: Band) -> Elemen
 /// reports a share.
 // reference: mui-linear-progress
 // reference: mui-linear-progress-bar
-pub fn bar<'a>(share: Option<Share>, band: Band) -> Element<'a, Message> {
-    let height = style::drawn(space::LINEAR_PROGRESS.drawn(band));
+pub fn bar<'a>(share: Option<Share>, layout: Layout) -> Element<'a, Message> {
+    let height = style::drawn(space::LINEAR_PROGRESS.drawn(layout));
     let standing: Element<'a, Message> = match share {
         Some(share) => iced::widget::row![
             container(Space::new())
@@ -269,13 +271,13 @@ pub fn bar<'a>(share: Option<Share>, band: Band) -> Element<'a, Message> {
 /// `TaskProgress`: that bar held to its own row and its least width, with the
 /// reading beside it where a share is reported.
 // reference: task-progress
-pub fn progress<'a>(share: Option<Share>, band: Band) -> Element<'a, Message> {
+pub fn progress<'a>(share: Option<Share>, layout: Layout) -> Element<'a, Message> {
     let mut held = iced::widget::row![
-        container(bar(share, band))
+        container(bar(share, layout))
             .width(Fill)
             .center_y(style::drawn(space::TASK_PROGRESS_ROW.drawn())),
     ]
-    .spacing(style::drawn(space::TASK_PROGRESS_GAP.drawn(band)));
+    .spacing(style::drawn(space::TASK_PROGRESS_GAP.drawn(layout)));
     if let Some(share) = share {
         held = held.push(prose(
             strings::format(Text::Percent, &[&format!("{:.0}", share.percent())]),
@@ -283,17 +285,17 @@ pub fn progress<'a>(share: Option<Share>, band: Band) -> Element<'a, Message> {
         ));
     }
     container(held.align_y(iced::Center))
-        .width(style::drawn(space::TASK_PROGRESS_MIN.drawn(band)))
-        .padding(iced::Padding::ZERO.right(style::drawn(space::TASK_PROGRESS_TRAIL.drawn(band))))
+        .width(style::drawn(space::TASK_PROGRESS_MIN.drawn(layout)))
+        .padding(iced::Padding::ZERO.right(style::drawn(space::TASK_PROGRESS_TRAIL.drawn(layout))))
         .into()
 }
 
 /// `MuiPaper` at MUI's own default elevation, with `content` standing on it.
 // reference: mui-paper
 // reference: mui-paper-elevation
-pub fn papered<'a>(content: Element<'a, Message>, band: Band) -> Element<'a, Message> {
+pub fn papered<'a>(content: Element<'a, Message>, layout: Layout) -> Element<'a, Message> {
     container(content)
-        .style(move |theme| style::paper(theme, band))
+        .style(move |theme| style::paper(theme, layout))
         .into()
 }
 
@@ -334,7 +336,7 @@ pub struct Card<'a> {
 // reference: mui-card-media
 // reference: mui-typography-gutter-bottom
 // reference: mui-icon-button
-pub fn card<'a>(card: Card<'a>, band: Band) -> Element<'a, Message> {
+pub fn card<'a>(card: Card<'a>, layout: Layout) -> Element<'a, Message> {
     let media: Element<'a, Message> = match card.media {
         Media::Image(handle) => container(
             iced::widget::image(handle)
@@ -394,23 +396,23 @@ pub fn card<'a>(card: Card<'a>, band: Band) -> Element<'a, Message> {
     if let Some(press) = card.action {
         held = held.push(
             button(icon::icon(Icon::MoreVert, typeface::CONTROL_GLYPH))
-                .padding(style::drawn(space::ICON_BUTTON_PAD.drawn(band)))
-                .style(move |theme, status| style::icon_button(theme, status, band))
+                .padding(style::drawn(space::ICON_BUTTON_PAD.drawn(layout)))
+                .style(move |theme, status| style::icon_button(theme, status, layout))
                 .on_press(press),
         );
     }
     let content = container(stack![
-        Space::new().height(style::drawn(space::CARD_CONTENT_MIN_INSIDE.drawn(band))),
+        Space::new().height(style::drawn(space::CARD_CONTENT_MIN_INSIDE.drawn(layout))),
         held,
     ])
     .width(Fill)
-    .padding(style::inset(space::CARD_CONTENT_PAD, band));
+    .padding(style::inset(space::CARD_CONTENT_PAD, layout));
 
     papered(
         column![container(area).width(Fill).height(Fill), content]
-            .height(style::drawn(card.height.drawn(band)))
+            .height(style::drawn(card.height.drawn(layout)))
             .into(),
-        band,
+        layout,
     )
 }
 
@@ -423,7 +425,7 @@ pub fn grid<'a>(
     viewport: Viewport,
 ) -> Element<'a, Message> {
     let across = cell.across(viewport).count();
-    let gutter = style::drawn(space::CARD_GRID_GAP.drawn(viewport.band()));
+    let gutter = style::drawn(space::CARD_GRID_GAP.drawn(viewport.layout()));
     let mut cells = cells.into_iter().peekable();
     column(std::iter::from_fn(move || {
         cells.peek()?;
@@ -453,7 +455,7 @@ pub enum Helper {
 // reference: mui-form-helper-text
 // reference: mui-theme-form-helper
 // reference: mui-typography-caption
-pub fn helper<'a>(sentence: Text, standing: Helper, band: Band) -> Element<'a, Message> {
+pub fn helper<'a>(sentence: Text, standing: Helper, layout: Layout) -> Element<'a, Message> {
     let margin = match standing {
         Helper::Contained => space::HELPER_CONTAINED_MARGIN,
         Helper::Flush => space::HELPER_MARGIN,
@@ -465,7 +467,7 @@ pub fn helper<'a>(sentence: Text, standing: Helper, band: Band) -> Element<'a, M
         typeface::HELPER_LEADING,
         style::muted,
     ))
-    .padding(style::inset(margin, band))
+    .padding(style::inset(margin, layout))
     .into()
 }
 
@@ -474,10 +476,12 @@ pub fn helper<'a>(sentence: Text, standing: Helper, band: Band) -> Element<'a, M
 fn beneath<'a>(
     control: Element<'a, Message>,
     helper: Option<Text>,
-    band: Band,
+    layout: Layout,
 ) -> Element<'a, Message> {
     match helper {
-        Some(sentence) => column![control, self::helper(sentence, Helper::Contained, band)].into(),
+        Some(sentence) => {
+            column![control, self::helper(sentence, Helper::Contained, layout)].into()
+        }
         None => control,
     }
 }
@@ -486,7 +490,7 @@ fn beneath<'a>(
 /// the field draws under its foot.
 // reference: mui-filled-underline
 // reference: mui-input-label
-fn dressed<'a>(control: Element<'a, Message>, label: Text, band: Band) -> Element<'a, Message> {
+fn dressed<'a>(control: Element<'a, Message>, label: Text, layout: Layout) -> Element<'a, Message> {
     let shrunk = container(tinted(
         strings::lookup(label),
         typeface::FILLED_LABEL,
@@ -494,12 +498,12 @@ fn dressed<'a>(control: Element<'a, Message>, label: Text, band: Band) -> Elemen
         typeface::LINE_HEIGHT,
         style::muted,
     ))
-    .padding(style::inset(space::FILLED_LABEL_INSET, band));
+    .padding(style::inset(space::FILLED_LABEL_INSET, layout));
     column![
         stack![control, shrunk],
         container(Space::new())
             .width(Fill)
-            .height(style::drawn(space::FILLED_RULE.drawn(band)))
+            .height(style::drawn(space::FILLED_RULE.drawn(layout)))
             .style(style::filled_rule),
     ]
     .into()
@@ -522,16 +526,16 @@ pub fn field<'a>(
     helper: Option<Text>,
     value: &str,
     edited: impl Fn(String) -> Message + 'a,
-    band: Band,
+    layout: Layout,
 ) -> Element<'a, Message> {
     let typed = text_input("", value)
-        .style(move |theme, status| style::filled(theme, status, band))
+        .style(move |theme, status| style::filled(theme, status, layout))
         .size(style::drawn(typeface::BODY.drawn()))
         .line_height(style::leading(typeface::FILLED_LEADING))
-        .padding(style::inset(space::FILLED_PAD, band))
+        .padding(style::inset(space::FILLED_PAD, layout))
         .on_input(edited)
         .width(Fill);
-    beneath(dressed(typed.into(), label, band), helper, band)
+    beneath(dressed(typed.into(), label, layout), helper, layout)
 }
 
 /// The same field carrying the option standing rather than a typed value, the
@@ -552,34 +556,34 @@ pub fn chosen<'a, T>(
 where
     T: Clone + PartialEq + 'a,
 {
-    let band = viewport.band();
+    let layout = viewport.layout();
     let options = offered.len();
     for choice in &offered {
         crate::fonts::observed(&choice.label, typeface::Weight::Regular);
     }
     let standing = offered.iter().find(|choice| &choice.value == held).cloned();
     let field = iced::widget::pick_list(offered, standing, move |choice| picked(choice.value))
-        .style(move |theme, status| style::filled_select(theme, status, band))
-        .menu_style(move |theme| style::filled_menu(theme, band))
+        .style(move |theme, status| style::filled_select(theme, status, layout))
+        .menu_style(move |theme| style::filled_menu(theme, layout))
         .menu_height(style::drawn(space::menu_height(options, viewport)))
         .handle(iced::widget::pick_list::Handle::None)
         .font(style::font(typeface::Weight::Regular))
         .text_size(style::drawn(typeface::BODY.drawn()))
         .text_line_height(style::leading(typeface::FILLED_LEADING))
-        .padding(style::inset(space::FILLED_SELECT_PAD, band))
+        .padding(style::inset(space::FILLED_SELECT_PAD, layout))
         .width(Fill);
     let chevron = container(icon::tinted(
         Icon::ArrowDropDown,
         typeface::CONTROL_GLYPH,
         style::chevron,
     ))
-    .padding(iced::Padding::ZERO.right(style::drawn(space::FILLED_CHEVRON_INSET.drawn(band))))
+    .padding(iced::Padding::ZERO.right(style::drawn(space::FILLED_CHEVRON_INSET.drawn(layout))))
     .align_right(Fill)
     .center_y(Fill);
     beneath(
-        dressed(stack![field, chevron].into(), label, band),
+        dressed(stack![field, chevron].into(), label, layout),
         helper,
-        band,
+        layout,
     )
 }
 
@@ -595,30 +599,33 @@ pub fn flag<'a>(
     helper: Option<Text>,
     held: bool,
     toggled: impl Fn(bool) -> Message + 'a,
-    band: Band,
+    layout: Layout,
 ) -> Element<'a, Message> {
-    let face: fn(&iced::Theme, iced::widget::button::Status, Band) -> iced::widget::button::Style =
-        match held {
-            true => style::check_ticked,
-            false => style::check_blank,
-        };
+    let face: fn(
+        &iced::Theme,
+        iced::widget::button::Status,
+        Layout,
+    ) -> iced::widget::button::Style = match held {
+        true => style::check_ticked,
+        false => style::check_blank,
+    };
     let glyph = match held {
         true => Icon::CheckBox,
         false => Icon::CheckBoxOutlineBlank,
     };
     let ticked = button(icon::icon(glyph, typeface::CONTROL_GLYPH))
-        .padding(style::drawn(space::CHECK_PAD.drawn(band)))
-        .style(move |theme, status| face(theme, status, band))
+        .padding(style::drawn(space::CHECK_PAD.drawn(layout)))
+        .style(move |theme, status| face(theme, status, layout))
         .on_press(toggled(!held));
     beneath(
         container(
             iced::widget::row![ticked, prose(strings::lookup(label), typeface::BODY)]
                 .align_y(iced::Center),
         )
-        .padding(style::inset(space::CHECK_LABEL_MARGIN, band))
+        .padding(style::inset(space::CHECK_LABEL_MARGIN, layout))
         .into(),
         helper,
-        band,
+        layout,
     )
 }
 
@@ -627,9 +634,9 @@ pub fn flag<'a>(
 // reference: mui-button
 // reference: mui-button-large
 // reference: mui-theme-button
-pub fn contained<'a>(label: Text, press: Option<Message>, band: Band) -> Element<'a, Message> {
+pub fn contained<'a>(label: Text, press: Option<Message>, layout: Layout) -> Element<'a, Message> {
     let lettering = column![
-        Space::new().width(style::drawn(space::CONTAINED_MIN_INSIDE.drawn(band))),
+        Space::new().width(style::drawn(space::CONTAINED_MIN_INSIDE.drawn(layout))),
         container(tinted(
             strings::lookup(label),
             typeface::CONTAINED,
@@ -640,8 +647,8 @@ pub fn contained<'a>(label: Text, press: Option<Message>, band: Band) -> Element
         .center_x(Fill),
     ];
     let mut control = button(lettering)
-        .padding(style::inset(space::CONTAINED_PAD, band))
-        .style(move |theme, status| style::contained(theme, status, band));
+        .padding(style::inset(space::CONTAINED_PAD, layout))
+        .style(move |theme, status| style::contained(theme, status, layout));
     if let Some(message) = press {
         control = control.on_press(message);
     }
@@ -658,13 +665,13 @@ pub fn contained<'a>(label: Text, press: Option<Message>, band: Band) -> Element
 // reference: mui-alert-dark
 // reference: mui-palette-success
 // reference: mui-color-green
-pub fn succeeded<'a>(sentence: Text, band: Band) -> Element<'a, Message> {
+pub fn succeeded<'a>(sentence: Text, layout: Layout) -> Element<'a, Message> {
     let glyph = container(icon::tinted(
         Icon::CheckCircleOutline,
         typeface::ALERT_GLYPH,
         style::alert_glyph,
     ))
-    .padding(style::inset(space::ALERT_GLYPH_PAD, band));
+    .padding(style::inset(space::ALERT_GLYPH_PAD, layout));
     let written = container(tinted(
         strings::lookup(sentence),
         typeface::BODY_2,
@@ -672,9 +679,9 @@ pub fn succeeded<'a>(sentence: Text, band: Band) -> Element<'a, Message> {
         typeface::BODY_2_LEADING,
         iced::widget::text::default,
     ))
-    .padding(style::inset(space::ALERT_MESSAGE_PAD, band));
+    .padding(style::inset(space::ALERT_MESSAGE_PAD, layout));
     container(iced::widget::row![glyph, written].align_y(iced::Center))
-        .padding(style::inset(space::ALERT_PAD, band))
-        .style(move |theme| style::alert_success(theme, band))
+        .padding(style::inset(space::ALERT_PAD, layout))
+        .style(move |theme| style::alert_success(theme, layout))
         .into()
 }

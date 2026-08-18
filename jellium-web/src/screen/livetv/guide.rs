@@ -90,7 +90,7 @@ fn badge<'a>(badge: Badge) -> Element<'a, Message> {
 // reference: scheme-guide-rule
 fn rule<'a>(viewport: Viewport) -> iced::widget::Container<'a, Message> {
     container(Space::new())
-        .width(style::drawn(space::GUIDE_RULE.drawn(viewport.band())))
+        .width(style::drawn(space::GUIDE_RULE.drawn(viewport.layout())))
         .style(style::guide_rule)
 }
 
@@ -108,7 +108,7 @@ fn header<'a>(
     logo: Option<iced::widget::image::Handle>,
     viewport: Viewport,
 ) -> Element<'a, Message> {
-    let standing = style::drawn(space::guide_standing(viewport.band()));
+    let standing = style::drawn(space::guide_standing(viewport.layout()));
     let mut laid = row![].align_y(iced::Center).height(standing);
     if !viewport.matches(space::GUIDE_CHANNEL_NARROW_AT) {
         laid = laid.push(
@@ -205,7 +205,7 @@ fn cell<'a>(program: &'a Program, standing: Standing, viewport: Viewport) -> Ele
         .style(move |theme: &iced::Theme, status| style::program_cell(theme, status, standing))
         .padding(iced::Padding::ZERO)
         .width(Fill)
-        .height(style::drawn(space::guide_standing(viewport.band())))
+        .height(style::drawn(space::guide_standing(viewport.layout())))
         .on_press(Message::LiveTvAction(Action::Show(program.id.clone())))
         .into()
 }
@@ -333,7 +333,7 @@ pub fn view<'a>(
                 header(channel, logo, viewport),
                 strip(state, index, now, viewport),
             ]
-            .height(style::drawn(space::guide_standing(viewport.band()))),
+            .height(style::drawn(space::guide_standing(viewport.layout()))),
             rule(viewport).width(Fill),
         ]
         .height(style::drawn(space::GUIDE_ROW.drawn()))

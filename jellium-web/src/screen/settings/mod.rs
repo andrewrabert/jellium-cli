@@ -381,7 +381,7 @@ pub fn view<'a>(
     }
     page = page.push(widget::capped(
         viewport,
-        space::section_bottom(viewport.band()),
+        space::section_bottom(viewport.layout()),
         rows,
     ));
 

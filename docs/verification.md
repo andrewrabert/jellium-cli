@@ -781,8 +781,20 @@ in order. A section passes only when every line in it holds.
 
 ## Appearance
 
-Run against a real browser at 360x800, 800x360, 768x1024 and 1920x1080.
+Run against a real browser at 360x800, 800x360, 768x1024 and 1920x1080, and
+against a phone, a tablet, an iPad asking for the desktop site and a desktop
+browser with a touch screen, each at its own size.
 
+- The layout does not follow the viewport width: a desktop browser draws the
+  item detail head beside its poster at 360x800 and at 1920x1080 alike, and a
+  phone draws it stacked at 360x800 and at 800x360 alike.
+- A phone draws every page at a 90% root, a desktop browser at 93%, and a
+  television browser at 125%.
+- An iPad reporting `iPad` draws the stacked head; the same iPad asking for the
+  desktop site draws the head beside its poster.
+- A desktop browser with a touch screen draws the head beside its poster.
+- A television browser draws item detail with no backdrop, its poster at the
+  page's leading edge and the head beside it.
 - The browser tab carries Jellyfin's own favicon.
 - The boot screen stands Jellyfin's splash logo, its banner at a device width of
   992 pixels and wider and its icon narrower, and no lettering of the app's name.

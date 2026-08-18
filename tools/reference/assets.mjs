@@ -563,10 +563,8 @@ function padding(checkout) {
 
 // One row: the whole viewport it was resolved at, and what the reference draws
 // there.
-function measured(kind, ladder, requested, shapes, side, width, height) {
+function measured(kind, ladder, requested, shapes, side, width, height, layout, root) {
     const orientation = width >= height ? 'landscape' : 'portrait';
-    const band = width <= 600 ? 'mobile' : 'desktop';
-    const root = band === 'mobile' ? 900 : 930;
     const viewport = { width, height, orientation };
     // getImageWidth's own landscape test, which is not the css orientation
     // above: it asks whether the page is half again as wide as it is tall.
@@ -597,7 +595,7 @@ function measured(kind, ladder, requested, shapes, side, width, height) {
             cards,
             rate.toFixed(ARM_DIGITS),
             Math.round(width / rate),
-            band,
+            layout,
             root,
             height <= 500 ? 'hidden' : 'shown',
             width <= 1280 || height <= 720 ? 'fullscreen' : 'fixed'
@@ -605,6 +603,14 @@ function measured(kind, ladder, requested, shapes, side, width, height) {
     }
     return rows;
 }
+
+// The three layouts jellyfin-web draws in, and the root size each writes over
+// the 16px base.
+const LAYOUTS = [
+    ['mobile', 900],
+    ['desktop', 930],
+    ['tv', 1250]
+];
 
 // The width a height row is resolved at, which no rule tests, so the row's
 // columns move with its height alone.
@@ -625,7 +631,7 @@ function breakpoints(checkout) {
         'across',
         'requested',
         'fill',
-        'band',
+        'layout',
         'root',
         'letter_jump',
         'dialog'
@@ -633,20 +639,26 @@ function breakpoints(checkout) {
     for (const threshold of tested[WIDTH]) {
         for (const width of [threshold - 1, threshold]) {
             for (const height of [width * 2, Math.max(200, width / 2)]) {
-                table += measured(WIDTH, ladder, requested, WALL, side, width, height);
+                for (const [layout, root] of LAYOUTS) {
+                    table += measured(WIDTH, ladder, requested, WALL, side, width, height, layout, root);
+                }
             }
         }
     }
     for (const threshold of tested[WIDTH]) {
         for (const width of [threshold - 1, threshold]) {
             for (const height of [width * 2, Math.max(200, width / 2)]) {
-                table += measured('rail', ladder, requested, RAIL, side, width, height);
+                for (const [layout, root] of LAYOUTS) {
+                    table += measured('rail', ladder, requested, RAIL, side, width, height, layout, root);
+                }
             }
         }
     }
     for (const threshold of tested[HEIGHT]) {
         for (const height of [threshold - 1, threshold]) {
-            table += measured(HEIGHT, ladder, requested, WALL, side, UNTESTED_WIDTH, height);
+            for (const [layout, root] of LAYOUTS) {
+                table += measured(HEIGHT, ladder, requested, WALL, side, UNTESTED_WIDTH, height, layout, root);
+            }
         }
     }
     generated('reference/breakpoints.tsv', 'src', table);

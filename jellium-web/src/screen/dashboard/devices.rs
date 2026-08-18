@@ -34,7 +34,7 @@ pub async fn load(
             devices: api.devices().await.bubbled()?,
             window: window::Window::new(
                 window::Id::Devices,
-                space::table_row(viewport.band()),
+                space::table_row(viewport.layout()),
                 viewport.canvas().height(),
             ),
             renaming: String::new(),

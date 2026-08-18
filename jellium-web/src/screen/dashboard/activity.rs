@@ -9,7 +9,7 @@ use crate::app::Message;
 use crate::error::Answer;
 use crate::icon::{self, Icon};
 use crate::route::Route;
-use crate::style::{self, Band, Viewport, space, typeface};
+use crate::style::{self, Layout, Viewport, space, typeface};
 use crate::text::Text;
 use crate::widget::table::{self, Column, Holding, Table};
 use crate::widget::{Segment, Showing};
@@ -55,7 +55,7 @@ pub async fn load(
             entries,
             window: window::Window::new(
                 window::Id::Activity,
-                space::table_row(viewport.band()),
+                space::table_row(viewport.layout()),
                 viewport.canvas().height(),
             ),
             users,
@@ -99,7 +99,7 @@ fn naming_users(with_user: Option<bool>) -> bool {
 /// that opens the item it names.
 // reference: table-activity-columns
 // reference: table-activity-view
-pub fn view<'a>(state: &'a State, band: Band) -> frame::Filling<'a> {
+pub fn view<'a>(state: &'a State, layout: Layout) -> frame::Filling<'a> {
     let segments = [
         (Text::ActivityAll, None),
         (Text::ActivityWithUser, Some(true)),
@@ -158,7 +158,7 @@ pub fn view<'a>(state: &'a State, band: Band) -> frame::Filling<'a> {
     frame::Filling::Tabled {
         subtitle: None,
         table: Table {
-            toolbar: vec![crate::widget::toggles(segments, band)],
+            toolbar: vec![crate::widget::toggles(segments, layout)],
             columns,
             window: state.window,
             rows: state.entries.len(),

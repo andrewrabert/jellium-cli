@@ -7,6 +7,7 @@
 use serde::ser::SerializeMap;
 
 use crate::failure::{self, Call};
+use crate::style::Layout;
 use crate::text::Text;
 
 /// The token `uaMatch` names, which the reference makes the object's first key.
@@ -624,6 +625,23 @@ impl Browser {
 
     pub fn windows(&self) -> bool {
         self.platform == Some(Platform::Windows)
+    }
+
+    /// Which layout this browser is drawn in.
+    // the mobile layout where the user agent names a phone or a tablet
+    // the television layout where it names a television, a PlayStation or an
+    // Xbox
+    // the desktop layout the application host answers with otherwise
+    // reference: layout-auto
+    // reference: layout-default
+    pub fn layout(&self) -> Layout {
+        if self.mobile {
+            Layout::Mobile
+        } else if self.tv || self.xbox_one || self.ps4 {
+            Layout::Television
+        } else {
+            Layout::Desktop
+        }
     }
 
     /// The name this browser announces itself under: the `BrowserName` entry

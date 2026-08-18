@@ -1110,14 +1110,14 @@ pub fn view<'a>(
                 frame::Filling::Stacked(libraries::view(held, session.read_only, images, viewport))
             }
             Body::Library(held) => frame::Filling::Stacked(libraries::one(held, session.read_only)),
-            Body::Tasks(held) => tasks::view(held, session.read_only, now, viewport.band()),
+            Body::Tasks(held) => tasks::view(held, session.read_only, now, viewport.layout()),
             Body::Task(held) => frame::Filling::Stacked(tasks::one(held, session.read_only)),
             Body::Logs(held) => logs::view(held, session.read_only, viewport),
-            Body::Log(held) => logs::viewer(held, viewport.band()),
-            Body::Activity(held) => activity::view(held, viewport.band()),
+            Body::Log(held) => logs::viewer(held, viewport.layout()),
+            Body::Activity(held) => activity::view(held, viewport.layout()),
             Body::Catalog(held) => frame::Filling::Stacked(catalog::view(held, session.read_only)),
             Body::Repositories(held) => {
-                repositories::view(held, session.read_only, viewport.band())
+                repositories::view(held, session.read_only, viewport.layout())
             }
             Body::Devices(held) => devices::view(held, session.read_only),
             Body::Keys(held) => keys::view(held, session.read_only),

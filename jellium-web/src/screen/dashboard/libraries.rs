@@ -364,7 +364,7 @@ pub fn view<'a>(
                         },
                     ))),
                 },
-                viewport.band(),
+                viewport.layout(),
             )
         }),
         viewport,

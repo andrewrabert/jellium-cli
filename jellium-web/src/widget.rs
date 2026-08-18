@@ -23,7 +23,7 @@ use crate::livetv::{Channel, Recording};
 use crate::player::group::Joined;
 use crate::route::Route;
 use crate::style::space::Room;
-use crate::style::{self, Band, Drawn, Share, Viewport, card, scheme, space, typeface};
+use crate::style::{self, Drawn, Layout, Share, Viewport, card, scheme, space, typeface};
 use crate::text::{self as strings, Text};
 
 /// Wrapping text, which is what a server's own disclaimer is. Every string the
@@ -207,7 +207,7 @@ fn footed<'a>(
     footing: card::Footing,
     logo: Option<image::Handle>,
     trailing: Option<Element<'a, Message>>,
-    band: Band,
+    layout: Layout,
 ) -> Element<'a, Message> {
     let written = column(lines).width(Fill).align_x(match setting {
         card::Setting::Centred => iced::alignment::Horizontal::Center,
@@ -218,7 +218,7 @@ fn footed<'a>(
         Some(control) => row![
             written,
             container(control).padding(
-                iced::Padding::ZERO.top(style::drawn(space::USER_CARD_MENU_TOP.drawn(band)))
+                iced::Padding::ZERO.top(style::drawn(space::USER_CARD_MENU_TOP.drawn(layout)))
             ),
         ]
         .into(),
@@ -519,7 +519,7 @@ pub fn card<'a>(
             drawing.footing,
             poster.logo,
             None,
-            room.viewport().band(),
+            room.viewport().layout(),
         )
     });
     let body = reserving(
@@ -850,7 +850,7 @@ pub struct Segment {
 // reference: mui-toggle-group
 pub fn toggles<'a>(
     segments: impl IntoIterator<Item = Segment>,
-    band: Band,
+    layout: Layout,
 ) -> Element<'a, Message> {
     let mut segments = segments.into_iter().enumerate().peekable();
     row(std::iter::from_fn(move || {
@@ -865,7 +865,7 @@ pub fn toggles<'a>(
             &iced::Theme,
             iced::widget::button::Status,
             style::Ends,
-            Band,
+            Layout,
         ) -> iced::widget::button::Style = match segment.showing {
             Showing::Shown => style::toggle_shown,
             Showing::Offered(_) => style::toggle_offered,
@@ -878,13 +878,13 @@ pub fn toggles<'a>(
                 typeface::BUTTON_LEADING,
                 iced::widget::text::default,
             ))
-            .padding(style::drawn(space::TOGGLE_PAD.drawn(band)))
-            .style(move |theme, status| face(theme, status, ends, band))
+            .padding(style::drawn(space::TOGGLE_PAD.drawn(layout)))
+            .style(move |theme, status| face(theme, status, ends, layout))
             .on_press(pressed(segment.showing))
             .into(),
         )
     }))
-    .spacing(style::drawn(space::TOGGLE_OVERLAP.drawn(band)))
+    .spacing(style::drawn(space::TOGGLE_OVERLAP.drawn(layout)))
     .into()
 }
 
@@ -943,7 +943,7 @@ pub fn editor<'a>(
     row![
         container(stacked).width(Length::FillPortion(portion(sidebar))),
         container(Space::new())
-            .width(style::drawn(space::EDITOR_RULE.drawn(viewport.band())))
+            .width(style::drawn(space::EDITOR_RULE.drawn(viewport.layout())))
             .height(Fill)
             .style(style::editor_rule),
         Space::new().width(Length::FillPortion(portion(gap))),
@@ -991,7 +991,7 @@ pub enum Rung {
 // reference: drawer-paper
 // reference: mui-list-item-button
 // reference: dashboard-list-icon-slot
-pub fn drawer<'a>(rungs: impl IntoIterator<Item = Rung>, band: Band) -> Element<'a, Message> {
+pub fn drawer<'a>(rungs: impl IntoIterator<Item = Rung>, layout: Layout) -> Element<'a, Message> {
     let mut rows: Vec<Element<'a, Message>> = Vec::new();
     for standing in rungs {
         match standing {
@@ -1004,7 +1004,7 @@ pub fn drawer<'a>(rungs: impl IntoIterator<Item = Rung>, band: Band) -> Element<
                     showing: Some(link.showing.clone()),
                     trailing: None,
                 },
-                band,
+                layout,
             )),
             Rung::Group {
                 glyph,
@@ -1026,7 +1026,7 @@ pub fn drawer<'a>(rungs: impl IntoIterator<Item = Rung>, band: Band) -> Element<
                         showing: Some(Showing::Offered(press)),
                         trailing: None,
                     },
-                    band,
+                    layout,
                 ));
                 if showing == Held::Shown {
                     for link in held {
@@ -1039,7 +1039,7 @@ pub fn drawer<'a>(rungs: impl IntoIterator<Item = Rung>, band: Band) -> Element<
                                 showing: Some(link.showing.clone()),
                                 trailing: None,
                             },
-                            band,
+                            layout,
                         ));
                     }
                 }
@@ -1047,7 +1047,7 @@ pub fn drawer<'a>(rungs: impl IntoIterator<Item = Rung>, band: Band) -> Element<
         }
     }
     container(scrolled(column(rows)))
-        .width(style::drawn(space::DRAWER.drawn(band)))
+        .width(style::drawn(space::DRAWER.drawn(layout)))
         .height(Fill)
         .padding(iced::Padding::ZERO.bottom(style::drawn(space::DRAWER_BOTTOM.drawn())))
         .style(style::drawer)
@@ -1197,7 +1197,7 @@ pub fn channel_card<'a>(
             card::Footing::Bare,
             None,
             None,
-            room.viewport().band(),
+            room.viewport().layout(),
         )),
         card::Backing::Padder,
     )]
@@ -1656,7 +1656,7 @@ pub fn user_card<'a>(
                 None,
                 menu,
             )),
-            room.viewport().band(),
+            room.viewport().layout(),
         )),
         card::Backing::Paper,
     )
@@ -1703,13 +1703,13 @@ pub fn osd_header<'a>(sync_play: SyncAccess) -> Element<'a, Message> {
 
 /// `control` under `.filterIndicator`: the reference's own mark that a control
 /// is narrowing what is shown, laid on its top trailing corner.
-/// `band` is what the inset, written in css pixels, crosses to the canvas
+/// `layout` is what the inset, written in css pixels, crosses to the canvas
 /// through.
 // reference: filter-indicator
 // reference: filter-indicator-face
-pub fn indicated<'a>(control: Element<'a, Message>, band: Band) -> Element<'a, Message> {
+pub fn indicated<'a>(control: Element<'a, Message>, layout: Layout) -> Element<'a, Message> {
     let circle = style::drawn(space::INDICATOR.drawn());
-    let inset = style::drawn(space::INDICATOR_INSET.drawn(band));
+    let inset = style::drawn(space::INDICATOR_INSET.drawn(layout));
     let mark = container(
         container(line(
             strings::lookup(Text::FilterIndicator),

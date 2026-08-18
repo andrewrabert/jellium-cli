@@ -1,11 +1,11 @@
 //! The one place the ported appearance values cross into iced.
 //!
-//! Every length below is a canvas length, because the canvas carries the band's
+//! Every length below is a canvas length, because the canvas carries the layout's
 //! root size as its scale and so resolves every em once for the whole surface.
 
 pub use jellium_model::appearance::{
-    Band, Css, Dialog, Drawn, Length, Letters, Ratio, Screen, Share, Viewport, card, scheme, space,
-    typeface,
+    Css, Dialog, Drawn, Layout, Length, Letters, Ratio, Screen, Share, Viewport, card, scheme,
+    space, typeface,
 };
 use jellium_model::guide::Standing;
 
@@ -32,14 +32,14 @@ pub fn padding(padding: space::Padding) -> iced::Padding {
     }
 }
 
-/// A padding the reference writes in css pixels, which the band's root
+/// A padding the reference writes in css pixels, which the layout's root
 /// resolves once for the whole surface.
-pub fn inset(inset: space::Inset, band: Band) -> iced::Padding {
+pub fn inset(inset: space::Inset, layout: Layout) -> iced::Padding {
     iced::Padding {
-        top: drawn(inset.top.drawn(band)),
-        right: drawn(inset.right.drawn(band)),
-        bottom: drawn(inset.bottom.drawn(band)),
-        left: drawn(inset.left.drawn(band)),
+        top: drawn(inset.top.drawn(layout)),
+        right: drawn(inset.right.drawn(layout)),
+        bottom: drawn(inset.bottom.drawn(layout)),
+        left: drawn(inset.left.drawn(layout)),
     }
 }
 
@@ -110,9 +110,9 @@ pub fn leading(leading: typeface::Leading) -> iced::widget::text::LineHeight {
     }
 }
 
-/// The canvas scale the band draws at, which is what resolves every em.
-pub fn scale(band: Band) -> f32 {
-    band.root().factor()
+/// The canvas scale the layout draws at, which is what resolves every em.
+pub fn scale(layout: Layout) -> f32 {
+    layout.root().factor()
 }
 
 /// The page itself, which the reference paints in the scheme's background and
@@ -415,12 +415,12 @@ pub fn list_surface(_theme: &iced::Theme) -> iced::widget::container::Style {
 /// `MuiAvatar`'s own disc, on the accent.
 // reference: mui-avatar
 // reference: tasks-row
-pub fn avatar(_theme: &iced::Theme, band: Band) -> iced::widget::container::Style {
+pub fn avatar(_theme: &iced::Theme, layout: Layout) -> iced::widget::container::Style {
     iced::widget::container::Style::default()
         .background(color(scheme::ACCENT))
         .border(iced::Border {
             radius: iced::border::Radius::new(drawn(
-                space::AVATAR_RADIUS.of(space::AVATAR).drawn(band),
+                space::AVATAR_RADIUS.of(space::AVATAR).drawn(layout),
             )),
             ..iced::Border::default()
         })
@@ -441,11 +441,11 @@ pub fn on_avatar(_theme: &iced::Theme) -> iced::widget::text::Style {
 pub fn icon_button(
     _theme: &iced::Theme,
     status: iced::widget::button::Status,
-    band: Band,
+    layout: Layout,
 ) -> iced::widget::button::Style {
     let across = space::ICON_BUTTON_PAD
-        .drawn(band)
-        .plus(space::ICON_BUTTON_PAD.drawn(band))
+        .drawn(layout)
+        .plus(space::ICON_BUTTON_PAD.drawn(layout))
         .plus(typeface::CONTROL_GLYPH.drawn());
     let disc = iced::border::Radius::new(drawn(space::ICON_BUTTON_RADIUS.of(across)));
     let face = match lit(status) {
@@ -480,12 +480,12 @@ pub fn progress_bar(_theme: &iced::Theme) -> iced::widget::container::Style {
 // reference: mui-paper
 // reference: mui-paper-elevation
 // reference: mui-shape
-pub fn paper(_theme: &iced::Theme, band: Band) -> iced::widget::container::Style {
+pub fn paper(_theme: &iced::Theme, layout: Layout) -> iced::widget::container::Style {
     iced::widget::container::Style::default()
         .background(color(scheme::paper_face(scheme::PAPER_ELEVATION)))
         .color(color(scheme::TEXT))
         .border(iced::Border {
-            radius: iced::border::Radius::new(drawn(space::SHAPE_RADIUS.drawn(band))),
+            radius: iced::border::Radius::new(drawn(space::SHAPE_RADIUS.drawn(layout))),
             ..iced::Border::default()
         })
 }
@@ -604,14 +604,14 @@ pub fn table_rule(_theme: &iced::Theme) -> iced::widget::container::Style {
 
 /// The edge one segment of the toolbar's group carries, and the radius the
 /// group carries at its two ends alone. The radius is written in css pixels,
-/// so the band resolves it.
+/// so the layout resolves it.
 // reference: mui-toggle-button
 // reference: mui-toggle-group
-fn toggle_edge(ends: Ends, band: Band) -> iced::Border {
+fn toggle_edge(ends: Ends, layout: Layout) -> iced::Border {
     iced::Border {
         color: color(scheme::DIVIDER),
-        width: drawn(space::TOGGLE_BORDER.drawn(band)),
-        radius: rounded(ends, space::SHAPE_RADIUS.drawn(band)),
+        width: drawn(space::TOGGLE_BORDER.drawn(layout)),
+        radius: rounded(ends, space::SHAPE_RADIUS.drawn(layout)),
     }
 }
 
@@ -623,7 +623,7 @@ pub fn toggle_offered(
     _theme: &iced::Theme,
     status: iced::widget::button::Status,
     ends: Ends,
-    band: Band,
+    layout: Layout,
 ) -> iced::widget::button::Style {
     let face = match lit(status) {
         true => faced(scheme::ACTION_HOVER, scheme::ON_SURFACE),
@@ -633,7 +633,7 @@ pub fn toggle_offered(
         },
     };
     iced::widget::button::Style {
-        border: toggle_edge(ends, band),
+        border: toggle_edge(ends, layout),
         ..face
     }
 }
@@ -646,14 +646,14 @@ pub fn toggle_shown(
     _theme: &iced::Theme,
     status: iced::widget::button::Status,
     ends: Ends,
-    band: Band,
+    layout: Layout,
 ) -> iced::widget::button::Style {
     let face = match lit(status) {
         true => faced(scheme::TOGGLE_SHOWN_HOVER, scheme::ON_SURFACE),
         false => faced(scheme::TOGGLE_SHOWN, scheme::ON_SURFACE),
     };
     iced::widget::button::Style {
-        border: toggle_edge(ends, band),
+        border: toggle_edge(ends, layout),
         ..face
     }
 }
@@ -976,11 +976,11 @@ fn topped(corner: Drawn) -> iced::border::Radius {
 /// The edge a filled surface carries, which MUI draws none of: its head rounded
 /// by MUI's own shape and its foot square.
 // reference: mui-shape
-fn filled_edge(band: Band) -> iced::Border {
+fn filled_edge(layout: Layout) -> iced::Border {
     iced::Border {
         color: iced::Color::TRANSPARENT,
         width: 0.0,
-        radius: topped(space::SHAPE_RADIUS.drawn(band)),
+        radius: topped(space::SHAPE_RADIUS.drawn(layout)),
     }
 }
 
@@ -991,7 +991,7 @@ fn filled_edge(band: Band) -> iced::Border {
 pub fn filled(
     _theme: &iced::Theme,
     status: iced::widget::text_input::Status,
-    band: Band,
+    layout: Layout,
 ) -> iced::widget::text_input::Style {
     let face = match status {
         iced::widget::text_input::Status::Hovered => scheme::FILLED_HOVER,
@@ -1001,7 +1001,7 @@ pub fn filled(
     };
     iced::widget::text_input::Style {
         background: iced::Background::Color(color(face)),
-        border: filled_edge(band),
+        border: filled_edge(layout),
         icon: color(scheme::ON_SURFACE_SECONDARY),
         placeholder: color(scheme::ON_SURFACE_SECONDARY),
         value: color(scheme::ON_SURFACE),
@@ -1022,7 +1022,7 @@ pub fn filled_rule(_theme: &iced::Theme) -> iced::widget::container::Style {
 pub fn filled_select(
     _theme: &iced::Theme,
     status: iced::widget::pick_list::Status,
-    band: Band,
+    layout: Layout,
 ) -> iced::widget::pick_list::Style {
     let face = match status {
         iced::widget::pick_list::Status::Active => scheme::FILLED,
@@ -1034,7 +1034,7 @@ pub fn filled_select(
         placeholder_color: color(scheme::ON_SURFACE_SECONDARY),
         handle_color: color(scheme::ACTION_ACTIVE),
         background: iced::Background::Color(color(face)),
-        border: filled_edge(band),
+        border: filled_edge(layout),
     }
 }
 
@@ -1043,13 +1043,13 @@ pub fn filled_select(
 // reference: mui-overlay
 // reference: mui-popover-elevation
 // reference: mui-shape
-pub fn filled_menu(_theme: &iced::Theme, band: Band) -> iced::widget::overlay::menu::Style {
+pub fn filled_menu(_theme: &iced::Theme, layout: Layout) -> iced::widget::overlay::menu::Style {
     iced::widget::overlay::menu::Style {
         background: iced::Background::Color(color(scheme::paper_face(scheme::POPOVER_ELEVATION))),
         border: iced::Border {
             color: iced::Color::TRANSPARENT,
             width: 0.0,
-            radius: iced::border::Radius::new(drawn(space::SHAPE_RADIUS.drawn(band))),
+            radius: iced::border::Radius::new(drawn(space::SHAPE_RADIUS.drawn(layout))),
         },
         text_color: color(scheme::ON_SURFACE),
         selected_text_color: color(scheme::ON_SURFACE),
@@ -1068,8 +1068,8 @@ pub fn chevron(_theme: &iced::Theme) -> iced::widget::text::Style {
 
 /// The disc `MuiSwitchBase` rounds a box's own padding into.
 // reference: mui-switch-base
-fn check_disc(band: Band) -> iced::border::Radius {
-    iced::border::Radius::new(drawn(space::CHECK_RADIUS.of(space::check_row(band))))
+fn check_disc(layout: Layout) -> iced::border::Radius {
+    iced::border::Radius::new(drawn(space::CHECK_RADIUS.of(space::check_row(layout))))
 }
 
 /// A box drawing its glyph in `mark`, on that disc where it is reached.
@@ -1078,7 +1078,7 @@ fn check_disc(band: Band) -> iced::border::Radius {
 fn checked(
     status: iced::widget::button::Status,
     mark: scheme::Color,
-    band: Band,
+    layout: Layout,
 ) -> iced::widget::button::Style {
     let face = match lit(status) {
         true => faced(scheme::ACTION_HOVER, mark),
@@ -1089,7 +1089,7 @@ fn checked(
     };
     iced::widget::button::Style {
         border: iced::Border {
-            radius: check_disc(band),
+            radius: check_disc(layout),
             ..face.border
         },
         ..face
@@ -1103,9 +1103,9 @@ fn checked(
 pub fn check_ticked(
     _theme: &iced::Theme,
     status: iced::widget::button::Status,
-    band: Band,
+    layout: Layout,
 ) -> iced::widget::button::Style {
-    checked(status, scheme::ACCENT, band)
+    checked(status, scheme::ACCENT, layout)
 }
 
 /// The box carrying none, which MUI draws in its secondary lettering.
@@ -1114,9 +1114,9 @@ pub fn check_ticked(
 pub fn check_blank(
     _theme: &iced::Theme,
     status: iced::widget::button::Status,
-    band: Band,
+    layout: Layout,
 ) -> iced::widget::button::Style {
-    checked(status, scheme::ON_SURFACE_SECONDARY, band)
+    checked(status, scheme::ON_SURFACE_SECONDARY, layout)
 }
 
 /// `MuiButton` at `variant='contained'`: the accent, darkened under the
@@ -1127,7 +1127,7 @@ pub fn check_blank(
 pub fn contained(
     _theme: &iced::Theme,
     status: iced::widget::button::Status,
-    band: Band,
+    layout: Layout,
 ) -> iced::widget::button::Style {
     let face = match lit(status) {
         true => scheme::CONTAINED_HOVER,
@@ -1135,7 +1135,7 @@ pub fn contained(
     };
     iced::widget::button::Style {
         border: iced::Border {
-            radius: iced::border::Radius::new(drawn(space::SHAPE_RADIUS.drawn(band))),
+            radius: iced::border::Radius::new(drawn(space::SHAPE_RADIUS.drawn(layout))),
             ..iced::Border::default()
         },
         ..faced(face, scheme::ACCENT.contrast_text())
@@ -1145,12 +1145,12 @@ pub fn contained(
 /// A success alert's face and its lettering, rounded by MUI's own shape.
 // reference: mui-alert
 // reference: mui-shape
-pub fn alert_success(_theme: &iced::Theme, band: Band) -> iced::widget::container::Style {
+pub fn alert_success(_theme: &iced::Theme, layout: Layout) -> iced::widget::container::Style {
     iced::widget::container::Style::default()
         .background(color(scheme::ALERT_SUCCESS))
         .color(color(scheme::ON_ALERT_SUCCESS))
         .border(iced::Border {
-            radius: iced::border::Radius::new(drawn(space::SHAPE_RADIUS.drawn(band))),
+            radius: iced::border::Radius::new(drawn(space::SHAPE_RADIUS.drawn(layout))),
             ..iced::Border::default()
         })
 }

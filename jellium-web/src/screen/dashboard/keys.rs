@@ -27,7 +27,7 @@ pub async fn load(api: std::rc::Rc<crate::api::Api>, viewport: Viewport) -> Answ
             keys: api.keys().await.bubbled()?,
             window: window::Window::new(
                 window::Id::Keys,
-                space::table_row(viewport.band()),
+                space::table_row(viewport.layout()),
                 viewport.canvas().height(),
             ),
             naming: String::new(),

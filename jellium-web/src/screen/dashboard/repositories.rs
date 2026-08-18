@@ -7,7 +7,7 @@ use super::frame;
 use crate::app::Message;
 use crate::error::Answer;
 use crate::icon::Icon;
-use crate::style::{self, Band, space, typeface};
+use crate::style::{self, Layout, space, typeface};
 use crate::text::{self as strings, Text};
 use crate::widget::{self, prose};
 
@@ -37,7 +37,7 @@ pub async fn load(api: std::rc::Rc<crate::api::Api>) -> Answer<State> {
 // control whose disc opens the url in another tab
 // reference: repositories-page
 // reference: repositories-row
-pub fn view<'a>(state: &'a State, read_only: bool, band: Band) -> frame::Filling<'a> {
+pub fn view<'a>(state: &'a State, read_only: bool, layout: Layout) -> frame::Filling<'a> {
     let mut page: Vec<Element<'a, Message>> = Vec::new();
 
     if !read_only {
@@ -82,8 +82,8 @@ pub fn view<'a>(state: &'a State, read_only: bool, band: Band) -> frame::Filling
                     prose(strings::lookup(Text::RepositoriesEmptyHelp), typeface::BODY),
                 ]
                 .align_x(iced::Center)
-                .spacing(style::drawn(space::REPOSITORIES_EMPTY_GAP.drawn(band)))
-                .max_width(style::drawn(space::REPOSITORIES_EMPTY.drawn(band))),
+                .spacing(style::drawn(space::REPOSITORIES_EMPTY_GAP.drawn(layout)))
+                .max_width(style::drawn(space::REPOSITORIES_EMPTY.drawn(layout))),
             )
             .center_x(iced::Fill)
             .into(),
@@ -117,7 +117,7 @@ pub fn view<'a>(state: &'a State, read_only: bool, band: Band) -> frame::Filling
                 }),
             }
         }),
-        band,
+        layout,
     ));
 
     frame::Filling::Stacked(page)

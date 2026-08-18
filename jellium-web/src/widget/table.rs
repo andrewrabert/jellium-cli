@@ -4,7 +4,7 @@ use iced::widget::{Space, column, container, row};
 use iced::{Element, Fill};
 
 use crate::app::Message;
-use crate::style::{self, Band, Css, space, typeface};
+use crate::style::{self, Css, Layout, space, typeface};
 use crate::text::{self as strings, Text};
 use crate::widget::line;
 use crate::window::{self, Window};
@@ -52,20 +52,20 @@ pub struct Table<'a> {
 /// The width MRT draws a column at, which is what its definition declares held
 /// to the narrowest MRT will draw.
 // reference: table-cell-width
-fn width(declared: Css, band: Band) -> f32 {
+fn width(declared: Css, layout: Layout) -> f32 {
     match declared > space::TABLE_COLUMN_FLOOR {
-        true => style::drawn(declared.drawn(band)),
-        false => style::drawn(space::TABLE_COLUMN_FLOOR.drawn(band)),
+        true => style::drawn(declared.drawn(layout)),
+        false => style::drawn(space::TABLE_COLUMN_FLOOR.drawn(layout)),
     }
 }
 
 /// The rule one cell draws under itself, as wide as that cell.
 // reference: mui-table-cell
-fn rule<'a>(across: f32, band: Band) -> Element<'a, Message> {
+fn rule<'a>(across: f32, layout: Layout) -> Element<'a, Message> {
     container(
         Space::new()
             .width(across)
-            .height(style::drawn(space::TABLE_CELL_RULE.drawn(band))),
+            .height(style::drawn(space::TABLE_CELL_RULE.drawn(layout))),
     )
     .style(style::table_rule)
     .into()
@@ -77,21 +77,21 @@ fn cell<'a>(
     content: Element<'a, Message>,
     across: f32,
     padding: space::Padding,
-    band: Band,
+    layout: Layout,
 ) -> Element<'a, Message> {
     column![
         container(content)
             .padding(style::padding(padding))
             .width(across)
             .height(Fill),
-        rule(across, band),
+        rule(across, layout),
     ]
     .into()
 }
 
 /// The head row, which does not scroll with the body under it.
 // reference: table-head-cell
-fn head<'a>(columns: &[Column], widths: &[f32], band: Band) -> Element<'a, Message> {
+fn head<'a>(columns: &[Column], widths: &[f32], layout: Layout) -> Element<'a, Message> {
     let cells = columns
         .iter()
         .zip(widths.iter())
@@ -105,11 +105,11 @@ fn head<'a>(columns: &[Column], widths: &[f32], band: Band) -> Element<'a, Messa
                 ),
                 None => Space::new().into(),
             };
-            cell(content, *across, space::TABLE_HEAD_PAD, band)
+            cell(content, *across, space::TABLE_HEAD_PAD, layout)
         })
         .collect::<Vec<Element<'a, Message>>>();
     container(row(cells))
-        .height(style::drawn(space::table_head(band)))
+        .height(style::drawn(space::table_head(layout)))
         .into()
 }
 
@@ -145,7 +145,7 @@ pub fn stamped<Zone: chrono::TimeZone>(at: chrono::DateTime<Zone>) -> String {
 // reference: table-body-cell
 // reference: table-head-cell
 // reference: table-cell-width
-pub fn drawn<'a>(table: Table<'a>, band: Band) -> Element<'a, Message> {
+pub fn drawn<'a>(table: Table<'a>, layout: Layout) -> Element<'a, Message> {
     let Table {
         toolbar,
         columns,
@@ -155,7 +155,7 @@ pub fn drawn<'a>(table: Table<'a>, band: Band) -> Element<'a, Message> {
     } = table;
     let widths: Vec<f32> = columns
         .iter()
-        .map(|column| width(column.width, band))
+        .map(|column| width(column.width, layout))
         .collect();
     let holdings: Vec<space::Padding> = columns
         .iter()
@@ -166,16 +166,16 @@ pub fn drawn<'a>(table: Table<'a>, band: Band) -> Element<'a, Message> {
         .padding(style::drawn(space::TABLE_TOOLBAR_PAD.drawn()))
         .height(style::drawn(space::TABLE_TOOLBAR.drawn()));
 
-    let heading = head(&columns, &widths, band);
+    let heading = head(&columns, &widths, layout);
 
     let body = window::list(window, rows, move |index| {
         let held = cells(index)
             .into_iter()
             .zip(widths.iter().zip(holdings.iter()))
-            .map(|(content, (across, padding))| cell(content, *across, *padding, band))
+            .map(|(content, (across, padding))| cell(content, *across, *padding, layout))
             .collect::<Vec<Element<'a, Message>>>();
         container(row(held))
-            .height(style::drawn(space::table_row(band)))
+            .height(style::drawn(space::table_row(layout)))
             .into()
     });
 

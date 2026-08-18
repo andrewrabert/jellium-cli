@@ -233,7 +233,8 @@ pub async fn start() {
         "Jellium Web graphics backend: {backend}"
     )));
 
-    let Some(viewport) = crate::page::viewport() else {
+    let layout = crate::browser::Browser::detect(&crate::browser::Runtime::probe()).layout();
+    let Some(viewport) = crate::page::viewport(layout) else {
         STARTING.with(|held| held.set(false));
         let failure = Failure::told(
             Text::BootNoViewport,
