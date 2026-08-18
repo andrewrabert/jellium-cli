@@ -45,6 +45,7 @@ pub fn view<'a>(state: &'a State, read_only: bool, viewport: Viewport) -> frame:
     let mut rows = vec![super::controls(
         state.section.groups(),
         &state.form,
+        &[],
         controls,
         viewport,
     )];

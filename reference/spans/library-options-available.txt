@@ -1,0 +1,8 @@
+function populateMetadataSettings(parent, contentType) {
+    const isNewLibrary = parent.classList.contains('newlibrary');
+    return ApiClient.getJSON(ApiClient.getUrl('Libraries/AvailableOptions', {
+        LibraryContentType: contentType,
+        IsNewLibrary: isNewLibrary
+    })).then(availableOptions => {
+        currentAvailableOptions = availableOptions;
+        parent.availableOptions = availableOptions;

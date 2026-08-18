@@ -79,6 +79,37 @@ pub struct Offered {
     pub label: Text,
 }
 
+/// The values one control offers beyond the single value it edits.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Values {
+    /// `emby-select` over a closed set this client owns, in the order the
+    /// reference stands it.
+    Closed(&'static [Offered]),
+    /// `.checkboxList` over the rows the screen loaded; the field holds every
+    /// value checked, and the list stands only while `unless` is clear.
+    // reference: user-access-container
+    // reference: library-options-languages
+    Checked {
+        unless: Option<jellium_model::form::Field>,
+    },
+    /// `.checkboxList` of `.sortableOption` rows over the rows the screen
+    /// loaded; the field holds every value in the order drawn, and `disabled`
+    /// holds every value whose box is clear.
+    // reference: library-options-sortable
+    Ranked {
+        disabled: Option<jellium_model::form::Field>,
+    },
+}
+
+/// The rows one control's list holds, which a screen loads because the server
+/// names them.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Sourced {
+    pub field: jellium_model::form::Field,
+    /// The rows in the server's own order.
+    pub rows: Vec<crate::widget::Choice<String>>,
+}
+
 /// One control of a section's form.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Control {
@@ -93,9 +124,9 @@ pub struct Control {
     /// The unit the reference writes at the field's trailing edge, and nothing
     /// where it writes none.
     pub unit: Option<Text>,
-    /// What each value it offers reads as, in the order the reference stands
-    /// them, and nothing where it offers no closed set.
-    pub offered: Option<&'static [Offered]>,
+    /// What it offers beyond the single value it edits, and nothing where it
+    /// offers a single value alone.
+    pub offered: Option<Values>,
 }
 
 /// One group of a section's controls: the heading the reference writes over
@@ -513,7 +544,7 @@ impl Section {
                         label: Text::TranscodingHardwareAcceleration,
                         helper: &[Text::TranscodingHardwareAccelerationHelp],
                         unit: None,
-                        offered: Some(ACCELERATION),
+                        offered: Some(Values::Closed(ACCELERATION)),
                     }],
                     closing: None,
                 },
@@ -724,9 +755,9 @@ impl UserTab {
     /// edits no configuration key.
     pub fn groups(self, account: Account) -> &'static [Group] {
         match (self, account) {
-            (UserTab::Profile, _) => users::PROFILE,
-            (UserTab::Access, Account::Own) => users::ACCESS_OWN,
-            (UserTab::Access, Account::Other) => users::ACCESS,
+            (UserTab::Profile, Account::Own) => users::PROFILE_OWN,
+            (UserTab::Profile, Account::Other) => users::PROFILE,
+            (UserTab::Access, _) => users::ACCESS,
             (UserTab::Parental, _) => users::PARENTAL,
             (UserTab::Password, _) => &[],
         }
@@ -798,6 +829,7 @@ fn under<'a>(
 /// the sentences the reference writes under it.
 fn filled<'a>(
     control: Control,
+    closed: Option<&'static [Offered]>,
     form: &'a jellium_model::form::Form,
     viewport: Viewport,
 ) -> Element<'a, Message> {
@@ -805,7 +837,7 @@ fn filled<'a>(
     let field = control.field;
     let held = form.value(field);
     let layout = viewport.layout();
-    let drawn = match control.offered {
+    let drawn = match closed {
         Some(options) => {
             let (offered, standing) = self::offered(options, &held);
             widget::mui::chosen(
@@ -854,12 +886,16 @@ fn filled<'a>(
 
 /// The reference's own control for `control`, which its legacy views draw,
 /// carrying what the form holds for it and the sentences it writes under it.
-fn emby<'a>(control: Control, form: &'a jellium_model::form::Form) -> Element<'a, Message> {
+fn emby<'a>(
+    control: Control,
+    closed: Option<&'static [Offered]>,
+    form: &'a jellium_model::form::Form,
+) -> Element<'a, Message> {
     use jellium_model::form::Field;
     let field = control.field;
     let held = form.value(field);
     let label = strings::lookup(control.label);
-    let (drawn, inset) = match control.offered {
+    let (drawn, inset) = match closed {
         Some(options) => {
             let (offered, standing) = self::offered(options, &held);
             (
@@ -924,14 +960,133 @@ fn said<'a>(
     }
 }
 
+/// The rows `field`'s list holds, and none where the screen sourced it with
+/// none.
+fn rows(
+    sourced: &[Sourced],
+    field: jellium_model::form::Field,
+) -> Option<&[crate::widget::Choice<String>]> {
+    sourced
+        .iter()
+        .find(|held| held.field == field)
+        .map(|held| held.rows.as_slice())
+        .filter(|rows| !rows.is_empty())
+}
+
+/// The `.checkboxList` one control offers: the rows the screen loaded, each
+/// held where the field names it.
+// reference: user-access-container
+// reference: library-options-languages
+fn checked<'a>(
+    control: Control,
+    form: &'a jellium_model::form::Form,
+    rows: &'a [crate::widget::Choice<String>],
+) -> Element<'a, Message> {
+    let field = control.field;
+    let held = form.listed(field);
+    widget::labelled(
+        strings::lookup(control.label),
+        column(rows.iter().map(|row| {
+            let value = row.value.clone();
+            widget::flag(
+                row.label.as_str(),
+                None,
+                held.contains(&row.value),
+                move |on| {
+                    Message::DashboardAction(Action::Checked {
+                        field,
+                        value: value.clone(),
+                        held: on,
+                    })
+                },
+            )
+        }))
+        .spacing(style::drawn(space::CHECKBOX_LIST_GAP.drawn()))
+        .into(),
+    )
+}
+
+/// The `.sortableOption` rows one control offers, in the rank the field names,
+/// each carrying the one control that moves it and the box `disabled` clears.
+// reference: library-options-sortable
+// reference: library-options-subtitle-fetchers
+fn ranked<'a>(
+    control: Control,
+    disabled: Option<jellium_model::form::Field>,
+    form: &'a jellium_model::form::Form,
+    rows: &'a [crate::widget::Choice<String>],
+) -> Element<'a, Message> {
+    let field = control.field;
+    let offered: Vec<String> = rows.iter().map(|row| row.value.clone()).collect();
+    let order = jellium_model::library::ranked(&offered, &form.listed(field));
+    let cleared = disabled.map(|held| form.listed(held)).unwrap_or_default();
+    let drawn = order.into_iter().enumerate().map(move |(at, value)| {
+        let (glyph, says, toward) = match at {
+            0 => (
+                crate::icon::Icon::KeyboardArrowDown,
+                Text::MoveDown,
+                jellium_model::rank::Toward::Later,
+            ),
+            _ => (
+                crate::icon::Icon::KeyboardArrowUp,
+                Text::MoveUp,
+                jellium_model::rank::Toward::Earlier,
+            ),
+        };
+        let title = rows
+            .iter()
+            .find(|row| row.value == value)
+            .map(|row| row.label.clone())
+            .unwrap_or_default();
+        let moves = value.clone();
+        widget::list::Row {
+            face: disabled.map(|held| {
+                let named = value.clone();
+                widget::list::Face::Check(widget::flag(
+                    "",
+                    None,
+                    !cleared.contains(&value),
+                    move |on| {
+                        Message::DashboardAction(Action::Checked {
+                            field: held,
+                            value: named.clone(),
+                            held: !on,
+                        })
+                    },
+                ))
+            }),
+            index: None,
+            title: title.into(),
+            secondary: Vec::new(),
+            press: widget::list::Press::Inert,
+            controls: vec![widget::icon_button(
+                glyph,
+                typeface::ICON_BUTTON,
+                Some(says),
+                Message::DashboardAction(Action::Moved {
+                    field,
+                    value: moves,
+                    toward,
+                }),
+            )],
+        }
+    });
+    widget::labelled(
+        strings::lookup(control.label),
+        widget::list::listed(space::ListRow::glyph(space::Lines::One), drawn),
+    )
+}
+
 /// The groups of one form, each in the section the reference stands it in,
 /// drawn with the controls `dressing` names.
 // reference: section-vertical
 // reference: networking-fieldset
 // reference: dashboard-content
+// a group holding a control the screen sources with no rows is absent
 pub fn controls<'a>(
     groups: &'static [Group],
     form: &'a jellium_model::form::Form,
+    sourced: &'a [Sourced],
     dressing: Controls,
     viewport: Viewport,
 ) -> Element<'a, Message> {
@@ -944,15 +1099,57 @@ pub fn controls<'a>(
         Controls::Mui => space::DASHBOARD_GAP.drawn(layout),
         Controls::Emby => space::SECTION_GAP.drawn(),
     };
-    let sections = groups.iter().map(|group| {
+    let standing = groups.iter().filter(|group| {
+        group.controls.iter().all(|control| match control.offered {
+            Some(Values::Checked { .. } | Values::Ranked { .. }) => {
+                rows(sourced, control.field).is_some()
+            }
+            None | Some(Values::Closed(_)) => true,
+        })
+    });
+    let sections = standing.map(|group| {
         let mut held: Vec<Element<'a, Message>> = Vec::new();
         if let Some(note) = group.note {
             held.push(said(note, dressing, layout));
         }
-        held.extend(group.controls.iter().map(|control| match dressing {
-            Controls::Mui => filled(*control, form, viewport),
-            Controls::Emby => emby(*control, form),
-        }));
+        for control in group.controls {
+            let closed = match control.offered {
+                Some(Values::Closed(options)) => Some(options),
+                _ => None,
+            };
+            let listed = match control.offered {
+                None | Some(Values::Closed(_)) => {
+                    held.push(match dressing {
+                        Controls::Mui => filled(*control, closed, form, viewport),
+                        Controls::Emby => emby(*control, closed, form),
+                    });
+                    continue;
+                }
+                Some(Values::Checked { unless }) => {
+                    if unless.is_some_and(|held| form.flagged(held)) {
+                        continue;
+                    }
+                    let Some(rows) = rows(sourced, control.field) else {
+                        continue;
+                    };
+                    checked(*control, form, rows)
+                }
+                Some(Values::Ranked { disabled }) => {
+                    let Some(rows) = rows(sourced, control.field) else {
+                        continue;
+                    };
+                    ranked(*control, disabled, form, rows)
+                }
+            };
+            held.push(under(
+                listed,
+                control
+                    .helper
+                    .iter()
+                    .map(|sentence| said(*sentence, dressing, layout))
+                    .collect(),
+            ));
+        }
         if let Some(closing) = group.closing {
             held.push(said(closing, dressing, layout));
         }
@@ -1337,6 +1534,18 @@ pub enum Action {
     TypedCurrentPassword(String),
     /// Edits one field of the form the shown screen holds.
     Edited(jellium_model::form::Field, String),
+    /// Adds a value to a field's list, or drops it.
+    Checked {
+        field: jellium_model::form::Field,
+        value: String,
+        held: bool,
+    },
+    /// Moves a value one place in a field's list, writing the whole rank.
+    Moved {
+        field: jellium_model::form::Field,
+        value: String,
+        toward: jellium_model::rank::Toward,
+    },
     /// Writes the form the shown screen holds, whole.
     Save,
     /// Asks about a destructive action, types its object's name, abandons it,
@@ -1577,15 +1786,37 @@ pub fn act(signed: &mut Signed, action: Action, viewport: Viewport) -> Task<Mess
                     held.saved = false;
                 }
                 Some(Body::LiveTv(held)) => held.dvr.edit(field, value),
-                Some(Body::User(held)) => match held.tab {
-                    UserTab::Profile => held.configuration.edit(field, value),
-                    UserTab::Access | UserTab::Parental | UserTab::Password => {
-                        held.policy.edit(field, value)
-                    }
-                },
+                Some(Body::User(held)) => held.policy.edit(field, value),
                 Some(Body::Library(held)) => held.options.edit(field, value),
                 _ => {}
             }
+            Task::none()
+        }
+        Action::Checked { field, value, held } => {
+            if let Some((form, _)) = listing_mut(signed) {
+                let mut values = form.listed(field);
+                values.retain(|name| *name != value);
+                if held {
+                    values.push(value);
+                }
+                form.list(field, values);
+            }
+            Task::none()
+        }
+        Action::Moved {
+            field,
+            value,
+            toward,
+        } => {
+            let Some((form, sourced)) = listing_mut(signed) else {
+                return Task::none();
+            };
+            let Some(rows) = sourced.iter().find(|held| held.field == field) else {
+                return Task::none();
+            };
+            let offered: Vec<String> = rows.rows.iter().map(|row| row.value.clone()).collect();
+            let ranked = jellium_model::library::ranked(&offered, &form.listed(field));
+            form.list(field, jellium_model::rank::moved(&ranked, &value, toward));
             Task::none()
         }
         Action::Browse(path) => {
@@ -1663,14 +1894,8 @@ pub fn act(signed: &mut Signed, action: Action, viewport: Viewport) -> Task<Mess
                     let id = held.id;
                     let object = held.name.clone();
                     let policy = held.policy.written();
-                    let configuration = held.configuration.written();
                     return Task::perform(
-                        crate::error::Answer::of(async move {
-                            api.save_policy(id, &policy).await.bubbled()?;
-                            api.save_user_configuration(id, &configuration)
-                                .await
-                                .bubbled()
-                        }),
+                        async move { api.save_policy(id, &policy).await },
                         move |outcome| {
                             Message::DashboardSaved(
                                 Wrote {
@@ -2372,6 +2597,15 @@ pub fn act(signed: &mut Signed, action: Action, viewport: Viewport) -> Task<Mess
     }
 }
 
+/// The form a shown screen's lists edit, with the rows those lists offer.
+fn listing_mut(signed: &mut Signed) -> Option<(&mut jellium_model::form::Form, &[Sourced])> {
+    match shown_mut(signed).map(|state| &mut state.body)? {
+        Body::User(held) => Some((&mut held.policy, &held.sourced)),
+        Body::Library(held) => Some((&mut held.options, &held.sourced)),
+        _ => None,
+    }
+}
+
 /// The dashboard shown now, and nothing when another screen is.
 fn shown_mut(signed: &mut Signed) -> Option<&mut State> {
     match &mut signed.view {
@@ -2499,7 +2733,7 @@ pub fn dirty(view: &crate::app::View) -> bool {
             Body::Settings(held) => held.form.dirty(),
             Body::Logs(held) => held.form.dirty(),
             Body::LiveTv(held) => held.dvr.dirty(),
-            Body::User(held) => held.policy.dirty() || held.configuration.dirty(),
+            Body::User(held) => held.policy.dirty(),
             Body::Library(held) => held.options.dirty(),
             _ => false,
         },
@@ -2522,9 +2756,7 @@ pub fn saved(signed: &mut Signed) {
         }
         Some(Body::User(held)) => {
             let policy = held.policy.written();
-            let configuration = held.configuration.written();
             held.policy.saved(policy);
-            held.configuration.saved(configuration);
         }
         Some(Body::Library(held)) => {
             let options = held.options.written();
@@ -2544,10 +2776,7 @@ pub fn abandoned(signed: &mut Signed) {
     match shown_mut(signed).map(|state| &mut state.body) {
         Some(Body::Settings(held)) => held.form.discard(),
         Some(Body::Logs(held)) => held.form.discard(),
-        Some(Body::User(held)) => {
-            held.policy.discard();
-            held.configuration.discard();
-        }
+        Some(Body::User(held)) => held.policy.discard(),
         Some(Body::Library(held)) => held.options.discard(),
         Some(Body::LiveTv(held)) => held.dvr.discard(),
         _ => {}

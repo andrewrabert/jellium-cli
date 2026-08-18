@@ -1,0 +1,6 @@
+    if (plugins.length < 2) {
+        elem.classList.add('hide');
+    } else {
+        elem.classList.remove('hide');
+    }
+    elem.innerHTML = html;

@@ -459,6 +459,7 @@ fn dvr<'a>(
     page.push(super::controls(
         DVR,
         &state.dvr,
+        &[],
         super::Controls::Mui,
         viewport,
     ));

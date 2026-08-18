@@ -12,7 +12,7 @@ use crate::widget::{self, prose};
 use jellium_model::appearance::typeface::Rank;
 use jellium_model::form::{Field, Form};
 
-use super::{Control, Group, Heading, Offered};
+use super::{Control, Group, Heading, Offered, Values};
 
 /// Every user on the server, what a new one is being named, and the account
 /// whose card menu is open.
@@ -37,15 +37,16 @@ pub async fn load(api: std::rc::Rc<crate::api::Api>) -> Answer<State> {
     .await
 }
 
-/// One user's screen: its four panels, its policy and its configuration, each
-/// read whole and written whole.
+/// One user's screen: its four panels and the policy every one of them but the
+/// password panel edits, read whole and written whole.
 #[derive(Debug, Clone)]
 pub struct One {
     pub id: Uuid,
     pub name: String,
     pub tab: super::UserTab,
     pub policy: Form,
-    pub configuration: Form,
+    /// The libraries, channels and devices the access panel's lists offer.
+    pub sourced: Vec<super::Sourced>,
     /// What has been typed into the two password fields.
     pub current: String,
     pub replacement: String,
@@ -68,118 +69,6 @@ pub const SYNC_PLAY_ACCESS: &[Offered] = &[
         label: Text::UsersSyncPlayNone,
     },
 ];
-
-/// The subtitle modes the configuration offers, in the order the reference
-/// stands them.
-// reference: settings-subtitles-mode
-pub const SUBTITLE_MODES: &[Offered] = &[
-    Offered {
-        value: "Default",
-        label: Text::UsersSubtitleModeDefault,
-    },
-    Offered {
-        value: "Smart",
-        label: Text::UsersSubtitleModeSmart,
-    },
-    Offered {
-        value: "OnlyForced",
-        label: Text::UsersSubtitleModeOnlyForced,
-    },
-    Offered {
-        value: "Always",
-        label: Text::UsersSubtitleModeAlways,
-    },
-    Offered {
-        value: "None",
-        label: Text::UsersSubtitleModeNone,
-    },
-];
-
-/// The user's own configuration, in the order the reference's preference pages
-/// stand it; every key outside it survives a save.
-// reference: settings-playback-form
-// reference: settings-playback-remembered
-// reference: settings-subtitles-mode
-// reference: settings-display-form
-pub const PROFILE: &[Group] = &[Group {
-    heading: None,
-    note: None,
-    controls: &[
-        Control {
-            field: Field::Text {
-                key: "AudioLanguagePreference",
-            },
-            label: Text::UsersAudioLanguage,
-            helper: &[],
-            unit: None,
-            offered: None,
-        },
-        Control {
-            field: Field::Flag {
-                key: "PlayDefaultAudioTrack",
-            },
-            label: Text::UsersDefaultAudioTrack,
-            helper: &[],
-            unit: None,
-            offered: None,
-        },
-        Control {
-            field: Field::Flag {
-                key: "EnableNextEpisodeAutoPlay",
-            },
-            label: Text::UsersNextEpisode,
-            helper: &[],
-            unit: None,
-            offered: None,
-        },
-        Control {
-            field: Field::Flag {
-                key: "RememberAudioSelections",
-            },
-            label: Text::UsersRememberAudio,
-            helper: &[Text::UsersRememberAudioHelp],
-            unit: None,
-            offered: None,
-        },
-        Control {
-            field: Field::Flag {
-                key: "RememberSubtitleSelections",
-            },
-            label: Text::UsersRememberSubtitles,
-            helper: &[Text::UsersRememberSubtitlesHelp],
-            unit: None,
-            offered: None,
-        },
-        Control {
-            field: Field::Text {
-                key: "SubtitleLanguagePreference",
-            },
-            label: Text::UsersSubtitleLanguage,
-            helper: &[],
-            unit: None,
-            offered: None,
-        },
-        Control {
-            field: Field::Listed {
-                key: "SubtitleMode",
-            },
-            label: Text::UsersSubtitleMode,
-            helper: &[],
-            unit: None,
-            offered: Some(SUBTITLE_MODES),
-        },
-        Control {
-            field: Field::Flag {
-                key: "DisplayMissingEpisodes",
-            },
-            label: Text::UsersMissingEpisodes,
-            helper: &[Text::UsersMissingEpisodesHelp],
-            unit: None,
-            offered: None,
-        },
-    ],
-    closing: None,
-}];
 
 // reference: user-profile-remote-access
 const REMOTE_ACCESS: Group = Group {
@@ -328,7 +217,7 @@ const SYNC_PLAY: Group = Group {
         label: Text::UsersSyncPlay,
         helper: &[Text::UsersSyncPlayHelp],
         unit: None,
-        offered: Some(SYNC_PLAY_ACCESS),
+        offered: Some(Values::Closed(SYNC_PLAY_ACCESS)),
     }],
     closing: None,
 };
@@ -440,12 +329,52 @@ const LIBRARY_ACCESS: Group = Group {
             label: Text::UsersLibraries,
             helper: &[Text::UsersLibrariesHelp],
             unit: None,
-            offered: None,
+            offered: Some(Values::Checked {
+                unless: Some(Field::Flag {
+                    key: "EnableAllFolders",
+                }),
+            }),
         },
     ],
     closing: None,
 };
 
+// reference: user-access-container
+// reference: user-access-channels
+const CHANNEL_ACCESS: Group = Group {
+    heading: Some(Heading {
+        rank: Rank::Second,
+        title: Text::UsersChannelAccess,
+    }),
+    note: None,
+    controls: &[
+        Control {
+            field: Field::Flag {
+                key: "EnableAllChannels",
+            },
+            label: Text::UsersAllChannels,
+            helper: &[],
+            unit: None,
+            offered: None,
+        },
+        Control {
+            field: Field::Lines {
+                key: "EnabledChannels",
+            },
+            label: Text::UsersChannels,
+            helper: &[Text::UsersChannelsHelp],
+            unit: None,
+            offered: Some(Values::Checked {
+                unless: Some(Field::Flag {
+                    key: "EnableAllChannels",
+                }),
+            }),
+        },
+    ],
+    closing: None,
+};
+
+// reference: user-access-container
 // reference: user-access-devices
 const DEVICE_ACCESS: Group = Group {
     heading: Some(Heading {
@@ -470,14 +399,18 @@ const DEVICE_ACCESS: Group = Group {
             label: Text::UsersDevices,
             helper: &[Text::UsersDevicesHelp],
             unit: None,
-            offered: None,
+            offered: Some(Values::Checked {
+                unless: Some(Field::Flag {
+                    key: "EnableAllDevices",
+                }),
+            }),
         },
     ],
     closing: None,
 };
 
-/// The user's policy as the reference's own profile and access pages stand it.
-pub const ACCESS: &[Group] = &[
+/// The user's policy as the reference's own profile page stands it.
+pub const PROFILE: &[Group] = &[
     REMOTE_ACCESS,
     ADMINISTRATOR,
     FEATURE_ACCESS,
@@ -487,12 +420,10 @@ pub const ACCESS: &[Group] = &[
     DELETION,
     OTHER,
     LIMITS,
-    LIBRARY_ACCESS,
-    DEVICE_ACCESS,
 ];
 
 /// The same panel on the reader's own account.
-pub const ACCESS_OWN: &[Group] = &[
+pub const PROFILE_OWN: &[Group] = &[
     REMOTE_ACCESS,
     OWN_ADMINISTRATOR,
     FEATURE_ACCESS,
@@ -502,9 +433,11 @@ pub const ACCESS_OWN: &[Group] = &[
     DELETION,
     OTHER,
     LIMITS,
-    LIBRARY_ACCESS,
-    DEVICE_ACCESS,
 ];
+
+/// The libraries, channels and devices the user reaches, as the reference's
+/// own access page stands them.
+pub const ACCESS: &[Group] = &[LIBRARY_ACCESS, CHANNEL_ACCESS, DEVICE_ACCESS];
 
 /// The parental controls, in the order the reference stands them.
 // reference: user-parental-rating
@@ -541,15 +474,64 @@ pub const PARENTAL: &[Group] = &[Group {
     closing: None,
 }];
 
+/// One item the server names, as a row of a checkbox list.
+fn item(item: &jellyfin_api::types::BaseItemDto) -> Option<crate::widget::Choice<String>> {
+    Some(crate::widget::Choice {
+        label: item.name.clone().unwrap_or_default(),
+        value: item.id?.to_string(),
+    })
+}
+
+/// One device as the reference's own access list writes it: its custom name or
+/// its name, joined to the application it runs.
+// reference: user-access-devices
+fn device(held: &jellyfin_api::types::DeviceInfoDto) -> Option<crate::widget::Choice<String>> {
+    let named = held
+        .custom_name
+        .clone()
+        .or_else(|| held.name.clone())
+        .unwrap_or_default();
+    let written = match held.app_name.as_deref() {
+        Some(app) => format!("{named} - {app}"),
+        None => named,
+    };
+    Some(crate::widget::Choice {
+        label: written,
+        value: held.id.clone()?,
+    })
+}
+
 pub async fn open(api: std::rc::Rc<crate::api::Api>, id: Uuid, tab: super::UserTab) -> Answer<One> {
     Answer::of(async {
         let user = api.user(id).await.bubbled()?;
+        let folders = api.media_folders().await.bubbled()?;
+        let channels = api.channels().await.bubbled()?;
+        let devices = api.devices().await.bubbled()?;
         Ok(One {
             id,
             name: user.name.clone().unwrap_or_default(),
             tab,
             policy: Form::of(api.policy(id).await.bubbled()?),
-            configuration: Form::of(api.user_configuration(id).await.bubbled()?),
+            sourced: vec![
+                super::Sourced {
+                    field: Field::Lines {
+                        key: "EnabledFolders",
+                    },
+                    rows: folders.iter().filter_map(item).collect(),
+                },
+                super::Sourced {
+                    field: Field::Lines {
+                        key: "EnabledChannels",
+                    },
+                    rows: channels.iter().filter_map(item).collect(),
+                },
+                super::Sourced {
+                    field: Field::Lines {
+                        key: "EnabledDevices",
+                    },
+                    rows: devices.iter().filter_map(device).collect(),
+                },
+            ],
             current: String::new(),
             replacement: String::new(),
         })
@@ -714,8 +696,7 @@ pub fn view<'a>(
     widget::scrolled(column(page)).into()
 }
 
-/// One user's four panels: profile, library and device access, parental
-/// control, and password.
+/// One user's four panels: profile, access, parental control, and password.
 pub fn one<'a>(
     state: &'a One,
     read_only: bool,
@@ -787,17 +768,14 @@ pub fn one<'a>(
             }
         }
         tab => {
-            let form = match tab {
-                super::UserTab::Profile => &state.configuration,
-                _ => &state.policy,
-            };
             let account = match state.id == own {
                 true => super::Account::Own,
                 false => super::Account::Other,
             };
             page.push(super::controls(
                 tab.groups(account),
-                form,
+                &state.policy,
+                &state.sourced,
                 super::Controls::Emby,
                 viewport,
             ));

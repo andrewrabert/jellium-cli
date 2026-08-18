@@ -1,0 +1,5 @@
+        if (user.Policy?.IsAdministrator) {
+            (page.querySelector('.deviceAccessContainer') as HTMLDivElement).classList.add('hide');
+        } else {
+            (page.querySelector('.deviceAccessContainer') as HTMLDivElement).classList.remove('hide');
+        }

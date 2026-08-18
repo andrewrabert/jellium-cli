@@ -372,11 +372,17 @@ in order. A section passes only when every line in it holds.
 - The user list shows every user, and creates and deletes one.
 - A user screen heads with that user's own name, at the size a section title
   is written at, and the add-user screen heads "Add User".
-- A user screen carries profile, access, parental control and password.
+- A user screen carries profile, access, parental control and password; the
+  profile panel holds that user's policy and the access panel holds the
+  library, channel and device lists.
 - A user's password is set and reset from the user screen, and a user's image is
   removed.
-- Saving a user policy or configuration leaves every field no control covers as
-  the server answered it.
+- Saving a user policy leaves every field no control covers as the server
+  answered it.
+- Library, channel and device access are chosen from checkboxes naming what
+  the server holds, each list standing only while its own "all" box is clear,
+  and a device reads as its name joined to its application's.
+- A server holding no channels shows no channel access group.
 - Deleting the signed-in user's own account and removing their own
   administrator status are absent, with text naming that cause where each would
   stand.
@@ -398,6 +404,13 @@ in order. A section passes only when every line in it holds.
 - The library options form saves without disturbing the fields no control
   covers.
 - The first group of the library options form is headed "Library Settings".
+- Subtitle download languages are chosen from checkboxes naming every language
+  the server reports.
+- Metadata readers and subtitle downloaders stand as ranked rows, each moved
+  one place by the control on its row, and a subtitle downloader is turned on
+  and off by the box on its row.
+- Saving a library's options writes the ranked orders the rows stand in and
+  the downloaders left off.
 - A scan starts for all libraries and for one named library, and
   `RefreshProgress` updates the named library's progress in place; an event
   naming an item no open screen shows changes nothing.

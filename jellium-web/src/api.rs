@@ -943,6 +943,41 @@ impl Api {
         .await
     }
 
+    /// The media folders a user's library access is chosen from.
+    // reference: user-access-load
+    pub async fn media_folders(&self) -> Answer<Vec<jellyfin_api::types::BaseItemDto>> {
+        Answer::of(async { Ok(self.client.get_media_folders(Some(false)).await?.items) }).await
+    }
+
+    /// The channels a user's channel access is chosen from.
+    // reference: user-access-load
+    pub async fn channels(&self) -> Answer<Vec<jellyfin_api::types::BaseItemDto>> {
+        Answer::of(async {
+            Ok(self
+                .client
+                .get_channels(None, None, None, None, None, None)
+                .await?
+                .items)
+        })
+        .await
+    }
+
+    /// The metadata readers and subtitle fetchers a library of `content`
+    /// offers.
+    // reference: library-options-available
+    pub async fn library_option_info(
+        &self,
+        content: Option<jellyfin_api::types::CollectionType>,
+    ) -> Answer<jellyfin_api::types::LibraryOptionsResultDto> {
+        Answer::of(async {
+            Ok(self
+                .client
+                .get_library_options_info(Some(false), content)
+                .await?)
+        })
+        .await
+    }
+
     /// The channels of `kind`, favourites first and then in channel-number
     /// order, each carrying its current program, in one request.
     pub async fn live_tv_channels(

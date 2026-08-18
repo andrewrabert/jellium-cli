@@ -11,7 +11,7 @@ use crate::widget::{self, prose};
 use jellium_model::appearance::typeface::Rank;
 use jellium_model::form::{Field, Form};
 
-use super::{Control, Group, Heading};
+use super::{Control, Group, Heading, Values};
 
 /// The content types a library can be created as, in the order both the
 /// dashboard and the wizard offer them.
@@ -150,6 +150,9 @@ pub struct One {
     pub id: String,
     pub paths: Vec<String>,
     pub options: Form,
+    /// The languages, metadata readers and subtitle fetchers this library's
+    /// lists offer.
+    pub sourced: Vec<super::Sourced>,
     /// The directory the browser stands in, and what it holds.
     pub browsing: Option<String>,
     pub entries: Vec<jellyfin_api::types::FileSystemEntryInfo>,
@@ -159,6 +162,7 @@ pub struct One {
 
 /// The library options the reference's own editor draws, in its order; every
 /// key outside them survives a save.
+// reference: library-folders
 // reference: library-options-heading
 // reference: library-options-metadata-language
 // reference: library-options-photos
@@ -166,6 +170,8 @@ pub struct One {
 // reference: library-options-metadata-readers
 // reference: library-options-save-local
 // reference: library-options-chapters
+// reference: library-options-languages
+// reference: library-options-sortable
 // reference: library-options-subtitle-languages
 // reference: library-options-subtitle-fetchers
 // reference: library-options-save-subtitles
@@ -220,7 +226,7 @@ pub const OPTIONS: &[Group] = &[
                 label: Text::LibrariesMetadataReaders,
                 helper: &[Text::LibrariesMetadataReadersHelp],
                 unit: None,
-                offered: None,
+                offered: Some(Values::Ranked { disabled: None }),
             },
             Control {
                 field: Field::Flag {
@@ -265,7 +271,7 @@ pub const OPTIONS: &[Group] = &[
                 label: Text::LibrariesDownloadLanguages,
                 helper: &[],
                 unit: None,
-                offered: None,
+                offered: Some(Values::Checked { unless: None }),
             },
             Control {
                 field: Field::Lines {
@@ -274,7 +280,11 @@ pub const OPTIONS: &[Group] = &[
                 label: Text::LibrariesSubtitleDownloaders,
                 helper: &[Text::LibrariesSubtitleDownloadersHelp],
                 unit: None,
-                offered: None,
+                offered: Some(Values::Ranked {
+                    disabled: Some(Field::Lines {
+                        key: "DisabledSubtitleFetchers",
+                    }),
+                }),
             },
             Control {
                 field: Field::Flag {
@@ -290,6 +300,33 @@ pub const OPTIONS: &[Group] = &[
     },
 ];
 
+/// One plugin the server offers, as a row of a ranked list.
+fn plugin(
+    held: &jellyfin_api::types::LibraryOptionInfoDto,
+) -> Option<crate::widget::Choice<String>> {
+    let named = held.name.clone()?;
+    Some(crate::widget::Choice {
+        label: named.clone(),
+        value: named,
+    })
+}
+
+/// One metadata language as a row of the subtitle download list: the code the
+/// option holds, under the name the culture reads as.
+// reference: library-options-languages
+fn language(culture: &jellyfin_api::types::CultureDto) -> Option<crate::widget::Choice<String>> {
+    Some(crate::widget::Choice {
+        label: culture
+            .display_name
+            .clone()
+            .or_else(|| culture.name.clone())?,
+        value: culture
+            .three_letter_iso_language_name
+            .clone()?
+            .to_lowercase(),
+    })
+}
+
 pub async fn open(api: std::rc::Rc<crate::api::Api>, name: String) -> Answer<One> {
     Answer::of(async {
         let folders = api.virtual_folders().await.bubbled()?;
@@ -298,10 +335,39 @@ pub async fn open(api: std::rc::Rc<crate::api::Api>, name: String) -> Answer<One
             .find(|folder| folder.name.as_deref() == Some(name.as_str()))
             .cloned()
             .unwrap_or_default();
+        let cultures = api.cultures().await.bubbled()?;
+        let offered = api
+            .library_option_info(collected(folder.collection_type))
+            .await
+            .bubbled()?;
         Ok(One {
             id: folder.item_id.clone().unwrap_or_default(),
             paths: folder.locations.clone().unwrap_or_default(),
             options: Form::of(api.library_options(&name).await.bubbled()?),
+            sourced: vec![
+                super::Sourced {
+                    field: Field::Lines {
+                        key: "LocalMetadataReaderOrder",
+                    },
+                    rows: offered.metadata_readers.iter().filter_map(plugin).collect(),
+                },
+                super::Sourced {
+                    field: Field::Lines {
+                        key: "SubtitleDownloadLanguages",
+                    },
+                    rows: cultures.iter().filter_map(language).collect(),
+                },
+                super::Sourced {
+                    field: Field::Lines {
+                        key: "SubtitleFetcherOrder",
+                    },
+                    rows: offered
+                        .subtitle_fetchers
+                        .iter()
+                        .filter_map(plugin)
+                        .collect(),
+                },
+            ],
             name,
             browsing: None,
             entries: Vec::new(),
@@ -571,6 +637,7 @@ pub fn one<'a>(
     page.push(super::controls(
         OPTIONS,
         &state.options,
+        &state.sourced,
         super::Controls::Emby,
         viewport,
     ));

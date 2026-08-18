@@ -40,8 +40,7 @@ impl std::fmt::Display for Ordinal {
 }
 
 /// What stands before a row's body.
-#[derive(Debug, Clone)]
-pub enum Face {
+pub enum Face<'a> {
     /// `.listItemImage`, drawn at its own square, with
     /// `.listItemProgressBar` across the foot of it where a row carries one,
     /// and the square standing empty until the image arrives.
@@ -51,6 +50,9 @@ pub enum Face {
     },
     /// `.listItemIcon`.
     Glyph(Icon),
+    /// `.listItemCheckboxContainer`.
+    // reference: library-options-subtitle-fetchers
+    Check(Element<'a, Message>),
 }
 
 /// What a press on a row opens.
@@ -67,7 +69,7 @@ pub enum Press {
 
 /// One `.listItem`.
 pub struct Row<'a> {
-    pub face: Option<Face>,
+    pub face: Option<Face<'a>>,
     /// `.listItem-indexnumberleft`, which the reference writes after the face.
     pub index: Option<Ordinal>,
     pub title: Cow<'a, str>,
@@ -170,6 +172,12 @@ pub fn row<'a>(list: space::ListRow, row: Row<'a>) -> Element<'a, Message> {
                 container(crate::icon::icon(glyph, typeface::LIST_ICON))
                     .padding(iced::Padding::ZERO.right(style::drawn(space::LIST_ICON_GAP.drawn()))),
             );
+        }
+        Some(Face::Check(checkbox)) => {
+            inner = inner
+                .push(container(checkbox).padding(
+                    iced::Padding::ZERO.right(style::drawn(space::LIST_ICON_GAP.drawn())),
+                ));
         }
     }
     if let Some(index) = index {
