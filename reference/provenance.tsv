@@ -648,3 +648,5 @@ user-add-title	src/apps/dashboard/routes/users/add.tsx	199	203	781c3740d3b230628
 library-editor-title	src/components/mediaLibraryEditor/mediaLibraryEditor.js	228	228	0b2812848aff1ac0eb642965414f1d4af6543356a5fa5ad00441f07c3a402095	ported
 library-folders	src/components/mediaLibraryEditor/mediaLibraryEditor.template.html	12	20	5ecff0beec2f96f9198ff29bde0f305fe9a0f29e2948c4e59e07b255480f062e	ported
 networking-fieldset	src/apps/dashboard/controllers/networking.html	10	11	b0da3101344c3487665050f08e9ff0f5abee7999f1d06751b76ed3983e30c5db	ported
+library-options-plugin-order	src/components/libraryoptionseditor/libraryoptionseditor.js	682	690	2893a19766ba6d08a21785f2421514f71cbe78f65fff8891defb239183e11a70	ported
+library-options-sortable	src/components/libraryoptionseditor/libraryoptionseditor.js	364	380	4199423aa1d2dc456f82d757eb76c69adfee7134d869b82bc71bf6055479befc	ported

@@ -241,7 +241,7 @@ pub enum Action {
     /// Moves one library in the home screen's own order.
     MoveLibrary {
         id: Uuid,
-        toward: jellium_model::user::Toward,
+        toward: jellium_model::rank::Toward,
     },
     /// Hides one home library, and shows it.
     HideLibrary {

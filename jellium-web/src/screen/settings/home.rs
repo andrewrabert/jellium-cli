@@ -70,19 +70,19 @@ pub fn sections<'a>(
                 widget::icon_button(
                     Icon::KeyboardArrowUp,
                     typeface::ICON_BUTTON,
-                    Some(Text::HomeMoveUp),
+                    Some(Text::MoveUp),
                     Message::SettingsAction(Action::MoveLibrary {
                         id,
-                        toward: jellium_model::user::Toward::Earlier,
+                        toward: jellium_model::rank::Toward::Earlier,
                     }),
                 ),
                 widget::icon_button(
                     Icon::KeyboardArrowDown,
                     typeface::ICON_BUTTON,
-                    Some(Text::HomeMoveDown),
+                    Some(Text::MoveDown),
                     Message::SettingsAction(Action::MoveLibrary {
                         id,
-                        toward: jellium_model::user::Toward::Later,
+                        toward: jellium_model::rank::Toward::Later,
                     }),
                 ),
             ],

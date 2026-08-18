@@ -1,0 +1,17 @@
+function adjustSortableListElement(elem) {
+    const btnSortable = elem.querySelector('.btnSortable');
+    const inner = btnSortable.querySelector('.material-icons');
+    if (elem.previousSibling) {
+        btnSortable.title = globalize.translate('Up');
+        btnSortable.classList.add('btnSortableMoveUp');
+        btnSortable.classList.remove('btnSortableMoveDown');
+        inner.classList.remove('keyboard_arrow_down');
+        inner.classList.add('keyboard_arrow_up');
+    } else {
+        btnSortable.title = globalize.translate('Down');
+        btnSortable.classList.remove('btnSortableMoveUp');
+        btnSortable.classList.add('btnSortableMoveDown');
+        inner.classList.remove('keyboard_arrow_up');
+        inner.classList.add('keyboard_arrow_down');
+    }
+}

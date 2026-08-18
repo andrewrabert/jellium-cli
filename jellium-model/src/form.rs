@@ -158,6 +158,26 @@ impl Form {
         self.edited.insert(field.key().to_owned(), held);
     }
 
+    /// The values `field` names now: the edit made against it when there is
+    /// one, and what the server answered otherwise.
+    // the values of a key holding no array read as none
+    pub fn listed(&self, field: Field) -> Vec<String> {
+        self.edited
+            .get(field.key())
+            .or_else(|| self.read.get(field.key()))
+            .and_then(serde_json::Value::as_array)
+            .map(|entries| entries.iter().map(rendered).collect())
+            .unwrap_or_default()
+    }
+
+    /// Records an edit setting `field` to `values`.
+    pub fn list(&mut self, field: Field, values: Vec<String>) {
+        self.edited.insert(
+            field.key().to_owned(),
+            serde_json::Value::Array(values.into_iter().map(serde_json::Value::String).collect()),
+        );
+    }
+
     /// What `field`'s flag holds now, which is false unless it holds `true`.
     pub fn flagged(&self, field: Field) -> bool {
         self.edited
@@ -380,6 +400,22 @@ mod tests {
         assert!(form.dirty());
         assert_eq!(form.value(NAME), "typed");
         assert_eq!(form.value(PORT), "9999");
+    }
+
+    #[test]
+    fn a_list_reads_as_the_values_it_names_and_writes_back_as_an_array() {
+        let mut form = Form::of(serde_json::json!({"Paths": ["one", "two"]}));
+        assert_eq!(form.listed(PATHS), vec!["one", "two"]);
+        form.list(PATHS, vec!["three".to_owned()]);
+        assert_eq!(form.listed(PATHS), vec!["three"]);
+        assert_eq!(form.written()["Paths"], serde_json::json!(["three"]));
+    }
+
+    #[test]
+    fn the_values_of_a_key_holding_no_array_read_as_none() {
+        let form = Form::of(serde_json::json!({"Paths": "one"}));
+        assert!(form.listed(PATHS).is_empty());
+        assert!(Form::of(serde_json::json!({})).listed(PATHS).is_empty());
     }
 
     #[test]

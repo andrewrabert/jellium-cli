@@ -71,28 +71,15 @@ pub fn arranged(libraries: &[Uuid], order: &[Uuid], hidden: &[Uuid]) -> Vec<Uuid
     arranged
 }
 
-/// Which way a library moves in the home screen's own order.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum Toward {
-    Earlier,
-    Later,
-}
-
 /// `order` with `id` moved one place `toward`, over `libraries` when the order
 /// names none of them.
-pub fn moved(libraries: &[Uuid], order: &[Uuid], id: Uuid, toward: Toward) -> Vec<Uuid> {
-    let mut moved = arranged(libraries, order, &[]);
-    let Some(at) = moved.iter().position(|held| *held == id) else {
-        return moved;
-    };
-    let to = match toward {
-        Toward::Later => at + 1,
-        Toward::Earlier => at.wrapping_sub(1),
-    };
-    if to < moved.len() {
-        moved.swap(at, to);
-    }
-    moved
+pub fn moved(
+    libraries: &[Uuid],
+    order: &[Uuid],
+    id: Uuid,
+    toward: crate::rank::Toward,
+) -> Vec<Uuid> {
+    crate::rank::moved(&arranged(libraries, order, &[]), &id, toward)
 }
 
 #[cfg(test)]
@@ -138,6 +125,7 @@ mod tests {
 
     #[test]
     fn a_move_at_either_end_changes_nothing() {
+        use crate::rank::Toward;
         let libraries = [id(1), id(2), id(3)];
         let order = arranged(&libraries, &[], &[]);
         assert_eq!(moved(&libraries, &order, id(1), Toward::Earlier), order);
