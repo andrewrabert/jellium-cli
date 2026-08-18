@@ -516,6 +516,16 @@ pub const CARD_OVERLAY_FAB: Color = Color::rgba(0x00, 0x00, 0x00, Alpha::thousan
 // reference: card-overlay-button
 pub const ON_CARD_OVERLAY: Color = Color::rgba(0xff, 0xff, 0xff, Alpha::thousandths(760));
 
+/// `.playstatebutton-icon-played`, the glyph a played mark draws once it is
+/// set.
+// reference: scheme-played-mark
+pub const PLAYED_MARK: Color = Color::rgb(0xcc, 0x33, 0x33);
+
+/// `.ratingbutton-icon-withrating`, the glyph a rating control draws once the
+/// item is a favourite.
+// reference: scheme-rating-mark
+pub const FAVORITE_MARK: Color = Color::rgb(0xcc, 0x33, 0x33);
+
 /// `.timerIcon`, the glyph a single timer draws on a cell.
 // reference: guide-timer-icon
 pub const TIMER: Color = Color::rgb(0xcc, 0x33, 0x33);

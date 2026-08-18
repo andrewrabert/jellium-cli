@@ -271,6 +271,7 @@ fn sectioned<'a>(
     results: &'a Results,
     viewport: Viewport,
     images: &'a Cache,
+    now: chrono::DateTime<chrono::Utc>,
 ) -> Element<'a, Message> {
     let room = Room::content(viewport);
     let drawn = card(results.section, shared(&results.items));
@@ -278,7 +279,7 @@ fn sectioned<'a>(
         results.window,
         results.items.len(),
         move |index| match results.items.get(index) {
-            Some(item) => widget::poster(drawn, item, room, images, widget::Overflow::Withheld),
+            Some(item) => widget::poster(drawn, item, room, images, now, widget::Writes::Withheld),
             None => iced::widget::Space::new()
                 .width(style::drawn(drawn.card.width(room)))
                 .into(),
@@ -292,7 +293,12 @@ fn sectioned<'a>(
     )
 }
 
-pub fn view<'a>(state: &'a State, viewport: Viewport, images: &'a Cache) -> Element<'a, Message> {
+pub fn view<'a>(
+    state: &'a State,
+    viewport: Viewport,
+    images: &'a Cache,
+    now: chrono::DateTime<chrono::Utc>,
+) -> Element<'a, Message> {
     let mut page = column![widget::searching(&state.term, viewport)]
         .spacing(style::drawn(space::SECTION_GAP.drawn()))
         .padding(style::padding(space::PAGE_PAD));
@@ -312,7 +318,7 @@ pub fn view<'a>(state: &'a State, viewport: Viewport, images: &'a Cache) -> Elem
     }
 
     for results in &state.sections {
-        page = page.push(sectioned(results, viewport, images));
+        page = page.push(sectioned(results, viewport, images, now));
     }
     page.into()
 }

@@ -486,12 +486,13 @@ pub fn view<'a>(
     state: &'a State,
     viewport: Viewport,
     images: &'a Cache,
+    now: chrono::DateTime<chrono::Utc>,
     session: &'a jellium_protocol::Session,
 ) -> Element<'a, Message> {
     let item = &state.item;
-    let overflow = match session.read_only {
-        true => widget::Overflow::Withheld,
-        false => widget::Overflow::Offered,
+    let writes = match session.read_only {
+        true => widget::Writes::Withheld,
+        false => widget::Writes::Offered,
     };
 
     let head = head(item, viewport, images);
@@ -516,7 +517,8 @@ pub fn view<'a>(
                 state.children.iter(),
                 Room::content(viewport),
                 images,
-                overflow,
+                now,
+                writes,
             ));
     }
 
@@ -542,7 +544,8 @@ pub fn view<'a>(
                 state.similar.iter(),
                 Room::content(viewport),
                 images,
-                overflow,
+                now,
+                writes,
             ),
         ));
     }

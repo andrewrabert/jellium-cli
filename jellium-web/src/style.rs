@@ -794,16 +794,33 @@ pub fn card_overlay(
         })
 }
 
+/// The face a control on a card's hover scrim draws its glyph in.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Tint {
+    /// The scrim's own lettering, which every control carrying no set mark
+    /// draws in.
+    Plain,
+    Played,
+    Favorite,
+}
+
 /// `.cardOverlayButton-hover`: a glyph on that scrim carrying no face of its
-/// own.
+/// own, in the reference's own red where the mark it carries is set.
 // reference: card-overlay-button
 // reference: card-overlay-hover
+// reference: scheme-played-mark
+// reference: scheme-rating-mark
 pub fn card_overlay_control(
     _theme: &iced::Theme,
     _status: iced::widget::button::Status,
+    tint: Tint,
 ) -> iced::widget::button::Style {
     iced::widget::button::Style {
-        text_color: color(scheme::ON_CARD_OVERLAY),
+        text_color: color(match tint {
+            Tint::Plain => scheme::ON_CARD_OVERLAY,
+            Tint::Played => scheme::PLAYED_MARK,
+            Tint::Favorite => scheme::FAVORITE_MARK,
+        }),
         ..iced::widget::button::Style::default()
     }
 }

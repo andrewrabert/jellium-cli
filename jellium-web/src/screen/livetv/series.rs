@@ -166,11 +166,13 @@ fn entry<'a>(timer: &'a SeriesTimerInfoDto, room: Room) -> Element<'a, Message> 
                     Some(id) => vec![
                         Control {
                             glyph: Icon::Edit,
+                            tint: style::Tint::Plain,
                             label: Text::SeriesEdit,
                             press: Message::LiveTvAction(Action::EditSeries(id.clone())),
                         },
                         Control {
                             glyph: Icon::Delete,
+                            tint: style::Tint::Plain,
                             label: Text::SeriesCancel,
                             press: Message::LiveTvAction(Action::CancelSeriesTimer(id)),
                         },

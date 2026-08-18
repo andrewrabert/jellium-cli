@@ -1,7 +1,7 @@
 //! The `BaseItemDto` fields the metadata manager edits, written through one
 //! `form::Form` so a save preserves every field no control covers.
 
-use jellyfin_api::types::{BaseItemDto, BaseItemKind, MetadataField};
+use jellyfin_api::types::{BaseItemDto, BaseItemKind, LocationType, MediaType, MetadataField};
 
 use crate::form::{Field, Form};
 
@@ -362,6 +362,87 @@ pub fn played(item: &BaseItemDto) -> Mark {
 /// Whether the user has favorited it.
 pub fn favorited(item: &BaseItemDto) -> Mark {
     mark(item.user_data.as_ref().and_then(|data| data.is_favorite))
+}
+
+/// Whether the reference's own player would take this item.
+// a book, a photo album, a music genre, a season, a series, a box set, an
+// album, an artist and a playlist play whatever they hold
+// an item the server holds no file for plays only as a programme
+// a programme plays only while `now` falls inside its own airing
+// everything else plays where its media type is video or audio
+// reference: item-can-play
+pub fn playable(item: &BaseItemDto, now: chrono::DateTime<chrono::Utc>) -> bool {
+    if matches!(
+        item.type_,
+        Some(
+            BaseItemKind::Book
+                | BaseItemKind::PhotoAlbum
+                | BaseItemKind::MusicGenre
+                | BaseItemKind::Season
+                | BaseItemKind::Series
+                | BaseItemKind::BoxSet
+                | BaseItemKind::MusicAlbum
+                | BaseItemKind::MusicArtist
+                | BaseItemKind::Playlist
+        )
+    ) {
+        return true;
+    }
+    let programme = item.type_ == Some(BaseItemKind::Program);
+    if item.location_type == Some(LocationType::Virtual) && !programme {
+        return false;
+    }
+    if programme {
+        let (Some(start), Some(end)) = (item.start_date, item.end_date) else {
+            return false;
+        };
+        if now > end || now < start {
+            return false;
+        }
+    }
+    matches!(item.media_type, Some(MediaType::Video | MediaType::Audio))
+}
+
+/// Whether the played mark stands on it.
+// a programme carries none
+// video that is not a channel carries one
+// an audio book carries one, the reference's audio podcast naming a type
+// Jellyfin's own item kinds do not hold
+// a series, a season and a box set carry one, and so does anything the server
+// reports as a book, the reference's recording media type being one Jellyfin's
+// own media types do not hold either
+// reference: item-can-mark-played
+pub fn markable(item: &BaseItemDto) -> bool {
+    if item.type_ == Some(BaseItemKind::Program) {
+        return false;
+    }
+    match item.media_type {
+        Some(MediaType::Video) if item.type_ != Some(BaseItemKind::TvChannel) => return true,
+        Some(MediaType::Audio) if item.type_ == Some(BaseItemKind::AudioBook) => return true,
+        _ => {}
+    }
+    matches!(
+        item.type_,
+        Some(BaseItemKind::Series | BaseItemKind::Season | BaseItemKind::BoxSet)
+    ) || matches!(item.media_type, Some(MediaType::Book))
+}
+
+/// Whether the rating control stands on it.
+// a programme, a library, a user view and a channel carry none, and so does an
+// item the server reports no user data for; the reference's timer and series
+// timer name types Jellyfin's own item kinds do not hold, a timer arriving as a
+// type of its own rather than as an item
+// reference: item-can-rate
+pub fn ratable(item: &BaseItemDto) -> bool {
+    !matches!(
+        item.type_,
+        Some(
+            BaseItemKind::Program
+                | BaseItemKind::CollectionFolder
+                | BaseItemKind::UserView
+                | BaseItemKind::Channel
+        )
+    ) && item.user_data.is_some()
 }
 
 #[cfg(test)]

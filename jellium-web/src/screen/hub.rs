@@ -125,7 +125,12 @@ pub fn opens(state: &State, entry: &BaseItemDto) -> Option<Route> {
 }
 
 /// Each entry opens the filtered list narrowed to that value by id.
-pub fn view<'a>(state: &'a State, viewport: Viewport, images: &'a Cache) -> Element<'a, Message> {
+pub fn view<'a>(
+    state: &'a State,
+    viewport: Viewport,
+    images: &'a Cache,
+    now: chrono::DateTime<chrono::Utc>,
+) -> Element<'a, Message> {
     let count = state.entries.len();
     column![crate::window::grid(
         state.grid,
@@ -138,7 +143,8 @@ pub fn view<'a>(state: &'a State, viewport: Viewport, images: &'a Cache) -> Elem
                     entry,
                     Room::content(viewport),
                     images,
-                    widget::Overflow::Withheld,
+                    now,
+                    widget::Writes::Withheld,
                 );
                 match opens(state, entry) {
                     Some(route) => button(card)

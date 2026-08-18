@@ -205,6 +205,7 @@ fn timed<'a>(
                     .clone()
                     .map(|id| Control {
                         glyph: Icon::Delete,
+                        tint: style::Tint::Plain,
                         label: Text::ScheduleCancel,
                         press: Message::LiveTvAction(Action::CancelTimer(id)),
                     })

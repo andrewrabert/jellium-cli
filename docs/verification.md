@@ -249,6 +249,9 @@ in order. A section passes only when every line in it holds.
 - Home carries an on-now row of favourite channels first and then channels in
   number order, each showing its logo, number and current programme with an
   elapsed bar, and home paints before the row arrives.
+- An on-now card whose current programme carries a timer draws the record glyph
+  on the top trailing corner of its image: filled and red for a single timer,
+  and the faded series glyph for a series timer.
 - A server with no Live TV service, and an account denied Live TV, each show no
   Live TV entry, no on-now row and no Record anywhere, and reaching `/livetv`
   by hand names the cause.
@@ -910,8 +913,17 @@ browser with a touch screen, each at its own size.
   rail and 15.6% for a square or portrait rail.
 - A television browser asks for a portrait or square card's image at a sixth of
   the page width and a backdrop card's at a quarter, at every window width.
-- A library card under the pointer raises a scrim carrying the more control at
-  its trailing foot.
+- A library card under the pointer raises a scrim carrying a play disc at its
+  middle and the played mark, the rating control and the more control in that
+  order at its trailing foot.
+- That scrim carries no play disc on an item the server holds no file for, no
+  played mark on a programme or a channel, and no rating control on a
+  programme, a library or a channel.
+- A card whose item is marked played draws its check in #cc3333 and one whose
+  item is a favourite draws its heart in #cc3333, both drawing in the scrim's
+  own lettering otherwise, and pressing either changes the colour without a
+  reload.
+- Under `--read-only` that scrim carries the play disc alone.
 - A Live TV recording card raises a play control under the pointer, one still
   being written included.
 - The search field stands a 2em magnifier before its 1.1em field, gapped a

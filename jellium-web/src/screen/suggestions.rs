@@ -83,7 +83,8 @@ pub fn view<'a>(
     state: &'a State,
     viewport: Viewport,
     images: &'a Cache,
-    overflow: widget::Overflow,
+    now: chrono::DateTime<chrono::Utc>,
+    writes: widget::Writes,
 ) -> Element<'a, Message> {
     let mut page = column![widget::section(
         strings::lookup(Text::LibraryTabSuggestions),
@@ -92,7 +93,8 @@ pub fn view<'a>(
             state.suggestions.iter(),
             Room::content(viewport),
             images,
-            overflow,
+            now,
+            writes,
         ),
     )]
     .spacing(style::drawn(space::SECTION_GAP.drawn()));
@@ -105,7 +107,8 @@ pub fn view<'a>(
                 rail.items.iter(),
                 Room::content(viewport),
                 images,
-                overflow,
+                now,
+                writes,
             ),
         ));
     }

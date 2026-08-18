@@ -189,7 +189,7 @@ pub async fn load(
     library: Uuid,
     tab: Tab,
     viewport: Viewport,
-    overflow: widget::Overflow,
+    writes: widget::Writes,
 ) -> Answer<State> {
     Answer::of(async {
         let held = api.item(library).await.bubbled()?;
@@ -217,7 +217,7 @@ pub async fn load(
                 Listing::default(),
                 held.collection_type,
                 viewport,
-                overflow,
+                writes,
             );
             let items = api.upcoming(library, UPCOMING).await.bubbled()?;
             rows.items = Paged::new(items.len());
@@ -231,7 +231,7 @@ pub async fn load(
                 listing.clone(),
                 held.collection_type,
                 viewport,
-                overflow,
+                writes,
             );
             let answered = api
                 .browse(
@@ -307,6 +307,7 @@ pub fn view<'a>(
     state: &'a State,
     viewport: Viewport,
     images: &'a Cache,
+    now: chrono::DateTime<chrono::Utc>,
     read_only: bool,
 ) -> Element<'a, Message> {
     let Some(id) = state.library.id else {
@@ -328,17 +329,18 @@ pub fn view<'a>(
     );
 
     let body = match &state.body {
-        Body::Browse(browse) | Body::Rows(browse) => browse::view(browse, viewport, images),
+        Body::Browse(browse) | Body::Rows(browse) => browse::view(browse, viewport, images, now),
         Body::Suggestions(held) => crate::screen::suggestions::view(
             held,
             viewport,
             images,
+            now,
             match read_only {
-                true => widget::Overflow::Withheld,
-                false => widget::Overflow::Offered,
+                true => widget::Writes::Withheld,
+                false => widget::Writes::Offered,
             },
         ),
-        Body::Hub(held) => crate::screen::hub::view(held, viewport, images),
+        Body::Hub(held) => crate::screen::hub::view(held, viewport, images, now),
     };
 
     column![strip, body]

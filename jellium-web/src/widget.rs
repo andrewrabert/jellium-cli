@@ -11,7 +11,7 @@ use iced::widget::{
     Space, button, column, container, grid, image, rich_text, row, scrollable, span, stack, text,
 };
 use iced::{Element, Fill, Length};
-use jellium_model::item;
+use jellium_model::item::{self, Mark};
 use jellium_protocol::{Session, SyncAccess};
 use jellyfin_api::types::{BaseItemDto, BaseItemKind};
 
@@ -180,10 +180,11 @@ fn subtitle(item: &BaseItemDto) -> String {
     }
 }
 
-/// Whether a card offers the overflow menu; the menu is absent entirely under
-/// read-only.
+/// Whether a card's hover menu offers the controls that write to the Jellyfin
+/// server — the played mark, the rating control and the overflow menu — which a
+/// read-only session offers none of.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum Overflow {
+pub enum Writes {
     Offered,
     Withheld,
 }
@@ -415,11 +416,12 @@ pub fn tile<'a>(card: card::Card, room: Room, face: Option<image::Handle>) -> El
     }
 }
 
-/// One control the hover menu carries: the glyph it draws, the title it names
-/// itself by, and what pressing it sends.
+/// One control the hover menu carries: the glyph it draws, the face it draws
+/// that glyph in, the title it names itself by, and what pressing it sends.
 #[derive(Debug, Clone)]
 pub struct Control {
     pub glyph: Icon,
+    pub tint: style::Tint,
     pub label: Text,
     pub press: Message,
 }
@@ -518,17 +520,22 @@ fn hovered<'a>(
         let disc = style::drawn(space::CARD_OVERLAY_FAB.drawn());
         layers.push(
             container(
-                button(
-                    container(crate::icon::icon(
-                        Icon::PlayArrow,
-                        typeface::CARD_OVERLAY_ICON,
-                    ))
-                    .center_x(disc)
-                    .center_y(disc),
+                iced::widget::tooltip(
+                    button(
+                        container(crate::icon::icon(
+                            Icon::PlayArrow,
+                            typeface::CARD_OVERLAY_ICON,
+                        ))
+                        .center_x(disc)
+                        .center_y(disc),
+                    )
+                    .style(style::card_overlay_fab)
+                    .padding(style::drawn(Drawn::ZERO))
+                    .on_press(play),
+                    prose(strings::lookup(Text::CardPlay), typeface::BODY),
+                    iced::widget::tooltip::Position::Top,
                 )
-                .style(style::card_overlay_fab)
-                .padding(style::drawn(Drawn::ZERO))
-                .on_press(play),
+                .style(style::dialog),
             )
             .center_x(Fill)
             .center_y(Fill)
@@ -539,6 +546,7 @@ fn hovered<'a>(
         let glyph = style::drawn(space::CARD_OVERLAY_GLYPH.drawn());
         layers.push(
             container(row(hovered.controls.into_iter().map(|control| {
+                let tint = control.tint;
                 iced::widget::tooltip(
                     button(
                         container(crate::icon::icon(
@@ -548,7 +556,7 @@ fn hovered<'a>(
                         .center_x(glyph)
                         .center_y(glyph),
                     )
-                    .style(style::card_overlay_control)
+                    .style(move |theme, status| style::card_overlay_control(theme, status, tint))
                     .padding(style::drawn(space::CARD_OVERLAY_PAD.drawn()))
                     .on_press(control.press),
                     prose(strings::lookup(control.label), typeface::BODY),
@@ -698,30 +706,71 @@ pub fn page<'a>(viewport: Viewport, body: Element<'a, Message>) -> Element<'a, M
 }
 
 /// A library item's card: its poster, the lines its section writes under it,
-/// and the hover menu's own more control.
+/// and the hover menu's four controls, each standing where its own predicate
+/// answers for the item.
+// reference: card-hover-menu
+// reference: item-can-play
+// reference: item-can-mark-played
+// reference: item-can-rate
 pub fn poster<'a>(
     drawing: card::Drawing,
     item: &'a BaseItemDto,
     room: Room,
     images: &'a Cache,
-    overflow: Overflow,
+    now: chrono::DateTime<chrono::Utc>,
+    writes: Writes,
 ) -> Element<'a, Message> {
     let name = item.name.clone().unwrap_or_default();
     let said = subtitle(item);
-    let controls = item
-        .id
-        .filter(|_| overflow == Overflow::Offered)
-        .map(|id| Control {
+    let mut controls = Vec::new();
+    if let Some(id) = item.id.filter(|_| writes == Writes::Offered) {
+        let played = item::played(item);
+        let favorite = item::favorited(item);
+        if item::markable(item) {
+            controls.push(Control {
+                glyph: Icon::Check,
+                tint: match played {
+                    Mark::Set => style::Tint::Played,
+                    Mark::Cleared => style::Tint::Plain,
+                },
+                label: match played {
+                    Mark::Set => Text::CardWatched,
+                    Mark::Cleared => Text::CardMarkPlayed,
+                },
+                press: Message::PlayedToggled(id, played.flipped()),
+            });
+        }
+        if item::ratable(item) {
+            controls.push(Control {
+                glyph: Icon::Favorite,
+                tint: match favorite {
+                    Mark::Set => style::Tint::Favorite,
+                    Mark::Cleared => style::Tint::Plain,
+                },
+                label: match favorite {
+                    Mark::Set => Text::CardFavorite,
+                    Mark::Cleared => Text::CardAddToFavorites,
+                },
+                press: Message::FavoriteToggled(id, favorite.flipped()),
+            });
+        }
+        controls.push(Control {
             glyph: Icon::MoreVert,
+            tint: style::Tint::Plain,
             label: Text::OverflowOpen,
             press: Message::OverflowAction(crate::screen::overflow::Action::Open {
                 item: id,
-                played: item::played(item),
-                favorite: item::favorited(item),
+                played,
+                favorite,
             }),
+        });
+    }
+    let plays = item.id.filter(|_| item::playable(item, now)).map(|id| {
+        Message::PlayPressed(crate::player::Intent::Item {
+            item: id,
+            resume: true,
         })
-        .into_iter()
-        .collect();
+    });
     card(
         drawing,
         room,
@@ -732,10 +781,7 @@ pub fn poster<'a>(
             timer: None,
             elapsed: None,
             press: item.id.map(|id| Message::Navigated(opens(item, id))),
-            hovered: Hovered {
-                plays: None,
-                controls,
-            },
+            hovered: Hovered { plays, controls },
         },
         move |line| match line {
             card::Line::Name => name.clone(),
@@ -750,11 +796,12 @@ fn cards<'a>(
     items: impl IntoIterator<Item = &'a BaseItemDto>,
     room: Room,
     images: &'a Cache,
-    overflow: Overflow,
+    now: chrono::DateTime<chrono::Utc>,
+    writes: Writes,
 ) -> Vec<Element<'a, Message>> {
     items
         .into_iter()
-        .map(|item| poster(drawing, item, room, images, overflow))
+        .map(|item| poster(drawing, item, room, images, now, writes))
         .collect()
 }
 
@@ -780,9 +827,14 @@ pub fn rail<'a>(
     items: impl IntoIterator<Item = &'a BaseItemDto>,
     room: Room,
     images: &'a Cache,
-    overflow: Overflow,
+    now: chrono::DateTime<chrono::Utc>,
+    writes: Writes,
 ) -> Element<'a, Message> {
-    scroller(drawing, room, cards(drawing, items, room, images, overflow))
+    scroller(
+        drawing,
+        room,
+        cards(drawing, items, room, images, now, writes),
+    )
 }
 
 /// Whether a navigation is showing what one of its entries names, and what
@@ -1174,10 +1226,11 @@ pub fn posters<'a>(
     items: impl IntoIterator<Item = &'a BaseItemDto>,
     room: Room,
     images: &'a Cache,
-    overflow: Overflow,
+    now: chrono::DateTime<chrono::Utc>,
+    writes: Writes,
 ) -> Element<'a, Message> {
     scrolled(
-        grid(cards(drawing, items, room, images, overflow))
+        grid(cards(drawing, items, room, images, now, writes))
             .columns(drawing.card.across(room).count())
             .spacing(style::drawn(space::GUTTER.drawn())),
     )

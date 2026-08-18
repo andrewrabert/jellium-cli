@@ -46,8 +46,8 @@ pub struct Browse {
     /// Where the grid rested under each sort visited, so returning to a sort
     /// returns to its place.
     rested: Vec<(Sort, Drawn)>,
-    /// Whether this surface's cards offer the overflow menu.
-    overflow: widget::Overflow,
+    /// Whether this surface's cards offer the controls that write.
+    writes: widget::Writes,
 }
 
 /// One facet value: the id every query carries and the name every control
@@ -144,7 +144,7 @@ impl Browse {
         listing: Listing,
         collection: Option<CollectionType>,
         viewport: Viewport,
-        overflow: widget::Overflow,
+        writes: widget::Writes,
     ) -> Browse {
         let drawn = wall(collection, None);
         let room = Browse::laid(listing.sort, viewport);
@@ -159,7 +159,7 @@ impl Browse {
             card: drawn,
             viewport,
             rested: Vec::new(),
-            overflow,
+            writes,
         }
     }
 
@@ -522,7 +522,12 @@ fn filter_surface<'a>(browse: &'a Browse, viewport: Viewport) -> Element<'a, Mes
 
 /// The heading, the paging bar, the surface the bar has open, and the windowed
 /// grid.
-pub fn view<'a>(browse: &'a Browse, viewport: Viewport, images: &'a Cache) -> Element<'a, Message> {
+pub fn view<'a>(
+    browse: &'a Browse,
+    viewport: Viewport,
+    images: &'a Cache,
+    now: chrono::DateTime<chrono::Utc>,
+) -> Element<'a, Message> {
     let wall = browse.card();
     let room = browse.room();
     let mut page = column![
@@ -543,7 +548,7 @@ pub fn view<'a>(browse: &'a Browse, viewport: Viewport, images: &'a Cache) -> El
         card::Wrap::Leading,
         count,
         move |index| match browse.items.row(index) {
-            Some(item) => widget::poster(wall, item, room, images, browse.overflow),
+            Some(item) => widget::poster(wall, item, room, images, now, browse.writes),
             None => iced::widget::Space::new()
                 .width(style::drawn(wall.card.width(room)))
                 .height(style::drawn(wall.row(room)))

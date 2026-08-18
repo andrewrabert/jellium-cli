@@ -11,9 +11,9 @@ use crate::app::Message;
 use crate::error::Answer;
 use crate::icon::Icon;
 use crate::images::{self, Cache};
-use crate::style::card;
 use crate::style::card::Aspect;
 use crate::style::space::Room;
+use crate::style::{self, card};
 use crate::text::{self as strings, Text};
 use crate::widget::{self, Control, Face, Hovered, Poster};
 use crate::window;
@@ -91,6 +91,7 @@ fn key(item: &BaseItemDto, card: card::Card) -> Option<images::Key> {
 fn stop(timer: &str) -> Control {
     Control {
         glyph: Icon::Stop,
+        tint: style::Tint::Plain,
         label: Text::RecordingsStop,
         press: Message::LiveTvAction(Action::StopRecording(timer.to_string())),
     }
@@ -100,6 +101,7 @@ fn stop(timer: &str) -> Control {
 fn confirm(id: Uuid) -> Control {
     Control {
         glyph: Icon::Check,
+        tint: style::Tint::Plain,
         label: Text::RecordingsDeleteConfirm,
         press: Message::LiveTvAction(Action::ConfirmDelete(id)),
     }
@@ -109,6 +111,7 @@ fn confirm(id: Uuid) -> Control {
 fn keep() -> Control {
     Control {
         glyph: Icon::Close,
+        tint: style::Tint::Plain,
         label: Text::RecordingsDeleteCancel,
         press: Message::LiveTvAction(Action::CloseDelete),
     }
@@ -118,6 +121,7 @@ fn keep() -> Control {
 fn delete(id: Uuid) -> Control {
     Control {
         glyph: Icon::Delete,
+        tint: style::Tint::Plain,
         label: Text::RecordingsDelete,
         press: Message::LiveTvAction(Action::Delete(id)),
     }

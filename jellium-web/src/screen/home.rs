@@ -181,7 +181,7 @@ pub fn view<'a>(
     now: chrono::DateTime<chrono::Utc>,
     viewport: Viewport,
     images: &'a Cache,
-    overflow: widget::Overflow,
+    writes: widget::Writes,
 ) -> Element<'a, Message> {
     if state.libraries.is_empty() && state.continue_watching.is_empty() && state.next_up.is_empty()
     {
@@ -218,7 +218,8 @@ pub fn view<'a>(
                     items,
                     Room::content(viewport),
                     images,
-                    overflow,
+                    now,
+                    writes,
                 ),
             ));
         }
@@ -251,7 +252,8 @@ pub fn view<'a>(
                 state.next_up.iter(),
                 Room::content(viewport),
                 images,
-                overflow,
+                now,
+                writes,
             ),
         ));
     }
@@ -263,7 +265,8 @@ pub fn view<'a>(
                 row.items.iter(),
                 Room::content(viewport),
                 images,
-                overflow,
+                now,
+                writes,
             ),
         ));
     }

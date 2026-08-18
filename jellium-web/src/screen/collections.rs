@@ -49,11 +49,7 @@ pub enum Action {
     PlayAll { id: Uuid, shuffle: bool },
 }
 
-pub async fn listed(
-    api: Rc<Api>,
-    viewport: Viewport,
-    overflow: widget::Overflow,
-) -> Answer<Listed> {
+pub async fn listed(api: Rc<Api>, viewport: Viewport, writes: widget::Writes) -> Answer<Listed> {
     Answer::of(async {
         let heading = strings::lookup(Text::NavCollections).to_string();
         let mut browse = Browse::new(
@@ -62,7 +58,7 @@ pub async fn listed(
             Listing::default(),
             Some(CollectionType::Boxsets),
             viewport,
-            overflow,
+            writes,
         );
         let answered = api
             .collections(0, Paged::<BaseItemDto>::PAGE as i32)
@@ -84,7 +80,7 @@ pub async fn load(
     collection: Uuid,
     listing: Listing,
     viewport: Viewport,
-    overflow: widget::Overflow,
+    writes: widget::Writes,
 ) -> Answer<State> {
     Answer::of(async {
         let held = api.item(collection).await.bubbled()?;
@@ -95,7 +91,7 @@ pub async fn load(
             listing.clone(),
             Some(CollectionType::Boxsets),
             viewport,
-            overflow,
+            writes,
         );
         let answered = api
             .browse(
@@ -139,6 +135,7 @@ pub fn view_listed<'a>(
     state: &'a Listed,
     viewport: Viewport,
     images: &'a Cache,
+    now: chrono::DateTime<chrono::Utc>,
     read_only: bool,
 ) -> Element<'a, Message> {
     let mut page = column![].spacing(style::drawn(space::SECTION_GAP.drawn()));
@@ -149,7 +146,7 @@ pub fn view_listed<'a>(
             Message::CollectionAction(Action::Create),
         ));
     }
-    page.push(browse::view(&state.browse, viewport, images))
+    page.push(browse::view(&state.browse, viewport, images, now))
         .into()
 }
 
@@ -157,6 +154,7 @@ pub fn view<'a>(
     state: &'a State,
     viewport: Viewport,
     images: &'a Cache,
+    now: chrono::DateTime<chrono::Utc>,
     read_only: bool,
 ) -> Element<'a, Message> {
     let Some(id) = state.collection.id else {
@@ -196,7 +194,7 @@ pub fn view<'a>(
             );
     }
 
-    page.push(browse::view(&state.browse, viewport, images))
+    page.push(browse::view(&state.browse, viewport, images, now))
         .into()
 }
 

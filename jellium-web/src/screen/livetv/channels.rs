@@ -94,6 +94,7 @@ fn entry<'a>(
                         true => Icon::Favorite,
                         false => Icon::FavoriteBorder,
                     },
+                    tint: style::Tint::Plain,
                     label: match channel.favorite {
                         true => Text::ChannelUnfavorite,
                         false => Text::ChannelFavorite,

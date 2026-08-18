@@ -480,7 +480,7 @@ async fn filtered_load(
     api: Rc<Api>,
     filtered: crate::route::Filtered,
     viewport: Viewport,
-    overflow: widget::Overflow,
+    writes: widget::Writes,
 ) -> Answer<crate::screen::browse::Browse> {
     Answer::of(async {
         let heading = match filtered.header {
@@ -499,7 +499,7 @@ async fn filtered_load(
             listing.clone(),
             None,
             viewport,
-            overflow,
+            writes,
         );
         let answered = api
             .browse(
@@ -524,30 +524,30 @@ async fn filtered_load(
 pub fn load(signed: &Signed, route: &Route, viewport: Viewport) -> Task<Message> {
     let api: Rc<Api> = signed.api.clone();
     let reachable = signed.session.live_tv.allowed();
-    let overflow = match signed.session.read_only {
-        true => widget::Overflow::Withheld,
-        false => widget::Overflow::Offered,
+    let writes = match signed.session.read_only {
+        true => widget::Writes::Withheld,
+        false => widget::Writes::Offered,
     };
     match route.clone() {
         Route::Home => Task::perform(home::load(api), Message::HomeLoaded),
         Route::Library { id, tab } => Task::perform(
-            library::load(api, id, *tab, viewport, overflow),
+            library::load(api, id, *tab, viewport, writes),
             Message::LibraryLoaded,
         ),
         Route::Filtered(filtered) => Task::perform(
-            filtered_load(api, *filtered, viewport, overflow),
+            filtered_load(api, *filtered, viewport, writes),
             Message::FilteredLoaded,
         ),
         Route::Collections => Task::perform(
-            crate::screen::collections::listed(api, viewport, overflow),
+            crate::screen::collections::listed(api, viewport, writes),
             Message::CollectionsLoaded,
         ),
         Route::Collection { id, listing } => Task::perform(
-            crate::screen::collections::load(api, id, *listing, viewport, overflow),
+            crate::screen::collections::load(api, id, *listing, viewport, writes),
             Message::CollectionLoaded,
         ),
         Route::Playlists => Task::perform(
-            crate::screen::playlists::listed(api, viewport, overflow),
+            crate::screen::playlists::listed(api, viewport, writes),
             Message::PlaylistsLoaded,
         ),
         Route::Playlist { id } => Task::perform(
@@ -2928,20 +2928,33 @@ impl Jellium {
                         self.viewport,
                         &self.images,
                         match read_only {
-                            true => widget::Overflow::Withheld,
-                            false => widget::Overflow::Offered,
+                            true => widget::Writes::Withheld,
+                            false => widget::Writes::Offered,
                         },
                     ),
-                    View::Library(state) => {
-                        library::view(state, self.viewport, &self.images, read_only)
+                    View::Library(state) => library::view(
+                        state,
+                        self.viewport,
+                        &self.images,
+                        chrono::Utc::now(),
+                        read_only,
+                    ),
+                    View::Detail(state) => detail::view(
+                        state,
+                        self.viewport,
+                        &self.images,
+                        chrono::Utc::now(),
+                        &signed.session,
+                    ),
+                    View::Search(state) => {
+                        search::view(state, self.viewport, &self.images, chrono::Utc::now())
                     }
-                    View::Detail(state) => {
-                        detail::view(state, self.viewport, &self.images, &signed.session)
-                    }
-                    View::Search(state) => search::view(state, self.viewport, &self.images),
-                    View::Filtered(browse) => {
-                        crate::screen::browse::view(browse, self.viewport, &self.images)
-                    }
+                    View::Filtered(browse) => crate::screen::browse::view(
+                        browse,
+                        self.viewport,
+                        &self.images,
+                        chrono::Utc::now(),
+                    ),
                     View::Metadata(state) => crate::screen::metadata::view(
                         state,
                         self.viewport,
@@ -2953,18 +2966,21 @@ impl Jellium {
                         state,
                         self.viewport,
                         &self.images,
+                        chrono::Utc::now(),
                         read_only,
                     ),
                     View::Collection(state) => crate::screen::collections::view(
                         state,
                         self.viewport,
                         &self.images,
+                        chrono::Utc::now(),
                         read_only,
                     ),
                     View::Playlists(state) => crate::screen::playlists::view_listed(
                         state,
                         self.viewport,
                         &self.images,
+                        chrono::Utc::now(),
                         read_only,
                     ),
                     View::Playlist(state) => {
