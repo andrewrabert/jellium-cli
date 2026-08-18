@@ -809,6 +809,7 @@ pub fn view<'a>(
     state: &'a State,
     session: &'a jellium_protocol::Session,
     images: &'a crate::images::Cache,
+    now: chrono::DateTime<chrono::Utc>,
     viewport: Viewport,
 ) -> Element<'a, Message> {
     let filling: frame::Filling<'a> = match state.confirming.as_ref() {
@@ -830,14 +831,14 @@ pub fn view<'a>(
                 frame::Filling::Stacked(libraries::view(held, session.read_only))
             }
             Body::Library(held) => frame::Filling::Stacked(libraries::one(held, session.read_only)),
-            Body::Tasks(held) => frame::Filling::Stacked(tasks::view(held, session.read_only)),
+            Body::Tasks(held) => tasks::view(held, session.read_only, now, viewport.band()),
             Body::Task(held) => frame::Filling::Stacked(tasks::one(held, session.read_only)),
-            Body::Logs(held) => frame::Filling::Stacked(logs::view(held)),
-            Body::Log(held) => frame::Filling::Stacked(logs::viewer(held)),
+            Body::Logs(held) => logs::view(held, session.read_only, viewport),
+            Body::Log(held) => logs::viewer(held, viewport.band()),
             Body::Activity(held) => activity::view(held, viewport.band()),
             Body::Catalog(held) => frame::Filling::Stacked(catalog::view(held, session.read_only)),
             Body::Repositories(held) => {
-                frame::Filling::Stacked(repositories::view(held, session.read_only))
+                repositories::view(held, session.read_only, viewport.band())
             }
             Body::Devices(held) => devices::view(held, session.read_only),
             Body::Keys(held) => keys::view(held, session.read_only),
@@ -847,13 +848,11 @@ pub fn view<'a>(
         },
     };
 
-    frame::frame(
-        &state.screen,
-        &state.opened,
-        strings::lookup(state.screen.label()),
-        filling,
-        viewport,
-    )
+    let title = match state.screen {
+        Screen::Tasks | Screen::Log { .. } => None,
+        _ => Some(state.screen.label()),
+    };
+    frame::frame(&state.screen, &state.opened, title, filling, viewport)
 }
 
 /// What stands beside a configuration page: the frame occupies the viewport
@@ -907,6 +906,10 @@ pub fn act(signed: &mut Signed, action: Action, viewport: Viewport) -> Task<Mess
         Action::Edited(field, value) => {
             match shown_mut(signed).map(|state| &mut state.body) {
                 Some(Body::Settings(held)) => {
+                    held.form.edit(field, value);
+                    held.saved = false;
+                }
+                Some(Body::Logs(held)) => {
                     held.form.edit(field, value);
                     held.saved = false;
                 }
@@ -1011,6 +1014,21 @@ pub fn act(signed: &mut Signed, action: Action, viewport: Viewport) -> Task<Mess
                                 Wrote {
                                     operation: Operation::UserSave,
                                     object: object.clone(),
+                                },
+                                outcome,
+                            )
+                        },
+                    );
+                }
+                Some(Body::Logs(held)) => {
+                    let body = held.form.written();
+                    return Task::perform(
+                        async move { api.save_server_configuration(&body).await },
+                        move |outcome| {
+                            Message::DashboardSaved(
+                                Wrote {
+                                    operation: Operation::Configuration,
+                                    object: strings::lookup(Text::LogsTitle).to_string(),
                                 },
                                 outcome,
                             )
@@ -1804,6 +1822,7 @@ pub fn dirty(view: &crate::app::View) -> bool {
     match view {
         crate::app::View::Dashboard(state) => match &state.body {
             Body::Settings(held) => held.form.dirty(),
+            Body::Logs(held) => held.form.dirty(),
             Body::LiveTv(held) => held.dvr.dirty(),
             Body::User(held) => held.policy.dirty() || held.configuration.dirty(),
             Body::Library(held) => held.options.dirty(),
@@ -1817,6 +1836,11 @@ pub fn dirty(view: &crate::app::View) -> bool {
 pub fn saved(signed: &mut Signed) {
     match shown_mut(signed).map(|state| &mut state.body) {
         Some(Body::Settings(held)) => {
+            let written = held.form.written();
+            held.form.saved(written);
+            held.saved = true;
+        }
+        Some(Body::Logs(held)) => {
             let written = held.form.written();
             held.form.saved(written);
             held.saved = true;
@@ -1844,6 +1868,7 @@ pub fn saved(signed: &mut Signed) {
 pub fn abandoned(signed: &mut Signed) {
     match shown_mut(signed).map(|state| &mut state.body) {
         Some(Body::Settings(held)) => held.form.discard(),
+        Some(Body::Logs(held)) => held.form.discard(),
         Some(Body::User(held)) => {
             held.policy.discard();
             held.configuration.discard();

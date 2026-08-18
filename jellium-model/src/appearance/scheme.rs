@@ -2,7 +2,7 @@
 //! A construct carrying both a measure and a colour is named the same here and
 //! in `space`; the module names which of the two a constant is.
 
-use super::Ratio;
+use super::{Elevation, Ratio};
 
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
 pub struct Alpha {
@@ -330,13 +330,26 @@ const SELECTED: Alpha = Alpha::thousandths(200);
 // reference: mui-dark-action
 const HOVERED: Alpha = Alpha::thousandths(80);
 
-/// A drawer entry whose screen the dashboard is showing.
-// reference: drawer-entry
-pub const DRAWER_SHOWN: Color = ACCENT.at(SELECTED);
+/// A list row whose screen the dashboard is showing.
+// reference: mui-list-item-button
+pub const LIST_ROW_SELECTED: Color = ACCENT.at(SELECTED);
 
-/// That entry where it is reached.
-// reference: drawer-entry
-pub const DRAWER_SHOWN_HOVER: Color = ACCENT.at(SELECTED.plus(HOVERED));
+/// That row where it is reached.
+// reference: mui-list-item-button
+pub const LIST_ROW_SELECTED_HOVER: Color = ACCENT.at(SELECTED.plus(HOVERED));
+
+/// The glyph an avatar carries, which the reference writes white on the accent.
+// reference: tasks-row
+pub const ON_AVATAR: Color = Color::rgb(0xff, 0xff, 0xff);
+
+/// What MUI takes a palette colour down by to reach a progress bar's track on a
+/// dark scheme.
+// reference: mui-linear-progress-dark
+const PROGRESS_DARKENED_BY: Ratio = Ratio::thousandths(500);
+
+/// `MuiLinearProgress`'s own track, which MUI darkens out of the accent.
+// reference: mui-linear-progress
+pub const PROGRESS_TRACK: Color = ACCENT.darkened(PROGRESS_DARKENED_BY);
 
 /// MUI's `action.hover`, the overlay any reached control carries.
 // reference: mui-dark-action
@@ -430,25 +443,29 @@ const CONTAINED_DARKENED_BY: Ratio = TONAL_OFFSET.times(TONAL_DARK_STEP);
 // reference: mui-palette-augment
 pub const CONTAINED_HOVER: Color = ACCENT.darkened(CONTAINED_DARKENED_BY);
 
-/// `background.paper` on a dark scheme, which every MUI paper draws.
-// reference: mui-dark-action
-const PAPER: Color = Color::rgb(0x12, 0x12, 0x12);
+/// The elevation MUI's own paper stands at where nothing raises it.
+// reference: mui-paper-elevation
+pub const PAPER_ELEVATION: Elevation = Elevation::steps(1);
 
 /// The elevation MUI's own popover stands at.
 // reference: mui-popover-elevation
-const POPOVER_ELEVATION: f32 = 8.0;
+pub const POPOVER_ELEVATION: Elevation = Elevation::steps(8);
 
-/// The face MUI's own popover draws: the paper's face under the white its
-/// elevation lays over it.
+/// The face a MUI paper draws at `elevation`: `background.paper` under the
+/// white that elevation lays over it, which MUI reads off the square of the
+/// elevation below one step and off its logarithm at one step and above.
 // reference: mui-paper
 // reference: mui-overlay
-// reference: mui-popover-elevation
-pub fn menu_face() -> Color {
-    let raised = 4.5 * (POPOVER_ELEVATION + 1.0).ln() + 2.0;
+pub fn paper_face(elevation: Elevation) -> Color {
+    let steps = elevation.count();
+    let raised = match steps < 1.0 {
+        true => 5.119_16 * steps * steps,
+        false => 4.5 * (steps + 1.0).ln() + 2.0,
+    };
     let thousandths = (raised * 10.0).round() as u16;
     CONTRAST_LIGHT
         .at(Alpha::thousandths(thousandths))
-        .over(PAPER)
+        .over(SURFACE)
 }
 
 /// MUI's `divider`, which is the edge one segment of the toolbar's group

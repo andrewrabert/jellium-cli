@@ -617,25 +617,127 @@ pub const DRAWER_BESIDE_AT: Query = Query::MinWidth(Breakpoint::pixels(900));
 // reference: drawer-paper
 pub const DRAWER_BOTTOM: Length = Length::em(4.2);
 
-/// `.MuiListItemButton-root`'s own padding, which MUI writes as the bare
-/// numbers the DOM reads as css pixels.
-// reference: drawer-entry
-pub const DRAWER_ENTRY_PAD: Inset = Inset {
+/// `MuiListItemButton`'s own padding, which MUI writes as the bare numbers the
+/// DOM reads as css pixels.
+// reference: mui-list-item-button
+pub const LIST_ROW_PAD: Inset = Inset {
     top: Css::unitless(8.0),
     right: Css::unitless(16.0),
     bottom: Css::unitless(8.0),
     left: Css::unitless(16.0),
 };
 
-/// The slot `MuiListItemIcon` stands an entry's glyph in, which the reference
-/// narrows from MUI's own.
+/// The slot `MuiListItemIcon` stands a row's glyph in, which the reference
+/// narrows from MUI's own and which `MuiListItemText`'s own `inset` matches.
 // reference: dashboard-list-icon
 // reference: dashboard-list-icon-slot
-pub const DRAWER_GLYPH: Css = Css::unitless(36.0);
+pub const LIST_ICON_SLOT: Css = Css::unitless(36.0);
+
+/// `MuiList`'s own padding above and below the rows it holds.
+// reference: mui-list
+pub const LIST_PAD: Inset = Inset {
+    top: Css::unitless(8.0),
+    right: Css::unitless(0.0),
+    bottom: Css::unitless(8.0),
+    left: Css::unitless(0.0),
+};
+
+/// The room `MuiListItem` keeps clear at the trailing edge of the control it
+/// stands a `secondaryAction` beside.
+// reference: mui-list-item
+pub const LIST_ROW_ACTION: Css = Css::unitless(48.0);
+
+/// Where that action stands, measured from the row's own trailing edge.
+// reference: mui-list-secondary-action
+pub const LIST_ACTION_INSET: Css = Css::unitless(16.0);
+
+/// `MuiListItemText`'s own margins around the one line it writes.
+// reference: mui-list-item-text
+pub const LIST_TEXT_MARGIN: Inset = Inset {
+    top: Css::unitless(4.0),
+    right: Css::unitless(0.0),
+    bottom: Css::unitless(4.0),
+    left: Css::unitless(0.0),
+};
+
+/// The same margins where a row writes a second line under its title.
+// reference: mui-list-item-text
+pub const LIST_TEXT_MARGIN_STACKED: Inset = Inset {
+    top: Css::unitless(6.0),
+    right: Css::unitless(0.0),
+    bottom: Css::unitless(6.0),
+    left: Css::unitless(0.0),
+};
+
+/// The slot `MuiListItemAvatar` stands a row's disc in.
+// reference: mui-list-item-avatar
+pub const LIST_AVATAR_SLOT: Css = Css::unitless(56.0);
+
+/// `MuiAvatar`'s own disc.
+// reference: mui-avatar
+pub const AVATAR: Css = Css::unitless(40.0);
+
+/// The corner that rounds it, which MUI writes as the whole of its own box.
+// reference: mui-avatar
+pub const AVATAR_RADIUS: Share = Share::per_ten_thousand(5000);
+
+/// `MuiIconButton`'s own padding, which is what rounds it into a disc.
+// reference: mui-icon-button
+pub const ICON_BUTTON_PAD: Css = Css::unitless(8.0);
+
+/// The corner MUI rounds that padding by.
+// reference: mui-icon-button
+pub const ICON_BUTTON_RADIUS: Share = Share::per_ten_thousand(5000);
+
+/// `MuiLinearProgress`'s own track.
+// reference: mui-linear-progress
+pub const LINEAR_PROGRESS: Css = Css::unitless(4.0);
+
+/// `TaskProgress`'s own row, which the reference holds to this height.
+// reference: task-progress
+pub const TASK_PROGRESS_ROW: Length = Length::em(1.2);
+
+/// The least width it gives that row.
+// reference: task-progress
+pub const TASK_PROGRESS_MIN: Css = Css::of(170.0);
+
+/// The gap it leaves between the bar and the reading beside it.
+// reference: task-progress
+pub const TASK_PROGRESS_GAP: Css = SPACING_STEP;
+
+/// The room it leaves after that reading.
+// reference: task-progress
+pub const TASK_PROGRESS_TRAIL: Css = SPACING_STEP.times(Ratio::thousandths(2000));
+
+/// The room the tasks page leaves over its own categories.
+// reference: tasks-page
+pub const TASKS_TOP: Css = SPACING_STEP.times(Ratio::thousandths(2000));
+
+/// The rhythm one category stacks its heading and its list at.
+// reference: tasks-category
+pub const CATEGORY_GAP: Css = SPACING_STEP.times(Ratio::thousandths(2000));
+
+/// The padding the reference writes inside the paper a log file's body stands
+/// on.
+// reference: logs-viewer
+pub const VIEWER_PAD: Css = Css::of(16.0);
+
+/// The room it leaves over that paper.
+// reference: logs-viewer
+pub const VIEWER_GAP: Css = SPACING_STEP.times(Ratio::thousandths(2000));
 
 /// The inset an entry held by a group stands at, which is four steps.
 // reference: drawer-server
 pub const DRAWER_NESTED: Css = SPACING_STEP.times(Ratio::thousandths(4000));
+
+/// The width the reference caps the two sentences it writes where the server
+/// holds no repository at.
+// reference: repositories-page
+pub const REPOSITORIES_EMPTY: Css = Css::of(500.0);
+
+/// The rhythm it stacks those two sentences at.
+// reference: repositories-page
+pub const REPOSITORIES_EMPTY_GAP: Css = SPACING_STEP.times(Ratio::thousandths(2000));
 
 /// A body cell's own padding at MRT's compact density.
 // reference: table-body-cell
@@ -866,6 +968,14 @@ pub const CONTAINED_PAD: Inset = Inset {
 // reference: mui-button
 pub const CONTAINED_MIN: Css = Css::unitless(64.0);
 
+/// That floor inside `CONTAINED_PAD`, which is what a contained button's label
+/// is laid against.
+// reference: mui-button
+// reference: mui-button-large
+pub const CONTAINED_MIN_INSIDE: Css = CONTAINED_MIN
+    .less(CONTAINED_PAD.left)
+    .less(CONTAINED_PAD.right);
+
 /// An alert's own padding.
 // reference: mui-alert
 pub const ALERT_PAD: Inset = Inset {
@@ -893,19 +1003,6 @@ pub const ALERT_MESSAGE_PAD: Inset = Inset {
     left: Css::of(0.0),
 };
 
-/// One option of the menu a select opens.
-// reference: mui-menu-item
-pub const MENU_ITEM_PAD: Inset = Inset {
-    top: Css::unitless(6.0),
-    right: Css::unitless(16.0),
-    bottom: Css::unitless(6.0),
-    left: Css::unitless(16.0),
-};
-
-/// The least height MUI draws one of those options at.
-// reference: mui-menu-item
-pub const MENU_ITEM: Css = Css::unitless(48.0);
-
 /// The cap MUI holds a menu's paper under: the page it stands in, and the
 /// offset that leaves a row of that page tappable beyond the menu.
 // reference: mui-menu-paper
@@ -914,13 +1011,16 @@ pub const MENU_CAP: Cap = Cap {
     offset: Css::of(-96.0),
 };
 
-/// The height a select's menu stands at: MUI's own least option height for
-/// each option the menu holds, under the cap MUI writes over its paper.
-// reference: mui-menu-item
+/// The height a select's menu stands at: the height iced draws one option at,
+/// which is the closed field's own padding around one line of its lettering
+/// because iced gives a menu's options that padding, for each option the menu
+/// holds, under the cap MUI writes over its paper.
+// reference: mui-filled-input
+// reference: mui-input-base
 // reference: mui-menu-paper
 pub fn menu_height(options: usize, viewport: Viewport) -> Drawn {
     let band = viewport.band();
-    let stacked = Drawn::of(MENU_ITEM.drawn(band).count() * options as f32);
+    let stacked = Drawn::of(filled_row(band).count() * options as f32);
     MENU_CAP.holds(stacked, viewport.canvas().height(), band)
 }
 
@@ -1177,7 +1277,7 @@ pub const ICON_GAP: Length = ICON_MARGIN.abutting(ICON_MARGIN);
 
 /// `.paper-icon-button-light`'s padding, which is what rounds it into a disc.
 // reference: control-icon-button
-pub const ICON_BUTTON_PAD: Length = Length::em(0.556);
+pub const PAPER_ICON_BUTTON_PAD: Length = Length::em(0.556);
 
 // reference: progress-bar
 pub const PROGRESS: Length = Length::em(0.28);

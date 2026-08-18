@@ -2984,9 +2984,13 @@ impl Jellium {
                     View::LiveTv(state) => {
                         livetv::view(state, chrono::Utc::now(), &self.images, self.viewport)
                     }
-                    View::Dashboard(state) => {
-                        dashboard::view(state, &signed.session, &self.images, self.viewport)
-                    }
+                    View::Dashboard(state) => dashboard::view(
+                        state,
+                        &signed.session,
+                        &self.images,
+                        chrono::Utc::now(),
+                        self.viewport,
+                    ),
                     View::Settings(state) => {
                         crate::screen::settings::view(state, signed, &self.images, self.viewport)
                     }

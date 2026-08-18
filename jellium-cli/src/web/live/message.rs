@@ -138,24 +138,6 @@ fn typed<T: serde::de::DeserializeOwned>(frame: &str) -> Option<T> {
     serde_json::from_str(frame).ok()
 }
 
-/// One scheduled task as the dashboard takes it; a task the server named no id
-/// for is dropped.
-pub fn task_state(info: jellyfin_api::types::TaskInfo) -> Option<jellium_protocol::TaskState> {
-    use jellyfin_api::types::TaskState as Upstream;
-    Some(jellium_protocol::TaskState {
-        id: info.id?,
-        name: info.name.unwrap_or_default(),
-        category: info.category.unwrap_or_default(),
-        description: info.description.unwrap_or_default(),
-        state: match info.state {
-            Some(Upstream::Cancelling) => jellium_protocol::TaskRunState::Cancelling,
-            Some(Upstream::Running) => jellium_protocol::TaskRunState::Running,
-            Some(Upstream::Idle) | None => jellium_protocol::TaskRunState::Idle,
-        },
-        progress: info.current_progress_percentage,
-    })
-}
-
 /// One activity entry as the activity screen takes it; an entry the server
 /// named no id for is dropped.
 pub fn activity_entry(
@@ -344,7 +326,7 @@ pub fn dispatch(frame: &str, user: Uuid, live_tv: bool) -> Dispatched {
                         .data
                         .unwrap_or_default()
                         .into_iter()
-                        .filter_map(task_state)
+                        .filter_map(jellium_model::task::taken)
                         .collect(),
                 ),
                 None => Dispatched::Ignored,

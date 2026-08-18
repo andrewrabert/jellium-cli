@@ -35,6 +35,12 @@ impl Css {
         Css::of(self.count * ratio.factor())
     }
 
+    /// Const, so a measure that is one written count less another is written as
+    /// that difference rather than as its arithmetic result.
+    pub const fn less(self, other: Css) -> Css {
+        Css::of(self.count - other.count)
+    }
+
     /// MUI's `pxToRem`: this count of css pixels as the design length it is
     /// over the 16px base.
     pub const fn length(self) -> Length {
@@ -119,6 +125,12 @@ impl Share {
     /// `Css::drawn` being the only crossing.
     pub fn of<M: Measure>(self, length: M) -> M {
         length.scaled(self.per_ten_thousand as f32 / 10_000.0)
+    }
+
+    /// This as the count out of a hundred, which is what the reading beside a
+    /// progress bar writes.
+    pub fn percent(self) -> f32 {
+        self.per_ten_thousand as f32 / 100.0
     }
 }
 
@@ -214,6 +226,23 @@ impl Ratio {
     /// This ratio taken `other` of.
     pub const fn times(self, other: Ratio) -> Ratio {
         Ratio::thousandths((self.thousandths as f32 * other.factor()) as u16)
+    }
+}
+
+/// How far a MUI surface stands off the page, which is what decides the white
+/// MUI lays over its own paper.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct Elevation {
+    steps: u8,
+}
+
+impl Elevation {
+    pub const fn steps(steps: u8) -> Elevation {
+        Elevation { steps }
+    }
+
+    pub fn count(self) -> f32 {
+        self.steps as f32
     }
 }
 

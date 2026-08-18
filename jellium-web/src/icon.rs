@@ -39,6 +39,7 @@ macro_rules! icons {
 }
 
 icons! {
+    AccessTime => "access_time",
     Add => "add",
     Analytics => "analytics",
     ArrowBack => "arrow_back",
@@ -87,6 +88,7 @@ icons! {
     Movie => "movie",
     MusicNote => "music_note",
     MusicVideo => "music_video",
+    OpenInNew => "open_in_new",
     Palette => "palette",
     Pause => "pause",
     People => "people",

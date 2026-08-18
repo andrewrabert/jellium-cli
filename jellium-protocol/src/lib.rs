@@ -421,6 +421,26 @@ pub enum TaskRunState {
     Running,
 }
 
+/// How a scheduled task's last run ended.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum TaskEnding {
+    Completed,
+    Failed,
+    Cancelled,
+    Aborted,
+}
+
+/// A scheduled task's last run: when it opened, when it closed, and how it
+/// ended.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct TaskRun {
+    pub started: chrono::DateTime<chrono::Utc>,
+    pub ended: chrono::DateTime<chrono::Utc>,
+    pub ending: TaskEnding,
+}
+
 /// One scheduled task, as the task list, task detail and dashboard home take
 /// it.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -433,6 +453,9 @@ pub struct TaskState {
     pub state: TaskRunState,
     /// 0.0..=100.0 while the task runs, absent otherwise.
     pub progress: Option<f64>,
+    /// The run that closed last, and nothing where the server reports none or
+    /// reports it without both of its two moments.
+    pub last_ran: Option<TaskRun>,
 }
 
 /// One activity log entry.

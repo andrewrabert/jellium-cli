@@ -18,7 +18,7 @@ mod socket;
 mod tabs;
 pub mod verbs;
 
-pub use message::{activity_entry, task_state};
+pub use message::activity_entry;
 pub use tabs::TabId;
 
 use super::AppState;

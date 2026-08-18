@@ -363,7 +363,7 @@ impl Upstream {
             .map_err(|e| self.failed(e))?;
         Ok(tasks
             .into_iter()
-            .filter_map(crate::web::live::task_state)
+            .filter_map(jellium_model::task::taken)
             .collect())
     }
 

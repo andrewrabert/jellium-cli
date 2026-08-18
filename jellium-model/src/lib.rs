@@ -1,5 +1,6 @@
 pub mod appearance;
 pub mod bridge;
+pub mod distance;
 pub mod facets;
 pub mod form;
 pub mod guide;
@@ -14,6 +15,7 @@ pub mod quickconnect;
 pub mod search;
 pub mod setup;
 pub mod sort;
+pub mod task;
 pub mod trickplay;
 pub mod upload;
 pub mod user;

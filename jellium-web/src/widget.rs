@@ -823,62 +823,26 @@ pub enum Rung {
     },
 }
 
-/// One row of the drawer, its glyph in the slot the reference stands one in.
-fn rung<'a>(
-    glyph: Icon,
-    label: Text,
-    press: Message,
-    face: fn(&iced::Theme, iced::widget::button::Status) -> iced::widget::button::Style,
-    trailing: Option<Icon>,
-    band: Band,
-) -> Element<'a, Message> {
-    let mut parts = vec![
-        container(crate::icon::icon(glyph, typeface::LIST_ICON))
-            .width(style::drawn(space::DRAWER_GLYPH.drawn(band)))
-            .into(),
-        container(prose(strings::lookup(label), typeface::BODY))
-            .width(Fill)
-            .into(),
-    ];
-    if let Some(trailing) = trailing {
-        parts.push(crate::icon::icon(trailing, typeface::LIST_ICON));
-    }
-    button(row(parts))
-        .width(Fill)
-        .padding(style::inset(space::DRAWER_ENTRY_PAD, band))
-        .style(face)
-        .on_press(press)
-        .into()
-}
-
-/// The face a destination carries, which is the accent where the drawer is
-/// showing what it names.
-fn face(
-    showing: &Showing,
-) -> fn(&iced::Theme, iced::widget::button::Status) -> iced::widget::button::Style {
-    match showing {
-        Showing::Shown => style::drawer_shown,
-        Showing::Offered(_) => style::drawer_offered,
-    }
-}
-
 /// The reference's navigation drawer: its rows in one column on its own
 /// surface, the row whose screen is shown carrying the accent, a group
 /// carrying the glyph that says which way it opens, and the rows a group holds
 /// standing at the group's own inset while it is open.
 // reference: drawer-paper
-// reference: drawer-entry
+// reference: mui-list-item-button
 // reference: dashboard-list-icon-slot
 pub fn drawer<'a>(rungs: impl IntoIterator<Item = Rung>, band: Band) -> Element<'a, Message> {
     let mut rows: Vec<Element<'a, Message>> = Vec::new();
     for standing in rungs {
         match standing {
-            Rung::Reached(link) => rows.push(rung(
-                link.glyph,
-                link.label,
-                pressed(link.showing.clone()),
-                face(&link.showing),
-                None,
+            Rung::Reached(link) => rows.push(mui::row(
+                mui::Row {
+                    lead: Some(mui::Lead::Glyph(link.glyph)),
+                    primary: mui::Primary::Said(strings::lookup(link.label).into()),
+                    beneath: None,
+                    within: None,
+                    showing: Some(link.showing.clone()),
+                    trailing: None,
+                },
                 band,
             )),
             Rung::Group {
@@ -892,31 +856,30 @@ pub fn drawer<'a>(rungs: impl IntoIterator<Item = Rung>, band: Band) -> Element<
                     Held::Shown => Icon::ExpandLess,
                     Held::Hidden => Icon::ExpandMore,
                 };
-                rows.push(rung(
-                    glyph,
-                    label,
-                    press,
-                    style::drawer_offered,
-                    Some(arrow),
+                rows.push(mui::row(
+                    mui::Row {
+                        lead: Some(mui::Lead::Glyph(glyph)),
+                        primary: mui::Primary::Said(strings::lookup(label).into()),
+                        beneath: None,
+                        within: Some(arrow),
+                        showing: Some(Showing::Offered(press)),
+                        trailing: None,
+                    },
                     band,
                 ));
                 if showing == Held::Shown {
                     for link in held {
-                        rows.push(
-                            container(rung(
-                                link.glyph,
-                                link.label,
-                                pressed(link.showing.clone()),
-                                face(&link.showing),
-                                None,
-                                band,
-                            ))
-                            .padding(
-                                iced::Padding::ZERO
-                                    .left(style::drawn(space::DRAWER_NESTED.drawn(band))),
-                            )
-                            .into(),
-                        );
+                        rows.push(mui::row(
+                            mui::Row {
+                                lead: Some(mui::Lead::Nested),
+                                primary: mui::Primary::Said(strings::lookup(link.label).into()),
+                                beneath: None,
+                                within: None,
+                                showing: Some(link.showing.clone()),
+                                trailing: None,
+                            },
+                            band,
+                        ));
                     }
                 }
             }
@@ -1397,7 +1360,7 @@ pub fn icon_button<'a>(
 ) -> Element<'a, Message> {
     let control = button(crate::icon::icon(glyph, size))
         .style(style::icon_control)
-        .padding(style::drawn(space::ICON_BUTTON_PAD.drawn()))
+        .padding(style::drawn(space::PAPER_ICON_BUTTON_PAD.drawn()))
         .on_press(press);
     let Some(label) = label else {
         return control.into();

@@ -151,6 +151,16 @@ pub const LIST_ICON: Length = BODY.times(Ratio::thousandths(1430));
 // reference: list-body-text-desktop
 pub const LIST_LEADING: Leading = Leading::Factor(Ratio::thousandths(1200));
 
+/// MUI's own `body1`, which a list row's title and the line under it are
+/// written in.
+// reference: mui-typography
+pub const BODY_1_LEADING: Leading = Leading::Factor(Ratio::thousandths(1500));
+
+/// The line box `TaskLastRan` writes its own line in, which the reference sets
+/// as a length rather than as a factor.
+// reference: task-last-ran
+pub const TASK_LAST_RAN_LEADING: Leading = Leading::Length(Length::em(1.2));
+
 /// The size MUI sets its own `body2` variant at, in the css pixels it writes
 /// before `pxToRem` puts that size over the 16px base.
 // reference: mui-typography

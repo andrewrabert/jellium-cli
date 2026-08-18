@@ -1,7 +1,6 @@
 //! The page every dashboard screen stands in, and the navigation drawer that
 //! stands beside it.
 
-use std::borrow::Cow;
 use std::collections::BTreeSet;
 
 use iced::widget::{Space, column, container, row};
@@ -162,9 +161,9 @@ pub enum Filling<'a> {
     /// A screen heading its own content with `.sectionTitleContainer` rather
     /// than the dashboard's own `h1`, which fills the page whole.
     Whole(Element<'a, Message>),
-    /// The `<form>` the reference's settings routes wrap their whole stack in,
-    /// which the page caps and holds at its leading edge.
-    Formed(Vec<Element<'a, Message>>),
+    /// A stack the page holds to the width the reference caps a `<form>` and a
+    /// `.readOnlyContent` box at.
+    Capped(Vec<Element<'a, Message>>),
 }
 
 /// The page every dashboard screen stands in: the drawer beside the content on
@@ -176,25 +175,32 @@ pub enum Filling<'a> {
 // reference: dashboard-content
 // reference: dashboard-content-side
 // reference: table-page
+// the page writes no heading where `title` names none
 pub fn frame<'a>(
     shown: &Screen,
     opened: &BTreeSet<Group>,
-    title: impl Into<Cow<'a, str>>,
+    title: Option<Text>,
     filling: Filling<'a>,
     viewport: Viewport,
 ) -> Element<'a, Message> {
     let band = viewport.band();
+    let titled = |rank| -> Vec<Element<'a, Message>> {
+        title
+            .map(|title| widget::mui::heading(rank, strings::lookup(title)))
+            .into_iter()
+            .collect()
+    };
     let filled: Element<'a, Message> = match filling {
         Filling::Stacked(content) => {
-            let mut stacked = vec![widget::mui::heading(typeface::Rank::First, title)];
+            let mut stacked = titled(typeface::Rank::First);
             stacked.extend(content);
             widget::scrolled(
                 column(stacked).spacing(style::drawn(space::DASHBOARD_GAP.drawn(band))),
             )
             .into()
         }
-        Filling::Formed(rows) => {
-            let mut stacked = vec![widget::mui::heading(typeface::Rank::First, title)];
+        Filling::Capped(rows) => {
+            let mut stacked = titled(typeface::Rank::First);
             stacked.extend(rows);
             let held = column(stacked).spacing(style::drawn(space::DASHBOARD_GAP.drawn(band)));
             let capped = match viewport.matches(space::FORM_WIDTH_AT) {
@@ -204,12 +210,12 @@ pub fn frame<'a>(
             widget::scrolled(container(capped).width(Fill)).into()
         }
         Filling::Tabled { subtitle, table } => {
-            let mut titled = vec![widget::mui::heading(typeface::Rank::First, title)];
+            let mut standing = titled(typeface::Rank::First);
             if let Some(subtitle) = subtitle {
-                titled.push(widget::prose(strings::lookup(subtitle), typeface::BODY));
+                standing.push(widget::prose(strings::lookup(subtitle), typeface::BODY));
             }
             column![
-                column(titled).spacing(style::drawn(space::TABLE_TITLE_GAP.drawn(band))),
+                column(standing).spacing(style::drawn(space::TABLE_TITLE_GAP.drawn(band))),
                 Space::new().height(style::drawn(space::TABLE_TITLE_BOTTOM.drawn(band))),
                 widget::table::drawn(table, band),
             ]

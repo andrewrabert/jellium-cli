@@ -1,13 +1,15 @@
 //! The scheduled tasks the server holds, and the one task a task screen shows.
 
 use iced::Element;
-use iced::widget::{button, row};
+use iced::widget::{button, column, row};
 
+use super::frame;
 use crate::app::Message;
 use crate::error::Answer;
-use crate::style::{self, space, typeface};
+use crate::icon::Icon;
+use crate::style::{self, Band, Share, space, typeface};
 use crate::text::{self as strings, Text};
-use crate::widget::{line, prose};
+use crate::widget::{self, Showing, prose};
 
 /// Every scheduled task, with the state and progress each push carries.
 #[derive(Debug, Clone)]
@@ -23,29 +25,11 @@ pub async fn load(api: std::rc::Rc<crate::api::Api>) -> Answer<State> {
                 .await
                 .bubbled()?
                 .into_iter()
-                .filter_map(shaped)
+                .filter_map(jellium_model::task::taken)
                 .collect(),
         })
     })
     .await
-}
-
-/// One task as the dashboard takes it; a task the server named no id for is
-/// dropped.
-fn shaped(info: jellyfin_api::types::TaskInfo) -> Option<jellium_protocol::TaskState> {
-    use jellyfin_api::types::TaskState as Upstream;
-    Some(jellium_protocol::TaskState {
-        id: info.id?,
-        name: info.name.unwrap_or_default(),
-        category: info.category.unwrap_or_default(),
-        description: info.description.unwrap_or_default(),
-        state: match info.state {
-            Some(Upstream::Cancelling) => jellium_protocol::TaskRunState::Cancelling,
-            Some(Upstream::Running) => jellium_protocol::TaskRunState::Running,
-            Some(Upstream::Idle) | None => jellium_protocol::TaskRunState::Idle,
-        },
-        progress: info.current_progress_percentage,
-    })
 }
 
 /// One task's screen: what it is, how its last run ended, and its triggers.
@@ -72,73 +56,177 @@ pub fn tasks(state: &mut State, tasks: Vec<jellium_protocol::TaskState>) {
     state.tasks = tasks;
 }
 
-fn state_text(state: jellium_protocol::TaskRunState) -> Text {
-    match state {
-        jellium_protocol::TaskRunState::Idle => Text::TasksIdle,
-        jellium_protocol::TaskRunState::Running => Text::TasksRunning,
-        jellium_protocol::TaskRunState::Cancelling => Text::TasksCancelling,
+/// The phrase date-fns writes for a span, singular where it counts one.
+// reference: date-fns-distance-en-us
+fn phrase(distance: jellium_model::distance::Distance) -> String {
+    use jellium_model::distance::Distance;
+    let (alone, several) = match distance {
+        Distance::LessThanMinutes(_) => {
+            (Text::DistanceLessThanMinute, Text::DistanceLessThanMinutes)
+        }
+        Distance::Minutes(_) => (Text::DistanceMinute, Text::DistanceMinutes),
+        Distance::AboutHours(_) => (Text::DistanceAboutHour, Text::DistanceAboutHours),
+        Distance::Days(_) => (Text::DistanceDay, Text::DistanceDays),
+        Distance::AboutMonths(_) => (Text::DistanceAboutMonth, Text::DistanceAboutMonths),
+        Distance::Months(_) => (Text::DistanceMonth, Text::DistanceMonths),
+        Distance::AboutYears(_) => (Text::DistanceAboutYear, Text::DistanceAboutYears),
+        Distance::OverYears(_) => (Text::DistanceOverYear, Text::DistanceOverYears),
+        Distance::AlmostYears(_) => (Text::DistanceAlmostYear, Text::DistanceAlmostYears),
+    };
+    match distance.count() {
+        1 => strings::lookup(alone).to_string(),
+        count => strings::format(several, &[&count.to_string()]),
     }
 }
 
-/// Every task with its state and its running progress.
-pub fn view<'a>(state: &'a State, read_only: bool) -> Vec<Element<'a, Message>> {
-    let mut page: Vec<Element<'a, Message>> = Vec::new();
+/// How far a moment stands from now, in words, with the suffix its side of now
+/// asks for.
+// reference: date-fns-distance
+fn since(at: chrono::DateTime<chrono::Utc>, now: chrono::DateTime<chrono::Utc>) -> String {
+    let said = phrase(jellium_model::distance::Distance::between(at, now));
+    match jellium_model::distance::Sense::of(at, now) {
+        jellium_model::distance::Sense::Passed => strings::format(Text::DistancePassed, &[&said]),
+        jellium_model::distance::Sense::Ahead => strings::format(Text::DistanceAhead, &[&said]),
+    }
+}
 
-    for task in &state.tasks {
-        let progress = task
-            .progress
-            .map(|progress| format!(" {progress:.0}%"))
-            .unwrap_or_default();
-        let mut held = row![
-            button(line(
-                task.name.clone(),
-                typeface::BODY,
-                typeface::Weight::Regular,
-                typeface::LINE_HEIGHT,
-            ))
-            .style(style::link)
-            .on_press(Message::DashboardAction(super::Action::Open(
-                super::Screen::Task {
-                    id: task.id.clone(),
-                }
-            ))),
-            line(
-                format!("{}{progress}", strings::lookup(state_text(task.state))),
-                typeface::BODY,
-                typeface::Weight::Regular,
-                typeface::LINE_HEIGHT,
-            ),
-        ]
-        .spacing(style::drawn(space::CONTROL_GAP.drawn()));
+/// The sentence saying how long ago a task last ran and how long that run took.
+// reference: task-last-ran
+fn last_ran(run: jellium_protocol::TaskRun, now: chrono::DateTime<chrono::Utc>) -> String {
+    strings::format(
+        Text::TasksLastRan,
+        &[
+            &since(run.ended, now),
+            &phrase(jellium_model::distance::Distance::between(
+                run.started,
+                run.ended,
+            )),
+        ],
+    )
+}
 
-        if !read_only {
-            held = held.push(match task.state {
-                jellium_protocol::TaskRunState::Running => {
-                    button(prose(strings::lookup(Text::TasksStop), typeface::BODY))
-                        .style(style::raised)
-                        .on_press(Message::DashboardAction(super::Action::Ask(
-                            crate::screen::confirm::Pending::of(
-                                crate::screen::confirm::Destructive::StopTask {
-                                    id: task.id.clone(),
-                                },
-                                task.name.clone(),
-                            ),
-                        )))
-                }
-                _ => button(prose(strings::lookup(Text::TasksStart), typeface::BODY))
-                    .style(style::raised)
-                    .on_press(Message::DashboardAction(super::Action::Write(
-                        super::Written::StartTask {
-                            id: task.id.clone(),
-                            name: task.name.clone(),
-                        },
-                    ))),
-            });
+/// The word the reference writes after the sentence for an ending it names.
+// reference: task-last-ran
+fn ending(ending: jellium_protocol::TaskEnding) -> Option<Text> {
+    match ending {
+        jellium_protocol::TaskEnding::Completed => None,
+        jellium_protocol::TaskEnding::Failed => Some(Text::TasksFailed),
+        jellium_protocol::TaskEnding::Cancelled => Some(Text::TasksCancelled),
+        jellium_protocol::TaskEnding::Aborted => Some(Text::TasksAborted),
+    }
+}
+
+/// What a task writes under its own name.
+// reference: task-progress
+// reference: task-last-ran
+fn beneath<'a>(
+    task: &'a jellium_protocol::TaskState,
+    now: chrono::DateTime<chrono::Utc>,
+) -> Option<widget::mui::Beneath<'a>> {
+    match task.state {
+        jellium_protocol::TaskRunState::Running => Some(widget::mui::Beneath::Running(
+            task.progress
+                .map(|progress| Share::part((progress * 100.0) as i64, 10_000)),
+        )),
+        jellium_protocol::TaskRunState::Cancelling => Some(widget::mui::Beneath::Said(
+            strings::lookup(Text::TasksStopping).into(),
+        )),
+        jellium_protocol::TaskRunState::Idle => {
+            let run = task.last_ran?;
+            let mut said = last_ran(run, now);
+            if let Some(named) = ending(run.ending) {
+                said.push_str(strings::lookup(named));
+            }
+            Some(widget::mui::Beneath::Ran(said.into()))
         }
-        page.push(held.into());
+    }
+}
+
+/// The control that starts a task or stops the one that is running.
+// reference: tasks-row
+fn control(task: &jellium_protocol::TaskState) -> widget::mui::Trailing {
+    match task.state {
+        jellium_protocol::TaskRunState::Running => widget::mui::Trailing {
+            glyph: Icon::Stop,
+            label: None,
+            press: Message::DashboardAction(super::Action::Ask(
+                crate::screen::confirm::Pending::of(
+                    crate::screen::confirm::Destructive::StopTask {
+                        id: task.id.clone(),
+                    },
+                    task.name.clone(),
+                ),
+            )),
+        },
+        _ => widget::mui::Trailing {
+            glyph: Icon::PlayArrow,
+            label: None,
+            press: Message::DashboardAction(super::Action::Write(super::Written::StartTask {
+                id: task.id.clone(),
+                name: task.name.clone(),
+            })),
+        },
+    }
+}
+
+/// The heading over each category and the tasks it holds as MUI's own list,
+/// the categories in name order and a category's tasks in name order, each row
+/// reaching its own screen and carrying the control that starts it or stops it.
+// the three endings the reference writes after the sentence are written in the
+// same secondary lettering the sentence is, where the reference paints two of
+// them in its own error colour and one in the css named blue
+// reference: tasks-page
+// reference: tasks-categories
+// reference: tasks-category
+// reference: tasks-row
+// reference: task-progress
+// reference: task-last-ran
+pub fn view<'a>(
+    state: &'a State,
+    read_only: bool,
+    now: chrono::DateTime<chrono::Utc>,
+    band: Band,
+) -> frame::Filling<'a> {
+    let mut categories: std::collections::BTreeMap<&'a str, Vec<&'a jellium_protocol::TaskState>> =
+        std::collections::BTreeMap::new();
+    for task in &state.tasks {
+        categories
+            .entry(task.category.as_str())
+            .or_default()
+            .push(task);
     }
 
-    page
+    let mut page: Vec<Element<'a, Message>> = Vec::new();
+    for (category, mut held) in categories {
+        held.sort_by(|one, other| one.name.cmp(&other.name));
+        page.push(
+            column![
+                widget::mui::heading(typeface::Rank::Second, category),
+                widget::mui::listed(
+                    held.into_iter().map(|task| widget::mui::Row {
+                        lead: Some(widget::mui::Lead::Avatar(Icon::AccessTime)),
+                        primary: widget::mui::Primary::Headed(
+                            typeface::Rank::Third,
+                            task.name.as_str().into(),
+                        ),
+                        beneath: beneath(task, now),
+                        within: None,
+                        showing: Some(Showing::Offered(Message::DashboardAction(
+                            super::Action::Open(super::Screen::Task {
+                                id: task.id.clone(),
+                            }),
+                        ))),
+                        trailing: (!read_only).then(|| control(task)),
+                    }),
+                    band,
+                ),
+            ]
+            .spacing(style::drawn(space::CATEGORY_GAP.drawn(band)))
+            .into(),
+        );
+    }
+
+    frame::Filling::Stacked(page)
 }
 
 /// One task: its description, its last execution's status and duration, and

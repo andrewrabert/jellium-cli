@@ -341,8 +341,8 @@ pub fn icon_control(
 ) -> iced::widget::button::Style {
     let disc = iced::border::Radius::new(drawn(
         typeface::ICON_BUTTON
-            .plus(space::ICON_BUTTON_PAD)
-            .plus(space::ICON_BUTTON_PAD)
+            .plus(space::PAPER_ICON_BUTTON_PAD)
+            .plus(space::PAPER_ICON_BUTTON_PAD)
             .times(Ratio::thousandths(500))
             .drawn(),
     ));
@@ -388,11 +388,11 @@ pub fn drawer(_theme: &iced::Theme) -> iced::widget::container::Style {
         .color(color(scheme::TEXT))
 }
 
-/// A drawer entry whose screen the dashboard is not showing: no face of its
-/// own until it is reached.
-// reference: drawer-entry
+/// `MuiListItemButton`'s own face: nothing at rest and MUI's own overlay under
+/// the pointer.
+// reference: mui-list-item-button
 // reference: mui-dark-action
-pub fn drawer_offered(
+pub fn list_row(
     _theme: &iced::Theme,
     status: iced::widget::button::Status,
 ) -> iced::widget::button::Style {
@@ -405,17 +405,105 @@ pub fn drawer_offered(
     }
 }
 
-/// The entry whose screen the dashboard is showing: the accent at a fifth of
+/// The same row whose screen the dashboard is showing: the accent at a fifth of
 /// its opacity, and at twenty-eight hundredths where it is reached.
-// reference: drawer-entry
-pub fn drawer_shown(
+// reference: mui-list-item-button
+pub fn list_row_selected(
     _theme: &iced::Theme,
     status: iced::widget::button::Status,
 ) -> iced::widget::button::Style {
     if lit(status) {
-        return faced(scheme::DRAWER_SHOWN_HOVER, scheme::TEXT);
+        return faced(scheme::LIST_ROW_SELECTED_HOVER, scheme::TEXT);
     }
-    faced(scheme::DRAWER_SHOWN, scheme::TEXT)
+    faced(scheme::LIST_ROW_SELECTED, scheme::TEXT)
+}
+
+/// `MuiList`'s own surface, which the reference paints in `background.paper`.
+// reference: tasks-category
+// reference: logs-list
+// reference: repositories-page
+pub fn list_surface(_theme: &iced::Theme) -> iced::widget::container::Style {
+    iced::widget::container::Style::default()
+        .background(color(scheme::SURFACE))
+        .color(color(scheme::TEXT))
+}
+
+/// `MuiAvatar`'s own disc, on the accent.
+// reference: mui-avatar
+// reference: tasks-row
+pub fn avatar(_theme: &iced::Theme, band: Band) -> iced::widget::container::Style {
+    iced::widget::container::Style::default()
+        .background(color(scheme::ACCENT))
+        .border(iced::Border {
+            radius: iced::border::Radius::new(drawn(
+                space::AVATAR_RADIUS.of(space::AVATAR).drawn(band),
+            )),
+            ..iced::Border::default()
+        })
+}
+
+/// The glyph standing on it, which the reference writes white.
+// reference: tasks-row
+pub fn on_avatar(_theme: &iced::Theme) -> iced::widget::text::Style {
+    iced::widget::text::Style {
+        color: Some(color(scheme::ON_AVATAR)),
+    }
+}
+
+/// `MuiIconButton`'s own face: nothing at rest, MUI's own overlay under the
+/// pointer, rounded into a disc.
+// reference: mui-icon-button
+// reference: mui-dark-action
+pub fn icon_button(
+    _theme: &iced::Theme,
+    status: iced::widget::button::Status,
+    band: Band,
+) -> iced::widget::button::Style {
+    let across = space::ICON_BUTTON_PAD
+        .drawn(band)
+        .plus(space::ICON_BUTTON_PAD.drawn(band))
+        .plus(typeface::CONTROL_GLYPH.drawn());
+    let disc = iced::border::Radius::new(drawn(space::ICON_BUTTON_RADIUS.of(across)));
+    let face = match lit(status) {
+        true => faced(scheme::ACTION_HOVER, scheme::TEXT),
+        false => iced::widget::button::Style {
+            text_color: color(scheme::TEXT),
+            ..iced::widget::button::Style::default()
+        },
+    };
+    iced::widget::button::Style {
+        border: iced::Border {
+            radius: disc,
+            ..face.border
+        },
+        ..face
+    }
+}
+
+/// `MuiLinearProgress`'s own track, which MUI darkens out of the accent.
+// reference: mui-linear-progress
+pub fn progress_track(_theme: &iced::Theme) -> iced::widget::container::Style {
+    iced::widget::container::Style::default().background(color(scheme::PROGRESS_TRACK))
+}
+
+/// The bar standing on it, which MUI paints in the palette colour itself.
+// reference: mui-linear-progress-bar
+pub fn progress_bar(_theme: &iced::Theme) -> iced::widget::container::Style {
+    iced::widget::container::Style::default().background(color(scheme::ACCENT))
+}
+
+/// `MuiPaper` at MUI's own default elevation: its face and its corner.
+// reference: mui-paper
+// reference: mui-paper-elevation
+// reference: mui-shape
+pub fn paper(_theme: &iced::Theme, band: Band) -> iced::widget::container::Style {
+    iced::widget::container::Style::default()
+        .background(color(scheme::paper_face(scheme::PAPER_ELEVATION)))
+        .color(color(scheme::TEXT))
+        .border(iced::Border {
+            radius: iced::border::Radius::new(drawn(space::SHAPE_RADIUS.drawn(band))),
+            ..iced::Border::default()
+        })
 }
 
 /// A tab the strip is not showing: the reference's own grey lettering on no
@@ -901,7 +989,7 @@ pub fn filled_select(
 // reference: mui-shape
 pub fn filled_menu(_theme: &iced::Theme, band: Band) -> iced::widget::overlay::menu::Style {
     iced::widget::overlay::menu::Style {
-        background: iced::Background::Color(color(scheme::menu_face())),
+        background: iced::Background::Color(color(scheme::paper_face(scheme::POPOVER_ELEVATION))),
         border: iced::Border {
             color: iced::Color::TRANSPARENT,
             width: 0.0,

@@ -1,13 +1,15 @@
 //! The plugin repositories the server is configured with.
 
 use iced::Element;
-use iced::widget::{button, row, text_input};
+use iced::widget::{button, column, container, row, text_input};
 
+use super::frame;
 use crate::app::Message;
 use crate::error::Answer;
-use crate::style::{self, space, typeface};
+use crate::icon::Icon;
+use crate::style::{self, Band, space, typeface};
 use crate::text::{self as strings, Text};
-use crate::widget::prose;
+use crate::widget::{self, prose};
 
 /// Every repository, and what a new one is being named.
 #[derive(Debug, Clone)]
@@ -28,35 +30,15 @@ pub async fn load(api: std::rc::Rc<crate::api::Api>) -> Answer<State> {
     .await
 }
 
-/// Each repository with its name and url, its removal, and the control that
-/// adds one behind a confirmation naming the url.
-pub fn view<'a>(state: &'a State, read_only: bool) -> Vec<Element<'a, Message>> {
+/// The two fields and the control that add a repository, over the repositories
+/// as MUI's own list, and the two sentences the reference writes where the
+/// server holds none.
+// a repository's row carries no press, where the reference draws it as a
+// control whose disc opens the url in another tab
+// reference: repositories-page
+// reference: repositories-row
+pub fn view<'a>(state: &'a State, read_only: bool, band: Band) -> frame::Filling<'a> {
     let mut page: Vec<Element<'a, Message>> = Vec::new();
-
-    for repository in &state.repositories {
-        let url = repository.url.clone().unwrap_or_default();
-        let mut held = row![
-            prose(repository.name.clone().unwrap_or_default(), typeface::BODY),
-            prose(url.clone(), typeface::BODY),
-        ]
-        .spacing(style::drawn(space::CONTROL_GAP.drawn()));
-        if !read_only {
-            held = held.push(
-                button(prose(
-                    strings::lookup(Text::RepositoriesRemove),
-                    typeface::BODY,
-                ))
-                .style(style::raised)
-                .on_press(Message::DashboardAction(super::Action::Ask(
-                    crate::screen::confirm::Pending::of(
-                        crate::screen::confirm::Destructive::RemoveRepository { url: url.clone() },
-                        url,
-                    ),
-                ))),
-            );
-        }
-        page.push(held.into());
-    }
 
     if !read_only {
         page.push(
@@ -89,5 +71,54 @@ pub fn view<'a>(state: &'a State, read_only: bool) -> Vec<Element<'a, Message>> 
         );
     }
 
-    page
+    if state.repositories.is_empty() {
+        page.push(
+            container(
+                column![
+                    widget::mui::heading(
+                        typeface::Rank::Second,
+                        strings::lookup(Text::RepositoriesEmpty),
+                    ),
+                    prose(strings::lookup(Text::RepositoriesEmptyHelp), typeface::BODY),
+                ]
+                .align_x(iced::Center)
+                .spacing(style::drawn(space::REPOSITORIES_EMPTY_GAP.drawn(band)))
+                .max_width(style::drawn(space::REPOSITORIES_EMPTY.drawn(band))),
+            )
+            .center_x(iced::Fill)
+            .into(),
+        );
+        return frame::Filling::Stacked(page);
+    }
+
+    page.push(widget::mui::listed(
+        state.repositories.iter().map(|repository| {
+            let url = repository.url.clone().unwrap_or_default();
+            widget::mui::Row {
+                lead: Some(widget::mui::Lead::Avatar(Icon::OpenInNew)),
+                primary: widget::mui::Primary::Headed(
+                    typeface::Rank::Third,
+                    repository.name.clone().unwrap_or_default().into(),
+                ),
+                beneath: Some(widget::mui::Beneath::Said(url.clone().into())),
+                within: None,
+                showing: None,
+                trailing: (!read_only).then(|| widget::mui::Trailing {
+                    glyph: Icon::Delete,
+                    label: Some(Text::RepositoriesRemove),
+                    press: Message::DashboardAction(super::Action::Ask(
+                        crate::screen::confirm::Pending::of(
+                            crate::screen::confirm::Destructive::RemoveRepository {
+                                url: url.clone(),
+                            },
+                            url,
+                        ),
+                    )),
+                }),
+            }
+        }),
+        band,
+    ));
+
+    frame::Filling::Stacked(page)
 }

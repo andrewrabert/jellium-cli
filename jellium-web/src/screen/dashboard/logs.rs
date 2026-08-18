@@ -1,19 +1,34 @@
 //! The server's log files, and the tail of the one a viewer shows.
 
 use iced::Element;
-use iced::widget::button;
+use jellium_model::form::{Field, Form};
 
+use super::frame;
 use crate::app::Message;
 use crate::error::Answer;
-use crate::style::{self, Drawn, space, typeface};
+use crate::style::{self, Band, Drawn, Viewport, space, typeface};
 use crate::text::{self as strings, Text};
-use crate::widget::{line, prose};
+use crate::widget::{self, line};
 use crate::window;
 
-/// The log files the server holds.
+/// The switch the logging form offers.
+pub const SLOW_RESPONSE: Field = Field::Flag {
+    key: "EnableSlowResponseWarning",
+};
+
+/// The threshold past which the server calls a response slow.
+pub const SLOW_RESPONSE_THRESHOLD: Field = Field::Number {
+    key: "SlowResponseThresholdMs",
+};
+
+/// The log files the server holds, and the server configuration the logging
+/// form edits.
 #[derive(Debug, Clone)]
 pub struct State {
     pub files: Vec<jellyfin_api::types::LogFile>,
+    pub form: Form,
+    /// True once a save has landed and nothing has been edited since.
+    pub saved: bool,
 }
 
 /// One log file's tail, windowed by line.
@@ -28,6 +43,8 @@ pub async fn load(api: std::rc::Rc<crate::api::Api>) -> Answer<State> {
     Answer::of(async {
         Ok(State {
             files: api.log_files().await.bubbled()?,
+            form: Form::of(api.server_configuration().await.bubbled()?),
+            saved: false,
         })
     })
     .await
@@ -63,43 +80,97 @@ fn sized(bytes: u64) -> String {
     format!("{mib:.1} MiB")
 }
 
-/// Each log file with its name and size.
-pub fn view<'a>(state: &'a State) -> Vec<Element<'a, Message>> {
-    let mut page: Vec<Element<'a, Message>> = Vec::new();
+/// When a file was last written, as the date and the time the reference writes
+/// beside its name, in the zone the browser stands in.
+// reference: date-locale-date
+// reference: date-display-time
+fn modified(at: chrono::DateTime<chrono::Utc>) -> String {
+    at.with_timezone(&chrono::Local)
+        .format("%-m/%-d/%Y %-I:%M %p")
+        .to_string()
+}
 
-    for file in &state.files {
-        let name = file.name.clone().unwrap_or_default();
-        page.push(
-            iced::widget::row![
-                button(prose(name.clone(), typeface::BODY))
-                    .style(style::link)
-                    .on_press(Message::DashboardAction(super::Action::Open(
-                        super::Screen::Log { name }
-                    ))),
-                prose(
-                    strings::format(Text::LogsSize, &[&sized(file.size.unwrap_or(0) as u64)]),
-                    typeface::BODY
-                ),
-            ]
-            .spacing(style::drawn(space::CONTROL_GAP.drawn()))
-            .into(),
-        );
+/// What editing `field` to `value` sends.
+fn edited(field: Field, value: String) -> Message {
+    Message::DashboardAction(super::Action::Edited(field, value))
+}
+
+/// The logging form over the files, each file one row reaching its own viewer
+/// under its name at MUI's `h3` over the date and time it was last modified.
+// the threshold field is offered whether or not the switch is on, where the
+// reference disables it while the switch is off
+// reference: dashboard-content
+// reference: logs-body
+// reference: logs-list
+// reference: date-locale-date
+// reference: date-display-time
+pub fn view<'a>(state: &'a State, read_only: bool, viewport: Viewport) -> frame::Filling<'a> {
+    let band = viewport.band();
+    let mut rows: Vec<Element<'a, Message>> = vec![
+        widget::mui::flag(
+            strings::lookup(Text::LogsSlowResponse),
+            state.form.flagged(SLOW_RESPONSE),
+            move |on| edited(SLOW_RESPONSE, on.to_string()),
+            band,
+        ),
+        widget::mui::field(
+            strings::lookup(Text::LogsSlowResponseTime),
+            &state.form.value(SLOW_RESPONSE_THRESHOLD),
+            move |typed| edited(SLOW_RESPONSE_THRESHOLD, typed),
+            band,
+        ),
+    ];
+
+    if state.saved {
+        rows.push(widget::mui::succeeded(Text::DashboardSaved, band));
     }
 
-    page
+    if !read_only {
+        let press = state
+            .form
+            .dirty()
+            .then_some(Message::DashboardAction(super::Action::Save));
+        rows.push(widget::mui::contained(Text::DashboardSave, press, band));
+    }
+
+    rows.push(widget::mui::listed(
+        state.files.iter().map(|file| {
+            let name = file.name.clone().unwrap_or_default();
+            widget::mui::Row {
+                lead: None,
+                primary: widget::mui::Primary::Headed(typeface::Rank::Third, name.clone().into()),
+                beneath: file
+                    .date_modified
+                    .map(|at| widget::mui::Beneath::Said(modified(at).into())),
+                within: None,
+                showing: Some(widget::Showing::Offered(Message::DashboardAction(
+                    super::Action::Open(super::Screen::Log { name }),
+                ))),
+                trailing: None,
+            }
+        }),
+        band,
+    ));
+
+    frame::Filling::Stacked(rows)
 }
 
 /// The most of a log file the local server delivers, which is what names the
 /// body a tail.
 const TAIL_LIMIT: u64 = 2 * 1024 * 1024;
 
-/// The sentence naming the tail and the file's full size, and only the lines
-/// the window shows.
-pub fn viewer<'a>(held: &'a Viewer) -> Vec<Element<'a, Message>> {
-    let mut page: Vec<Element<'a, Message>> = vec![prose(held.name.clone(), typeface::HEADING_2)];
+/// The file's own name as the page's heading, the sentence naming the tail and
+/// the file's full size, and the lines the window shows, on the paper the
+/// reference stands a log's body on.
+// reference: logs-viewer
+pub fn viewer<'a>(held: &'a Viewer, band: Band) -> frame::Filling<'a> {
+    let mut page: Vec<Element<'a, Message>> = vec![widget::mui::heading(
+        typeface::Rank::First,
+        held.name.clone(),
+    )];
 
     if held.tail.truncated() {
-        page.push(prose(
+        page.push(widget::prose(
             strings::format(
                 Text::LogsTail,
                 &[&sized(TAIL_LIMIT), &sized(held.tail.size())],
@@ -108,13 +179,18 @@ pub fn viewer<'a>(held: &'a Viewer) -> Vec<Element<'a, Message>> {
         ));
     }
 
-    page.push(window::list(held.window, held.tail.lines(), |index| {
-        line(
-            held.tail.line(index),
-            typeface::BODY,
-            typeface::Weight::Regular,
-            typeface::LINE_HEIGHT,
-        )
-    }));
-    page
+    page.push(widget::mui::papered(
+        iced::widget::container(window::list(held.window, held.tail.lines(), |index| {
+            line(
+                held.tail.line(index),
+                typeface::BODY,
+                typeface::Weight::Regular,
+                typeface::LINE_HEIGHT,
+            )
+        }))
+        .padding(style::drawn(space::VIEWER_PAD.drawn(band)))
+        .into(),
+        band,
+    ));
+    frame::Filling::Stacked(page)
 }
