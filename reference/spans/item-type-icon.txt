@@ -1,0 +1,32 @@
+export function getItemTypeIcon(itemType: BaseItemKind | string | undefined, defaultIcon?: string) {
+    switch (itemType) {
+        case BaseItemKind.MusicAlbum:
+            return 'album';
+        case BaseItemKind.MusicArtist:
+        case BaseItemKind.Person:
+            return 'person';
+        case BaseItemKind.Audio:
+            return 'audiotrack';
+        case BaseItemKind.Movie:
+            return 'movie';
+        case BaseItemKind.Episode:
+        case BaseItemKind.Series:
+            return 'tv';
+        case BaseItemKind.Program:
+            return 'live_tv';
+        case BaseItemKind.Book:
+            return 'book';
+        case BaseItemKind.Folder:
+            return 'folder';
+        case BaseItemKind.BoxSet:
+            return 'video_library';
+        case BaseItemKind.Playlist:
+            return 'queue';
+        case BaseItemKind.Photo:
+            return 'photo';
+        case BaseItemKind.PhotoAlbum:
+            return 'photo_album';
+        default:
+            return defaultIcon;
+    }
+}

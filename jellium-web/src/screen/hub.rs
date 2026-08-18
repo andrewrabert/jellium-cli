@@ -140,7 +140,7 @@ pub fn view<'a>(state: &'a State, viewport: Viewport, images: &'a Cache) -> Elem
                     wall,
                     entry,
                     Room::content(viewport),
-                    widget::poster_key(entry, wall.card).and_then(|key| images.handle(key)),
+                    images,
                     widget::Overflow::Withheld,
                 );
                 match opens(state, entry) {

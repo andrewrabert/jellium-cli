@@ -7,7 +7,7 @@
 
 use jellyfin_api::types::{CollectionType, MediaType};
 
-use super::space::{self, GUTTER, Room};
+use super::space::{self, Room};
 use super::typeface;
 use super::{
     Across, Breakpoint, Css, Drawn, Layout, Length, Orientation, Query, Screen, Share, Viewport,
@@ -1094,7 +1094,7 @@ pub struct Drawing {
 impl Drawing {
     /// The pitch one card occupies down the page, gutter included.
     pub fn row(self, room: Room) -> Drawn {
-        let gutter = GUTTER.drawn();
+        let gutter = space::GUTTER.drawn();
         let inside = Drawn::of(self.card.width(room).count() - gutter.count());
         self.card
             .shape()

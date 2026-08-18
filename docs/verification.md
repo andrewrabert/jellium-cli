@@ -907,3 +907,11 @@ browser with a touch screen, each at its own size.
   lettering while it is cleared and filled with #00a4dc while it is set.
 - The activity log draws its user column in the All and User views and drops it
   in System.
+- A movie the server holds no image for draws the movie glyph at 5em over its
+  own background, on a home rail, in a library grid and in a search result
+  alike, and a music album the server holds no image for draws the album glyph.
+- An episode the server holds no image of its own draws its series' image, a
+  track with none draws its album's, and a season with none draws its own
+  thumb.
+- The browser's network panel shows no image request for an item carrying no
+  image tag of any kind.

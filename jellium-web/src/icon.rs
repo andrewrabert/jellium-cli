@@ -2,7 +2,7 @@
 //! becomes a codepoint.
 
 use iced::Element;
-use jellyfin_api::types::CollectionType;
+use jellyfin_api::types::{BaseItemKind, CollectionType};
 
 use crate::app::Message;
 use crate::failure::unraised;
@@ -41,6 +41,7 @@ macro_rules! icons {
 icons! {
     AccessTime => "access_time",
     Add => "add",
+    Album => "album",
     Analytics => "analytics",
     ArrowBack => "arrow_back",
     ArrowDropDown => "arrow_drop_down",
@@ -97,6 +98,7 @@ icons! {
     Person => "person",
     PhonelinkLock => "phonelink_lock",
     Photo => "photo",
+    PhotoAlbum => "photo_album",
     PlayArrow => "play_arrow",
     PlayCircle => "play_circle",
     PlayCircleFilled => "play_circle_filled",
@@ -140,6 +142,33 @@ impl Icon {
             Some(CollectionType::Playlists) => Icon::Queue,
             None => Icon::Quiz,
             Some(CollectionType::Folders | CollectionType::Unknown) => Icon::Folder,
+        }
+    }
+
+    // the glyph `getItemTypeIcon` answers for an item's own type: album for a
+    // music album, person for a music artist and for a person, audiotrack for
+    // audio, movie for a movie, tv for an episode and for a series, live_tv
+    // for a program, book for a book, folder for a folder, video_library for a
+    // box set, queue for a playlist, photo for a photo and photo_album for a
+    // photo album
+    // `None` for every other type, which is where the reference's switch falls
+    // to the default no card sets
+    // reference: item-type-icon
+    pub fn of(kind: Option<BaseItemKind>) -> Option<Icon> {
+        match kind? {
+            BaseItemKind::MusicAlbum => Some(Icon::Album),
+            BaseItemKind::MusicArtist | BaseItemKind::Person => Some(Icon::Person),
+            BaseItemKind::Audio => Some(Icon::Audiotrack),
+            BaseItemKind::Movie => Some(Icon::Movie),
+            BaseItemKind::Episode | BaseItemKind::Series => Some(Icon::Tv),
+            BaseItemKind::Program => Some(Icon::LiveTv),
+            BaseItemKind::Book => Some(Icon::Book),
+            BaseItemKind::Folder => Some(Icon::Folder),
+            BaseItemKind::BoxSet => Some(Icon::VideoLibrary),
+            BaseItemKind::Playlist => Some(Icon::Queue),
+            BaseItemKind::Photo => Some(Icon::Photo),
+            BaseItemKind::PhotoAlbum => Some(Icon::PhotoAlbum),
+            _ => None,
         }
     }
 

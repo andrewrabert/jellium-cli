@@ -635,3 +635,6 @@ user-parental-blocked-tags	src/apps/dashboard/routes/users/parentalcontrol.tsx	4
 user-parental-schedule	src/apps/dashboard/routes/users/parentalcontrol.tsx	486	508	8e686c8912669c8af5d8d3f00d4a613444d2137a6fe3cf6799e4d5848794e1b5	owed
 settings-playback-remembered	src/components/playbackSettings/playbackSettings.template.html	107	128	9d68fb5ee2e2165ea69e53e5e7ac468838df4edc8d523bcd61f4468904b5265f	ported
 settings-subtitles-mode	src/components/subtitlesettings/subtitlesettings.template.html	7	24	5d0fbe446bea65b5d2a8b82951314889fe7cb0b978b82ca8b2253a5887f21031	ported
+card-image-banner	src/components/cardbuilder/cardBuilder.js	286	288	3ab0368af867b0974b0b8c4f8954d76f32d0e94a0e54cf34b51fce24410393b0	ported
+card-image-inherited	src/components/cardbuilder/cardBuilder.js	327	378	7defd1c5779d7afee79f20a27f030de320de9a86f6ff71a8a7ff869a021e74fb	ported
+item-type-icon	src/utils/image.ts	130	161	412090ae234c0d40c8fb8642b8b85291b873c5ded577542ef8bdddd35eddda27	ported

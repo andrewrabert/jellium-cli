@@ -13,7 +13,7 @@ use iced::widget::{
 use iced::{Element, Fill, Length};
 use jellium_model::item;
 use jellium_protocol::{Session, SyncAccess};
-use jellyfin_api::types::BaseItemDto;
+use jellyfin_api::types::{BaseItemDto, BaseItemKind};
 
 use crate::app::Message;
 use crate::icon::Icon;
@@ -86,16 +86,64 @@ impl<T> std::fmt::Display for Choice<T> {
     }
 }
 
-// the key the item's own primary image is fetched under
-// None where the item carries no primary image tag and where it carries no id
+// the key `getCardImageUrl` resolves for an item drawn on `card`, in the order
+// the reference tests its branches, each answering the item its tag belongs to
+// and the item's own id where the reference names none
+// a banner card takes the item's own Banner tag
+// the item's own Primary tag, unless it is an episode reporting no children
+// the series' Primary tag, under the series' id
+// the parent's Primary tag, under the parent's id
+// the album's Primary tag, under the album's id
+// a season's own Thumb tag
+// the item's first Backdrop tag
+// the item's own Thumb tag
+// the series' Thumb tag, under the series' id
+// the parent's Thumb tag, under the parent's id
+// the parent's first Backdrop tag, under the parent's id
+// `None` where no branch answers a tag, and where the item carries no id
+// reference: card-image-banner
+// reference: card-image-primary
+// reference: card-image-inherited
 pub fn poster_key(item: &BaseItemDto, card: card::Card) -> Option<images::Key> {
-    let tags = item.image_tags.as_ref()?;
-    if !tags.contains_key(Kind::Primary.as_str()) {
+    let held = |kind: Kind| {
+        item.image_tags
+            .as_ref()
+            .is_some_and(|tags| tags.contains_key(kind.as_str()))
+    };
+    let any = |tags: &Option<Vec<String>>| tags.as_ref().is_some_and(|tags| !tags.is_empty());
+    let childless = item.type_ == Some(BaseItemKind::Episode) && item.child_count == Some(0);
+    let (kind, at) = if card.shape() == card::Shape::Banner && held(Kind::Banner) {
+        (Kind::Banner, None)
+    } else if held(Kind::Primary) && !childless {
+        (Kind::Primary, None)
+    } else if item.series_primary_image_tag.is_some() {
+        (Kind::Primary, item.series_id)
+    } else if item.parent_primary_image_tag.is_some() {
+        (Kind::Primary, item.parent_primary_image_item_id)
+    } else if item.album_id.is_some() && item.album_primary_image_tag.is_some() {
+        (Kind::Primary, item.album_id)
+    } else if item.type_ == Some(BaseItemKind::Season) && held(Kind::Thumb) {
+        (Kind::Thumb, None)
+    } else if any(&item.backdrop_image_tags) {
+        (Kind::Backdrop, None)
+    } else if held(Kind::Thumb) {
+        (Kind::Thumb, None)
+    } else if item.series_thumb_image_tag.is_some() {
+        (Kind::Thumb, item.series_id)
+    } else if let Some(parent) = item.parent_thumb_item_id {
+        // the reference stops here on the parent's id alone: an item naming one
+        // and carrying no parent thumb tag draws nothing, rather than falling
+        // to the parent's backdrop below
+        item.parent_thumb_image_tag.as_ref()?;
+        (Kind::Thumb, Some(parent))
+    } else if any(&item.parent_backdrop_image_tags) {
+        (Kind::Backdrop, item.parent_backdrop_item_id)
+    } else {
         return None;
-    }
+    };
     Some(images::Key {
-        item: item.id?,
-        kind: Kind::Primary,
+        item: at.or(item.id)?,
+        kind,
         index: None,
         card,
     })
@@ -154,10 +202,33 @@ pub enum Face {
     Icon(Icon),
 }
 
+/// What a card stands where its image goes: the image the cache holds, and the
+/// glyph `getDefaultText` stands in with where the item names no image at all
+/// — its collection's glyph where it carries a collection type or is a
+/// collection folder, and its own type's glyph otherwise.
+/// `None` while the image is in flight and where the item's type names no
+/// glyph.
+// reference: card-no-image
+// reference: card-default-glyph
+// reference: library-icon
+// reference: library-icon-unknown
+// reference: item-type-icon
+fn faced(item: &BaseItemDto, card: card::Card, images: &Cache) -> Option<Face> {
+    if let Some(key) = poster_key(item, card) {
+        return images.handle(key).map(Face::Image);
+    }
+    let collected =
+        item.type_ == Some(BaseItemKind::CollectionFolder) || item.collection_type.is_some();
+    collected
+        .then(|| Icon::library(item.collection_type))
+        .or_else(|| Icon::of(item.type_))
+        .map(Face::Icon)
+}
+
 /// The frame a card's image stands in, at the card's width inside its pitch
 /// and its shape's own aspect: the image, the glyph `.cardImageIcon` stands in
-/// with over the background the name picks, or that background alone while
-/// nothing has arrived.
+/// with over the background the name picks, or that background alone while the
+/// image is in flight and where nothing names a glyph.
 // reference: card-container
 // reference: card-content
 fn framed<'a>(
@@ -619,7 +690,7 @@ pub fn poster<'a>(
     drawing: card::Drawing,
     item: &'a BaseItemDto,
     room: Room,
-    image: Option<image::Handle>,
+    images: &'a Cache,
     overflow: Overflow,
 ) -> Element<'a, Message> {
     let name = item.name.clone().unwrap_or_default();
@@ -642,7 +713,7 @@ pub fn poster<'a>(
         drawing,
         room,
         Poster {
-            face: image.map(Face::Image),
+            face: faced(item, drawing.card, images),
             name: name.clone(),
             logo: None,
             timer: None,
@@ -669,15 +740,7 @@ fn cards<'a>(
 ) -> Vec<Element<'a, Message>> {
     items
         .into_iter()
-        .map(|item| {
-            poster(
-                drawing,
-                item,
-                room,
-                poster_key(item, drawing.card).and_then(|key| images.handle(key)),
-                overflow,
-            )
-        })
+        .map(|item| poster(drawing, item, room, images, overflow))
         .collect()
 }
 
@@ -1118,7 +1181,7 @@ pub fn posters<'a>(
 pub fn library_tile<'a>(
     library: &'a BaseItemDto,
     room: Room,
-    image: Option<image::Handle>,
+    images: &'a Cache,
     press: Message,
 ) -> Element<'a, Message> {
     let name = library.name.clone().unwrap_or_default();
@@ -1127,10 +1190,7 @@ pub fn library_tile<'a>(
         TILE,
         room,
         Poster {
-            face: Some(match image {
-                Some(handle) => Face::Image(handle),
-                None => Face::Icon(crate::icon::Icon::library(library.collection_type)),
-            }),
+            face: faced(library, TILE.card, images),
             name,
             logo: None,
             timer: None,

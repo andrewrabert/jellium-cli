@@ -278,13 +278,7 @@ fn sectioned<'a>(
         results.window,
         results.items.len(),
         move |index| match results.items.get(index) {
-            Some(item) => widget::poster(
-                drawn,
-                item,
-                room,
-                widget::poster_key(item, drawn.card).and_then(|key| images.handle(key)),
-                widget::Overflow::Withheld,
-            ),
+            Some(item) => widget::poster(drawn, item, room, images, widget::Overflow::Withheld),
             None => iced::widget::Space::new()
                 .width(style::drawn(drawn.card.width(room)))
                 .into(),

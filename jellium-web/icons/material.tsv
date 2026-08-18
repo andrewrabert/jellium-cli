@@ -1,5 +1,6 @@
 access_time	E192
 add	E145
+album	E019
 analytics	EF3E
 arrow_back	E5C4
 arrow_drop_down	E5C5
@@ -56,6 +57,7 @@ perm_media	E8A7
 person	E7FD
 phonelink_lock	E0DC
 photo	E410
+photo_album	E411
 play_arrow	E037
 play_circle	E1C4
 play_circle_filled	E038

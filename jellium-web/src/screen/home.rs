@@ -201,8 +201,7 @@ pub fn view<'a>(
                     Some(widget::library_tile(
                         library,
                         Room::content(viewport),
-                        widget::poster_key(library, widget::TILE.card)
-                            .and_then(|key| images.handle(key)),
+                        images,
                         Message::Navigated(opens(library)?),
                     ))
                 }),

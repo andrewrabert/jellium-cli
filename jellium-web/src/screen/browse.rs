@@ -543,13 +543,7 @@ pub fn view<'a>(browse: &'a Browse, viewport: Viewport, images: &'a Cache) -> El
         card::Wrap::Leading,
         count,
         move |index| match browse.items.row(index) {
-            Some(item) => widget::poster(
-                wall,
-                item,
-                room,
-                widget::poster_key(item, wall.card).and_then(|key| images.handle(key)),
-                browse.overflow,
-            ),
+            Some(item) => widget::poster(wall, item, room, images, browse.overflow),
             None => iced::widget::Space::new()
                 .width(style::drawn(wall.card.width(room)))
                 .height(style::drawn(wall.row(room)))
