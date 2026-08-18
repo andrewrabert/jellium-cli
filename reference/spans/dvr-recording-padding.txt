@@ -1,0 +1,33 @@
+                            <Typography variant='h2'>{globalize.translate('HeaderDefaultRecordingSettings')}</Typography>
+
+                            <TextField
+                                name='PrePaddingMinutes'
+                                label={globalize.translate('LabelStartWhenPossible')}
+                                value={prePaddingMinutes}
+                                onChange={onPrePaddingMinutesChange}
+                                slotProps={{
+                                    input: {
+                                        endAdornment: (
+                                            <InputAdornment position='end'>
+                                                <Typography variant='body1' color='text.secondary'>{globalize.translate('MinutesBefore')}</Typography>
+                                            </InputAdornment>
+                                        )
+                                    }
+                                }}
+                            />
+
+                            <TextField
+                                name='PostPaddingMinutes'
+                                label={globalize.translate('LabelStopWhenPossible')}
+                                value={postPaddingMinutes}
+                                onChange={onPostPaddingMinutesChange}
+                                slotProps={{
+                                    input: {
+                                        endAdornment: (
+                                            <InputAdornment position='end'>
+                                                <Typography variant='body1' color='text.secondary'>{globalize.translate('MinutesAfter')}</Typography>
+                                            </InputAdornment>
+                                        )
+                                    }
+                                }}
+                            />

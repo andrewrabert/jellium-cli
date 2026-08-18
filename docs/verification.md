@@ -478,6 +478,10 @@ in order. A section passes only when every line in it holds.
 - The Schedules Direct country list parses.
 - (tuner) A tuner's channels are mapped to a provider's.
 - The DVR settings page saves without disturbing the fields no control covers.
+- Every control on the DVR settings page carries the sentence the reference
+  writes beside it, drawn as MUI's outlined fields.
+- Recording padding is typed in minutes and reads back in minutes after a save,
+  and the server holds it in seconds.
 
 ## Read-only mode
 

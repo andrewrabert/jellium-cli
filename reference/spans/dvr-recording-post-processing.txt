@@ -1,0 +1,31 @@
+                            <Typography variant='h2'>{globalize.translate('HeaderRecordingPostProcessing')}</Typography>
+
+                            <TextField
+                                name='RecordingPostProcessor'
+                                label={globalize.translate('LabelPostProcessor')}
+                                value={config.RecordingPostProcessor}
+                                onChange={onChange}
+                                slotProps={{
+                                    input: {
+                                        endAdornment: (
+                                            <InputAdornment position='end'>
+                                                <IconButton edge='end' onClick={showPostProcessorPicker}>
+                                                    <SearchIcon />
+                                                </IconButton>
+                                            </InputAdornment>
+                                        )
+                                    },
+
+                                    inputLabel: {
+                                        shrink: !!config.RecordingPostProcessor
+                                    }
+                                }}
+                            />
+
+                            <TextField
+                                name='RecordingPostProcessorArguments'
+                                label={globalize.translate('LabelPostProcessorArguments')}
+                                helperText={globalize.translate('LabelPostProcessorArgumentsHelp')}
+                                value={config.RecordingPostProcessorArguments}
+                                onChange={onChange}
+                            />

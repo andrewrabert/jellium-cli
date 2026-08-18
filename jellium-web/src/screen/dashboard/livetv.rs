@@ -9,7 +9,10 @@ use crate::error::Answer;
 use crate::style::{self, space, typeface};
 use crate::text::{self as strings, Text};
 use crate::widget::{self, prose};
+use jellium_model::appearance::typeface::Rank;
 use jellium_model::form::{Field, Form};
+
+use super::{Control, Group, Heading};
 
 /// The Live TV administration, whichever tab is shown.
 #[derive(Debug, Clone)]
@@ -50,31 +53,67 @@ pub struct Provider {
     pub path: String,
 }
 
-/// The fields the DVR settings expose; every key outside them survives a save.
-pub const DVR: &[Field] = &[
-    Field::Text {
-        key: "RecordingPath",
+/// The DVR settings the reference draws, in its order; every key outside them
+/// survives a save.
+// reference: dvr-recording-paths
+// reference: dvr-recording-padding
+pub const DVR: &[Group] = &[
+    Group {
+        heading: None,
+        note: None,
+        controls: &[
+            Control {
+                field: Field::Text {
+                    key: "RecordingPath",
+                },
+                label: Text::DvrRecordingPath,
+                helper: &[Text::DvrRecordingPathHelp],
+                offered: None,
+            },
+            Control {
+                field: Field::Text {
+                    key: "MovieRecordingPath",
+                },
+                label: Text::DvrMovieRecordingPath,
+                helper: &[],
+                offered: None,
+            },
+            Control {
+                field: Field::Text {
+                    key: "SeriesRecordingPath",
+                },
+                label: Text::DvrSeriesRecordingPath,
+                helper: &[],
+                offered: None,
+            },
+        ],
+        closing: None,
     },
-    Field::Text {
-        key: "MovieRecordingPath",
-    },
-    Field::Text {
-        key: "SeriesRecordingPath",
-    },
-    Field::Number {
-        key: "PrePaddingSeconds",
-    },
-    Field::Number {
-        key: "PostPaddingSeconds",
-    },
-    Field::Flag {
-        key: "EnableRecordingSubfolders",
-    },
-    Field::Flag {
-        key: "EnableOriginalAudioWithEncodedRecordings",
-    },
-    Field::Text {
-        key: "RecordingEncodingFormat",
+    Group {
+        heading: Some(Heading {
+            rank: Rank::Second,
+            title: Text::DvrDefaults,
+        }),
+        note: None,
+        controls: &[
+            Control {
+                field: Field::Minutes {
+                    key: "PrePaddingSeconds",
+                },
+                label: Text::DvrStartWhenPossible,
+                helper: &[Text::DvrMinutesBefore],
+                offered: None,
+            },
+            Control {
+                field: Field::Minutes {
+                    key: "PostPaddingSeconds",
+                },
+                label: Text::DvrStopWhenPossible,
+                helper: &[Text::DvrMinutesAfter],
+                offered: None,
+            },
+        ],
+        closing: None,
     },
 ];
 
@@ -135,7 +174,11 @@ pub async fn load(api: std::rc::Rc<crate::api::Api>, tab: super::LiveTvTab) -> A
 }
 
 /// Whichever of the four screens is shown.
-pub fn view<'a>(state: &'a State, read_only: bool) -> Vec<Element<'a, Message>> {
+pub fn view<'a>(
+    state: &'a State,
+    read_only: bool,
+    viewport: crate::style::Viewport,
+) -> Vec<Element<'a, Message>> {
     let page: Page<'a> = vec![crate::widget::localnav(
         super::LiveTvTab::ALL
             .into_iter()
@@ -153,7 +196,7 @@ pub fn view<'a>(state: &'a State, read_only: bool) -> Vec<Element<'a, Message>> 
         super::LiveTvTab::Tuners => tuners(page, state, read_only),
         super::LiveTvTab::Providers => providers(page, state, read_only),
         super::LiveTvTab::Mapping => mapping(page, state, read_only),
-        super::LiveTvTab::Dvr => dvr(page, state, read_only),
+        super::LiveTvTab::Dvr => dvr(page, state, read_only, viewport),
     }
 }
 
@@ -399,17 +442,27 @@ fn mapping<'a>(mut page: Page<'a>, state: &'a State, read_only: bool) -> Page<'a
     page
 }
 
-fn dvr<'a>(mut page: Page<'a>, state: &'a State, read_only: bool) -> Page<'a> {
-    for field in DVR {
-        page.push(super::control(*field, state.dvr.value(*field)));
-    }
+// the reference writes the unit inside the field as a trailing adornment;
+// here it stands under the field as its own sentence
+// reference: dvr-recording-padding
+fn dvr<'a>(
+    mut page: Page<'a>,
+    state: &'a State,
+    read_only: bool,
+    viewport: crate::style::Viewport,
+) -> Page<'a> {
+    page.extend(super::controls(
+        DVR,
+        &state.dvr,
+        super::Controls::Mui,
+        viewport,
+    ));
     if !read_only {
-        page.push(
-            button(prose(strings::lookup(Text::DashboardSave), typeface::BODY))
-                .style(style::submit)
-                .on_press(Message::DashboardAction(super::Action::Save))
-                .into(),
-        );
+        page.push(super::save(
+            super::Controls::Mui,
+            Some(Message::DashboardAction(super::Action::Save)),
+            viewport.layout(),
+        ));
     }
     page
 }

@@ -590,3 +590,8 @@ card-image-primary	src/components/cardbuilder/cardBuilder.js	315	317	0e6f2199ed3
 card-no-image	src/components/cardbuilder/cardBuilder.js	1077	1079	e073c8b004efbdf8c98a2f28ff167c1d244394512b86ff9fdba95f1de1d6a1a9	ported
 card-default-glyph	src/components/cardbuilder/cardBuilder.js	1188	1201	25103ff064d929c4d9ce4cb2b7e19dfc12b690b2fbe6cad4c11b0d38060d1c56	ported
 dashboard-libraries-page	src/apps/dashboard/routes/libraries/index.tsx	56	62	76040682aeef32bd9eda3f22af0b14c36f0ec1fd57f25dd43b7a7d4db1917a1e	ported
+dvr-guide-days	src/apps/dashboard/routes/livetv/recordings.tsx	206	238	508e2092f8b7c77df195f753295ac1a24f502a48dd1113a530da0905de2fbfea	owed
+dvr-recording-paths	src/apps/dashboard/routes/livetv/recordings.tsx	240	305	d99ad73858a8b799787d581afb588ff590d19ab7b6a214d0ae94a0d2bc58adf2	ported
+dvr-recording-padding	src/apps/dashboard/routes/livetv/recordings.tsx	307	339	0a24cdc656bb090744b100777887f5e47782cc2556877c20cd7a94b0860a2cf4	ported
+dvr-recording-post-processing	src/apps/dashboard/routes/livetv/recordings.tsx	341	371	3246bc898ea5e6ac9854a08db4d13b9fc541c335cbf2dd52dbb088f09a06d70e	owed
+dvr-recording-metadata	src/apps/dashboard/routes/livetv/recordings.tsx	373	401	7c55999a327febe95a132bea5c745ee60d9bd2e8ba9f824f63582eff27447d4c	owed

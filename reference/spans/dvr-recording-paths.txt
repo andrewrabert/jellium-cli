@@ -1,0 +1,66 @@
+                            <TextField
+                                name='RecordingPath'
+                                label={globalize.translate('LabelRecordingPath')}
+                                helperText={globalize.translate('LabelRecordingPathHelp')}
+                                value={config.RecordingPath}
+                                onChange={onChange}
+                                slotProps={{
+                                    input: {
+                                        endAdornment: (
+                                            <InputAdornment position='end'>
+                                                <IconButton edge='end' onClick={showRecordingPathPicker}>
+                                                    <SearchIcon />
+                                                </IconButton>
+                                            </InputAdornment>
+                                        )
+                                    },
+
+                                    inputLabel: {
+                                        shrink: !!config.RecordingPath
+                                    }
+                                }}
+                            />
+
+                            <TextField
+                                name='MovieRecordingPath'
+                                label={globalize.translate('LabelMovieRecordingPath')}
+                                value={config.MovieRecordingPath}
+                                onChange={onChange}
+                                slotProps={{
+                                    input: {
+                                        endAdornment: (
+                                            <InputAdornment position='end'>
+                                                <IconButton edge='end' onClick={showMovieRecordingPathPicker}>
+                                                    <SearchIcon />
+                                                </IconButton>
+                                            </InputAdornment>
+                                        )
+                                    },
+
+                                    inputLabel: {
+                                        shrink: !!config.MovieRecordingPath
+                                    }
+                                }}
+                            />
+
+                            <TextField
+                                name='SeriesRecordingPath'
+                                label={globalize.translate('LabelSeriesRecordingPath')}
+                                value={config.SeriesRecordingPath}
+                                onChange={onChange}
+                                slotProps={{
+                                    input: {
+                                        endAdornment: (
+                                            <InputAdornment position='end'>
+                                                <IconButton edge='end' onClick={showSeriesRecordingPathPicker}>
+                                                    <SearchIcon />
+                                                </IconButton>
+                                            </InputAdornment>
+                                        )
+                                    },
+
+                                    inputLabel: {
+                                        shrink: !!config.SeriesRecordingPath
+                                    }
+                                }}
+                            />

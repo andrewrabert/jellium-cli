@@ -1374,7 +1374,7 @@ pub fn view<'a>(
             Body::Keys(held) => keys::view(held, session.read_only),
             Body::LiveTv(held) => frame::Filling::Stacked {
                 above: None,
-                rows: livetv::view(held, session.read_only),
+                rows: livetv::view(held, session.read_only, viewport),
             },
             Body::Plugins(held) => frame::Filling::Stacked {
                 above: None,
