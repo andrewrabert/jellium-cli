@@ -192,6 +192,7 @@ osd-preview	src/styles/videoosd.scss	60	81	2b4495a7ee6e2ec7b6cbd6b868f39f153b749
 header-back	src/scripts/libraryMenu.js	43	43	bb8ee9c6d41abe7c1572291244f8fbc8afdf82871d66b0a086d034ac04b25e8f	ported
 header-sync	src/scripts/libraryMenu.js	49	49	822bdc371d3e3525ef001d3311868d40bac561fd15441717334a91c5810a3feb	ported
 header-cast	src/scripts/libraryMenu.js	52	52	3e9928e12e1321120f590512a4ddf135e2a3849f21668db39cd5cfaf91c546ee	ported
+page-default-title	src/scripts/libraryMenu.js	617	625	2226db96ef62e1d4a7c98ddd88644fc5e12636bee8d87610d1364ef6c75b806d	ported
 filter-dialog	src/components/filterdialog/style.scss	1	18	3386199b96d52a29065f5135c6193f0bf0b3465dbd6f20105ab8dede5e8a2acf	ported
 guide-row	src/components/guide/guide.scss	77	87	58d9ac30dc487b057b4263e2f143287c53b2df9893c574cea61a03a40cbcc1eb	ported
 guide-strip	src/components/guide/guide.scss	98	122	9b1fd214d27b47e858d9afe46942adfdfd646465e4f8195b974150064a055c2c	ported
@@ -237,6 +238,8 @@ section-title	src/styles/librarybrowser.scss	1292	1300	f42cb439ecb9fe44f615faa2c
 section-title-cards	src/styles/librarybrowser.scss	1303	1317	100b8bcce30738ca3b8f7ba49c8dc909d6ab7443522a860922bb58def73d7703	ported
 section-title-button	src/styles/librarybrowser.scss	1319	1329	f2f8c9c07d74298ad91393cd9ceb83386d180bc49073ad1fa2f5e7752bf5c559	ported
 splash-logo	src/styles/site.scss	17	36	0720b5fbb0e0b0b28991354f80bd085277fcf51d1501e1f2fcb3eb12628052fd	ported
+document-icons	src/index.html	18	20	9206fa573540f58b9b840eb7a573af920d71d5cc7ed2bfc2748fe20d8e6adbf4	ported
+splash-markup	src/index.html	89	91	7a199d6bbaaf93ed8569a0be9e420d9be2122451fe2a750c86c12d4dc084cadd	ported
 band-threshold	src/styles/librarybrowser.scss	422	426	97b6d00bf260b8803f27b275fdc3f81792e87b73e1d2e49968aa6b6321cd2726	ported
 card-aspect	src/components/cardbuilder/card.scss	58	86	2f24399449711db454e202f61f52aa44006d7e0a1426499eb582632a472db75e	ported
 card-box	src/components/cardbuilder/card.scss	88	99	ced046c031cf3e217e29d8c1335e74665df2594b235a3e7962896192bb885419	ported

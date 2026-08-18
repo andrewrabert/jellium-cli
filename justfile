@@ -32,9 +32,10 @@ reference checkout:
 assets checkout:
     node tools/reference/assets.mjs "$1"
 
-# Rewrite jellium-web/boot.css from the ported appearance values
-boot-css:
+# Rewrite jellium-web/boot.css and jellium-web/index.html from the ported appearance values
+static-page:
     cargo run -p jellium-model --example boot-css > jellium-web/boot.css
+    cargo run -p jellium-model --example index-html > jellium-web/index.html
 
 # Fail when the tree has drifted from a checkout of the pinned revision
 pinned checkout: (reference checkout)

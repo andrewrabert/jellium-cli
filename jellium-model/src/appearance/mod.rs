@@ -5,6 +5,7 @@
 
 pub mod card;
 pub mod css;
+pub mod document;
 pub mod scheme;
 pub mod space;
 pub mod typeface;

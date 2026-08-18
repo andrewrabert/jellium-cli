@@ -8,7 +8,7 @@ pub mod metadata;
 pub mod remote;
 pub mod user;
 
-use iced::widget::{button, center, row};
+use iced::widget::{button, row};
 use iced::{Element, Task};
 use jellium_model::setup::Step;
 
@@ -502,13 +502,12 @@ pub fn view(state: &State, viewport: Viewport) -> Element<'_, Message> {
                 .on_press(Message::SetupAction(Action::Next)),
         );
     }
-    center(crate::widget::scrolled(
-        iced::widget::container(widget::capped(
+    widget::page(
+        viewport,
+        widget::capped(
             viewport,
             space::FIELD_GAP,
             rows.chain([body(state), controls.into()]),
-        ))
-        .padding(style::padding(space::PAGE_PAD)),
-    ))
-    .into()
+        ),
+    )
 }

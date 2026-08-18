@@ -1,4 +1,15 @@
-<!DOCTYPE html>
+//! The static page's markup, rendered from the ported document so the head's
+//! icons and the boot page's splash slot cannot drift from the stylesheet that
+//! dresses them.
+
+/// The whole text of `jellium-web/index.html`. The head carries the
+/// reference's own three icon references against the paths this bundle serves
+/// them at, and the boot page's logo slot is the reference's own splash
+/// element.
+// reference: document-icons
+// reference: splash-markup
+pub fn index() -> &'static str {
+    r#"<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -23,3 +34,5 @@
     </div>
   </body>
 </html>
+"#
+}

@@ -35,36 +35,39 @@ pub fn view<'a>(state: &'a super::State, viewport: Viewport) -> Element<'a, Mess
     };
     let written = matches!(held.answered, Some(jellium_model::login::Reset::PinWritten))
         .then(|| redeeming(held));
-    widget::capped(
+    widget::page(
         viewport,
-        space::FIELD_GAP,
-        [
-            widget::heading(
-                typeface::Rank::First,
-                strings::lookup(Text::LoginResetTitle),
-            ),
-            widget::field(
-                strings::lookup(Text::LoginResetUsername),
-                &held.username,
-                Some(Text::LoginResetHelp),
-                |value| Message::LoginAction(Action::Edited(Edit::ResetUsername(value))),
-                Message::LoginAction(Action::ResetSubmit),
-                Secrecy::Shown,
-            ),
-            widget::block(
-                strings::lookup(Text::LoginResetSubmit),
-                Some(Message::LoginAction(Action::ResetSubmit)),
-                Emphasis::Submit,
-            ),
-        ]
-        .into_iter()
-        .chain(written.into_iter().flatten())
-        .chain(told.map(|text| widget::prose(strings::lookup(text), typeface::BODY)))
-        .chain([widget::block(
-            strings::lookup(Text::LoginBack),
-            Some(Message::LoginAction(Action::Back)),
-            Emphasis::Raised,
-        )]),
+        widget::capped(
+            viewport,
+            space::FIELD_GAP,
+            [
+                widget::heading(
+                    typeface::Rank::First,
+                    strings::lookup(Text::LoginResetTitle),
+                ),
+                widget::field(
+                    strings::lookup(Text::LoginResetUsername),
+                    &held.username,
+                    Some(Text::LoginResetHelp),
+                    |value| Message::LoginAction(Action::Edited(Edit::ResetUsername(value))),
+                    Message::LoginAction(Action::ResetSubmit),
+                    Secrecy::Shown,
+                ),
+                widget::block(
+                    strings::lookup(Text::LoginResetSubmit),
+                    Some(Message::LoginAction(Action::ResetSubmit)),
+                    Emphasis::Submit,
+                ),
+            ]
+            .into_iter()
+            .chain(written.into_iter().flatten())
+            .chain(told.map(|text| widget::prose(strings::lookup(text), typeface::BODY)))
+            .chain([widget::block(
+                strings::lookup(Text::LoginBack),
+                Some(Message::LoginAction(Action::Back)),
+                Emphasis::Raised,
+            )]),
+        ),
     )
 }
 

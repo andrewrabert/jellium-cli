@@ -9,7 +9,7 @@ fn the_boot_stylesheet_is_the_one_the_appearance_module_renders() {
         include_str!("../../jellium-web/boot.css"),
         css::boot(),
         "jellium-web/boot.css has drifted from appearance::css::boot; \
-         `just boot-css` writes it"
+         `just static-page` writes it"
     );
 }
 

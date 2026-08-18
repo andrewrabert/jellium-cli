@@ -773,8 +773,15 @@ in order. A section passes only when every line in it holds.
 
 Run against a real browser at 360x800, 800x360, 768x1024 and 1920x1080.
 
+- The browser tab carries Jellyfin's own favicon.
+- The boot screen stands Jellyfin's splash logo, its banner at a device width of
+  992 pixels and wider and its icon narrower, and no lettering of the app's name.
+- No instant between the boot screen and the canvas's first frame paints the page
+  anything but #101010.
 - The select-server page and the login page each stand Jellyfin's own banner in a
   header slot 13.2em wide.
+- The add-server page, the password-reset page and every setup wizard step each
+  stand that same banner in that same slot.
 - No viewport width produces a horizontal page scrollbar.
 - Body text draws in Noto Sans, and every heading draws in that face at its
   regular weight.

@@ -568,18 +568,20 @@ pub fn logo<'a>() -> Element<'a, Message> {
     .into()
 }
 
-/// The page a login screen is drawn on: the header slot the reference's banner
-/// stands in, its own side padding, its top and bottom, and the body centered
-/// in what is left.
+/// The page a standalone screen is drawn on: the header slot the reference's
+/// banner stands in, its own side padding, its top and bottom, and the body
+/// scrolled and centered in what is left. Every page carrying no title of its
+/// own carries the banner.
 // reference: page-centering
 // reference: page-padded
+// reference: page-default-title
 pub fn page<'a>(viewport: Viewport, body: Element<'a, Message>) -> Element<'a, Message> {
     let side = style::drawn(space::page_side(viewport.canvas()));
     let header = container(logo())
         .padding(style::drawn(space::HEADER_PAD.drawn()))
         .width(Fill)
         .style(style::header);
-    let body: Element<'a, Message> = column![header, container(body).center_x(Fill)]
+    let body: Element<'a, Message> = column![header, scrolled(container(body).center_x(Fill))]
         .spacing(style::drawn(space::SECTION_GAP.drawn()))
         .into();
     container(body)

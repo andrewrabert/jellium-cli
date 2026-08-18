@@ -10,11 +10,17 @@ fn em(length: Length) -> String {
 }
 
 /// The whole text of `jellium-web/boot.css`. The boot logo's slot is the
-/// reference's own `.splashLogo`, its 30% and its 992px included.
+/// reference's own `.splashLogo`, its 30% and its 992px included, laid by the
+/// boot page's own column rather than by the reference's fixed centring.
 // reference: splash-logo
+// reference: scheme-background
 pub fn boot() -> String {
     format!(
-        "#jellium-boot {{
+        "html {{
+  background-color: {background};
+}}
+
+#jellium-boot {{
   position: fixed;
   inset: 0;
   display: flex;
@@ -43,10 +49,6 @@ pub fn boot() -> String {
   background-position: center center;
   background-repeat: no-repeat;
   background-size: contain;
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
 }}
 
 @media screen and (min-device-width: 992px) {{
