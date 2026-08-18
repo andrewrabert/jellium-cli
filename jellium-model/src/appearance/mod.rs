@@ -3,6 +3,7 @@
 //! `jellium-reference/tests/appearance.rs` fails when a citation stops
 //! resolving.
 
+pub mod blur;
 pub mod card;
 pub mod css;
 pub mod document;

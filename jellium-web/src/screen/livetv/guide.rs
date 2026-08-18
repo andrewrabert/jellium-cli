@@ -1,4 +1,4 @@
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 use std::rc::Rc;
 
 use chrono::{DateTime, TimeDelta, Utc};
@@ -350,7 +350,7 @@ pub fn view<'a>(
 
 /// The primary image of every channel shown whose header draws one.
 // reference: guide-channel-header-markup
-pub fn images(state: &State) -> HashSet<images::Key> {
+pub fn images(state: &State) -> images::Wanted {
     state
         .window
         .shown(state.channels.len())

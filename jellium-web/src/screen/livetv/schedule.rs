@@ -1,4 +1,3 @@
-use std::collections::HashSet;
 use std::rc::Rc;
 
 use iced::widget::{button, column, container, row, text_input};
@@ -471,7 +470,7 @@ pub fn view<'a>(
 
 /// Every active recording's own image, and every shown timer's programme image
 /// and channel logo.
-pub fn images(state: &State) -> HashSet<images::Key> {
+pub fn images(state: &State) -> images::Wanted {
     let active = state
         .active
         .iter()

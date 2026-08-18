@@ -1,4 +1,3 @@
-use std::collections::HashSet;
 use std::rc::Rc;
 
 use iced::Element;
@@ -559,12 +558,12 @@ pub fn view<'a>(
     page.into()
 }
 
-pub fn images(browse: &Browse) -> HashSet<images::Key> {
+pub fn images(browse: &Browse) -> images::Wanted {
     let wall = browse.card();
     let shown = browse.grid.shown(browse.items.len());
     shown
         .filter_map(|index| browse.items.row(index))
-        .filter_map(|item| widget::poster_key(item, wall.card))
+        .filter_map(|item| widget::posted(item, wall.card))
         .collect()
 }
 

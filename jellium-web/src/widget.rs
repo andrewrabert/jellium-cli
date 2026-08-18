@@ -12,7 +12,6 @@ pub mod sheet;
 pub mod table;
 
 use std::borrow::Cow;
-use std::collections::HashSet;
 
 use iced::widget::{
     Space, button, column, container, grid, image, rich_text, row, scrollable, span, stack, text,
@@ -114,58 +113,73 @@ impl<T> std::fmt::Display for Choice<T> {
 // reference: card-image-banner
 // reference: card-image-primary
 // reference: card-image-inherited
-pub fn poster_key(item: &BaseItemDto, card: card::Card) -> Option<images::Key> {
-    let held = |kind: Kind| {
+// reference: blurhash-canvas
+pub fn posted(item: &BaseItemDto, card: card::Card) -> Option<images::Poster> {
+    let tagged = |kind: Kind| {
         item.image_tags
             .as_ref()
-            .is_some_and(|tags| tags.contains_key(kind.as_str()))
+            .and_then(|tags| tags.get(kind.as_str()))
+            .cloned()
     };
-    let any = |tags: &Option<Vec<String>>| tags.as_ref().is_some_and(|tags| !tags.is_empty());
+    let first = |tags: &Option<Vec<String>>| {
+        tags.as_ref()
+            .and_then(|tags| tags.first())
+            .filter(|tag| !tag.is_empty())
+            .cloned()
+    };
     let childless = item.type_ == Some(BaseItemKind::Episode) && item.child_count == Some(0);
-    let (kind, at) = if card.shape() == card::Shape::Banner && held(Kind::Banner) {
-        (Kind::Banner, None)
-    } else if held(Kind::Primary) && !childless {
-        (Kind::Primary, None)
-    } else if item.series_primary_image_tag.is_some() {
-        (Kind::Primary, item.series_id)
-    } else if item.parent_primary_image_tag.is_some() {
-        (Kind::Primary, item.parent_primary_image_item_id)
-    } else if item.album_id.is_some() && item.album_primary_image_tag.is_some() {
-        (Kind::Primary, item.album_id)
-    } else if item.type_ == Some(BaseItemKind::Season) && held(Kind::Thumb) {
-        (Kind::Thumb, None)
-    } else if any(&item.backdrop_image_tags) {
-        (Kind::Backdrop, None)
-    } else if held(Kind::Thumb) {
-        (Kind::Thumb, None)
-    } else if item.series_thumb_image_tag.is_some() {
-        (Kind::Thumb, item.series_id)
+    let (kind, at, tag) = if card.shape() == card::Shape::Banner
+        && let Some(tag) = tagged(Kind::Banner)
+    {
+        (Kind::Banner, None, Some(tag))
+    } else if let Some(tag) = tagged(Kind::Primary).filter(|_| !childless) {
+        (Kind::Primary, None, Some(tag))
+    } else if let Some(tag) = item.series_primary_image_tag.clone() {
+        (Kind::Primary, item.series_id, Some(tag))
+    } else if let Some(tag) = item.parent_primary_image_tag.clone() {
+        (Kind::Primary, item.parent_primary_image_item_id, Some(tag))
+    } else if let (Some(_), Some(tag)) = (item.album_id, item.album_primary_image_tag.clone()) {
+        (Kind::Primary, item.album_id, Some(tag))
+    } else if item.type_ == Some(BaseItemKind::Season)
+        && let Some(tag) = tagged(Kind::Thumb)
+    {
+        (Kind::Thumb, None, Some(tag))
+    } else if let Some(tag) = first(&item.backdrop_image_tags) {
+        (Kind::Backdrop, None, Some(tag))
+    } else if let Some(tag) = tagged(Kind::Thumb) {
+        (Kind::Thumb, None, Some(tag))
+    } else if let Some(tag) = item.series_thumb_image_tag.clone() {
+        (Kind::Thumb, item.series_id, Some(tag))
     } else if let Some(parent) = item.parent_thumb_item_id {
         // the reference stops here on the parent's id alone: an item naming one
         // and carrying no parent thumb tag draws nothing, rather than falling
         // to the parent's backdrop below
-        item.parent_thumb_image_tag.as_ref()?;
-        (Kind::Thumb, Some(parent))
-    } else if any(&item.parent_backdrop_image_tags) {
-        (Kind::Backdrop, item.parent_backdrop_item_id)
+        let tag = item.parent_thumb_image_tag.clone()?;
+        (Kind::Thumb, Some(parent), Some(tag))
     } else {
-        return None;
+        let tag = first(&item.parent_backdrop_image_tags)?;
+        (Kind::Backdrop, item.parent_backdrop_item_id, Some(tag))
     };
-    Some(images::Key {
+    let key = images::Key {
         item: at.or(item.id)?,
         kind,
         index: None,
         card,
-    })
+    };
+    let hash = tag
+        .as_deref()
+        .and_then(images::Tag::read)
+        .and_then(|tag| images::Hashes::of(item).hash(kind, &tag).cloned());
+    Some(images::Poster { key, hash })
 }
 
 pub fn card_images<'a>(
     items: impl IntoIterator<Item = &'a BaseItemDto>,
     card: card::Card,
-) -> HashSet<images::Key> {
+) -> images::Wanted {
     items
         .into_iter()
-        .filter_map(|item| poster_key(item, card))
+        .filter_map(|item| posted(item, card))
         .collect()
 }
 
@@ -206,8 +220,16 @@ pub enum Face {
 // reference: library-icon-unknown
 // reference: item-type-icon
 fn faced(item: &BaseItemDto, card: card::Card, images: &Cache) -> Option<Face> {
-    if let Some(key) = poster_key(item, card) {
-        return images.handle(key).map(Face::Image);
+    if let Some(posted) = posted(item, card) {
+        return images
+            .handle(posted.key)
+            .or_else(|| {
+                posted
+                    .hash
+                    .as_ref()
+                    .and_then(|hash| images.placeholder(hash))
+            })
+            .map(Face::Image);
     }
     let collected =
         item.type_ == Some(BaseItemKind::CollectionFolder) || item.collection_type.is_some();

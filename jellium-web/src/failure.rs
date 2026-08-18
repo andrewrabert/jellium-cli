@@ -394,6 +394,32 @@ pub fn decoded_image(sentence: Text, bytes: &[u8]) -> Option<image::DynamicImage
     }
 }
 
+/// `hash` decoded into `pixels` at `size` square; a hash that will not decode is
+/// recorded and answers `None`.
+/// This is the only site that decodes a BlurHash.
+pub fn unblurred(
+    sentence: Text,
+    hash: &crate::images::Hash,
+    size: jellium_model::appearance::blur::Decode,
+    punch: jellium_model::appearance::blur::Punch,
+) -> Option<Vec<u8>> {
+    match blurhash::decode(hash.as_str(), size.count(), size.count(), punch.scale()) {
+        Ok(pixels) => Some(pixels),
+        Err(error) => {
+            raise(Failure {
+                weight: Weight::Recorded,
+                ..Failure::told(
+                    sentence,
+                    Cause::Malformed {
+                        detail: error.to_string(),
+                    },
+                )
+            });
+            None
+        }
+    }
+}
+
 /// The sfnt bytes inside a woff2; a file that will not unpack is raised as a
 /// failure carrying `sentence` and answers `None`.
 /// This is the only site that decodes a woff2.

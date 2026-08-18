@@ -1,5 +1,3 @@
-use std::collections::HashSet;
-
 use iced::Element;
 use iced::widget::{column, container};
 use jellium_protocol::{SyncAccess, Target};
@@ -83,7 +81,7 @@ pub fn view<'a>(
     .into()
 }
 
-pub fn images(bound: Option<&Bound>) -> HashSet<images::Key> {
+pub fn images(bound: Option<&Bound>) -> images::Wanted {
     bound
         .map(|bound| osd::bar_images(Transport::Remote(bound)))
         .unwrap_or_default()

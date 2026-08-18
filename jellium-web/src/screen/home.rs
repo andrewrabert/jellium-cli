@@ -1,4 +1,3 @@
-use std::collections::HashSet;
 use std::rc::Rc;
 
 use iced::Element;
@@ -339,13 +338,13 @@ pub fn shown<'a>(state: &'a State, arrangement: &Arrangement) -> Vec<&'a BaseIte
         .collect()
 }
 
-pub fn images(state: &State, arrangement: &Arrangement) -> HashSet<images::Key> {
+pub fn images(state: &State, arrangement: &Arrangement) -> images::Wanted {
     let mut keys = widget::card_images(shown(state, arrangement), widget::TILE.card);
     keys.extend(
         state
             .continue_watching
             .iter()
-            .filter_map(|item| widget::poster_key(item, card::Card::resumed(item.media_type))),
+            .filter_map(|item| widget::posted(item, card::Card::resumed(item.media_type))),
     );
     keys.extend(widget::card_images(&state.next_up, card::Card::NEXT_UP));
     for row in &state.latest {
@@ -354,11 +353,13 @@ pub fn images(state: &State, arrangement: &Arrangement) -> HashSet<images::Key> 
             card::Card::latest(row.library.collection_type),
         ));
     }
-    keys.extend(state.on_now.iter().map(|channel| images::Key {
-        item: channel.id,
-        kind: images::Kind::Primary,
-        index: None,
-        card: widget::ON_NOW.card,
+    keys.extend(state.on_now.iter().map(|channel| {
+        images::Poster::of(images::Key {
+            item: channel.id,
+            kind: images::Kind::Primary,
+            index: None,
+            card: widget::ON_NOW.card,
+        })
     }));
     keys
 }

@@ -1,4 +1,3 @@
-use std::collections::HashSet;
 use std::rc::Rc;
 
 use iced::widget::{button, checkbox, column, row, text_input};
@@ -308,8 +307,8 @@ fn entry_row<'a>(
         ROW,
         widget::list::Row {
             face: Some(widget::list::Face::Art {
-                image: widget::poster_key(&entry.item, card::Card::Wall(card::Shape::Portrait))
-                    .and_then(|key| images.handle(key)),
+                image: widget::posted(&entry.item, card::Card::Wall(card::Shape::Portrait))
+                    .and_then(|posted| images.handle(posted.key)),
                 elapsed: None,
             }),
             index: Some(widget::list::Ordinal::at(index)),
@@ -508,17 +507,15 @@ fn playlist_entry(signed: &Signed, index: usize) -> Option<Uuid> {
     }
 }
 
-pub fn images(state: &State) -> HashSet<images::Key> {
+pub fn images(state: &State) -> images::Wanted {
     state
         .window
         .shown(state.entries.len())
         .filter_map(|index| state.entries.row(index))
-        .filter_map(|entry| {
-            widget::poster_key(&entry.item, card::Card::Wall(card::Shape::Portrait))
-        })
+        .filter_map(|entry| widget::posted(&entry.item, card::Card::Wall(card::Shape::Portrait)))
         .collect()
 }
 
-pub fn listed_images(state: &Listed) -> HashSet<images::Key> {
+pub fn listed_images(state: &Listed) -> images::Wanted {
     browse::images(&state.browse)
 }

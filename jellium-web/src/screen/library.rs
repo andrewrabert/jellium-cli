@@ -1,4 +1,3 @@
-use std::collections::HashSet;
 use std::rc::Rc;
 
 use iced::Element;
@@ -337,7 +336,7 @@ pub fn view<'a>(
         .into()
 }
 
-pub fn images(state: &State) -> HashSet<images::Key> {
+pub fn images(state: &State) -> images::Wanted {
     match &state.body {
         Body::Browse(browse) | Body::Rows(browse) => browse::images(browse),
         Body::Suggestions(held) => crate::screen::suggestions::images(held),

@@ -87,7 +87,7 @@ fn imaged(folder: &jellyfin_api::types::VirtualFolderInfo) -> Option<uuid::Uuid>
 
 /// The image every library with one draws on its card.
 // reference: dashboard-library-card
-pub fn images(state: &State) -> std::collections::HashSet<crate::images::Key> {
+pub fn images(state: &State) -> crate::images::Wanted {
     state
         .folders
         .iter()

@@ -592,9 +592,9 @@ fn metadata_mut(signed: &mut Signed) -> Option<&mut State> {
     }
 }
 
-pub fn images(state: &State) -> HashSet<images::Key> {
+pub fn images(state: &State) -> images::Wanted {
     let Some(id) = state.item.id else {
-        return HashSet::new();
+        return images::Wanted::new();
     };
     artwork::images(&state.artwork, id)
 }

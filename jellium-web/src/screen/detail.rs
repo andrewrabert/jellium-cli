@@ -1,4 +1,3 @@
-use std::collections::HashSet;
 use std::rc::Rc;
 
 use iced::widget::{Space, button, column, container, image, row};
@@ -703,22 +702,22 @@ pub fn view<'a>(
     crate::widget::scrolled(column![drawn, page]).into()
 }
 
-pub fn images(state: &State) -> HashSet<images::Key> {
+pub fn images(state: &State) -> images::Wanted {
     let mut keys = widget::card_images(&state.children, CHILDREN.card);
     keys.extend(widget::card_images(&state.similar, ALIKE.card));
     if let Some(id) = state.item.id {
-        keys.insert(images::Key {
+        keys.want(images::Poster::of(images::Key {
             item: id,
             kind: Kind::Primary,
             index: None,
             card: card::Card::Wall(card::Shape::Portrait),
-        });
-        keys.insert(images::Key {
+        }));
+        keys.want(images::Poster::of(images::Key {
             item: id,
             kind: Kind::Backdrop,
             index: None,
             card: card::Card::Wall(card::Shape::Backdrop),
-        });
+        }));
     }
     keys
 }

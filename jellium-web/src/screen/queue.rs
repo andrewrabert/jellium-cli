@@ -1,5 +1,3 @@
-use std::collections::HashSet;
-
 use iced::widget::{button, column, container, row};
 use iced::{Element, Fill};
 use jellium_protocol::Repeat;
@@ -30,7 +28,7 @@ pub fn images(
     playing: Option<&Playing>,
     group: Option<&Joined>,
     window: window::Window,
-) -> HashSet<images::Key> {
+) -> images::Wanted {
     if let Some(joined) = group {
         let queued = joined.queued();
         return window
@@ -40,7 +38,7 @@ pub fn images(
             .collect();
     }
     let Some(playing) = playing else {
-        return HashSet::new();
+        return images::Wanted::new();
     };
     let upcoming = playing.queue.upcoming().collect::<Vec<_>>();
     window

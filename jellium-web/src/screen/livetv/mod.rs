@@ -4,7 +4,6 @@ pub mod recordings;
 pub mod schedule;
 pub mod series;
 
-use std::collections::HashSet;
 use std::rc::Rc;
 
 use chrono::{DateTime, Utc};
@@ -197,13 +196,13 @@ pub fn view<'a>(
     .into()
 }
 
-pub fn images(state: &State) -> HashSet<images::Key> {
+pub fn images(state: &State) -> images::Wanted {
     match &state.body {
         Body::Guide(held) => guide::images(held),
         Body::Channels(held) => channels::images(held),
         Body::Recordings(held) => recordings::images(held),
         Body::Schedule(held) => schedule::images(held),
-        Body::Series(_) => HashSet::new(),
+        Body::Series(_) => images::Wanted::new(),
     }
 }
 

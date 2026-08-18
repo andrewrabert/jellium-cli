@@ -1,4 +1,3 @@
-use std::collections::HashSet;
 use std::rc::Rc;
 
 use iced::Element;
@@ -328,7 +327,7 @@ pub fn view<'a>(
     page.into()
 }
 
-pub fn images(state: &State) -> HashSet<images::Key> {
+pub fn images(state: &State) -> images::Wanted {
     state
         .sections
         .iter()
@@ -338,7 +337,7 @@ pub fn images(state: &State) -> HashSet<images::Key> {
                 .window
                 .shown(results.items.len())
                 .filter_map(|index| results.items.get(index))
-                .filter_map(move |item| widget::poster_key(item, drawn.card))
+                .filter_map(move |item| widget::posted(item, drawn.card))
         })
         .collect()
 }

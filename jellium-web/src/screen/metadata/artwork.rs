@@ -272,7 +272,7 @@ pub fn view<'a>(
     page.push(found).into()
 }
 
-pub fn images(state: &State, item: Uuid) -> HashSet<images::Key> {
+pub fn images(state: &State, item: Uuid) -> images::Wanted {
     state
         .held
         .iter()

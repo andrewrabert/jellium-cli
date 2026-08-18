@@ -1,6 +1,5 @@
 //! The profile screen: who this account is, and its image.
 
-use std::collections::HashSet;
 use std::rc::Rc;
 
 use iced::Element;
@@ -183,8 +182,8 @@ fn image_key(state: &State) -> crate::images::Key {
 }
 
 /// The user's own image, which is the one image this screen draws.
-pub fn images(state: &State) -> HashSet<crate::images::Key> {
-    HashSet::from([image_key(state)])
+pub fn images(state: &State) -> crate::images::Wanted {
+    crate::images::Wanted::from_iter([image_key(state)])
 }
 
 /// The `UserDto` a name change writes: what was read with the name replaced.

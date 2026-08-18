@@ -637,6 +637,24 @@ fn written(initializer: &str) -> Written {
                     }]
                 }
             }
+            // the square a BlurHash is decoded into, in pixels of the decode
+            // rather than of the page
+            ("decode", "pixels") => {
+                let Ok(count) = number else { continue };
+                vec![Measure::Spelt {
+                    named: trimmed(count),
+                    spellings: vec![Spelling::Measured(Count::of(count, Unit::Bare))],
+                }]
+            }
+            // the scaling a BlurHash's AC components are decoded at, which the
+            // reference writes as a bare number and gives no identity
+            ("punch", "of") => {
+                let Ok(scale) = number else { continue };
+                vec![Measure::Spelt {
+                    named: trimmed(scale),
+                    spellings: vec![Spelling::Measured(Count::of(scale, Unit::Bare))],
+                }]
+            }
             ("columns", "twelfths") => {
                 let Ok(count) = number else { continue };
                 vec![Measure::Spelt {

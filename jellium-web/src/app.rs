@@ -394,45 +394,42 @@ impl Signed {
         self.history.last()
     }
 
-    fn wanted_images(&self) -> HashSet<images::Key> {
-        match &self.view {
-            View::Loading => HashSet::new(),
+    fn wanted_images(&self) -> images::Wanted {
+        let mut held = match &self.view {
+            View::Loading => images::Wanted::new(),
             View::Home(state) => home::images(state, &self.arrangement),
             View::Library(state) => library::images(state),
             View::Detail(state) => detail::images(state),
             View::Search(state) => search::images(state),
             View::Filtered(browse) => crate::screen::browse::images(browse),
             View::Metadata(state) => crate::screen::metadata::images(state),
-            View::MetadataRoot => HashSet::new(),
+            View::MetadataRoot => images::Wanted::new(),
             View::Collections(state) => crate::screen::collections::listed_images(state),
             View::Playlists(state) => crate::screen::playlists::listed_images(state),
             View::Playlist(state) => crate::screen::playlists::images(state),
             View::LiveTv(state) => livetv::images(state),
-            View::Queue => HashSet::new(),
+            View::Queue => images::Wanted::new(),
             View::Remote => crate::screen::remote::images(self.remote.as_ref()),
             View::Dashboard(state) => crate::screen::dashboard::images(state),
             View::Settings(state) => match &state.body {
                 crate::screen::settings::Body::Profile(profile) => {
                     crate::screen::settings::profile::images(profile)
                 }
-                _ => HashSet::new(),
+                _ => images::Wanted::new(),
             },
-            View::SyncPlay | View::Unavailable => HashSet::new(),
+            View::SyncPlay | View::Unavailable => images::Wanted::new(),
+        };
+        for playing in self.playing.iter() {
+            held.extend(player::osd::images(playing));
         }
-        .into_iter()
-        .chain(self.playing.iter().flat_map(player::osd::images))
-        .chain(
-            matches!(self.view, View::Queue)
-                .then(|| {
-                    crate::screen::queue::images(
-                        self.playing.as_ref(),
-                        self.group.as_ref(),
-                        self.queue,
-                    )
-                })
-                .unwrap_or_default(),
-        )
-        .collect()
+        if matches!(self.view, View::Queue) {
+            held.extend(crate::screen::queue::images(
+                self.playing.as_ref(),
+                self.group.as_ref(),
+                self.queue,
+            ));
+        }
+        held
     }
 
     /// The libraries the drawer lists, which is what the home screen already
@@ -1110,6 +1107,7 @@ impl Jellium {
         signed.arrangement =
             crate::screen::home::Arrangement::of(&signed.configuration, signed.held);
         let wanted = signed.wanted_images();
+        self.images.blur(&wanted);
         self.images.retain(&wanted);
     }
 
@@ -1119,7 +1117,9 @@ impl Jellium {
         };
         let wanted = signed.wanted_images();
         let started: Vec<_> = wanted
-            .into_iter()
+            .keys()
+            .iter()
+            .copied()
             .filter(|key| self.images.begin(*key))
             .collect();
 
@@ -1383,7 +1383,7 @@ impl Jellium {
                     return Task::none();
                 }
                 live::disconnect();
-                self.images.retain(&HashSet::new());
+                self.images.retain(&images::Wanted::new());
                 Task::perform(control::switch_server(), Message::LoginAnswered)
             }
             Message::LogoutPressed => Task::perform(control::logout(), Message::LoggedOut),
@@ -1392,7 +1392,7 @@ impl Jellium {
                     return Task::none();
                 };
                 live::disconnect();
-                self.images.retain(&HashSet::new());
+                self.images.retain(&images::Wanted::new());
                 announcing(Message::LoginAnswered)
             }
             Message::SetupAction(action) => match &mut self.stage {

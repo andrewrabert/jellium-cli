@@ -576,7 +576,7 @@ fn image_key(id: Uuid) -> crate::images::Key {
 
 /// The image every account with one draws on its card.
 // reference: user-card
-pub fn images(state: &State) -> std::collections::HashSet<crate::images::Key> {
+pub fn images(state: &State) -> crate::images::Wanted {
     state
         .users
         .iter()

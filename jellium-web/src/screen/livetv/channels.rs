@@ -1,4 +1,3 @@
-use std::collections::HashSet;
 use std::rc::Rc;
 
 use iced::widget::{button, column, row};
@@ -201,7 +200,7 @@ pub fn view<'a>(
         .into()
 }
 
-pub fn images(state: &State) -> HashSet<images::Key> {
+pub fn images(state: &State) -> images::Wanted {
     state
         .grid
         .shown(state.channels.len())

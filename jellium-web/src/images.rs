@@ -2,6 +2,8 @@ use std::collections::{HashMap, HashSet};
 
 use uuid::Uuid;
 
+use jellium_model::appearance::blur;
+
 use crate::style::card;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -119,11 +121,183 @@ impl Foreign {
     }
 }
 
+/// One image tag, as the server mints one.
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct Tag(String);
+
+impl Tag {
+    /// A tag of the letters and digits the server mints one from, and None for
+    /// any other text.
+    pub fn read(text: &str) -> Option<Tag> {
+        let named = !text.is_empty() && text.chars().all(|value| value.is_ascii_alphanumeric());
+        named.then(|| Tag(text.to_owned()))
+    }
+}
+
+/// One BlurHash, as the wire carries it.
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct Hash(String);
+
+impl Hash {
+    /// A hash of the base-83 alphabet BlurHash is written in, and None for any
+    /// other text.
+    pub fn read(text: &str) -> Option<Hash> {
+        let named = !text.is_empty() && text.chars().all(|value| !value.is_whitespace());
+        named.then(|| Hash(text.to_owned()))
+    }
+
+    pub fn as_str(&self) -> &str {
+        &self.0
+    }
+}
+
+/// The BlurHashes one item carries, held by image kind and image tag.
+/// This is the one site that reads `BaseItemDtoImageBlurHashes`, whose two
+/// levels of map `jellyfin-api` carries as `String`.
+#[derive(Debug, Clone, Default)]
+pub struct Hashes {
+    held: HashMap<(Kind, Tag), Hash>,
+}
+
+impl Hashes {
+    pub fn of(item: &jellyfin_api::types::BaseItemDto) -> Hashes {
+        let mut held = HashMap::new();
+        let Some(hashes) = item.image_blur_hashes.as_ref() else {
+            return Hashes { held };
+        };
+        for (named, tags) in [
+            (Kind::Primary, &hashes.primary),
+            (Kind::Backdrop, &hashes.backdrop),
+            (Kind::Thumb, &hashes.thumb),
+            (Kind::Logo, &hashes.logo),
+            (Kind::Banner, &hashes.banner),
+            (Kind::Art, &hashes.art),
+            (Kind::Chapter, &hashes.chapter),
+        ] {
+            for (tag, hash) in tags {
+                let (Some(tag), Some(hash)) = (Tag::read(tag), Hash::read(hash)) else {
+                    continue;
+                };
+                held.insert((named, tag), hash);
+            }
+        }
+        Hashes { held }
+    }
+
+    pub fn hash(&self, kind: Kind, tag: &Tag) -> Option<&Hash> {
+        self.held.get(&(kind, tag.clone()))
+    }
+}
+
+/// What one card asks the server for: the key the image is fetched under, and
+/// the BlurHash the wire carries for that key.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Poster {
+    pub key: Key,
+    pub hash: Option<Hash>,
+}
+
+impl Poster {
+    /// The key alone, for an image the wire carries no hash for.
+    pub fn of(key: Key) -> Poster {
+        Poster { key, hash: None }
+    }
+}
+
+/// The images one screen asks for: the keys it fetches, and the BlurHash the
+/// wire carries for each key it has one for.
+#[derive(Debug, Clone, Default)]
+pub struct Wanted {
+    keys: HashSet<Key>,
+    hashes: HashMap<Key, Hash>,
+}
+
+impl Wanted {
+    pub fn new() -> Wanted {
+        Wanted::default()
+    }
+
+    pub fn want(&mut self, posted: Poster) {
+        if let Some(hash) = posted.hash {
+            self.hashes.insert(posted.key, hash);
+        }
+        self.keys.insert(posted.key);
+    }
+
+    pub fn extend(&mut self, posted: impl IntoIterator<Item = Poster>) {
+        for one in posted {
+            self.want(one);
+        }
+    }
+
+    pub fn keys(&self) -> &HashSet<Key> {
+        &self.keys
+    }
+
+    pub fn hash(&self, key: Key) -> Option<&Hash> {
+        self.hashes.get(&key)
+    }
+}
+
+impl IntoIterator for Wanted {
+    type Item = Poster;
+    type IntoIter = std::vec::IntoIter<Poster>;
+
+    fn into_iter(mut self) -> Self::IntoIter {
+        let held: Vec<Poster> = self
+            .keys
+            .iter()
+            .map(|key| Poster {
+                key: *key,
+                hash: self.hashes.remove(key),
+            })
+            .collect();
+        held.into_iter()
+    }
+}
+
+impl Extend<Wanted> for Wanted {
+    fn extend<T: IntoIterator<Item = Wanted>>(&mut self, held: T) {
+        for one in held {
+            Wanted::extend(self, one);
+        }
+    }
+}
+
+impl FromIterator<Key> for Wanted {
+    fn from_iter<T: IntoIterator<Item = Key>>(keys: T) -> Wanted {
+        keys.into_iter().map(Poster::of).collect()
+    }
+}
+
+impl Extend<Poster> for Wanted {
+    fn extend<T: IntoIterator<Item = Poster>>(&mut self, posted: T) {
+        Wanted::extend(self, posted);
+    }
+}
+
+impl Extend<Key> for Wanted {
+    fn extend<T: IntoIterator<Item = Key>>(&mut self, keys: T) {
+        Wanted::extend(self, keys.into_iter().map(Poster::of));
+    }
+}
+
+impl FromIterator<Poster> for Wanted {
+    fn from_iter<T: IntoIterator<Item = Poster>>(posted: T) -> Wanted {
+        let mut held = Wanted::new();
+        held.extend(posted);
+        held
+    }
+}
+
 #[derive(Default)]
 pub struct Cache {
     held: HashMap<Key, iced::widget::image::Handle>,
     in_flight: HashSet<Key>,
     attempts: HashMap<Key, u32>,
+    /// One entry per hash decoded, holding nothing for a hash that would not
+    /// decode, so a refusal is not attempted twice.
+    blurred: HashMap<Hash, Option<iced::widget::image::Handle>>,
 }
 
 impl Cache {
@@ -168,11 +342,39 @@ impl Cache {
         *attempts < Cache::ATTEMPTS
     }
 
+    /// The placeholder `hash` decodes to, and None while it has not been
+    /// decoded or would not decode.
+    pub fn placeholder(&self, hash: &Hash) -> Option<iced::widget::image::Handle> {
+        self.blurred.get(hash).cloned().flatten()
+    }
+
+    /// Decodes every hash `wanted` carries that is not held, at `blur::SIZE`
+    /// square and `blur::PUNCH`; a hash that will not decode is recorded and
+    /// held as nothing.
+    pub fn blur(&mut self, wanted: &Wanted) {
+        for hash in wanted.keys().iter().filter_map(|key| wanted.hash(*key)) {
+            if self.blurred.contains_key(hash) {
+                continue;
+            }
+            let size = blur::SIZE.count();
+            let drawn = crate::failure::unblurred(
+                crate::text::Text::FailureImageUnread,
+                hash,
+                blur::SIZE,
+                blur::PUNCH,
+            )
+            .map(|pixels| iced::widget::image::Handle::from_rgba(size, size, pixels));
+            self.blurred.insert(hash.clone(), drawn);
+        }
+    }
+
     /// Drops every handle, in-flight mark and attempt count whose key is absent
-    /// from `keep`.
-    pub fn retain(&mut self, keep: &HashSet<Key>) {
-        self.held.retain(|key, _| keep.contains(key));
-        self.in_flight.retain(|key| keep.contains(key));
-        self.attempts.retain(|key, _| keep.contains(key));
+    /// from `keep`, and every placeholder no key it holds carries.
+    pub fn retain(&mut self, keep: &Wanted) {
+        self.held.retain(|key, _| keep.keys.contains(key));
+        self.in_flight.retain(|key| keep.keys.contains(key));
+        self.attempts.retain(|key, _| keep.keys.contains(key));
+        let held: HashSet<&Hash> = keep.hashes.values().collect();
+        self.blurred.retain(|hash, _| held.contains(hash));
     }
 }

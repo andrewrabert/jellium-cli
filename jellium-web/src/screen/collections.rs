@@ -1,4 +1,3 @@
-use std::collections::HashSet;
 use std::rc::Rc;
 
 use iced::Element;
@@ -134,6 +133,6 @@ pub fn act(signed: &mut Signed, action: Action) -> Task<Message> {
     }
 }
 
-pub fn listed_images(state: &Listed) -> HashSet<images::Key> {
+pub fn listed_images(state: &Listed) -> images::Wanted {
     browse::images(&state.browse)
 }

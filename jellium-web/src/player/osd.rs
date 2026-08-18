@@ -1,5 +1,4 @@
 use std::borrow::Cow;
-use std::collections::HashSet;
 use std::time::Duration;
 
 use iced::widget::Space;
@@ -57,7 +56,7 @@ fn art_key(playing: &Playing) -> Option<images::Key> {
     })
 }
 
-pub fn images(playing: &Playing) -> HashSet<images::Key> {
+pub fn images(playing: &Playing) -> images::Wanted {
     art_key(playing).into_iter().collect()
 }
 
@@ -1127,7 +1126,7 @@ fn remote_title(bound: &Bound) -> String {
     }
 }
 
-pub fn bar_images(transport: Transport<'_>) -> HashSet<images::Key> {
+pub fn bar_images(transport: Transport<'_>) -> images::Wanted {
     match transport {
         Transport::Local(playing) => art_key(playing).into_iter().collect(),
         Transport::Remote(bound) => remote_art_key(bound).into_iter().collect(),

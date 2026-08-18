@@ -2619,11 +2619,11 @@ fn shown_mut(signed: &mut Signed) -> Option<&mut State> {
 }
 
 /// The images the shown dashboard screen draws.
-pub fn images(state: &State) -> std::collections::HashSet<crate::images::Key> {
+pub fn images(state: &State) -> crate::images::Wanted {
     match &state.body {
         Body::Users(held) => users::images(held),
         Body::Libraries(held) => libraries::images(held),
-        _ => std::collections::HashSet::new(),
+        _ => crate::images::Wanted::new(),
     }
 }
 

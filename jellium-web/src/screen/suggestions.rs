@@ -1,4 +1,3 @@
-use std::collections::HashSet;
 use std::rc::Rc;
 
 use iced::Element;
@@ -126,7 +125,7 @@ pub fn view<'a>(
     page.into()
 }
 
-pub fn images(state: &State) -> HashSet<images::Key> {
+pub fn images(state: &State) -> images::Wanted {
     let mut wanted = widget::card_images(&state.suggestions, RAIL.card);
     for rail in &state.recommendations {
         wanted.extend(widget::card_images(&rail.items, RAIL.card));
