@@ -444,7 +444,7 @@ pub fn view<'a>(
     let mut page = column![];
     if !state.active.is_empty() {
         page = page.push(widget::section(
-            strings::lookup(Text::ScheduleActive),
+            widget::prose(strings::lookup(Text::ScheduleActive), typeface::HEADING_2),
             widget::wall(
                 state.drawing.card,
                 room,

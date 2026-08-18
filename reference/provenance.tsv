@@ -707,3 +707,12 @@ device-picker-sheet	src/components/playback/playerSelectionMenu.js	70	96	e834a6b
 group-picker-sheet	src/plugins/syncPlay/ui/groupSelectionMenu.js	51	85	5b43395ee5fc097ea78898e55077ba1051b8db4105ed317765f18904f5bda85b	ported
 group-sheet	src/plugins/syncPlay/ui/groupSelectionMenu.js	122	166	724830f9976ffa126c4de02e8a4b97e0a36edb1143a11e28a5fa578f3ea618cf	ported
 scheme-action-sheet-divider	src/themes/dark/theme.scss	164	167	44b6008cde096699b6e2bbbd92035ef0ae2a84fc8a049d0c0b37966f8ce1ae6f	ported
+page-class-top	src/styles/librarybrowser.scss	91	113	e861955d988fbd480ac1445d701a894959668ac4709ac7376d3402febc0d3638	ported
+page-class-top-wide	src/styles/librarybrowser.scss	386	406	a056e3f51e6ea61e6e2cd683686307a3859475e0a5056c88645556939f6acfd2	ported
+scroll-buttons	src/elements/emby-scrollbuttons/emby-scrollbuttons.scss	1	26	cb0c99015a168cd39dde88fda734e67ad1920073d73d36648b1ede5dc004179a	ported
+scroll-window	src/elements/emby-scrollbuttons/utils.ts	42	103	5f54830b0f251bd1f9fef2545e971750bac31024af9ead5739aab976042f8a90	ported
+skin-header	src/styles/librarybrowser.scss	212	236	57f387806fba90b18d5e97fdcfbac430777783ec2f3126973d45f973be0d9e69	ported
+header-slots	src/styles/librarybrowser.scss	153	170	3e02665cecc8f171bf76d0fe7cd9d372cefb7a4bbecefc7883d32087ae16be4b	ported
+nav-drawer	src/lib/navdrawer/navdrawer.scss	1	37	86cecdb2166009d02e82c6f1f31acbdf4a647307201b9f87abf144309b410a50	ported
+nav-menu-option	src/styles/librarybrowser.scss	254	301	6b07c82433a4f2aa3ca9fc86b0ed6acec485652387469f45d2f87e9b3716a569	ported
+main-drawer-scroll	src/styles/librarybrowser.scss	329	331	803e521fe170727106161e8f9323a6cfe8cd7e8524f038c552b2936effe59fa6	ported

@@ -14,7 +14,7 @@ use crate::images::{self, Cache};
 use crate::livetv::Channel;
 use crate::route::Route;
 use crate::style::space::Room;
-use crate::style::{Viewport, card};
+use crate::style::{self, Viewport, card};
 use crate::text::{self as strings, Text};
 use crate::widget;
 use jellium_model::construct::{Construct, Page};
@@ -27,6 +27,15 @@ fn empty_paragraph(session: &Session) -> Text {
         true => Text::HomeEmptyAdministrator,
         false => Text::HomeEmptyUser,
     }
+}
+
+/// One section title, drawn as the construct the reference writes it on.
+fn titled<'a>(said: Text) -> Element<'a, Message> {
+    construct::stated(
+        Construct::SectionTitleCards,
+        said,
+        widget::prose(strings::lookup(said), style::typeface::HEADING_2),
+    )
 }
 
 /// The reference pages this screen draws.
@@ -227,97 +236,88 @@ pub fn view<'a>(
 
     let libraries = shown(state, arrangement);
     if !libraries.is_empty() {
-        page = page.push(construct::stated(
-            Construct::SectionTitleCards,
-            Text::HomeMyMedia,
-            widget::section(
-                strings::lookup(Text::HomeMyMedia),
-                widget::scroller(
-                    widget::TILE,
-                    Room::content(viewport),
-                    libraries.iter().filter_map(|library| {
-                        Some(widget::library_tile(
-                            library,
-                            Room::content(viewport),
-                            images,
-                            Message::Navigated(opens(library)?),
-                        ))
-                    }),
-                ),
+        page = page.push(widget::section(
+            titled(Text::HomeMyMedia),
+            widget::scroller(
+                widget::TILE,
+                widget::Rail::of(Construct::ItemsContainer),
+                widget::stepping(Room::content(viewport)),
+                Room::content(viewport),
+                libraries.iter().filter_map(|library| {
+                    Some(widget::library_tile(
+                        library,
+                        Room::content(viewport),
+                        images,
+                        Message::Navigated(opens(library)?),
+                    ))
+                }),
             ),
         ));
     }
 
     if arrangement.continue_watching {
         for (media, items) in resumed(&state.continue_watching) {
-            page = page.push(construct::stated(
-                Construct::SectionTitleCards,
-                Text::HomeContinueWatching,
-                widget::section(
-                    strings::lookup(Text::HomeContinueWatching),
-                    widget::rail(
-                        railed(card::Card::resumed(media)),
-                        items,
-                        Room::content(viewport),
-                        images,
-                        now,
-                        session,
-                    ),
+            page = page.push(widget::section(
+                titled(Text::HomeContinueWatching),
+                widget::rail(
+                    railed(card::Card::resumed(media)),
+                    widget::Rail::of(Construct::ItemsContainer),
+                    items,
+                    Room::content(viewport),
+                    images,
+                    now,
+                    session,
                 ),
             ));
         }
     }
     if live_tv {
         // reference: home-live-tv
-        page = page.push(construct::stated(
-            Construct::SectionTitleCards,
-            Text::HomeLiveTv,
-            widget::section(
-                strings::lookup(Text::HomeLiveTv),
-                // reference: home-live-tv-sections
-                row(crate::screen::livetv::Tab::ALL.iter().map(|tab| {
-                    construct::navigation(
-                        Construct::Raised,
-                        Some(tab.label()),
-                        Message::Navigated(Route::LiveTv { tab: *tab }),
-                        widget::block(strings::lookup(tab.label()), None, widget::Emphasis::Raised),
-                    )
-                }))
-                .into(),
-            ),
+        page = page.push(widget::section(
+            titled(Text::HomeLiveTv),
+            // reference: home-live-tv-sections
+            row(crate::screen::livetv::Tab::ALL.iter().map(|tab| {
+                construct::navigation(
+                    Construct::Raised,
+                    Some(tab.label()),
+                    Message::Navigated(Route::LiveTv { tab: *tab }),
+                    widget::block(strings::lookup(tab.label()), None, widget::Emphasis::Raised),
+                )
+            }))
+            .into(),
         ));
-        page = page.push(construct::stated(
-            Construct::SectionTitleCards,
-            Text::HomeOnNow,
-            widget::section(
-                strings::lookup(Text::HomeOnNow),
-                widget::on_now_row(&state.on_now, Room::content(viewport), now, images),
-            ),
+        page = page.push(widget::section(
+            titled(Text::HomeOnNow),
+            widget::on_now_row(&state.on_now, Room::content(viewport), now, images),
         ));
     }
 
     if arrangement.next_up && !state.next_up.is_empty() {
-        page = page.push(construct::stated(
-            Construct::SectionTitleCards,
-            Text::HomeNextUp,
-            widget::section(
-                strings::lookup(Text::HomeNextUp),
-                widget::rail(
-                    railed(card::Card::NEXT_UP),
-                    state.next_up.iter(),
-                    Room::content(viewport),
-                    images,
-                    now,
-                    session,
-                ),
+        page = page.push(widget::section(
+            titled(Text::HomeNextUp),
+            widget::rail(
+                railed(card::Card::NEXT_UP),
+                widget::Rail::of(Construct::ItemsContainer),
+                state.next_up.iter(),
+                Room::content(viewport),
+                images,
+                now,
+                session,
             ),
         ));
     }
     for row in &state.latest {
         page = page.push(widget::section(
-            row.library.name.as_deref().unwrap_or_default(),
+            widget::prose(
+                row.library.name.as_deref().unwrap_or_default(),
+                style::typeface::HEADING_2,
+            ),
             widget::rail(
                 railed(card::Card::latest(row.library.collection_type)),
+                widget::Rail::within(
+                    Construct::ItemsContainer,
+                    row.library.id.unwrap_or_default(),
+                ),
                 row.items.iter(),
                 Room::content(viewport),
                 images,
@@ -326,7 +326,7 @@ pub fn view<'a>(
             ),
         ));
     }
-    construct::page(DRAWS, viewport, crate::widget::scrolled(page).into())
+    crate::widget::scrolled(page).into()
 }
 
 /// The library views My Media draws: the arrangement's own order, with the

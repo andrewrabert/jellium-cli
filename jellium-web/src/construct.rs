@@ -32,13 +32,12 @@ pub fn page<'a>(
     viewport: Viewport,
     body: Element<'a, Message>,
 ) -> Element<'a, Message> {
-    let side = style::drawn(space::page_side(viewport.canvas()));
     container(body)
         .padding(iced::Padding {
-            top: room(pages),
-            right: side,
+            top: room(pages, viewport),
+            right: 0.0,
             bottom: style::drawn(space::PAGE_BOTTOM.drawn()),
-            left: side,
+            left: 0.0,
         })
         .height(Fill)
         .style(style::page)
@@ -47,14 +46,14 @@ pub fn page<'a>(
 
 /// The room the pages one module draws reserve above themselves, which is one
 /// room because one module draws pages of one class.
-fn room(pages: &'static [Page]) -> f32 {
+fn room(pages: &'static [Page], viewport: Viewport) -> f32 {
     let mut classes = pages.iter().map(|page| page.class());
     let held = classes.next().unwrap_or(PageClass::Standalone);
     assert!(
         classes.all(|other| other == held),
         "one module draws pages of two classes, which reserve two rooms"
     );
-    style::drawn(space::PAGE_TOP.drawn())
+    style::drawn(space::page_top(held, viewport))
 }
 
 /// `held` under the reference's flat link face with the trailing chevron the

@@ -20,6 +20,34 @@ use crate::style::{self, Viewport, space, typeface};
 use crate::text::{self as strings, Text};
 use crate::widget::{self, prose};
 
+/// The library tree the reference's own manager stands beside its editor,
+/// which is what `#/metadata` opens before any item is chosen.
+// reference: metadata-tree
+pub fn root<'a>(libraries: &'a [BaseItemDto], viewport: Viewport) -> Element<'a, Message> {
+    let mut tree = column![prose(
+        strings::lookup(Text::NavMetadata),
+        typeface::HEADING_2
+    )]
+    .spacing(style::drawn(space::BLOCK_GAP.drawn()));
+    for library in libraries {
+        let Some(item) = library.id else {
+            continue;
+        };
+        tree = tree.push(
+            button(prose(
+                library.name.clone().unwrap_or_default(),
+                typeface::BODY,
+            ))
+            .style(style::flat)
+            .on_press(Message::Navigated(crate::route::Route::Metadata {
+                item: Some(item),
+                part: None,
+            })),
+        );
+    }
+    widget::capped(viewport, space::BLOCK_GAP, vec![tree.into()])
+}
+
 /// One part of the metadata manager.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Part {

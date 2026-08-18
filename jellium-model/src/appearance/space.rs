@@ -5,6 +5,8 @@
 
 use chrono::TimeDelta;
 
+use crate::construct::PageClass;
+
 use super::scheme::{self, Color};
 use super::typeface;
 use super::{
@@ -298,8 +300,96 @@ pub const PAGE_PAD: Padding = Padding {
 // reference: page-bottom
 pub const PAGE_BOTTOM: Length = Length::em(5.0);
 
-// reference: page-standalone
-pub const PAGE_TOP: Length = Length::em(4.5);
+// reference: page-class-top
+const PAGE_TOP_LIBRARY: Length = Length::em(7.0);
+
+// reference: page-class-top
+const PAGE_TOP_LIBRARY_WITH_NAV: Length = Length::em(7.5);
+
+// reference: page-class-top-wide
+const PAGE_TOP_LIBRARY_WITH_NAV_WIDE: Length = Length::em(4.6);
+
+// reference: page-class-top
+const PAGE_TOP_ITEM_DETAIL: Length = Length::em(0.0);
+
+// reference: page-class-top
+const PAGE_TOP_STANDALONE: Length = Length::em(4.5);
+
+// reference: page-class-top
+const PAGE_TOP_WIZARD: Length = Length::em(7.0);
+
+/// `.navMenuOption`'s own box, which the reference writes on the drawer's link
+/// rather than on its lettering.
+// reference: nav-menu-option
+pub const NAV_MENU_OPTION_PAD: Padding = Padding {
+    top: Length::em(0.9),
+    right: Length::em(0.0),
+    bottom: Length::em(0.9),
+    left: Length::em(2.4),
+};
+
+/// The room `.navMenuOptionIcon` leaves between itself and the lettering
+/// beside it.
+// reference: nav-menu-option
+pub const NAV_MENU_OPTION_ICON_GAP: Length = Length::em(1.0);
+
+/// `.sidebarHeader`'s own margins, which are what parts one drawer section
+/// from the one above it.
+// reference: nav-menu-option
+pub const SIDEBAR_HEADER_MARGIN: Padding = Padding {
+    top: Length::em(1.0),
+    right: Length::em(0.0),
+    bottom: Length::em(0.5),
+    left: Length::em(0.0),
+};
+
+/// `.sidebarHeader`'s own leading inset, which stands short of the inset its
+/// own rows take.
+// reference: nav-menu-option
+pub const SIDEBAR_HEADER_LEAD: Length = Length::em(1.2);
+
+/// Where the reference stops reserving a tabbed page's taller room.
+// reference: page-class-top-wide
+pub const PAGE_TOP_WIDE: Query = Query::MinWidth(Breakpoint::em(100.0));
+
+/// The room a page of `class` reserves above itself for the fixed header, which
+/// the reference writes on the page's own class.
+/// A library page carrying a secondary nav reserves more than one that does
+/// not, and a viewport at or past `PAGE_TOP_WIDE` reserves less than one below
+/// it.
+/// A page the modern layout paints carries no class of the legacy layout's and
+/// reserves nothing here; its own frame reserves its room.
+// reference: page-class-top
+// reference: page-class-top-wide
+pub fn page_top(class: PageClass, viewport: Viewport) -> Drawn {
+    match class {
+        PageClass::Library => PAGE_TOP_LIBRARY.drawn(),
+        PageClass::LibraryWithNav => match viewport.matches(PAGE_TOP_WIDE) {
+            true => PAGE_TOP_LIBRARY_WITH_NAV_WIDE.drawn(),
+            false => PAGE_TOP_LIBRARY_WITH_NAV.drawn(),
+        },
+        PageClass::ItemDetail => PAGE_TOP_ITEM_DETAIL.drawn(),
+        PageClass::Standalone => PAGE_TOP_STANDALONE.drawn(),
+        PageClass::Wizard => PAGE_TOP_WIZARD.drawn(),
+        PageClass::Modern => Drawn::ZERO,
+    }
+}
+
+/// `.emby-scrollbuttons`' own box, which holds the pair of controls at the top
+/// trailing corner of the scroller they step.
+// reference: scroll-buttons
+pub const SCROLL_BUTTONS_WIDTH: Css = Css::of(104.0);
+
+// reference: scroll-buttons
+pub const SCROLL_BUTTONS_HEIGHT: Css = Css::of(24.0);
+
+/// The room `.emby-scrollbuttons` leaves above itself.
+// reference: scroll-buttons
+pub const SCROLL_BUTTONS_TOP: Length = Length::em(0.85);
+
+/// `.emby-scrollbuttons-button > .material-icons`' own box.
+// reference: scroll-buttons
+pub const SCROLL_BUTTON_GLYPH: Css = Css::of(24.0);
 
 // reference: page-side
 const PAGE_SIDE: Share = Share::per_ten_thousand(330);

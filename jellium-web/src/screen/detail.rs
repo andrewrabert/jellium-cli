@@ -8,6 +8,8 @@ use jellyfin_api::types::{BaseItemDto, BaseItemKind};
 use uuid::Uuid;
 
 use crate::api::Api;
+use jellium_model::construct::Construct;
+
 use crate::app::Message;
 use crate::error::Answer;
 use crate::icon::Icon;
@@ -677,7 +679,7 @@ pub fn view<'a>(
             button(prose(strings::lookup(Text::MetadataOpen), typeface::BODY))
                 .style(style::raised)
                 .on_press(Message::Navigated(crate::route::Route::Metadata {
-                    item: id,
+                    item: Some(id),
                     part: None,
                 })),
         );
@@ -685,9 +687,10 @@ pub fn view<'a>(
 
     if !state.similar.is_empty() {
         page = page.push(widget::section(
-            strings::lookup(Text::DetailSimilar),
+            widget::prose(strings::lookup(Text::DetailSimilar), typeface::HEADING_2),
             widget::rail(
                 ALIKE,
+                widget::Rail::of(Construct::ItemsContainer),
                 state.similar.iter(),
                 Room::content(viewport),
                 images,

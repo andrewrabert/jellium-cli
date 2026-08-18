@@ -18,12 +18,14 @@ use iced::widget::{
     Space, button, column, container, grid, image, rich_text, row, scrollable, span, stack, text,
 };
 use iced::{Element, Fill, Length};
+use jellium_model::construct::Construct;
 use jellium_model::item::{self, Mark};
 use jellium_protocol::{Session, SyncAccess};
 use jellyfin_api::types::{BaseItemDto, BaseItemKind};
 use uuid::Uuid;
 
 use crate::app::Message;
+use crate::construct;
 use crate::icon::Icon;
 use crate::images::{self, Cache, Kind};
 use crate::live;
@@ -31,7 +33,7 @@ use crate::livetv::{Channel, Program, Recording};
 use crate::player::group::Joined;
 use crate::route::Route;
 use crate::style::space::Room;
-use crate::style::{self, Drawn, Layout, Share, Viewport, card, scheme, space, typeface};
+use crate::style::{self, Drawn, Layout, Share, Viewport, card, scheme, scroll, space, typeface};
 use crate::text::{self as strings, Text};
 
 /// Wrapping text, which is what a server's own disclaimer is. Every string the
@@ -826,7 +828,10 @@ pub fn page<'a>(viewport: Viewport, body: Element<'a, Message>) -> Element<'a, M
         .into();
     container(body)
         .padding(iced::Padding {
-            top: style::drawn(space::PAGE_TOP.drawn()),
+            top: style::drawn(space::page_top(
+                jellium_model::construct::PageClass::Standalone,
+                viewport,
+            )),
             right: side,
             bottom: style::drawn(space::PAGE_BOTTOM.drawn()),
             left: side,
@@ -945,17 +950,114 @@ fn cards<'a>(
         .collect()
 }
 
+/// One horizontal scroller of the page, which the scroll buttons beside it
+/// step. A page drawing several scrollers of one construct tells them apart by
+/// the item whose row each carries.
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct Rail {
+    construct: Construct,
+    within: Option<Uuid>,
+}
+
+impl Rail {
+    pub fn of(construct: Construct) -> Rail {
+        Rail {
+            construct,
+            within: None,
+        }
+    }
+
+    pub fn within(construct: Construct, item: Uuid) -> Rail {
+        Rail {
+            construct,
+            within: Some(item),
+        }
+    }
+
+    pub fn id(&self) -> iced::widget::Id {
+        match self.within {
+            Some(item) => iced::widget::Id::from(format!("{:?}/{item}", self.construct)),
+            None => iced::widget::Id::from(format!("{:?}", self.construct)),
+        }
+    }
+}
+
+/// Whether the reference gives a scroller its own scroll buttons, which
+/// `data-scrollbuttons="false"` withholds and which no mobile band draws.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Stepping {
+    Offered,
+    Withheld,
+}
+
+/// The pair of controls `emby-scrollbuttons` inserts before a scroller, at the
+/// top trailing corner of the scroller they step.
+// reference: scroll-buttons
+fn scroll_buttons<'a>(rail: &Rail, frame: scroll::Frame) -> Element<'a, Message> {
+    let step = |toward, glyph, label| {
+        icon_button(
+            glyph,
+            space::SCROLL_BUTTON_GLYPH.length(),
+            Some(label),
+            Message::RailStepped {
+                rail: rail.clone(),
+                toward,
+                frame,
+            },
+        )
+    };
+    container(
+        row![
+            step(
+                scroll::Toward::Leading,
+                Icon::ChevronLeft,
+                Text::NavPrevious
+            ),
+            step(scroll::Toward::Trailing, Icon::ChevronRight, Text::NavNext),
+        ]
+        .align_y(iced::Center),
+    )
+    .width(style::drawn(space::SCROLL_BUTTONS_WIDTH.length().drawn()))
+    .height(style::drawn(space::SCROLL_BUTTONS_HEIGHT.length().drawn()))
+    .padding(iced::Padding::ZERO.top(style::drawn(space::SCROLL_BUTTONS_TOP.drawn())))
+    .align_x(iced::Right)
+    .into()
+}
+
 /// `emby-scroller`: a run of cards scrolled sideways at the height one card of
-/// `drawing` pitches down the page.
+/// `drawing` pitches down the page, under the leading and trailing scroll
+/// buttons `emby-scrollbuttons` inserts before it.
+/// The scroller reports where it stands through `Message::RailScrolled`, and
+/// each button presses `Message::RailStepped` carrying the frame this call
+/// builds from `drawing` and `room`, so the step needs nothing read back off
+/// the widget.
 // reference: card-container
+// reference: scroll-buttons
 pub fn scroller<'a>(
     drawing: card::Drawing,
+    rail: Rail,
+    stepping: Stepping,
     room: Room,
     cards: impl IntoIterator<Item = Element<'a, Message>>,
 ) -> Element<'a, Message> {
-    sideways(row(cards).spacing(style::drawn(space::GUTTER.drawn())))
-        .height(style::drawn(drawing.row(room)))
-        .into()
+    let reporting = rail.clone();
+    let run: Element<'a, Message> = construct::silent(
+        Construct::EmbyScroller,
+        sideways(row(cards).spacing(style::drawn(space::GUTTER.drawn())))
+            .id(rail.id())
+            .on_scroll(move |viewport| Message::RailScrolled {
+                rail: reporting.clone(),
+                at: Drawn::of(f64::from(viewport.absolute_offset().x)),
+            })
+            .height(style::drawn(drawing.row(room)))
+            .into(),
+    );
+    match stepping {
+        Stepping::Withheld => run,
+        Stepping::Offered => {
+            column![scroll_buttons(&rail, scroll::Frame::of(drawing, room)), run].into()
+        }
+    }
 }
 
 /// A rail of cards, scrolled sideways under whatever title the section it
@@ -964,6 +1066,7 @@ pub fn scroller<'a>(
 /// their own.
 pub fn rail<'a>(
     drawing: card::Drawing,
+    rail: Rail,
     items: impl IntoIterator<Item = &'a BaseItemDto>,
     room: Room,
     images: &'a Cache,
@@ -972,9 +1075,21 @@ pub fn rail<'a>(
 ) -> Element<'a, Message> {
     scroller(
         drawing,
+        rail,
+        stepping(room),
         room,
         cards(drawing, items, room, images, now, session, None),
     )
+}
+
+/// Whether a rail laid in `room` carries the scroll buttons, which the
+/// reference draws on no mobile band.
+// reference: scroll-buttons
+pub fn stepping(room: Room) -> Stepping {
+    match room.viewport().layout() {
+        Layout::Mobile => Stepping::Withheld,
+        Layout::Desktop | Layout::Television => Stepping::Offered,
+    }
 }
 
 /// Whether a navigation is showing what one of its entries names, and what
@@ -1344,16 +1459,21 @@ pub fn drawer<'a>(rungs: impl IntoIterator<Item = Rung>, layout: Layout) -> Elem
         .into()
 }
 
-/// A section's title over its body, the title padded above by the one length
-/// `.sectionTitleContainer-cards` gives it.
+/// `.sectionTitleContainer-cards`: a section's title over its body, the title
+/// as the reference wraps it and padded above by the one length that container
+/// gives it.
 // reference: section-title-cards
 pub fn section<'a>(
-    title: impl Into<Cow<'a, str>>,
+    title: Element<'a, Message>,
     body: Element<'a, Message>,
 ) -> Element<'a, Message> {
     column![
-        container(prose(title, typeface::HEADING_2))
-            .padding(iced::Padding::ZERO.top(style::drawn(space::SECTION_TITLE_TOP.drawn()))),
+        construct::silent(
+            Construct::SectionTitleContainerCards,
+            container(title)
+                .padding(iced::Padding::ZERO.top(style::drawn(space::SECTION_TITLE_TOP.drawn())))
+                .into(),
+        ),
         body,
     ]
     .into()
@@ -1540,7 +1660,13 @@ pub fn on_now_row<'a>(
             channel_card(channel, room, now, handle)
         });
 
-    scroller(ON_NOW, room, cards)
+    scroller(
+        ON_NOW,
+        Rail::of(Construct::ItemsContainer),
+        stepping(room),
+        room,
+        cards,
+    )
 }
 
 /// Which control ends a failure report.
@@ -1591,91 +1717,285 @@ pub fn raised<'a>(failures: &'a crate::failure::Log) -> Option<Element<'a, Messa
         .map(|failure| reported(failure, Ending::Dismissed))
 }
 
-/// The nav row above `body`, both inside the page's own padding: the page's
-/// own above and below, and `page_side`'s share at each edge.
-/// `nav` is `Settings` while a settings route is on top, which is what the
-/// settings column replaces; Back and Logout stand either way.
-// reference: page-padded
-// reference: page-side
-pub fn chrome<'a>(
+/// `.skinHeader`: the fixed header every signed-in page stands under. Its
+/// leading slot carries the back, home and drawer controls, its title slot the
+/// reference's banner, and its trailing slot the sync, cast, search and user
+/// controls, each a Material glyph.
+/// The home control stands on no page the home tab strip is drawn on.
+/// The sync control stands only where the session grants SyncPlay.
+// reference: skin-header
+// reference: header-slots
+// reference: header-top
+// reference: scheme-header-transparent
+pub fn skin_header<'a>(
     session: &'a Session,
     back: Back,
-    nav: Nav,
     viewport: Viewport,
-    body: Element<'a, Message>,
 ) -> Element<'a, Message> {
-    let mut controls = row![].spacing(style::drawn(space::CONTROL_GAP.drawn()));
+    let control = |construct, glyph, said, press: Message| {
+        construct::navigation(
+            construct,
+            None,
+            press.clone(),
+            iced::widget::tooltip(
+                crate::icon::icon(glyph, typeface::ICON_BUTTON),
+                prose(strings::lookup(said), typeface::BODY),
+                iced::widget::tooltip::Position::Bottom,
+            )
+            .style(style::dialog)
+            .into(),
+        )
+    };
 
+    let mut leading = row![].spacing(style::drawn(space::CONTROL_GAP.drawn()));
     if back == Back::Offered {
-        controls = controls.push(
-            button(prose(strings::lookup(Text::NavBack), typeface::BODY))
-                .style(style::flat)
-                .on_press(Message::WentBack),
-        );
+        leading = leading.push(control(
+            Construct::HeaderBackButton,
+            Icon::ArrowBack,
+            Text::NavBack,
+            Message::WentBack,
+        ));
     }
-    if nav == Nav::Browse {
-        controls = controls
-            .push(
-                button(prose(strings::lookup(Text::NavHome), typeface::BODY))
-                    .style(style::flat)
-                    .on_press(Message::Navigated(Route::Home)),
-            )
-            .push(
-                button(prose(strings::lookup(Text::NavSearch), typeface::BODY))
-                    .style(style::flat)
-                    .on_press(Message::Navigated(Route::Search {
-                        term: String::new(),
-                    })),
-            )
-            .push(
-                button(prose(strings::lookup(Text::NavSettings), typeface::BODY))
-                    .style(style::flat)
-                    .on_press(Message::Navigated(Route::Settings {
-                        screen: crate::screen::settings::Screen::Menu,
-                    })),
-            )
-            .push(
-                button(prose(strings::lookup(Text::NavRemote), typeface::BODY))
-                    .style(style::flat)
-                    .on_press(Message::Navigated(Route::Remote)),
-            );
+    leading = leading
+        .push(control(
+            Construct::HeaderHomeButton,
+            Icon::Home,
+            Text::NavHome,
+            Message::Navigated(Route::Home),
+        ))
+        .push(control(
+            Construct::MainDrawerButton,
+            Icon::Menu,
+            Text::NavDrawer,
+            Message::DrawerToggled,
+        ));
 
-        if session.sync_play != SyncAccess::None {
-            controls = controls.push(
-                button(prose(strings::lookup(Text::NavSyncPlay), typeface::BODY))
-                    .style(style::flat)
-                    .on_press(Message::Navigated(Route::SyncPlay)),
-            );
-        }
-        if session.administrator {
-            controls = controls.push(
-                button(prose(strings::lookup(Text::NavDashboard), typeface::BODY))
-                    .style(style::flat)
-                    .on_press(Message::Navigated(Route::Dashboard {
-                        screen: crate::screen::dashboard::Screen::Plugins,
-                    })),
-            );
-        }
+    let mut trailing = row![].spacing(style::drawn(space::CONTROL_GAP.drawn()));
+    if session.sync_play != SyncAccess::None {
+        trailing = trailing.push(control(
+            Construct::HeaderSyncButton,
+            Icon::Groups,
+            Text::NavSyncPlay,
+            Message::Navigated(Route::SyncPlay),
+        ));
     }
-    controls = controls.push(
-        button(prose(strings::lookup(Text::NavSwitch), typeface::BODY))
-            .style(style::flat)
-            .on_press(Message::SwitchPressed),
-    );
+    trailing = trailing
+        .push(control(
+            Construct::HeaderAudioPlayerButton,
+            Icon::MusicNote,
+            Text::QueueTitle,
+            Message::Navigated(Route::Queue),
+        ))
+        .push(control(
+            Construct::HeaderCastButton,
+            Icon::Cast,
+            Text::NavRemote,
+            Message::CastPressed,
+        ))
+        .push(control(
+            Construct::HeaderSearchButton,
+            Icon::Search,
+            Text::NavSearch,
+            Message::SearchPressed,
+        ))
+        .push(control(
+            Construct::HeaderUserButton,
+            Icon::Person,
+            Text::NavUser,
+            Message::UserPressed,
+        ));
+
+    let title = construct::silent(Construct::PageTitle, logo());
+    let top = row![leading, title, Space::new().width(Fill), trailing]
+        .align_y(iced::Center)
+        .spacing(style::drawn(space::CONTROL_GAP.drawn()));
+
+    construct::silent(
+        Construct::SkinHeader,
+        container(top)
+            .padding(
+                iced::Padding::ZERO
+                    .top(style::drawn(space::HEADER_PAD.drawn()))
+                    .bottom(style::drawn(space::HEADER_PAD.drawn()))
+                    .left(style::drawn(space::page_side(viewport.canvas())))
+                    .right(style::drawn(space::page_side(viewport.canvas()))),
+            )
+            .width(Fill)
+            .style(style::header)
+            .into(),
+    )
+}
+
+/// Whether the header offers the control that steps back, which the reference
+/// hides where there is nothing to step back to.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Back {
+    Offered,
+    Withheld,
+}
+
+/// Whether the navigation drawer stands over the page.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Drawer {
+    Open,
+    Closed,
+}
+
+/// One row of the navigation drawer: the reference's own link over its glyph
+/// and its lettering, the lettering carrying the sentence rather than the link.
+fn drawer_row<'a>(
+    glyph: Icon,
+    said: Option<Text>,
+    name: Cow<'a, str>,
+    opens: Message,
+) -> Element<'a, Message> {
+    construct::navigation(
+        Construct::NavMenuOption,
+        None,
+        opens,
+        row![
+            construct::silent(
+                Construct::NavMenuOptionIcon,
+                crate::icon::icon(glyph, typeface::ICON_BUTTON),
+            ),
+            match said {
+                Some(said) => construct::navigation(
+                    Construct::NavMenuOptionText,
+                    Some(said),
+                    Message::Unchanged,
+                    prose(name, typeface::BODY),
+                ),
+                None => construct::navigation(
+                    Construct::NavMenuOptionText,
+                    None,
+                    Message::Unchanged,
+                    prose(name, typeface::BODY),
+                ),
+            },
+        ]
+        .align_y(iced::Center)
+        .spacing(style::drawn(space::NAV_MENU_OPTION_ICON_GAP.drawn()))
+        .padding(style::padding(space::NAV_MENU_OPTION_PAD))
+        .into(),
+    )
+}
+
+/// `.mainDrawer`: Home, then a Media heading over one row per library with that
+/// library's own glyph and the Guide row after Live TV, then an Administration
+/// heading over Dashboard and Metadata Manager for an administrator, then a
+/// User heading over Select Server, Settings and Sign Out.
+/// The drawer's own surface takes the scheme's colour and cites that;
+/// `nav-drawer` states the light default this client does not draw.
+/// No Exit row stands here: `RESOLVED` gives `AppFeature::ExitMenu` false and
+/// so no row of `reference/constructs.tsv` names it.
+// reference: nav-drawer
+// reference: nav-menu-option
+// reference: main-drawer-scroll
+pub fn main_drawer<'a>(
+    session: &'a Session,
+    libraries: &'a [BaseItemDto],
+    viewport: Viewport,
+) -> Element<'a, Message> {
+    let heading = |said| {
+        construct::stated(
+            Construct::SidebarHeader,
+            said,
+            container(prose(strings::lookup(said), typeface::BODY))
+                .padding(
+                    style::padding(space::SIDEBAR_HEADER_MARGIN)
+                        .left(style::drawn(space::SIDEBAR_HEADER_LEAD.drawn())),
+                )
+                .into(),
+        )
+    };
+    let mut held = column![drawer_row(
+        Icon::Home,
+        Some(Text::NavHome),
+        Cow::Borrowed(strings::lookup(Text::NavHome)),
+        Message::Navigated(Route::Home),
+    )]
+    .spacing(style::drawn(space::BLOCK_GAP.drawn()));
+
+    held = held.push(heading(Text::NavMedia));
+    for library in libraries {
+        let Some(id) = library.id else {
+            continue;
+        };
+        held = held.push(drawer_row(
+            Icon::library(library.collection_type),
+            None,
+            Cow::Owned(library.name.clone().unwrap_or_default()),
+            Message::Navigated(Route::Library {
+                id,
+                tab: Box::new(crate::screen::library::Tab::Items(Box::default())),
+            }),
+        ));
+    }
+    held = held.push(drawer_row(
+        Icon::Dvr,
+        None,
+        Cow::Borrowed(strings::lookup(Text::LiveTvTabGuide)),
+        Message::Navigated(Route::LiveTv {
+            tab: crate::screen::livetv::Tab::Guide,
+        }),
+    ));
+
+    if session.administrator {
+        held = held
+            .push(heading(Text::NavAdministration))
+            .push(drawer_row(
+                Icon::Dashboard,
+                Some(Text::NavDashboard),
+                Cow::Borrowed(strings::lookup(Text::NavDashboard)),
+                Message::Navigated(Route::Dashboard {
+                    screen: crate::screen::dashboard::Screen::Plugins,
+                }),
+            ))
+            .push(drawer_row(
+                Icon::ModeEdit,
+                Some(Text::NavMetadata),
+                Cow::Borrowed(strings::lookup(Text::NavMetadata)),
+                Message::Navigated(Route::Metadata {
+                    item: None,
+                    part: None,
+                }),
+            ));
+    }
+
+    held = held.push(heading(Text::NavUser)).push(drawer_row(
+        Icon::Devices,
+        Some(Text::NavSwitch),
+        Cow::Borrowed(strings::lookup(Text::NavSwitch)),
+        Message::SwitchPressed,
+    ));
+    held = held.push(drawer_row(
+        Icon::Settings,
+        Some(Text::NavSettings),
+        Cow::Borrowed(strings::lookup(Text::NavSettings)),
+        Message::Navigated(Route::Settings {
+            screen: crate::screen::settings::Screen::Menu,
+        }),
+    ));
     if !session.read_only {
-        controls = controls.push(
-            button(prose(strings::lookup(Text::NavLogout), typeface::BODY))
-                .style(style::flat)
-                .on_press(Message::LogoutPressed),
-        );
+        held = held.push(drawer_row(
+            Icon::MeetingRoom,
+            Some(Text::NavLogout),
+            Cow::Borrowed(strings::lookup(Text::NavLogout)),
+            Message::LogoutPressed,
+        ));
     }
 
-    let side = style::drawn(space::page_side(viewport.canvas()));
-    let page = column![controls]
-        .spacing(style::drawn(space::SECTION_GAP.drawn()))
-        .padding(style::padding(space::PAGE_PAD).left(side).right(side));
-
-    page.push(body).into()
+    construct::silent(
+        Construct::MainDrawer,
+        container(scrolled(held))
+            .width(style::drawn(
+                space::page_side(viewport.canvas())
+                    .times(jellium_model::appearance::Ratio::thousandths(4000)),
+            ))
+            .height(Fill)
+            .style(style::page)
+            .into(),
+    )
 }
 
 /// One notice as the reference draws one: a card carrying its header over its
@@ -1758,21 +2078,6 @@ pub fn notices<'a>(
         ));
     }
     raised
-}
-
-/// Whether the chrome offers the control that steps back.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum Back {
-    Offered,
-    Withheld,
-}
-
-/// Which column the chrome's nav draws: the browse row, or the settings column
-/// that replaces it.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum Nav {
-    Browse,
-    Settings,
 }
 
 /// A column of rows held to the width the reference caps a form and

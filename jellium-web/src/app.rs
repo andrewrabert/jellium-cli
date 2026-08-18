@@ -45,6 +45,8 @@ pub struct Jellium {
     pub viewport: Viewport,
     /// Every failure raised this session and the one shown above the view.
     pub failures: crate::failure::Log,
+    /// Whether the navigation drawer stands over the page.
+    pub drawer: widget::Drawer,
 }
 
 pub enum Stage {
@@ -78,6 +80,9 @@ pub struct Signed {
     /// The element and queue a play request was issued for, held until its
     /// plan arrives.
     pub pending: Option<player::Pending>,
+    /// Where each rail this session drew last reported itself standing, which
+    /// is what a scroll button steps from.
+    pub rails: std::collections::HashMap<crate::widget::Rail, jellium_model::appearance::Drawn>,
     /// The preferences this browser holds.
     pub device: Device,
     /// The preference bag as the server answered it, with the edits made.
@@ -141,6 +146,9 @@ pub enum View {
     Search(Box<search::State>),
     Filtered(Box<crate::screen::browse::Browse>),
     Metadata(Box<crate::screen::metadata::State>),
+    /// The metadata manager before any item is chosen, which is the library
+    /// tree the reference stands beside its editor.
+    MetadataRoot,
     Collections(Box<crate::screen::collections::Listed>),
     Playlists(Box<crate::screen::playlists::Listed>),
     Playlist(Box<crate::screen::playlists::State>),
@@ -156,6 +164,22 @@ pub enum View {
 
 #[derive(Debug, Clone)]
 pub enum Message {
+    /// The navigation drawer's own control was pressed.
+    DrawerToggled,
+    /// Where a rail now stands, from the scroller's own `on_scroll`.
+    RailScrolled {
+        rail: crate::widget::Rail,
+        at: jellium_model::appearance::Drawn,
+    },
+    /// A scroll button pressed, carrying the frame the rail was drawn in.
+    RailStepped {
+        rail: crate::widget::Rail,
+        toward: jellium_model::appearance::scroll::Toward,
+        frame: jellium_model::appearance::scroll::Frame,
+    },
+    SearchPressed,
+    CastPressed,
+    UserPressed,
     /// One failure report raised anywhere in the client.
     Failed(crate::failure::Failure),
     /// The press an entry naming what its navigation is already showing
@@ -379,6 +403,7 @@ impl Signed {
             View::Search(state) => search::images(state),
             View::Filtered(browse) => crate::screen::browse::images(browse),
             View::Metadata(state) => crate::screen::metadata::images(state),
+            View::MetadataRoot => HashSet::new(),
             View::Collections(state) => crate::screen::collections::listed_images(state),
             View::Playlists(state) => crate::screen::playlists::listed_images(state),
             View::Playlist(state) => crate::screen::playlists::images(state),
@@ -410,6 +435,15 @@ impl Signed {
         .collect()
     }
 
+    /// The libraries the drawer lists, which is what the home screen already
+    /// read, and nothing on a screen that has not read them.
+    pub fn libraries(&self) -> &[jellyfin_api::types::BaseItemDto] {
+        match &self.view {
+            View::Home(state) => &state.libraries,
+            _ => &[],
+        }
+    }
+
     fn items_mut(&mut self) -> Vec<&mut jellyfin_api::types::BaseItemDto> {
         match &mut self.view {
             View::Loading => Vec::new(),
@@ -428,7 +462,8 @@ impl Signed {
             | View::Collections(_)
             | View::Playlists(_)
             | View::Playlist(_)
-            | View::Metadata(_) => Vec::new(),
+            | View::Metadata(_)
+            | View::MetadataRoot => Vec::new(),
             View::Queue
             | View::Remote
             | View::SyncPlay
@@ -447,8 +482,36 @@ impl Signed {
 /// screens draw from what is already in hand and load nothing, and a Live TV
 /// route a session cannot reach stands as the sentence naming which of the two
 /// causes it is.
+impl View {
+    /// The reference pages this view draws, taken from the drawing module's own
+    /// `DRAWS`.
+    fn draws(&self) -> &'static [jellium_model::construct::Page] {
+        match self {
+            View::Home(_) => crate::screen::home::DRAWS,
+            View::Loading
+            | View::LiveTv(_)
+            | View::Library(_)
+            | View::Detail(_)
+            | View::Search(_)
+            | View::Filtered(_)
+            | View::Metadata(_)
+            | View::MetadataRoot
+            | View::Collections(_)
+            | View::Playlists(_)
+            | View::Playlist(_)
+            | View::Queue
+            | View::Remote
+            | View::SyncPlay
+            | View::Dashboard(_)
+            | View::Settings(_)
+            | View::Unavailable => &[],
+        }
+    }
+}
+
 pub fn staged(route: &Route, live_tv: jellium_protocol::LiveTvAccess) -> View {
     match route {
+        Route::Metadata { item: None, .. } => View::MetadataRoot,
         Route::Queue => View::Queue,
         Route::Remote => View::Remote,
         Route::SyncPlay => View::SyncPlay,
@@ -532,10 +595,14 @@ pub fn load(signed: &Signed, route: &Route, viewport: Viewport) -> Task<Message>
             crate::screen::playlists::load(api, id, signed.session.user_id, viewport),
             Message::PlaylistLoaded,
         ),
-        Route::Metadata { item, part } => Task::perform(
+        Route::Metadata {
+            item: Some(item),
+            part,
+        } => Task::perform(
             crate::screen::metadata::load(api, item, part),
             Message::MetadataLoaded,
         ),
+        Route::Metadata { item: None, .. } => Task::none(),
         Route::Detail { id } => Task::perform(detail::load(api, id), Message::DetailLoaded),
         Route::Search { term } => {
             Task::perform(search::load(api, term, viewport), Message::SearchLoaded)
@@ -659,6 +726,7 @@ impl Jellium {
                 images: Cache::new(),
                 viewport,
                 failures: crate::failure::Log::default(),
+                drawer: widget::Drawer::Closed,
             },
             Task::batch([
                 Task::done(Message::Ready),
@@ -709,6 +777,7 @@ impl Jellium {
                 let api = Rc::new(Api::new(session.user_id));
                 let detected = crate::browser::Browser::detect(&crate::browser::Runtime::probe());
                 self.stage = Stage::Signed(Box::new(Signed {
+                    rails: std::collections::HashMap::new(),
                     session,
                     api,
                     history: vec![Route::Home],
@@ -1142,6 +1211,45 @@ impl Jellium {
                     Task::perform(control::servers(), Message::ServersListed),
                 ])
             }
+            Message::DrawerToggled => {
+                self.drawer = match self.drawer {
+                    widget::Drawer::Open => widget::Drawer::Closed,
+                    widget::Drawer::Closed => widget::Drawer::Open,
+                };
+                Task::none()
+            }
+            Message::RailScrolled { rail, at } => {
+                if let Some(signed) = self.signed() {
+                    signed.rails.insert(rail, at);
+                }
+                Task::none()
+            }
+            Message::RailStepped {
+                rail,
+                toward,
+                frame,
+            } => {
+                let at = self
+                    .signed()
+                    .and_then(|signed| signed.rails.get(&rail).copied())
+                    .unwrap_or(jellium_model::appearance::Drawn::ZERO);
+                iced::widget::operation::scroll_to(
+                    rail.id(),
+                    iced::widget::scrollable::AbsoluteOffset {
+                        x: Some(style::drawn(jellium_model::appearance::scroll::stepped(
+                            at, frame, toward,
+                        ))),
+                        y: None,
+                    },
+                )
+            }
+            Message::SearchPressed => self.navigate(Route::Search {
+                term: String::new(),
+            }),
+            Message::CastPressed => self.navigate(Route::Remote),
+            Message::UserPressed => self.navigate(Route::Settings {
+                screen: crate::screen::settings::Screen::Profile,
+            }),
             Message::FailureDismissed => {
                 self.failures.dismiss();
                 Task::none()
@@ -2588,6 +2696,7 @@ impl Jellium {
         };
         let wanted = match &signed.view {
             View::Metadata(state) => crate::screen::metadata::handles(state),
+            View::MetadataRoot => HashSet::new(),
             _ => HashSet::new(),
         };
         signed.foreign.retain(&wanted);
@@ -2968,22 +3077,31 @@ impl Jellium {
                         &self.images,
                         self.viewport,
                     ),
+                    View::MetadataRoot => {
+                        crate::screen::metadata::root(signed.libraries(), self.viewport)
+                    }
                     View::Unavailable => center(iced::widget::Space::new()).into(),
                 };
 
-                let mut page = column![widget::chrome(
-                    &signed.session,
-                    match signed.history.len() > 1 {
-                        true => widget::Back::Offered,
-                        false => widget::Back::Withheld,
-                    },
-                    match matches!(signed.route(), Some(Route::Settings { .. })) {
-                        true => widget::Nav::Settings,
-                        false => widget::Nav::Browse,
-                    },
-                    self.viewport,
+                let body = crate::construct::page(signed.view.draws(), self.viewport, body);
+                let mut page = column![
+                    widget::skin_header(
+                        &signed.session,
+                        match signed.history.len() > 1 {
+                            true => widget::Back::Offered,
+                            false => widget::Back::Withheld,
+                        },
+                        self.viewport,
+                    ),
                     body,
-                )];
+                ];
+                if self.drawer == widget::Drawer::Open {
+                    page = page.push(widget::main_drawer(
+                        &signed.session,
+                        signed.libraries(),
+                        self.viewport,
+                    ));
+                }
 
                 if let Some(menu) = menu {
                     page = page.push(menu);
@@ -3187,6 +3305,7 @@ fn library_changed(
         | View::Loading
         | View::LiveTv(_)
         | View::Metadata(_)
+        | View::MetadataRoot
         | View::Playlist(_)
         | View::Queue
         | View::Remote

@@ -5,7 +5,7 @@
 
 pub use jellium_model::appearance::{
     Css, Dialog, Drawn, Layout, Length, Letters, Ratio, Screen, Share, Viewport, card, scheme,
-    space, typeface,
+    scroll, space, typeface,
 };
 use jellium_model::guide::Standing;
 

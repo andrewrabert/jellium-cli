@@ -1,0 +1,3 @@
+.mainDrawer-scrollContainer {
+    padding-bottom: 10vh;
+}

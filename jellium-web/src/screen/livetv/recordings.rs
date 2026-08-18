@@ -168,7 +168,10 @@ pub fn view<'a>(
         return widget::centered(strings::lookup(Text::RecordingsEmpty).to_string());
     }
     widget::section(
-        strings::lookup(Text::RecordingsLatest),
+        widget::prose(
+            strings::lookup(Text::RecordingsLatest),
+            style::typeface::HEADING_2,
+        ),
         window::grid(
             state.grid,
             card::Wrap::Centred,

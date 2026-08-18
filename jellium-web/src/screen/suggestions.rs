@@ -8,6 +8,8 @@ use jellyfin_api::types::{BaseItemDto, CollectionType};
 use uuid::Uuid;
 
 use crate::api::Api;
+use jellium_model::construct::Construct;
+
 use crate::app::Message;
 use crate::error::Answer;
 use crate::images::{self, Cache};
@@ -90,9 +92,13 @@ pub fn view<'a>(
     session: &'a Session,
 ) -> Element<'a, Message> {
     let mut page = column![widget::section(
-        strings::lookup(Text::LibraryTabSuggestions),
+        widget::prose(
+            strings::lookup(Text::LibraryTabSuggestions),
+            style::typeface::HEADING_2
+        ),
         widget::rail(
             RAIL,
+            widget::Rail::of(Construct::ItemsContainer),
             state.suggestions.iter(),
             Room::content(viewport),
             images,
@@ -104,9 +110,10 @@ pub fn view<'a>(
 
     for rail in &state.recommendations {
         page = page.push(widget::section(
-            rail.heading.as_str(),
+            widget::prose(rail.heading.as_str(), style::typeface::HEADING_2),
             widget::rail(
                 RAIL,
+                widget::Rail::of(Construct::ItemsContainer),
                 rail.items.iter(),
                 Room::content(viewport),
                 images,

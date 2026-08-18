@@ -290,7 +290,7 @@ fn sectioned<'a>(
         },
     );
     widget::section(
-        strings::lookup(title(results.section)),
+        widget::prose(strings::lookup(title(results.section)), typeface::HEADING_2),
         iced::widget::container(rail)
             .height(style::drawn(drawn.row(room)))
             .into(),

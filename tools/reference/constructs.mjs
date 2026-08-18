@@ -1197,8 +1197,10 @@ export function pageClass(checkout, route) {
     const root = rootOf(checkout, route);
     const classes = root ? root.classes : [];
     if (route.held === 'wizard') return 'Wizard';
-    if (route.held === 'dashboard') return 'Dashboard';
-    if (classes.includes('libraryPage')) return 'Library';
+    if (route.held === 'dashboard') return 'Modern';
+    if (classes.includes('libraryPage')) {
+        return classes.includes('noSecondaryNavPage') ? 'Library' : 'LibraryWithNav';
+    }
     if (classes.includes('itemDetailPage')) return 'ItemDetail';
     return 'Standalone';
 }
@@ -1456,13 +1458,18 @@ ${enumerated(
     )}
 /// The class the reference writes on a page's root element, which is what
 /// decides the room the page reserves above itself.
+/// \`Modern\` is the page carrying none of the legacy layout's own page
+/// classes, which is every route the dashboard's react app paints.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum PageClass {
     Library,
+    /// A library page carrying a secondary nav, which is a library page whose
+    /// root omits \`noSecondaryNavPage\`.
+    LibraryWithNav,
     ItemDetail,
     Standalone,
     Wizard,
-    Dashboard,
+    Modern,
 }
 
 impl Page {

@@ -45,13 +45,18 @@ pub enum Page {
 
 /// The class the reference writes on a page's root element, which is what
 /// decides the room the page reserves above itself.
+/// `Modern` is the page carrying none of the legacy layout's own page
+/// classes, which is every route the dashboard's react app paints.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum PageClass {
     Library,
+    /// A library page carrying a secondary nav, which is a library page whose
+    /// root omits `noSecondaryNavPage`.
+    LibraryWithNav,
     ItemDetail,
     Standalone,
     Wizard,
-    Dashboard,
+    Modern,
 }
 
 impl Page {
@@ -62,22 +67,22 @@ impl Page {
     pub fn class(self) -> PageClass {
         match self {
             Page::Addserver => PageClass::Standalone,
-            Page::Branding => PageClass::Dashboard,
+            Page::Branding => PageClass::Modern,
             Page::Details => PageClass::Library,
             Page::Forgotpassword => PageClass::Standalone,
             Page::Forgotpasswordpin => PageClass::Standalone,
-            Page::Home => PageClass::Library,
-            Page::LibrariesDisplay => PageClass::Dashboard,
-            Page::LibrariesMetadata => PageClass::Dashboard,
-            Page::LibrariesNfo => PageClass::Dashboard,
+            Page::Home => PageClass::LibraryWithNav,
+            Page::LibrariesDisplay => PageClass::Modern,
+            Page::LibrariesMetadata => PageClass::Modern,
+            Page::LibrariesNfo => PageClass::Modern,
             Page::List => PageClass::Library,
-            Page::Livetv => PageClass::Dashboard,
-            Page::LivetvRecordings => PageClass::Dashboard,
+            Page::Livetv => PageClass::Modern,
+            Page::LivetvRecordings => PageClass::Modern,
             Page::Login => PageClass::Standalone,
-            Page::Logs => PageClass::Dashboard,
+            Page::Logs => PageClass::Modern,
             Page::Lyrics => PageClass::Standalone,
-            Page::Movies => PageClass::Library,
-            Page::Music => PageClass::Library,
+            Page::Movies => PageClass::LibraryWithNav,
+            Page::Music => PageClass::LibraryWithNav,
             Page::Mypreferencescontrols => PageClass::Library,
             Page::Mypreferencesdisplay => PageClass::Library,
             Page::Mypreferenceshome => PageClass::Library,
@@ -86,14 +91,14 @@ impl Page {
             Page::Queue => PageClass::Library,
             Page::Quickconnect => PageClass::Standalone,
             Page::Selectserver => PageClass::Standalone,
-            Page::Tv => PageClass::Library,
+            Page::Tv => PageClass::LibraryWithNav,
             Page::Userprofile => PageClass::Standalone,
-            Page::Users => PageClass::Dashboard,
-            Page::UsersAccess => PageClass::Dashboard,
-            Page::UsersAdd => PageClass::Dashboard,
-            Page::UsersPassword => PageClass::Dashboard,
-            Page::UsersProfile => PageClass::Dashboard,
-            Page::Video => PageClass::Library,
+            Page::Users => PageClass::Modern,
+            Page::UsersAccess => PageClass::Modern,
+            Page::UsersAdd => PageClass::Modern,
+            Page::UsersPassword => PageClass::Modern,
+            Page::UsersProfile => PageClass::Modern,
+            Page::Video => PageClass::LibraryWithNav,
         }
     }
 }
