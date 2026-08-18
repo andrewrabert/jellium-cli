@@ -118,6 +118,7 @@ pub fn view<'a>(state: &'a State, read_only: bool, viewport: Viewport) -> frame:
         widget::mui::field(
             Text::LogsSlowResponseTime,
             None,
+            None,
             &state.form.value(SLOW_RESPONSE_THRESHOLD),
             move |typed| edited(SLOW_RESPONSE_THRESHOLD, typed),
             layout,

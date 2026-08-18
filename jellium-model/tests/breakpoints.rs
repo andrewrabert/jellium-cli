@@ -4,14 +4,19 @@
 //! Every expected value here is read from `reference/breakpoints.tsv`, which
 //! `tools/reference/assets.mjs` computed from the stylesheets themselves, so no
 //! row of it is written by the same hand that writes the ladder.
+//!
+//! The oracle's `kind`, `shape` and `layout` columns name the walk's own
+//! vocabulary, and its `orientation` column and the em of every threshold rest
+//! on the css spec rather than on anything the reference writes; every other
+//! column is read out of the pinned sources.
 
 use std::collections::BTreeSet;
 
 use jellium_model::appearance::card::{Card, Mixed, PerRow, Rail, Shape};
 use jellium_model::appearance::space::Room;
 use jellium_model::appearance::{
-    Across, Breakpoint, Css, Dialog, HEIGHTS, Layout, Letters, Orientation, Screen, Viewport,
-    WIDTHS,
+    Across, Breakpoint, Css, Dialog, HEIGHTS, Layout, Letters, Orientation, Ratio, Screen,
+    Viewport, WIDTHS,
 };
 
 /// One row of the oracle, naming the whole viewport it was resolved at.
@@ -26,7 +31,7 @@ struct Row {
     requested: String,
     fill: u32,
     layout: String,
-    root: f64,
+    root: f32,
     letters: String,
     dialog: String,
 }
@@ -152,10 +157,7 @@ fn every_width_threshold_lands_where_the_reference_puts_it() {
         let viewport = row.viewport();
         let at = format!("{}x{} {}", row.width, row.height, row.shape);
         assert_eq!(named(viewport.orientation()), row.orientation, "{at}");
-        assert!(
-            (row.drawn().root().factor() as f64 - row.root / 1000.0).abs() < 1e-6,
-            "{at}"
-        );
+        assert_eq!(row.drawn().root(), Ratio::percent(row.root), "{at}");
         assert_eq!(row.card().across(row.room()).count(), row.across, "{at}");
         assert!(apart(row.share(), row.percent) < 1e-3, "{at}");
     }

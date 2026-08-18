@@ -49,6 +49,7 @@ pub fn view<'a>(state: &'a super::State, viewport: Viewport) -> Element<'a, Mess
                     strings::lookup(Text::LoginResetUsername),
                     &held.username,
                     Some(Text::LoginResetHelp),
+                    None,
                     |value| Message::LoginAction(Action::Edited(Edit::ResetUsername(value))),
                     Message::LoginAction(Action::ResetSubmit),
                     Secrecy::Shown,
@@ -96,6 +97,7 @@ fn redeeming<'a>(held: &'a State) -> impl Iterator<Item = Element<'a, Message>> 
         widget::field(
             strings::lookup(Text::LoginResetPin),
             &held.pin,
+            None,
             None,
             |value| Message::LoginAction(Action::Edited(Edit::Pin(value))),
             Message::LoginAction(Action::PinSubmit),

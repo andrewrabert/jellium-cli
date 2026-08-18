@@ -388,6 +388,7 @@ in order. A section passes only when every line in it holds.
   taking typed text.
 - The library options form saves without disturbing the fields no control
   covers.
+- The first group of the library options form is headed "Library Settings".
 - A scan starts for all libraries and for one named library, and
   `RefreshProgress` updates the named library's progress in place; an event
   naming an item no open screen shows changes nothing.
@@ -493,6 +494,9 @@ in order. A section passes only when every line in it holds.
   writes beside it, drawn as MUI's outlined fields.
 - Recording padding is typed in minutes and reads back in minutes after a save,
   and the server holds it in seconds.
+- The two recording padding fields write "minutes before" and "minutes after"
+  inside the field, against its trailing edge, and neither carries a line of
+  text beneath it.
 
 ## Read-only mode
 

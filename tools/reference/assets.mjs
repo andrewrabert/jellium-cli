@@ -13,6 +13,7 @@ import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { apiclient, checkedOut, locked, pinned } from './pinned.mjs';
+import { span, texts } from './provenance.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const web = join(root, 'jellium-web');
@@ -218,6 +219,8 @@ const UNRESOLVED = new Set([
 
 // The base a media query resolves an em against, which is the initial font
 // size rather than whatever the root is set to.
+// standard: css-initial-font-size — sixteen css pixels is that size in every
+// engine this client runs on, and the reference never writes it
 const QUERY_EM = 16;
 
 const WIDTH = 'width';
@@ -226,6 +229,27 @@ const HEIGHT = 'height';
 // The layout `layoutManager.tv` draws in, named as the table's `layout` column
 // writes it.
 const TELEVISION = 'tv';
+
+// The three layouts jellyfin-web draws in, each named as the table's `layout`
+// column writes it and paired with the construct whose rule writes its root.
+const LAYOUTS = [
+    ['mobile', 'type-mobile-root'],
+    ['desktop', 'type-root'],
+    [TELEVISION, 'type-tv-root']
+];
+
+// The construct whose span writes `setCardData`'s width request.
+const WIDTH_REQUEST = 'card-width-request';
+
+// The construct whose span writes the query the letter jump is hidden under,
+// and the rule that query hides.
+const LETTER_JUMP = 'letter-jump';
+const ALPHA_PICKER_FIXED = '.alphaPicker-fixed';
+
+// The construct whose span writes the query a dialog fills the page under, and
+// the rule that query pins.
+const DIALOG_FULLSCREEN = 'dialog-fullscreen';
+const DIALOG_FIXED_SIZE = '.dialog-fixedSize';
 
 // The class `layoutManager.tv` puts on an items container, which is what makes
 // a rule under it outrank every step of a ladder by specificity.
@@ -642,8 +666,9 @@ function declared(text, name) {
 // every other arm of the switch it stands in.
 const TELEVISED_ARM = 'isTV';
 
-// One arm's condition, as a test of the request.
-function reached(condition) {
+// One arm's condition, as a test of the viewport, `wider` being the factor
+// `setCardData` writes.
+function reached(condition, wider) {
     const tests = [];
     for (const part of condition.split('&&').map((one) => one.trim())) {
         if (part === TELEVISED_ARM) {
@@ -652,7 +677,7 @@ function reached(condition) {
             );
         }
         if (part === 'isLandscape') {
-            tests.push((request) => request.landscape);
+            tests.push((viewport) => viewport.width > viewport.height * wider);
             continue;
         }
         const wide = /^screenWidth >= ([0-9]+)$/.exec(part);
@@ -660,9 +685,9 @@ function reached(condition) {
             throw new Error(`unread cards-per-row condition: ${JSON.stringify(part)}`);
         }
         const at = Number(wide[1]);
-        tests.push((request) => request.width >= at);
+        tests.push((viewport) => viewport.width >= at);
     }
-    return (request) => tests.every((holds) => holds(request));
+    return (viewport) => tests.every((holds) => holds(viewport));
 }
 
 // One arm's value, which the reference writes either as a count or as
@@ -684,7 +709,7 @@ const ARM_LINE = /^\s*(?:case\b|default\s*:)/;
 
 // Every arm of one `switch (true)`: the television arm the reference tests
 // before all of them, and the steps under it in the source order.
-function arms(source) {
+function arms(source, wider) {
     const steps = [];
     let televised;
     for (const line of source.split('\n')) {
@@ -707,7 +732,7 @@ function arms(source) {
             televised = { rate: held, answered: false };
             continue;
         }
-        steps.push({ holds: reached(arm[1]), rate: held, answered: false });
+        steps.push({ holds: reached(arm[1], wider), rate: held, answered: false });
     }
     if (steps.length === 0) {
         throw new Error(`${CARD_BUILDER_UTILS} holds a switch with no step`);
@@ -718,7 +743,7 @@ function arms(source) {
 // `getPostersPerRow`, read out of the reference rather than transcribed: each
 // shape's own ladder, and the `default` the switch gives a shape it holds no
 // case for.
-function requesting(checkout) {
+function requesting(checkout, wider) {
     const text = readFileSync(join(checkout, CARD_BUILDER_UTILS), 'utf8');
     const dispatch = declared(text, 'getPostersPerRow');
     const shapes = new Map();
@@ -729,7 +754,7 @@ function requesting(checkout) {
         }
         const named = /^\s*case '([^']+)':\s*return (\w+)\([^)]*\);\s*$/.exec(line);
         if (named) {
-            shapes.set(named[1], arms(declared(text, named[2])));
+            shapes.set(named[1], arms(declared(text, named[2]), wider));
             continue;
         }
         const fallback = /^\s*default:\s*return ([0-9]+);\s*$/.exec(line);
@@ -744,12 +769,12 @@ function requesting(checkout) {
     return { shapes, otherwise };
 }
 
-// The arm one shape's ladder answers for a request, and marks it answered: the
-// television arm where the request is drawn in the television layout and the
-// ladder holds one, and the first step whose condition the request answers
+// The arm one shape's ladder answers for a viewport, and marks it answered: the
+// television arm where the viewport is drawn in the television layout and the
+// ladder holds one, and the first step whose condition the viewport answers
 // otherwise. `null` asks for the switch's own `default`, which is what a mixed
 // card's name reaches.
-function asked(dispatch, shape, request) {
+function asked(dispatch, shape, viewport) {
     if (shape === null) {
         return dispatch.otherwise;
     }
@@ -757,17 +782,17 @@ function asked(dispatch, shape, request) {
     if (!ladder) {
         throw new Error(`${CARD_BUILDER_UTILS} holds no case for ${shape}`);
     }
-    if (request.layout === TELEVISION && ladder.televised) {
+    if (viewport.layout === TELEVISION && ladder.televised) {
         ladder.televised.answered = true;
         return ladder.televised.rate;
     }
     for (const arm of ladder.steps) {
-        if (arm.holds(request)) {
+        if (arm.holds(viewport)) {
             arm.answered = true;
             return arm.rate;
         }
     }
-    throw new Error(`${shape} answers no arm at ${request.width}px`);
+    throw new Error(`${shape} answers no arm at ${viewport.width}px`);
 }
 
 // Every arm of a walked shape's ladder that no request of the walk answered.
@@ -812,9 +837,87 @@ function padding(checkout) {
     throw new Error(`${LIBRARY_BROWSER} holds no rule whose whole selector is ${PADDED}`);
 }
 
+// The root size one construct's rule sets, as the percentage of the 16px base
+// the reference writes it in. Refuses a span writing no font size in percent,
+// and one writing more than one.
+function rootPercent(read, construct) {
+    const written = [
+        ...span(read, construct).matchAll(/(?:font-size|\$size)\s*:\s*([0-9.]+)%/g)
+    ];
+    if (written.length !== 1) {
+        throw new Error(
+            `${construct} writes ${written.length} font sizes in percent, and a root rule writes one`
+        );
+    }
+    return Number(written[0][1]);
+}
+
+// The query one construct's span writes over `selector`, as a test of a
+// viewport. Refuses unless exactly one `@media` block of that span holds a rule
+// naming `selector`.
+function queried(read, construct, selector) {
+    const text = span(read, construct);
+    const held = [];
+    for (const [prelude, body] of blocks(construct, text)) {
+        const media = /^@media\b([\s\S]*)$/.exec(prelude.trim());
+        if (!media) {
+            continue;
+        }
+        const names = blocks(construct, body).some(([inner]) =>
+            inner.split(',').some((one) => one.trim() === selector)
+        );
+        if (names) {
+            held.push(query(media[1].trim()));
+        }
+    }
+    if (held.length !== 1) {
+        throw new Error(
+            `${construct} holds ${held.length} media blocks naming ${selector}, and this reader reads one`
+        );
+    }
+    return held[0];
+}
+
+// How much wider than tall `setCardData` asks a page to be before it calls it
+// landscape, read from the call it writes. Refuses a span that does not write
+// `getImageWidth(.., screenWidth > (screenHeight * <count>))`.
+function landscape(read) {
+    const written =
+        /getImageWidth\([^;]*screenWidth > \(screenHeight \* ([0-9.]+)\)\)/.exec(
+            span(read, WIDTH_REQUEST)
+        );
+    if (!written) {
+        throw new Error(
+            `${WIDTH_REQUEST} writes no getImageWidth call this reader can read a landscape factor out of`
+        );
+    }
+    return Number(written[1]);
+}
+
+// Everything the walk reads out of the checkout, read once: the width ladder,
+// the page's own side share, the request ladder, every threshold the resolved
+// stylesheets test, the two queries the row's last columns answer, and each
+// layout beside the root percentage its own rule writes.
+function reading(checkout) {
+    const read = texts(checkout);
+    const wider = landscape(read);
+    return {
+        ladder: widths(checkout, CARD_STYLESHEET),
+        side: padding(checkout),
+        dispatch: requesting(checkout, wider),
+        tested: thresholds(checkout),
+        letters: queried(read, LETTER_JUMP, ALPHA_PICKER_FIXED),
+        dialog: queried(read, DIALOG_FULLSCREEN, DIALOG_FIXED_SIZE),
+        layouts: LAYOUTS.map(([layout, construct]) => [layout, rootPercent(read, construct)])
+    };
+}
+
 // One viewport the table walks: the size the page reports, the orientation that
 // size implies, the layout the browser showing it is drawn in, and the root
-// size that layout writes over the 16px base.
+// percentage that layout writes over the 16px base.
+// standard: css-media-queries — a viewport is landscape where its width is at
+// least its height, which the reference never writes and this reader resolves
+// its own `orientation:` queries by
 function walked(width, height, layout, root) {
     return {
         width,
@@ -827,18 +930,15 @@ function walked(width, height, layout, root) {
 
 // One row: the whole viewport it was resolved at, and what the reference draws
 // there.
-function measured(kind, ladder, dispatch, shapes, side, viewport) {
+function measured(kind, shapes, read, viewport) {
     const { width, height, orientation, layout, root } = viewport;
-    // getImageWidth's own landscape test, which is not the css orientation
-    // above: it asks whether the page is half again as wide as it is tall.
-    const request = { width, landscape: width > height * 1.3, layout };
     let rows = '';
     for (const [shape, selector, dispatched] of shapes) {
-        const held = standing(ladder, selector, viewport);
-        const box = width * (1 - (2 * side) / 100);
+        const held = standing(read.ladder, selector, viewport);
+        const box = width * (1 - (2 * read.side) / 100);
         const percent =
             held.unit === 'em'
-                ? (100 * Number(held.count) * ((root / 1000) * QUERY_EM)) / box
+                ? (100 * Number(held.count) * ((root / 100) * QUERY_EM)) / box
                 : Number(held.count);
         const cards =
             held.unit === '%' ? across(held.count) : Math.max(1, Math.floor(100 / percent));
@@ -847,7 +947,7 @@ function measured(kind, ladder, dispatch, shapes, side, viewport) {
                 `${selector} is ${held.count}% at ${width}px, which is no ${cards}th of a viewport`
             );
         }
-        const rate = asked(dispatch, dispatched, request);
+        const rate = asked(read.dispatch, dispatched, viewport);
         rows += row([
             kind,
             width,
@@ -860,30 +960,23 @@ function measured(kind, ladder, dispatch, shapes, side, viewport) {
             Math.round(width / rate),
             layout,
             root,
-            height <= 500 ? 'hidden' : 'shown',
-            width <= 1280 || height <= 720 ? 'fullscreen' : 'fixed'
+            read.letters(viewport) ? 'hidden' : 'shown',
+            read.dialog(viewport) ? 'fullscreen' : 'fixed'
         ]);
     }
     return rows;
 }
-
-// The three layouts jellyfin-web draws in, and the root size each writes over
-// the 16px base.
-const LAYOUTS = [
-    ['mobile', 900],
-    ['desktop', 930],
-    [TELEVISION, 1250]
-];
 
 // The width a height row is resolved at, which no rule tests, so the row's
 // columns move with its height alone.
 const UNTESTED_WIDTH = 1440;
 
 function breakpoints(checkout) {
-    const ladder = widths(checkout, CARD_STYLESHEET);
-    const side = padding(checkout);
-    const dispatch = requesting(checkout);
-    const tested = thresholds(checkout);
+    const read = reading(checkout);
+    const { tested } = read;
+    // `kind`, `shape` and `layout` name the walk's own vocabulary rather than
+    // any measurement, and `orientation` is the css rule above resolved on
+    // both sides; every other column is read out of the reference.
     let table = row([
         'kind',
         'width',
@@ -899,6 +992,11 @@ function breakpoints(checkout) {
         'letter_jump',
         'dialog'
     ]);
+    if (tested[WIDTH].includes(UNTESTED_WIDTH)) {
+        throw new Error(
+            `a height row is resolved at ${UNTESTED_WIDTH}px, which a stylesheet this client resolves tests`
+        );
+    }
     for (const [kind, shapes] of [
         [WIDTH, WALL],
         ['rail', RAIL]
@@ -906,13 +1004,11 @@ function breakpoints(checkout) {
         for (const threshold of tested[WIDTH]) {
             for (const width of [threshold - 1, threshold]) {
                 for (const height of [width * 2, Math.max(200, width / 2)]) {
-                    for (const [layout, root] of LAYOUTS) {
+                    for (const [layout, root] of read.layouts) {
                         table += measured(
                             kind,
-                            ladder,
-                            dispatch,
                             shapes,
-                            side,
+                            read,
                             walked(width, height, layout, root)
                         );
                     }
@@ -922,25 +1018,23 @@ function breakpoints(checkout) {
     }
     for (const threshold of tested[HEIGHT]) {
         for (const height of [threshold - 1, threshold]) {
-            for (const [layout, root] of LAYOUTS) {
+            for (const [layout, root] of read.layouts) {
                 table += measured(
                     HEIGHT,
-                    ladder,
-                    dispatch,
                     WALL,
-                    side,
+                    read,
                     walked(UNTESTED_WIDTH, height, layout, root)
                 );
             }
         }
     }
-    const missed = unread(ladder);
+    const missed = unread(read.ladder);
     if (missed.length > 0) {
         throw new Error(
             `${CARD_STYLESHEET} sizes a walked card in ${missed.length} rules the walk never left standing: ${missed.join('; ')}`
         );
     }
-    const dropped = unanswered(dispatch);
+    const dropped = unanswered(read.dispatch);
     if (dropped.length > 0) {
         throw new Error(
             `${CARD_BUILDER_UTILS} holds ${dropped.length} arms the walk never answered: ${dropped.join('; ')}`

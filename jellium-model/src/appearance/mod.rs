@@ -22,8 +22,8 @@ impl Css {
         Css { count }
     }
 
-    /// A length a MUI style declaration writes as a bare number, which the DOM
-    /// reads as a count of css pixels.
+    /// A length a script or a MUI style declaration writes as a bare number,
+    /// which the DOM reads as a count of css pixels.
     pub const fn unitless(count: f32) -> Css {
         Css { count }
     }
@@ -244,6 +244,14 @@ pub struct Ratio {
 impl Ratio {
     pub const fn thousandths(thousandths: u16) -> Ratio {
         Ratio { thousandths }
+    }
+
+    /// A ratio the reference writes as a percentage, which is how a root font
+    /// size is written.
+    pub const fn percent(percent: f32) -> Ratio {
+        Ratio {
+            thousandths: (percent * 10.0) as u16,
+        }
     }
 
     pub const fn factor(self) -> f32 {
@@ -570,7 +578,7 @@ pub struct Screen {
 /// The width the display has to offer beyond the page for the page to be
 /// resizable inside it.
 // reference: card-resizable
-const RESIZABLE_BY: f32 = 20.0;
+const RESIZABLE_BY: Css = Css::unitless(20.0);
 
 impl Screen {
     pub fn new(available: Css) -> Screen {
@@ -581,7 +589,7 @@ impl Screen {
     /// pixels of width beyond the page.
     // reference: card-resizable
     pub fn resizable(self, viewport: Viewport) -> bool {
-        self.available.count() - viewport.width().count() > RESIZABLE_BY
+        self.available.less(viewport.width()) > RESIZABLE_BY
     }
 }
 

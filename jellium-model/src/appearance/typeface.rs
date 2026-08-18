@@ -41,13 +41,13 @@ impl Leading {
 pub const LINE_HEIGHT: Leading = Leading::Factor(Ratio::thousandths(1350));
 
 // reference: type-root
-pub const DESKTOP_ROOT: Ratio = Ratio::thousandths(930);
+pub const DESKTOP_ROOT: Ratio = Ratio::percent(93.0);
 
 // reference: type-mobile-root
-pub const MOBILE_ROOT: Ratio = Ratio::thousandths(900);
+pub const MOBILE_ROOT: Ratio = Ratio::percent(90.0);
 
 // reference: type-tv-root
-pub const TELEVISION_ROOT: Ratio = Ratio::thousandths(1250);
+pub const TELEVISION_ROOT: Ratio = Ratio::percent(125.0);
 
 // reference: type-root
 pub const HEADING_1: Length = Length::em(1.8);

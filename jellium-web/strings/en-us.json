@@ -851,7 +851,7 @@
   "librariesManage": "Manage library",
   "librariesScan": "Scan library",
   "librariesScanning": "Scanning: {0}%",
-  "librariesOptions": "Options",
+  "librariesSettings": "Library Settings",
   "librariesMetadataLanguage": "Preferred download language",
   "librariesMetadataCountry": "Country/Region",
   "librariesPhotos": "Display the photos",

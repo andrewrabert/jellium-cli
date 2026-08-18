@@ -8,7 +8,7 @@ use std::borrow::Cow;
 use std::collections::HashSet;
 
 use iced::widget::{
-    Space, button, column, container, grid, image, rich_text, row, scrollable, span, text,
+    Space, button, column, container, grid, image, rich_text, row, scrollable, span, stack, text,
 };
 use iced::{Element, Fill, Length};
 use jellium_model::item;
@@ -1859,6 +1859,7 @@ pub fn field<'a>(
     label: impl Into<Cow<'a, str>>,
     value: &str,
     description: Option<Text>,
+    unit: Option<Text>,
     edited: impl Fn(String) -> Message + 'a,
     submitted: Message,
     secrecy: Secrecy,
@@ -1870,12 +1871,34 @@ pub fn field<'a>(
         .secure(secrecy == Secrecy::Hidden)
         .on_input(edited)
         .on_submit(submitted);
+    let control = match unit {
+        Some(sentence) => stack![typed, unitted(sentence)].into(),
+        None => Element::from(typed),
+    };
 
-    let mut held = column![labelled(label, typed.into())];
+    let mut held = column![labelled(label, control)];
     if let Some(sentence) = description {
         held = held.push(self::description(sentence, space::DESCRIPTION_INSET));
     }
     held.into()
+}
+
+/// The unit the reference writes at an `emby-input`'s trailing edge, in the
+/// secondary lettering, inside the field's own trailing padding.
+// reference: control-input
+// reference: scheme-secondary-text
+fn unitted<'a>(sentence: Text) -> Element<'a, Message> {
+    container(tinted(
+        strings::lookup(sentence),
+        typeface::FIELD,
+        typeface::Weight::Regular,
+        typeface::LINE_HEIGHT,
+        style::description,
+    ))
+    .padding(style::padding(space::INPUT_PAD))
+    .align_right(Fill)
+    .center_y(Fill)
+    .into()
 }
 
 /// `.fieldDescription`: the sentence the reference writes under a control, in

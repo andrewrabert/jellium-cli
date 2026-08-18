@@ -147,6 +147,7 @@ pub fn sections<'a>(
         strings::lookup(Text::ProfileDisplayName),
         &state.naming,
         None,
+        None,
         |typed| Message::SettingsAction(Action::Typed(typed)),
         match read_only {
             true => Message::Unchanged,

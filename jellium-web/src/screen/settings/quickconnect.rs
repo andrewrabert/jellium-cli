@@ -41,6 +41,7 @@ pub fn sections<'a>(state: &'a State, read_only: bool) -> Vec<Element<'a, Messag
             strings::lookup(Text::QuickConnectCode),
             &state.code,
             None,
+            None,
             |typed| Message::SettingsAction(Action::Typed(typed)),
             match read_only {
                 true => Message::Unchanged,

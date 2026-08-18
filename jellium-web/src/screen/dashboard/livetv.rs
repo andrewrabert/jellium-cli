@@ -68,6 +68,7 @@ pub const DVR: &[Group] = &[
                 },
                 label: Text::DvrRecordingPath,
                 helper: &[Text::DvrRecordingPathHelp],
+                unit: None,
                 offered: None,
             },
             Control {
@@ -76,6 +77,7 @@ pub const DVR: &[Group] = &[
                 },
                 label: Text::DvrMovieRecordingPath,
                 helper: &[],
+                unit: None,
                 offered: None,
             },
             Control {
@@ -84,6 +86,7 @@ pub const DVR: &[Group] = &[
                 },
                 label: Text::DvrSeriesRecordingPath,
                 helper: &[],
+                unit: None,
                 offered: None,
             },
         ],
@@ -101,7 +104,8 @@ pub const DVR: &[Group] = &[
                     key: "PrePaddingSeconds",
                 },
                 label: Text::DvrStartWhenPossible,
-                helper: &[Text::DvrMinutesBefore],
+                helper: &[],
+                unit: Some(Text::DvrMinutesBefore),
                 offered: None,
             },
             Control {
@@ -109,7 +113,8 @@ pub const DVR: &[Group] = &[
                     key: "PostPaddingSeconds",
                 },
                 label: Text::DvrStopWhenPossible,
-                helper: &[Text::DvrMinutesAfter],
+                helper: &[],
+                unit: Some(Text::DvrMinutesAfter),
                 offered: None,
             },
         ],

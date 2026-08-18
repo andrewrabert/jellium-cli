@@ -28,6 +28,7 @@ pub fn view<'a>(state: &'a super::State, viewport: Viewport) -> Element<'a, Mess
                     strings::lookup(Text::LoginAddUrl),
                     &state.add.url,
                     Some(Text::LoginAddUrlHelp),
+                    None,
                     |value| Message::LoginAction(Action::Edited(Edit::Url(value))),
                     Message::LoginAction(Action::AddSubmit),
                     Secrecy::Shown,

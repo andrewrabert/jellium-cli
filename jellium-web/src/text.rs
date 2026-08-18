@@ -876,7 +876,7 @@ text! {
     LibrariesManage => "librariesManage",
     LibrariesScan => "librariesScan",
     LibrariesScanning => "librariesScanning",
-    LibrariesOptions => "librariesOptions",
+    LibrariesSettings => "librariesSettings",
     LibrariesMetadataLanguage => "librariesMetadataLanguage",
     LibrariesMetadataCountry => "librariesMetadataCountry",
     LibrariesPhotos => "librariesPhotos",

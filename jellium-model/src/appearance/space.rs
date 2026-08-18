@@ -1080,6 +1080,11 @@ pub const FILLED_LABEL_INSET: Inset = Inset {
 // reference: mui-filled-underline
 pub const FILLED_RULE: Css = Css::of(1.0);
 
+/// The gap `MuiInputAdornment` leaves between a field's value and the
+/// adornment standing at its trailing edge.
+// reference: mui-input-adornment
+pub const FILLED_ADORNMENT_MARGIN: Css = Css::unitless(8.0);
+
 /// The room a filled select keeps clear at its trailing edge.
 // reference: mui-select-filled
 const FILLED_CHEVRON_ROOM: Css = Css::unitless(32.0);

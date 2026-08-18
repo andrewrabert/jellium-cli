@@ -173,7 +173,7 @@ pub const OPTIONS: &[Group] = &[
     Group {
         heading: Some(Heading {
             rank: Rank::Second,
-            title: Text::LibrariesOptions,
+            title: Text::LibrariesSettings,
         }),
         note: None,
         controls: &[
@@ -183,6 +183,7 @@ pub const OPTIONS: &[Group] = &[
                 },
                 label: Text::LibrariesMetadataLanguage,
                 helper: &[],
+                unit: None,
                 offered: None,
             },
             Control {
@@ -191,6 +192,7 @@ pub const OPTIONS: &[Group] = &[
                 },
                 label: Text::LibrariesMetadataCountry,
                 helper: &[],
+                unit: None,
                 offered: None,
             },
             Control {
@@ -199,6 +201,7 @@ pub const OPTIONS: &[Group] = &[
                 },
                 label: Text::LibrariesPhotos,
                 helper: &[Text::LibrariesPhotosHelp],
+                unit: None,
                 offered: None,
             },
             Control {
@@ -207,6 +210,7 @@ pub const OPTIONS: &[Group] = &[
                 },
                 label: Text::LibrariesRealtimeMonitor,
                 helper: &[Text::LibrariesRealtimeMonitorHelp],
+                unit: None,
                 offered: None,
             },
             Control {
@@ -215,6 +219,7 @@ pub const OPTIONS: &[Group] = &[
                 },
                 label: Text::LibrariesMetadataReaders,
                 helper: &[Text::LibrariesMetadataReadersHelp],
+                unit: None,
                 offered: None,
             },
             Control {
@@ -223,6 +228,7 @@ pub const OPTIONS: &[Group] = &[
                 },
                 label: Text::LibrariesSaveArtwork,
                 helper: &[Text::LibrariesSaveArtworkHelp],
+                unit: None,
                 offered: None,
             },
         ],
@@ -240,6 +246,7 @@ pub const OPTIONS: &[Group] = &[
             },
             label: Text::LibrariesChapterExtraction,
             helper: &[Text::LibrariesChapterExtractionHelp],
+            unit: None,
             offered: None,
         }],
         closing: None,
@@ -257,6 +264,7 @@ pub const OPTIONS: &[Group] = &[
                 },
                 label: Text::LibrariesDownloadLanguages,
                 helper: &[],
+                unit: None,
                 offered: None,
             },
             Control {
@@ -265,6 +273,7 @@ pub const OPTIONS: &[Group] = &[
                 },
                 label: Text::LibrariesSubtitleDownloaders,
                 helper: &[Text::LibrariesSubtitleDownloadersHelp],
+                unit: None,
                 offered: None,
             },
             Control {
@@ -273,6 +282,7 @@ pub const OPTIONS: &[Group] = &[
                 },
                 label: Text::LibrariesSaveSubtitles,
                 helper: &[Text::LibrariesSaveSubtitlesHelp],
+                unit: None,
                 offered: None,
             },
         ],

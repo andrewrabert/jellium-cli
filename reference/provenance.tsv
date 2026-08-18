@@ -231,7 +231,7 @@ slider-marker	src/elements/emby-slider/emby-slider.scss	263	268	5030551f65a27014
 control-icon-button	src/elements/emby-button/emby-button.scss	86	118	45503b025e4f98b1d3cafcb0f20d4f66a635a6c8e9e1305d55cc88020ad4a72e	ported
 control-icon-glyph	src/elements/emby-button/emby-button.scss	134	141	e69773fcafd0289d076a61e154221e89b8b5acd0dffbf0f9412bbb19a74ed442	ported
 card-image-width	src/components/cardbuilder/cardBuilder.js	61	71	1b75af04297a403eb03715d76486733bf745687cb041e024f896efbd756723cd	ported
-card-screen-rounding	src/components/cardbuilder/cardBuilder.js	118	131	96a43c3d5bb7a052b97c1e67e4a679b39e44e4b4cd10dd51b7896fa530453851	ported
+card-width-request	src/components/cardbuilder/cardBuilder.js	118	131	96a43c3d5bb7a052b97c1e67e4a679b39e44e4b4cd10dd51b7896fa530453851	ported
 card-resizable	src/components/cardbuilder/cardBuilderUtils.ts	39	50	3d5781719905a5eee3cb3723e9e60ed9a466517ba4189e3d67dd949df71cff66	ported
 page-bottom	src/styles/site.scss	115	134	da6bb9f82946e4e68926426781b36161b7c360dbc5c97f7d1b3746ff863ff7f6	ported
 page-centering	src/styles/site.scss	172	180	2f0322279a79240d5deb025830b8f85bc77406b57407358b445557953974ea6f	ported
@@ -500,6 +500,7 @@ mui-filled-underline	node_modules/@mui/material/FilledInput/FilledInput.js	79	13
 mui-filled-input	node_modules/@mui/material/FilledInput/FilledInput.js	186	196	a4a9076f7284e6d8e72523aba4ea8f3d53ec77936fa257b6afa99bf7457cfd3f	ported
 mui-input-base	node_modules/@mui/material/InputBase/InputBase.js	64	76	3054633f3e9ee2f4f9547ec8ad97e58e0fbd8cabda63275ee9ba156b444006b5	ported
 mui-input-label	node_modules/@mui/material/InputLabel/InputLabel.js	119	129	55b9e90229daa76c803d8b431c67310e6afd1cd2d72826c9701e8e6b0cb6b6af	ported
+mui-input-adornment	node_modules/@mui/material/InputAdornment/InputAdornment.js	37	80	bc11b3e4389ecb7ad16630d938002fd549c6123c28c231c3b17be721414e5ec0	ported
 mui-form-control-label	node_modules/@mui/material/FormControlLabel/FormControlLabel.js	44	58	f9d6c08e35e5eeb4974afb2d84ac8bc9e576b51fbbd43b551de42bbfb29b48d6	ported
 mui-switch-base	node_modules/@mui/material/internal/SwitchBase.js	29	33	be26a7c30013851430a4b83791ed3d9a0d3bfb3de4c1122eb6c8854a90ae0f30	ported
 mui-checkbox	node_modules/@mui/material/Checkbox/Checkbox.js	49	111	95fb6a1a8ba0fc830f097e53ac9ae7c7070f6df62f642762fce3a10dac14f496	ported

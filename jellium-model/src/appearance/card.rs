@@ -10,7 +10,8 @@ use jellyfin_api::types::{CollectionType, MediaType};
 use super::space::{self, Room};
 use super::typeface;
 use super::{
-    Across, Breakpoint, Css, Drawn, Layout, Length, Orientation, Query, Screen, Share, Viewport,
+    Across, Breakpoint, Css, Drawn, Layout, Length, Orientation, Query, Ratio, Screen, Share,
+    Viewport,
 };
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -722,13 +723,13 @@ impl Card {
 
 /// The hundred a resizable page's width is floored to before it asks for an
 /// image.
-// reference: card-screen-rounding
-const ROUND_SCREEN_TO: f32 = 100.0;
+// reference: card-width-request
+const ROUND_SCREEN_TO: Css = Css::unitless(100.0);
 
 /// A resizable page's width as the reference asks with it.
-// reference: card-screen-rounding
+// reference: card-width-request
 fn rounded(width: Css) -> Css {
-    Css::of((width.count() / ROUND_SCREEN_TO).floor() * ROUND_SCREEN_TO)
+    Css::of((width.count() / ROUND_SCREEN_TO.count()).floor() * ROUND_SCREEN_TO.count())
 }
 
 /// One arm of the request ladder: cards per row as the reference computes it,
@@ -832,8 +833,8 @@ enum Turned {
 
 /// How much wider than tall `getImageWidth` asks a page to be before it calls
 /// it landscape.
-// reference: card-image-width
-const WIDER_THAN_TALL: f32 = 1.3;
+// reference: card-width-request
+const WIDER_THAN_TALL: Ratio = Ratio::thousandths(1300);
 
 /// One arm of a `getPostersPerRow` switch, in the source order the reference
 /// tests them.
@@ -862,7 +863,7 @@ impl Request {
         {
             return held;
         }
-        let landscape = viewport.width().count() > viewport.height().count() * WIDER_THAN_TALL;
+        let landscape = viewport.width() > viewport.height().times(WIDER_THAN_TALL);
         for arm in self.arms {
             let turned = match arm.turned {
                 Turned::Landscape => landscape,

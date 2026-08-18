@@ -677,6 +677,21 @@ fn measures(initializer: &str) -> Vec<Measure> {
                     }
                 }
             }
+            ("ratio", "percent") => {
+                let Ok(percent) = number else { continue };
+                if percent == 0.0 || percent == 100.0 {
+                    Measure::Identity
+                } else {
+                    Measure::Spelt {
+                        named: format!("{}%", trimmed(percent)),
+                        spellings: vec![
+                            Spelling::Measured(Count::of(percent, Unit::Percent)),
+                            Spelling::Measured(Count::of(percent / 100.0, Unit::Bare)),
+                            Spelling::Measured(Count::of(percent / 100.0, Unit::Em)),
+                        ],
+                    }
+                }
+            }
             ("alpha", "thousandths") => {
                 let Ok(thousandths) = number else { continue };
                 if thousandths == 0.0 || thousandths == 1000.0 {

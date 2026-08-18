@@ -110,6 +110,7 @@ fn typed<'a>(state: &'a super::State, viewport: Viewport) -> Element<'a, Message
                 strings::lookup(Text::LoginUsername),
                 &state.credentials.username,
                 None,
+                None,
                 |value| Message::LoginAction(Action::Edited(Edit::Username(value))),
                 Message::LoginAction(Action::Submit),
                 Secrecy::Shown,
@@ -117,6 +118,7 @@ fn typed<'a>(state: &'a super::State, viewport: Viewport) -> Element<'a, Message
             widget::field(
                 strings::lookup(Text::LoginPassword),
                 &state.credentials.password,
+                None,
                 None,
                 |value| Message::LoginAction(Action::Edited(Edit::Password(value))),
                 Message::LoginAction(Action::Submit),

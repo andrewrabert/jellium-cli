@@ -519,11 +519,13 @@ fn dressed<'a>(control: Element<'a, Message>, label: Text, layout: Layout) -> El
 // reference: mui-filled-root
 // reference: mui-filled-input
 // reference: mui-filled-underline
+// reference: mui-input-adornment
 // reference: mui-input-base
 // reference: mui-input-label
 pub fn field<'a>(
     label: Text,
     helper: Option<Text>,
+    unit: Option<Text>,
     value: &str,
     edited: impl Fn(String) -> Message + 'a,
     layout: Layout,
@@ -535,7 +537,33 @@ pub fn field<'a>(
         .padding(style::inset(space::FILLED_PAD, layout))
         .on_input(edited)
         .width(Fill);
-    beneath(dressed(typed.into(), label, layout), helper, layout)
+    let control = match unit {
+        Some(sentence) => stack![typed, adornment(sentence, layout)].into(),
+        None => Element::from(typed),
+    };
+    beneath(dressed(control, label, layout), helper, layout)
+}
+
+/// `MuiInputAdornment` at a field's trailing edge: the unit the reference
+/// writes beside the value, in the scheme's secondary lettering, at the margin
+/// the adornment keeps from the value.
+// reference: mui-input-adornment
+// reference: scheme-secondary-text
+fn adornment<'a>(sentence: Text, layout: Layout) -> Element<'a, Message> {
+    container(tinted(
+        strings::lookup(sentence),
+        typeface::BODY,
+        typeface::Weight::Regular,
+        typeface::FILLED_LEADING,
+        style::muted,
+    ))
+    .padding(
+        style::inset(space::FILLED_PAD, layout)
+            .right(style::drawn(space::FILLED_ADORNMENT_MARGIN.drawn(layout))),
+    )
+    .align_right(Fill)
+    .center_y(Fill)
+    .into()
 }
 
 /// The same field carrying the option standing rather than a typed value, the
