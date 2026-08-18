@@ -74,11 +74,12 @@ pub async fn load(api: Rc<Api>, room: Room) -> Answer<State> {
     .await
 }
 
-fn key(item: &BaseItemDto) -> Option<images::Key> {
+fn key(item: &BaseItemDto, card: card::Card) -> Option<images::Key> {
     Some(images::Key {
         item: item.id?,
         kind: images::Kind::Primary,
         index: None,
+        card,
     })
 }
 
@@ -193,7 +194,7 @@ pub fn view<'a>(
                     drawing,
                     room,
                     confirming,
-                    key(item).and_then(|key| images.handle(key)),
+                    key(item, drawing.card).and_then(|key| images.handle(key)),
                 )
             },
         ),
@@ -201,10 +202,11 @@ pub fn view<'a>(
 }
 
 pub fn images(state: &State) -> HashSet<images::Key> {
+    let drawing = card(&state.recordings);
     state
         .grid
         .shown(state.recordings.len())
         .filter_map(|index| state.recordings.get(index))
-        .filter_map(key)
+        .filter_map(|item| key(item, drawing.card))
         .collect()
 }

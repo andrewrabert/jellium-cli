@@ -88,7 +88,7 @@ impl<T> std::fmt::Display for Choice<T> {
 
 // the key the item's own primary image is fetched under
 // None where the item carries no primary image tag and where it carries no id
-pub fn poster_key(item: &BaseItemDto) -> Option<images::Key> {
+pub fn poster_key(item: &BaseItemDto, card: card::Card) -> Option<images::Key> {
     let tags = item.image_tags.as_ref()?;
     if !tags.contains_key(Kind::Primary.as_str()) {
         return None;
@@ -97,11 +97,18 @@ pub fn poster_key(item: &BaseItemDto) -> Option<images::Key> {
         item: item.id?,
         kind: Kind::Primary,
         index: None,
+        card,
     })
 }
 
-pub fn card_images<'a>(items: impl IntoIterator<Item = &'a BaseItemDto>) -> HashSet<images::Key> {
-    items.into_iter().filter_map(poster_key).collect()
+pub fn card_images<'a>(
+    items: impl IntoIterator<Item = &'a BaseItemDto>,
+    card: card::Card,
+) -> HashSet<images::Key> {
+    items
+        .into_iter()
+        .filter_map(|item| poster_key(item, card))
+        .collect()
 }
 
 /// The route a card opens: a collection and a playlist each have their own
@@ -667,7 +674,7 @@ fn cards<'a>(
                 drawing,
                 item,
                 room,
-                poster_key(item).and_then(|key| images.handle(key)),
+                poster_key(item, drawing.card).and_then(|key| images.handle(key)),
                 overflow,
             )
         })
@@ -1252,6 +1259,7 @@ pub fn on_now_row<'a>(
                     item: channel.id,
                     kind: Kind::Primary,
                     index: None,
+                    card: card::Card::Rail(card::Rail::Backdrop),
                 })
                 .clone();
             channel_card(channel, room, now, handle)

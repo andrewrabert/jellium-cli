@@ -405,9 +405,9 @@ impl Playing {
                     item,
                     kind: ImageKind::Primary,
                     index: None,
+                    card: card::Card::Wall(card::Shape::Portrait),
                 };
-                let fill =
-                    crate::images::card(key.kind).image_width(viewport, crate::page::screen());
+                let fill = key.card.image_width(viewport, crate::page::screen());
                 crate::images::url(key, fill)
             }),
         }

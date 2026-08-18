@@ -62,6 +62,7 @@ fn key(channel: &Channel) -> images::Key {
         item: channel.id,
         kind: images::Kind::Primary,
         index: None,
+        card: CARD.card,
     }
 }
 

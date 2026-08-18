@@ -166,6 +166,7 @@ pub fn view<'a>(
                     item,
                     kind: kind.cached(),
                     index,
+                    card: card::Card::Wall(card::Shape::Backdrop),
                 }),
             );
 
@@ -281,6 +282,7 @@ pub fn images(state: &State, item: Uuid) -> HashSet<images::Key> {
                 item,
                 kind: kind.cached(),
                 index: held.image_index,
+                card: card::Card::Wall(card::Shape::Backdrop),
             })
         })
         .collect()

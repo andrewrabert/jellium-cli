@@ -120,12 +120,14 @@ fn airtime(
     }
 }
 
-/// The image the Jellyfin server holds for `item`.
-fn key(id: uuid::Uuid) -> images::Key {
+/// The image the Jellyfin server holds for `item`, asked at the width the card
+/// it is drawn on wants.
+fn key(id: uuid::Uuid, card: card::Card) -> images::Key {
     images::Key {
         item: id,
         kind: images::Kind::Primary,
         index: None,
+        card,
     }
 }
 
@@ -248,11 +250,11 @@ fn program_art(timer: &TimerInfoDto, images: &Cache) -> Option<iced::widget::ima
 fn logo(timer: &TimerInfoDto, images: &Cache) -> Option<iced::widget::image::Handle> {
     timer
         .channel_id
-        .and_then(|channel| images.handle(key(channel)))
+        .and_then(|channel| images.handle(key(channel, TIMER_CARD.card)))
 }
 
 fn program_key(timer: &TimerInfoDto) -> Option<images::Key> {
-    Some(key(timer.program_info.as_ref()?.id?))
+    Some(key(timer.program_info.as_ref()?.id?, TIMER_CARD.card))
 }
 
 /// The active recordings under their own title, then the timers grouped by the
@@ -276,7 +278,7 @@ pub fn view<'a>(state: &'a State, images: &'a Cache, room: Room) -> Element<'a, 
                         item,
                         drawing,
                         room,
-                        item.id.and_then(|id| images.handle(key(id))),
+                        item.id.and_then(|id| images.handle(key(id, drawing.card))),
                     )
                 }),
             ),
@@ -291,12 +293,17 @@ pub fn view<'a>(state: &'a State, images: &'a Cache, room: Room) -> Element<'a, 
 /// Every active recording's own image, and every shown timer's programme image
 /// and channel logo.
 pub fn images(state: &State) -> HashSet<images::Key> {
-    let active = state.active.iter().filter_map(|item| item.id).map(key);
+    let drawing = active_card(&state.active);
+    let active = state
+        .active
+        .iter()
+        .filter_map(|item| item.id)
+        .map(move |id| key(id, drawing.card));
     let programs = state.timers.iter().filter_map(program_key);
     let logos = state
         .timers
         .iter()
         .filter_map(|timer| timer.channel_id)
-        .map(key);
+        .map(|channel| key(channel, TIMER_CARD.card));
     active.chain(programs).chain(logos).collect()
 }

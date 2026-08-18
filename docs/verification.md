@@ -862,6 +862,12 @@ browser with a touch screen, each at its own size.
   and 18.5%; at 360 wide, 72% and 40%.
 - My Media's tiles take the backdrop rail's own widths, so one spans 18.7% of
   the window at 1920 wide, 45.5% at 768, 23.1% at 800 and 72% at 360.
+- At 1920 wide the browser's network panel shows a My Media tile's image and a
+  next-up card's image asked for at 355 pixels wide, and a movie library grid's
+  poster asked for at 213.
+- At 768 wide the network panel shows a My Media tile's image asked for at the
+  same width as a next-up card's image, and wider than a movie library grid's
+  poster.
 - A television browser lays four backdrop cards, six square cards and six
   portrait cards across a library grid at every window width, where a desktop
   browser at 383 wide lays one, two and three.

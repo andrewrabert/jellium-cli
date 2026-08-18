@@ -10,7 +10,7 @@ use crate::api::Api;
 use crate::app::Message;
 use crate::error::Answer;
 use crate::images::Cache;
-use crate::style::{space, typeface};
+use crate::style::{card, space, typeface};
 use crate::text::{self as strings, Text};
 use crate::widget::{self, prose};
 
@@ -177,6 +177,7 @@ fn image_key(state: &State) -> crate::images::Key {
         item: state.id,
         kind: crate::images::Kind::User,
         index: None,
+        card: card::Card::USER,
     }
 }
 

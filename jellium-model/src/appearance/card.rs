@@ -13,7 +13,7 @@ use super::{
     Across, Breakpoint, Css, Drawn, Layout, Length, Orientation, Query, Screen, Share, Viewport,
 };
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Shape {
     Portrait,
     Backdrop,
@@ -23,7 +23,7 @@ pub enum Shape {
     Mixed(Mixed),
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Mixed {
     Portrait,
     Square,
@@ -531,7 +531,7 @@ impl Shape {
 /// How a run of cards is laid out, which is what picks the ladder that sizes
 /// them; the reference gives an overflow class to four shapes and none to the
 /// rest, so no unreachable pairing is constructible.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Card {
     /// Cards wrap into rows, sized by the stylesheet ladder.
     Wall(Shape),
@@ -539,7 +539,7 @@ pub enum Card {
     Rail(Rail),
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Rail {
     Portrait,
     Square,

@@ -37,18 +37,9 @@ pub struct Key {
     pub kind: Kind,
     /// The index within the kind, and `None` for the first.
     pub index: Option<i32>,
-}
-
-/// The card a kind is drawn on, which is what decides how wide it is asked for.
-/// This client's own mapping, the reference resolving a shape from an item's
-/// type at each list it builds.
-pub fn card(kind: Kind) -> card::Card {
-    match kind {
-        Kind::Primary => card::Card::Wall(card::Shape::Portrait),
-        Kind::Thumb | Kind::Backdrop | Kind::Chapter => card::Card::Wall(card::Shape::Backdrop),
-        Kind::Logo | Kind::Banner => card::Card::Wall(card::Shape::Banner),
-        Kind::Art | Kind::User => card::Card::Wall(card::Shape::Square),
-    }
+    /// The card whose request ladder decides how wide the server is asked to
+    /// fill this image.
+    pub card: card::Card,
 }
 
 /// The same-origin relay url an image key is fetched from, at `fill` wide: a

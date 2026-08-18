@@ -547,7 +547,7 @@ pub fn view<'a>(browse: &'a Browse, viewport: Viewport, images: &'a Cache) -> El
                 wall,
                 item,
                 room,
-                widget::poster_key(item).and_then(|key| images.handle(key)),
+                widget::poster_key(item, wall.card).and_then(|key| images.handle(key)),
                 browse.overflow,
             ),
             None => iced::widget::Space::new()
@@ -560,10 +560,11 @@ pub fn view<'a>(browse: &'a Browse, viewport: Viewport, images: &'a Cache) -> El
 }
 
 pub fn images(browse: &Browse) -> HashSet<images::Key> {
+    let wall = browse.card();
     let shown = browse.grid.shown(browse.items.len());
     shown
         .filter_map(|index| browse.items.row(index))
-        .filter_map(widget::poster_key)
+        .filter_map(|item| widget::poster_key(item, wall.card))
         .collect()
 }
 

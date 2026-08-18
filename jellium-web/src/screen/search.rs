@@ -282,7 +282,7 @@ fn sectioned<'a>(
                 drawn,
                 item,
                 room,
-                widget::poster_key(item).and_then(|key| images.handle(key)),
+                widget::poster_key(item, drawn.card).and_then(|key| images.handle(key)),
                 widget::Overflow::Withheld,
             ),
             None => iced::widget::Space::new()
@@ -328,11 +328,12 @@ pub fn images(state: &State) -> HashSet<images::Key> {
         .sections
         .iter()
         .flat_map(|results| {
+            let drawn = card(results.section, shared(&results.items));
             results
                 .window
                 .shown(results.items.len())
                 .filter_map(|index| results.items.get(index))
-                .filter_map(widget::poster_key)
+                .filter_map(move |item| widget::poster_key(item, drawn.card))
         })
         .collect()
 }

@@ -51,6 +51,7 @@ fn art_key(playing: &Playing) -> Option<images::Key> {
         item: playing.item.id?,
         kind: ImageKind::Primary,
         index: None,
+        card: card::Card::Wall(card::Shape::Portrait),
     })
 }
 
@@ -124,6 +125,7 @@ pub fn chapters<'a>(
                     item,
                     kind: crate::images::Kind::Chapter,
                     index: numbered,
+                    card: card::Card::Rail(card::Rail::Backdrop),
                 })
             });
             let thumbnail = crate::widget::tile(
@@ -1061,6 +1063,7 @@ fn remote_art_key(bound: &Bound) -> Option<images::Key> {
         item: bound.target.now_playing.as_ref()?.item,
         kind: ImageKind::Primary,
         index: None,
+        card: card::Card::Wall(card::Shape::Portrait),
     })
 }
 

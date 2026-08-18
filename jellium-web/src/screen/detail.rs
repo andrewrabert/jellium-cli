@@ -228,6 +228,7 @@ fn backdrop<'a>(item: &BaseItemDto, images: &'a Cache, height: Drawn) -> Element
             item: id,
             kind: Kind::Backdrop,
             index: None,
+            card: card::Card::Wall(card::Shape::Backdrop),
         })
     });
     match face {
@@ -249,6 +250,7 @@ fn poster<'a>(item: &BaseItemDto, images: &'a Cache, width: Drawn) -> Element<'a
             item: id,
             kind: Kind::Primary,
             index: None,
+            card: card::Card::Wall(card::Shape::Portrait),
         })
     });
     match face {
@@ -533,18 +535,20 @@ pub fn view<'a>(
 }
 
 pub fn images(state: &State) -> HashSet<images::Key> {
-    let mut keys = widget::card_images(&state.children);
-    keys.extend(widget::card_images(&state.similar));
+    let mut keys = widget::card_images(&state.children, CHILDREN.card);
+    keys.extend(widget::card_images(&state.similar, ALIKE.card));
     if let Some(id) = state.item.id {
         keys.insert(images::Key {
             item: id,
             kind: Kind::Primary,
             index: None,
+            card: card::Card::Wall(card::Shape::Portrait),
         });
         keys.insert(images::Key {
             item: id,
             kind: Kind::Backdrop,
             index: None,
+            card: card::Card::Wall(card::Shape::Backdrop),
         });
     }
     keys

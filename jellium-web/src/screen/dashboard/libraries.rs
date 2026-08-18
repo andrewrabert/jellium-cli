@@ -5,7 +5,7 @@ use iced::widget::{button, row, text_input};
 
 use crate::app::Message;
 use crate::error::Answer;
-use crate::style::{self, space, typeface};
+use crate::style::{self, card, space, typeface};
 use crate::text::{self as strings, Text};
 use crate::widget::{self, prose};
 use jellium_model::appearance::typeface::Rank;
@@ -96,6 +96,7 @@ pub fn images(state: &State) -> std::collections::HashSet<crate::images::Key> {
             item,
             kind: crate::images::Kind::Primary,
             index: None,
+            card: card::Card::Wall(card::Shape::Portrait),
         })
         .collect()
 }
@@ -416,6 +417,7 @@ pub fn view<'a>(
                     item,
                     kind: crate::images::Kind::Primary,
                     index: None,
+                    card: card::Card::Wall(card::Shape::Portrait),
                 })
             }) {
                 Some(handle) => crate::widget::mui::Media::Image(handle),

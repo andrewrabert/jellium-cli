@@ -201,7 +201,8 @@ pub fn view<'a>(
                     Some(widget::library_tile(
                         library,
                         Room::content(viewport),
-                        widget::poster_key(library).and_then(|key| images.handle(key)),
+                        widget::poster_key(library, widget::TILE.card)
+                            .and_then(|key| images.handle(key)),
                         Message::Navigated(opens(library)?),
                     ))
                 }),
@@ -281,17 +282,26 @@ pub fn shown<'a>(state: &'a State, arrangement: &Arrangement) -> Vec<&'a BaseIte
 }
 
 pub fn images(state: &State, arrangement: &Arrangement) -> HashSet<images::Key> {
-    let mut keys = widget::card_images(shown(state, arrangement));
-    keys.extend(widget::card_images(&state.continue_watching));
-    keys.extend(widget::card_images(&state.next_up));
+    let mut keys = widget::card_images(shown(state, arrangement), widget::TILE.card);
+    keys.extend(
+        state
+            .continue_watching
+            .iter()
+            .filter_map(|item| widget::poster_key(item, card::Card::resumed(item.media_type))),
+    );
+    keys.extend(widget::card_images(&state.next_up, card::Card::NEXT_UP));
     for row in &state.latest {
-        keys.extend(widget::card_images(&row.items));
+        keys.extend(widget::card_images(
+            &row.items,
+            card::Card::latest(row.library.collection_type),
+        ));
     }
     {
         keys.extend(state.on_now.iter().map(|channel| images::Key {
             item: channel.id,
             kind: images::Kind::Primary,
             index: None,
+            card: card::Card::Rail(card::Rail::Backdrop),
         }));
     }
     keys

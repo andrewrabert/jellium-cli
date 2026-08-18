@@ -14,7 +14,7 @@ use crate::error::{Answer, Operation};
 use crate::images::{self, Cache};
 use crate::route::Listing;
 use crate::screen::browse::{self, Browse};
-use crate::style::{self, Viewport, space, typeface};
+use crate::style::{self, Viewport, card, space, typeface};
 use crate::text::{self as strings, Text};
 use crate::widget::{self, prose};
 
@@ -304,7 +304,8 @@ fn entry_row<'a>(
         ROW,
         widget::list::Row {
             face: Some(widget::list::Face::Art {
-                image: widget::poster_key(&entry.item).and_then(|key| images.handle(key)),
+                image: widget::poster_key(&entry.item, card::Card::Wall(card::Shape::Portrait))
+                    .and_then(|key| images.handle(key)),
                 elapsed: None,
             }),
             index: Some(widget::list::Ordinal::at(index)),
@@ -508,7 +509,9 @@ pub fn images(state: &State) -> HashSet<images::Key> {
         .window
         .shown(state.entries.len())
         .filter_map(|index| state.entries.row(index))
-        .filter_map(|entry| widget::poster_key(&entry.item))
+        .filter_map(|entry| {
+            widget::poster_key(&entry.item, card::Card::Wall(card::Shape::Portrait))
+        })
         .collect()
 }
 

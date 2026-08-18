@@ -140,7 +140,7 @@ pub fn view<'a>(state: &'a State, viewport: Viewport, images: &'a Cache) -> Elem
                     wall,
                     entry,
                     Room::content(viewport),
-                    widget::poster_key(entry).and_then(|key| images.handle(key)),
+                    widget::poster_key(entry, wall.card).and_then(|key| images.handle(key)),
                     widget::Overflow::Withheld,
                 );
                 match opens(state, entry) {
@@ -161,10 +161,17 @@ pub fn view<'a>(state: &'a State, viewport: Viewport, images: &'a Cache) -> Elem
 }
 
 pub fn images(state: &State) -> HashSet<images::Key> {
+    let wall = wall(Aspect::shared(
+        state
+            .entries
+            .held()
+            .filter_map(|item| item.primary_image_aspect_ratio)
+            .map(Aspect::of),
+    ));
     state
         .grid
         .shown(state.entries.len())
         .filter_map(|index| state.entries.row(index))
-        .filter_map(widget::poster_key)
+        .filter_map(|entry| widget::poster_key(entry, wall.card))
         .collect()
 }

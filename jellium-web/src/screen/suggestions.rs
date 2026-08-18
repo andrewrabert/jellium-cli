@@ -114,9 +114,9 @@ pub fn view<'a>(
 }
 
 pub fn images(state: &State) -> HashSet<images::Key> {
-    let mut wanted = widget::card_images(&state.suggestions);
+    let mut wanted = widget::card_images(&state.suggestions, RAIL.card);
     for rail in &state.recommendations {
-        wanted.extend(widget::card_images(&rail.items));
+        wanted.extend(widget::card_images(&rail.items, RAIL.card));
     }
     wanted
 }

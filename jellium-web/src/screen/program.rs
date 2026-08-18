@@ -35,6 +35,7 @@ fn key(program: &Program) -> images::Key {
         item: program.item,
         kind: images::Kind::Primary,
         index: None,
+        card: card::Card::Wall(card::Shape::Backdrop),
     }
 }
 

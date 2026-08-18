@@ -557,6 +557,7 @@ fn image_key(id: Uuid) -> crate::images::Key {
         item: id,
         kind: crate::images::Kind::User,
         index: None,
+        card: card::Card::USER,
     }
 }
 

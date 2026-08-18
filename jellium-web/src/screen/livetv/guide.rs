@@ -11,7 +11,7 @@ use crate::api::Api;
 use crate::app::Message;
 use crate::images::{self, Cache};
 use crate::livetv::{Badge, Channel, Marque, Program};
-use crate::style::{self, Drawn, Viewport, scheme, space, typeface};
+use crate::style::{self, Drawn, Viewport, card, scheme, space, typeface};
 use crate::text::{self as strings, Text};
 use crate::widget::{line, prose};
 use crate::window;
@@ -327,6 +327,7 @@ pub fn view<'a>(
             item: channel.id,
             kind: images::Kind::Primary,
             index: None,
+            card: card::Card::Wall(card::Shape::Portrait),
         });
         column![
             row![
@@ -359,6 +360,7 @@ pub fn images(state: &State) -> HashSet<images::Key> {
             item: channel.id,
             kind: images::Kind::Primary,
             index: None,
+            card: card::Card::Wall(card::Shape::Portrait),
         })
         .collect()
 }

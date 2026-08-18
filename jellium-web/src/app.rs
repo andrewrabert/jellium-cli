@@ -1008,7 +1008,7 @@ impl Jellium {
             return Task::none();
         };
         let api = signed.api.clone();
-        let fill = crate::images::card(key.kind).image_width(self.viewport, crate::page::screen());
+        let fill = key.card.image_width(self.viewport, crate::page::screen());
         let url = api.image_url(key, fill);
         Task::perform(async move { api.image(url).await }, move |result| {
             Message::ImageLoaded(key, result)
@@ -2629,6 +2629,7 @@ impl Jellium {
             item: playing.item.id?,
             kind: images::Kind::Chapter,
             index: numbered,
+            card: card::Card::Rail(card::Rail::Backdrop),
         })
     }
 
