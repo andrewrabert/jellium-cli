@@ -1610,7 +1610,10 @@ pub fn shell<'a>(
             }
             listed = listed.push(one.spacing(style::drawn(space::BLOCK_GAP.drawn())));
         }
-        page = page.push(scrolled(listed));
+        page = page.push(crate::construct::own(
+            crate::construct::Own::FailureList,
+            scrolled(listed).into(),
+        ));
     }
     page.push(body).into()
 }

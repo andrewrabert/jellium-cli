@@ -7,6 +7,7 @@ mod api;
 mod app;
 mod boot;
 mod browser;
+mod construct;
 mod control;
 mod error;
 mod failure;
