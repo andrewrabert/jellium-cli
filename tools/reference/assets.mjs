@@ -222,18 +222,64 @@ const QUERY_EM = 16;
 const WIDTH = 'width';
 const HEIGHT = 'height';
 
+// The layout `layoutManager.tv` draws in, named as the table's `layout` column
+// writes it.
+const TELEVISION = 'tv';
+
+// The class `layoutManager.tv` puts on an items container, which is what makes
+// a rule under it outrank every step of a ladder by specificity.
+const TELEVISED = '.itemsContainer-tv';
+
+// The eight shapes a wall row is written for, and the four a rail row is: the
+// name the row carries, the selector card.scss sizes it by, and the name
+// getPostersPerRow dispatches on. A mixed card's name reaches no case of that
+// switch, which is how the reference gives it the default four.
+const WALL = [
+    ['portrait', '.portraitCard', 'portrait'],
+    ['backdrop', '.backdropCard', 'backdrop'],
+    ['smallBackdrop', '.smallBackdropCard', 'smallBackdrop'],
+    ['square', '.squareCard', 'square'],
+    ['banner', '.bannerCard', 'banner'],
+    ['mixedPortrait', '.mixedPortraitCard', null],
+    ['mixedSquare', '.mixedSquareCard', null],
+    ['mixedBackdrop', '.mixedBackdropCard', null]
+];
+
+const RAIL = [
+    ['portrait', '.overflowPortraitCard', 'overflowPortrait'],
+    ['backdrop', '.overflowBackdropCard', 'overflowBackdrop'],
+    ['smallBackdrop', '.overflowSmallBackdropCard', 'overflowSmallBackdrop'],
+    ['square', '.overflowSquareCard', 'overflowSquare']
+];
+
+// The twelve selectors the table walks.
+const CARDS = new Set([...WALL, ...RAIL].map(([, selector]) => selector));
+
+const CARD_STYLESHEET = 'src/components/cardbuilder/card.scss';
+
 const LIBRARY_BROWSER = 'src/styles/librarybrowser.scss';
 
 // The dashboard's own overrides, which declare MUI's four default breakpoints
 // as scss variables and are the one place under `src` that writes them.
 const MUI_BREAKPOINTS = 'src/apps/dashboard/AppOverrides.scss';
 
-// Every width MUI's grid tests, read from those declarations.
+// Every width MUI's grid tests, read from the dashboard's own declarations.
 function muiBreakpoints(checkout) {
     const text = readFileSync(join(checkout, MUI_BREAKPOINTS), 'utf8');
-    return [...text.matchAll(/^\$mui-bp-[a-z]+:\s*([0-9.]+)px;/gm)].map(([, count]) =>
-        Number(count)
-    );
+    const held = [];
+    for (const [, written] of text.matchAll(/^\$mui-bp-[a-z]+:([^\n]*)$/gm)) {
+        const width = /^\s*([0-9.]+)px\s*;\s*$/.exec(written);
+        if (!width) {
+            throw new Error(
+                `${MUI_BREAKPOINTS} writes a breakpoint this reader cannot read: ${JSON.stringify(written.trim())}`
+            );
+        }
+        held.push(Number(width[1]));
+    }
+    if (held.length === 0) {
+        throw new Error(`${MUI_BREAKPOINTS} declares no MUI breakpoint`);
+    }
+    return held;
 }
 
 // Every stylesheet under the checkout's `src` that a browser drawing this
@@ -241,17 +287,30 @@ function muiBreakpoints(checkout) {
 function resolved(checkout) {
     const src = join(checkout, 'src');
     const held = [];
+    const met = new Set();
     const walk = (at) => {
         for (const entry of readdirSync(join(src, at), { withFileTypes: true })) {
             const path = at ? `${at}/${entry.name}` : entry.name;
             if (entry.isDirectory()) {
                 walk(path);
-            } else if (/\.(scss|css)$/.test(entry.name) && !UNRESOLVED.has(path)) {
-                held.push(readFileSync(join(src, path), 'utf8'));
+            } else if (/\.(scss|css)$/.test(entry.name)) {
+                if (UNRESOLVED.has(path)) {
+                    met.add(path);
+                } else {
+                    held.push(readFileSync(join(src, path), 'utf8'));
+                }
             }
         }
     };
     walk('');
+    if (held.length === 0) {
+        throw new Error(`${src} holds no stylesheet this client resolves`);
+    }
+    for (const path of UNRESOLVED) {
+        if (!met.has(path)) {
+            throw new Error(`${path} is held unresolved and the walk never met it`);
+        }
+    }
     return held;
 }
 
@@ -261,15 +320,25 @@ function thresholds(checkout) {
     const held = { [WIDTH]: new Set(), [HEIGHT]: new Set() };
     for (const text of resolved(checkout)) {
         for (const [, , axis, count, unit] of text.matchAll(
-            /\((min|max)-(width|height)\s*:\s*([0-9.]+)(em|px)\)/g
+            /\((min|max)-(width|height)\s*:\s*([0-9.]+)([a-z%]*)\)/g
         )) {
+            if (unit !== 'px' && unit !== 'em') {
+                throw new Error(
+                    `a media query bounds the ${axis} at ${count}${unit}, which this reader cannot read as css pixels`
+                );
+            }
             held[axis].add(unit === 'px' ? Number(count) : Number(count) * QUERY_EM);
         }
     }
     for (const at of muiBreakpoints(checkout)) {
         held[WIDTH].add(at);
     }
-    const ascending = (axis) => [...held[axis]].sort((left, right) => left - right);
+    const ascending = (axis) => {
+        if (held[axis].size === 0) {
+            throw new Error(`no stylesheet this client resolves tests a viewport ${axis}`);
+        }
+        return [...held[axis]].sort((left, right) => left - right);
+    };
     return { [WIDTH]: ascending(WIDTH), [HEIGHT]: ascending(HEIGHT) };
 }
 
@@ -305,93 +374,192 @@ function query(prelude) {
         alternatives.some((parts) => parts.every((holds) => holds(viewport)));
 }
 
-// The width declarations of one stylesheet, in the order the cascade reads
-// them, each with the query that has to hold for it to apply.
+// Every block of one css body, braces balanced: the text before its braces and
+// the text between them, so a declaration list is never read as a selector
+// list.
+function blocks(path, body) {
+    const held = [];
+    let at = 0;
+    let opened = 0;
+    let depth = 0;
+    for (let index = 0; index < body.length; index += 1) {
+        const brace = body[index];
+        if (brace === '{') {
+            if (depth === 0) {
+                opened = index;
+            }
+            depth += 1;
+        } else if (brace === '}') {
+            depth -= 1;
+            if (depth < 0) {
+                throw new Error(`${path} closes a block it never opened`);
+            }
+            if (depth === 0) {
+                held.push([body.slice(at, opened), body.slice(opened + 1, index)]);
+                at = index + 1;
+            }
+        }
+    }
+    if (depth !== 0) {
+        throw new Error(`${path} holds an unclosed block`);
+    }
+    return held;
+}
+
+// One rule's own declarations: its body with every block nested in it cut out.
+function flattened(body) {
+    let held = '';
+    let at = 0;
+    let depth = 0;
+    for (let index = 0; index < body.length; index += 1) {
+        const brace = body[index];
+        if (brace === '{') {
+            if (depth === 0) {
+                held += body.slice(at, index);
+            }
+            depth += 1;
+        } else if (brace === '}') {
+            depth -= 1;
+            if (depth === 0) {
+                at = index + 1;
+            }
+        }
+    }
+    return held + body.slice(at);
+}
+
+// One selector of a width rule: the class it sizes, and whether `TELEVISED`
+// qualifies it. `null` for a selector that sizes no card the table walks; a
+// selector naming a walked card in any other shape is refused, this reader
+// having no ranking to give it.
+function sized(path, selector) {
+    const at = selector.trim();
+    if (CARDS.has(at)) {
+        return { card: at, televised: false };
+    }
+    const child = /^(\.[A-Za-z][\w-]*)\s*>\s*(\.[A-Za-z][\w-]*)$/.exec(at);
+    if (child && CARDS.has(child[2])) {
+        if (child[1] !== TELEVISED) {
+            throw new Error(
+                `${path} sizes ${child[2]} under ${child[1]}, which this reader cannot rank`
+            );
+        }
+        return { card: child[2], televised: true };
+    }
+    for (const [name] of at.matchAll(/\.[A-Za-z][\w-]*/g)) {
+        if (CARDS.has(name)) {
+            throw new Error(
+                `${path} names ${name} in a selector this reader cannot rank: ${JSON.stringify(at)}`
+            );
+        }
+    }
+    return null;
+}
+
+// The units a width declaration is read in.
+const WIDTH_UNITS = new Set(['%', 'vw', 'em']);
+
+// Every width declaration of one stylesheet, in the order the cascade reads
+// them: the selectors it sizes, the count and unit it sets, the query that has
+// to hold for it to apply, and whether the walk has left it standing.
 function widths(checkout, path) {
     const text = readFileSync(join(checkout, path), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
     const held = [];
-    const rules = (body, holds) => {
-        const pattern = /([^{}]+)\{([^{}]*)\}/g;
-        for (const [, selectors, declarations] of body.matchAll(pattern)) {
-            const width = /(?:^|;)\s*width:\s*([0-9.]+)(%|vw|em)\s*(?:!important)?\s*(?:;|$)/.exec(
-                declarations
-            );
-            if (!width) {
-                continue;
+    const nested = (body) => {
+        for (const [prelude, inner] of blocks(path, body)) {
+            for (const selector of prelude.split(',')) {
+                if (sized(path, selector)) {
+                    throw new Error(
+                        `${path} sizes ${selector.trim()} in a rule nested inside another`
+                    );
+                }
             }
-            held.push({
-                selectors: selectors.split(',').map((selector) => selector.trim()),
-                count: width[1],
-                unit: width[2],
-                holds
-            });
+            nested(inner);
         }
     };
-    let at = 0;
-    while (at < text.length) {
-        const block = /@media([^{]*)\{/g;
-        block.lastIndex = at;
-        const found = block.exec(text);
-        if (!found) {
-            rules(text.slice(at), () => true);
-            break;
-        }
-        rules(text.slice(at, found.index), () => true);
-        let depth = 1;
-        let end = block.lastIndex;
-        while (depth > 0) {
-            const brace = text[end];
-            if (brace === '{') {
-                depth += 1;
-            } else if (brace === '}') {
-                depth -= 1;
-            } else if (brace === undefined) {
-                throw new Error(`${path} holds an unclosed @media block`);
+    const read = (body, holds) => {
+        for (const [prelude, inner] of blocks(path, body)) {
+            const at = prelude.trim();
+            const media = /^@media\b([\s\S]*)$/.exec(at);
+            if (media) {
+                const inside = query(media[1].trim());
+                read(inner, (viewport) => holds(viewport) && inside(viewport));
+                continue;
             }
-            end += 1;
+            if (at.startsWith('@')) {
+                throw new Error(`${path} holds an at-rule this reader cannot read: ${JSON.stringify(at)}`);
+            }
+            const cards = at
+                .split(',')
+                .map((selector) => sized(path, selector))
+                .filter((one) => one !== null);
+            nested(inner);
+            const declaration = /(?:^|;)\s*width:\s*([^;{}]+?)\s*(?:!important)?\s*(?:;|$)/.exec(
+                flattened(inner)
+            );
+            if (!declaration) {
+                continue;
+            }
+            const width = /^([0-9.]+)(%|[a-z]+)$/.exec(declaration[1]);
+            if (!width || !WIDTH_UNITS.has(width[2])) {
+                if (cards.length > 0) {
+                    throw new Error(
+                        `${path} sizes ${cards.map(({ card }) => card).join(', ')} as ${JSON.stringify(declaration[1])}, which this reader cannot read`
+                    );
+                }
+                continue;
+            }
+            if (cards.length === 0) {
+                continue;
+            }
+            held.push({ sized: cards, count: width[1], unit: width[2], holds, read: false });
         }
-        rules(text.slice(block.lastIndex, end - 1), query(found[1].trim()));
-        at = end;
-    }
+    };
+    read(text, () => true);
     return held;
 }
 
-// The width the cascade leaves standing for one selector, as the reference
-// wrote it.
+// The width the cascade leaves standing for one card, and marks that rule
+// read: the `TELEVISED` rule where the viewport is drawn in the television
+// layout, whatever the source order, and the last step whose query the
+// viewport answers otherwise.
 function standing(ladder, selector, viewport) {
-    let held;
+    let stepped;
+    let televised;
     for (const rule of ladder) {
-        if (rule.selectors.includes(selector) && rule.holds(viewport)) {
-            held = rule;
+        if (!rule.holds(viewport)) {
+            continue;
+        }
+        for (const card of rule.sized) {
+            if (card.card !== selector) {
+                continue;
+            }
+            if (card.televised) {
+                televised = rule;
+            } else {
+                stepped = rule;
+            }
         }
     }
+    const held = viewport.layout === TELEVISION && televised ? televised : stepped;
     if (!held) {
-        throw new Error(`card.scss leaves ${selector} no width`);
+        throw new Error(`no rule of the stylesheet sizes ${selector} at ${viewport.width}px`);
     }
+    held.read = true;
     return held;
 }
 
-// The eight shapes a wall row is written for, and the four a rail row is: the
-// name the row carries, the selector card.scss sizes it by, and the name
-// getPostersPerRow dispatches on. A mixed card's name reaches no arm of that
-// switch, which is how the reference gives it the default four.
-const WALL = [
-    ['portrait', '.portraitCard', 'portrait'],
-    ['backdrop', '.backdropCard', 'backdrop'],
-    ['smallBackdrop', '.smallBackdropCard', 'smallBackdrop'],
-    ['square', '.squareCard', 'square'],
-    ['banner', '.bannerCard', 'banner'],
-    ['mixedPortrait', '.mixedPortraitCard', 'mixedPortrait'],
-    ['mixedSquare', '.mixedSquareCard', 'mixedSquare'],
-    ['mixedBackdrop', '.mixedBackdropCard', 'mixedBackdrop']
-];
-
-const RAIL = [
-    ['portrait', '.overflowPortraitCard', 'overflowPortrait'],
-    ['backdrop', '.overflowBackdropCard', 'overflowBackdrop'],
-    ['smallBackdrop', '.overflowSmallBackdropCard', 'overflowSmallBackdrop'],
-    ['square', '.overflowSquareCard', 'overflowSquare']
-];
+// Every rule of `ladder` that sizes a card the table walks and that no viewport
+// of the walk left standing.
+function unread(ladder) {
+    return ladder
+        .filter((rule) => !rule.read)
+        .map((rule) =>
+            rule.sized
+                .map(({ card, televised }) => (televised ? `${TELEVISED} > ${card}` : card))
+                .join(', ')
+        );
+}
 
 // The decimals a written percentage carries, which is what decides whether it
 // names a count.
@@ -447,7 +615,12 @@ function declared(text, name) {
     if (at < 0) {
         throw new Error(`${CARD_BUILDER_UTILS} declares no ${name}`);
     }
-    const opened = text.indexOf('{', text.indexOf('=>', at));
+    const arrow = text.indexOf('=>', at) + '=>'.length;
+    const gap = /^\s*\{/.exec(text.slice(arrow));
+    if (!gap) {
+        throw new Error(`${CARD_BUILDER_UTILS} does not open ${name}'s body at its arrow`);
+    }
+    const opened = arrow + gap[0].length - 1;
     let depth = 1;
     let end = opened + 1;
     while (depth > 0) {
@@ -464,13 +637,18 @@ function declared(text, name) {
     return text.slice(opened + 1, end - 1);
 }
 
-// One arm's condition, as a test of the request. A television arm answers
-// nothing, this client being drawn on no television.
+// The condition the reference writes for a television, which it tests before
+// every other arm of the switch it stands in.
+const TELEVISED_ARM = 'isTV';
+
+// One arm's condition, as a test of the request.
 function reached(condition) {
     const tests = [];
     for (const part of condition.split('&&').map((one) => one.trim())) {
-        if (part === 'isTV') {
-            return null;
+        if (part === TELEVISED_ARM) {
+            throw new Error(
+                `a cards-per-row arm tests a television beside another test: ${JSON.stringify(condition.trim())}`
+            );
         }
         if (part === 'isLandscape') {
             tests.push((request) => request.landscape);
@@ -499,78 +677,162 @@ function rate(expression) {
     return Number(expression);
 }
 
-// Every arm of one `switch (true)`, in the source order the reference tests
-// them.
+// Whether a line opens an arm of a switch, which is what makes an unread one a
+// refusal rather than a line this reader passes over.
+const ARM_LINE = /^\s*(?:case\b|default\s*:)/;
+
+// Every arm of one `switch (true)`: the television arm the reference tests
+// before all of them, and the steps under it in the source order.
 function arms(source) {
-    const held = [];
+    const steps = [];
+    let televised;
     for (const line of source.split('\n')) {
+        if (!ARM_LINE.test(line)) {
+            continue;
+        }
         const arm = /^\s*(?:case (.+?)|(default)):\s*return (.+?);\s*$/.exec(line);
         if (!arm) {
+            throw new Error(`unread cards-per-row arm: ${JSON.stringify(line.trim())}`);
+        }
+        const held = rate(arm[3].trim());
+        if (arm[2] !== undefined) {
+            steps.push({ holds: () => true, rate: held, answered: false });
             continue;
         }
-        const holds = arm[2] === undefined ? reached(arm[1]) : () => true;
-        if (!holds) {
+        if (arm[1].trim() === TELEVISED_ARM) {
+            if (televised) {
+                throw new Error(`${CARD_BUILDER_UTILS} holds a switch with two television arms`);
+            }
+            televised = { rate: held, answered: false };
             continue;
         }
-        held.push({ holds, rate: rate(arm[3].trim()) });
+        steps.push({ holds: reached(arm[1]), rate: held, answered: false });
     }
-    if (held.length === 0) {
-        throw new Error(`${CARD_BUILDER_UTILS} holds a switch with no arm this client reaches`);
+    if (steps.length === 0) {
+        throw new Error(`${CARD_BUILDER_UTILS} holds a switch with no step`);
+    }
+    return { televised, steps };
+}
+
+// `getPostersPerRow`, read out of the reference rather than transcribed: each
+// shape's own ladder, and the `default` the switch gives a shape it holds no
+// case for.
+function requesting(checkout) {
+    const text = readFileSync(join(checkout, CARD_BUILDER_UTILS), 'utf8');
+    const dispatch = declared(text, 'getPostersPerRow');
+    const shapes = new Map();
+    let otherwise;
+    for (const line of dispatch.split('\n')) {
+        if (!ARM_LINE.test(line)) {
+            continue;
+        }
+        const named = /^\s*case '([^']+)':\s*return (\w+)\([^)]*\);\s*$/.exec(line);
+        if (named) {
+            shapes.set(named[1], arms(declared(text, named[2])));
+            continue;
+        }
+        const fallback = /^\s*default:\s*return ([0-9]+);\s*$/.exec(line);
+        if (!fallback) {
+            throw new Error(`unread cards-per-row case: ${JSON.stringify(line.trim())}`);
+        }
+        otherwise = Number(fallback[1]);
+    }
+    if (shapes.size === 0 || otherwise === undefined) {
+        throw new Error(`${CARD_BUILDER_UTILS} holds no cards-per-row switch`);
+    }
+    return { shapes, otherwise };
+}
+
+// The arm one shape's ladder answers for a request, and marks it answered: the
+// television arm where the request is drawn in the television layout and the
+// ladder holds one, and the first step whose condition the request answers
+// otherwise. `null` asks for the switch's own `default`, which is what a mixed
+// card's name reaches.
+function asked(dispatch, shape, request) {
+    if (shape === null) {
+        return dispatch.otherwise;
+    }
+    const ladder = dispatch.shapes.get(shape);
+    if (!ladder) {
+        throw new Error(`${CARD_BUILDER_UTILS} holds no case for ${shape}`);
+    }
+    if (request.layout === TELEVISION && ladder.televised) {
+        ladder.televised.answered = true;
+        return ladder.televised.rate;
+    }
+    for (const arm of ladder.steps) {
+        if (arm.holds(request)) {
+            arm.answered = true;
+            return arm.rate;
+        }
+    }
+    throw new Error(`${shape} answers no arm at ${request.width}px`);
+}
+
+// Every arm of a walked shape's ladder that no request of the walk answered.
+function unanswered(dispatch) {
+    const held = [];
+    for (const [shape, ladder] of dispatch.shapes) {
+        if (ladder.televised && !ladder.televised.answered) {
+            held.push(`${shape}: ${TELEVISED_ARM}`);
+        }
+        for (const [at, arm] of ladder.steps.entries()) {
+            if (!arm.answered) {
+                held.push(`${shape}: step ${at}`);
+            }
+        }
     }
     return held;
 }
 
-// `getPostersPerRow`, read out of the reference rather than transcribed: the
-// arm each shape's own ladder answers, and the default a shape the switch does
-// not name is given.
-function requesting(checkout) {
-    const text = readFileSync(join(checkout, CARD_BUILDER_UTILS), 'utf8');
-    const dispatch = declared(text, 'getPostersPerRow');
-    const named = new Map();
-    for (const [, shape, helper] of dispatch.matchAll(/case '([^']+)':\s*return (\w+)\(/g)) {
-        named.set(shape, arms(declared(text, helper)));
-    }
-    const otherwise = /default:\s*return ([0-9]+);/.exec(dispatch);
-    if (named.size === 0 || !otherwise) {
-        throw new Error(`${CARD_BUILDER_UTILS} holds no cards-per-row switch`);
-    }
-    return (shape, request) => {
-        const ladder = named.get(shape);
-        if (!ladder) {
-            return Number(otherwise[1]);
+// The rule whose whole selector is this, which is where the page's own side
+// share is written.
+const PADDED = '.padded-left';
+
+// `.padded-left`: the share of the page a card wall's own container keeps clear
+// on each side, read inside that rule's own braces.
+function padding(checkout) {
+    const text = readFileSync(join(checkout, LIBRARY_BROWSER), 'utf8').replace(
+        /\/\*[\s\S]*?\*\//g,
+        ''
+    );
+    for (const [prelude, body] of blocks(LIBRARY_BROWSER, text)) {
+        if (prelude.trim() !== PADDED) {
+            continue;
         }
-        for (const arm of ladder) {
-            if (arm.holds(request)) {
-                return arm.rate;
-            }
+        const share = /conditional-max\(padding-left,\s*([0-9.]+)%/.exec(body);
+        if (!share) {
+            throw new Error(
+                `${LIBRARY_BROWSER}'s ${PADDED} rule holds no conditional-max(padding-left, ..%)`
+            );
         }
-        throw new Error(`${shape} answers no arm at ${request.width}px`);
-    };
+        return Number(share[1]);
+    }
+    throw new Error(`${LIBRARY_BROWSER} holds no rule whose whole selector is ${PADDED}`);
 }
 
-// `.padded-left` and `.padded-right`: the share of the page a card wall's own
-// container keeps clear on each side.
-function padding(checkout) {
-    const text = readFileSync(join(checkout, LIBRARY_BROWSER), 'utf8');
-    const share = /\.padded-left\s*\{[\s\S]*?conditional-max\(padding-left,\s*([0-9.]+)%/.exec(
-        text
-    );
-    if (!share) {
-        throw new Error(`${LIBRARY_BROWSER} holds no .padded-left share`);
-    }
-    return Number(share[1]);
+// One viewport the table walks: the size the page reports, the orientation that
+// size implies, the layout the browser showing it is drawn in, and the root
+// size that layout writes over the 16px base.
+function walked(width, height, layout, root) {
+    return {
+        width,
+        height,
+        orientation: width >= height ? 'landscape' : 'portrait',
+        layout,
+        root
+    };
 }
 
 // One row: the whole viewport it was resolved at, and what the reference draws
 // there.
-function measured(kind, ladder, requested, shapes, side, width, height, layout, root) {
-    const orientation = width >= height ? 'landscape' : 'portrait';
-    const viewport = { width, height, orientation };
+function measured(kind, ladder, dispatch, shapes, side, viewport) {
+    const { width, height, orientation, layout, root } = viewport;
     // getImageWidth's own landscape test, which is not the css orientation
     // above: it asks whether the page is half again as wide as it is tall.
-    const request = { width, landscape: width > height * 1.3 };
+    const request = { width, landscape: width > height * 1.3, layout };
     let rows = '';
-    for (const [shape, selector, asked] of shapes) {
+    for (const [shape, selector, dispatched] of shapes) {
         const held = standing(ladder, selector, viewport);
         const box = width * (1 - (2 * side) / 100);
         const percent =
@@ -584,7 +846,7 @@ function measured(kind, ladder, requested, shapes, side, width, height, layout, 
                 `${selector} is ${held.count}% at ${width}px, which is no ${cards}th of a viewport`
             );
         }
-        const rate = requested(asked, request);
+        const rate = asked(dispatch, dispatched, request);
         rows += row([
             kind,
             width,
@@ -609,7 +871,7 @@ function measured(kind, ladder, requested, shapes, side, width, height, layout, 
 const LAYOUTS = [
     ['mobile', 900],
     ['desktop', 930],
-    ['tv', 1250]
+    [TELEVISION, 1250]
 ];
 
 // The width a height row is resolved at, which no rule tests, so the row's
@@ -617,9 +879,9 @@ const LAYOUTS = [
 const UNTESTED_WIDTH = 1440;
 
 function breakpoints(checkout) {
-    const ladder = widths(checkout, 'src/components/cardbuilder/card.scss');
+    const ladder = widths(checkout, CARD_STYLESHEET);
     const side = padding(checkout);
-    const requested = requesting(checkout);
+    const dispatch = requesting(checkout);
     const tested = thresholds(checkout);
     let table = row([
         'kind',
@@ -636,20 +898,23 @@ function breakpoints(checkout) {
         'letter_jump',
         'dialog'
     ]);
-    for (const threshold of tested[WIDTH]) {
-        for (const width of [threshold - 1, threshold]) {
-            for (const height of [width * 2, Math.max(200, width / 2)]) {
-                for (const [layout, root] of LAYOUTS) {
-                    table += measured(WIDTH, ladder, requested, WALL, side, width, height, layout, root);
-                }
-            }
-        }
-    }
-    for (const threshold of tested[WIDTH]) {
-        for (const width of [threshold - 1, threshold]) {
-            for (const height of [width * 2, Math.max(200, width / 2)]) {
-                for (const [layout, root] of LAYOUTS) {
-                    table += measured('rail', ladder, requested, RAIL, side, width, height, layout, root);
+    for (const [kind, shapes] of [
+        [WIDTH, WALL],
+        ['rail', RAIL]
+    ]) {
+        for (const threshold of tested[WIDTH]) {
+            for (const width of [threshold - 1, threshold]) {
+                for (const height of [width * 2, Math.max(200, width / 2)]) {
+                    for (const [layout, root] of LAYOUTS) {
+                        table += measured(
+                            kind,
+                            ladder,
+                            dispatch,
+                            shapes,
+                            side,
+                            walked(width, height, layout, root)
+                        );
+                    }
                 }
             }
         }
@@ -657,9 +922,28 @@ function breakpoints(checkout) {
     for (const threshold of tested[HEIGHT]) {
         for (const height of [threshold - 1, threshold]) {
             for (const [layout, root] of LAYOUTS) {
-                table += measured(HEIGHT, ladder, requested, WALL, side, UNTESTED_WIDTH, height, layout, root);
+                table += measured(
+                    HEIGHT,
+                    ladder,
+                    dispatch,
+                    WALL,
+                    side,
+                    walked(UNTESTED_WIDTH, height, layout, root)
+                );
             }
         }
+    }
+    const missed = unread(ladder);
+    if (missed.length > 0) {
+        throw new Error(
+            `${CARD_STYLESHEET} sizes a walked card in ${missed.length} rules the walk never left standing: ${missed.join('; ')}`
+        );
+    }
+    const dropped = unanswered(dispatch);
+    if (dropped.length > 0) {
+        throw new Error(
+            `${CARD_BUILDER_UTILS} holds ${dropped.length} arms the walk never answered: ${dropped.join('; ')}`
+        );
     }
     generated('reference/breakpoints.tsv', 'src', table);
 }

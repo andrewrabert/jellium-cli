@@ -1,0 +1,11 @@
+.itemsContainer-tv > .backdropCard {
+    width: 25%;
+}
+
+.itemsContainer-tv > .squareCard {
+    width: 16.666666666666666666666666666667%;
+}
+
+.itemsContainer-tv > .portraitCard {
+    width: 16.666666666666666666666666666667%;
+}

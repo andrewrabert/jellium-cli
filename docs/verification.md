@@ -774,10 +774,12 @@ in order. A section passes only when every line in it holds.
   to link against.
 - `cargo test -p jellium-cli web::playback::requests` counts what each step of
   the playback chain puts on the wire against the stub upstream.
-- `just pinned <jellyfin-web-checkout>` rewrites `jellium-web/reference` and
-  `reference/spans` from the checkout and fails on any difference. Its
-  `git ls-files` guard refuses an untracked slice or an untracked span, so this
-  command answers only once `jellium-web/reference/jellyfin-web.mjs`,
+- `just pinned <jellyfin-web-checkout>` rewrites `jellium-web/reference`,
+  `reference/spans`, `jellium-web/fonts`, `jellium-web/icons`,
+  `jellium-web/branding`, `reference/assets.tsv` and
+  `reference/breakpoints.tsv` from the checkout and fails on any difference.
+  Its `git ls-files` guard refuses an untracked slice or an untracked span, so
+  this command answers only once `jellium-web/reference/jellyfin-web.mjs`,
   `environment.mjs` and `reference/spans` are committed; before that commit it
   reports the tree broken when the tree is not.
 - `cargo test -p jellium-reference` digests every row of
@@ -860,6 +862,14 @@ browser with a touch screen, each at its own size.
   and 18.5%; at 360 wide, 72% and 40%.
 - My Media's tiles take the backdrop rail's own widths, so one spans 18.7% of
   the window at 1920 wide, 45.5% at 768, 23.1% at 800 and 72% at 360.
+- A television browser lays four backdrop cards, six square cards and six
+  portrait cards across a library grid at every window width, where a desktop
+  browser at 383 wide lays one, two and three.
+- A television browser's home rails take their own widths at every window
+  width: 23.5% of the window for a backdrop rail, 18.8% for a small-backdrop
+  rail and 15.6% for a square or portrait rail.
+- A television browser asks for a portrait or square card's image at a sixth of
+  the page width and a backdrop card's at a quarter, at every window width.
 - A library card under the pointer raises a scrim carrying the more control at
   its trailing foot.
 - A Live TV recording card raises a play control under the pointer, one still

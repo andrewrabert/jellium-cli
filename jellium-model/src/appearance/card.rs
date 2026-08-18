@@ -9,7 +9,9 @@ use jellyfin_api::types::{CollectionType, MediaType};
 
 use super::space::{self, GUTTER, Room};
 use super::typeface;
-use super::{Across, Breakpoint, Css, Drawn, Length, Orientation, Query, Screen, Share, Viewport};
+use super::{
+    Across, Breakpoint, Css, Drawn, Layout, Length, Orientation, Query, Screen, Share, Viewport,
+};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Shape {
@@ -193,17 +195,25 @@ struct Step<T> {
     held: T,
 }
 
-/// A ladder: what it sets before any block matches, and the blocks in the
-/// source order the stylesheet writes them.
+/// A ladder: what it sets before any block matches, the blocks in the source
+/// order the stylesheet writes them, and what `.itemsContainer-tv`'s own
+/// selector sets, which outranks every block by specificity.
 struct Ladder<T: Copy + 'static> {
     base: T,
     steps: &'static [Step<T>],
+    televised: Option<T>,
 }
 
 impl<T: Copy> Ladder<T> {
-    /// The last step whose query the viewport answers, which is what the
-    /// cascade leaves standing.
+    /// The `.itemsContainer-tv` value where the browser is drawn in the
+    /// television layout, and the last step whose query the viewport answers
+    /// otherwise.
     fn resolved(&self, viewport: Viewport) -> T {
+        if let Some(held) = self.televised
+            && viewport.layout() == Layout::Television
+        {
+            return held;
+        }
         let mut standing = self.base;
         for step in self.steps {
             let wide_enough = step.at.is_none_or(|at| viewport.matches(at));
@@ -245,9 +255,11 @@ const BANNER: Ladder<Across> = Ladder {
         step(75.0, Across::cards(3)),
         step(131.25, Across::cards(4)),
     ],
+    televised: None,
 };
 
 // reference: card-width-ladder
+// reference: card-width-televised
 const BACKDROP: Ladder<Across> = Ladder {
     base: Across::cards(1),
     steps: &[
@@ -257,6 +269,7 @@ const BACKDROP: Ladder<Across> = Ladder {
         step(100.0, Across::cards(5)),
         step(156.25, Across::cards(6)),
     ],
+    televised: Some(Across::cards(4)),
 };
 
 // reference: card-width-ladder
@@ -270,9 +283,11 @@ const SMALL_BACKDROP: Ladder<Across> = Ladder {
         step(87.5, Across::cards(7)),
         step(100.0, Across::cards(8)),
     ],
+    televised: None,
 };
 
 // reference: card-width-ladder
+// reference: card-width-televised
 const SQUARE: Ladder<Across> = Ladder {
     base: Across::cards(2),
     steps: &[
@@ -285,9 +300,11 @@ const SQUARE: Ladder<Across> = Ladder {
         step(120.0, Across::cards(9)),
         step(131.25, Across::cards(10)),
     ],
+    televised: Some(Across::cards(6)),
 };
 
 // reference: card-width-ladder
+// reference: card-width-televised
 const PORTRAIT: Ladder<Across> = Ladder {
     base: Across::cards(3),
     steps: &[
@@ -300,6 +317,7 @@ const PORTRAIT: Ladder<Across> = Ladder {
         step(120.0, Across::cards(9)),
         step(131.25, Across::cards(10)),
     ],
+    televised: Some(Across::cards(6)),
 };
 
 /// The cards a row of `shape` holds, in the source order of `card-width` and
@@ -337,6 +355,7 @@ const fn units_landscape(at: Option<f32>, count: f32) -> Step<Share> {
 }
 
 // reference: card-rail-ladder
+// reference: card-rail-overrides
 const RAIL_BACKDROP: Ladder<Share> = Ladder {
     base: Share::units(72.0),
     steps: &[
@@ -348,9 +367,11 @@ const RAIL_BACKDROP: Ladder<Share> = Ladder {
         units(100.0, 18.7),
         units(156.25, 15.6),
     ],
+    televised: Some(Share::units(23.5)),
 };
 
 // reference: card-rail-ladder
+// reference: card-rail-overrides
 const RAIL_SMALL_BACKDROP: Ladder<Share> = Ladder {
     base: Share::units(72.0),
     steps: &[
@@ -363,9 +384,11 @@ const RAIL_SMALL_BACKDROP: Ladder<Share> = Ladder {
         units(100.0, 18.7),
         units(156.25, 15.6),
     ],
+    televised: Some(Share::units(18.8)),
 };
 
 // reference: card-rail-ladder
+// reference: card-rail-overrides
 const RAIL_SQUARE: Ladder<Share> = Ladder {
     base: Share::units(40.0),
     steps: &[
@@ -379,9 +402,11 @@ const RAIL_SQUARE: Ladder<Share> = Ladder {
         units(120.0, 10.41),
         units(131.25, 9.3),
     ],
+    televised: Some(Share::units(15.6)),
 };
 
 // reference: card-rail-ladder
+// reference: card-rail-overrides
 const RAIL_PORTRAIT: Ladder<Share> = Ladder {
     base: Share::units(40.0),
     steps: &[
@@ -395,6 +420,7 @@ const RAIL_PORTRAIT: Ladder<Share> = Ladder {
         units(120.0, 10.41),
         units(131.25, 9.3),
     ],
+    televised: Some(Share::units(15.6)),
 };
 
 // reference: card-rail-ladder
@@ -666,9 +692,9 @@ impl Card {
         Across::cards((measured(self, room).count() / width) as u32)
     }
 
-    /// The arm `getPostersPerRow` answers, which steps at 2200px and 420px
-    /// where the wall ladder steps at 2100px and 400px, and which is not a
-    /// whole number.
+    /// The arm `getPostersPerRow` answers, which a television takes before
+    /// every width it tests, which steps at 2200px and 420px where the wall
+    /// ladder steps at 2100px and 400px, and which is not a whole number.
     // reference: card-count-ladder
     pub fn requested(self, viewport: Viewport) -> PerRow {
         request(self).resolved(viewport)
@@ -817,14 +843,25 @@ struct Arm {
     held: PerRow,
 }
 
-/// One shape's cards-per-row switch: its arms, and the `default` it falls to.
+/// One shape's cards-per-row switch: the arm the reference answers a
+/// television with before it tests anything else, its arms in the source order
+/// it tests them, and the `default` it falls to.
 struct Request {
+    televised: Option<PerRow>,
     arms: &'static [Arm],
     otherwise: PerRow,
 }
 
 impl Request {
+    /// The `isTV` arm where the browser is drawn in the television layout, the
+    /// first arm whose condition the viewport answers otherwise, and the
+    /// `default` under them both.
     fn resolved(&self, viewport: Viewport) -> PerRow {
+        if let Some(held) = self.televised
+            && viewport.layout() == Layout::Television
+        {
+            return held;
+        }
         let landscape = viewport.width().count() > viewport.height().count() * WIDER_THAN_TALL;
         for arm in self.arms {
             let turned = match arm.turned {
@@ -860,6 +897,7 @@ const fn turned(at: Option<f32>, held: PerRow) -> Arm {
 
 // reference: card-count-ladder
 const REQUEST_PORTRAIT: Request = Request {
+    televised: Some(PerRow::percent(16.66666667)),
     arms: &[
         arm(2200.0, PerRow::cards(10)),
         arm(1920.0, PerRow::percent(11.1111111111)),
@@ -875,6 +913,7 @@ const REQUEST_PORTRAIT: Request = Request {
 
 // reference: card-count-ladder
 const REQUEST_SQUARE: Request = Request {
+    televised: Some(PerRow::percent(16.66666667)),
     arms: &[
         arm(2200.0, PerRow::cards(10)),
         arm(1920.0, PerRow::percent(11.1111111111)),
@@ -890,6 +929,7 @@ const REQUEST_SQUARE: Request = Request {
 
 // reference: card-count-ladder
 const REQUEST_BANNER: Request = Request {
+    televised: None,
     arms: &[
         arm(2200.0, PerRow::cards(4)),
         arm(1200.0, PerRow::percent(33.33333333)),
@@ -900,6 +940,7 @@ const REQUEST_BANNER: Request = Request {
 
 // reference: card-count-ladder
 const REQUEST_BACKDROP: Request = Request {
+    televised: Some(PerRow::cards(4)),
     arms: &[
         arm(2500.0, PerRow::cards(6)),
         arm(1600.0, PerRow::cards(5)),
@@ -912,6 +953,7 @@ const REQUEST_BACKDROP: Request = Request {
 
 // reference: card-count-ladder
 const REQUEST_SMALL_BACKDROP: Request = Request {
+    televised: None,
     arms: &[
         arm(1600.0, PerRow::cards(8)),
         arm(1400.0, PerRow::percent(14.2857142857)),
@@ -927,12 +969,14 @@ const REQUEST_SMALL_BACKDROP: Request = Request {
 /// takes its `default`.
 // reference: card-count-ladder
 const REQUEST_MIXED: Request = Request {
+    televised: None,
     arms: &[],
     otherwise: PerRow::cards(4),
 };
 
 // reference: card-count-ladder
 const REQUEST_RAIL_PORTRAIT: Request = Request {
+    televised: Some(PerRow::percent(15.5)),
     arms: &[
         turned(Some(1700.0), PerRow::percent(11.6)),
         turned(None, PerRow::percent(15.5)),
@@ -946,6 +990,7 @@ const REQUEST_RAIL_PORTRAIT: Request = Request {
 
 // reference: card-count-ladder
 const REQUEST_RAIL_SQUARE: Request = Request {
+    televised: Some(PerRow::percent(15.5)),
     arms: &[
         turned(Some(1700.0), PerRow::percent(11.6)),
         turned(None, PerRow::percent(15.5)),
@@ -959,6 +1004,7 @@ const REQUEST_RAIL_SQUARE: Request = Request {
 
 // reference: card-count-ladder
 const REQUEST_RAIL_BACKDROP: Request = Request {
+    televised: Some(PerRow::percent(23.3)),
     arms: &[
         turned(Some(1700.0), PerRow::percent(18.5)),
         turned(None, PerRow::percent(23.3)),
@@ -972,6 +1018,7 @@ const REQUEST_RAIL_BACKDROP: Request = Request {
 
 // reference: card-count-ladder
 const REQUEST_RAIL_SMALL_BACKDROP: Request = Request {
+    televised: Some(PerRow::percent(18.9)),
     arms: &[
         turned(Some(800.0), PerRow::percent(15.5)),
         turned(None, PerRow::percent(23.3)),

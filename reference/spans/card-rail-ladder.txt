@@ -128,7 +128,3 @@
         width: 15.6vw;
     }
 }
-
-.itemsContainer-tv > .overflowBackdropCard {
-    width: 23.5vw;
-}
