@@ -8,7 +8,7 @@ use crate::app::Message;
 use crate::error::Answer;
 use crate::style::{self, space, typeface};
 use crate::text::{self as strings, Text};
-use crate::widget::prose;
+use crate::widget::{self, prose};
 use jellium_model::form::{Field, Form};
 
 /// The Live TV administration, whichever tab is shown.
@@ -334,17 +334,12 @@ fn providers<'a>(mut page: Page<'a>, state: &'a State, read_only: bool) -> Page<
             .into(),
         );
         for lineup in &state.lineups {
-            page.push(
-                button(prose(
-                    lineup.name.clone().unwrap_or_default(),
-                    typeface::BODY,
-                ))
-                .style(style::link)
-                .on_press(Message::DashboardAction(super::Action::ProviderLineup(
+            page.push(widget::anchor(
+                lineup.name.clone().unwrap_or_default(),
+                Message::DashboardAction(super::Action::ProviderLineup(
                     lineup.id.clone().unwrap_or_default(),
-                )))
-                .into(),
-            );
+                )),
+            ));
         }
     } else {
         page.push(

@@ -7,6 +7,8 @@
   "loginPassword": "Password",
   "loginSubmit": "Sign in",
   "loginWorking": "Signing in",
+  "loginManual": "Manual login",
+  "loginCancel": "Cancel",
   "homeMyMedia": "My Media",
   "homeLiveTv": "Live TV",
   "homeContinueWatching": "Continue Watching",

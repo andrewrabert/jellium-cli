@@ -79,6 +79,8 @@ text! {
     LoginPassword => "loginPassword",
     LoginSubmit => "loginSubmit",
     LoginWorking => "loginWorking",
+    LoginManual => "loginManual",
+    LoginCancel => "loginCancel",
     NavSwitch => "navSwitch",
     LoginServersTitle => "loginServersTitle",
     LoginServersActive => "loginServersActive",

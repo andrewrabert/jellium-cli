@@ -7,7 +7,7 @@ use jellyfin_api::types::CollectionType;
 use crate::app::Message;
 use crate::failure::unraised;
 use crate::fonts::Codepoint;
-use crate::style::{self, Length};
+use crate::style::{self, Length, typeface};
 
 /// The table `just assets` writes from the reference's own icon metadata: one
 /// ligature per row, with the codepoint it draws in base sixteen.
@@ -168,6 +168,7 @@ pub fn icon<'a>(icon: Icon, size: Length) -> Element<'a, Message> {
     iced::widget::text(drawn.to_string())
         .font(style::ICONS)
         .size(style::drawn(size.drawn()))
+        .line_height(style::leading(typeface::ICON_LEADING))
         .into()
 }
 
@@ -184,6 +185,7 @@ pub fn tinted<'a>(
     iced::widget::text(drawn.to_string())
         .font(style::ICONS)
         .size(style::drawn(size.drawn()))
+        .line_height(style::leading(typeface::ICON_LEADING))
         .style(color)
         .into()
 }

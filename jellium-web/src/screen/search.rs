@@ -2,7 +2,7 @@ use std::collections::HashSet;
 use std::rc::Rc;
 
 use iced::Element;
-use iced::widget::column;
+use iced::widget::{column, container};
 use jellium_model::facets::Facets;
 use jellium_model::search::Section;
 use jellium_model::sort::Sort;
@@ -245,11 +245,12 @@ fn suggesting(suggestions: &[BaseItemDto]) -> Element<'_, Message> {
     let links = suggestions.iter().filter_map(|item| {
         let id = item.id?;
         Some(
-            iced::widget::button(prose(item.name.clone().unwrap_or_default(), typeface::BODY))
-                .style(style::link)
-                .padding(style::padding(space::SUGGESTION_PAD))
-                .on_press(Message::Navigated(crate::route::Route::Detail { id }))
-                .into(),
+            container(widget::anchor(
+                item.name.clone().unwrap_or_default(),
+                Message::Navigated(crate::route::Route::Detail { id }),
+            ))
+            .padding(style::padding(space::SUGGESTION_PAD))
+            .into(),
         )
     });
     column![

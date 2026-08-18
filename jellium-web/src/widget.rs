@@ -7,7 +7,9 @@ pub mod table;
 use std::borrow::Cow;
 use std::collections::HashSet;
 
-use iced::widget::{Space, button, column, container, grid, image, row, scrollable, text};
+use iced::widget::{
+    Space, button, column, container, grid, image, rich_text, row, scrollable, span, text,
+};
 use iced::{Element, Fill, Length};
 use jellium_model::item;
 use jellium_protocol::{Session, SyncAccess};
@@ -1913,7 +1915,7 @@ pub fn flag<'a>(
             font: style::ICONS,
             code_point: mark,
             size: Some(iced::Pixels(style::drawn(typeface::CHECKBOX_MARK.drawn()))),
-            line_height: style::leading(typeface::LINE_HEIGHT),
+            line_height: style::leading(typeface::ICON_LEADING),
             shaping: iced::widget::text::Shaping::Advanced,
         }),
         None => outline,
@@ -1967,6 +1969,23 @@ pub fn control<'a>(
     held.into()
 }
 
+/// `.button-link`: the reference's anchor, its lettering in the scheme's own
+/// anchor colour on no face, underlined while the pointer stands over it.
+// reference: control-button-link
+// reference: scheme-button-link
+pub fn anchor<'a>(label: impl Into<Cow<'a, str>>, press: Message) -> Element<'a, Message> {
+    let written = label.into();
+    crate::fonts::observed(&written, typeface::Weight::Regular);
+    rich_text([span(written)
+        .color(style::color(scheme::ANCHOR))
+        .link(press)])
+    .size(style::drawn(typeface::BODY.drawn()))
+    .font(style::font(typeface::Weight::Regular))
+    .line_height(style::leading(typeface::LINE_HEIGHT))
+    .on_link_click(|link| link)
+    .into()
+}
+
 /// The search field as the reference draws it: its glyph, then the field
 /// itself, centred together in `SEARCH_FIELD` of width.
 // reference: search-field
@@ -1975,7 +1994,7 @@ pub fn searching<'a>(term: &str, viewport: Viewport) -> Element<'a, Message> {
     let glyph = container(crate::icon::icon(Icon::Search, typeface::SEARCH_ICON)).padding(
         iced::Padding::ZERO
             .right(style::drawn(space::SEARCH_ICON_GAP.drawn()))
-            .bottom(style::drawn(space::SEARCH_ICON_DROP.drawn())),
+            .bottom(style::drawn(space::SEARCH_ICON_LIFT.drawn())),
     );
     let typed = iced::widget::text_input(strings::lookup(Text::SearchPlaceholder), term)
         .style(style::input)
@@ -1985,7 +2004,7 @@ pub fn searching<'a>(term: &str, viewport: Viewport) -> Element<'a, Message> {
         .on_submit(Message::SearchSubmitted);
     let side = style::drawn(space::page_side(viewport.canvas()));
     container(
-        container(row![glyph, typed].align_y(iced::Alignment::Center))
+        container(row![glyph, typed].align_y(iced::Alignment::End))
             .max_width(style::drawn(space::SEARCH_FIELD.drawn())),
     )
     .padding(iced::Padding::ZERO.right(side).left(side))

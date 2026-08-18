@@ -7,7 +7,7 @@ use crate::app::Message;
 use crate::error::Answer;
 use crate::style::{self, space, typeface};
 use crate::text::{self as strings, Text};
-use crate::widget::prose;
+use crate::widget::{self, prose};
 use jellium_model::form::{Field, Form};
 
 /// The content types a library can be created as, in the order both the
@@ -443,14 +443,10 @@ pub fn one<'a>(state: &'a One, read_only: bool) -> Vec<Element<'a, Message>> {
             };
             page.push(
                 row![
-                    button(prose(
+                    widget::anchor(
                         entry.name.clone().unwrap_or_default(),
-                        typeface::BODY
-                    ))
-                    .style(style::link)
-                    .on_press(Message::DashboardAction(
-                        super::Action::Browse(path.clone())
-                    )),
+                        Message::DashboardAction(super::Action::Browse(path.clone())),
+                    ),
                     button(prose(
                         strings::lookup(Text::LibrariesPathAdd),
                         typeface::BODY

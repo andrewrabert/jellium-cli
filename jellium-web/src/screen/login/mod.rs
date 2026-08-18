@@ -60,6 +60,9 @@ pub enum Action {
     Remove {
         server: String,
     },
+    /// Shows one of the page's two arrangements: Manual login reaches the
+    /// typed form and Cancel returns to the picker.
+    Show(jellium_model::login::Prompt),
     /// Fills the name from the picker and shows the password field.
     Pick {
         user: Uuid,
@@ -131,6 +134,11 @@ pub fn entered(screen: jellium_protocol::LoginScreen) -> (State, Task<Message>) 
         crate::failure::raise(crate::error::told(Text::FailureSavedSignInRejected));
     }
     let target = screen.target.clone();
+    // reference: login-users
+    state.credentials.prompt = match screen.users.is_empty() {
+        true => jellium_model::login::Prompt::Manual,
+        false => jellium_model::login::Prompt::Picker,
+    };
     state.target = Some(screen);
     let images = credentials::images(&state).into_iter().map(|user| {
         let target = target.clone();

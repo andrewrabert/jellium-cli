@@ -32,6 +32,22 @@ impl Screen {
     }
 }
 
+/// Which of the login page's two arrangements the credentials screen shows;
+/// the reference draws the picker and the typed form one at a time.
+// the page opens on the picker, which is the arrangement the reference's own
+// markup carries before its public users answer
+// reference: login-page
+// reference: login-manual-form
+// reference: login-visual-form
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
+pub enum Prompt {
+    /// `.visualLoginForm`: the cards the server's public users draw.
+    #[default]
+    Picker,
+    /// `.manualLoginForm`: the typed name and password.
+    Manual,
+}
+
 /// Which of Jellyfin's three password-reset answers is shown.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Reset {

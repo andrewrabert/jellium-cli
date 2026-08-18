@@ -1,0 +1,8 @@
+        apiClient.getPublicUsers().then(function (users) {
+            if (users.length) {
+                showVisualForm();
+                loadUserList(view, apiClient, users);
+            } else {
+                view.querySelector('#txtManualName').value = '';
+                showManualForm(view, false, false);
+            }

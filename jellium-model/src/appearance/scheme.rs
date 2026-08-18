@@ -207,6 +207,10 @@ pub const ACCENT: Color = Color::rgb(0x00, 0xa4, 0xdc);
 // reference: scheme-submit
 pub const ACCENT_FOCUS: Color = Color::rgb(0x0c, 0xb0, 0xe8);
 
+/// `.button-link`'s own lettering, which the reference draws on no face.
+// reference: scheme-button-link
+pub const ANCHOR: Color = Color::rgb(0x00, 0xa4, 0xdc);
+
 // reference: scheme-anchors
 pub const SECONDARY: Color = Color::rgb(0xaa, 0x5c, 0xc3);
 

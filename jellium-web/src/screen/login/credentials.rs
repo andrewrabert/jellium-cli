@@ -1,5 +1,6 @@
 use iced::Element;
 use iced::widget::column;
+use jellium_model::login::Prompt;
 use uuid::Uuid;
 
 use crate::app::Message;
@@ -17,6 +18,7 @@ pub struct State {
     pub password: String,
     /// The user the picker filled the name from.
     pub picked: Option<Uuid>,
+    pub prompt: jellium_model::login::Prompt,
 }
 
 /// The users whose images the picker wants now.
@@ -84,19 +86,23 @@ fn picker<'a>(state: &'a super::State, viewport: Viewport) -> Option<Element<'a,
     ))
 }
 
-/// The reference's login page: the user picker over the manual form, then the
-/// block controls.
-// reference: login-page
-pub fn view<'a>(state: &'a super::State, viewport: Viewport) -> Element<'a, Message> {
-    let mut page = column![widget::heading(
-        typeface::Rank::First,
-        strings::lookup(Text::LoginHeader)
-    )]
-    .spacing(style::drawn(space::SECTION_GAP.drawn()));
-    if let Some(picker) = picker(state, viewport) {
-        page = page.push(picker);
-    }
-    page = page.push(widget::capped(
+/// The typed name and password over the sign-in control, with the control that
+/// returns to the picker where the server named a public user.
+// reference: login-manual-form
+// reference: login-visual-form
+fn typed<'a>(state: &'a super::State, viewport: Viewport) -> Element<'a, Message> {
+    let cancel = state
+        .target
+        .as_ref()
+        .is_some_and(|screen| !screen.users.is_empty())
+        .then(|| {
+            widget::block(
+                strings::lookup(Text::LoginCancel),
+                Some(Message::LoginAction(Action::Show(Prompt::Picker))),
+                Emphasis::Raised,
+            )
+        });
+    widget::capped(
         viewport,
         space::FIELD_GAP,
         [
@@ -124,8 +130,34 @@ pub fn view<'a>(state: &'a super::State, viewport: Viewport) -> Element<'a, Mess
                 (!state.working).then_some(Message::LoginAction(Action::Submit)),
                 Emphasis::Submit,
             ),
-        ],
-    ));
+        ]
+        .into_iter()
+        .chain(cancel),
+    )
+}
+
+/// The reference's login page: one of its two arrangements, then the block
+/// controls.
+// reference: login-page
+pub fn view<'a>(state: &'a super::State, viewport: Viewport) -> Element<'a, Message> {
+    let mut page = column![widget::heading(
+        typeface::Rank::First,
+        strings::lookup(Text::LoginHeader)
+    )]
+    .spacing(style::drawn(space::SECTION_GAP.drawn()));
+    match state.credentials.prompt {
+        Prompt::Picker => {
+            if let Some(cards) = picker(state, viewport) {
+                page = page.push(cards);
+            }
+            page = page.push(widget::block(
+                strings::lookup(Text::LoginManual),
+                Some(Message::LoginAction(Action::Show(Prompt::Manual))),
+                Emphasis::Raised,
+            ));
+        }
+        Prompt::Manual => page = page.push(typed(state, viewport)),
+    }
 
     if state
         .target

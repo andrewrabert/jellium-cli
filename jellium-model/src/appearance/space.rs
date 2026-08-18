@@ -1424,13 +1424,14 @@ pub const LETTERS_RESERVE: Share = Share::per_ten_thousand(750);
 // reference: search-field
 pub const SEARCH_FIELD: Length = Length::em(60.0);
 
-/// `.searchfields-icon`'s gap to the field it stands before.
+/// `.searchfields-icon`'s gap to the field it stands before, in the glyph's own
+/// em.
 // reference: search-icon
-pub const SEARCH_ICON_GAP: Length = Length::em(0.25);
+pub const SEARCH_ICON_GAP: Length = typeface::SEARCH_ICON.times(Ratio::thousandths(250));
 
-/// The same icon's drop from the field's own baseline.
+/// The same glyph's lift off the foot of the row, in that same em.
 // reference: search-icon
-pub const SEARCH_ICON_DROP: Length = Length::em(0.1);
+pub const SEARCH_ICON_LIFT: Length = typeface::SEARCH_ICON.times(Ratio::thousandths(100));
 
 /// `.centerMessage`'s share of the page.
 // reference: center-message

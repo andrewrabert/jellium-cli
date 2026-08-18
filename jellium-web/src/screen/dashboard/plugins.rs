@@ -2,14 +2,14 @@
 //! configuration pages it hosts.
 
 use iced::Element;
-use iced::widget::{button, row};
+use iced::widget::row;
 use uuid::Uuid;
 
 use crate::app::Message;
 use crate::error::Answer;
 use crate::style::{self, space, typeface};
 use crate::text::{self as strings, Text};
-use crate::widget::prose;
+use crate::widget;
 
 /// The plugins installed on the server, and the configuration pages they host.
 #[derive(Debug, Clone)]
@@ -158,19 +158,14 @@ pub fn view<'a>(
 ) -> Vec<Element<'a, Message>> {
     let mut listed: Vec<Element<'a, Message>> = vec![
         row![
-            button(prose(strings::lookup(Text::CatalogTitle), typeface::BODY))
-                .style(style::link)
-                .on_press(Message::DashboardAction(super::Action::Open(
-                    super::Screen::Catalog
-                ))),
-            button(prose(
+            widget::anchor(
+                strings::lookup(Text::CatalogTitle),
+                Message::DashboardAction(super::Action::Open(super::Screen::Catalog)),
+            ),
+            widget::anchor(
                 strings::lookup(Text::RepositoriesTitle),
-                typeface::BODY
-            ))
-            .style(style::link)
-            .on_press(Message::DashboardAction(super::Action::Open(
-                super::Screen::Repositories
-            ))),
+                Message::DashboardAction(super::Action::Open(super::Screen::Repositories)),
+            ),
         ]
         .spacing(style::drawn(space::CONTROL_GAP.drawn()))
         .into(),

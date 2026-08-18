@@ -362,22 +362,6 @@ pub fn icon_control(
     }
 }
 
-/// A control that reads as one of the reference's anchors: its accent lettering
-/// on no face of its own, brightening where it is reached.
-// reference: scheme-anchors
-pub fn link(
-    _theme: &iced::Theme,
-    status: iced::widget::button::Status,
-) -> iced::widget::button::Style {
-    iced::widget::button::Style {
-        text_color: match lit(status) {
-            true => color(scheme::ACCENT_FOCUS),
-            false => color(scheme::ACCENT),
-        },
-        ..iced::widget::button::Style::default()
-    }
-}
-
 /// The surface the navigation drawer stands on, which is the scheme's own
 /// paper.
 // reference: drawer-paper

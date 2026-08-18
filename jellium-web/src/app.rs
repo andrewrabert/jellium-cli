@@ -842,10 +842,15 @@ impl Jellium {
                 state.working = true;
                 Task::perform(control::remove_server(server), Message::ServerRemoved)
             }
+            login::Action::Show(prompt) => {
+                state.credentials.prompt = prompt;
+                Task::none()
+            }
             login::Action::Pick { user, name } => {
                 state.credentials.picked = Some(user);
                 state.credentials.username = name;
                 state.credentials.password.clear();
+                state.credentials.prompt = jellium_model::login::Prompt::Manual;
                 Task::none()
             }
             login::Action::Submit => {

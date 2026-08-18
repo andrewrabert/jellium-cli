@@ -311,6 +311,11 @@ pub const GUIDE_MARK: Length = Length::em(1.6);
 // reference: detail-button-icon
 pub const DETAIL_ICON: Length = Length::em(1.6);
 
+/// The line box every Material Icons glyph stands in, which the face's own
+/// stylesheet writes as the glyph's size.
+// reference: material-icons
+pub const ICON_LEADING: Leading = Leading::Factor(Ratio::thousandths(1000));
+
 /// `.searchfields-icon`, the one glyph the search field stands beside.
 // reference: search-icon
 pub const SEARCH_ICON: Length = Length::em(2.0);

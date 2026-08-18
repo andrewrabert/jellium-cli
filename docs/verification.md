@@ -547,7 +547,11 @@ in order. A section passes only when every line in it holds.
   empty one.
 - A user's picture appears in the picker, and a request for a user id outside
   the public list is refused.
-- A server with no public users shows no picker and still takes a typed name.
+- The login page shows the user picker alone under Manual login, or the typed
+  name and password alone over Cancel, and never both; Manual login and Cancel
+  move between them.
+- A server with no public users opens on the typed name and password, with
+  neither Manual login nor Cancel anywhere on the page.
 - (real server) A Quick Connect code shown here is authorized on a second real
   device, and this browser is signed in within five seconds of the
   authorization.
@@ -793,6 +797,8 @@ Run against a real browser at 360x800, 800x360, 768x1024 and 1920x1080.
   regular weight.
 - No control's label is upper-cased.
 - A submit control stands on #00a4dc and a raised control on #303030.
+- A link-style control draws its lettering in #00a4dc on no face of its own,
+  and rules that lettering only while the pointer stands over it.
 - The select-server page centres its cards, each a square card carrying the
   storage glyph over a centred name, and a name wider than its card ends in an
   ellipsis on one line.
@@ -818,8 +824,11 @@ Run against a real browser at 360x800, 800x360, 768x1024 and 1920x1080.
   its trailing foot.
 - A Live TV recording card raises a play control under the pointer, one still
   being written included.
-- The search field stands a 2em magnifier before its 1.1em field at a 0.25em gap,
-  the two capped together at a 60em measure centred in the page.
+- The search field stands a 2em magnifier before its 1.1em field, gapped a
+  quarter of the magnifier's own em and lifted a tenth of that em off the foot
+  of the field's row, the two capped together at a 60em measure centred in the
+  page.
+- Every Material Icons glyph draws in a line box its own size tall.
 - The now-playing bar is 4.2em tall, and its artwork 4.2em wide and 70% of the
   bar's height.
 - The video display stands previous, rewind, play, fast forward and next
