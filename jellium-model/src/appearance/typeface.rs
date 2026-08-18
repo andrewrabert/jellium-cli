@@ -173,6 +173,15 @@ pub const BODY_2: Length = MUI_BODY_2.length();
 // reference: mui-typography
 pub const BODY_2_LEADING: Leading = Leading::Factor(Ratio::thousandths(1430));
 
+/// The size the reference writes over `MuiFormHelperText`, which is the page's
+/// own body rather than `caption`'s.
+// reference: mui-theme-form-helper
+pub const HELPER: Length = Length::em(1.0);
+
+/// `caption`'s own line box, which the helper keeps.
+// reference: mui-typography-caption
+pub const HELPER_LEADING: Leading = Leading::Factor(Ratio::thousandths(1660));
+
 /// The line box MUI writes inside a filled field, which it sets as a length
 /// rather than as a factor.
 // reference: mui-input-base

@@ -108,13 +108,15 @@ pub fn view<'a>(state: &'a State, read_only: bool, viewport: Viewport) -> frame:
     let band = viewport.band();
     let mut rows: Vec<Element<'a, Message>> = vec![
         widget::mui::flag(
-            strings::lookup(Text::LogsSlowResponse),
+            Text::LogsSlowResponse,
+            None,
             state.form.flagged(SLOW_RESPONSE),
             move |on| edited(SLOW_RESPONSE, on.to_string()),
             band,
         ),
         widget::mui::field(
-            strings::lookup(Text::LogsSlowResponseTime),
+            Text::LogsSlowResponseTime,
+            None,
             &state.form.value(SLOW_RESPONSE_THRESHOLD),
             move |typed| edited(SLOW_RESPONSE_THRESHOLD, typed),
             band,

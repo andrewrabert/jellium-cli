@@ -21,7 +21,7 @@ pub enum Field {
     Lines {
         key: &'static str,
     },
-    /// A string chosen from a list the screen supplies at runtime.
+    /// A string chosen from a list the screen supplies.
     Listed {
         key: &'static str,
     },

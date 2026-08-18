@@ -955,6 +955,26 @@ pub const CHECK_LABEL_MARGIN: Inset = Inset {
     left: Css::unitless(-11.0),
 };
 
+/// `MuiFormHelperText`'s own margins, which MUI writes as the bare numbers the
+/// DOM reads as css pixels.
+// reference: mui-form-helper-text
+pub const HELPER_MARGIN: Inset = Inset {
+    top: Css::unitless(3.0),
+    right: Css::unitless(0.0),
+    bottom: Css::unitless(0.0),
+    left: Css::unitless(0.0),
+};
+
+/// The margins the `contained` variant takes, which is the variant every
+/// helper under a filled control is drawn in.
+// reference: mui-form-helper-text
+pub const HELPER_CONTAINED_MARGIN: Inset = Inset {
+    top: HELPER_MARGIN.top,
+    right: Css::unitless(14.0),
+    bottom: HELPER_MARGIN.bottom,
+    left: Css::unitless(14.0),
+};
+
 /// A contained button's own padding at MUI's large size.
 // reference: mui-button-large
 pub const CONTAINED_PAD: Inset = Inset {

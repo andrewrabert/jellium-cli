@@ -522,3 +522,6 @@ repositories-page	src/apps/dashboard/routes/plugins/repositories.tsx	69	101	b536
 repositories-row	src/apps/dashboard/features/plugins/components/RepositoryListItem.tsx	48	79	6d4a2e7f083862fc12f5ecf643a778fcfacef88a104964bb7a28b99d7a00d4f1	ported
 date-locale-date	src/scripts/datetime.js	156	185	dc9f27b50785becc561a86df3599f20139aae1df729d19b9e4d3c5375aa6c61c	ported
 date-display-time	src/scripts/datetime.js	222	243	62146e94c29d58eeaab9d5e053d9451197ee65cc90bb8782f694b637cb46c96b	ported
+mui-theme-form-helper	src/themes/defaults.ts	86	92	342d92fd00e8ee2e8b002e23900cb7a636d110d30b62516d1e59873a1599979f	ported
+mui-form-helper-text	node_modules/@mui/material/FormHelperText/FormHelperText.js	32	73	f67789a475a7be88d9b23ec627492e0b34bbc53048bbe855be63c593ec099241	ported
+mui-typography-caption	node_modules/@mui/material/styles/createTypography.js	68	68	1209079636cffa5e0a63144cbf82d352814afa50cb7bedf42d40eb2a13d9aa94	ported

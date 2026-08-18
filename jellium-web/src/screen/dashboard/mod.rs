@@ -47,13 +47,77 @@ pub struct Heading {
     pub title: Text,
 }
 
-/// One group of a section's fields: the heading the reference writes over
-/// them, and the fields standing under it in the order it stands them.
+/// One option a control offers: the value it writes and the sentence naming
+/// it.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct Offered {
+    pub value: &'static str,
+    pub label: Text,
+}
+
+/// One control of a section's form.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct Control {
+    /// The key it edits, and how that key is read and written.
+    pub field: jellium_model::form::Field,
+    /// The sentence naming it, which a filled field shrinks into its own head
+    /// and a box writes beside itself.
+    pub label: Text,
+    /// The sentence `MuiFormHelperText` writes under it, and nothing where the
+    /// reference writes none.
+    pub helper: Option<Text>,
+    /// What each value it offers reads as, in the order the reference stands
+    /// them, and nothing where it offers no closed set.
+    pub offered: Option<&'static [Offered]>,
+}
+
+/// One group of a section's controls: the heading the reference writes over
+/// them, the sentence it writes between that heading and them, and the
+/// controls standing under it in the order it stands them.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Group {
     pub heading: Option<Heading>,
-    pub fields: &'static [jellium_model::form::Field],
+    pub note: Option<Text>,
+    pub controls: &'static [Control],
 }
+
+/// The acceleration methods the transcoding screen offers, in the order the
+/// reference stands them.
+// reference: dashboard-content
+const ACCELERATION: &[Offered] = &[
+    Offered {
+        value: "none",
+        label: Text::TranscodingAccelerationNone,
+    },
+    Offered {
+        value: "amf",
+        label: Text::TranscodingAccelerationAmf,
+    },
+    Offered {
+        value: "nvenc",
+        label: Text::TranscodingAccelerationNvenc,
+    },
+    Offered {
+        value: "qsv",
+        label: Text::TranscodingAccelerationQsv,
+    },
+    Offered {
+        value: "vaapi",
+        label: Text::TranscodingAccelerationVaapi,
+    },
+    Offered {
+        value: "rkmpp",
+        label: Text::TranscodingAccelerationRkmpp,
+    },
+    Offered {
+        value: "videotoolbox",
+        label: Text::TranscodingAccelerationVideoToolbox,
+    },
+    Offered {
+        value: "v4l2m2m",
+        label: Text::TranscodingAccelerationV4l2m2m,
+    },
+];
 
 /// Which configuration section a settings screen edits.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -114,9 +178,20 @@ impl Section {
             Section::General => &[
                 Group {
                     heading: None,
-                    fields: &[
-                        Field::Text { key: "ServerName" },
-                        Field::Text { key: "UICulture" },
+                    note: None,
+                    controls: &[
+                        Control {
+                            field: Field::Text { key: "ServerName" },
+                            label: Text::GeneralServerName,
+                            helper: Some(Text::GeneralServerNameHelp),
+                            offered: None,
+                        },
+                        Control {
+                            field: Field::Text { key: "UICulture" },
+                            label: Text::GeneralDisplayLanguage,
+                            helper: Some(Text::GeneralDisplayLanguageHelp),
+                            offered: None,
+                        },
                     ],
                 },
                 Group {
@@ -124,8 +199,14 @@ impl Section {
                         rank: Rank::Second,
                         title: Text::DashboardPaths,
                     }),
-                    fields: &[Field::Text {
-                        key: "MetadataPath",
+                    note: None,
+                    controls: &[Control {
+                        field: Field::Text {
+                            key: "MetadataPath",
+                        },
+                        label: Text::GeneralMetadataPath,
+                        helper: Some(Text::GeneralMetadataPathHelp),
+                        offered: None,
                     }],
                 },
                 Group {
@@ -133,8 +214,14 @@ impl Section {
                         rank: Rank::Second,
                         title: Text::DashboardQuickConnect,
                     }),
-                    fields: &[Field::Flag {
-                        key: "QuickConnectAvailable",
+                    note: None,
+                    controls: &[Control {
+                        field: Field::Flag {
+                            key: "QuickConnectAvailable",
+                        },
+                        label: Text::GeneralQuickConnect,
+                        helper: None,
+                        offered: None,
                     }],
                 },
                 Group {
@@ -142,8 +229,14 @@ impl Section {
                         rank: Rank::Second,
                         title: Text::DashboardPerformance,
                     }),
-                    fields: &[Field::Number {
-                        key: "LibraryScanFanoutConcurrency",
+                    note: None,
+                    controls: &[Control {
+                        field: Field::Number {
+                            key: "LibraryScanFanoutConcurrency",
+                        },
+                        label: Text::GeneralScanConcurrency,
+                        helper: Some(Text::GeneralScanConcurrencyHelp),
+                        offered: None,
                     }],
                 },
             ],
@@ -153,16 +246,37 @@ impl Section {
                         rank: Rank::Third,
                         title: Text::NetworkingAddresses,
                     }),
-                    fields: &[
-                        Field::Number {
-                            key: "InternalHttpPort",
+                    note: None,
+                    controls: &[
+                        Control {
+                            field: Field::Number {
+                                key: "InternalHttpPort",
+                            },
+                            label: Text::NetworkingPort,
+                            helper: Some(Text::NetworkingPortHelp),
+                            offered: None,
                         },
-                        Field::Text { key: "BaseUrl" },
-                        Field::Lines {
-                            key: "LocalNetworkSubnets",
+                        Control {
+                            field: Field::Text { key: "BaseUrl" },
+                            label: Text::NetworkingBaseUrl,
+                            helper: Some(Text::NetworkingBaseUrlHelp),
+                            offered: None,
                         },
-                        Field::Lines {
-                            key: "KnownProxies",
+                        Control {
+                            field: Field::Lines {
+                                key: "LocalNetworkSubnets",
+                            },
+                            label: Text::NetworkingLanNetworks,
+                            helper: Some(Text::NetworkingLanNetworksHelp),
+                            offered: None,
+                        },
+                        Control {
+                            field: Field::Lines {
+                                key: "KnownProxies",
+                            },
+                            label: Text::NetworkingKnownProxies,
+                            helper: Some(Text::NetworkingKnownProxiesHelp),
+                            offered: None,
                         },
                     ],
                 },
@@ -171,15 +285,31 @@ impl Section {
                         rank: Rank::Third,
                         title: Text::NetworkingRemote,
                     }),
-                    fields: &[
-                        Field::Flag {
-                            key: "EnableRemoteAccess",
+                    note: None,
+                    controls: &[
+                        Control {
+                            field: Field::Flag {
+                                key: "EnableRemoteAccess",
+                            },
+                            label: Text::NetworkingRemoteAccess,
+                            helper: Some(Text::NetworkingRemoteAccessHelp),
+                            offered: None,
                         },
-                        Field::Lines {
-                            key: "RemoteIPFilter",
+                        Control {
+                            field: Field::Lines {
+                                key: "RemoteIPFilter",
+                            },
+                            label: Text::NetworkingRemoteFilter,
+                            helper: Some(Text::NetworkingRemoteFilterHelp),
+                            offered: None,
                         },
-                        Field::Number {
-                            key: "PublicHttpPort",
+                        Control {
+                            field: Field::Number {
+                                key: "PublicHttpPort",
+                            },
+                            label: Text::NetworkingPublicPort,
+                            helper: Some(Text::NetworkingPublicPortHelp),
+                            offered: None,
                         },
                     ],
                 },
@@ -188,9 +318,20 @@ impl Section {
                         rank: Rank::Third,
                         title: Text::NetworkingProtocols,
                     }),
-                    fields: &[
-                        Field::Flag { key: "EnableIPv4" },
-                        Field::Flag { key: "EnableIPv6" },
+                    note: None,
+                    controls: &[
+                        Control {
+                            field: Field::Flag { key: "EnableIPv4" },
+                            label: Text::NetworkingIpv4,
+                            helper: Some(Text::NetworkingIpv4Help),
+                            offered: None,
+                        },
+                        Control {
+                            field: Field::Flag { key: "EnableIPv6" },
+                            label: Text::NetworkingIpv6,
+                            helper: Some(Text::NetworkingIpv6Help),
+                            offered: None,
+                        },
                     ],
                 },
                 Group {
@@ -198,76 +339,129 @@ impl Section {
                         rank: Rank::Third,
                         title: Text::NetworkingDiscovery,
                     }),
-                    fields: &[Field::Flag { key: "EnableUPnP" }],
+                    note: None,
+                    controls: &[Control {
+                        field: Field::Flag {
+                            key: "AutoDiscovery",
+                        },
+                        label: Text::NetworkingAutoDiscovery,
+                        helper: Some(Text::NetworkingAutoDiscoveryHelp),
+                        offered: None,
+                    }],
                 },
             ],
             Section::Branding => &[Group {
                 heading: None,
-                fields: &[
-                    Field::Flag {
-                        key: "SplashscreenEnabled",
+                note: None,
+                controls: &[
+                    Control {
+                        field: Field::Flag {
+                            key: "SplashscreenEnabled",
+                        },
+                        label: Text::BrandingSplashscreen,
+                        helper: None,
+                        offered: None,
                     },
-                    Field::Text {
-                        key: "LoginDisclaimer",
+                    Control {
+                        field: Field::Text {
+                            key: "LoginDisclaimer",
+                        },
+                        label: Text::BrandingLoginDisclaimer,
+                        helper: Some(Text::BrandingLoginDisclaimerHelp),
+                        offered: None,
                     },
-                    Field::Text { key: "CustomCss" },
+                    Control {
+                        field: Field::Text { key: "CustomCss" },
+                        label: Text::BrandingCustomCss,
+                        helper: Some(Text::BrandingCustomCssHelp),
+                        offered: None,
+                    },
                 ],
             }],
             Section::Resume => &[Group {
                 heading: None,
-                fields: &[
-                    Field::Number {
-                        key: "MinResumePct",
+                note: None,
+                controls: &[
+                    Control {
+                        field: Field::Number {
+                            key: "MinResumePct",
+                        },
+                        label: Text::ResumeMinimumPercentage,
+                        helper: Some(Text::ResumeMinimumPercentageHelp),
+                        offered: None,
                     },
-                    Field::Number {
-                        key: "MaxResumePct",
+                    Control {
+                        field: Field::Number {
+                            key: "MaxResumePct",
+                        },
+                        label: Text::ResumeMaximumPercentage,
+                        helper: Some(Text::ResumeMaximumPercentageHelp),
+                        offered: None,
                     },
-                    Field::Number {
-                        key: "MinResumeDurationSeconds",
+                    Control {
+                        field: Field::Number {
+                            key: "MinAudiobookResume",
+                        },
+                        label: Text::ResumeMinimumAudiobook,
+                        helper: Some(Text::ResumeMinimumAudiobookHelp),
+                        offered: None,
                     },
-                    Field::Number {
-                        key: "MinAudiobookResume",
+                    Control {
+                        field: Field::Number {
+                            key: "MaxAudiobookResume",
+                        },
+                        label: Text::ResumeMaximumAudiobook,
+                        helper: Some(Text::ResumeMaximumAudiobookHelp),
+                        offered: None,
                     },
-                    Field::Number {
-                        key: "MaxAudiobookResume",
+                    Control {
+                        field: Field::Number {
+                            key: "MinResumeDurationSeconds",
+                        },
+                        label: Text::ResumeMinimumDuration,
+                        helper: Some(Text::ResumeMinimumDurationHelp),
+                        offered: None,
                     },
                 ],
             }],
             Section::Streaming => &[Group {
                 heading: None,
-                fields: &[Field::Number {
-                    key: "RemoteClientBitrateLimit",
+                note: None,
+                controls: &[Control {
+                    field: Field::Number {
+                        key: "RemoteClientBitrateLimit",
+                    },
+                    label: Text::StreamingBitrateLimit,
+                    helper: Some(Text::StreamingBitrateLimitHelp),
+                    offered: None,
                 }],
             }],
             Section::Transcoding => &[
                 Group {
                     heading: None,
-                    fields: &[
-                        Field::Choice {
+                    note: None,
+                    controls: &[Control {
+                        field: Field::Listed {
                             key: "HardwareAccelerationType",
-                            options: &[
-                                "none",
-                                "amf",
-                                "qsv",
-                                "nvenc",
-                                "v4l2m2m",
-                                "vaapi",
-                                "videotoolbox",
-                                "rkmpp",
-                            ],
                         },
-                        Field::Text {
-                            key: "TranscodingTempPath",
-                        },
-                    ],
+                        label: Text::TranscodingHardwareAcceleration,
+                        helper: Some(Text::TranscodingHardwareAccelerationHelp),
+                        offered: Some(ACCELERATION),
+                    }],
                 },
                 Group {
                     heading: Some(Heading {
                         rank: Rank::Third,
                         title: Text::TranscodingHardwareEncoding,
                     }),
-                    fields: &[Field::Flag {
-                        key: "EnableHardwareEncoding",
+                    note: None,
+                    controls: &[Control {
+                        field: Field::Flag {
+                            key: "EnableHardwareEncoding",
+                        },
+                        label: Text::TranscodingEnableHardwareEncoding,
+                        helper: None,
+                        offered: None,
                     }],
                 },
                 Group {
@@ -275,47 +469,128 @@ impl Section {
                         rank: Rank::Third,
                         title: Text::TranscodingEncodingFormat,
                     }),
-                    fields: &[Field::Flag {
-                        key: "AllowHevcEncoding",
+                    note: Some(Text::TranscodingEncodingFormatHelp),
+                    controls: &[Control {
+                        field: Field::Flag {
+                            key: "AllowHevcEncoding",
+                        },
+                        label: Text::TranscodingAllowHevc,
+                        helper: None,
+                        offered: None,
                     }],
                 },
                 Group {
                     heading: None,
-                    fields: &[
-                        Field::Flag {
-                            key: "EnableTonemapping",
+                    note: None,
+                    controls: &[
+                        Control {
+                            field: Field::Flag {
+                                key: "EnableTonemapping",
+                            },
+                            label: Text::TranscodingTonemapping,
+                            helper: Some(Text::TranscodingTonemappingHelp),
+                            offered: None,
                         },
-                        Field::Flag {
-                            key: "EnableThrottling",
+                        Control {
+                            field: Field::Number {
+                                key: "EncodingThreadCount",
+                            },
+                            label: Text::TranscodingThreadCount,
+                            helper: Some(Text::TranscodingThreadCountHelp),
+                            offered: None,
                         },
-                        Field::Number {
-                            key: "ThrottleDelaySeconds",
+                        Control {
+                            field: Field::Text {
+                                key: "TranscodingTempPath",
+                            },
+                            label: Text::TranscodingPath,
+                            helper: Some(Text::TranscodingPathHelp),
+                            offered: None,
                         },
-                        Field::Number {
-                            key: "DownMixAudioBoost",
+                        Control {
+                            field: Field::Number {
+                                key: "DownMixAudioBoost",
+                            },
+                            label: Text::TranscodingDownMixBoost,
+                            helper: Some(Text::TranscodingDownMixBoostHelp),
+                            offered: None,
                         },
-                        Field::Number {
-                            key: "EncodingThreadCount",
+                        Control {
+                            field: Field::Flag {
+                                key: "EnableThrottling",
+                            },
+                            label: Text::TranscodingThrottle,
+                            helper: Some(Text::TranscodingThrottleHelp),
+                            offered: None,
+                        },
+                        Control {
+                            field: Field::Number {
+                                key: "ThrottleDelaySeconds",
+                            },
+                            label: Text::TranscodingThrottleDelay,
+                            helper: Some(Text::TranscodingThrottleDelayHelp),
+                            offered: None,
                         },
                     ],
                 },
             ],
             Section::Trickplay => &[Group {
                 heading: None,
-                fields: &[
-                    Field::Flag {
-                        key: "EnableHwAcceleration",
+                note: None,
+                controls: &[
+                    Control {
+                        field: Field::Flag {
+                            key: "EnableHwAcceleration",
+                        },
+                        label: Text::TrickplayHardwareDecoding,
+                        helper: None,
+                        offered: None,
                     },
-                    Field::Flag {
-                        key: "EnableHwEncoding",
+                    Control {
+                        field: Field::Flag {
+                            key: "EnableHwEncoding",
+                        },
+                        label: Text::TrickplayHardwareEncoding,
+                        helper: Some(Text::TrickplayHardwareEncodingHelp),
+                        offered: None,
                     },
-                    Field::Number { key: "Interval" },
-                    Field::Number { key: "TileWidth" },
-                    Field::Number { key: "TileHeight" },
-                    Field::Number { key: "Qscale" },
-                    Field::Number { key: "JpegQuality" },
-                    Field::Number {
-                        key: "ProcessThreads",
+                    Control {
+                        field: Field::Number { key: "Interval" },
+                        label: Text::TrickplayInterval,
+                        helper: Some(Text::TrickplayIntervalHelp),
+                        offered: None,
+                    },
+                    Control {
+                        field: Field::Number { key: "TileWidth" },
+                        label: Text::TrickplayTileWidth,
+                        helper: Some(Text::TrickplayTileWidthHelp),
+                        offered: None,
+                    },
+                    Control {
+                        field: Field::Number { key: "TileHeight" },
+                        label: Text::TrickplayTileHeight,
+                        helper: Some(Text::TrickplayTileHeightHelp),
+                        offered: None,
+                    },
+                    Control {
+                        field: Field::Number { key: "JpegQuality" },
+                        label: Text::TrickplayJpegQuality,
+                        helper: Some(Text::TrickplayJpegQualityHelp),
+                        offered: None,
+                    },
+                    Control {
+                        field: Field::Number { key: "Qscale" },
+                        label: Text::TrickplayQscale,
+                        helper: Some(Text::TrickplayQscaleHelp),
+                        offered: None,
+                    },
+                    Control {
+                        field: Field::Number {
+                            key: "ProcessThreads",
+                        },
+                        label: Text::TrickplayThreads,
+                        helper: Some(Text::TrickplayThreadsHelp),
+                        offered: None,
                     },
                 ],
             }],

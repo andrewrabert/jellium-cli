@@ -297,17 +297,58 @@ pub fn papered<'a>(content: Element<'a, Message>, band: Band) -> Element<'a, Mes
         .into()
 }
 
+/// Where a `MuiFormHelperText` stands.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Helper {
+    /// Inside a filled control, where MUI insets it to that control's own
+    /// text.
+    Contained,
+    /// Under a heading, where it stands at the page's own leading edge.
+    Flush,
+}
+
+/// `MuiFormHelperText`: the sentence MUI writes under a control, in the
+/// scheme's secondary lettering at `caption`'s line box and the size the
+/// reference writes over it.
+// reference: mui-form-helper-text
+// reference: mui-theme-form-helper
+// reference: mui-typography-caption
+pub fn helper<'a>(sentence: Text, standing: Helper, band: Band) -> Element<'a, Message> {
+    let margin = match standing {
+        Helper::Contained => space::HELPER_CONTAINED_MARGIN,
+        Helper::Flush => space::HELPER_MARGIN,
+    };
+    container(tinted(
+        strings::lookup(sentence),
+        typeface::HELPER,
+        typeface::Weight::Regular,
+        typeface::HELPER_LEADING,
+        style::muted,
+    ))
+    .padding(style::inset(margin, band))
+    .into()
+}
+
+/// The control with `MuiFormHelperText`'s sentence under it, and the control
+/// alone where the reference writes none.
+fn beneath<'a>(
+    control: Element<'a, Message>,
+    helper: Option<Text>,
+    band: Band,
+) -> Element<'a, Message> {
+    match helper {
+        Some(sentence) => column![control, self::helper(sentence, Helper::Contained, band)].into(),
+        None => control,
+    }
+}
+
 /// A filled field's label shrunk into the head of its own face, and the rule
 /// the field draws under its foot.
 // reference: mui-filled-underline
 // reference: mui-input-label
-fn dressed<'a>(
-    control: Element<'a, Message>,
-    label: impl Into<Cow<'a, str>>,
-    band: Band,
-) -> Element<'a, Message> {
+fn dressed<'a>(control: Element<'a, Message>, label: Text, band: Band) -> Element<'a, Message> {
     let shrunk = container(tinted(
-        label,
+        strings::lookup(label),
         typeface::FILLED_LABEL,
         typeface::Weight::Regular,
         typeface::LINE_HEIGHT,
@@ -337,7 +378,8 @@ fn dressed<'a>(
 // reference: mui-input-base
 // reference: mui-input-label
 pub fn field<'a>(
-    label: impl Into<Cow<'a, str>>,
+    label: Text,
+    helper: Option<Text>,
     value: &str,
     edited: impl Fn(String) -> Message + 'a,
     band: Band,
@@ -349,7 +391,7 @@ pub fn field<'a>(
         .padding(style::inset(space::FILLED_PAD, band))
         .on_input(edited)
         .width(Fill);
-    dressed(typed.into(), label, band)
+    beneath(dressed(typed.into(), label, band), helper, band)
 }
 
 /// The same field carrying the option standing rather than a typed value, the
@@ -360,7 +402,8 @@ pub fn field<'a>(
 // reference: mui-menu-item
 // reference: mui-menu-paper
 pub fn chosen<'a, T>(
-    label: impl Into<Cow<'a, str>>,
+    label: Text,
+    helper: Option<Text>,
     offered: Vec<Choice<T>>,
     held: &T,
     picked: impl Fn(T) -> Message + 'a,
@@ -393,7 +436,11 @@ where
     .padding(iced::Padding::ZERO.right(style::drawn(space::FILLED_CHEVRON_INSET.drawn(band))))
     .align_right(Fill)
     .center_y(Fill);
-    dressed(stack![field, chevron].into(), label, band)
+    beneath(
+        dressed(stack![field, chevron].into(), label, band),
+        helper,
+        band,
+    )
 }
 
 /// A box and the label beside it, at `MuiFormControlLabel`'s own margins and
@@ -404,7 +451,8 @@ where
 // reference: mui-form-control-label
 // reference: mui-svg-icon
 pub fn flag<'a>(
-    label: impl Into<Cow<'a, str>>,
+    label: Text,
+    helper: Option<Text>,
     held: bool,
     toggled: impl Fn(bool) -> Message + 'a,
     band: Band,
@@ -422,9 +470,16 @@ pub fn flag<'a>(
         .padding(style::drawn(space::CHECK_PAD.drawn(band)))
         .style(move |theme, status| face(theme, status, band))
         .on_press(toggled(!held));
-    container(iced::widget::row![ticked, prose(label, typeface::BODY)].align_y(iced::Center))
+    beneath(
+        container(
+            iced::widget::row![ticked, prose(strings::lookup(label), typeface::BODY)]
+                .align_y(iced::Center),
+        )
         .padding(style::inset(space::CHECK_LABEL_MARGIN, band))
-        .into()
+        .into(),
+        helper,
+        band,
+    )
 }
 
 /// `MuiButton` at `variant='contained'` and `size='large'`, no narrower than
