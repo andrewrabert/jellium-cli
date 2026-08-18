@@ -9,7 +9,7 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use jellium_reference::construct::{Construct, Page, Role, Sentence, Table};
 use jellium_reference::drawn::{self, Names, Site};
-use jellium_reference::exemption::Exemptions;
+use jellium_reference::exemption::{Exemptions, Kind};
 use jellium_reference::tree;
 
 /// The table, the exemptions and what the client says it draws, read once.
@@ -215,8 +215,10 @@ fn every_drawing_site_names_what_it_draws() {
 }
 
 #[test]
-/// Every exemption row cites a document that exists and names the row's
-/// construct, and every `own` row states a purpose.
+/// Every exemption row cites a file under `reference/exemptions/` that the
+/// repository holds and whose text names the row's construct, and every `own`
+/// row states a purpose.
+/// Reading the document is what makes an exemption cost one.
 fn every_exemption_rests_on_a_document_that_names_it() {
     let root = tree::workspace_root();
     let exemptions = Exemptions::read(&root).unwrap_or_else(|trouble| panic!("{trouble}"));
@@ -226,20 +228,23 @@ fn every_exemption_rests_on_a_document_that_names_it() {
     );
     let mut unrested: Vec<String> = Vec::new();
     for row in exemptions.rows() {
-        let path = root.join(row.cited.as_str());
-        let Ok(text) = std::fs::read_to_string(&path) else {
+        let Some(text) = row.cited.text(&root) else {
             unrested.push(format!(
-                "{} cites {}, which does not read",
-                row.construct,
-                row.cited.as_str()
+                "{} cites {}, which the repository does not hold",
+                row.construct, row.cited
             ));
             continue;
         };
-        if !text.contains(row.serves.as_str()) && !names(&text, &row.construct) {
+        if !text.contains(row.construct.as_str()) {
             unrested.push(format!(
-                "{} cites {}, which names neither it nor what it serves",
-                row.construct,
-                row.cited.as_str()
+                "{} cites {}, which does not name it",
+                row.construct, row.cited
+            ));
+        }
+        if row.kind == Kind::Own && row.serves.as_str().is_empty() {
+            unrested.push(format!(
+                "{} is an own row stating no purpose",
+                row.construct
             ));
         }
     }
@@ -248,17 +253,6 @@ fn every_exemption_rests_on_a_document_that_names_it() {
         unrested.is_empty(),
         "exemptions resting on no document that names them: {unrested:#?}"
     );
-}
-
-/// Whether a document names a construct, under its own name or under the words
-/// its name is made of.
-fn names(text: &str, construct: &Construct) -> bool {
-    let lowered = text.to_lowercase();
-    lowered.contains(construct.as_str())
-        || construct
-            .as_str()
-            .split('-')
-            .all(|word| lowered.contains(word))
 }
 
 #[test]

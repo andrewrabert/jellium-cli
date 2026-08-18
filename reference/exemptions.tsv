@@ -1,7 +1,7 @@
 kind	construct	cites	serves
-loss	transition	adr/0050-the-references-motion-is-an-accepted-loss.md	the change between two states of a control shown over time
-loss	keyframe	adr/0050-the-references-motion-is-an-accepted-loss.md	a repeating change of a control's own appearance
-loss	ripple	adr/0050-the-references-motion-is-an-accepted-loss.md	the mark a press leaves under the pointer
-loss	backdrop-blur	adr/0051-backdrop-blur-is-an-accepted-loss.md	the page seen blurred through a raised surface
-loss	browser-rasterized-text	adr/0052-gpu-rasterized-text-is-an-accepted-loss.md	lettering laid out and hinted by the browser's own rasterizer
-own	failure-list	dev/requirements/jellium-web-boot-and-failure-visibility.md	every failure raised this session, dismissed ones included, read after the fact
+loss	transition	reference/exemptions/motion.md	the change between two states of a control shown over time
+loss	keyframe	reference/exemptions/motion.md	a repeating change of a control's own appearance
+loss	ripple	reference/exemptions/motion.md	the mark a press leaves under the pointer
+loss	backdrop-blur	reference/exemptions/backdrop-blur.md	the page seen blurred through a raised surface
+loss	browser-rasterized-text	reference/exemptions/rasterized-text.md	lettering laid out and hinted by the browser's own rasterizer
+own	failure-list	reference/exemptions/failure-list.md	every failure raised this session, dismissed ones included, read after the fact

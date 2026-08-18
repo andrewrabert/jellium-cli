@@ -25,26 +25,42 @@ impl Kind {
     }
 }
 
-/// The document a row rests on: the ADR that accepted a loss, or the
-/// requirement that introduced an own construct.
+/// Where the documents a row may rest on stand, which is inside the repository
+/// so that a gate reads one on a bare clone.
+const CITED: &str = "reference/exemptions/";
+
+/// The document a row rests on, as a repository-relative path under
+/// `reference/exemptions/`, so the gate can read it on a bare clone.
+/// None for a path outside that directory, which is what stops a row citing a
+/// document no gate can reach.
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Cited(String);
+pub struct Cited(PathBuf);
 
 impl Cited {
-    /// A path to a document, and None for text naming none.
+    /// A markdown file under `reference/exemptions/`, and None for any other
+    /// text.
     pub fn read(text: &str) -> Option<Cited> {
-        let named = !text.trim().is_empty() && text.trim() == text && text.ends_with(".md");
-        named.then(|| Cited(text.to_owned()))
+        let named = text.trim() == text
+            && text.starts_with(CITED)
+            && text.ends_with(".md")
+            && text.len() > CITED.len() + ".md".len()
+            && !text[CITED.len()..].contains('/');
+        named.then(|| Cited(PathBuf::from(text)))
     }
 
-    pub fn as_str(&self) -> &str {
+    pub fn path(&self) -> &Path {
         &self.0
+    }
+
+    /// The document's text, and None where the repository holds no such file.
+    pub fn text(&self, root: &Path) -> Option<String> {
+        std::fs::read_to_string(root.join(&self.0)).ok()
     }
 }
 
 impl fmt::Display for Cited {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
-        formatter.write_str(&self.0)
+        write!(formatter, "{}", self.0.display())
     }
 }
 
@@ -249,16 +265,22 @@ mod tests {
     use std::path::Path;
 
     #[test]
-    fn a_citation_names_a_document_and_untrimmed_or_unsuffixed_text_names_none() {
+    fn a_citation_names_a_document_the_repository_holds_and_no_other() {
         assert_eq!(
-            Cited::read("adr/0050-the-references-motion-is-an-accepted-loss.md")
+            Cited::read("reference/exemptions/motion.md")
                 .as_ref()
-                .map(Cited::as_str),
-            Some("adr/0050-the-references-motion-is-an-accepted-loss.md")
+                .map(Cited::path),
+            Some(Path::new("reference/exemptions/motion.md"))
         );
         assert_eq!(Cited::read(""), None);
-        assert_eq!(Cited::read("  adr/0050.md"), None);
-        assert_eq!(Cited::read("adr/0050"), None);
+        assert_eq!(Cited::read("  reference/exemptions/motion.md"), None);
+        assert_eq!(Cited::read("reference/exemptions/motion"), None);
+        assert_eq!(Cited::read("reference/exemptions/.md"), None);
+        assert_eq!(Cited::read("reference/exemptions/held/motion.md"), None);
+        assert_eq!(
+            Cited::read("adr/0050-the-references-motion-is-an-accepted-loss.md"),
+            None
+        );
     }
 
     #[test]
