@@ -1353,7 +1353,7 @@ pub fn view<'a>(
             },
             Body::Library(held) => frame::Filling::Stacked {
                 above: None,
-                rows: libraries::one(held, session.read_only),
+                rows: libraries::one(held, session.read_only, viewport),
             },
             Body::Tasks(held) => tasks::view(held, session.read_only, now, viewport.layout()),
             Body::Task(held) => frame::Filling::Stacked {

@@ -1,0 +1,7 @@
+<div class="checkboxContainer checkboxContainer-withDescription chkSaveLocalContainer hide">
+    <label>
+        <input is="emby-checkbox" type="checkbox" id="chkSaveLocal" />
+        <span>${LabelSaveLocalMetadata}</span>
+    </label>
+    <div class="fieldDescription checkboxFieldDescription">${LabelSaveLocalMetadataHelp}</div>
+</div>

@@ -1,0 +1,7 @@
+<div class="checkboxContainer checkboxContainer-withDescription chkEnabledContainer">
+    <label>
+        <input type="checkbox" is="emby-checkbox" class="chkEnabled" checked />
+        <span>${EnableLibrary}</span>
+    </label>
+    <div class="fieldDescription checkboxFieldDescription">${EnableLibraryHelp}</div>
+</div>

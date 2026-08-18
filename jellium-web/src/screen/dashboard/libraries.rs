@@ -8,7 +8,10 @@ use crate::error::Answer;
 use crate::style::{self, space, typeface};
 use crate::text::{self as strings, Text};
 use crate::widget::{self, prose};
+use jellium_model::appearance::typeface::Rank;
 use jellium_model::form::{Field, Form};
+
+use super::{Control, Group, Heading};
 
 /// The content types a library can be created as, in the order both the
 /// dashboard and the wizard offer them.
@@ -153,47 +156,126 @@ pub struct One {
     pub renaming: String,
 }
 
-/// The fields a library's options expose; every key outside them survives a
-/// save.
-pub const OPTIONS: &[Field] = &[
-    Field::Flag {
-        key: "EnableRealtimeMonitor",
+/// The library options the reference's own editor draws, in its order; every
+/// key outside them survives a save.
+// reference: library-options-heading
+// reference: library-options-metadata-language
+// reference: library-options-photos
+// reference: library-options-realtime
+// reference: library-options-metadata-readers
+// reference: library-options-save-local
+// reference: library-options-chapters
+// reference: library-options-subtitle-languages
+// reference: library-options-subtitle-fetchers
+// reference: library-options-save-subtitles
+pub const OPTIONS: &[Group] = &[
+    Group {
+        heading: Some(Heading {
+            rank: Rank::Second,
+            title: Text::LibrariesOptions,
+        }),
+        note: None,
+        controls: &[
+            Control {
+                field: Field::Text {
+                    key: "PreferredMetadataLanguage",
+                },
+                label: Text::LibrariesMetadataLanguage,
+                helper: &[],
+                offered: None,
+            },
+            Control {
+                field: Field::Text {
+                    key: "MetadataCountryCode",
+                },
+                label: Text::LibrariesMetadataCountry,
+                helper: &[],
+                offered: None,
+            },
+            Control {
+                field: Field::Flag {
+                    key: "EnablePhotos",
+                },
+                label: Text::LibrariesPhotos,
+                helper: &[Text::LibrariesPhotosHelp],
+                offered: None,
+            },
+            Control {
+                field: Field::Flag {
+                    key: "EnableRealtimeMonitor",
+                },
+                label: Text::LibrariesRealtimeMonitor,
+                helper: &[Text::LibrariesRealtimeMonitorHelp],
+                offered: None,
+            },
+            Control {
+                field: Field::Lines {
+                    key: "LocalMetadataReaderOrder",
+                },
+                label: Text::LibrariesMetadataReaders,
+                helper: &[Text::LibrariesMetadataReadersHelp],
+                offered: None,
+            },
+            Control {
+                field: Field::Flag {
+                    key: "SaveLocalMetadata",
+                },
+                label: Text::LibrariesSaveArtwork,
+                helper: &[Text::LibrariesSaveArtworkHelp],
+                offered: None,
+            },
+        ],
+        closing: None,
     },
-    Field::Flag {
-        key: "EnableChapterImageExtraction",
+    Group {
+        heading: Some(Heading {
+            rank: Rank::Second,
+            title: Text::LibrariesChapterImages,
+        }),
+        note: None,
+        controls: &[Control {
+            field: Field::Flag {
+                key: "EnableChapterImageExtraction",
+            },
+            label: Text::LibrariesChapterExtraction,
+            helper: &[Text::LibrariesChapterExtractionHelp],
+            offered: None,
+        }],
+        closing: None,
     },
-    Field::Flag {
-        key: "SaveLocalMetadata",
-    },
-    Field::Flag {
-        key: "EnableInternetProviders",
-    },
-    Field::Flag {
-        key: "EnablePhotos",
-    },
-    Field::Flag {
-        key: "SaveSubtitlesWithMedia",
-    },
-    Field::Text {
-        key: "MetadataCountryCode",
-    },
-    Field::Text {
-        key: "PreferredMetadataLanguage",
-    },
-    Field::Lines {
-        key: "DisabledLocalMetadataReaders",
-    },
-    Field::Lines {
-        key: "LocalMetadataReaderOrder",
-    },
-    Field::Lines {
-        key: "DisabledSubtitleFetchers",
-    },
-    Field::Lines {
-        key: "SubtitleFetcherOrder",
-    },
-    Field::Lines {
-        key: "SubtitleDownloadLanguages",
+    Group {
+        heading: Some(Heading {
+            rank: Rank::Second,
+            title: Text::LibrariesSubtitleDownloads,
+        }),
+        note: None,
+        controls: &[
+            Control {
+                field: Field::Lines {
+                    key: "SubtitleDownloadLanguages",
+                },
+                label: Text::LibrariesDownloadLanguages,
+                helper: &[],
+                offered: None,
+            },
+            Control {
+                field: Field::Lines {
+                    key: "SubtitleFetcherOrder",
+                },
+                label: Text::LibrariesSubtitleDownloaders,
+                helper: &[Text::LibrariesSubtitleDownloadersHelp],
+                offered: None,
+            },
+            Control {
+                field: Field::Flag {
+                    key: "SaveSubtitlesWithMedia",
+                },
+                label: Text::LibrariesSaveSubtitles,
+                helper: &[Text::LibrariesSaveSubtitlesHelp],
+                offered: None,
+            },
+        ],
+        closing: None,
     },
 ];
 
@@ -374,7 +456,11 @@ pub fn view<'a>(
 }
 
 /// One library: its paths, the browser a path is chosen from, and its options.
-pub fn one<'a>(state: &'a One, read_only: bool) -> Vec<Element<'a, Message>> {
+pub fn one<'a>(
+    state: &'a One,
+    read_only: bool,
+    viewport: style::Viewport,
+) -> Vec<Element<'a, Message>> {
     let mut page: Vec<Element<'a, Message>> = Vec::new();
 
     if !read_only {
@@ -465,20 +551,18 @@ pub fn one<'a>(state: &'a One, read_only: bool) -> Vec<Element<'a, Message>> {
         }
     }
 
-    page.push(prose(
-        strings::lookup(Text::LibrariesOptions),
-        typeface::BODY,
+    page.extend(super::controls(
+        OPTIONS,
+        &state.options,
+        super::Controls::Emby,
+        viewport,
     ));
-    for field in OPTIONS {
-        page.push(super::control(*field, state.options.value(*field)));
-    }
     if !read_only {
-        page.push(
-            button(prose(strings::lookup(Text::DashboardSave), typeface::BODY))
-                .style(style::submit)
-                .on_press(Message::DashboardAction(super::Action::Save))
-                .into(),
-        );
+        page.push(super::save(
+            super::Controls::Emby,
+            Some(Message::DashboardAction(super::Action::Save)),
+            viewport.layout(),
+        ));
     }
 
     page

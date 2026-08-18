@@ -1,0 +1,20 @@
+    html += `<h3 class="checkboxListLabel">${globalize.translate('LabelMetadataReaders')}</h3>`;
+    html += '<div class="checkboxList paperList checkboxList-paperList">';
+    for (let i = 0; i < plugins.length; i++) {
+        const plugin = plugins[i];
+        html += `<div class="listItem localReaderOption sortableOption" data-pluginname="${escapeHtml(plugin.Name)}">`;
+        html += '<span class="listItemIcon material-icons live_tv" aria-hidden="true"></span>';
+        html += '<div class="listItemBody">';
+        html += '<h3 class="listItemBodyText">';
+        html += escapeHtml(plugin.Name);
+        html += '</h3>';
+        html += '</div>';
+        if (i > 0) {
+            html += `<button type="button" is="paper-icon-button-light" title="${globalize.translate('Up')}" class="btnSortableMoveUp btnSortable" data-pluginindex="${i}"><span class="material-icons keyboard_arrow_up" aria-hidden="true"></span></button>`;
+        } else if (plugins.length > 1) {
+            html += `<button type="button" is="paper-icon-button-light" title="${globalize.translate('Down')}" class="btnSortableMoveDown btnSortable" data-pluginindex="${i}"><span class="material-icons keyboard_arrow_down" aria-hidden="true"></span></button>`;
+        }
+        html += '</div>';
+    }
+    html += '</div>';
+    html += `<div class="fieldDescription">${globalize.translate('LabelMetadataReadersHelp')}</div>`;

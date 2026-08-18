@@ -1,0 +1,7 @@
+<div class="checkboxContainer checkboxContainer-withDescription chkEnablePhotosContainer">
+    <label>
+        <input type="checkbox" is="emby-checkbox" class="chkEnablePhotos" checked />
+        <span>${EnablePhotos}</span>
+    </label>
+    <div class="fieldDescription checkboxFieldDescription">${EnablePhotosHelp}</div>
+</div>

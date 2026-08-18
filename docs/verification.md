@@ -386,6 +386,10 @@ in order. A section passes only when every line in it holds.
   naming an item no open screen shows changes nothing.
 - Item detail offers Refresh Metadata with its replace and scan mode options to
   an administrator and to nobody else.
+- Every control on a library's options carries the sentence the reference
+  writes beside it, and the options stand in three headed sections.
+- The libraries page writes no heading of its own and stands its content two
+  steps down the page.
 
 ## Scheduled tasks
 
