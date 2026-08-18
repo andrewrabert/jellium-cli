@@ -305,7 +305,7 @@ mod tests {
             number: format!("{}", index + 1),
             name: format!("Channel {}", index + 1),
             kind: jellyfin_api::types::ChannelType::Tv,
-            favorite: false,
+            favorite: crate::item::Mark::Cleared,
             marque: crate::livetv::Marque::Name,
             current: None,
         }

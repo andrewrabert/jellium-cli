@@ -526,7 +526,8 @@ pub const PLAYED_MARK: Color = Color::rgb(0xcc, 0x33, 0x33);
 // reference: scheme-rating-mark
 pub const FAVORITE_MARK: Color = Color::rgb(0xcc, 0x33, 0x33);
 
-/// `.timerIcon`, the glyph a single timer draws on a cell.
+/// `.timerIcon` and `.seriesTimerIcon`, the glyph a timer covering a guide cell
+/// draws.
 // reference: guide-timer-icon
 pub const TIMER: Color = Color::rgb(0xcc, 0x33, 0x33);
 
@@ -535,11 +536,21 @@ pub const TIMER: Color = Color::rgb(0xcc, 0x33, 0x33);
 // reference: guide-timer-icon
 const INACTIVE: Ratio = Ratio::thousandths(700);
 
-/// The glyph a series timer draws on a cell, which is the cell's own lettering
-/// faded.
+/// `.seriesTimerIcon-inactive`, which is the cell's own lettering faded.
 // reference: guide-timer-icon
 // reference: scheme-text
-pub const SERIES_TIMER: Color = TEXT.faded(INACTIVE);
+pub const TIMER_CANCELLED: Color = TEXT.faded(INACTIVE);
+
+/// `.timerIndicator`, the glyph a timer covering a card's image draws. The
+/// reference writes this hex in `.timerIndicator` and in `.button-delete` as
+/// two rules that stand apart, so neither constant is written as the other.
+// reference: indicator-timer-face
+pub const CARD_TIMER: Color = Color::rgb(0xcb, 0x27, 0x2a);
+
+/// `.timerIndicator-inactive`, the glyph a cancelled series timer draws on that
+/// image.
+// reference: indicator-timer-face
+pub const CARD_TIMER_CANCELLED: Color = Color::rgb(0x88, 0x88, 0x88);
 
 /// `.liveTvProgram`.
 // reference: guide-indicator-colors

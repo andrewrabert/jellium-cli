@@ -1676,20 +1676,18 @@ impl Jellium {
                     return Task::none();
                 };
                 let api = signed.api.clone();
-                Task::perform(
-                    async move { api.set_played(id, mark.set()).await },
-                    move |r| Message::UserDataUpdated(id, r),
-                )
+                Task::perform(async move { api.set_played(id, mark).await }, move |r| {
+                    Message::UserDataUpdated(id, r)
+                })
             }
             Message::FavoriteToggled(id, mark) => {
                 let Some(signed) = self.signed() else {
                     return Task::none();
                 };
                 let api = signed.api.clone();
-                Task::perform(
-                    async move { api.set_favorite(id, mark.set()).await },
-                    move |r| Message::UserDataUpdated(id, r),
-                )
+                Task::perform(async move { api.set_favorite(id, mark).await }, move |r| {
+                    Message::UserDataUpdated(id, r)
+                })
             }
             Message::UserDataUpdated(id, answered) => {
                 let Some(data) = answered.or_none(Text::FailureMarkUnwritten) else {

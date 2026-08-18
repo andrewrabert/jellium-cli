@@ -152,7 +152,7 @@ fn active<'a>(
             face: art.map(Face::Image),
             name: name.clone(),
             logo: None,
-            timer: Some(crate::livetv::Recording::Once),
+            timer: crate::livetv::Recording::covering(item),
             elapsed: None,
             press: None,
             hovered: Hovered::default(),
@@ -192,10 +192,7 @@ fn timed<'a>(
             face: art.map(Face::Image),
             name: name.clone(),
             logo,
-            timer: Some(match timer.series_timer_id {
-                Some(_) => crate::livetv::Recording::Series,
-                None => crate::livetv::Recording::Once,
-            }),
+            timer: Some(crate::livetv::Recording::scheduled(timer)),
             elapsed: None,
             press: None,
             hovered: Hovered {

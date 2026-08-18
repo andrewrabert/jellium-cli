@@ -483,28 +483,49 @@ pub struct Poster {
     pub hovered: Hovered,
 }
 
-/// The glyph of the timer covering an item: a single timer's in the
-/// reference's own red, and a series timer's in the lettering faded.
-// reference: indicator-timer
-// reference: indicator-timer-face
+/// The glyph of the timer covering a guide cell.
+// reference: guide-timer-indicator
+// reference: guide-timer-icon
 pub fn timer<'a>(recording: Recording, size: style::Length) -> Element<'a, Message> {
     match recording {
         Recording::Once => crate::icon::tinted(Icon::FiberManualRecord, size, style::timer),
-        Recording::Series => crate::icon::tinted(Icon::FiberSmartRecord, size, style::series_timer),
+        Recording::Series => crate::icon::tinted(Icon::FiberSmartRecord, size, style::timer),
+        Recording::SeriesCancelled => {
+            crate::icon::tinted(Icon::FiberSmartRecord, size, style::timer_cancelled)
+        }
     }
 }
 
-/// `.cardIndicators`: the timer's glyph laid on the top trailing corner of a
-/// card's image, and nothing where no timer covers the item.
+/// `.cardIndicators`: the glyph of the timer covering a card's image, laid on
+/// the top trailing corner of that image, and nothing where no timer covers it.
 // reference: card-indicators
+// reference: indicator-timer
+// reference: indicator-timer-face
 fn marked<'a>(frame: Element<'a, Message>, recording: Option<Recording>) -> Element<'a, Message> {
     let Some(recording) = recording else {
         return frame;
     };
+    let glyph = match recording {
+        Recording::Once => crate::icon::tinted(
+            Icon::FiberManualRecord,
+            typeface::INDICATOR_ICON,
+            style::card_timer,
+        ),
+        Recording::Series => crate::icon::tinted(
+            Icon::FiberSmartRecord,
+            typeface::INDICATOR_ICON,
+            style::card_timer,
+        ),
+        Recording::SeriesCancelled => crate::icon::tinted(
+            Icon::FiberSmartRecord,
+            typeface::INDICATOR_ICON,
+            style::card_timer_cancelled,
+        ),
+    };
     let inset = style::drawn(space::CARD_INDICATORS_INSET.drawn());
     iced::widget::stack![
         frame,
-        container(timer(recording, typeface::INDICATOR_ICON))
+        container(glyph)
             .padding(iced::Padding::ZERO.top(inset).right(inset))
             .align_right(Fill),
     ]

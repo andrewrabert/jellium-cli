@@ -145,10 +145,7 @@ fn entry<'a>(
             face: art.map(Face::Image),
             name: name.clone(),
             logo: None,
-            timer: item
-                .timer_id
-                .as_ref()
-                .map(|_| crate::livetv::Recording::Once),
+            timer: crate::livetv::Recording::covering(item),
             elapsed: None,
             press: None,
             hovered: Hovered {

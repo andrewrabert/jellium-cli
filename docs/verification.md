@@ -311,6 +311,15 @@ in order. A section passes only when every line in it holds.
   and cancels one.
 - (tuner) The Series tab lists series timers by name, edits every field the
   server carries, and cancels one.
+- (tuner) A recording written by a series timer draws fiber_smart_record in
+  #cb272a on its image, one written by a single timer draws
+  fiber_manual_record in #cb272a, and one the server reports no timer for draws
+  no glyph.
+- (tuner) A scheduled timer belonging to a series timer draws
+  fiber_smart_record in #cb272a on its Schedule card, and every Series tab card
+  draws that same glyph in that same colour.
+- (tuner) A channel's card on the Channels tab draws no record glyph, whatever
+  timer covers the programme on it now.
 - (tuner) A timer created or cancelled in a second real client updates the
   Schedule tab, the Series tab and the guide's record markers within 1 second,
   with the scroll position and the order unmoved.

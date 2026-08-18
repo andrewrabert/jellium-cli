@@ -3,6 +3,7 @@ use std::rc::Rc;
 
 use iced::widget::{button, column, row};
 use iced::{Element, Fill};
+use jellium_model::item::Mark;
 
 use super::{Action, clock};
 use crate::api::Api;
@@ -84,22 +85,25 @@ fn entry<'a>(
             face: logo.map(Face::Image),
             name: name.clone(),
             logo: None,
-            timer: current.as_ref().and_then(crate::livetv::Program::recording),
+            timer: None,
             elapsed: None,
             press: None,
             hovered: Hovered {
                 plays: Some(Message::LiveTvAction(Action::PlayChannel(channel.id))),
                 controls: vec![Control {
                     glyph: match channel.favorite {
-                        true => Icon::Favorite,
-                        false => Icon::FavoriteBorder,
+                        Mark::Set => Icon::Favorite,
+                        Mark::Cleared => Icon::FavoriteBorder,
                     },
                     tint: style::Tint::Plain,
                     label: match channel.favorite {
-                        true => Text::ChannelUnfavorite,
-                        false => Text::ChannelFavorite,
+                        Mark::Set => Text::ChannelUnfavorite,
+                        Mark::Cleared => Text::ChannelFavorite,
                     },
-                    press: Message::LiveTvAction(Action::Favorited(channel.id, !channel.favorite)),
+                    press: Message::LiveTvAction(Action::Favorited(
+                        channel.id,
+                        channel.favorite.flipped(),
+                    )),
                 }],
             },
         },

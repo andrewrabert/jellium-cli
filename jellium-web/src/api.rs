@@ -1,4 +1,5 @@
 use jellium_model::facets::{Facet, Facets, SeriesState, VideoKind};
+use jellium_model::item::Mark;
 use jellium_model::sort::Sort;
 use jellium_model::{prefs, quickconnect};
 use jellyfin_api::types::{
@@ -743,9 +744,9 @@ impl Api {
         .await
     }
 
-    pub async fn set_played(&self, item: Uuid, played: bool) -> Answer<UserItemDataDto> {
+    pub async fn set_played(&self, item: Uuid, played: Mark) -> Answer<UserItemDataDto> {
         Answer::of(async {
-            Ok(if played {
+            Ok(if played.set() {
                 self.client
                     .mark_played_item(&item, None, Some(&self.user_id))
                     .await?
@@ -758,9 +759,9 @@ impl Api {
         .await
     }
 
-    pub async fn set_favorite(&self, item: Uuid, favorite: bool) -> Answer<UserItemDataDto> {
+    pub async fn set_favorite(&self, item: Uuid, favorite: Mark) -> Answer<UserItemDataDto> {
         Answer::of(async {
-            Ok(if favorite {
+            Ok(if favorite.set() {
                 self.client
                     .mark_favorite_item(&item, Some(&self.user_id))
                     .await?

@@ -1,9 +1,10 @@
 use chrono::{DateTime, Utc};
 use jellium_protocol::{TimerChange, TimerChanged};
-use jellyfin_api::types::{BaseItemDto, BaseItemKind, ChannelType};
+use jellyfin_api::types::{BaseItemDto, BaseItemKind, ChannelType, RecordingStatus, TimerInfoDto};
 use uuid::Uuid;
 
 use crate::appearance::Share;
+use crate::item::Mark;
 
 /// What the guide's channel header writes for a channel: the primary image the
 /// Jellyfin server holds for it, or the channel's own name where it holds none.
@@ -23,14 +24,65 @@ pub enum Badge {
     New,
 }
 
-/// The glyph a programme's cell carries for the timer covering it.
+/// The glyph the timer covering an item draws.
 // reference: guide-timer-indicator
+// reference: indicator-timer
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Recording {
-    /// A series timer, which the reference draws on a programme faded, its own
-    /// status branch reading a programme's absent status as cancelled.
-    Series,
+    /// `fiber_manual_record`.
     Once,
+    /// `fiber_smart_record`, in the timer's own colour.
+    Series,
+    /// `fiber_smart_record` drawn inactive.
+    SeriesCancelled,
+}
+
+impl Recording {
+    /// The series glyph, inactive where the server reports the timer cancelled.
+    // reference: indicator-timer
+    fn series(status: RecordingStatus) -> Recording {
+        match status {
+            RecordingStatus::Cancelled => Recording::SeriesCancelled,
+            RecordingStatus::New
+            | RecordingStatus::InProgress
+            | RecordingStatus::Completed
+            | RecordingStatus::ConflictedOk
+            | RecordingStatus::ConflictedNotOk
+            | RecordingStatus::Error => Recording::Series,
+        }
+    }
+
+    // a series timer draws the series glyph, inactive where the item's own
+    // recording status reads as cancelled and where it carries none
+    // a timer standing alone draws the single glyph
+    // an item naming neither timer carries no glyph
+    // reference: indicator-timer
+    pub fn covering(item: &BaseItemDto) -> Option<Recording> {
+        if item.series_timer_id.is_some() {
+            return Some(Recording::series(reported(item.status.as_deref())));
+        }
+        item.timer_id.as_ref().map(|_| Recording::Once)
+    }
+
+    // a timer belonging to a series timer draws the series glyph, inactive
+    // where the server reports that timer cancelled
+    // reference: indicator-timer
+    pub fn scheduled(timer: &TimerInfoDto) -> Recording {
+        match timer.series_timer_id {
+            Some(_) => Recording::series(timer.status.unwrap_or(RecordingStatus::Cancelled)),
+            None => Recording::Once,
+        }
+    }
+}
+
+/// The recording status the Jellyfin server names on an item, which the
+/// reference reads as cancelled where the item names none. This is the one site
+/// that reads the server's own status string.
+// reference: indicator-timer
+fn reported(status: Option<&str>) -> RecordingStatus {
+    status
+        .and_then(|named| named.parse().ok())
+        .unwrap_or(RecordingStatus::Cancelled)
 }
 
 /// One scheduled airing, as a guide cell, a channel row and program detail
@@ -106,11 +158,13 @@ impl Program {
         None
     }
 
-    // a series timer wins over the single timer beside it
+    // a series timer wins over the single timer beside it, and draws inactive:
+    // a guide programme carries no recording status, which the reference's own
+    // status branch reads as cancelled
     // reference: guide-timer-indicator
     pub fn recording(&self) -> Option<Recording> {
         if self.series_timer.is_some() {
-            return Some(Recording::Series);
+            return Some(Recording::SeriesCancelled);
         }
         self.timer.as_ref().map(|_| Recording::Once)
     }
@@ -160,7 +214,7 @@ pub struct Channel {
     pub number: String,
     pub name: String,
     pub kind: ChannelType,
-    pub favorite: bool,
+    pub favorite: Mark,
     /// `Logo` where the Jellyfin server reports a primary image tag.
     pub marque: Marque,
     pub current: Option<Program>,
@@ -185,11 +239,7 @@ impl Channel {
             number: item.channel_number.clone().unwrap_or_default(),
             name: item.name.clone().unwrap_or_default(),
             kind: item.channel_type.unwrap_or(ChannelType::Tv),
-            favorite: item
-                .user_data
-                .as_ref()
-                .and_then(|data| data.is_favorite)
-                .unwrap_or(false),
+            favorite: crate::item::favorited(item),
             marque: match item
                 .image_tags
                 .as_ref()

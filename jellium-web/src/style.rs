@@ -1296,7 +1296,7 @@ pub fn program_cell(
     }
 }
 
-/// `.timerIcon`, the glyph a single timer draws on a cell.
+/// `.timerIcon` and `.seriesTimerIcon`, the glyph a timer draws on a guide cell.
 // reference: guide-timer-icon
 pub fn timer(_theme: &iced::Theme) -> iced::widget::text::Style {
     iced::widget::text::Style {
@@ -1306,8 +1306,24 @@ pub fn timer(_theme: &iced::Theme) -> iced::widget::text::Style {
 
 /// `.seriesTimerIcon-inactive`, which is the cell's own lettering faded.
 // reference: guide-timer-icon
-pub fn series_timer(_theme: &iced::Theme) -> iced::widget::text::Style {
+pub fn timer_cancelled(_theme: &iced::Theme) -> iced::widget::text::Style {
     iced::widget::text::Style {
-        color: Some(color(scheme::SERIES_TIMER)),
+        color: Some(color(scheme::TIMER_CANCELLED)),
+    }
+}
+
+/// `.timerIndicator`, the glyph a timer draws on a card's image.
+// reference: indicator-timer-face
+pub fn card_timer(_theme: &iced::Theme) -> iced::widget::text::Style {
+    iced::widget::text::Style {
+        color: Some(color(scheme::CARD_TIMER)),
+    }
+}
+
+/// `.timerIndicator-inactive`, the glyph a cancelled series timer draws there.
+// reference: indicator-timer-face
+pub fn card_timer_cancelled(_theme: &iced::Theme) -> iced::widget::text::Style {
+    iced::widget::text::Style {
+        color: Some(color(scheme::CARD_TIMER_CANCELLED)),
     }
 }

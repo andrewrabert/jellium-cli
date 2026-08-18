@@ -10,6 +10,7 @@ use std::rc::Rc;
 use chrono::{DateTime, Utc};
 use iced::widget::column;
 use iced::{Element, Fill, Subscription, Task};
+use jellium_model::item::Mark;
 use jellium_protocol::TimerChanged;
 use uuid::Uuid;
 
@@ -90,7 +91,7 @@ pub enum Action {
     Selected(Tab),
     /// Plays a channel here, or sends it to a bound target.
     PlayChannel(Uuid),
-    Favorited(Uuid, bool),
+    Favorited(Uuid, Mark),
     /// Filters the Channels tab.
     Kind(jellyfin_api::types::ChannelType),
     /// Opens a program's detail.
@@ -242,10 +243,27 @@ pub fn act(signed: &mut Signed, action: Action, viewport: Viewport) -> Task<Mess
             }
             crate::player::live::play(signed, channel)
         }
-        Action::Favorited(channel, wanted) => Task::perform(
-            async move { api.set_favorite(channel, wanted).await.map(|_| ()) },
-            move |outcome| Message::Wrote(Operation::Timer, outcome),
-        ),
+        Action::Favorited(channel, wanted) => {
+            let kind = match showing(signed).map(|state| &state.body) {
+                Some(Body::Channels(held)) => held.kind,
+                _ => jellyfin_api::types::ChannelType::Tv,
+            };
+            let room = Room::content(viewport);
+            Task::perform(
+                Answer::of(async move {
+                    api.set_favorite(channel, wanted).await.bubbled()?;
+                    channels::load(api, kind, room).await.bubbled()
+                }),
+                |loaded| {
+                    Message::LiveTvLoaded(loaded.map(|channels| State {
+                        tab: Tab::Channels,
+                        body: Body::Channels(channels),
+                        editing: None,
+                        confirming: None,
+                    }))
+                },
+            )
+        }
         Action::Kind(kind) => {
             let room = Room::content(viewport);
             Task::perform(
