@@ -51,6 +51,7 @@ pub fn card(recordings: &[BaseItemDto]) -> card::Drawing {
         card: card::Card::Wall(card::Shape::fitting(shared, card::Shape::Backdrop)),
         footer: card::Footer::Recording,
         backing: card::Backing::Padder,
+        footing: card::Footing::Bare,
         setting: card::Setting::Centred,
         bottom: card::Bottom::Padded,
     }

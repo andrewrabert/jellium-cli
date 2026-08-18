@@ -40,6 +40,7 @@ pub fn active_card(recordings: &[BaseItemDto]) -> card::Drawing {
         card: card::Card::Wall(card::Shape::fitting(shared, card::Shape::Backdrop)),
         footer: card::Footer::ActiveRecording,
         backing: card::Backing::Padder,
+        footing: card::Footing::Bare,
         setting: card::Setting::Centred,
         bottom: card::Bottom::Padded,
     }
@@ -51,6 +52,7 @@ pub const TIMER_CARD: card::Drawing = card::Drawing {
     card: card::Card::Wall(card::Shape::Backdrop),
     footer: card::Footer::Timer,
     backing: card::Backing::Paper,
+    footing: card::Footing::Padded,
     setting: card::Setting::Leading,
     bottom: card::Bottom::Flush,
 };

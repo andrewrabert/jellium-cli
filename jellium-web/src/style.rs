@@ -840,6 +840,27 @@ pub fn card_overlay_fab(
     }
 }
 
+/// The background `getDefaultBackgroundClass` gives a card whose server holds
+/// no image, which that card's own glyph stands centred on.
+// reference: base-card
+// reference: scheme-card-background
+pub fn card_media(
+    _theme: &iced::Theme,
+    background: scheme::Color,
+) -> iced::widget::container::Style {
+    iced::widget::container::Style::default()
+        .background(color(background))
+        .color(color(scheme::ON_SURFACE))
+}
+
+/// `MuiCardActionArea`'s own focus highlight: the lettering colour at MUI's
+/// hover opacity, laid over the media while the pointer is over the card.
+// reference: mui-card-action-area
+// reference: mui-dark-action
+pub fn card_highlight(_theme: &iced::Theme) -> iced::widget::container::Style {
+    iced::widget::container::Style::default().background(color(scheme::ACTION_HOVER))
+}
+
 /// What a card writes under its image.
 // reference: card-footer
 pub fn card_footer(_theme: &iced::Theme) -> iced::widget::container::Style {

@@ -224,6 +224,18 @@ const HEIGHT = 'height';
 
 const LIBRARY_BROWSER = 'src/styles/librarybrowser.scss';
 
+// The dashboard's own overrides, which declare MUI's four default breakpoints
+// as scss variables and are the one place under `src` that writes them.
+const MUI_BREAKPOINTS = 'src/apps/dashboard/AppOverrides.scss';
+
+// Every width MUI's grid tests, read from those declarations.
+function muiBreakpoints(checkout) {
+    const text = readFileSync(join(checkout, MUI_BREAKPOINTS), 'utf8');
+    return [...text.matchAll(/^\$mui-bp-[a-z]+:\s*([0-9.]+)px;/gm)].map(([, count]) =>
+        Number(count)
+    );
+}
+
 // Every stylesheet under the checkout's `src` that a browser drawing this
 // client would resolve.
 function resolved(checkout) {
@@ -253,6 +265,9 @@ function thresholds(checkout) {
         )) {
             held[axis].add(unit === 'px' ? Number(count) : Number(count) * QUERY_EM);
         }
+    }
+    for (const at of muiBreakpoints(checkout)) {
+        held[WIDTH].add(at);
     }
     const ascending = (axis) => [...held[axis]].sort((left, right) => left - right);
     return { [WIDTH]: ascending(WIDTH), [HEIGHT]: ascending(HEIGHT) };

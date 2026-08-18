@@ -513,7 +513,7 @@ pub fn card<'a>(
         footed(
             drawn,
             drawing.setting,
-            drawing.footing(),
+            drawing.footing,
             poster.logo,
             None,
             room.viewport().band(),
@@ -528,39 +528,6 @@ pub fn card<'a>(
         return body;
     };
     button(body).style(style::flat).on_press(press).into()
-}
-
-/// The card the login pages write by hand: its face over its centred name
-/// inside `.cardFooter`'s own padding.
-// reference: select-server-card
-// reference: login-user-card
-pub fn picked<'a>(
-    card: card::Card,
-    room: Room,
-    face: Face,
-    name: impl Into<Cow<'a, str>>,
-    bottom: card::Bottom,
-    press: Message,
-) -> Element<'a, Message> {
-    let name = name.into().into_owned();
-    let body = boxed(
-        card,
-        room,
-        framed(card, room, Some(face), &name, card::Backing::Padder),
-        Some(footed(
-            vec![named(name)],
-            card::Setting::Centred,
-            card::Footing::Padded,
-            None,
-            None,
-            room.viewport().band(),
-        )),
-        card::Backing::Padder,
-    );
-    button(reserving(body, room, bottom))
-        .style(style::flat)
-        .on_press(press)
-        .into()
 }
 
 /// Cards broken into rows of `card.across(room)`, each row laid where `wrap`
@@ -1153,6 +1120,7 @@ pub const TILE: card::Drawing = card::Drawing {
     card: card::Card::LIBRARY,
     footer: card::Footer::Name,
     backing: card::Backing::Padder,
+    footing: card::Footing::Bare,
     setting: card::Setting::Centred,
     bottom: card::Bottom::Padded,
 };

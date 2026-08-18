@@ -575,6 +575,13 @@ fn measures(initializer: &str) -> Vec<Measure> {
                     }
                 }
             }
+            ("columns", "twelfths") => {
+                let Ok(count) = number else { continue };
+                Measure::Spelt {
+                    named: trimmed(count),
+                    spellings: vec![Spelling::Measured(Count::of(count, Unit::Bare))],
+                }
+            }
             // a canvas length is not a css value: its zero is the unit, and the
             // reference writes no other
             ("drawn", "of") => {

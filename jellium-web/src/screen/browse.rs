@@ -131,6 +131,7 @@ fn wall(collection: Option<CollectionType>, aspect: Option<Aspect>) -> card::Dra
         card: Card::grid(collection, aspect),
         footer: card::Footer::NameAndSubtitle,
         backing: card::Backing::Padder,
+        footing: card::Footing::Bare,
         setting: card::Setting::Centred,
         bottom: card::Bottom::Padded,
     }

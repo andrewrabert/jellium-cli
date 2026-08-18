@@ -26,19 +26,75 @@ pub const CONTENT_TYPES: [jellyfin_api::types::CollectionTypeOptions; 8] = {
     ]
 };
 
-/// The label one content type is offered under.
-fn content_label(kind: jellyfin_api::types::CollectionTypeOptions) -> Text {
+/// The label one content type is offered under, and `Other` where the server
+/// names none.
+// reference: dashboard-library-card
+fn content_label(kind: Option<jellyfin_api::types::CollectionTypeOptions>) -> Text {
     use jellyfin_api::types::CollectionTypeOptions as Kind;
     match kind {
-        Kind::Movies => Text::LibrariesContentMovies,
-        Kind::Tvshows => Text::LibrariesContentShows,
-        Kind::Music => Text::LibrariesContentMusic,
-        Kind::Musicvideos => Text::LibrariesContentMusicVideos,
-        Kind::Homevideos => Text::LibrariesContentHomeVideos,
-        Kind::Boxsets => Text::LibrariesContentCollections,
-        Kind::Books => Text::LibrariesContentBooks,
-        Kind::Mixed => Text::LibrariesContentMixed,
+        Some(Kind::Movies) => Text::LibrariesContentMovies,
+        Some(Kind::Tvshows) => Text::LibrariesContentShows,
+        Some(Kind::Music) => Text::LibrariesContentMusic,
+        Some(Kind::Musicvideos) => Text::LibrariesContentMusicVideos,
+        Some(Kind::Homevideos) => Text::LibrariesContentHomeVideos,
+        Some(Kind::Boxsets) => Text::LibrariesContentCollections,
+        Some(Kind::Books) => Text::LibrariesContentBooks,
+        Some(Kind::Mixed) => Text::LibrariesContentMixed,
+        None => Text::LibrariesContentOther,
     }
+}
+
+/// The library type `getLibraryIcon` reads, a virtual folder naming its own
+/// type in the words a library item names its; mixed content names no library
+/// type and takes the glyph the reference's default arm writes.
+// reference: dashboard-library-card
+fn collected(
+    kind: Option<jellyfin_api::types::CollectionTypeOptions>,
+) -> Option<jellyfin_api::types::CollectionType> {
+    use jellyfin_api::types::CollectionType as Named;
+    use jellyfin_api::types::CollectionTypeOptions as Kind;
+    match kind {
+        Some(Kind::Movies) => Some(Named::Movies),
+        Some(Kind::Tvshows) => Some(Named::Tvshows),
+        Some(Kind::Music) => Some(Named::Music),
+        Some(Kind::Musicvideos) => Some(Named::Musicvideos),
+        Some(Kind::Homevideos) => Some(Named::Homevideos),
+        Some(Kind::Boxsets) => Some(Named::Boxsets),
+        Some(Kind::Books) => Some(Named::Books),
+        Some(Kind::Mixed) | None => None,
+    }
+}
+
+/// The item a virtual folder names, and nothing where the server names one
+/// this client cannot read; the one site that reads a folder's identifier.
+fn named(folder: &jellyfin_api::types::VirtualFolderInfo) -> Option<uuid::Uuid> {
+    let Ok(named) = crate::failure::unraised::read::<uuid::Uuid>(folder.item_id.as_deref()?) else {
+        return None;
+    };
+    Some(named)
+}
+
+/// That item where the server holds a primary image for it, and nothing where
+/// it holds none.
+// reference: dashboard-library-card
+fn imaged(folder: &jellyfin_api::types::VirtualFolderInfo) -> Option<uuid::Uuid> {
+    folder.primary_image_item_id.as_ref()?;
+    named(folder)
+}
+
+/// The image every library with one draws on its card.
+// reference: dashboard-library-card
+pub fn images(state: &State) -> std::collections::HashSet<crate::images::Key> {
+    state
+        .folders
+        .iter()
+        .filter_map(imaged)
+        .map(|item| crate::images::Key {
+            item,
+            kind: crate::images::Kind::Primary,
+            index: None,
+        })
+        .collect()
 }
 
 /// Every content type as a picker option.
@@ -46,7 +102,7 @@ pub fn content_choices() -> Vec<crate::widget::Choice<String>> {
     CONTENT_TYPES
         .into_iter()
         .map(|kind| crate::widget::Choice {
-            label: strings::lookup(content_label(kind)).to_string(),
+            label: strings::lookup(content_label(Some(kind))).to_string(),
             value: kind.to_string(),
         })
         .collect()
@@ -61,6 +117,8 @@ pub struct State {
     pub content_type: crate::widget::Choice<String>,
     /// How far a scan of each library has got, by the item the refresh names.
     pub refreshing: std::collections::HashMap<uuid::Uuid, f64>,
+    /// The library whose commands are open, by name.
+    pub menu: Option<String>,
 }
 
 pub async fn load(api: std::rc::Rc<crate::api::Api>) -> Answer<State> {
@@ -73,6 +131,7 @@ pub async fn load(api: std::rc::Rc<crate::api::Api>) -> Answer<State> {
                 .next()
                 .expect("the content types are not empty"),
             refreshing: std::collections::HashMap::new(),
+            menu: None,
         })
     })
     .await
@@ -167,8 +226,71 @@ pub fn refreshed(state: &mut State, items: &[jellium_protocol::Refreshed]) {
     }
 }
 
-/// Every library with its scan control, and the control that creates one.
-pub fn view<'a>(state: &'a State, read_only: bool) -> Vec<Element<'a, Message>> {
+/// The commands one library's card offers: the screen that manages it, its
+/// scan, and its removal, the last two absent under read-only.
+// the reference floats these rows over the card in a `MuiMenu`; here they
+// stand in the page above the grid
+// the reference's own scan row carries `refresh`, which this client's icon
+// font does not hold
+// reference: dashboard-library-card
+fn menu<'a>(open: &'a str, read_only: bool) -> Element<'a, Message> {
+    let mut rows = vec![crate::widget::list::Row {
+        face: Some(crate::widget::list::Face::Glyph(crate::icon::Icon::Folder)),
+        index: None,
+        title: strings::lookup(Text::LibrariesManage).into(),
+        secondary: Vec::new(),
+        press: crate::widget::list::Press::Whole(Message::DashboardAction(super::Action::Open(
+            super::Screen::Library {
+                name: open.to_owned(),
+            },
+        ))),
+        controls: Vec::new(),
+    }];
+    if !read_only {
+        rows.push(crate::widget::list::Row {
+            face: Some(crate::widget::list::Face::Glyph(
+                crate::icon::Icon::Autorenew,
+            )),
+            index: None,
+            title: strings::lookup(Text::LibrariesScan).into(),
+            secondary: Vec::new(),
+            press: crate::widget::list::Press::Whole(Message::DashboardAction(
+                super::Action::Write(super::Written::ScanLibrary {
+                    name: open.to_owned(),
+                }),
+            )),
+            controls: Vec::new(),
+        });
+        rows.push(crate::widget::list::Row {
+            face: Some(crate::widget::list::Face::Glyph(crate::icon::Icon::Delete)),
+            index: None,
+            title: strings::lookup(Text::LibrariesRemove).into(),
+            secondary: Vec::new(),
+            press: crate::widget::list::Press::Whole(Message::DashboardAction(super::Action::Ask(
+                crate::screen::confirm::Pending::of(
+                    crate::screen::confirm::Destructive::DeleteLibrary {
+                        name: open.to_owned(),
+                    },
+                    open.to_owned(),
+                ),
+            ))),
+            controls: Vec::new(),
+        });
+    }
+    crate::widget::list::listed(space::ListRow::glyph(space::Lines::One), rows)
+}
+
+/// Every library on the card `LibraryCard` draws, in the grid its own ladder
+/// lays them in, with the create row above and the open card's commands under
+/// it.
+// reference: dashboard-libraries-grid
+// reference: dashboard-library-card
+pub fn view<'a>(
+    state: &'a State,
+    read_only: bool,
+    images: &'a crate::images::Cache,
+    viewport: style::Viewport,
+) -> Vec<Element<'a, Message>> {
     let mut page: Vec<Element<'a, Message>> = Vec::new();
 
     if !read_only {
@@ -199,52 +321,54 @@ pub fn view<'a>(state: &'a State, read_only: bool) -> Vec<Element<'a, Message>> 
         );
     }
 
-    for folder in &state.folders {
-        let name = folder.name.clone().unwrap_or_default();
-        let mut held = row![
-            button(prose(name.clone(), typeface::BODY))
-                .style(style::link)
-                .on_press(Message::DashboardAction(super::Action::Open(
-                    super::Screen::Library { name: name.clone() }
-                ))),
-        ]
-        .spacing(style::drawn(space::CONTROL_GAP.drawn()));
-
-        let named = folder
-            .item_id
-            .as_deref()
-            .and_then(|id| crate::failure::read::<uuid::Uuid>(Text::FailureLibraryId, id));
-        if let Some(progress) = named.and_then(|id| state.refreshing.get(&id)) {
-            held = held.push(prose(
-                strings::format(Text::LibrariesScanning, &[&format!("{progress:.0}")]),
-                typeface::BODY,
-            ));
-        }
-
-        if !read_only {
-            held = held.push(
-                button(prose(strings::lookup(Text::LibrariesScan), typeface::BODY))
-                    .style(style::raised)
-                    .on_press(Message::DashboardAction(super::Action::Write(
-                        super::Written::ScanLibrary { name: name.clone() },
-                    ))),
-            );
-            held = held.push(
-                button(prose(
-                    strings::lookup(Text::LibrariesRemove),
-                    typeface::BODY,
-                ))
-                .style(style::raised)
-                .on_press(Message::DashboardAction(super::Action::Ask(
-                    crate::screen::confirm::Pending::of(
-                        crate::screen::confirm::Destructive::DeleteLibrary { name: name.clone() },
-                        name,
-                    ),
-                ))),
-            );
-        }
-        page.push(held.into());
+    if let Some(open) = state.menu.as_deref() {
+        page.push(menu(open, read_only));
     }
+
+    page.push(crate::widget::mui::grid(
+        space::LIBRARY_CELL,
+        state.folders.iter().map(|folder| {
+            let name = folder.name.clone().unwrap_or_default();
+            let media = match imaged(folder).and_then(|item| {
+                images.handle(crate::images::Key {
+                    item,
+                    kind: crate::images::Kind::Primary,
+                    index: None,
+                })
+            }) {
+                Some(handle) => crate::widget::mui::Media::Image(handle),
+                None => crate::widget::mui::Media::Glyph(
+                    crate::icon::Icon::library(collected(folder.collection_type)),
+                    typeface::LIBRARY_CARD_ICON,
+                ),
+            };
+            let said = match named(folder).and_then(|id| state.refreshing.get(&id)) {
+                Some(progress) => {
+                    strings::format(Text::LibrariesScanning, &[&format!("{progress:.0}")])
+                }
+                None => strings::lookup(content_label(folder.collection_type)).to_owned(),
+            };
+            crate::widget::mui::card(
+                crate::widget::mui::Card {
+                    title: name.clone().into(),
+                    text: Some(said.into()),
+                    media,
+                    height: space::LIBRARY_CARD,
+                    opens: Some(Message::DashboardAction(super::Action::Open(
+                        super::Screen::Library { name: name.clone() },
+                    ))),
+                    action: Some(Message::DashboardAction(super::Action::LibraryMenu(
+                        match state.menu.as_deref() == Some(name.as_str()) {
+                            true => None,
+                            false => Some(name),
+                        },
+                    ))),
+                },
+                viewport.band(),
+            )
+        }),
+        viewport,
+    ));
 
     page
 }

@@ -32,6 +32,18 @@ pub fn images(state: &super::State) -> std::collections::HashSet<Uuid> {
         .collect()
 }
 
+/// The card the login picker writes by hand: the user's image or the person
+/// glyph over the centred name inside `.cardFooter`'s own padding.
+// reference: login-user-card
+const PICKED: card::Drawing = card::Drawing {
+    card: card::Card::Wall(card::Shape::Square),
+    footer: card::Footer::Name,
+    backing: card::Backing::Padder,
+    footing: card::Footing::Padded,
+    setting: card::Setting::Centred,
+    bottom: card::Bottom::Padded,
+};
+
 /// The users the server offers, each on the square card the reference draws,
 /// with the person glyph where the user carries no image.
 // reference: login-user-card
@@ -40,25 +52,33 @@ fn picker<'a>(state: &'a super::State, viewport: Viewport) -> Option<Element<'a,
     if screen.users.is_empty() {
         return None;
     }
-    let wall = card::Card::Wall(card::Shape::Square);
     Some(widget::wall(
-        wall,
+        PICKED.card,
         Room::content(viewport),
         card::Wrap::Centred,
         screen.users.iter().map(|user| {
-            widget::picked(
-                wall,
+            let said = user.name.clone();
+            widget::card(
+                PICKED,
                 Room::content(viewport),
-                match state.images.get(&user.id) {
-                    Some(handle) => Face::Image(handle.clone()),
-                    None => Face::Icon(Icon::Person),
-                },
-                user.name.clone(),
-                card::Bottom::Padded,
-                Message::LoginAction(Action::Pick {
-                    user: user.id,
+                widget::Poster {
+                    face: Some(match state.images.get(&user.id) {
+                        Some(handle) => Face::Image(handle.clone()),
+                        None => Face::Icon(Icon::Person),
+                    }),
                     name: user.name.clone(),
-                }),
+                    logo: None,
+                    timer: None,
+                    press: Some(Message::LoginAction(Action::Pick {
+                        user: user.id,
+                        name: user.name.clone(),
+                    })),
+                    hovered: widget::Hovered::default(),
+                },
+                move |line| match line {
+                    card::Line::Name => said.clone(),
+                    _ => String::new(),
+                },
             )
         }),
     ))

@@ -24,6 +24,7 @@ fn railed(card: card::Card) -> card::Drawing {
         card,
         footer: card::Footer::NameAndSubtitle,
         backing: card::Backing::Padder,
+        footing: card::Footing::Bare,
         setting: card::Setting::Centred,
         bottom: card::Bottom::Padded,
     }

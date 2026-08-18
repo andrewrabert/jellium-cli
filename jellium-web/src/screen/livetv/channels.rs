@@ -1,7 +1,6 @@
 use std::collections::HashSet;
 use std::rc::Rc;
 
-use chrono::{DateTime, Utc};
 use iced::widget::{button, column, row};
 use iced::{Element, Fill};
 
@@ -33,6 +32,7 @@ pub const CARD: card::Drawing = card::Drawing {
     card: card::Card::Wall(card::Shape::Square),
     footer: card::Footer::Channel,
     backing: card::Backing::Paper,
+    footing: card::Footing::Padded,
     setting: card::Setting::Leading,
     bottom: card::Bottom::Flush,
 };
@@ -123,12 +123,7 @@ fn entry<'a>(
 
 /// The TV and radio filter above a windowed wall of cards, each carrying the
 /// channel's logo, number, name and current programme.
-pub fn view<'a>(
-    state: &'a State,
-    _now: DateTime<Utc>,
-    images: &'a Cache,
-    room: Room,
-) -> Element<'a, Message> {
+pub fn view<'a>(state: &'a State, images: &'a Cache, room: Room) -> Element<'a, Message> {
     use jellyfin_api::types::ChannelType;
 
     let filter = row![

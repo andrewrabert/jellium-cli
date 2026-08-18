@@ -1016,23 +1016,12 @@ pub struct Drawing {
     pub card: Card,
     pub footer: Footer,
     pub backing: Backing,
+    pub footing: Footing,
     pub setting: Setting,
     pub bottom: Bottom,
 }
 
 impl Drawing {
-    /// Whether this card's lines stand inside `.cardFooter`'s own padding,
-    /// which `resolveCardBoxCssClasses` gives the card `cardLayout` stands on
-    /// the paper.
-    // reference: card-box-classes
-    // reference: card-footer-outer
-    pub fn footing(self) -> Footing {
-        match self.backing {
-            Backing::Paper => Footing::Padded,
-            Backing::Padder => Footing::Bare,
-        }
-    }
-
     /// The pitch one card occupies down the page, gutter included.
     pub fn row(self, room: Room) -> Drawn {
         let gutter = GUTTER.drawn();
@@ -1041,7 +1030,7 @@ impl Drawing {
             .shape()
             .aspect()
             .of(inside)
-            .plus(written(self.footer, self.footing()))
+            .plus(written(self.footer, self.footing))
             .plus(reserved(self.bottom, room.viewport()))
             .plus(gutter)
     }

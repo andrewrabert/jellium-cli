@@ -208,6 +208,32 @@ impl Across {
     }
 }
 
+/// A count of the twelve columns MUI's grid divides a row into, held in tenths
+/// because a `Grid item` names its width to one decimal.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+pub struct Columns {
+    tenths: u32,
+}
+
+impl Columns {
+    /// A count, never zero.
+    pub const fn twelfths(count: f32) -> Columns {
+        let tenths = (count * 10.0) as u32;
+        Columns {
+            tenths: if tenths == 0 { 1 } else { tenths },
+        }
+    }
+
+    /// How many items this wide stand across one row.
+    pub fn across(self) -> Across {
+        Across::cards(ROW.tenths / self.tenths)
+    }
+}
+
+/// MUI's own twelve, which every `Grid item`'s width is a count of.
+// reference: mui-grid
+const ROW: Columns = Columns::twelfths(12.0);
+
 /// One length to another, which is what a line height and a root size are.
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
 pub struct Ratio {
@@ -349,7 +375,7 @@ impl Breakpoint {
     }
 }
 
-/// Every width the pinned stylesheets test the viewport against, ascending.
+/// Every width the pinned client tests the viewport against, ascending.
 // oracle: reference/breakpoints.tsv
 pub const WIDTHS: &[Breakpoint] = &[
     Breakpoint::em(24.0),
@@ -368,6 +394,7 @@ pub const WIDTHS: &[Breakpoint] = &[
     Breakpoint::em(48.125),
     Breakpoint::em(50.0),
     Breakpoint::em(56.0),
+    Breakpoint::pixels(900),
     Breakpoint::em(60.0),
     Breakpoint::em(62.5),
     Breakpoint::em(63.0),
@@ -378,6 +405,7 @@ pub const WIDTHS: &[Breakpoint] = &[
     Breakpoint::em(75.0),
     Breakpoint::em(80.0),
     Breakpoint::em(87.5),
+    Breakpoint::pixels(1536),
     Breakpoint::em(100.0),
     Breakpoint::em(112.5),
     Breakpoint::em(120.0),

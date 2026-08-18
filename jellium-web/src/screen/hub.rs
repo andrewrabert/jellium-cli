@@ -28,6 +28,7 @@ pub fn wall(aspect: Option<Aspect>) -> card::Drawing {
         card: Card::grid(None, aspect),
         footer: card::Footer::NameAndSubtitle,
         backing: card::Backing::Padder,
+        footing: card::Footing::Bare,
         setting: card::Setting::Centred,
         bottom: card::Bottom::Padded,
     }

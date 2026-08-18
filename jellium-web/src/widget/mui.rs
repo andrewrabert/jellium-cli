@@ -5,10 +5,10 @@ use std::borrow::Cow;
 use iced::widget::{Space, button, column, container, stack, text_input};
 use iced::{Element, Fill};
 
-use super::{Choice, Showing, portion, pressed, prose, tinted};
+use super::{Choice, Showing, line, portion, pressed, prose, tinted};
 use crate::app::Message;
 use crate::icon::{self, Icon};
-use crate::style::{self, Band, Share, Viewport, space, typeface};
+use crate::style::{self, Band, Css, Share, Viewport, space, typeface};
 use crate::text::{self as strings, Text};
 
 /// One line of the heading ladder `DEFAULT_THEME_OPTIONS` sets: its size from
@@ -295,6 +295,146 @@ pub fn papered<'a>(content: Element<'a, Message>, band: Band) -> Element<'a, Mes
     container(content)
         .style(move |theme| style::paper(theme, band))
         .into()
+}
+
+/// What a card stands where its media goes: the image the server holds for it,
+/// or the glyph it stands in with over the background its title picks.
+#[derive(Debug, Clone)]
+pub enum Media {
+    Image(iced::widget::image::Handle),
+    Glyph(Icon, style::Length),
+}
+
+/// One `BaseCard`: its media over the title, the line under that title, and
+/// the overflow control at that line's trailing edge.
+#[derive(Debug, Clone)]
+pub struct Card<'a> {
+    pub title: Cow<'a, str>,
+    /// The line under the title, and nothing where the card writes none.
+    pub text: Option<Cow<'a, str>>,
+    pub media: Media,
+    pub height: Css,
+    /// What pressing the media sends, and nothing where the card reaches
+    /// nothing.
+    pub opens: Option<Message>,
+    /// What the overflow control sends, and nothing where the card carries no
+    /// such control.
+    pub action: Option<Message>,
+}
+
+/// `BaseCard`: MUI's own paper at that height, the media filling what
+/// `MuiCardContent` leaves it, the title elided to one line over
+/// `gutterBottom`'s margin, and the second line in `body2` on the scheme's
+/// secondary lettering.
+// the media is cropped to its slot, which is what `backgroundSize: cover` does
+// reference: base-card
+// reference: mui-card
+// reference: mui-card-content
+// reference: mui-card-action-area
+// reference: mui-card-media
+// reference: mui-typography-gutter-bottom
+// reference: mui-icon-button
+pub fn card<'a>(card: Card<'a>, band: Band) -> Element<'a, Message> {
+    let media: Element<'a, Message> = match card.media {
+        Media::Image(handle) => container(
+            iced::widget::image(handle)
+                .width(Fill)
+                .height(Fill)
+                .content_fit(iced::ContentFit::Cover),
+        )
+        .width(Fill)
+        .height(Fill)
+        .into(),
+        Media::Glyph(glyph, size) => {
+            let background = style::scheme::card_background(&card.title);
+            container(icon::icon(glyph, size))
+                .center_x(Fill)
+                .center_y(Fill)
+                .style(move |theme| style::card_media(theme, background))
+                .into()
+        }
+    };
+    let lit = iced::widget::hover(
+        media,
+        container(Space::new())
+            .width(Fill)
+            .height(Fill)
+            .style(style::card_highlight),
+    );
+    let area: Element<'a, Message> = match card.opens {
+        None => lit,
+        Some(press) => button(lit)
+            .width(Fill)
+            .height(Fill)
+            .padding(iced::Padding::ZERO)
+            .style(style::flat)
+            .on_press(press)
+            .into(),
+    };
+
+    let mut lines = column![
+        container(line(
+            card.title,
+            typeface::BODY,
+            typeface::Weight::Regular,
+            typeface::BODY_1_LEADING,
+        ))
+        .padding(iced::Padding::ZERO.bottom(style::drawn(space::GUTTER_BOTTOM.drawn())))
+    ];
+    if let Some(text) = card.text {
+        lines = lines.push(tinted(
+            text,
+            typeface::BODY_2,
+            typeface::Weight::Regular,
+            typeface::BODY_2_LEADING,
+            style::muted,
+        ));
+    }
+    let mut held = iced::widget::row![container(lines).width(Fill)];
+    if let Some(press) = card.action {
+        held = held.push(
+            button(icon::icon(Icon::MoreVert, typeface::CONTROL_GLYPH))
+                .padding(style::drawn(space::ICON_BUTTON_PAD.drawn(band)))
+                .style(move |theme, status| style::icon_button(theme, status, band))
+                .on_press(press),
+        );
+    }
+    let content = container(stack![
+        Space::new().height(style::drawn(space::CARD_CONTENT_MIN_INSIDE.drawn(band))),
+        held,
+    ])
+    .width(Fill)
+    .padding(style::inset(space::CARD_CONTENT_PAD, band));
+
+    papered(
+        column![container(area).width(Fill).height(Fill), content]
+            .height(style::drawn(card.height.drawn(band)))
+            .into(),
+        band,
+    )
+}
+
+/// `Grid container`: its cells laid across the count `cell`'s own ladder puts
+/// in one row at this page, at the gutter the container's spacing leaves.
+// reference: mui-grid
+pub fn grid<'a>(
+    cell: space::Cell,
+    cells: impl IntoIterator<Item = Element<'a, Message>>,
+    viewport: Viewport,
+) -> Element<'a, Message> {
+    let across = cell.across(viewport).count();
+    let gutter = style::drawn(space::CARD_GRID_GAP.drawn(viewport.band()));
+    let mut cells = cells.into_iter().peekable();
+    column(std::iter::from_fn(move || {
+        cells.peek()?;
+        let mut laid: Vec<Element<'a, Message>> = cells.by_ref().take(across).collect();
+        while laid.len() < across {
+            laid.push(Space::new().width(Fill).into());
+        }
+        Some(iced::widget::row(laid).spacing(gutter).into())
+    }))
+    .spacing(gutter)
+    .into()
 }
 
 /// Where a `MuiFormHelperText` stands.

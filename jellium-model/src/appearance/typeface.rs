@@ -220,6 +220,23 @@ const MUI_GLYPH: Css = Css::unitless(24.0);
 // reference: mui-svg-icon
 pub const CONTROL_GLYPH: Length = MUI_GLYPH.length();
 
+/// The glyph size the libraries page writes over a card standing in for an
+/// image the server does not hold.
+// reference: dashboard-library-card
+const LIBRARY_CARD_GLYPH: Css = Css::unitless(70.0);
+
+/// That glyph.
+// reference: dashboard-library-card
+pub const LIBRARY_CARD_ICON: Length = LIBRARY_CARD_GLYPH.length();
+
+/// The glyph size the plugins page writes over the same slot.
+// reference: dashboard-plugin-card
+const PLUGIN_CARD_GLYPH: Css = Css::unitless(80.0);
+
+/// That glyph.
+// reference: dashboard-plugin-card
+pub const PLUGIN_CARD_ICON: Length = PLUGIN_CARD_GLYPH.length();
+
 /// An alert's own glyph, which MUI writes as the bare number the DOM reads as
 /// css pixels.
 // reference: mui-alert-parts

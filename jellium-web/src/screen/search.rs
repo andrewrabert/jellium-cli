@@ -208,6 +208,7 @@ pub fn card(section: Section, aspect: Option<Aspect>) -> card::Drawing {
         },
         footer: footer(section),
         backing: card::Backing::Padder,
+        footing: card::Footing::Bare,
         setting: card::Setting::Centred,
         bottom: card::Bottom::Flush,
     }

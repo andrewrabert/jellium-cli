@@ -26,6 +26,7 @@ const CHILDREN: card::Drawing = card::Drawing {
     card: card::Card::Wall(card::Shape::Portrait),
     footer: card::Footer::NameAndSubtitle,
     backing: card::Backing::Padder,
+    footing: card::Footing::Bare,
     setting: card::Setting::Centred,
     bottom: card::Bottom::Padded,
 };
@@ -36,6 +37,7 @@ const ALIKE: card::Drawing = card::Drawing {
     card: card::Card::Rail(card::Rail::Portrait),
     footer: card::Footer::NameAndSubtitle,
     backing: card::Backing::Padder,
+    footing: card::Footing::Bare,
     setting: card::Setting::Centred,
     bottom: card::Bottom::Padded,
 };

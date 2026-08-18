@@ -174,7 +174,7 @@ pub fn view<'a>(
     let room = Room::content(viewport);
     let body = match &state.body {
         Body::Guide(guide) => guide::view(guide, now, images, viewport),
-        Body::Channels(channels) => channels::view(channels, now, images, room),
+        Body::Channels(channels) => channels::view(channels, images, room),
         Body::Recordings(held) => recordings::view(held, state.confirming, images, room),
         Body::Schedule(schedule) => schedule::view(schedule, images, room),
         Body::Series(series) => series::view(series, room),

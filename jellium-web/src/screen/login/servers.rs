@@ -10,6 +10,18 @@ use crate::widget::{self, Emphasis, Face};
 
 use super::Action;
 
+/// The card the select-server page writes by hand: its glyph over its centred
+/// name inside `.cardFooter`'s own padding.
+// reference: select-server-card
+const SAVED: card::Drawing = card::Drawing {
+    card: card::Card::Rail(card::Rail::Square),
+    footer: card::Footer::Name,
+    backing: card::Backing::Padder,
+    footing: card::Footing::Padded,
+    setting: card::Setting::Centred,
+    bottom: card::Bottom::Flush,
+};
+
 /// One saved server's card: the reference's own square server card, with what
 /// this client knows about the server written under it and the control that
 /// forgets it.
@@ -23,15 +35,24 @@ fn saved<'a>(
         true => saved.server.clone(),
         false => saved.name.clone(),
     };
-    let mut entry = column![widget::picked(
-        card::Card::Rail(card::Rail::Square),
+    let said = named.clone();
+    let mut entry = column![widget::card(
+        SAVED,
         Room::content(viewport),
-        Face::Icon(Icon::Storage),
-        named,
-        card::Bottom::Flush,
-        Message::LoginAction(Action::Select {
-            server: saved.server.clone(),
-        }),
+        widget::Poster {
+            face: Some(Face::Icon(Icon::Storage)),
+            name: named,
+            logo: None,
+            timer: None,
+            press: Some(Message::LoginAction(Action::Select {
+                server: saved.server.clone(),
+            })),
+            hovered: widget::Hovered::default(),
+        },
+        move |line| match line {
+            card::Line::Name => said.clone(),
+            _ => String::new(),
+        },
     )]
     .spacing(style::drawn(space::BLOCK_GAP.drawn()));
 

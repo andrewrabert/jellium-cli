@@ -1021,6 +1021,10 @@ pub enum Action {
     Bridged(String),
     /// Opens the menu one account's card offers, and closes it.
     UserMenu(Option<Uuid>),
+    /// Opens the commands one library's card offers, and closes them.
+    LibraryMenu(Option<String>),
+    /// Opens the commands one plugin's card offers, and closes them.
+    PluginMenu(Option<Uuid>),
 }
 
 /// Loads the screen `screen` names, against the page `viewport` measures.
@@ -1103,7 +1107,7 @@ pub fn view<'a>(
                 frame::Filling::Stacked(users::one(held, session.read_only, session.user_id))
             }
             Body::Libraries(held) => {
-                frame::Filling::Stacked(libraries::view(held, session.read_only))
+                frame::Filling::Stacked(libraries::view(held, session.read_only, images, viewport))
             }
             Body::Library(held) => frame::Filling::Stacked(libraries::one(held, session.read_only)),
             Body::Tasks(held) => tasks::view(held, session.read_only, now, viewport.band()),
@@ -1118,7 +1122,9 @@ pub fn view<'a>(
             Body::Devices(held) => devices::view(held, session.read_only),
             Body::Keys(held) => keys::view(held, session.read_only),
             Body::LiveTv(held) => frame::Filling::Stacked(livetv::view(held, session.read_only)),
-            Body::Plugins(held) => frame::Filling::Stacked(plugins::view(held, session.read_only)),
+            Body::Plugins(held) => {
+                frame::Filling::Stacked(plugins::view(held, session.read_only, viewport))
+            }
             Body::Page(held) => frame::Filling::Stacked(shown_page(held)),
         },
     };
@@ -1386,6 +1392,18 @@ pub fn act(signed: &mut Signed, action: Action, viewport: Viewport) -> Task<Mess
         }
         Action::UserMenu(open) => {
             if let Some(Body::Users(held)) = shown_mut(signed).map(|state| &mut state.body) {
+                held.menu = open;
+            }
+            Task::none()
+        }
+        Action::LibraryMenu(open) => {
+            if let Some(Body::Libraries(held)) = shown_mut(signed).map(|state| &mut state.body) {
+                held.menu = open;
+            }
+            Task::none()
+        }
+        Action::PluginMenu(open) => {
+            if let Some(Body::Plugins(held)) = shown_mut(signed).map(|state| &mut state.body) {
                 held.menu = open;
             }
             Task::none()
@@ -1985,6 +2003,7 @@ fn shown_mut(signed: &mut Signed) -> Option<&mut State> {
 pub fn images(state: &State) -> std::collections::HashSet<crate::images::Key> {
     match &state.body {
         Body::Users(held) => users::images(held),
+        Body::Libraries(held) => libraries::images(held),
         _ => std::collections::HashSet::new(),
     }
 }

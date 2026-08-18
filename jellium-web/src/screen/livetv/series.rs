@@ -30,6 +30,7 @@ pub const CARD: card::Drawing = card::Drawing {
     card: card::Card::Wall(card::Shape::Portrait),
     footer: card::Footer::SeriesTimer,
     backing: card::Backing::Padder,
+    footing: card::Footing::Bare,
     setting: card::Setting::Centred,
     bottom: card::Bottom::Padded,
 };

@@ -11,11 +11,8 @@ pub enum Id {
     Activity,
     Log,
     Catalog,
-    Users,
-    Tasks,
     Devices,
     Keys,
-    Plugins,
     /// The one browse surface on screen: a library grid, search results, a hub,
     /// a filtered list, a collection's contents, or either destination.
     Browse,

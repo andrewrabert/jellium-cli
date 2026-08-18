@@ -8,8 +8,8 @@ use chrono::TimeDelta;
 use super::scheme::{self, Color};
 use super::typeface;
 use super::{
-    Band, Breakpoint, Canvas, Cap, Css, Drawn, Length, Letters, Orientation, Query, Ratio, Share,
-    Viewport,
+    Across, Band, Breakpoint, Canvas, Cap, Columns, Css, Drawn, Length, Letters, Orientation,
+    Query, Ratio, Share, Viewport,
 };
 
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -27,6 +27,40 @@ pub struct Inset {
     pub right: Css,
     pub bottom: Css,
     pub left: Css,
+}
+
+/// What one `Grid item` takes of its row at each of MUI's own breakpoints, a
+/// width carrying up from the key that names it until another key names one.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct Cell {
+    pub xs: Columns,
+    pub sm: Option<Columns>,
+    pub md: Option<Columns>,
+    pub lg: Option<Columns>,
+    pub xl: Option<Columns>,
+}
+
+impl Cell {
+    /// The widest key the page reaches, and `xs` where it reaches none.
+    pub fn columns(self, viewport: Viewport) -> Columns {
+        for (at, named) in [
+            (EXTRA_AT, self.xl),
+            (LARGE_AT, self.lg),
+            (MEDIUM_AT, self.md),
+            (SMALL_AT, self.sm),
+        ] {
+            if viewport.matches(at)
+                && let Some(columns) = named
+            {
+                return columns;
+            }
+        }
+        self.xs
+    }
+
+    pub fn across(self, viewport: Viewport) -> Across {
+        self.columns(viewport).across()
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -645,9 +679,85 @@ pub const DASHBOARD_TOP: Length = Length::em(3.25);
 // reference: dashboard-frame
 pub const DRAWER: Css = Css::of(240.0);
 
+/// MUI's own breakpoints, which every `Grid item`'s ladder is written against
+/// and which the dashboard's overrides declare.
+// reference: dashboard-frame
+pub const SMALL_AT: Query = Query::MinWidth(Breakpoint::pixels(600));
+
+// reference: dashboard-frame
+pub const MEDIUM_AT: Query = Query::MinWidth(Breakpoint::pixels(900));
+
+// reference: dashboard-frame
+pub const LARGE_AT: Query = Query::MinWidth(Breakpoint::pixels(1200));
+
+// reference: dashboard-frame
+pub const EXTRA_AT: Query = Query::MinWidth(Breakpoint::pixels(1536));
+
 /// The page the drawer stands beside the content on rather than over it.
 // reference: dashboard-frame
-pub const DRAWER_BESIDE_AT: Query = Query::MinWidth(Breakpoint::pixels(900));
+pub const DRAWER_BESIDE_AT: Query = MEDIUM_AT;
+
+/// The ladder the libraries page's own grid puts one card on.
+// reference: dashboard-libraries-grid
+pub const LIBRARY_CELL: Cell = Cell {
+    xs: Columns::twelfths(12.0),
+    sm: Some(Columns::twelfths(6.0)),
+    md: Some(Columns::twelfths(3.0)),
+    lg: Some(Columns::twelfths(2.4)),
+    xl: None,
+};
+
+/// The ladder the plugins page's own grid puts one card on.
+// reference: dashboard-plugins-grid
+pub const PLUGIN_CELL: Cell = Cell {
+    xs: Columns::twelfths(12.0),
+    sm: Some(Columns::twelfths(6.0)),
+    md: Some(Columns::twelfths(4.0)),
+    lg: Some(Columns::twelfths(3.0)),
+    xl: Some(Columns::twelfths(2.0)),
+};
+
+/// The gutter a `Grid container` of cards leaves between two of them.
+// reference: dashboard-libraries-grid
+// reference: dashboard-plugins-grid
+pub const CARD_GRID_GAP: Css = SPACING_STEP.times(Ratio::thousandths(2000));
+
+/// The height `BaseCard` stands at where the screen drawing it names none.
+// reference: base-card
+pub const BASE_CARD: Css = Css::unitless(240.0);
+
+/// The height the libraries page gives its own cards.
+// reference: dashboard-library-card
+pub const LIBRARY_CARD: Css = Css::unitless(260.0);
+
+/// `MuiCardContent`'s own padding on every side it writes one.
+// reference: mui-card-content
+pub const CARD_CONTENT_INSET: Css = Css::unitless(16.0);
+
+/// That padding as `BaseCard` writes it, being the last child
+/// `MuiCardContent` rounds off: its bottom two steps and its trailing side one.
+// reference: base-card
+// reference: mui-spacing
+pub const CARD_CONTENT_PAD: Inset = Inset {
+    top: CARD_CONTENT_INSET,
+    right: SPACING_STEP,
+    bottom: SPACING_STEP.times(Ratio::thousandths(2000)),
+    left: CARD_CONTENT_INSET,
+};
+
+/// The least `MuiCardContent` stands at, border box included.
+// reference: base-card
+pub const CARD_CONTENT_MIN: Css = Css::unitless(50.0);
+
+/// The same least, inside that padding.
+pub const CARD_CONTENT_MIN_INSIDE: Css = CARD_CONTENT_MIN
+    .less(CARD_CONTENT_PAD.top)
+    .less(CARD_CONTENT_PAD.bottom);
+
+/// The margin `gutterBottom` leaves under a `MuiTypography` line, in the em of
+/// the line it sits under.
+// reference: mui-typography-gutter-bottom
+pub const GUTTER_BOTTOM: Length = Length::em(0.35);
 
 /// `.MuiDrawer-paper`'s own foot, which the reference leaves clear for the
 /// now-playing bar.
