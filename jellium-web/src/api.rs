@@ -945,7 +945,7 @@ impl Api {
 
     /// The channels of `kind`, favourites first and then in channel-number
     /// order, each carrying its current program, in one request.
-    pub async fn channels(
+    pub async fn live_tv_channels(
         &self,
         kind: jellyfin_api::types::ChannelType,
         limit: Option<i32>,

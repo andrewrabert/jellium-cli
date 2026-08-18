@@ -25,7 +25,7 @@ pub use jellium_model::guide::{
 pub async fn load(api: Rc<Api>, height: Drawn) -> Result<State, crate::error::Bubble> {
     let range = api.guide_range().await.bubbled()?;
     let channels = api
-        .channels(jellyfin_api::types::ChannelType::Tv, None)
+        .live_tv_channels(jellyfin_api::types::ChannelType::Tv, None)
         .await
         .bubbled()?;
     let start = half_hour(Utc::now()).max(range.start);

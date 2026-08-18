@@ -91,7 +91,7 @@ pub async fn load(api: Rc<Api>) -> Answer<State> {
 /// The channels the on-now row shows, in one channel query carrying their
 /// current programs.
 pub async fn on_now(api: Rc<Api>) -> Answer<Vec<Channel>> {
-    api.channels(jellyfin_api::types::ChannelType::Tv, Some(ON_NOW))
+    api.live_tv_channels(jellyfin_api::types::ChannelType::Tv, Some(ON_NOW))
         .await
 }
 
