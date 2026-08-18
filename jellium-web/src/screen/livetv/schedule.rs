@@ -21,6 +21,8 @@ use crate::widget::{self, Control, Face, Hovered, Poster, prose};
 pub struct State {
     /// The recordings the server is writing now.
     pub active: Vec<BaseItemDto>,
+    // the aspect those recordings share settles this
+    pub drawing: card::Drawing,
     /// Upcoming timers ordered by start time.
     pub timers: Vec<TimerInfoDto>,
 }
@@ -29,7 +31,7 @@ pub struct State {
 // reference: livetv-schedule-recordings
 // reference: livetv-schedule-active
 // reference: card-auto-shape
-pub fn active_card(recordings: &[BaseItemDto]) -> card::Drawing {
+fn active_card(recordings: &[BaseItemDto]) -> card::Drawing {
     let shared = Aspect::shared(
         recordings
             .iter()
@@ -59,8 +61,10 @@ pub const TIMER_CARD: card::Drawing = card::Drawing {
 
 pub async fn load(api: Rc<Api>) -> Answer<State> {
     Answer::of(async {
+        let active = api.active_recordings().await.bubbled()?;
         Ok(State {
-            active: api.active_recordings().await.bubbled()?,
+            drawing: active_card(&active),
+            active,
             timers: api.timers().await.bubbled()?,
         })
     })
@@ -268,19 +272,19 @@ pub fn view<'a>(state: &'a State, images: &'a Cache, room: Room) -> Element<'a, 
     }
     let mut page = column![];
     if !state.active.is_empty() {
-        let drawing = active_card(&state.active);
         page = page.push(widget::section(
             strings::lookup(Text::ScheduleActive),
             widget::wall(
-                drawing.card,
+                state.drawing.card,
                 room,
                 card::Wrap::Centred,
                 state.active.iter().map(|item| {
                     active(
                         item,
-                        drawing,
+                        state.drawing,
                         room,
-                        item.id.and_then(|id| images.handle(key(id, drawing.card))),
+                        item.id
+                            .and_then(|id| images.handle(key(id, state.drawing.card))),
                     )
                 }),
             ),
@@ -295,12 +299,11 @@ pub fn view<'a>(state: &'a State, images: &'a Cache, room: Room) -> Element<'a, 
 /// Every active recording's own image, and every shown timer's programme image
 /// and channel logo.
 pub fn images(state: &State) -> HashSet<images::Key> {
-    let drawing = active_card(&state.active);
     let active = state
         .active
         .iter()
         .filter_map(|item| item.id)
-        .map(move |id| key(id, drawing.card));
+        .map(|id| key(id, state.drawing.card));
     let programs = state.timers.iter().filter_map(program_key);
     let logos = state
         .timers

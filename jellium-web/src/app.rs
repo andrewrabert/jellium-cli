@@ -28,7 +28,7 @@ use crate::prefs::Device;
 use crate::route::Route;
 use crate::screen::livetv::{self, guide};
 use crate::screen::program;
-use crate::screen::{dashboard, detail, home, hub, library, login, search};
+use crate::screen::{dashboard, detail, home, library, login, search};
 use crate::style::space::Room;
 use crate::style::{self, Drawn, Viewport, card, space, typeface};
 use crate::text::{self as strings, Text};
@@ -2115,15 +2115,9 @@ impl Jellium {
                     browse.resized(page);
                 }
                 if let Some(hub) = self.hubbing() {
-                    let wall = hub::wall(card::Aspect::shared(
-                        hub.entries
-                            .held()
-                            .filter_map(|item| item.primary_image_aspect_ratio)
-                            .map(card::Aspect::of),
-                    ));
                     let room = Room::content(page);
                     hub.grid
-                        .resized(room, wall.card.width(room), wall.row(room));
+                        .resized(room, hub.wall.card.width(room), hub.wall.row(room));
                 }
                 let Some(signed) = self.signed() else {
                     return Task::none();
@@ -2138,9 +2132,11 @@ impl Jellium {
                                 .resized(room, card.card.width(room), card.row(room));
                         }
                         livetv::Body::Recordings(held) => {
-                            let drawn = livetv::recordings::card(&held.recordings);
-                            held.grid
-                                .resized(room, drawn.card.width(room), drawn.row(room));
+                            held.grid.resized(
+                                room,
+                                held.drawing.card.width(room),
+                                held.drawing.row(room),
+                            );
                         }
                         livetv::Body::Schedule(_) => {}
                         livetv::Body::Series(held) => {

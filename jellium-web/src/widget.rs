@@ -19,7 +19,7 @@ use crate::app::Message;
 use crate::icon::Icon;
 use crate::images::{self, Cache, Kind};
 use crate::live;
-use crate::livetv::{Channel, Recording};
+use crate::livetv::{Channel, Program, Recording};
 use crate::player::group::Joined;
 use crate::route::Route;
 use crate::style::space::Room;
@@ -163,11 +163,11 @@ pub fn card_images<'a>(
 /// screen, and every other item opens its detail.
 fn opens(item: &BaseItemDto, id: uuid::Uuid) -> Route {
     match item.type_ {
-        Some(jellyfin_api::types::BaseItemKind::BoxSet) => Route::Collection {
+        Some(BaseItemKind::BoxSet) => Route::Collection {
             id,
             listing: Box::default(),
         },
-        Some(jellyfin_api::types::BaseItemKind::Playlist) => Route::Playlist { id },
+        Some(BaseItemKind::Playlist) => Route::Playlist { id },
         _ => Route::Detail { id },
     }
 }
@@ -1250,21 +1250,22 @@ fn portion(share: Share) -> u16 {
 /// A bar filled to `elapsed`, which is how far through a program `now` is.
 pub fn elapsed_bar<'a>(elapsed: Share) -> Element<'a, Message> {
     let filled = portion(elapsed);
+    let height = style::drawn(space::PROGRESS.drawn());
     container(
         row![
             container(Space::new())
                 .width(Length::FillPortion(filled))
-                .height(style::drawn(space::PROGRESS.drawn()))
+                .height(height)
                 .style(|theme: &iced::Theme| container::Style::default()
                     .background(theme.palette().primary)),
             container(Space::new())
                 .width(Length::FillPortion(PORTIONS - filled))
-                .height(style::drawn(space::PROGRESS.drawn())),
+                .height(height),
         ]
-        .height(style::drawn(space::PROGRESS.drawn())),
+        .height(height),
     )
     .width(Length::Fill)
-    .height(style::drawn(space::PROGRESS.drawn()))
+    .height(height)
     .into()
 }
 
@@ -1284,6 +1285,7 @@ pub const ON_NOW: card::Drawing = card::Drawing {
 
 /// One on-now card: the channel's logo, its number, and its current program's
 /// title with an elapsed bar, on the card the reference's on-now rail draws.
+// reference: indicator-timer
 pub fn channel_card<'a>(
     channel: &'a Channel,
     room: Room,
@@ -1304,7 +1306,7 @@ pub fn channel_card<'a>(
             face: image.map(Face::Image),
             name,
             logo: None,
-            timer: None,
+            timer: channel.current.as_ref().and_then(Program::recording),
             elapsed: channel.current.as_ref().map(|program| program.elapsed(now)),
             press: Some(Message::LiveTvAction(
                 crate::screen::livetv::Action::PlayChannel(channel.id),

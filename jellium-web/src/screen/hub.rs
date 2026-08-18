@@ -23,7 +23,7 @@ use crate::widget;
 /// The card a hub's entries draw on, at the shape they share, over the two
 /// lines a grid writes under one.
 // reference: grid-card-auto
-pub fn wall(aspect: Option<Aspect>) -> card::Drawing {
+fn wall(aspect: Option<Aspect>) -> card::Drawing {
     card::Drawing {
         card: Card::grid(None, aspect),
         footer: card::Footer::NameAndSubtitle,
@@ -40,6 +40,9 @@ pub struct State {
     pub facet: Facet,
     pub library: Uuid,
     pub sort: Sort,
+    // the aspect the first page's items share settles this, and the window is
+    // measured against it
+    pub wall: card::Drawing,
     pub grid: window::Grid,
     pub entries: Paged<BaseItemDto>,
 }
@@ -83,6 +86,7 @@ pub async fn load(
                 wall.row(room),
                 room,
             ),
+            wall,
             entries,
         })
     })
@@ -122,13 +126,6 @@ pub fn opens(state: &State, entry: &BaseItemDto) -> Option<Route> {
 
 /// Each entry opens the filtered list narrowed to that value by id.
 pub fn view<'a>(state: &'a State, viewport: Viewport, images: &'a Cache) -> Element<'a, Message> {
-    let wall = wall(Aspect::shared(
-        state
-            .entries
-            .held()
-            .filter_map(|item| item.primary_image_aspect_ratio)
-            .map(Aspect::of),
-    ));
     let count = state.entries.len();
     column![crate::window::grid(
         state.grid,
@@ -137,7 +134,7 @@ pub fn view<'a>(state: &'a State, viewport: Viewport, images: &'a Cache) -> Elem
         move |index| match state.entries.row(index) {
             Some(entry) => {
                 let card = widget::poster(
-                    wall,
+                    state.wall,
                     entry,
                     Room::content(viewport),
                     images,
@@ -152,8 +149,8 @@ pub fn view<'a>(state: &'a State, viewport: Viewport, images: &'a Cache) -> Elem
                 }
             }
             None => iced::widget::Space::new()
-                .width(style::drawn(wall.card.width(Room::content(viewport))))
-                .height(style::drawn(wall.row(Room::content(viewport))))
+                .width(style::drawn(state.wall.card.width(Room::content(viewport))))
+                .height(style::drawn(state.wall.row(Room::content(viewport))))
                 .into(),
         }
     )]
@@ -161,17 +158,10 @@ pub fn view<'a>(state: &'a State, viewport: Viewport, images: &'a Cache) -> Elem
 }
 
 pub fn images(state: &State) -> HashSet<images::Key> {
-    let wall = wall(Aspect::shared(
-        state
-            .entries
-            .held()
-            .filter_map(|item| item.primary_image_aspect_ratio)
-            .map(Aspect::of),
-    ));
     state
         .grid
         .shown(state.entries.len())
         .filter_map(|index| state.entries.row(index))
-        .filter_map(|entry| widget::poster_key(entry, wall.card))
+        .filter_map(|entry| widget::poster_key(entry, state.wall.card))
         .collect()
 }

@@ -22,6 +22,9 @@ use crate::window;
 pub struct State {
     /// In-progress recordings first, then the rest newest first.
     pub recordings: Vec<BaseItemDto>,
+    // the aspect the recordings share settles this, and the window is measured
+    // against it
+    pub drawing: card::Drawing,
     pub grid: window::Grid,
 }
 
@@ -40,7 +43,7 @@ pub fn writing(item: &BaseItemDto) -> Option<&str> {
 // reference: livetv-recordings-cards
 // reference: livetv-recordings-latest
 // reference: card-auto-shape
-pub fn card(recordings: &[BaseItemDto]) -> card::Drawing {
+fn card(recordings: &[BaseItemDto]) -> card::Drawing {
     let shared = Aspect::shared(
         recordings
             .iter()
@@ -60,14 +63,15 @@ pub fn card(recordings: &[BaseItemDto]) -> card::Drawing {
 pub async fn load(api: Rc<Api>, room: Room) -> Answer<State> {
     Answer::of(async {
         let recordings = api.recordings().await.bubbled()?;
-        let drawn = card(&recordings);
+        let drawing = card(&recordings);
         Ok(State {
             grid: window::Grid::new(
                 window::Id::Recordings,
-                drawn.card.width(room),
-                drawn.row(room),
+                drawing.card.width(room),
+                drawing.row(room),
                 room,
             ),
+            drawing,
             recordings,
         })
     })
@@ -181,7 +185,6 @@ pub fn view<'a>(
     if state.recordings.is_empty() {
         return widget::centered(strings::lookup(Text::RecordingsEmpty).to_string());
     }
-    let drawing = card(&state.recordings);
     widget::section(
         strings::lookup(Text::RecordingsLatest),
         window::grid(
@@ -192,10 +195,10 @@ pub fn view<'a>(
                 let item = &state.recordings[index];
                 entry(
                     item,
-                    drawing,
+                    state.drawing,
                     room,
                     confirming,
-                    key(item, drawing.card).and_then(|key| images.handle(key)),
+                    key(item, state.drawing.card).and_then(|key| images.handle(key)),
                 )
             },
         ),
@@ -203,11 +206,10 @@ pub fn view<'a>(
 }
 
 pub fn images(state: &State) -> HashSet<images::Key> {
-    let drawing = card(&state.recordings);
     state
         .grid
         .shown(state.recordings.len())
         .filter_map(|index| state.recordings.get(index))
-        .filter_map(|item| key(item, drawing.card))
+        .filter_map(|item| key(item, state.drawing.card))
         .collect()
 }
