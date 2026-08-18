@@ -7,6 +7,7 @@ use jellium_model::facets::{Facet, Facets};
 use jellium_model::paged::Paged;
 use jellium_model::sort::Sort;
 use jellium_model::window;
+use jellium_protocol::Session;
 use jellyfin_api::types::BaseItemDto;
 use uuid::Uuid;
 
@@ -130,7 +131,7 @@ pub fn view<'a>(
     viewport: Viewport,
     images: &'a Cache,
     now: chrono::DateTime<chrono::Utc>,
-    writes: widget::Writes,
+    session: &'a Session,
 ) -> Element<'a, Message> {
     let count = state.entries.len();
     column![crate::window::grid(
@@ -145,7 +146,8 @@ pub fn view<'a>(
                     Room::content(viewport),
                     images,
                     now,
-                    writes,
+                    session,
+                    None,
                 );
                 match opens(state, entry) {
                     Some(route) => button(card)

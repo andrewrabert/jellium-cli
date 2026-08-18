@@ -1,25 +1,203 @@
 use iced::widget::{button, column, row, text_input};
 use iced::{Element, Task};
-use jellium_model::item::{Mark, Replace, Scope};
+use jellium_model::item::{self, Mark, Replace, Scope};
+use jellium_protocol::Session;
 use jellyfin_api::types::BaseItemDto;
 use uuid::Uuid;
 
 use crate::app::{Message, Signed};
 use crate::error::Operation;
-use crate::images::Cache;
-use crate::route::Route;
+use crate::icon::Icon;
+use crate::screen::confirm::{Destructive, Pending};
 use crate::style::{self, Viewport, space, typeface};
 use crate::text::{self as strings, Text};
 use crate::widget::prose;
 use crate::widget::sheet::{Entry, Item, sheet};
 
-/// The overflow menu open now; at most one is open, and none is reachable under
-/// read-only.
+/// What a card's menu was opened on, which is what the reference fetches by the
+/// card's own type before `getCommands` reads it.
+pub enum Subject<'a> {
+    Item(&'a BaseItemDto),
+}
+
+/// One command `getCommands` pushes, carrying what running it takes.
+// reference: item-context-play
+// reference: item-context-delete
+// reference: detail-refresh
+#[derive(Debug, Clone, PartialEq)]
+pub enum Command {
+    Play(crate::player::Intent),
+    MarkPlayed {
+        item: Uuid,
+        played: Mark,
+    },
+    Favorite {
+        item: Uuid,
+        favorite: Mark,
+    },
+    AddTo {
+        item: Uuid,
+        into: Into,
+    },
+    RemoveFrom {
+        collection: Uuid,
+        item: Uuid,
+    },
+    /// `delete`, which the reference raises `deleteHelper`'s confirmation for.
+    Delete {
+        item: Uuid,
+        name: String,
+    },
+    Refresh {
+        item: Uuid,
+        replace: Replace,
+        scope: Scope,
+    },
+}
+
+impl Command {
+    /// What the sheet writes this command as.
+    pub fn label(&self) -> Text {
+        match self {
+            Command::Play(_) => Text::MenuPlay,
+            Command::MarkPlayed { played, .. } => match played {
+                Mark::Set => Text::OverflowMarkPlayed,
+                Mark::Cleared => Text::OverflowMarkUnplayed,
+            },
+            Command::Favorite { favorite, .. } => match favorite {
+                Mark::Set => Text::OverflowFavorite,
+                Mark::Cleared => Text::OverflowUnfavorite,
+            },
+            Command::AddTo { into, .. } => match into {
+                Into::Collection => Text::OverflowAddToCollection,
+                Into::Playlist => Text::OverflowAddToPlaylist,
+            },
+            Command::RemoveFrom { .. } => Text::OverflowRemoveFromCollection,
+            Command::Delete { .. } => Text::MenuDeleteMedia,
+            Command::Refresh { replace, scope, .. } => match (replace, scope) {
+                (Replace::Missing, Scope::Tree) => Text::DetailRefreshMetadata,
+                (Replace::All, Scope::Tree) => Text::DetailRefreshReplace,
+                (_, Scope::Item) => Text::DetailRefreshScanMode,
+            },
+        }
+    }
+
+    /// `actionSheet`'s own glyph for this command.
+    pub fn glyph(&self) -> Icon {
+        match self {
+            Command::Play(_) => Icon::PlayArrow,
+            Command::MarkPlayed { .. } => Icon::Check,
+            Command::Favorite { favorite, .. } => match favorite {
+                Mark::Set => Icon::Favorite,
+                Mark::Cleared => Icon::FavoriteBorder,
+            },
+            Command::AddTo { .. } => Icon::PlaylistAdd,
+            Command::RemoveFrom { .. } => Icon::PlaylistRemove,
+            Command::Delete { .. } => Icon::Delete,
+            Command::Refresh { .. } => Icon::Refresh,
+        }
+    }
+
+    /// The confirmation this command is asked about behind, and `None` where
+    /// the reference runs it at once.
+    // reference: delete-confirm
+    pub fn asks(&self) -> Option<Pending> {
+        match self {
+            Command::Delete { item, name } => Some(Pending::of(
+                Destructive::DeleteItem { id: *item },
+                name.clone(),
+            )),
+            Command::Play(_)
+            | Command::MarkPlayed { .. }
+            | Command::Favorite { .. }
+            | Command::AddTo { .. }
+            | Command::RemoveFrom { .. }
+            | Command::Refresh { .. } => None,
+        }
+    }
+}
+
+/// The commands the menu offers for `subject`, in the order `getCommands`
+/// pushes them; a read-only session is offered the ones that write nothing, and
+/// `collection` names the collection whose screen the card stands on.
+// reference: item-context-play
+// reference: item-context-delete
+// reference: item-can-play
+// reference: item-can-mark-played
+// reference: item-can-rate
+pub fn commands(
+    subject: Subject<'_>,
+    session: &Session,
+    collection: Option<Uuid>,
+    now: chrono::DateTime<chrono::Utc>,
+) -> Vec<Command> {
+    let Subject::Item(item) = subject;
+    let mut offered = Vec::new();
+    let Some(id) = item.id else {
+        return offered;
+    };
+
+    if item::playable(item, now) {
+        offered.push(Command::Play(crate::player::Intent::Item {
+            item: id,
+            resume: true,
+        }));
+    }
+    if session.read_only {
+        return offered;
+    }
+    if item::markable(item) {
+        offered.push(Command::MarkPlayed {
+            item: id,
+            played: item::played(item).flipped(),
+        });
+    }
+    if item::ratable(item) {
+        offered.push(Command::Favorite {
+            item: id,
+            favorite: item::favorited(item).flipped(),
+        });
+    }
+    offered.push(Command::AddTo {
+        item: id,
+        into: Into::Collection,
+    });
+    offered.push(Command::AddTo {
+        item: id,
+        into: Into::Playlist,
+    });
+    if let Some(collection) = collection {
+        offered.push(Command::RemoveFrom {
+            collection,
+            item: id,
+        });
+    }
+    if item.can_delete == Some(true) {
+        offered.push(Command::Delete {
+            item: id,
+            name: item.name.clone().unwrap_or_default(),
+        });
+    }
+    if session.administrator {
+        for (replace, scope) in [
+            (Replace::Missing, Scope::Tree),
+            (Replace::All, Scope::Tree),
+            (Replace::Missing, Scope::Item),
+        ] {
+            offered.push(Command::Refresh {
+                item: id,
+                replace,
+                scope,
+            });
+        }
+    }
+    offered
+}
+
+/// The menu open now; at most one is open.
 #[derive(Debug, Clone)]
 pub struct Open {
-    pub item: Uuid,
-    pub played: Mark,
-    pub favorite: Mark,
+    pub offered: Vec<Command>,
     /// The picker open over the menu, and `None` while the menu itself shows.
     pub filing: Option<Filing>,
 }
@@ -28,6 +206,8 @@ pub struct Open {
 /// one without leaving the screen.
 #[derive(Debug, Clone)]
 pub struct Filing {
+    /// The item being filed.
+    pub item: Uuid,
     pub into: Into,
     /// The collections or playlists the server holds, offered to file into.
     pub offered: Vec<BaseItemDto>,
@@ -43,27 +223,19 @@ pub enum Into {
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Action {
-    /// The card names what it already holds, so the menu draws its two toggles
-    /// without a second read.
     Open {
-        item: Uuid,
-        played: Mark,
-        favorite: Mark,
+        offered: Vec<Command>,
     },
     Close,
-    MarkPlayed {
-        item: Uuid,
-        played: Mark,
-    },
-    Favorite {
-        item: Uuid,
-        favorite: Mark,
-    },
-    /// Opens the picker, which loads what the server holds.
-    AddTo {
-        item: Uuid,
-        into: Into,
-    },
+    /// Runs one command the menu offered, or raises the confirmation it takes.
+    Chose(Command),
+    /// The object's name typed into that confirmation.
+    Named(String),
+    /// Runs the command the confirmation stands for.
+    Confirm,
+    /// Abandons the confirmation, the command unrun.
+    Dismiss,
+    /// The name typed into the picker's create field.
     Typed(String),
     /// Files the item into the collection or playlist named.
     File {
@@ -72,120 +244,35 @@ pub enum Action {
     /// Creates a collection or playlist holding the item alone; a playlist's
     /// media type follows from that item.
     CreateAndFile,
-    /// Removes the item from the collection whose screen it was opened from.
-    RemoveFrom {
-        collection: Uuid,
-        item: Uuid,
-    },
-    /// Re-reads the item's metadata, offered to an administrator on a writable
-    /// server, in the menu the reference puts its own refresh command in.
-    // reference: detail-refresh
-    Refresh {
-        item: Uuid,
-        replace: Replace,
-        scope: Scope,
-    },
 }
 
-/// The menu drawn over the card or detail screen it was opened from, and the
-/// picker over the menu while one is open.
-/// `collection` names the collection whose screen the menu was opened from, and
-/// is what puts the removal control on it.
-pub fn view<'a>(
-    open: &'a Open,
-    images: &'a Cache,
-    collection: Option<Uuid>,
-    session: &'a jellium_protocol::Session,
-    viewport: Viewport,
-) -> Element<'a, Message> {
-    let _ = images;
-    let item = open.item;
+/// The menu drawn over the screen it was opened from, and the picker over the
+/// menu while one is open.
+// reference: action-sheet-markup
+pub fn view<'a>(open: &'a Open, viewport: Viewport) -> Element<'a, Message> {
     let close = Message::OverflowAction(Action::Close);
 
     let Some(filing) = &open.filing else {
-        let mut entries = vec![
+        let written = |command: &Command| {
             Entry::Item(Item {
-                glyph: None,
-                name: strings::lookup(match open.played {
-                    Mark::Set => Text::OverflowMarkUnplayed,
-                    Mark::Cleared => Text::OverflowMarkPlayed,
-                })
-                .into(),
+                glyph: Some(command.glyph()),
+                name: strings::lookup(command.label()).into(),
                 secondary: None,
                 aside: None,
-                press: Message::OverflowAction(Action::MarkPlayed {
-                    item,
-                    played: open.played.flipped(),
-                }),
-            }),
-            Entry::Item(Item {
-                glyph: None,
-                name: strings::lookup(match open.favorite {
-                    Mark::Set => Text::OverflowUnfavorite,
-                    Mark::Cleared => Text::OverflowFavorite,
-                })
-                .into(),
-                secondary: None,
-                aside: None,
-                press: Message::OverflowAction(Action::Favorite {
-                    item,
-                    favorite: open.favorite.flipped(),
-                }),
-            }),
-            Entry::Item(Item {
-                glyph: None,
-                name: strings::lookup(Text::OverflowAddToCollection).into(),
-                secondary: None,
-                aside: None,
-                press: Message::OverflowAction(Action::AddTo {
-                    item,
-                    into: Into::Collection,
-                }),
-            }),
-            Entry::Item(Item {
-                glyph: None,
-                name: strings::lookup(Text::OverflowAddToPlaylist).into(),
-                secondary: None,
-                aside: None,
-                press: Message::OverflowAction(Action::AddTo {
-                    item,
-                    into: Into::Playlist,
-                }),
-            }),
-        ];
-
-        if let Some(collection) = collection {
-            entries.push(Entry::Item(Item {
-                glyph: None,
-                name: strings::lookup(Text::OverflowRemoveFromCollection).into(),
-                secondary: None,
-                aside: None,
-                press: Message::OverflowAction(Action::RemoveFrom { collection, item }),
-            }));
-        }
-
-        // reference: detail-refresh
-        if session.administrator && !session.read_only {
+                press: Message::OverflowAction(Action::Chose(command.clone())),
+            })
+        };
+        let split = open
+            .offered
+            .iter()
+            .position(|command| matches!(command, Command::Refresh { .. }))
+            .unwrap_or(open.offered.len());
+        let (early, late) = open.offered.split_at(split);
+        let mut entries: Vec<Entry<'a>> = early.iter().map(written).collect();
+        if !early.is_empty() && !late.is_empty() {
             entries.push(Entry::Divider);
-            for (label, replace, scope) in [
-                (Text::DetailRefreshMetadata, Replace::Missing, Scope::Tree),
-                (Text::DetailRefreshReplace, Replace::All, Scope::Tree),
-                (Text::DetailRefreshScanMode, Replace::Missing, Scope::Item),
-            ] {
-                entries.push(Entry::Item(Item {
-                    glyph: None,
-                    name: strings::lookup(label).into(),
-                    secondary: None,
-                    aside: None,
-                    press: Message::OverflowAction(Action::Refresh {
-                        item,
-                        replace,
-                        scope,
-                    }),
-                }));
-            }
         }
-
+        entries.extend(late.iter().map(written));
         return sheet(None, None, entries, Some(close), viewport);
     };
 
@@ -222,50 +309,26 @@ pub fn view<'a>(
     .into()
 }
 
-pub fn act(signed: &mut Signed, action: Action) -> Task<Message> {
-    let api = signed.api.clone();
-    match action {
-        Action::Open {
-            item,
-            played,
-            favorite,
-        } => {
-            if signed.session.read_only {
-                return Task::none();
-            }
-            signed.overflow = Some(Open {
-                item,
-                played,
-                favorite,
-                filing: None,
-            });
-            Task::none()
-        }
-        Action::Close => {
-            signed.overflow = None;
-            Task::none()
-        }
-        Action::MarkPlayed { item, played } => {
-            if let Some(open) = signed.overflow.as_mut() {
-                open.played = played;
-            }
-            Task::done(Message::PlayedToggled(item, played))
-        }
-        Action::Favorite { item, favorite } => {
-            if let Some(open) = signed.overflow.as_mut() {
-                open.favorite = favorite;
-            }
+/// Runs one command the menu offered; the menu is already closed, and the one
+/// command that draws the picker over it re-opens it carrying `offered`.
+fn run(signed: &mut Signed, offered: Vec<Command>, command: Command) -> Task<Message> {
+    match command {
+        Command::Play(intent) => Task::done(Message::PlayPressed(intent)),
+        Command::MarkPlayed { item, played } => Task::done(Message::PlayedToggled(item, played)),
+        Command::Favorite { item, favorite } => {
             Task::done(Message::FavoriteToggled(item, favorite))
         }
-        Action::AddTo { item: _, into } => {
-            let Some(open) = signed.overflow.as_mut() else {
-                return Task::none();
-            };
-            open.filing = Some(Filing {
-                into,
-                offered: Vec::new(),
-                naming: String::new(),
+        Command::AddTo { item, into } => {
+            signed.overflow = Some(Open {
+                offered,
+                filing: Some(Filing {
+                    item,
+                    into,
+                    offered: Vec::new(),
+                    naming: String::new(),
+                }),
             });
+            let api = signed.api.clone();
             Task::perform(
                 async move {
                     let page = match into {
@@ -276,6 +339,77 @@ pub fn act(signed: &mut Signed, action: Action) -> Task<Message> {
                 },
                 Message::FilingLoaded,
             )
+        }
+        Command::RemoveFrom { collection, item } => Task::done(Message::CollectionAction(
+            crate::screen::collections::Action::Remove { collection, item },
+        )),
+        Command::Delete { item, .. } => carried(signed, Destructive::DeleteItem { id: item }),
+        Command::Refresh {
+            item,
+            replace,
+            scope,
+        } => Task::done(Message::RefreshItem {
+            item,
+            replace,
+            scope,
+        }),
+    }
+}
+
+/// Runs the action a confirmation the menu raised stood for.
+fn carried(signed: &mut Signed, action: Destructive) -> Task<Message> {
+    let api = signed.api.clone();
+    match action {
+        Destructive::DeleteItem { id } => {
+            Task::perform(async move { api.delete_item(id).await }, |wrote| {
+                Message::Wrote(Operation::ItemDelete, wrote)
+            })
+        }
+        _ => Task::none(),
+    }
+}
+
+pub fn act(signed: &mut Signed, action: Action) -> Task<Message> {
+    let api = signed.api.clone();
+    match action {
+        Action::Open { offered } => {
+            signed.overflow = Some(Open {
+                offered,
+                filing: None,
+            });
+            Task::none()
+        }
+        Action::Close => {
+            signed.overflow = None;
+            Task::none()
+        }
+        Action::Chose(command) => {
+            let Some(open) = signed.overflow.take() else {
+                return Task::none();
+            };
+            match command.asks() {
+                Some(pending) => {
+                    signed.confirming = Some(pending);
+                    Task::none()
+                }
+                None => run(signed, open.offered, command),
+            }
+        }
+        Action::Named(typed) => {
+            if let Some(pending) = signed.confirming.as_mut() {
+                pending.typed = typed;
+            }
+            Task::none()
+        }
+        Action::Confirm => {
+            let Some(pending) = signed.confirming.take() else {
+                return Task::none();
+            };
+            carried(signed, pending.action)
+        }
+        Action::Dismiss => {
+            signed.confirming = None;
+            Task::none()
         }
         Action::Typed(typed) => {
             if let Some(filing) = signed
@@ -288,13 +422,14 @@ pub fn act(signed: &mut Signed, action: Action) -> Task<Message> {
             Task::none()
         }
         Action::File { target } => {
-            let Some(open) = signed.overflow.as_ref() else {
+            let Some(filing) = signed
+                .overflow
+                .as_ref()
+                .and_then(|open| open.filing.as_ref())
+            else {
                 return Task::none();
             };
-            let Some(filing) = open.filing.as_ref() else {
-                return Task::none();
-            };
-            let (item, into) = (open.item, filing.into);
+            let (item, into) = (filing.item, filing.into);
             signed.overflow = None;
             Task::perform(
                 async move {
@@ -315,17 +450,18 @@ pub fn act(signed: &mut Signed, action: Action) -> Task<Message> {
             )
         }
         Action::CreateAndFile => {
-            let Some(open) = signed.overflow.as_ref() else {
-                return Task::none();
-            };
-            let Some(filing) = open.filing.as_ref() else {
+            let Some(filing) = signed
+                .overflow
+                .as_ref()
+                .and_then(|open| open.filing.as_ref())
+            else {
                 return Task::none();
             };
             let name = filing.naming.clone();
             if name.trim().is_empty() {
                 return Task::none();
             }
-            let (item, into) = (open.item, filing.into);
+            let (item, into) = (filing.item, filing.into);
             signed.overflow = None;
             Task::perform(
                 async move {
@@ -345,35 +481,8 @@ pub fn act(signed: &mut Signed, action: Action) -> Task<Message> {
                 },
             )
         }
-        Action::Refresh {
-            item,
-            replace,
-            scope,
-        } => {
-            signed.overflow = None;
-            Task::done(Message::RefreshItem {
-                item,
-                replace,
-                scope,
-            })
-        }
-        Action::RemoveFrom { collection, item } => {
-            signed.overflow = None;
-            Task::done(Message::CollectionAction(
-                crate::screen::collections::Action::Remove { collection, item },
-            ))
-        }
     }
 }
 
 /// The most collections or playlists a picker offers.
 const OFFERED: i32 = 200;
-
-/// The collection whose screen `route` names, and `None` for every other route;
-/// it is what puts the removal control on the menu.
-pub fn enclosing(route: Option<&Route>) -> Option<Uuid> {
-    match route {
-        Some(Route::Collection { id, .. }) => Some(*id),
-        _ => None,
-    }
-}

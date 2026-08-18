@@ -68,8 +68,11 @@ pub struct Signed {
     pub api: Rc<Api>,
     pub history: Vec<Route>,
     pub view: View,
-    /// The overflow menu open now, which is never `Some` under read-only.
+    /// The item context menu open now.
     pub overflow: Option<crate::screen::overflow::Open>,
+    /// The confirmation a command of that menu raised, drawn in the menu's
+    /// place until it is answered.
+    pub confirming: Option<crate::screen::confirm::Pending>,
     /// The images the local server minted handles for.
     pub foreign: crate::images::Foreign,
     /// The one playback in progress; audio keeps the screen underneath, video
@@ -480,7 +483,6 @@ async fn filtered_load(
     api: Rc<Api>,
     filtered: crate::route::Filtered,
     viewport: Viewport,
-    writes: widget::Writes,
 ) -> Answer<crate::screen::browse::Browse> {
     Answer::of(async {
         let heading = match filtered.header {
@@ -499,7 +501,6 @@ async fn filtered_load(
             listing.clone(),
             None,
             viewport,
-            writes,
         );
         let answered = api
             .browse(
@@ -524,27 +525,26 @@ async fn filtered_load(
 pub fn load(signed: &Signed, route: &Route, viewport: Viewport) -> Task<Message> {
     let api: Rc<Api> = signed.api.clone();
     let reachable = signed.session.live_tv.allowed();
-    let writes = widget::Writes::of(&signed.session);
     match route.clone() {
         Route::Home => Task::perform(home::load(api), Message::HomeLoaded),
         Route::Library { id, tab } => Task::perform(
-            library::load(api, id, *tab, viewport, writes),
+            library::load(api, id, *tab, viewport),
             Message::LibraryLoaded,
         ),
         Route::Filtered(filtered) => Task::perform(
-            filtered_load(api, *filtered, viewport, writes),
+            filtered_load(api, *filtered, viewport),
             Message::FilteredLoaded,
         ),
         Route::Collections => Task::perform(
-            crate::screen::collections::listed(api, viewport, writes),
+            crate::screen::collections::listed(api, viewport),
             Message::CollectionsLoaded,
         ),
         Route::Collection { id, listing } => Task::perform(
-            crate::screen::collections::load(api, id, *listing, viewport, writes),
+            crate::screen::collections::load(api, id, *listing, viewport),
             Message::CollectionLoaded,
         ),
         Route::Playlists => Task::perform(
-            crate::screen::playlists::listed(api, viewport, writes),
+            crate::screen::playlists::listed(api, viewport),
             Message::PlaylistsLoaded,
         ),
         Route::Playlist { id } => Task::perform(
@@ -737,6 +737,7 @@ impl Jellium {
                     history: vec![Route::Home],
                     view: View::Loading,
                     overflow: None,
+                    confirming: None,
                     foreign: crate::images::Foreign::new(),
                     playing: None,
                     pending: None,
@@ -2869,7 +2870,7 @@ impl Jellium {
             }
             Stage::Signed(signed) => {
                 let read_only = signed.session.read_only;
-                let writes = widget::Writes::of(&signed.session);
+                let session = &signed.session;
                 if let Some(playing) = signed.playing.as_ref()
                     && playing.video()
                 {
@@ -2905,15 +2906,17 @@ impl Jellium {
                     };
                 }
 
-                let menu: Option<Element<'_, Message>> = signed.overflow.as_ref().map(|open| {
-                    crate::screen::overflow::view(
-                        open,
-                        &self.images,
-                        crate::screen::overflow::enclosing(signed.route()),
-                        &signed.session,
-                        self.viewport,
-                    )
-                });
+                let menu: Option<Element<'_, Message>> =
+                    match (&signed.confirming, &signed.overflow) {
+                        (Some(pending), _) => Some(crate::screen::confirm::view(
+                            pending,
+                            crate::screen::confirm::Region::Menu,
+                        )),
+                        (None, Some(open)) => {
+                            Some(crate::screen::overflow::view(open, self.viewport))
+                        }
+                        (None, None) => None,
+                    };
                 let body: Element<'_, Message> = match &signed.view {
                     View::Loading => {
                         center(prose(strings::lookup(Text::StatusLoading), typeface::BODY)).into()
@@ -2925,14 +2928,14 @@ impl Jellium {
                         chrono::Utc::now(),
                         self.viewport,
                         &self.images,
-                        writes,
+                        session,
                     ),
                     View::Library(state) => library::view(
                         state,
                         self.viewport,
                         &self.images,
                         chrono::Utc::now(),
-                        writes,
+                        session,
                     ),
                     View::Detail(state) => detail::view(
                         state,
@@ -2946,13 +2949,15 @@ impl Jellium {
                         self.viewport,
                         &self.images,
                         chrono::Utc::now(),
-                        writes,
+                        session,
                     ),
                     View::Filtered(browse) => crate::screen::browse::view(
                         browse,
                         self.viewport,
                         &self.images,
                         chrono::Utc::now(),
+                        session,
+                        None,
                     ),
                     View::Metadata(state) => crate::screen::metadata::view(
                         state,
@@ -2966,21 +2971,21 @@ impl Jellium {
                         self.viewport,
                         &self.images,
                         chrono::Utc::now(),
-                        read_only,
+                        session,
                     ),
                     View::Collection(state) => crate::screen::collections::view(
                         state,
                         self.viewport,
                         &self.images,
                         chrono::Utc::now(),
-                        read_only,
+                        session,
                     ),
                     View::Playlists(state) => crate::screen::playlists::view_listed(
                         state,
                         self.viewport,
                         &self.images,
                         chrono::Utc::now(),
-                        read_only,
+                        session,
                     ),
                     View::Playlist(state) => {
                         crate::screen::playlists::view(state, &self.images, read_only)

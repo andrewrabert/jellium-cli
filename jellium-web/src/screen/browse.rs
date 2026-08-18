@@ -7,6 +7,7 @@ use jellium_model::facets::{SeriesState, VideoKind};
 use jellium_model::paged::Paged;
 use jellium_model::sort::Sort;
 use jellium_model::window;
+use jellium_protocol::Session;
 use jellyfin_api::types::{BaseItemDto, CollectionType};
 use uuid::Uuid;
 
@@ -46,8 +47,6 @@ pub struct Browse {
     /// Where the grid rested under each sort visited, so returning to a sort
     /// returns to its place.
     rested: Vec<(Sort, Drawn)>,
-    /// Whether this surface's cards offer the controls that write.
-    writes: widget::Writes,
 }
 
 /// One facet value: the id every query carries and the name every control
@@ -144,7 +143,6 @@ impl Browse {
         listing: Listing,
         collection: Option<CollectionType>,
         viewport: Viewport,
-        writes: widget::Writes,
     ) -> Browse {
         let drawn = wall(collection, None);
         let room = Browse::laid(listing.sort, viewport);
@@ -159,7 +157,6 @@ impl Browse {
             card: drawn,
             viewport,
             rested: Vec::new(),
-            writes,
         }
     }
 
@@ -527,6 +524,8 @@ pub fn view<'a>(
     viewport: Viewport,
     images: &'a Cache,
     now: chrono::DateTime<chrono::Utc>,
+    session: &'a Session,
+    collection: Option<Uuid>,
 ) -> Element<'a, Message> {
     let wall = browse.card();
     let room = browse.room();
@@ -548,7 +547,7 @@ pub fn view<'a>(
         card::Wrap::Leading,
         count,
         move |index| match browse.items.row(index) {
-            Some(item) => widget::poster(wall, item, room, images, now, browse.writes),
+            Some(item) => widget::poster(wall, item, room, images, now, session, collection),
             None => iced::widget::Space::new()
                 .width(style::drawn(wall.card.width(room)))
                 .height(style::drawn(wall.row(room)))

@@ -5,6 +5,7 @@ use iced::Element;
 use iced::widget::{button, column, row, text_input};
 use jellium_model::paged::Paged;
 use jellium_model::window;
+use jellium_protocol::Session;
 use jellyfin_api::types::{BaseItemDto, CollectionType};
 use uuid::Uuid;
 
@@ -17,7 +18,6 @@ use crate::screen::browse::{self, Browse};
 use crate::style::{self, Viewport, space, typeface};
 use crate::text::{self as strings, Text};
 
-use crate::widget;
 use crate::widget::prose;
 use iced::Task;
 
@@ -49,7 +49,7 @@ pub enum Action {
     PlayAll { id: Uuid, shuffle: bool },
 }
 
-pub async fn listed(api: Rc<Api>, viewport: Viewport, writes: widget::Writes) -> Answer<Listed> {
+pub async fn listed(api: Rc<Api>, viewport: Viewport) -> Answer<Listed> {
     Answer::of(async {
         let heading = strings::lookup(Text::NavCollections).to_string();
         let mut browse = Browse::new(
@@ -58,7 +58,6 @@ pub async fn listed(api: Rc<Api>, viewport: Viewport, writes: widget::Writes) ->
             Listing::default(),
             Some(CollectionType::Boxsets),
             viewport,
-            writes,
         );
         let answered = api
             .collections(0, Paged::<BaseItemDto>::PAGE as i32)
@@ -80,7 +79,6 @@ pub async fn load(
     collection: Uuid,
     listing: Listing,
     viewport: Viewport,
-    writes: widget::Writes,
 ) -> Answer<State> {
     Answer::of(async {
         let held = api.item(collection).await.bubbled()?;
@@ -91,7 +89,6 @@ pub async fn load(
             listing.clone(),
             Some(CollectionType::Boxsets),
             viewport,
-            writes,
         );
         let answered = api
             .browse(
@@ -136,18 +133,25 @@ pub fn view_listed<'a>(
     viewport: Viewport,
     images: &'a Cache,
     now: chrono::DateTime<chrono::Utc>,
-    read_only: bool,
+    session: &'a Session,
 ) -> Element<'a, Message> {
     let mut page = column![].spacing(style::drawn(space::SECTION_GAP.drawn()));
-    if !read_only {
+    if !session.read_only {
         page = page.push(naming(
             &state.naming,
             Text::CollectionCreate,
             Message::CollectionAction(Action::Create),
         ));
     }
-    page.push(browse::view(&state.browse, viewport, images, now))
-        .into()
+    page.push(browse::view(
+        &state.browse,
+        viewport,
+        images,
+        now,
+        session,
+        None,
+    ))
+    .into()
 }
 
 pub fn view<'a>(
@@ -155,14 +159,14 @@ pub fn view<'a>(
     viewport: Viewport,
     images: &'a Cache,
     now: chrono::DateTime<chrono::Utc>,
-    read_only: bool,
+    session: &'a Session,
 ) -> Element<'a, Message> {
     let Some(id) = state.collection.id else {
         return column![].into();
     };
     let mut page = column![].spacing(style::drawn(space::SECTION_GAP.drawn()));
 
-    if !read_only {
+    if !session.read_only {
         page = page
             .push(naming(
                 &state.naming,
@@ -194,8 +198,15 @@ pub fn view<'a>(
             );
     }
 
-    page.push(browse::view(&state.browse, viewport, images, now))
-        .into()
+    page.push(browse::view(
+        &state.browse,
+        viewport,
+        images,
+        now,
+        session,
+        state.collection.id,
+    ))
+    .into()
 }
 
 /// Applies one control, and re-reads the surface the write changed.

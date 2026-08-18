@@ -7,6 +7,7 @@ use jellium_model::facets::Facets;
 use jellium_model::search::Section;
 use jellium_model::sort::Sort;
 use jellium_model::window;
+use jellium_protocol::Session;
 use jellyfin_api::types::{BaseItemDto, BaseItemKind};
 
 use crate::api::Api;
@@ -272,7 +273,7 @@ fn sectioned<'a>(
     viewport: Viewport,
     images: &'a Cache,
     now: chrono::DateTime<chrono::Utc>,
-    writes: widget::Writes,
+    session: &'a Session,
 ) -> Element<'a, Message> {
     let room = Room::content(viewport);
     let drawn = card(results.section, shared(&results.items));
@@ -280,7 +281,7 @@ fn sectioned<'a>(
         results.window,
         results.items.len(),
         move |index| match results.items.get(index) {
-            Some(item) => widget::poster(drawn, item, room, images, now, writes),
+            Some(item) => widget::poster(drawn, item, room, images, now, session, None),
             None => iced::widget::Space::new()
                 .width(style::drawn(drawn.card.width(room)))
                 .into(),
@@ -299,7 +300,7 @@ pub fn view<'a>(
     viewport: Viewport,
     images: &'a Cache,
     now: chrono::DateTime<chrono::Utc>,
-    writes: widget::Writes,
+    session: &'a Session,
 ) -> Element<'a, Message> {
     let mut page = column![widget::searching(&state.term, viewport)]
         .spacing(style::drawn(space::SECTION_GAP.drawn()))
@@ -320,7 +321,7 @@ pub fn view<'a>(
     }
 
     for results in &state.sections {
-        page = page.push(sectioned(results, viewport, images, now, writes));
+        page = page.push(sectioned(results, viewport, images, now, session));
     }
     page.into()
 }

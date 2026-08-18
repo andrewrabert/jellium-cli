@@ -7,6 +7,7 @@ use jellium_model::facets::{Facet, Facets};
 use jellium_model::paged::Paged;
 use jellium_model::sort::Sort;
 use jellium_model::window;
+use jellium_protocol::Session;
 use jellyfin_api::types::{BaseItemDto, BaseItemKind, CollectionType};
 use uuid::Uuid;
 
@@ -184,13 +185,7 @@ pub struct State {
     pub body: Body,
 }
 
-pub async fn load(
-    api: Rc<Api>,
-    library: Uuid,
-    tab: Tab,
-    viewport: Viewport,
-    writes: widget::Writes,
-) -> Answer<State> {
+pub async fn load(api: Rc<Api>, library: Uuid, tab: Tab, viewport: Viewport) -> Answer<State> {
     Answer::of(async {
         let held = api.item(library).await.bubbled()?;
         let tabs = Kind::of(held.collection_type);
@@ -217,7 +212,6 @@ pub async fn load(
                 Listing::default(),
                 held.collection_type,
                 viewport,
-                writes,
             );
             let items = api.upcoming(library, UPCOMING).await.bubbled()?;
             rows.items = Paged::new(items.len());
@@ -231,7 +225,6 @@ pub async fn load(
                 listing.clone(),
                 held.collection_type,
                 viewport,
-                writes,
             );
             let answered = api
                 .browse(
@@ -308,7 +301,7 @@ pub fn view<'a>(
     viewport: Viewport,
     images: &'a Cache,
     now: chrono::DateTime<chrono::Utc>,
-    writes: widget::Writes,
+    session: &'a Session,
 ) -> Element<'a, Message> {
     let Some(id) = state.library.id else {
         return column![].into();
@@ -329,11 +322,13 @@ pub fn view<'a>(
     );
 
     let body = match &state.body {
-        Body::Browse(browse) | Body::Rows(browse) => browse::view(browse, viewport, images, now),
-        Body::Suggestions(held) => {
-            crate::screen::suggestions::view(held, viewport, images, now, writes)
+        Body::Browse(browse) | Body::Rows(browse) => {
+            browse::view(browse, viewport, images, now, session, None)
         }
-        Body::Hub(held) => crate::screen::hub::view(held, viewport, images, now, writes),
+        Body::Suggestions(held) => {
+            crate::screen::suggestions::view(held, viewport, images, now, session)
+        }
+        Body::Hub(held) => crate::screen::hub::view(held, viewport, images, now, session),
     };
 
     column![strip, body]

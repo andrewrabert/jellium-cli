@@ -15,6 +15,7 @@ use iced::{Element, Fill, Length};
 use jellium_model::item::{self, Mark};
 use jellium_protocol::{Session, SyncAccess};
 use jellyfin_api::types::{BaseItemDto, BaseItemKind};
+use uuid::Uuid;
 
 use crate::app::Message;
 use crate::icon::Icon;
@@ -178,25 +179,6 @@ fn subtitle(item: &BaseItemDto) -> String {
         (Some(series), _) => series.clone(),
         (None, Some(year)) => year.to_string(),
         (None, None) => String::new(),
-    }
-}
-
-/// Whether a card's hover menu offers the controls that write to the Jellyfin
-/// server — the played mark, the rating control and the overflow menu — which a
-/// read-only session offers none of.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum Writes {
-    Offered,
-    Withheld,
-}
-
-impl Writes {
-    /// What the session offers: nothing where it is read-only.
-    pub fn of(session: &Session) -> Writes {
-        match session.read_only {
-            true => Writes::Withheld,
-            false => Writes::Offered,
-        }
     }
 }
 
@@ -776,12 +758,13 @@ pub fn poster<'a>(
     room: Room,
     images: &'a Cache,
     now: chrono::DateTime<chrono::Utc>,
-    writes: Writes,
+    session: &'a Session,
+    collection: Option<Uuid>,
 ) -> Element<'a, Message> {
     let name = item.name.clone().unwrap_or_default();
     let said = subtitle(item);
     let mut controls = Vec::new();
-    if let Some(id) = item.id.filter(|_| writes == Writes::Offered) {
+    if let Some(id) = item.id.filter(|_| !session.read_only) {
         let played = item::played(item);
         let favorite = item::favorited(item);
         if item::markable(item) {
@@ -804,15 +787,19 @@ pub fn poster<'a>(
                 Message::FavoriteToggled(id, favorite.flipped()),
             ));
         }
+    }
+    let offered = crate::screen::overflow::commands(
+        crate::screen::overflow::Subject::Item(item),
+        session,
+        collection,
+        now,
+    );
+    if !offered.is_empty() {
         controls.push(Control {
             glyph: Icon::MoreVert,
             tint: style::Tint::Plain,
             label: Text::OverflowOpen,
-            press: Message::OverflowAction(crate::screen::overflow::Action::Open {
-                item: id,
-                played,
-                favorite,
-            }),
+            press: Message::OverflowAction(crate::screen::overflow::Action::Open { offered }),
         });
     }
     let plays = item.id.filter(|_| item::playable(item, now)).map(|id| {
@@ -847,11 +834,11 @@ fn cards<'a>(
     room: Room,
     images: &'a Cache,
     now: chrono::DateTime<chrono::Utc>,
-    writes: Writes,
+    session: &'a Session,
 ) -> Vec<Element<'a, Message>> {
     items
         .into_iter()
-        .map(|item| poster(drawing, item, room, images, now, writes))
+        .map(|item| poster(drawing, item, room, images, now, session, None))
         .collect()
 }
 
@@ -878,12 +865,12 @@ pub fn rail<'a>(
     room: Room,
     images: &'a Cache,
     now: chrono::DateTime<chrono::Utc>,
-    writes: Writes,
+    session: &'a Session,
 ) -> Element<'a, Message> {
     scroller(
         drawing,
         room,
-        cards(drawing, items, room, images, now, writes),
+        cards(drawing, items, room, images, now, session),
     )
 }
 
@@ -1277,10 +1264,10 @@ pub fn posters<'a>(
     room: Room,
     images: &'a Cache,
     now: chrono::DateTime<chrono::Utc>,
-    writes: Writes,
+    session: &'a Session,
 ) -> Element<'a, Message> {
     scrolled(
-        grid(cards(drawing, items, room, images, now, writes))
+        grid(cards(drawing, items, room, images, now, session))
             .columns(drawing.card.across(room).count())
             .spacing(style::drawn(space::GUTTER.drawn())),
     )

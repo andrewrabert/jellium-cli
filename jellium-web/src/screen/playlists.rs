@@ -5,6 +5,7 @@ use iced::widget::{button, checkbox, column, row, text_input};
 use iced::{Element, Task};
 use jellium_model::paged::Paged;
 use jellium_model::window;
+use jellium_protocol::Session;
 use jellyfin_api::types::{BaseItemDto, CollectionType};
 use uuid::Uuid;
 
@@ -123,7 +124,7 @@ pub enum Action {
     },
 }
 
-pub async fn listed(api: Rc<Api>, viewport: Viewport, writes: widget::Writes) -> Answer<Listed> {
+pub async fn listed(api: Rc<Api>, viewport: Viewport) -> Answer<Listed> {
     Answer::of(async {
         let heading = strings::lookup(Text::NavPlaylists).to_string();
         let mut browse = Browse::new(
@@ -132,7 +133,6 @@ pub async fn listed(api: Rc<Api>, viewport: Viewport, writes: widget::Writes) ->
             Listing::default(),
             Some(CollectionType::Playlists),
             viewport,
-            writes,
         );
         let answered = api
             .playlists(0, Paged::<BaseItemDto>::PAGE as i32)
@@ -229,18 +229,25 @@ pub fn view_listed<'a>(
     viewport: Viewport,
     images: &'a Cache,
     now: chrono::DateTime<chrono::Utc>,
-    read_only: bool,
+    session: &'a Session,
 ) -> Element<'a, Message> {
     let mut page = column![].spacing(style::drawn(space::SECTION_GAP.drawn()));
-    if !read_only {
+    if !session.read_only {
         page = page.push(naming(
             &state.naming,
             Text::PlaylistCreate,
             Message::PlaylistAction(Action::Create),
         ));
     }
-    page.push(browse::view(&state.browse, viewport, images, now))
-        .into()
+    page.push(browse::view(
+        &state.browse,
+        viewport,
+        images,
+        now,
+        session,
+        None,
+    ))
+    .into()
 }
 
 /// One entry row: its position, its poster, its name, and the reorder and

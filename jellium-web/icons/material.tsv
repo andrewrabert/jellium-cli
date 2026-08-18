@@ -63,8 +63,11 @@ photo_album	E411
 play_arrow	E037
 play_circle	E1C4
 play_circle_filled	E038
+playlist_add	E03B
+playlist_remove	EB80
 queue	E03C
 quiz	F04C
+refresh	E5D5
 repeat	E040
 repeat_one	E041
 replay	E042

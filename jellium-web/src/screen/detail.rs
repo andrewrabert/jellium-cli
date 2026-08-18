@@ -490,7 +490,6 @@ pub fn view<'a>(
     session: &'a jellium_protocol::Session,
 ) -> Element<'a, Message> {
     let item = &state.item;
-    let writes = widget::Writes::of(session);
 
     let head = head(item, viewport, images);
     let drawn = match viewport.layout() {
@@ -515,7 +514,7 @@ pub fn view<'a>(
                 Room::content(viewport),
                 images,
                 now,
-                writes,
+                session,
             ));
     }
 
@@ -542,7 +541,7 @@ pub fn view<'a>(
                 Room::content(viewport),
                 images,
                 now,
-                writes,
+                session,
             ),
         ));
     }

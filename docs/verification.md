@@ -794,11 +794,11 @@ in order. A section passes only when every line in it holds.
    nor the sort.
 7. Delete an item while its own detail screen is open in another tab, and
    confirm that tab shows text naming the cause rather than stale metadata.
-8. Run with `--read-only`: confirm no card carries an overflow menu, and that
-   every collection, playlist, queue-order and metadata-manager control is
-   absent rather than disabled, while hubs, filtered lists, filters, sort, the
-   letter jump, trickplay, chapter images, Latest rows, the Programs tab and
-   channel detail all work unchanged.
+8. Run with `--read-only`: confirm a card's overflow menu offers the play
+   control alone, and that every collection, playlist, queue-order and
+   metadata-manager control is absent rather than disabled, while hubs,
+   filtered lists, filters, sort, the letter jump, trickplay, chapter images,
+   Latest rows, the Programs tab and channel detail all work unchanged.
 
 ## Playback parity
 
@@ -936,8 +936,8 @@ browser with a touch screen, each at its own size.
   item is a favourite draws a filled heart in #cc3333, both drawing in the
   scrim's own lettering otherwise, and pressing either changes the colour
   without a reload.
-- Under `--read-only` that scrim carries the play disc alone, on a library grid,
-  a search result and a genre card alike.
+- Under `--read-only` the scrim and the sheet alike offer the play control
+  alone, on a library grid, a search result and a genre card.
 - A Live TV recording card raises a play control under the pointer, one still
   being written included.
 - The search field stands a 2em magnifier before its 1.1em field, gapped a

@@ -3,6 +3,7 @@ use std::rc::Rc;
 
 use iced::Element;
 use iced::widget::column;
+use jellium_protocol::Session;
 use jellyfin_api::types::{BaseItemDto, CollectionType};
 use uuid::Uuid;
 
@@ -84,7 +85,7 @@ pub fn view<'a>(
     viewport: Viewport,
     images: &'a Cache,
     now: chrono::DateTime<chrono::Utc>,
-    writes: widget::Writes,
+    session: &'a Session,
 ) -> Element<'a, Message> {
     let mut page = column![widget::section(
         strings::lookup(Text::LibraryTabSuggestions),
@@ -94,7 +95,7 @@ pub fn view<'a>(
             Room::content(viewport),
             images,
             now,
-            writes,
+            session,
         ),
     )]
     .spacing(style::drawn(space::SECTION_GAP.drawn()));
@@ -108,7 +109,7 @@ pub fn view<'a>(
                 Room::content(viewport),
                 images,
                 now,
-                writes,
+                session,
             ),
         ));
     }

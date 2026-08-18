@@ -357,6 +357,9 @@ detail-button-icon	src/styles/librarybrowser.scss	1121	1125	9663a4f0502aaabfd47f
 detail-markup-play	src/controllers/itemDetails/index.html	18	29	b0900f0e04321a1594627ede725f9244c8452550af8c26234879bb4c95c3d94b	ported
 detail-markup-marks	src/controllers/itemDetails/index.html	67	77	16201f05a9d916adf9b2fe335ca0bb5135dc61f82af040cc0425b22628525717	ported
 detail-refresh	src/components/itemContextMenu.js	299	304	0c25d3844bea9e43fdb6c927d0363749f0377b959e9e89eec71efaee9d1ebfd8	ported
+item-context-play	src/components/itemContextMenu.js	44	57	1bdb0eea30ab7ef9da04f6c8c08f7b5ca9a626bef2cd3c5a5f1eed35e9feb01b	ported
+item-context-delete	src/components/itemContextMenu.js	208	214	442d09c962021144382de4f21e09e23ca9404af759bbcb98f97a69c352b9046b	ported
+delete-confirm	src/scripts/deleteHelper.js	14	31	3002578adab5511e9a1720c81a3c2fcab362a206bd37de35b4beebc0f81be31c	ported
 control-tab	src/elements/emby-tabs/emby-tabs.scss	1	22	c8811f369c6a7b2aa0ab0c2b6be973fb5306a39ef201c7f04cc7eb5c725c03cf	ported
 tab-scroll	src/elements/emby-tabs/emby-tabs.js	120	153	add0f5c44c6ea1886093fa6b30f449bec4517d8e99ec4ec4722b09142f0206bd	ported
 scheme-tab	src/themes/dark/theme.scss	346	360	9d78c97adf295ea8699d80fdddd6a4579e9a9de7684745d865dcc7c7cea46da1	ported

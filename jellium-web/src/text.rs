@@ -905,6 +905,8 @@ text! {
     OverflowRemoveFromCollection => "overflowRemoveFromCollection",
     OverflowCreateAndFile => "overflowCreateAndFile",
     OverflowOpen => "overflowOpen",
+    MenuPlay => "menuPlay",
+    MenuDeleteMedia => "menuDeleteMedia",
     SheetCancel => "sheetCancel",
     SheetPlayOn => "sheetPlayOn",
     SheetSelectGroup => "sheetSelectGroup",

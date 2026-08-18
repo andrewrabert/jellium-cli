@@ -1,5 +1,5 @@
-//! One confirmation rule with two tiers, serving both the dashboard and the
-//! settings region.
+//! One confirmation rule with two tiers, serving every region that raises a
+//! confirmation.
 
 use iced::Element;
 use iced::widget::{button, column, row, text_input};
@@ -16,6 +16,9 @@ pub enum Region {
     Dashboard,
     Settings,
     Metadata,
+    /// The item context menu, which raises every confirmation a card's own
+    /// command takes.
+    Menu,
 }
 
 impl Region {
@@ -30,6 +33,7 @@ impl Region {
             Region::Metadata => {
                 Message::MetadataAction(crate::screen::metadata::Action::Typed(typed))
             }
+            Region::Menu => Message::OverflowAction(crate::screen::overflow::Action::Named(typed)),
         }
     }
 
@@ -40,6 +44,7 @@ impl Region {
             }
             Region::Settings => Message::SettingsAction(crate::screen::settings::Action::Confirm),
             Region::Metadata => Message::MetadataAction(crate::screen::metadata::Action::Confirm),
+            Region::Menu => Message::OverflowAction(crate::screen::overflow::Action::Confirm),
         }
     }
 
@@ -48,6 +53,7 @@ impl Region {
             Region::Dashboard => Message::DashboardAction(crate::screen::dashboard::Action::Close),
             Region::Settings => Message::SettingsAction(crate::screen::settings::Action::Close),
             Region::Metadata => Message::MetadataAction(crate::screen::metadata::Action::Close),
+            Region::Menu => Message::OverflowAction(crate::screen::overflow::Action::Dismiss),
         }
     }
 }

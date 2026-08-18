@@ -3,6 +3,7 @@ use std::rc::Rc;
 
 use iced::Element;
 use iced::widget::{column, row};
+use jellium_protocol::Session;
 use jellyfin_api::types::{BaseItemDto, CollectionType, MediaType};
 
 use crate::api::Api;
@@ -181,7 +182,7 @@ pub fn view<'a>(
     now: chrono::DateTime<chrono::Utc>,
     viewport: Viewport,
     images: &'a Cache,
-    writes: widget::Writes,
+    session: &'a Session,
 ) -> Element<'a, Message> {
     if state.libraries.is_empty() && state.continue_watching.is_empty() && state.next_up.is_empty()
     {
@@ -219,7 +220,7 @@ pub fn view<'a>(
                     Room::content(viewport),
                     images,
                     now,
-                    writes,
+                    session,
                 ),
             ));
         }
@@ -253,7 +254,7 @@ pub fn view<'a>(
                 Room::content(viewport),
                 images,
                 now,
-                writes,
+                session,
             ),
         ));
     }
@@ -266,7 +267,7 @@ pub fn view<'a>(
                 Room::content(viewport),
                 images,
                 now,
-                writes,
+                session,
             ),
         ));
     }
