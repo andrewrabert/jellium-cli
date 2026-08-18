@@ -604,3 +604,12 @@ pub fn card_background(name: &str) -> Color {
     let last = sum % 10;
     CARD_BACKGROUNDS[(last % CARD_BACKGROUNDS.len() as u32) as usize]
 }
+
+/// `.actionSheetItemAsideText`, which the reference draws at the page's own
+/// lettering under its own opacity.
+// reference: action-sheet-item-aside
+pub const SHEET_ASIDE: Color = TEXT.faded(Ratio::percent(70.0));
+
+/// The rule `.actionsheetDivider` draws between two runs of a sheet.
+// reference: scheme-action-sheet-divider
+pub const SHEET_DIVIDER: Color = Color::rgba(0xff, 0xff, 0xff, Alpha::thousandths(140));

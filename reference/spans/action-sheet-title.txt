@@ -1,0 +1,5 @@
+.actionSheetTitle {
+    margin: 0.6em 0 0.7em !important;
+    padding: 0 0.75rem;
+    flex-grow: 0;
+}

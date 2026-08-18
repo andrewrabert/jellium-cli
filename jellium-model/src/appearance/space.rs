@@ -2142,3 +2142,85 @@ pub fn letters_right(viewport: Viewport) -> Drawn {
         false => LETTERS_RIGHT.drawn(),
     }
 }
+
+/// The corners `.actionSheet` rounds.
+// reference: action-sheet
+pub const SHEET_RADIUS: Length = Length::em(0.1);
+
+/// `.actionsheet-not-fullscreen`'s cap on the sheet's width.
+// reference: action-sheet-not-fullscreen
+pub const SHEET_WIDTH: Share = Share::per_ten_thousand(9_000);
+
+/// The height `.actionsheet-not-fullscreen` raises the sheet's own cap to.
+// reference: action-sheet-not-fullscreen
+pub const SHEET_LOOSE_HEIGHT: Share = Share::per_ten_thousand(9_000);
+
+/// `.actionSheetContent`'s own padding.
+// reference: action-sheet-content
+pub const SHEET_CONTENT_PAD: Padding = Padding {
+    top: Length::em(0.4),
+    right: Length::em(0.0),
+    bottom: Length::em(0.4),
+    left: Length::em(0.0),
+};
+
+/// `.actionsheetListItemBody`'s own padding.
+// reference: action-sheet-list-item-body
+pub const SHEET_BODY_PAD: Padding = Padding {
+    top: Length::em(0.4),
+    right: Length::em(1.0),
+    bottom: Length::em(0.4),
+    left: Length::em(0.6),
+};
+
+/// `.actionSheetItemAsideText`'s own margins.
+// reference: action-sheet-item-aside
+pub const SHEET_ASIDE_PAD: Padding = Padding {
+    top: Length::em(0.0),
+    right: Length::em(0.5),
+    bottom: Length::em(0.0),
+    left: Length::em(5.0),
+};
+
+/// `.actionsheetMenuItemIcon`'s own margins.
+// reference: action-sheet-menu-item-icon
+pub const SHEET_GLYPH_PAD: Padding = Padding {
+    top: Length::em(0.0),
+    right: Length::em(0.85),
+    bottom: Length::em(0.0),
+    left: Length::em(0.45),
+};
+
+/// `.actionsheetDivider`'s own height.
+// reference: action-sheet-divider
+pub const SHEET_DIVIDER: Length = Length::em(0.07);
+
+/// The margin it leaves above and below itself.
+// reference: action-sheet-divider
+pub const SHEET_DIVIDER_MARGIN: Length = Length::em(0.25);
+
+/// `.actionSheetTitle`'s own margins and side padding.
+// reference: action-sheet-title
+pub const SHEET_TITLE_PAD: Padding = Padding {
+    top: Length::em(0.6),
+    right: Length::em(0.75),
+    bottom: Length::em(0.7),
+    left: Length::em(0.75),
+};
+
+/// `.actionSheetText`'s own side padding.
+// reference: action-sheet-text
+pub const SHEET_TEXT_PAD: Padding = Padding {
+    top: Length::em(0.0),
+    right: Length::em(0.75),
+    bottom: Length::em(0.0),
+    left: Length::em(0.75),
+};
+
+/// `.actionSheetScroller-tv`'s cap on the scroller's height.
+// reference: action-sheet-scroller-tv
+pub const SHEET_TELEVISED_HEIGHT: Share = Share::per_ten_thousand(6_400);
+
+/// And on its width.
+// reference: action-sheet-scroller-tv
+pub const SHEET_TELEVISED_WIDTH: Share = Share::per_ten_thousand(6_000);

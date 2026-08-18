@@ -1,12 +1,14 @@
-use iced::widget::{button, column, container, row};
-use iced::{Element, Fill};
+use iced::Element;
+use iced::widget::{column, container};
 use jellium_protocol::{Group, GroupState, SyncAccess};
 
 use crate::app::Message;
+use crate::icon::Icon;
 use crate::player::group::{self, Joined};
-use crate::style::{self, space, typeface};
+use crate::style::{self, Viewport, space, typeface};
 use crate::text::{self as strings, Text};
 use crate::widget::prose;
+use crate::widget::sheet::{Entry, Item, sheet};
 
 fn state_label(state: GroupState) -> Text {
     match state {
@@ -24,81 +26,88 @@ fn participants(group: &Group) -> String {
     )
 }
 
-/// One joinable group, named with its participants and its state.
-fn offered(group: &Group) -> Element<'_, Message> {
-    row![
-        column![
-            prose(group.name.clone(), typeface::BODY),
-            prose(participants(group), typeface::SECONDARY),
-            prose(
-                strings::lookup(state_label(group.state)),
-                typeface::SECONDARY
-            ),
-        ]
-        .spacing(style::drawn(space::BLOCK_GAP.drawn())),
-        iced::widget::Space::new().width(Fill),
-        button(prose(strings::lookup(Text::SyncPlayJoin), typeface::BODY))
-            .style(style::raised)
-            .on_press(Message::GroupAction(group::Action::Join(group.id))),
-    ]
-    .spacing(style::drawn(space::CONTROL_GAP.drawn()))
-    .align_y(iced::Center)
-    .into()
-}
-
-fn picker<'a>(groups: &'a [Group], access: SyncAccess) -> Element<'a, Message> {
-    let mut body = column![].spacing(style::drawn(space::BLOCK_GAP.drawn()));
+/// The joinable groups, as the sheet the reference raises: each group under the
+/// person glyph with its participants beneath, and New Group under the add
+/// glyph where this installation may create one.
+// reference: group-picker-sheet
+fn picker<'a>(groups: &'a [Group], access: SyncAccess, viewport: Viewport) -> Element<'a, Message> {
+    if groups.is_empty() && access != SyncAccess::CreateAndJoin {
+        return prose(strings::lookup(Text::SyncPlayEmpty), typeface::BODY);
+    }
+    let mut entries: Vec<Entry<'a>> = groups
+        .iter()
+        .map(|group| {
+            Entry::Item(Item {
+                glyph: Some(Icon::Person),
+                name: group.name.as_str().into(),
+                secondary: Some(participants(group).into()),
+                aside: None,
+                press: Message::GroupAction(group::Action::Join(group.id)),
+            })
+        })
+        .collect();
     if access == SyncAccess::CreateAndJoin {
-        body = body.push(
-            button(prose(strings::lookup(Text::SyncPlayCreate), typeface::BODY))
-                .style(style::submit)
-                .on_press(Message::GroupAction(group::Action::Create)),
-        );
+        entries.push(Entry::Item(Item {
+            glyph: Some(Icon::Add),
+            name: strings::lookup(Text::SheetNewGroup).into(),
+            secondary: Some(strings::lookup(Text::SheetNewGroupHelp).into()),
+            aside: None,
+            press: Message::GroupAction(group::Action::Create),
+        }));
     }
-    if groups.is_empty() {
-        return body
-            .push(prose(strings::lookup(Text::SyncPlayEmpty), typeface::BODY))
-            .into();
-    }
-    let listed = groups.iter().fold(
-        column![].spacing(style::drawn(space::BLOCK_GAP.drawn())),
-        |listed, group| listed.push(offered(group)),
-    );
-    body.push(crate::widget::scrolled(listed).height(Fill))
-        .into()
+    sheet(
+        Some(strings::lookup(Text::SheetSelectGroup).into()),
+        None,
+        entries,
+        None,
+        viewport,
+    )
 }
 
-fn active<'a>(joined: &'a Joined) -> Element<'a, Message> {
-    let mut body = column![
-        prose(joined.group.name.clone(), typeface::BODY),
-        prose(participants(&joined.group), typeface::SECONDARY),
-        prose(
-            strings::lookup(state_label(joined.group.state)),
-            typeface::SECONDARY
-        ),
-    ]
+/// The group this installation is in, as the sheet the reference raises for it:
+/// titled with the group's own name over its participants, offering to halt
+/// playback and to leave, each with its own sentence beneath.
+// reference: group-sheet
+fn active<'a>(joined: &'a Joined, viewport: Viewport) -> Element<'a, Message> {
+    let mut standing = column![prose(
+        strings::lookup(state_label(joined.group.state)),
+        typeface::SECONDARY
+    )]
     .spacing(style::drawn(space::BLOCK_GAP.drawn()));
 
     if joined.waiting() {
-        body = body.push(prose(
+        standing = standing.push(prose(
             strings::lookup(Text::SyncPlayWaiting),
             typeface::SECONDARY,
         ));
     }
 
-    body.push(
-        button(prose(strings::lookup(Text::SyncPlayStop), typeface::BODY))
-            .style(style::raised)
-            .on_press(Message::GroupAction(group::Action::Stop)),
-    )
-    .push(iced::widget::Space::new().height(style::drawn(space::BLOCK_GAP.drawn())))
-    .push(
-        button(prose(strings::lookup(Text::SyncPlayLeave), typeface::BODY))
-            .style(style::raised)
-            .on_press(Message::GroupAction(group::Action::Leave)),
-    )
-    .spacing(style::drawn(space::BLOCK_GAP.drawn()))
-    .into()
+    let entries = [
+        Entry::Item(Item {
+            glyph: Some(Icon::PauseCircleFilled),
+            name: strings::lookup(Text::SheetHaltPlayback).into(),
+            secondary: Some(strings::lookup(Text::SheetHaltPlaybackHelp).into()),
+            aside: None,
+            press: Message::GroupAction(group::Action::Stop),
+        }),
+        Entry::Item(Item {
+            glyph: Some(Icon::MeetingRoom),
+            name: strings::lookup(Text::SheetLeaveGroup).into(),
+            secondary: Some(strings::lookup(Text::SheetLeaveGroupHelp).into()),
+            aside: None,
+            press: Message::GroupAction(group::Action::Leave),
+        }),
+    ];
+
+    standing
+        .push(sheet(
+            Some(joined.group.name.as_str().into()),
+            Some(participants(&joined.group).into()),
+            entries,
+            None,
+            viewport,
+        ))
+        .into()
 }
 
 /// The joinable groups when this installation is in none — each named with its
@@ -110,10 +119,11 @@ pub fn view<'a>(
     joined: Option<&'a Joined>,
     groups: &'a [Group],
     access: SyncAccess,
+    viewport: Viewport,
 ) -> Element<'a, Message> {
     let body: Element<'a, Message> = match joined {
-        Some(joined) => active(joined),
-        None => picker(groups, access),
+        Some(joined) => active(joined, viewport),
+        None => picker(groups, access, viewport),
     };
 
     container(

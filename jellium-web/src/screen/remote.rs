@@ -1,44 +1,47 @@
 use std::collections::HashSet;
 
-use iced::widget::{button, column, container};
-use iced::{Element, Fill};
+use iced::Element;
+use iced::widget::{column, container};
 use jellium_protocol::{SyncAccess, Target};
 
 use crate::app::Message;
+use crate::icon::Icon;
 use crate::images::{self, Cache};
 use crate::player::osd::{self, Transport};
 use crate::player::remote::{self, Bound};
 use crate::style::{self, Viewport, space, typeface};
 use crate::text::{self as strings, Text};
 use crate::widget::prose;
+use crate::widget::sheet::{Entry, Item, sheet};
 
-/// One target the picker offers, named by its device name with its client
-/// name beneath.
-fn offered(target: &Target) -> Element<'_, Message> {
-    button(
-        column![
-            prose(target.device_name.clone(), typeface::BODY),
-            prose(target.client_name.clone(), typeface::SECONDARY),
-        ]
-        .spacing(style::drawn(space::BLOCK_GAP.drawn())),
-    )
-    .style(style::flat)
-    .on_press(Message::RemoteAction(remote::Action::Take(
-        target.session.clone(),
-    )))
-    .width(Fill)
-    .into()
-}
+/// The glyph the reference draws for a target's device type: `tv`, which is
+/// what its own switch answers for a target naming none, and no target this
+/// client is handed names one.
+// reference: device-picker-glyph
+const TARGET_GLYPH: Icon = Icon::Tv;
 
-fn picker<'a>(targets: &'a [Target]) -> Element<'a, Message> {
+/// The device picker, as the sheet the reference raises for `HeaderPlayOn`:
+/// each target named by its device with its client beneath.
+// reference: device-picker-sheet
+fn picker<'a>(targets: &'a [Target], viewport: Viewport) -> Element<'a, Message> {
     if targets.is_empty() {
         return prose(strings::lookup(Text::RemoteEmpty), typeface::BODY);
     }
-    let listed = targets.iter().fold(
-        column![].spacing(style::drawn(space::BLOCK_GAP.drawn())),
-        |listed, target| listed.push(offered(target)),
-    );
-    crate::widget::scrolled(listed).height(Fill).into()
+    sheet(
+        Some(strings::lookup(Text::SheetPlayOn).into()),
+        None,
+        targets.iter().map(|target| {
+            Entry::Item(Item {
+                glyph: Some(TARGET_GLYPH),
+                name: target.device_name.as_str().into(),
+                secondary: Some(target.client_name.as_str().into()),
+                aside: None,
+                press: Message::RemoteAction(remote::Action::Take(target.session.clone())),
+            })
+        }),
+        None,
+        viewport,
+    )
 }
 
 /// The device picker when nothing is bound — each target named by its device
@@ -53,7 +56,7 @@ pub fn view<'a>(
     viewport: Viewport,
 ) -> Element<'a, Message> {
     let body: Element<'a, Message> = match bound {
-        None => picker(targets),
+        None => picker(targets, viewport),
         Some(bound) => column![
             prose(bound.target.device_name.clone(), typeface::BODY),
             prose(bound.target.client_name.clone(), typeface::SECONDARY),

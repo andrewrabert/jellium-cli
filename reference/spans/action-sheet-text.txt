@@ -1,0 +1,5 @@
+.actionSheetText {
+    margin-top: 0;
+    padding: 0 0.75rem;
+    flex-grow: 0;
+}

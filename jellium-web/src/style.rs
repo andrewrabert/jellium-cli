@@ -149,6 +149,35 @@ pub fn dialog(_theme: &iced::Theme) -> iced::widget::container::Style {
         .shadow(shadow(space::SHADOW))
 }
 
+/// The surface an action sheet stands on, rounded the way `.actionSheet`
+/// rounds itself.
+// reference: action-sheet
+pub fn sheet(_theme: &iced::Theme) -> iced::widget::container::Style {
+    iced::widget::container::Style::default()
+        .background(color(scheme::SURFACE))
+        .color(color(scheme::TEXT))
+        .border(iced::Border {
+            radius: iced::border::Radius::new(drawn(space::SHEET_RADIUS.drawn())),
+            ..iced::Border::default()
+        })
+        .shadow(shadow(space::SHADOW))
+}
+
+/// `.actionsheetDivider`.
+// reference: action-sheet-divider
+// reference: scheme-action-sheet-divider
+pub fn sheet_divider(_theme: &iced::Theme) -> iced::widget::container::Style {
+    iced::widget::container::Style::default().background(color(scheme::SHEET_DIVIDER))
+}
+
+/// `.actionSheetItemAsideText`.
+// reference: action-sheet-item-aside
+pub fn sheet_aside(_theme: &iced::Theme) -> iced::widget::text::Style {
+    iced::widget::text::Style {
+        color: Some(color(scheme::SHEET_ASIDE)),
+    }
+}
+
 /// The reference's `.toast`: its own surface, rounded tighter than a control
 /// and carrying the shadow a raised surface carries.
 // reference: scheme-toast

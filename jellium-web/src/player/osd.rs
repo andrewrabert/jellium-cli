@@ -1,3 +1,4 @@
+use std::borrow::Cow;
 use std::collections::HashSet;
 use std::time::Duration;
 
@@ -20,6 +21,7 @@ use crate::style::space::Room;
 use crate::style::{self, Viewport, card, space, typeface};
 use crate::text::{self as strings, Text};
 use crate::widget::prose;
+use crate::widget::sheet::{Chosen, Entry, Item, sheet};
 
 const VOLUME_WIDTH: f32 = 96.0;
 
@@ -146,113 +148,163 @@ pub fn chapters<'a>(
         .collect()
 }
 
+/// One entry of a player menu, chosen where it is the one in force.
+fn entry<'a>(name: Cow<'a, str>, chosen: Chosen, press: Action) -> Entry<'a> {
+    Entry::Item(
+        Item {
+            glyph: None,
+            name,
+            secondary: None,
+            aside: None,
+            press: Message::PlayerAction(press),
+        }
+        .chosen(chosen),
+    )
+}
+
+fn marked(chosen: bool) -> Chosen {
+    match chosen {
+        true => Chosen::Yes,
+        false => Chosen::No,
+    }
+}
+
+/// The menu open over the display, as the sheet the reference raises for it,
+/// save the chapter menu, which the reference draws as its own cards.
 // reference: osd-settings-repeat
 // reference: osd-repeat-menu
 fn menu<'a>(
     playing: &'a Playing,
+    quality: Quality,
     images: &'a Cache,
     viewport: Viewport,
 ) -> Option<Element<'a, Message>> {
-    let entries: Vec<Element<'a, Message>> = match playing.menu? {
-        Menu::Settings => [
-            (Text::PlayerQuality, Menu::Quality),
-            (Text::PlayerRepeatMode, Menu::Repeat),
-            (Text::PlayerChapters, Menu::Chapters),
-            (Text::PlayerVersion, Menu::Version),
-        ]
-        .into_iter()
-        .map(|(label, menu)| {
-            button(prose(strings::lookup(label), typeface::BODY))
-                .style(style::flat)
-                .on_press(Message::PlayerAction(Action::OpenMenu(menu)))
-                .into()
-        })
-        .collect(),
-        Menu::Audio => playing
-            .plan
-            .audio_streams
-            .iter()
-            .map(|stream| {
-                button(prose(stream.label.clone(), typeface::BODY))
-                    .style(style::flat)
-                    .on_press(Message::PlayerAction(Action::SelectAudio(stream.index)))
-                    .into()
-            })
-            .collect(),
-        Menu::Subtitle => std::iter::once(
-            button(prose(
-                strings::lookup(Text::PlayerSubtitlesOff),
-                typeface::BODY,
-            ))
-            .style(style::flat)
-            .on_press(Message::PlayerAction(Action::SelectSubtitle(
-                Subtitles::Off,
-            )))
+    let open = playing.menu?;
+    if open == Menu::Chapters {
+        return Some(
+            container(
+                column![
+                    crate::widget::scrolled(
+                        column(chapters(playing, images, viewport))
+                            .spacing(style::drawn(space::BLOCK_GAP.drawn()))
+                    ),
+                    acting(
+                        Icon::ArrowBack,
+                        typeface::ICON_BUTTON,
+                        Text::PlayerLeave,
+                        Action::CloseMenu
+                    ),
+                ]
+                .spacing(style::drawn(space::BLOCK_GAP.drawn())),
+            )
+            .padding(style::drawn(space::ICON_GAP.drawn()))
             .into(),
-        )
-        .chain(playing.plan.subtitle_streams.iter().map(|stream| {
-            button(prose(stream.label.clone(), typeface::BODY))
-                .style(style::flat)
-                .on_press(Message::PlayerAction(Action::SelectSubtitle(
-                    Subtitles::Stream {
-                        index: stream.index,
-                    },
-                )))
-                .into()
-        }))
-        .collect(),
-        Menu::Quality => Quality::LADDER
-            .iter()
-            .map(|quality| {
-                button(prose(quality_label(*quality), typeface::BODY))
-                    .style(style::flat)
-                    .on_press(Message::PlayerAction(Action::SelectQuality(*quality)))
-                    .into()
-            })
-            .collect(),
-        Menu::Repeat => [Repeat::All, Repeat::One, Repeat::Off]
+        );
+    }
+
+    let (title, entries): (Text, Vec<Entry<'a>>) = match open {
+        Menu::Settings => (
+            Text::PlayerSettings,
+            [
+                (Text::PlayerQuality, Menu::Quality),
+                (Text::PlayerRepeatMode, Menu::Repeat),
+                (Text::PlayerChapters, Menu::Chapters),
+                (Text::PlayerVersion, Menu::Version),
+            ]
             .into_iter()
-            .map(|repeat| {
-                button(prose(strings::lookup(repeat_label(repeat)), typeface::BODY))
-                    .style(style::flat)
-                    .on_press(Message::PlayerAction(Action::SetRepeat(repeat)))
-                    .into()
+            .map(|(label, menu)| {
+                entry(
+                    strings::lookup(label).into(),
+                    Chosen::No,
+                    Action::OpenMenu(menu),
+                )
             })
             .collect(),
-        Menu::Chapters => chapters(playing, images, viewport),
-        Menu::Version => playing
-            .plan
-            .sources
-            .iter()
-            .map(|source| {
-                button(prose(source.name.clone(), typeface::BODY))
-                    .style(style::flat)
-                    .on_press(Message::PlayerAction(Action::SelectVersion(
-                        source.id.clone(),
-                    )))
-                    .into()
-            })
+        ),
+        Menu::Audio => (
+            Text::PlayerAudio,
+            playing
+                .plan
+                .audio_streams
+                .iter()
+                .map(|stream| {
+                    entry(
+                        stream.label.clone().into(),
+                        marked(playing.plan.audio_stream == Some(stream.index)),
+                        Action::SelectAudio(stream.index),
+                    )
+                })
+                .collect(),
+        ),
+        Menu::Subtitle => (
+            Text::PlayerSubtitles,
+            std::iter::once(entry(
+                strings::lookup(Text::PlayerSubtitlesOff).into(),
+                marked(playing.plan.subtitle_stream.is_none()),
+                Action::SelectSubtitle(Subtitles::Off),
+            ))
+            .chain(playing.plan.subtitle_streams.iter().map(|stream| {
+                entry(
+                    stream.label.clone().into(),
+                    marked(playing.plan.subtitle_stream == Some(stream.index)),
+                    Action::SelectSubtitle(Subtitles::Stream {
+                        index: stream.index,
+                    }),
+                )
+            }))
             .collect(),
+        ),
+        Menu::Quality => (
+            Text::PlayerQuality,
+            Quality::LADDER
+                .iter()
+                .map(|offered| {
+                    entry(
+                        quality_label(*offered).into(),
+                        marked(*offered == quality),
+                        Action::SelectQuality(*offered),
+                    )
+                })
+                .collect(),
+        ),
+        Menu::Repeat => (
+            Text::PlayerRepeatMode,
+            [Repeat::All, Repeat::One, Repeat::Off]
+                .into_iter()
+                .map(|repeat| {
+                    entry(
+                        strings::lookup(repeat_label(repeat)).into(),
+                        marked(playing.queue.repeat() == repeat),
+                        Action::SetRepeat(repeat),
+                    )
+                })
+                .collect(),
+        ),
+        Menu::Version => (
+            Text::PlayerVersion,
+            playing
+                .plan
+                .sources
+                .iter()
+                .map(|source| {
+                    entry(
+                        source.name.clone().into(),
+                        marked(source.id == playing.plan.media_source),
+                        Action::SelectVersion(source.id.clone()),
+                    )
+                })
+                .collect(),
+        ),
+        Menu::Chapters => unreachable!(),
     };
 
-    Some(
-        container(
-            column![
-                crate::widget::scrolled(
-                    column(entries).spacing(style::drawn(space::BLOCK_GAP.drawn()))
-                ),
-                acting(
-                    Icon::ArrowBack,
-                    typeface::ICON_BUTTON,
-                    Text::PlayerLeave,
-                    Action::CloseMenu
-                ),
-            ]
-            .spacing(style::drawn(space::BLOCK_GAP.drawn())),
-        )
-        .padding(style::drawn(space::ICON_GAP.drawn()))
-        .into(),
-    )
+    Some(sheet(
+        Some(strings::lookup(title).into()),
+        None,
+        entries,
+        Some(Message::PlayerAction(Action::CloseMenu)),
+        viewport,
+    ))
 }
 
 /// The volume control and its slider, which the panel drops on a narrow page.
@@ -732,7 +784,7 @@ pub fn view<'a>(
 
     let mut panel = body;
 
-    if let Some(menu) = menu(playing, images, viewport) {
+    if let Some(menu) = menu(playing, quality, images, viewport) {
         panel = panel.push(menu);
     } else {
         panel = panel.push(prose(quality_label(quality), typeface::SECONDARY));

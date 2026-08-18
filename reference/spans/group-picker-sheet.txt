@@ -1,0 +1,35 @@
+                const menuItems = groups.map(function (group) {
+                    return {
+                        name: group.GroupName,
+                        icon: 'person',
+                        id: group.GroupId,
+                        selected: false,
+                        secondaryText: group.Participants.join(', ')
+                    };
+                });
+
+                if (policy.SyncPlayAccess === 'CreateAndJoinGroups') {
+                    menuItems.push({
+                        name: globalize.translate('LabelSyncPlayNewGroup'),
+                        icon: 'add',
+                        id: 'new-group',
+                        selected: true,
+                        secondaryText: globalize.translate('LabelSyncPlayNewGroupDescription')
+                    });
+                }
+
+                if (menuItems.length === 0 && policy.SyncPlayAccess === 'JoinGroups') {
+                    toast({
+                        text: globalize.translate('MessageSyncPlayCreateGroupDenied')
+                    });
+                    loading.hide();
+                    return;
+                }
+
+                const menuOptions = {
+                    title: globalize.translate('HeaderSyncPlaySelectGroup'),
+                    items: menuItems,
+                    positionTo: button,
+                    border: true,
+                    dialogClass: 'syncPlayGroupMenu'
+                };

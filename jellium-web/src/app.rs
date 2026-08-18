@@ -2895,6 +2895,7 @@ impl Jellium {
                             signed.group.as_ref(),
                             &signed.groups,
                             signed.session.sync_play,
+                            self.viewport,
                         ),
                         _ => player::osd::view(
                             playing,
@@ -2914,6 +2915,7 @@ impl Jellium {
                         &self.images,
                         crate::screen::overflow::enclosing(signed.route()),
                         &signed.session,
+                        self.viewport,
                     )
                 });
                 let body: Element<'_, Message> = match &signed.view {
@@ -3003,6 +3005,7 @@ impl Jellium {
                         signed.group.as_ref(),
                         &signed.groups,
                         signed.session.sync_play,
+                        self.viewport,
                     ),
                     View::LiveTv(state) => {
                         livetv::view(state, chrono::Utc::now(), &self.images, self.viewport)

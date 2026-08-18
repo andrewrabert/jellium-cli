@@ -1,0 +1,11 @@
+.actionsheetMenuItemIcon {
+    padding: 0 !important;
+
+    [dir="ltr"] & {
+        margin: 0 0.85em 0 0.45em !important;
+    }
+
+    [dir="rtl"] & {
+        margin: 0 0.45em 0 0.85em !important;
+    }
+}

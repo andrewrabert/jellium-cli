@@ -50,14 +50,18 @@ const ICONS = [
     'fiber_manual_record', 'fiber_smart_record', 'filter_alt',
     'folder', 'folder_open', 'fullscreen', 'fullscreen_exit', 'groups', 'home',
     'keyboard', 'keyboard_arrow_down', 'keyboard_arrow_up', 'lan',
-    'library_add', 'live_tv', 'lock', 'mode_edit', 'more_vert', 'movie',
+    'library_add', 'live_tv', 'lock', 'meeting_room', 'mode_edit', 'more_vert',
+    'movie',
     'music_note', 'music_video', 'open_in_new', 'palette',
-    'pause', 'people', 'perm_media', 'person', 'phonelink_lock', 'photo',
+    'pause', 'pause_circle_filled', 'people', 'perm_media', 'person',
+    'phonelink_lock', 'photo',
     'photo_album',
     'play_arrow', 'play_circle', 'play_circle_filled', 'queue', 'quiz',
     'repeat', 'repeat_one', 'replay', 'schedule', 'search', 'settings',
-    'shuffle', 'skip_next', 'skip_previous', 'sort_by_alpha', 'stop', 'storage',
-    'theaters', 'tv', 'video_library', 'volume_off', 'volume_up', 'vpn_key'
+    'shuffle', 'skip_next', 'skip_previous', 'sort_by_alpha',
+    'stop', 'storage',
+    'theaters', 'tv', 'video_library', 'volume_off',
+    'volume_up', 'vpn_key'
 ];
 
 const BRANDING = [

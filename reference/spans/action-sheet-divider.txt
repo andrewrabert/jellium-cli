@@ -1,0 +1,5 @@
+.actionsheetDivider {
+    height: 0.07em;
+    margin: 0.25em 0;
+    flex-shrink: 0;
+}

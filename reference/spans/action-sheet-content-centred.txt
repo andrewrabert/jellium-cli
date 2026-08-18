@@ -1,0 +1,4 @@
+.actionSheetContent-centered {
+    text-align: center;
+    align-items: center;
+}

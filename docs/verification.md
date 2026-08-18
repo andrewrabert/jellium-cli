@@ -965,3 +965,24 @@ browser with a touch screen, each at its own size.
   its foot lines up with the Next Up row's below it.
 - An On Now card's elapsed bar stands inside its image at the foot rather than
   under the card's name.
+- A card's overflow menu opens as one sheet on its own rounded surface, with
+  every command stacked one under the next and Cancel at the foot.
+- The video display's settings, audio, subtitle, quality, repeat and version
+  menus each open as one such sheet, titled by the menu's own name, with Cancel
+  at the foot.
+- The audio, subtitle, quality, repeat and version menus each draw a tick
+  against the one entry in force, and every other entry in each of them lines up
+  beside that tick.
+- The device picker on the Remote screen opens as one sheet titled Play On, each
+  target carrying the television glyph, its device name, and the name of the
+  client it runs beneath.
+- The SyncPlay screen, while this browser is in no group, opens as one sheet
+  titled Join a group, each group carrying the person glyph, the group's name
+  and its participants beneath, with New group under the plus glyph last where
+  the server lets this user create one.
+- The SyncPlay screen, while this browser is in a group, opens as one sheet
+  titled with the group's own name over its participants, offering Stop local
+  playback under the pause glyph and Leave group under the door glyph, each with
+  its own sentence beneath.
+- A sheet whose rows carry no glyph and which carries no title stands its rows
+  against the leading edge with no room reserved before them.

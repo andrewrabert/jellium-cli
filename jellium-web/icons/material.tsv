@@ -44,6 +44,7 @@ lan	EB2F
 library_add	E02E
 live_tv	E639
 lock	E897
+meeting_room	EB4F
 mode_edit	E254
 more_vert	E5D4
 movie	E02C
@@ -52,6 +53,7 @@ music_video	E063
 open_in_new	E89E
 palette	E40A
 pause	E034
+pause_circle_filled	E035
 people	E7FB
 perm_media	E8A7
 person	E7FD

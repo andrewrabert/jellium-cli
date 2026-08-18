@@ -8,9 +8,10 @@ use crate::app::{Message, Signed};
 use crate::error::Operation;
 use crate::images::Cache;
 use crate::route::Route;
-use crate::style::{self, space, typeface};
+use crate::style::{self, Viewport, space, typeface};
 use crate::text::{self as strings, Text};
 use crate::widget::prose;
+use crate::widget::sheet::{Entry, Item, sheet};
 
 /// The overflow menu open now; at most one is open, and none is reachable under
 /// read-only.
@@ -95,110 +96,108 @@ pub fn view<'a>(
     images: &'a Cache,
     collection: Option<Uuid>,
     session: &'a jellium_protocol::Session,
+    viewport: Viewport,
 ) -> Element<'a, Message> {
     let _ = images;
     let item = open.item;
+    let close = Message::OverflowAction(Action::Close);
 
     let Some(filing) = &open.filing else {
-        let mut menu = column![
-            button(prose(
-                strings::lookup(match open.played {
+        let mut entries = vec![
+            Entry::Item(Item {
+                glyph: None,
+                name: strings::lookup(match open.played {
                     Mark::Set => Text::OverflowMarkUnplayed,
                     Mark::Cleared => Text::OverflowMarkPlayed,
                 })
-                .to_owned(),
-                typeface::BODY
-            ))
-            .style(style::flat)
-            .on_press(Message::OverflowAction(Action::MarkPlayed {
-                item,
-                played: open.played.flipped(),
-            })),
-            button(prose(
-                strings::lookup(match open.favorite {
+                .into(),
+                secondary: None,
+                aside: None,
+                press: Message::OverflowAction(Action::MarkPlayed {
+                    item,
+                    played: open.played.flipped(),
+                }),
+            }),
+            Entry::Item(Item {
+                glyph: None,
+                name: strings::lookup(match open.favorite {
                     Mark::Set => Text::OverflowUnfavorite,
                     Mark::Cleared => Text::OverflowFavorite,
                 })
-                .to_owned(),
-                typeface::BODY
-            ))
-            .style(style::flat)
-            .on_press(Message::OverflowAction(Action::Favorite {
-                item,
-                favorite: open.favorite.flipped(),
-            })),
-            button(prose(
-                strings::lookup(Text::OverflowAddToCollection),
-                typeface::BODY
-            ))
-            .style(style::flat)
-            .on_press(Message::OverflowAction(Action::AddTo {
-                item,
-                into: Into::Collection,
-            })),
-            button(prose(
-                strings::lookup(Text::OverflowAddToPlaylist),
-                typeface::BODY
-            ))
-            .style(style::flat)
-            .on_press(Message::OverflowAction(Action::AddTo {
-                item,
-                into: Into::Playlist,
-            })),
-        ]
-        .spacing(style::drawn(space::CONTROL_GAP.drawn()));
+                .into(),
+                secondary: None,
+                aside: None,
+                press: Message::OverflowAction(Action::Favorite {
+                    item,
+                    favorite: open.favorite.flipped(),
+                }),
+            }),
+            Entry::Item(Item {
+                glyph: None,
+                name: strings::lookup(Text::OverflowAddToCollection).into(),
+                secondary: None,
+                aside: None,
+                press: Message::OverflowAction(Action::AddTo {
+                    item,
+                    into: Into::Collection,
+                }),
+            }),
+            Entry::Item(Item {
+                glyph: None,
+                name: strings::lookup(Text::OverflowAddToPlaylist).into(),
+                secondary: None,
+                aside: None,
+                press: Message::OverflowAction(Action::AddTo {
+                    item,
+                    into: Into::Playlist,
+                }),
+            }),
+        ];
 
         if let Some(collection) = collection {
-            menu = menu.push(
-                button(prose(
-                    strings::lookup(Text::OverflowRemoveFromCollection),
-                    typeface::BODY,
-                ))
-                .style(style::flat)
-                .on_press(Message::OverflowAction(Action::RemoveFrom {
-                    collection,
-                    item,
-                })),
-            );
+            entries.push(Entry::Item(Item {
+                glyph: None,
+                name: strings::lookup(Text::OverflowRemoveFromCollection).into(),
+                secondary: None,
+                aside: None,
+                press: Message::OverflowAction(Action::RemoveFrom { collection, item }),
+            }));
         }
 
         // reference: detail-refresh
         if session.administrator && !session.read_only {
+            entries.push(Entry::Divider);
             for (label, replace, scope) in [
                 (Text::DetailRefreshMetadata, Replace::Missing, Scope::Tree),
                 (Text::DetailRefreshReplace, Replace::All, Scope::Tree),
                 (Text::DetailRefreshScanMode, Replace::Missing, Scope::Item),
             ] {
-                menu = menu.push(
-                    button(prose(strings::lookup(label), typeface::BODY))
-                        .style(style::flat)
-                        .on_press(Message::OverflowAction(Action::Refresh {
-                            item,
-                            replace,
-                            scope,
-                        })),
-                );
+                entries.push(Entry::Item(Item {
+                    glyph: None,
+                    name: strings::lookup(label).into(),
+                    secondary: None,
+                    aside: None,
+                    press: Message::OverflowAction(Action::Refresh {
+                        item,
+                        replace,
+                        scope,
+                    }),
+                }));
             }
         }
 
-        return menu
-            .push(
-                button(prose(strings::lookup(Text::OverflowClose), typeface::BODY))
-                    .style(style::raised)
-                    .on_press(Message::OverflowAction(Action::Close)),
-            )
-            .padding(style::padding(space::PAGE_PAD))
-            .into();
+        return sheet(None, None, entries, Some(close), viewport);
     };
 
     let offered = filing.offered.iter().filter_map(|held| {
         let target = held.id?;
-        Some(
-            button(prose(held.name.clone().unwrap_or_default(), typeface::BODY))
-                .style(style::flat)
-                .on_press(Message::OverflowAction(Action::File { target }))
-                .into(),
-        )
+        Some(Entry::Item(Item {
+            glyph: None,
+            name: held.name.clone().unwrap_or_default().into(),
+            secondary: None,
+            aside: None,
+            press: Message::OverflowAction(Action::File { target }),
+        }))
     });
 
     column![
@@ -216,10 +215,7 @@ pub fn view<'a>(
         ]
         .spacing(style::drawn(space::CONTROL_GAP.drawn()))
         .align_y(iced::Alignment::Center),
-        column(offered).spacing(style::drawn(space::BLOCK_GAP.drawn())),
-        button(prose(strings::lookup(Text::OverflowClose), typeface::BODY))
-            .style(style::raised)
-            .on_press(Message::OverflowAction(Action::Close)),
+        sheet(None, None, offered, Some(close), viewport),
     ]
     .spacing(style::drawn(space::BLOCK_GAP.drawn()))
     .padding(style::padding(space::PAGE_PAD))

@@ -1,0 +1,9 @@
+.actionSheetItemText {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    vertical-align: middle;
+    flex-grow: 1;
+    display: flex;
+    justify-content: flex-start;
+}

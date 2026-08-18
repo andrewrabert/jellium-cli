@@ -384,3 +384,13 @@ pub fn letters(viewport: Viewport) -> Length {
     }
     standing
 }
+
+/// `.actionSheetItemAsideText`, which the reference writes smaller than the
+/// row it trails.
+// reference: action-sheet-item-aside
+pub const SHEET_ASIDE: Length = BODY.times(Ratio::percent(90.0));
+
+/// `.actionsheet-xlargeFont`, the size a sheet's own lettering takes on a
+/// mobile layout.
+// reference: action-sheet-large-font
+pub const SHEET_MOBILE: Length = BODY.times(Ratio::percent(112.0));
