@@ -204,7 +204,7 @@ pub fn frame<'a>(
 ) -> Element<'a, Message> {
     let layout = viewport.layout();
     let titled: Vec<Element<'a, Message>> = title
-        .map(|title| widget::mui::heading(title.rank, title.reads))
+        .map(|title| widget::modern::heading(title.rank, title.reads))
         .into_iter()
         .collect();
     let filled: Element<'a, Message> = match filling {

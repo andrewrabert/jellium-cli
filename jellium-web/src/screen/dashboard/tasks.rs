@@ -122,13 +122,13 @@ fn ending(ending: jellium_protocol::TaskEnding) -> Option<Text> {
 fn beneath<'a>(
     task: &'a jellium_protocol::TaskState,
     now: chrono::DateTime<chrono::Utc>,
-) -> Option<widget::mui::Beneath<'a>> {
+) -> Option<widget::modern::Beneath<'a>> {
     match task.state {
-        jellium_protocol::TaskRunState::Running => Some(widget::mui::Beneath::Running(
+        jellium_protocol::TaskRunState::Running => Some(widget::modern::Beneath::Running(
             task.progress
                 .map(|progress| Share::part((progress * 100.0) as i64, 10_000)),
         )),
-        jellium_protocol::TaskRunState::Cancelling => Some(widget::mui::Beneath::Said(
+        jellium_protocol::TaskRunState::Cancelling => Some(widget::modern::Beneath::Said(
             strings::lookup(Text::TasksStopping).into(),
         )),
         jellium_protocol::TaskRunState::Idle => {
@@ -137,16 +137,16 @@ fn beneath<'a>(
             if let Some(named) = ending(run.ending) {
                 said.push_str(strings::lookup(named));
             }
-            Some(widget::mui::Beneath::Ran(said.into()))
+            Some(widget::modern::Beneath::Ran(said.into()))
         }
     }
 }
 
 /// The control that starts a task or stops the one that is running.
 // reference: tasks-row
-fn control(task: &jellium_protocol::TaskState) -> widget::mui::Trailing {
+fn control(task: &jellium_protocol::TaskState) -> widget::modern::Trailing {
     match task.state {
-        jellium_protocol::TaskRunState::Running => widget::mui::Trailing {
+        jellium_protocol::TaskRunState::Running => widget::modern::Trailing {
             glyph: Icon::Stop,
             label: None,
             press: Message::DashboardAction(super::Action::Ask(
@@ -158,7 +158,7 @@ fn control(task: &jellium_protocol::TaskState) -> widget::mui::Trailing {
                 ),
             )),
         },
-        _ => widget::mui::Trailing {
+        _ => widget::modern::Trailing {
             glyph: Icon::PlayArrow,
             label: None,
             press: Message::DashboardAction(super::Action::Write(super::Written::StartTask {
@@ -201,11 +201,11 @@ pub fn view<'a>(
         held.sort_by(|one, other| one.name.cmp(&other.name));
         page.push(
             column![
-                widget::mui::heading(typeface::Rank::Second, category),
-                widget::mui::listed(
-                    held.into_iter().map(|task| widget::mui::Row {
-                        lead: Some(widget::mui::Lead::Avatar(Icon::AccessTime)),
-                        primary: widget::mui::Primary::Headed(
+                widget::modern::heading(typeface::Rank::Second, category),
+                widget::modern::listed(
+                    held.into_iter().map(|task| widget::modern::Row {
+                        lead: Some(widget::modern::Lead::Avatar(Icon::AccessTime)),
+                        primary: widget::modern::Primary::Headed(
                             typeface::Rank::Third,
                             task.name.as_str().into(),
                         ),

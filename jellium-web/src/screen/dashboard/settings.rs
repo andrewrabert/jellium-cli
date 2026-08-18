@@ -51,7 +51,7 @@ pub fn view<'a>(state: &'a State, read_only: bool, viewport: Viewport) -> frame:
     )];
 
     if state.saved {
-        rows.push(widget::mui::succeeded(Text::DashboardSaved, layout));
+        rows.push(widget::modern::succeeded(Text::DashboardSaved, layout));
     }
 
     if !read_only {

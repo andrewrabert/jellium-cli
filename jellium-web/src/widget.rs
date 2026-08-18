@@ -1,6 +1,12 @@
+//! The legacy layout's own controls, as the reference's view-manager pages
+//! draw them.
+//!
+//! These stand on every route outside `/dashboard`: home, the library pages,
+//! item detail, search, Live TV, the settings region and the setup wizard.
+
 mod line;
 pub mod list;
-pub mod mui;
+pub mod modern;
 pub mod overlap;
 pub mod sheet;
 pub mod table;
@@ -1279,10 +1285,10 @@ pub fn drawer<'a>(rungs: impl IntoIterator<Item = Rung>, layout: Layout) -> Elem
     let mut rows: Vec<Element<'a, Message>> = Vec::new();
     for standing in rungs {
         match standing {
-            Rung::Reached(link) => rows.push(mui::row(
-                mui::Row {
-                    lead: Some(mui::Lead::Glyph(link.glyph)),
-                    primary: mui::Primary::Said(strings::lookup(link.label).into()),
+            Rung::Reached(link) => rows.push(modern::row(
+                modern::Row {
+                    lead: Some(modern::Lead::Glyph(link.glyph)),
+                    primary: modern::Primary::Said(strings::lookup(link.label).into()),
                     beneath: None,
                     within: None,
                     showing: Some(link.showing.clone()),
@@ -1301,10 +1307,10 @@ pub fn drawer<'a>(rungs: impl IntoIterator<Item = Rung>, layout: Layout) -> Elem
                     Held::Shown => Icon::ExpandLess,
                     Held::Hidden => Icon::ExpandMore,
                 };
-                rows.push(mui::row(
-                    mui::Row {
-                        lead: Some(mui::Lead::Glyph(glyph)),
-                        primary: mui::Primary::Said(strings::lookup(label).into()),
+                rows.push(modern::row(
+                    modern::Row {
+                        lead: Some(modern::Lead::Glyph(glyph)),
+                        primary: modern::Primary::Said(strings::lookup(label).into()),
                         beneath: None,
                         within: Some(arrow),
                         showing: Some(Showing::Offered(press)),
@@ -1314,10 +1320,10 @@ pub fn drawer<'a>(rungs: impl IntoIterator<Item = Rung>, layout: Layout) -> Elem
                 ));
                 if showing == Held::Shown {
                     for link in held {
-                        rows.push(mui::row(
-                            mui::Row {
-                                lead: Some(mui::Lead::Nested),
-                                primary: mui::Primary::Said(strings::lookup(link.label).into()),
+                        rows.push(modern::row(
+                            modern::Row {
+                                lead: Some(modern::Lead::Nested),
+                                primary: modern::Primary::Said(strings::lookup(link.label).into()),
                                 beneath: None,
                                 within: None,
                                 showing: Some(link.showing.clone()),

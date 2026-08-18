@@ -106,14 +106,14 @@ fn edited(field: Field, value: String) -> Message {
 pub fn view<'a>(state: &'a State, read_only: bool, viewport: Viewport) -> frame::Filling<'a> {
     let layout = viewport.layout();
     let mut rows: Vec<Element<'a, Message>> = vec![
-        widget::mui::flag(
+        widget::modern::flag(
             Text::LogsSlowResponse,
             None,
             state.form.flagged(SLOW_RESPONSE),
             move |on| edited(SLOW_RESPONSE, on.to_string()),
             layout,
         ),
-        widget::mui::field(
+        widget::modern::field(
             Text::LogsSlowResponseTime,
             None,
             None,
@@ -124,7 +124,7 @@ pub fn view<'a>(state: &'a State, read_only: bool, viewport: Viewport) -> frame:
     ];
 
     if state.saved {
-        rows.push(widget::mui::succeeded(Text::DashboardSaved, layout));
+        rows.push(widget::modern::succeeded(Text::DashboardSaved, layout));
     }
 
     if !read_only {
@@ -132,18 +132,25 @@ pub fn view<'a>(state: &'a State, read_only: bool, viewport: Viewport) -> frame:
             .form
             .dirty()
             .then_some(Message::DashboardAction(super::Action::Save));
-        rows.push(widget::mui::contained(Text::DashboardSave, press, layout));
+        rows.push(widget::modern::contained(
+            Text::DashboardSave,
+            press,
+            layout,
+        ));
     }
 
-    rows.push(widget::mui::listed(
+    rows.push(widget::modern::listed(
         state.files.iter().map(|file| {
             let name = file.name.clone().unwrap_or_default();
-            widget::mui::Row {
+            widget::modern::Row {
                 lead: None,
-                primary: widget::mui::Primary::Headed(typeface::Rank::Third, name.clone().into()),
+                primary: widget::modern::Primary::Headed(
+                    typeface::Rank::Third,
+                    name.clone().into(),
+                ),
                 beneath: file
                     .date_modified
-                    .map(|at| widget::mui::Beneath::Said(modified(at).into())),
+                    .map(|at| widget::modern::Beneath::Said(modified(at).into())),
                 within: None,
                 showing: Some(widget::Showing::Offered(Message::DashboardAction(
                     super::Action::Open(super::Screen::Log { name }),
@@ -162,7 +169,7 @@ pub fn view<'a>(state: &'a State, read_only: bool, viewport: Viewport) -> frame:
 /// reference stands a log's body on.
 // reference: logs-viewer
 pub fn viewer<'a>(held: &'a Viewer, layout: Layout) -> frame::Filling<'a> {
-    let mut page: Vec<Element<'a, Message>> = vec![widget::mui::heading(
+    let mut page: Vec<Element<'a, Message>> = vec![widget::modern::heading(
         typeface::Rank::First,
         held.name.clone(),
     )];
@@ -180,7 +187,7 @@ pub fn viewer<'a>(held: &'a Viewer, layout: Layout) -> frame::Filling<'a> {
         ));
     }
 
-    page.push(widget::mui::papered(
+    page.push(widget::modern::papered(
         iced::widget::container(window::list(held.window, held.tail.lines(), |index| {
             line(
                 held.tail.line(index),

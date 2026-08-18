@@ -484,7 +484,7 @@ pub fn view<'a>(
         page.push(menu(open, read_only));
     }
 
-    page.push(crate::widget::mui::grid(
+    page.push(crate::widget::modern::grid(
         space::LIBRARY_CELL,
         state.folders.iter().map(|folder| {
             let name = folder.name.clone().unwrap_or_default();
@@ -496,8 +496,8 @@ pub fn view<'a>(
                     card: card::Card::Wall(card::Shape::Portrait),
                 })
             }) {
-                Some(handle) => crate::widget::mui::Media::Image(handle),
-                None => crate::widget::mui::Media::Glyph(
+                Some(handle) => crate::widget::modern::Media::Image(handle),
+                None => crate::widget::modern::Media::Glyph(
                     crate::icon::Icon::library(collected(folder.collection_type)),
                     typeface::LIBRARY_CARD_ICON,
                 ),
@@ -508,8 +508,8 @@ pub fn view<'a>(
                 }
                 None => strings::lookup(content_label(folder.collection_type)).to_owned(),
             };
-            crate::widget::mui::card(
-                crate::widget::mui::Card {
+            crate::widget::modern::card(
+                crate::widget::modern::Card {
                     title: name.clone().into(),
                     text: Some(said.into()),
                     media,

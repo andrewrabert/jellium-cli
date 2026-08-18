@@ -75,7 +75,7 @@ pub fn view<'a>(state: &'a State, read_only: bool, layout: Layout) -> frame::Fil
         page.push(
             container(
                 column![
-                    widget::mui::heading(
+                    widget::modern::heading(
                         typeface::Rank::Second,
                         strings::lookup(Text::RepositoriesEmpty),
                     ),
@@ -94,19 +94,19 @@ pub fn view<'a>(state: &'a State, read_only: bool, layout: Layout) -> frame::Fil
         };
     }
 
-    page.push(widget::mui::listed(
+    page.push(widget::modern::listed(
         state.repositories.iter().map(|repository| {
             let url = repository.url.clone().unwrap_or_default();
-            widget::mui::Row {
-                lead: Some(widget::mui::Lead::Avatar(Icon::OpenInNew)),
-                primary: widget::mui::Primary::Headed(
+            widget::modern::Row {
+                lead: Some(widget::modern::Lead::Avatar(Icon::OpenInNew)),
+                primary: widget::modern::Primary::Headed(
                     typeface::Rank::Third,
                     repository.name.clone().unwrap_or_default().into(),
                 ),
-                beneath: Some(widget::mui::Beneath::Said(url.clone().into())),
+                beneath: Some(widget::modern::Beneath::Said(url.clone().into())),
                 within: None,
                 showing: None,
-                trailing: (!read_only).then(|| widget::mui::Trailing {
+                trailing: (!read_only).then(|| widget::modern::Trailing {
                     glyph: Icon::Delete,
                     label: Some(Text::RepositoriesRemove),
                     press: Message::DashboardAction(super::Action::Ask(

@@ -1,4 +1,7 @@
-//! MUI's own controls as the dashboard's react routes draw them.
+//! The modern layout's own controls, as the dashboard's react routes draw
+//! them.
+//!
+//! These stand on `/dashboard` and every route beneath it, and on no other.
 
 use std::borrow::Cow;
 

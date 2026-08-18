@@ -840,7 +840,7 @@ fn filled<'a>(
     let drawn = match closed {
         Some(options) => {
             let (offered, standing) = self::offered(options, &held);
-            widget::mui::chosen(
+            widget::modern::chosen(
                 control.label,
                 None,
                 offered,
@@ -850,7 +850,7 @@ fn filled<'a>(
             )
         }
         None => match field {
-            Field::Flag { .. } => widget::mui::flag(
+            Field::Flag { .. } => widget::modern::flag(
                 control.label,
                 None,
                 held == "true",
@@ -864,7 +864,7 @@ fn filled<'a>(
             | Field::Listed { .. }
             | Field::Named { .. }
             | Field::Minutes { .. }
-            | Field::Megabits { .. } => widget::mui::field(
+            | Field::Megabits { .. } => widget::modern::field(
                 control.label,
                 None,
                 control.unit,
@@ -879,7 +879,9 @@ fn filled<'a>(
         control
             .helper
             .iter()
-            .map(|sentence| widget::mui::helper(*sentence, widget::mui::Helper::Contained, layout))
+            .map(|sentence| {
+                widget::modern::helper(*sentence, widget::modern::Helper::Contained, layout)
+            })
             .collect(),
     )
 }
@@ -955,7 +957,7 @@ fn said<'a>(
     layout: crate::style::Layout,
 ) -> Element<'a, Message> {
     match dressing {
-        Controls::Mui => widget::mui::helper(sentence, widget::mui::Helper::Flush, layout),
+        Controls::Mui => widget::modern::helper(sentence, widget::modern::Helper::Flush, layout),
         Controls::Emby => widget::description(sentence, space::DESCRIPTION_INSET),
     }
 }
@@ -1157,7 +1159,7 @@ pub fn controls<'a>(
         if let Some(heading) = group.heading {
             let title = strings::lookup(heading.title);
             section.push(match dressing {
-                Controls::Mui => widget::mui::heading(heading.rank, title),
+                Controls::Mui => widget::modern::heading(heading.rank, title),
                 Controls::Emby => widget::heading(heading.rank, title),
             });
         }
@@ -1177,7 +1179,7 @@ pub fn save<'a>(
     layout: crate::style::Layout,
 ) -> Element<'a, Message> {
     match dressing {
-        Controls::Mui => widget::mui::contained(Text::DashboardSave, press, layout),
+        Controls::Mui => widget::modern::contained(Text::DashboardSave, press, layout),
         Controls::Emby => widget::block(
             strings::lookup(Text::DashboardSave),
             press,

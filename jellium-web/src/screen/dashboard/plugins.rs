@@ -175,15 +175,15 @@ pub fn view<'a>(
         listed.push(menu(state, open, read_only));
     }
 
-    listed.push(crate::widget::mui::grid(
+    listed.push(crate::widget::modern::grid(
         space::PLUGIN_CELL,
         state.plugins.iter().filter_map(|plugin| {
             let id = plugin.id?;
-            Some(crate::widget::mui::card(
-                crate::widget::mui::Card {
+            Some(crate::widget::modern::card(
+                crate::widget::modern::Card {
                     title: plugin.name.clone().unwrap_or_default().into(),
                     text: Some(described(plugin).into()),
-                    media: crate::widget::mui::Media::Glyph(
+                    media: crate::widget::modern::Media::Glyph(
                         crate::icon::Icon::Extension,
                         typeface::PLUGIN_CARD_ICON,
                     ),
