@@ -171,7 +171,7 @@ fn pages(text: &str) -> Vec<Page> {
 fn own(text: &str) -> Vec<Construct> {
     calls(text, OWN)
         .into_iter()
-        .filter_map(|args| args.first()?.strip_prefix("Own::").map(str::to_owned))
+        .filter_map(|args| args.first()?.split("Own::").nth(1).and_then(named))
         .filter_map(|word| Construct::named(&word))
         .collect()
 }

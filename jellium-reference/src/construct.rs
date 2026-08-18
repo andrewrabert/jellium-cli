@@ -120,7 +120,7 @@ impl fmt::Display for Sentence {
 
 /// What the reference's markup makes of a construct, which is a fact its
 /// markup states and never a judgement about it.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Role {
     /// The reference wraps it in a link or a button.
     Navigation,
@@ -200,7 +200,7 @@ impl Table {
         }
 
         let mut pages: Vec<Constructs> = Vec::new();
-        let mut seen: BTreeMap<(Page, Construct), usize> = BTreeMap::new();
+        let mut seen: BTreeMap<(Page, Construct, Role, Option<Sentence>), usize> = BTreeMap::new();
         for (offset, line) in lines.enumerate() {
             let number = offset + 2;
             if line.is_empty() {
@@ -226,10 +226,13 @@ impl Table {
             if sentence.is_none() && fields[3] != SILENT {
                 return Err(Malformed::Keyed { line: number });
             }
-            if let Some(first) = seen.insert((page.clone(), construct.clone()), number) {
+            let at = (page.clone(), construct.clone(), role, sentence.clone());
+            if let Some(first) = seen.insert(at, number) {
                 return Err(Malformed::Twice {
                     page,
                     construct,
+                    role,
+                    sentence,
                     first,
                     again: number,
                 });
@@ -283,9 +286,13 @@ pub enum Malformed {
     Keyed {
         line: usize,
     },
+    // one page draws one construct many times, so a row repeats only where its
+    // page, name, role and key all repeat
     Twice {
         page: Page,
         construct: Construct,
+        role: Role,
+        sentence: Option<Sentence>,
         first: usize,
         again: usize,
     },
@@ -321,11 +328,15 @@ impl fmt::Display for Malformed {
             Malformed::Twice {
                 page,
                 construct,
+                role,
+                sentence,
                 first,
                 again,
             } => write!(
                 formatter,
-                "reference/constructs.tsv draws {construct} on {page} twice, at {first} and {again}"
+                "reference/constructs.tsv draws {construct} on {page} through {} saying {} twice, at {first} and {again}",
+                role.door(),
+                sentence.as_ref().map_or(SILENT, Sentence::as_str)
             ),
         }
     }
