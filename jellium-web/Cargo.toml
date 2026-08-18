@@ -10,6 +10,7 @@ license = "MIT"
 jellyfin-api = { path = "../jellyfin-api" }
 jellium-protocol = { path = "../jellium-protocol" }
 jellium-model = { path = "../jellium-model" }
+blurhash = { path = "vendor/blurhash" }
 iced = { version = "0.14", default-features = false, features = [
     "wgpu",
     "webgl",

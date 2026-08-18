@@ -65,7 +65,14 @@ jobs:
           tool: just
       - run: npm ci --omit=dev --ignore-scripts
         working-directory: jellyfin-web
-      - run: just pinned jellyfin-web
+      - id: blurhash
+        run: printf 'commit=%s\n' "$(sed -n 3p reference/PINNED | cut -f2)" >> "$GITHUB_OUTPUT"
+      - uses: actions/checkout@v4
+        with:
+          repository: whisperfish/blurhash-rs
+          ref: ${{ steps.blurhash.outputs.commit }}
+          path: blurhash-rs
+      - run: just pinned jellyfin-web blurhash-rs
       - run: just suppressions
       - run: cargo fmt --all --check
       - run: cargo clippy --all-targets -- -D warnings

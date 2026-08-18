@@ -2,7 +2,8 @@
 
 // The one reader of reference/PINNED. Its first row names the jellyfin-web
 // revision every slice and every copied asset is taken from; its second names
-// the jellyfin-apiclient release the reference itself depends on.
+// the jellyfin-apiclient release the reference itself depends on; its third
+// names the blurhash-rs revision jellium-web/vendor/blurhash was taken from.
 
 import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
@@ -33,6 +34,15 @@ export function apiclient() {
         throw new Error(`reference/PINNED row 2 is not '<version>\\t<npm integrity>': ${line}`);
     }
     return { version, integrity };
+}
+
+export function vendored() {
+    const line = rows()[2] ?? '';
+    const [name, commit] = line.split('\t');
+    if (!name || !/^[0-9a-f]{40}$/.test(commit ?? '')) {
+        throw new Error(`reference/PINNED row 3 is not '<name>\\t<40-hex-commit>': ${line}`);
+    }
+    return { name, commit };
 }
 
 export function checkedOut(checkout, commit) {

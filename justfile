@@ -45,11 +45,15 @@ spans checkout:
 constructs checkout:
     node tools/reference/constructs.mjs "$1"
 
-# Fail when the tree has drifted from a checkout of the pinned revision
-pinned checkout: (reference checkout) (assets checkout) (spans checkout) (constructs checkout)
+# Rewrite reference/vendor.tsv from a checkout of the pinned blurhash revision
+vendored checkout:
+    node tools/reference/vendor.mjs "$1"
+
+# Fail when the tree has drifted from a checkout of the pinned revisions
+pinned checkout blurhash: (reference checkout) (assets checkout) (spans checkout) (constructs checkout) (vendored blurhash)
     git ls-files --error-unmatch jellium-web/reference/jellyfin-web.mjs
     git ls-files --error-unmatch reference/spans
-    git diff --exit-code jellium-web/reference reference/spans jellium-web/fonts jellium-web/icons jellium-web/branding reference/assets.tsv reference/breakpoints.tsv reference/constructs.tsv jellium-model/src/construct.rs
+    git diff --exit-code jellium-web/reference reference/spans jellium-web/fonts jellium-web/icons jellium-web/branding reference/assets.tsv reference/breakpoints.tsv reference/constructs.tsv reference/vendor.tsv jellium-model/src/construct.rs
     cargo test -p jellium-reference
 
 # Build the Jellium Web bundle

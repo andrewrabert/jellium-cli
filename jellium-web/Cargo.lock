@@ -282,6 +282,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "blurhash"
+version = "0.2.3"
+dependencies = [
+ "wasm-bindgen-test",
+]
+
+[[package]]
 name = "brotli"
 version = "7.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1694,6 +1701,7 @@ name = "jellium-web"
 version = "0.1.0"
 dependencies = [
  "base64",
+ "blurhash",
  "chrono",
  "console_error_panic_hook",
  "console_log",
