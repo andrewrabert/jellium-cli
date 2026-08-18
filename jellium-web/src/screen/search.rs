@@ -204,7 +204,7 @@ pub fn card(section: Section, aspect: Option<Aspect>) -> card::Drawing {
     card::Drawing {
         card: match section {
             Section::Songs => Card::Rail(Rail::Square),
-            _ => Card::overflowing(aspect),
+            _ => Card::overflowing(aspect, Card::Rail(Rail::Square)),
         },
         footer: footer(section),
         backing: card::Backing::Padder,

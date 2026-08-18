@@ -517,19 +517,22 @@ const SQUARE_ABOVE: Aspect = Aspect::of(0.8);
 
 impl Shape {
     /// The shape items of this aspect ask for: banner at 3 and wider, backdrop
-    /// at 1.33, square above 0.8, portrait below it, and `default` where the
-    /// items share no aspect.
+    /// at 1.33, square above 0.8, portrait below it.
     // reference: card-auto-shape
-    pub fn fitting(aspect: Option<Aspect>, default: Shape) -> Shape {
-        let Some(aspect) = aspect else {
-            return default;
-        };
+    fn of(aspect: Aspect) -> Shape {
         match aspect {
             held if held >= BANNER_AT => Shape::Banner,
             held if held >= BACKDROP_AT => Shape::Backdrop,
             held if held > SQUARE_ABOVE => Shape::Square,
             _ => Shape::Portrait,
         }
+    }
+
+    /// The shape items of this aspect ask for, and `default` where they share
+    /// no aspect.
+    // reference: card-auto-shape
+    pub fn fitting(aspect: Option<Aspect>, default: Shape) -> Shape {
+        aspect.map_or(default, Shape::of)
     }
 
     /// The padder's share of the card's own width: 150%, 56.25%, 100%, 18.5%.
@@ -699,17 +702,18 @@ impl Card {
     }
 
     /// The card a scrolling row draws for items of this aspect: the
-    /// reference's overflow shapes, and the banner card it falls to where they
-    /// are three times as wide as they are tall.
-    /// `Rail(Square)` where they share no aspect.
+    /// reference's overflow shapes, the banner card it falls to where they are
+    /// three times as wide as they are tall, and `default` where they share no
+    /// aspect.
     // reference: card-auto-shape
-    pub fn overflowing(aspect: Option<Aspect>) -> Card {
-        match Shape::fitting(aspect, Shape::Square) {
-            Shape::Portrait => Card::Rail(Rail::Portrait),
-            Shape::Backdrop => Card::Rail(Rail::Backdrop),
-            Shape::SmallBackdrop => Card::Rail(Rail::SmallBackdrop),
-            Shape::Banner => Card::Wall(Shape::Banner),
-            Shape::Square | Shape::Mixed(_) => Card::Rail(Rail::Square),
+    pub fn overflowing(aspect: Option<Aspect>, default: Card) -> Card {
+        match aspect.map(Shape::of) {
+            Some(Shape::Portrait) => Card::Rail(Rail::Portrait),
+            Some(Shape::Backdrop) => Card::Rail(Rail::Backdrop),
+            Some(Shape::SmallBackdrop) => Card::Rail(Rail::SmallBackdrop),
+            Some(Shape::Banner) => Card::Wall(Shape::Banner),
+            Some(Shape::Square | Shape::Mixed(_)) => Card::Rail(Rail::Square),
+            None => default,
         }
     }
 
