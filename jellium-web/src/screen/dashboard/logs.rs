@@ -155,7 +155,7 @@ pub fn view<'a>(state: &'a State, read_only: bool, viewport: Viewport) -> frame:
         layout,
     ));
 
-    frame::Filling::Stacked(rows)
+    frame::Filling::Stacked { above: None, rows }
 }
 
 /// The file's own name as the page's heading, the sentence naming the tail and

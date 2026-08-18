@@ -870,6 +870,11 @@ pub const TASK_PROGRESS_TRAIL: Css = SPACING_STEP.times(Ratio::thousandths(2000)
 // reference: tasks-page
 pub const TASKS_TOP: Css = SPACING_STEP.times(Ratio::thousandths(2000));
 
+/// The room the libraries page leaves over its own content, which is two
+/// steps.
+// reference: dashboard-libraries-page
+pub const LIBRARIES_TOP: Css = SPACING_STEP.times(Ratio::thousandths(2000));
+
 /// The rhythm one category stacks its heading and its list at.
 // reference: tasks-category
 pub const CATEGORY_GAP: Css = SPACING_STEP.times(Ratio::thousandths(2000));

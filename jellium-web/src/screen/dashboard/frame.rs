@@ -153,7 +153,11 @@ pub fn drawer(shown: &Screen, opened: &BTreeSet<Group>) -> Vec<Rung> {
 
 /// What a dashboard screen fills its page with.
 pub enum Filling<'a> {
-    Stacked(Vec<Element<'a, Message>>),
+    /// A stack standing `above` down the page.
+    Stacked {
+        above: Option<Css>,
+        rows: Vec<Element<'a, Message>>,
+    },
     Tabled {
         subtitle: Option<Text>,
         table: widget::table::Table<'a>,
@@ -194,13 +198,14 @@ pub fn frame<'a>(
             .collect()
     };
     let filled: Element<'a, Message> = match filling {
-        Filling::Stacked(content) => {
+        Filling::Stacked { above, rows } => {
             let mut stacked = titled(typeface::Rank::First);
-            stacked.extend(content);
-            widget::scrolled(
-                column(stacked).spacing(style::drawn(space::DASHBOARD_GAP.drawn(layout))),
-            )
-            .into()
+            stacked.extend(rows);
+            let held = column(stacked).spacing(style::drawn(space::DASHBOARD_GAP.drawn(layout)));
+            let room = above.map_or(iced::Padding::ZERO, |above| {
+                iced::Padding::ZERO.top(style::drawn(above.drawn(layout)))
+            });
+            widget::scrolled(container(held).width(Fill).padding(room)).into()
         }
         Filling::Capped { above, rows } => {
             let mut stacked = titled(typeface::Rank::First);

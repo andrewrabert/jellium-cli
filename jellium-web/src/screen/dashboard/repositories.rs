@@ -88,7 +88,10 @@ pub fn view<'a>(state: &'a State, read_only: bool, layout: Layout) -> frame::Fil
             .center_x(iced::Fill)
             .into(),
         );
-        return frame::Filling::Stacked(page);
+        return frame::Filling::Stacked {
+            above: None,
+            rows: page,
+        };
     }
 
     page.push(widget::mui::listed(
@@ -120,5 +123,8 @@ pub fn view<'a>(state: &'a State, read_only: bool, layout: Layout) -> frame::Fil
         layout,
     ));
 
-    frame::Filling::Stacked(page)
+    frame::Filling::Stacked {
+        above: None,
+        rows: page,
+    }
 }

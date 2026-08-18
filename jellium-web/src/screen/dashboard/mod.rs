@@ -1323,45 +1323,72 @@ pub fn view<'a>(
     viewport: Viewport,
 ) -> Element<'a, Message> {
     let filling: frame::Filling<'a> = match state.confirming.as_ref() {
-        Some(pending) => frame::Filling::Stacked(vec![crate::screen::confirm::view(
-            pending,
-            crate::screen::confirm::Region::Dashboard,
-        )]),
+        Some(pending) => frame::Filling::Stacked {
+            above: None,
+            rows: vec![crate::screen::confirm::view(
+                pending,
+                crate::screen::confirm::Region::Dashboard,
+            )],
+        },
         None => match &state.body {
-            Body::Home(held) => frame::Filling::Stacked(home::view(held, session.read_only)),
+            Body::Home(held) => frame::Filling::Stacked {
+                above: None,
+                rows: home::view(held, session.read_only),
+            },
             Body::Settings(held) => settings::view(held, session.read_only, viewport),
             Body::Users(held) => match state.screen {
-                Screen::UserNew => frame::Filling::Stacked(users::new(held)),
+                Screen::UserNew => frame::Filling::Stacked {
+                    above: None,
+                    rows: users::new(held),
+                },
                 _ => frame::Filling::Whole(users::view(held, session.read_only, images, viewport)),
             },
-            Body::User(held) => {
-                frame::Filling::Stacked(users::one(held, session.read_only, session.user_id))
-            }
-            Body::Libraries(held) => {
-                frame::Filling::Stacked(libraries::view(held, session.read_only, images, viewport))
-            }
-            Body::Library(held) => frame::Filling::Stacked(libraries::one(held, session.read_only)),
+            Body::User(held) => frame::Filling::Stacked {
+                above: None,
+                rows: users::one(held, session.read_only, session.user_id),
+            },
+            Body::Libraries(held) => frame::Filling::Stacked {
+                above: Some(space::LIBRARIES_TOP),
+                rows: libraries::view(held, session.read_only, images, viewport),
+            },
+            Body::Library(held) => frame::Filling::Stacked {
+                above: None,
+                rows: libraries::one(held, session.read_only),
+            },
             Body::Tasks(held) => tasks::view(held, session.read_only, now, viewport.layout()),
-            Body::Task(held) => frame::Filling::Stacked(tasks::one(held, session.read_only)),
+            Body::Task(held) => frame::Filling::Stacked {
+                above: None,
+                rows: tasks::one(held, session.read_only),
+            },
             Body::Logs(held) => logs::view(held, session.read_only, viewport),
             Body::Log(held) => logs::viewer(held, viewport.layout()),
             Body::Activity(held) => activity::view(held, viewport.layout()),
-            Body::Catalog(held) => frame::Filling::Stacked(catalog::view(held, session.read_only)),
+            Body::Catalog(held) => frame::Filling::Stacked {
+                above: None,
+                rows: catalog::view(held, session.read_only),
+            },
             Body::Repositories(held) => {
                 repositories::view(held, session.read_only, viewport.layout())
             }
             Body::Devices(held) => devices::view(held, session.read_only),
             Body::Keys(held) => keys::view(held, session.read_only),
-            Body::LiveTv(held) => frame::Filling::Stacked(livetv::view(held, session.read_only)),
-            Body::Plugins(held) => {
-                frame::Filling::Stacked(plugins::view(held, session.read_only, viewport))
-            }
-            Body::Page(held) => frame::Filling::Stacked(shown_page(held)),
+            Body::LiveTv(held) => frame::Filling::Stacked {
+                above: None,
+                rows: livetv::view(held, session.read_only),
+            },
+            Body::Plugins(held) => frame::Filling::Stacked {
+                above: None,
+                rows: plugins::view(held, session.read_only, viewport),
+            },
+            Body::Page(held) => frame::Filling::Stacked {
+                above: None,
+                rows: shown_page(held),
+            },
         },
     };
 
     let title = match state.screen {
-        Screen::Tasks | Screen::Log { .. } => None,
+        Screen::Tasks | Screen::Libraries | Screen::Log { .. } => None,
         _ => Some(state.screen.label()),
     };
     frame::frame(&state.screen, &state.opened, title, filling, viewport)
