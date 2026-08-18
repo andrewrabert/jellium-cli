@@ -274,8 +274,6 @@ pub const SERVER_LIMIT: usize = 512;
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Operation {
     CollectionCreate,
-    CollectionRename,
-    CollectionDelete,
     CollectionAdd,
     CollectionRemove,
     PlaylistCreate,
@@ -355,8 +353,6 @@ impl Operation {
             Operation::Preferences => Text::FailureWrotePreferences,
             Operation::QuickConnect => Text::FailureWroteQuickConnect,
             Operation::CollectionCreate => Text::FailureWroteCollectionCreate,
-            Operation::CollectionRename => Text::FailureWroteCollectionRename,
-            Operation::CollectionDelete => Text::FailureWroteCollectionDelete,
             Operation::CollectionAdd => Text::FailureWroteCollectionAdd,
             Operation::CollectionRemove => Text::FailureWroteCollectionRemove,
             Operation::PlaylistCreate => Text::FailureWrotePlaylistCreate,

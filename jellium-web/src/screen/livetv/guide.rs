@@ -206,7 +206,7 @@ fn cell<'a>(program: &'a Program, standing: Standing, viewport: Viewport) -> Ele
         .padding(iced::Padding::ZERO)
         .width(Fill)
         .height(style::drawn(space::guide_standing(viewport.layout())))
-        .on_press(Message::LiveTvAction(Action::Show(program.id.clone())))
+        .on_press(Message::LiveTvAction(Action::Show(program.item)))
         .into()
 }
 

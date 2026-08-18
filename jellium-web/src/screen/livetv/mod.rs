@@ -95,12 +95,12 @@ pub enum Action {
     /// Filters the Channels tab.
     Kind(jellyfin_api::types::ChannelType),
     /// Opens a program's detail.
-    Show(String),
+    Show(Uuid),
     /// Creates a timer for a program from the server's defaults.
-    Record(String),
+    Record(Uuid),
     /// Opens the series options for a program, prefilled from the server's
     /// defaults.
-    RecordSeries(String),
+    RecordSeries(Uuid),
     /// Opens the series options of a series timer already created.
     EditSeries(String),
     Edited(series::Field),
@@ -283,17 +283,16 @@ pub fn act(signed: &mut Signed, action: Action, viewport: Viewport) -> Task<Mess
                 },
             )
         }
-        Action::Show(program) => Task::done(Message::Navigated(crate::route::Route::Program {
+        Action::Show(program) => Task::done(Message::Navigated(crate::route::Route::Detail {
             id: program,
         })),
-        Action::Record(program) => {
-            Task::perform(async move { api.record(&program).await }, |outcome| {
-                Message::Wrote(Operation::Timer, outcome)
-            })
-        }
+        Action::Record(program) => Task::perform(
+            async move { api.record(&program.to_string()).await },
+            |outcome| Message::Wrote(Operation::Timer, outcome),
+        ),
         Action::RecordSeries(program) => Task::perform(
             async move {
-                api.timer_defaults(&program)
+                api.timer_defaults(&program.to_string())
                     .await
                     .map(|options| (options, true))
             },
@@ -466,8 +465,8 @@ pub fn act(signed: &mut Signed, action: Action, viewport: Viewport) -> Task<Mess
                     act(signed, Action::PlayChannel(channel), viewport)
                 }
                 Some(program) => {
-                    let id = program.id.clone();
-                    act(signed, Action::Show(id), viewport)
+                    let item = program.item;
+                    act(signed, Action::Show(item), viewport)
                 }
                 None => Task::none(),
             }

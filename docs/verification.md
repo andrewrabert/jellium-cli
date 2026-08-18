@@ -1024,3 +1024,13 @@ browser with a touch screen, each at its own size.
   its own sentence beneath.
 - A sheet whose rows carry no glyph and which carries no title stands its rows
   against the leading edge with no room reserved before them.
+- Opening a collection draws the item detail page: its backdrop, its poster, its
+  name, Play All and Shuffle, its overview, and its items beneath.
+- Opening a programme from the guide draws the item detail page: its channel by
+  name and number above its name, its start and end times, its live, new,
+  premiere and repeat flags, its overview and its genres.
+- A programme's page offers Play only while the programme is on air, and offers
+  Record, Record Series and their cancels only to a user the server lets manage
+  Live TV.
+- Removing an item from a collection is offered from that item's menu on the
+  collection's own page, and from nowhere else.

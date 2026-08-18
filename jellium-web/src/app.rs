@@ -27,7 +27,6 @@ use crate::player::{self, Playing};
 use crate::prefs::Device;
 use crate::route::Route;
 use crate::screen::livetv::{self, guide};
-use crate::screen::program;
 use crate::screen::{dashboard, detail, home, library, login, search};
 use crate::style::space::Room;
 use crate::style::{self, Drawn, Viewport, card, space, typeface};
@@ -138,7 +137,6 @@ pub enum Stopped {
 pub enum View {
     Loading,
     LiveTv(Box<livetv::State>),
-    Program(Box<program::State>),
     Home(Box<home::State>),
     Library(Box<library::State>),
     Detail(Box<detail::State>),
@@ -146,7 +144,6 @@ pub enum View {
     Filtered(Box<crate::screen::browse::Browse>),
     Metadata(Box<crate::screen::metadata::State>),
     Collections(Box<crate::screen::collections::Listed>),
-    Collection(Box<crate::screen::collections::State>),
     Playlists(Box<crate::screen::playlists::Listed>),
     Playlist(Box<crate::screen::playlists::State>),
     Queue,
@@ -233,7 +230,6 @@ pub enum Message {
     ),
     FilteredLoaded(Answer<crate::screen::browse::Browse>),
     CollectionsLoaded(Answer<crate::screen::collections::Listed>),
-    CollectionLoaded(Answer<crate::screen::collections::State>),
     CollectionAction(crate::screen::collections::Action),
     OverflowAction(crate::screen::overflow::Action),
     MetadataLoaded(Answer<crate::screen::metadata::State>),
@@ -364,7 +360,6 @@ pub enum Message {
     LiveTvLoaded(Answer<livetv::State>),
     LiveTvAction(livetv::Action),
     GuideFetched(Answer<(guide::Fetched, Vec<Program>)>),
-    ProgramLoaded(Answer<program::State>),
     /// The programme now airing on the watched channel.
     AiringFetched(Answer<Option<Program>>),
     /// The server's defaults for a series recording, ready to be edited.
@@ -389,11 +384,9 @@ impl Signed {
             View::Filtered(browse) => crate::screen::browse::images(browse),
             View::Metadata(state) => crate::screen::metadata::images(state),
             View::Collections(state) => crate::screen::collections::listed_images(state),
-            View::Collection(state) => crate::screen::collections::images(state),
             View::Playlists(state) => crate::screen::playlists::listed_images(state),
             View::Playlist(state) => crate::screen::playlists::images(state),
             View::LiveTv(state) => livetv::images(state),
-            View::Program(state) => program::images(state),
             View::Queue => HashSet::new(),
             View::Remote => crate::screen::remote::images(self.remote.as_ref()),
             View::Dashboard(state) => crate::screen::dashboard::images(state),
@@ -437,7 +430,6 @@ impl Signed {
             View::Search(_)
             | View::Filtered(_)
             | View::Collections(_)
-            | View::Collection(_)
             | View::Playlists(_)
             | View::Playlist(_)
             | View::Metadata(_) => Vec::new(),
@@ -451,7 +443,6 @@ impl Signed {
                 livetv::Body::Recordings(held) => held.recordings.iter_mut().collect(),
                 _ => Vec::new(),
             },
-            View::Program(_) => Vec::new(),
         }
     }
 }
@@ -465,15 +456,13 @@ pub fn staged(route: &Route, live_tv: jellium_protocol::LiveTvAccess) -> View {
         Route::Queue => View::Queue,
         Route::Remote => View::Remote,
         Route::SyncPlay => View::SyncPlay,
-        Route::LiveTv { .. } | Route::Program { .. } => {
-            match crate::error::live_tv_denied(live_tv) {
-                Some(denied) => {
-                    crate::failure::raise(denied);
-                    View::Unavailable
-                }
-                None => View::Loading,
+        Route::LiveTv { .. } => match crate::error::live_tv_denied(live_tv) {
+            Some(denied) => {
+                crate::failure::raise(denied);
+                View::Unavailable
             }
-        }
+            None => View::Loading,
+        },
         _ => View::Loading,
     }
 }
@@ -539,10 +528,6 @@ pub fn load(signed: &Signed, route: &Route, viewport: Viewport) -> Task<Message>
             crate::screen::collections::listed(api, viewport),
             Message::CollectionsLoaded,
         ),
-        Route::Collection { id, listing } => Task::perform(
-            crate::screen::collections::load(api, id, *listing, viewport),
-            Message::CollectionLoaded,
-        ),
         Route::Playlists => Task::perform(
             crate::screen::playlists::listed(api, viewport),
             Message::PlaylistsLoaded,
@@ -564,10 +549,7 @@ pub fn load(signed: &Signed, route: &Route, viewport: Viewport) -> Task<Message>
             livetv::load(api, tab, Room::content(viewport)),
             Message::LiveTvLoaded,
         ),
-        Route::Program { id } if reachable => {
-            Task::perform(program::load(api, id), Message::ProgramLoaded)
-        }
-        Route::LiveTv { .. } | Route::Program { .. } => Task::none(),
+        Route::LiveTv { .. } => Task::none(),
         Route::Dashboard { screen } => {
             let device = signed.session.device.clone();
             Task::perform(
@@ -1429,13 +1411,6 @@ impl Jellium {
                 let showing = self.loaded(View::Collections(Box::new(state)));
                 Task::batch([showing, self.browse_fetch()])
             }
-            Message::CollectionLoaded(answered) => {
-                let Some(state) = answered.or_none(Text::FailureCollectionUnread) else {
-                    return Task::none();
-                };
-                let showing = self.loaded(View::Collection(Box::new(state)));
-                Task::batch([showing, self.browse_fetch()])
-            }
             Message::PlaylistsLoaded(answered) => {
                 let Some(state) = answered.or_none(Text::FailurePlaylistsUnread) else {
                     return Task::none();
@@ -2222,12 +2197,6 @@ impl Jellium {
                 let fetching = livetv::fetch_if_stale(signed);
                 Task::batch([showing, fetching])
             }
-            Message::ProgramLoaded(answered) => {
-                let Some(state) = answered.or_none(Text::FailureProgramUnread) else {
-                    return Task::none();
-                };
-                self.loaded(View::Program(Box::new(state)))
-            }
             Message::LiveTvAction(action) => {
                 let Some(signed) = self.signed() else {
                     return Task::none();
@@ -2568,7 +2537,6 @@ impl Jellium {
             },
             View::Filtered(browse) => Some(browse),
             View::Collections(state) => Some(&state.browse),
-            View::Collection(state) => Some(&state.browse),
             View::Playlists(state) => Some(&state.browse),
             _ => None,
         }
@@ -2583,7 +2551,6 @@ impl Jellium {
             },
             View::Filtered(browse) => Some(browse),
             View::Collections(state) => Some(&mut state.browse),
-            View::Collection(state) => Some(&mut state.browse),
             View::Playlists(state) => Some(&mut state.browse),
             _ => None,
         }
@@ -2973,13 +2940,6 @@ impl Jellium {
                         chrono::Utc::now(),
                         session,
                     ),
-                    View::Collection(state) => crate::screen::collections::view(
-                        state,
-                        self.viewport,
-                        &self.images,
-                        chrono::Utc::now(),
-                        session,
-                    ),
                     View::Playlists(state) => crate::screen::playlists::view_listed(
                         state,
                         self.viewport,
@@ -3027,9 +2987,6 @@ impl Jellium {
                         crate::screen::settings::view(state, signed, &self.images, self.viewport)
                     }
                     View::Unavailable => center(iced::widget::Space::new()).into(),
-                    View::Program(state) => {
-                        program::view(state, self.viewport, chrono::Utc::now(), &self.images)
-                    }
                 };
 
                 let mut page = column![widget::chrome(
@@ -3228,7 +3185,6 @@ fn library_changed(
         },
         View::Filtered(browse) => reread(browse),
         View::Collections(state) => reread(&mut state.browse),
-        View::Collection(state) => reread(&mut state.browse),
         View::Playlists(state) => reread(&mut state.browse),
         View::Detail(state) if state.item.id.is_some_and(|id| updated.contains(&id)) => {
             let Some(id) = state.item.id else {
@@ -3243,7 +3199,6 @@ fn library_changed(
         View::Detail(_)
         | View::Loading
         | View::LiveTv(_)
-        | View::Program(_)
         | View::Metadata(_)
         | View::Playlist(_)
         | View::Queue

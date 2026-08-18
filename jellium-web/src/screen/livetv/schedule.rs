@@ -343,7 +343,7 @@ fn timed<'a>(
             elapsed: None,
             // reference: shortcut-edit-item
             press: match timer.program_info.as_ref().and_then(|held| held.id) {
-                Some(program) => Some(Message::LiveTvAction(Action::Show(program.to_string()))),
+                Some(program) => Some(Message::LiveTvAction(Action::Show(program))),
                 None => timer
                     .id
                     .clone()

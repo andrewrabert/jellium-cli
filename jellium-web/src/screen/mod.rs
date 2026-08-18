@@ -11,7 +11,6 @@ pub mod login;
 pub mod metadata;
 pub mod overflow;
 pub mod playlists;
-pub mod program;
 pub mod queue;
 pub mod remote;
 pub mod search;

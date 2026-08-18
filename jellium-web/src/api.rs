@@ -738,6 +738,13 @@ impl Api {
                     })
                     .await?
                     .items),
+                Some(BaseItemKind::BoxSet | BaseItemKind::Playlist) => Ok(self
+                    .query(Query {
+                        parent_id: Some(id),
+                        ..Query::default()
+                    })
+                    .await?
+                    .items),
                 _ => Ok(Vec::new()),
             }
         })
@@ -1063,22 +1070,6 @@ impl Api {
                 })
                 .await?;
             Ok(result.items.iter().find_map(Program::read))
-        })
-        .await
-    }
-
-    pub async fn program(&self, program: &str) -> Answer<Program> {
-        Answer::of(async {
-            let item = self
-                .client
-                .get_program(program, Some(&self.user_id))
-                .await?;
-            Program::read(&item).ok_or_else(|| {
-                Bubble::from(Trouble::Relay {
-                    status: None,
-                    detail: "the server described no programme".to_string(),
-                })
-            })
         })
         .await
     }

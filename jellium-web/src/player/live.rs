@@ -119,7 +119,7 @@ pub fn record(signed: &mut Signed) -> Task<Message> {
         .as_ref()
         .and_then(|playing| playing.live.as_ref())
         .and_then(|live| live.program.as_ref())
-        .map(|program| program.id.clone())
+        .map(|program| program.item.to_string())
     else {
         return Task::none();
     };

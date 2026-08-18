@@ -273,7 +273,7 @@ pub fn commands(
 /// Whether this session may cancel a timer: the Live TV management the
 /// reference gates both cancel commands on, and a session that writes at all.
 // reference: item-context-cancel-timer
-fn manageable(session: &Session) -> bool {
+pub fn manageable(session: &Session) -> bool {
     session.live_tv.allowed() && !session.read_only
 }
 

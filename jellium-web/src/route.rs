@@ -25,10 +25,6 @@ pub enum Route {
         part: Option<crate::screen::metadata::Part>,
     },
     Collections,
-    Collection {
-        id: Uuid,
-        listing: Box<Listing>,
-    },
     Playlists,
     Playlist {
         id: Uuid,
@@ -41,9 +37,6 @@ pub enum Route {
     SyncPlay,
     LiveTv {
         tab: crate::screen::livetv::Tab,
-    },
-    Program {
-        id: String,
     },
     Dashboard {
         screen: crate::screen::dashboard::Screen,

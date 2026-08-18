@@ -161,14 +161,10 @@ pub fn card_images<'a>(
         .collect()
 }
 
-/// The route a card opens: a collection and a playlist each have their own
-/// screen, and every other item opens its detail.
+/// The route a card opens: a playlist has its own screen, and every other
+/// item opens its detail.
 fn opens(item: &BaseItemDto, id: uuid::Uuid) -> Route {
     match item.type_ {
-        Some(BaseItemKind::BoxSet) => Route::Collection {
-            id,
-            listing: Box::default(),
-        },
         Some(BaseItemKind::Playlist) => Route::Playlist { id },
         _ => Route::Detail { id },
     }
@@ -935,10 +931,11 @@ fn cards<'a>(
     images: &'a Cache,
     now: chrono::DateTime<chrono::Utc>,
     session: &'a Session,
+    collection: Option<Uuid>,
 ) -> Vec<Element<'a, Message>> {
     items
         .into_iter()
-        .map(|item| poster(drawing, item, room, images, now, session, None))
+        .map(|item| poster(drawing, item, room, images, now, session, collection))
         .collect()
 }
 
@@ -970,7 +967,7 @@ pub fn rail<'a>(
     scroller(
         drawing,
         room,
-        cards(drawing, items, room, images, now, session),
+        cards(drawing, items, room, images, now, session, None),
     )
 }
 
@@ -1365,11 +1362,14 @@ pub fn posters<'a>(
     images: &'a Cache,
     now: chrono::DateTime<chrono::Utc>,
     session: &'a Session,
+    collection: Option<Uuid>,
 ) -> Element<'a, Message> {
     scrolled(
-        grid(cards(drawing, items, room, images, now, session))
-            .columns(drawing.card.across(room).count())
-            .spacing(style::drawn(space::GUTTER.drawn())),
+        grid(cards(
+            drawing, items, room, images, now, session, collection,
+        ))
+        .columns(drawing.card.across(room).count())
+        .spacing(style::drawn(space::GUTTER.drawn())),
     )
     .height(Fill)
     .into()

@@ -361,6 +361,8 @@ detail-button-icon	src/styles/librarybrowser.scss	1121	1125	9663a4f0502aaabfd47f
 detail-markup-play	src/controllers/itemDetails/index.html	18	29	b0900f0e04321a1594627ede725f9244c8452550af8c26234879bb4c95c3d94b	ported
 detail-markup-marks	src/controllers/itemDetails/index.html	67	77	16201f05a9d916adf9b2fe335ca0bb5135dc61f82af040cc0425b22628525717	ported
 detail-more-commands	src/controllers/itemDetails/index.js	2044	2062	9934199d2c3b253901c4d08b13a4db93a69c1f70c65606405cb2cc956109f0d8	ported
+detail-program-play	src/controllers/itemDetails/index.js	321	336	7918c367e0f366aff56e5946ecd0faeeedad2ef62831d13de6b7e5a5de9bef20	ported
+detail-recording-fields	src/controllers/itemDetails/index.js	698	715	5a2e76799341a0c7f60448614eb1397361ea37dd0631077244ea63ee5429b8c9	ported
 detail-refresh	src/components/itemContextMenu.js	299	304	0c25d3844bea9e43fdb6c927d0363749f0377b959e9e89eec71efaee9d1ebfd8	ported
 item-context-play	src/components/itemContextMenu.js	44	57	1bdb0eea30ab7ef9da04f6c8c08f7b5ca9a626bef2cd3c5a5f1eed35e9feb01b	ported
 item-context-delete	src/components/itemContextMenu.js	208	214	442d09c962021144382de4f21e09e23ca9404af759bbcb98f97a69c352b9046b	ported

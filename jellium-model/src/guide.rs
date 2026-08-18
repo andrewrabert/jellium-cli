@@ -334,7 +334,6 @@ mod tests {
 
     fn program(channel: Uuid, start: DateTime<Utc>) -> Program {
         Program {
-            id: format!("{channel}-{}", start.timestamp()),
             item: Uuid::from_u128(start.timestamp() as u128 + 1_000),
             channel,
             channel_name: String::new(),

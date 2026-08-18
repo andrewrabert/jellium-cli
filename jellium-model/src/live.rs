@@ -156,7 +156,6 @@ mod tests {
 
     fn program(end: DateTime<Utc>) -> Program {
         Program {
-            id: "program-1".to_string(),
             item: Uuid::from_u128(99),
             channel: Uuid::from_u128(1),
             channel_name: String::new(),

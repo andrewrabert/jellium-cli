@@ -89,7 +89,6 @@ fn reported(status: Option<&str>) -> RecordingStatus {
 /// draw it.
 #[derive(Debug, Clone, PartialEq)]
 pub struct Program {
-    pub id: String,
     pub item: Uuid,
     pub channel: Uuid,
     pub channel_name: String,
@@ -121,7 +120,6 @@ impl Program {
         let end = item.end_date?;
         let repeat = item.is_repeat.unwrap_or(false);
         Some(Program {
-            id: id.to_string(),
             item: id,
             channel,
             channel_name: item.channel_name.clone().unwrap_or_default(),

@@ -12,6 +12,7 @@ use crate::app::Message;
 use crate::error::Answer;
 use crate::icon::Icon;
 use crate::images::{self, Cache, Kind};
+use crate::livetv::Program;
 use crate::player::Intent;
 use crate::style::space::Room;
 use crate::style::{self, Drawn, Layout, Viewport, card, space, typeface};
@@ -53,6 +54,8 @@ pub struct State {
     pub children: Vec<BaseItemDto>,
     /// What the server says is like this item.
     pub similar: Vec<BaseItemDto>,
+    /// The programme this item is, and nothing where it is not one.
+    pub programme: Option<Program>,
 }
 
 /// The most items the similar rail shows.
@@ -68,6 +71,10 @@ pub async fn load(api: Rc<Api>, item: Uuid) -> Answer<State> {
                 .similar(id, SIMILAR)
                 .await
                 .or_default(Text::FailureSimilarUnread),
+            programme: match item.type_ {
+                Some(BaseItemKind::Program) => Program::read(&item),
+                _ => None,
+            },
             item,
         })
     })
@@ -80,6 +87,7 @@ fn children_heading(kind: Option<BaseItemKind>) -> Text {
         Some(BaseItemKind::Season) => Text::DetailEpisodes,
         Some(BaseItemKind::MusicAlbum) => Text::DetailTracks,
         Some(BaseItemKind::MusicArtist) => Text::DetailAlbums,
+        Some(BaseItemKind::BoxSet) => Text::DetailItems,
         _ => Text::DetailEpisodes,
     }
 }
@@ -144,7 +152,7 @@ fn detail_button<'a>(
 
 /// Play, and Resume when the item has a stored position and is not marked
 /// played, for a movie, episode, music video or song.
-/// Play All and Shuffle for a series, season, album or artist.
+/// Play All and Shuffle for a series, season, album, artist or box set.
 /// Instant Mix for a song, album or artist.
 fn play_controls<'a>(item: &BaseItemDto, viewport: Viewport) -> Vec<Element<'a, Message>> {
     let Some(id) = item.id else {
@@ -183,7 +191,8 @@ fn play_controls<'a>(item: &BaseItemDto, viewport: Viewport) -> Vec<Element<'a, 
             BaseItemKind::Series
             | BaseItemKind::Season
             | BaseItemKind::MusicAlbum
-            | BaseItemKind::MusicArtist,
+            | BaseItemKind::MusicArtist
+            | BaseItemKind::BoxSet,
         ) => {
             controls.push(detail_button(
                 Icon::PlayArrow,
@@ -220,6 +229,77 @@ fn play_controls<'a>(item: &BaseItemDto, viewport: Viewport) -> Vec<Element<'a, 
     }
 
     controls
+}
+
+/// Play alone while the programme is airing, and nothing otherwise.
+// reference: detail-program-play
+fn programme_play<'a>(
+    programme: &'a Program,
+    now: chrono::DateTime<chrono::Utc>,
+    viewport: Viewport,
+) -> Vec<Element<'a, Message>> {
+    match programme.airing(now) {
+        false => Vec::new(),
+        true => vec![detail_button(
+            Icon::PlayArrow,
+            Text::DetailPlay,
+            Message::LiveTvAction(crate::screen::livetv::Action::PlayChannel(
+                programme.channel,
+            )),
+            viewport,
+        )],
+    }
+}
+
+/// Record, Record Series and Cancel as the timers covering the programme
+/// allow, offered where the server grants Live TV management.
+// reference: detail-recording-fields
+fn recording_controls<'a>(programme: &'a Program, viewport: Viewport) -> Vec<Element<'a, Message>> {
+    let single = match &programme.timer {
+        Some(timer) => detail_button(
+            Icon::Cancel,
+            Text::ProgramCancelRecording,
+            Message::LiveTvAction(crate::screen::livetv::Action::CancelTimer(timer.clone())),
+            viewport,
+        ),
+        None => detail_button(
+            Icon::FiberManualRecord,
+            Text::ProgramRecord,
+            Message::LiveTvAction(crate::screen::livetv::Action::Record(programme.item)),
+            viewport,
+        ),
+    };
+    let series = match &programme.series_timer {
+        Some(timer) => detail_button(
+            Icon::Cancel,
+            Text::ProgramCancelSeries,
+            Message::LiveTvAction(crate::screen::livetv::Action::CancelSeriesTimer(
+                timer.clone(),
+            )),
+            viewport,
+        ),
+        None => detail_button(
+            Icon::FiberSmartRecord,
+            Text::ProgramRecordSeries,
+            Message::LiveTvAction(crate::screen::livetv::Action::RecordSeries(programme.item)),
+            viewport,
+        ),
+    };
+    vec![single, series]
+}
+
+/// The programme's live, new, premiere and repeat flags, each as its own word.
+fn flags<'a>(programme: &'a Program) -> Vec<Element<'a, Message>> {
+    [
+        (programme.live, Text::GuideBadgeLive),
+        (programme.new, Text::GuideBadgeNew),
+        (programme.premiere, Text::GuideBadgePremiere),
+        (programme.repeat, Text::GuideBadgeRepeat),
+    ]
+    .into_iter()
+    .filter(|(carried, _)| *carried)
+    .map(|(_, label)| prose(strings::lookup(label), typeface::SECONDARY))
+    .collect()
 }
 
 /// `.itemBackdrop`, the item's own backdrop standing at the head of the page,
@@ -309,8 +389,11 @@ struct Head<'a> {
 // reference: detail-more-commands
 // reference: item-can-mark-played
 // reference: item-can-rate
+// reference: detail-program-play
+// reference: detail-recording-fields
 fn head<'a>(
     item: &'a BaseItemDto,
+    programme: Option<&'a Program>,
     session: &'a jellium_protocol::Session,
     viewport: Viewport,
     images: &'a Cache,
@@ -319,6 +402,16 @@ fn head<'a>(
     let mut actions = row![].spacing(style::drawn(space::CONTROL_GAP.drawn()));
     for control in play_controls(item, viewport) {
         actions = actions.push(control);
+    }
+    if let Some(programme) = programme {
+        for control in programme_play(programme, now, viewport) {
+            actions = actions.push(control);
+        }
+        if crate::screen::overflow::manageable(session) {
+            for control in recording_controls(programme, viewport) {
+                actions = actions.push(control);
+            }
+        }
     }
     if let Some(id) = item.id {
         if item::markable(item) && !session.read_only {
@@ -360,6 +453,14 @@ fn head<'a>(
     }
 
     let mut lines = column![].spacing(style::drawn(space::SECTION_GAP.drawn()));
+    if let Some(programme) = programme {
+        lines = lines.push(prose(crate::livetv::airtime(programme), typeface::BODY));
+        let mut marks = row![].spacing(style::drawn(space::CONTROL_GAP.drawn()));
+        for flag in flags(programme) {
+            marks = marks.push(flag);
+        }
+        lines = lines.push(marks);
+    }
     if let Some(overview) = &item.overview {
         lines = lines
             .push(prose(
@@ -368,12 +469,24 @@ fn head<'a>(
             ))
             .push(prose(overview.clone(), typeface::BODY));
     }
+    if let Some(programme) = programme.filter(|held| !held.genres.is_empty()) {
+        lines = lines.push(prose(programme.genres.join(", "), typeface::BODY));
+    }
 
     Head {
         backdrop: backdrop(item, images, space::backdrop(viewport)),
         poster: poster(item, images, viewport),
         name: column![
-            prose(heading(item), typeface::BODY),
+            prose(
+                match programme {
+                    Some(programme) => strings::format(
+                        Text::ProgramChannel,
+                        &[&programme.channel_name, &programme.channel_number],
+                    ),
+                    None => heading(item),
+                },
+                typeface::BODY
+            ),
             prose(item.name.clone().unwrap_or_default(), typeface::HEADING_1),
         ]
         .into(),
@@ -521,7 +634,14 @@ pub fn view<'a>(
 ) -> Element<'a, Message> {
     let item = &state.item;
 
-    let head = head(item, session, viewport, images, now);
+    let head = head(
+        item,
+        state.programme.as_ref(),
+        session,
+        viewport,
+        images,
+        now,
+    );
     let drawn = match viewport.layout() {
         Layout::Desktop => ribboned(head, viewport),
         Layout::Mobile => stacked(head, viewport),
@@ -545,6 +665,7 @@ pub fn view<'a>(
                 images,
                 now,
                 session,
+                item.id.filter(|_| item.type_ == Some(BaseItemKind::BoxSet)),
             ));
     }
 
