@@ -467,7 +467,9 @@ pub fn view<'a>(
     page
 }
 
-/// One library: its paths, the browser a path is chosen from, and its options.
+/// One library: its paths under the heading the reference writes over them,
+/// the browser a path is chosen from, and its options.
+// reference: library-folders
 pub fn one<'a>(
     state: &'a One,
     read_only: bool,
@@ -498,7 +500,10 @@ pub fn one<'a>(
         );
     }
 
-    page.push(prose(strings::lookup(Text::LibrariesPaths), typeface::BODY));
+    page.push(widget::heading(
+        typeface::Rank::First,
+        strings::lookup(Text::LibrariesFolders),
+    ));
     for path in &state.paths {
         let mut held = row![prose(path.clone(), typeface::BODY)]
             .spacing(style::drawn(space::CONTROL_GAP.drawn()));
@@ -563,7 +568,7 @@ pub fn one<'a>(
         }
     }
 
-    page.extend(super::controls(
+    page.push(super::controls(
         OPTIONS,
         &state.options,
         super::Controls::Emby,

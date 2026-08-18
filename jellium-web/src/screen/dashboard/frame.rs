@@ -173,6 +173,15 @@ pub enum Filling<'a> {
     },
 }
 
+/// The heading a dashboard page writes over its content.
+pub struct Title<'a> {
+    /// The level the reference writes it at.
+    pub rank: typeface::Rank,
+    /// The sentence this client owns, or the name of the object the screen
+    /// shows.
+    pub reads: std::borrow::Cow<'a, str>,
+}
+
 /// The page every dashboard screen stands in: the drawer beside the content on
 /// a page wide enough for it and absent below that, `.content-primary`'s own
 /// top and side padding, the screen's title over what it fills the page with,
@@ -182,24 +191,25 @@ pub enum Filling<'a> {
 // reference: dashboard-content
 // reference: dashboard-content-side
 // reference: table-page
+// reference: user-title
+// reference: user-add-title
+// reference: library-editor-title
 // the page writes no heading where `title` names none
 pub fn frame<'a>(
     shown: &Screen,
     opened: &BTreeSet<Group>,
-    title: Option<Text>,
+    title: Option<Title<'a>>,
     filling: Filling<'a>,
     viewport: Viewport,
 ) -> Element<'a, Message> {
     let layout = viewport.layout();
-    let titled = |rank| -> Vec<Element<'a, Message>> {
-        title
-            .map(|title| widget::mui::heading(rank, strings::lookup(title)))
-            .into_iter()
-            .collect()
-    };
+    let titled: Vec<Element<'a, Message>> = title
+        .map(|title| widget::mui::heading(title.rank, title.reads))
+        .into_iter()
+        .collect();
     let filled: Element<'a, Message> = match filling {
         Filling::Stacked { above, rows } => {
-            let mut stacked = titled(typeface::Rank::First);
+            let mut stacked = titled;
             stacked.extend(rows);
             let held = column(stacked).spacing(style::drawn(space::DASHBOARD_GAP.drawn(layout)));
             let room = above.map_or(iced::Padding::ZERO, |above| {
@@ -208,7 +218,7 @@ pub fn frame<'a>(
             widget::scrolled(container(held).width(Fill).padding(room)).into()
         }
         Filling::Capped { above, rows } => {
-            let mut stacked = titled(typeface::Rank::First);
+            let mut stacked = titled;
             stacked.extend(rows);
             let held = column(stacked).spacing(style::drawn(space::DASHBOARD_GAP.drawn(layout)));
             let capped = match viewport.matches(space::FORM_WIDTH_AT) {
@@ -221,7 +231,7 @@ pub fn frame<'a>(
             widget::scrolled(container(capped).width(Fill).padding(room)).into()
         }
         Filling::Tabled { subtitle, table } => {
-            let mut standing = titled(typeface::Rank::First);
+            let mut standing = titled;
             if let Some(subtitle) = subtitle {
                 standing.push(widget::prose(strings::lookup(subtitle), typeface::BODY));
             }

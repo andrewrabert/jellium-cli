@@ -26,7 +26,7 @@ use uuid::Uuid;
 use crate::api::Api;
 use crate::app::{Message, Signed};
 use crate::error::{Answer, Operation, Wrote};
-use crate::style::{Viewport, space, typeface};
+use crate::style::{self, Viewport, space, typeface};
 use crate::text::{self as strings, Text};
 use crate::widget::{self, Choice, Secrecy, prose};
 
@@ -37,6 +37,30 @@ use crate::widget::{self, Choice, Secrecy, prose};
 pub enum Controls {
     Mui,
     Emby,
+}
+
+impl Controls {
+    /// The level a page drawn with these controls writes its own title at.
+    // reference: dashboard-content
+    // reference: user-title
+    pub fn rank(self) -> jellium_model::appearance::typeface::Rank {
+        use jellium_model::appearance::typeface::Rank;
+        match self {
+            Controls::Mui => Rank::First,
+            Controls::Emby => Rank::Second,
+        }
+    }
+
+    /// The room the reference leaves under one group of controls.
+    // reference: dashboard-content
+    // reference: section-vertical
+    // reference: networking-fieldset
+    pub fn between(self, layout: crate::style::Layout) -> crate::style::Drawn {
+        match self {
+            Controls::Mui => space::DASHBOARD_GAP.drawn(layout),
+            Controls::Emby => space::section_bottom(layout).drawn(),
+        }
+    }
 }
 
 /// The heading a group of a section's fields stands under: the level the
@@ -900,36 +924,52 @@ fn said<'a>(
     }
 }
 
-/// The groups of one form, each under the heading it carries, drawn with the
-/// controls `dressing` names.
+/// The groups of one form, each in the section the reference stands it in,
+/// drawn with the controls `dressing` names.
+// reference: section-vertical
+// reference: networking-fieldset
+// reference: dashboard-content
 pub fn controls<'a>(
     groups: &'static [Group],
     form: &'a jellium_model::form::Form,
     dressing: Controls,
     viewport: Viewport,
-) -> Vec<Element<'a, Message>> {
+) -> Element<'a, Message> {
     let layout = viewport.layout();
-    let mut standing: Vec<Element<'a, Message>> = Vec::new();
-    for group in groups {
-        if let Some(heading) = group.heading {
-            let title = strings::lookup(heading.title);
-            standing.push(match dressing {
-                Controls::Mui => widget::mui::heading(heading.rank, title),
-                Controls::Emby => widget::heading(heading.rank, title),
-            });
-        }
+    let inside = match dressing {
+        Controls::Mui => space::DASHBOARD_GAP.drawn(layout),
+        Controls::Emby => space::FIELD_GAP.drawn(),
+    };
+    let over = match dressing {
+        Controls::Mui => space::DASHBOARD_GAP.drawn(layout),
+        Controls::Emby => space::SECTION_GAP.drawn(),
+    };
+    let sections = groups.iter().map(|group| {
+        let mut held: Vec<Element<'a, Message>> = Vec::new();
         if let Some(note) = group.note {
-            standing.push(said(note, dressing, layout));
+            held.push(said(note, dressing, layout));
         }
-        standing.extend(group.controls.iter().map(|control| match dressing {
+        held.extend(group.controls.iter().map(|control| match dressing {
             Controls::Mui => filled(*control, form, viewport),
             Controls::Emby => emby(*control, form),
         }));
         if let Some(closing) = group.closing {
-            standing.push(said(closing, dressing, layout));
+            held.push(said(closing, dressing, layout));
         }
-    }
-    standing
+        let mut section: Vec<Element<'a, Message>> = Vec::new();
+        if let Some(heading) = group.heading {
+            let title = strings::lookup(heading.title);
+            section.push(match dressing {
+                Controls::Mui => widget::mui::heading(heading.rank, title),
+                Controls::Emby => widget::heading(heading.rank, title),
+            });
+        }
+        section.push(column(held).spacing(style::drawn(inside)).into());
+        column(section).spacing(style::drawn(over)).into()
+    });
+    column(sections)
+        .spacing(style::drawn(dressing.between(layout)))
+        .into()
 }
 
 /// The control that writes a form whole, drawn with the controls `dressing`
@@ -1051,6 +1091,30 @@ impl Screen {
             Screen::LiveTv { tab } => tab.label(),
             Screen::Plugins => Text::PluginsTitle,
             Screen::PluginPage { .. } => Text::PluginsConfigurationPages,
+        }
+    }
+
+    /// Which controls this screen is drawn with.
+    // reference: dashboard-frame
+    pub fn controls(&self) -> Controls {
+        match self {
+            Screen::Settings { section } => section.controls(),
+            Screen::User { .. } | Screen::UserNew | Screen::Library { .. } => Controls::Emby,
+            Screen::Home
+            | Screen::Users
+            | Screen::Libraries
+            | Screen::Tasks
+            | Screen::Task { .. }
+            | Screen::Logs
+            | Screen::Log { .. }
+            | Screen::Activity
+            | Screen::Catalog
+            | Screen::Repositories
+            | Screen::Devices
+            | Screen::Keys
+            | Screen::LiveTv { .. }
+            | Screen::Plugins
+            | Screen::PluginPage { .. } => Controls::Mui,
         }
     }
 
@@ -1426,9 +1490,30 @@ pub fn view<'a>(
         },
     };
 
-    let title = match state.screen {
-        Screen::Tasks | Screen::Libraries | Screen::Log { .. } => None,
-        _ => Some(state.screen.label()),
+    let title = match &state.body {
+        Body::User(held) => Some(frame::Title {
+            rank: typeface::Rank::Second,
+            reads: std::borrow::Cow::Borrowed(held.name.as_str()),
+        }),
+        Body::Library(held) => Some(frame::Title {
+            rank: typeface::Rank::Third,
+            reads: std::borrow::Cow::Borrowed(held.name.as_str()),
+        }),
+        _ => match &state.screen {
+            Screen::Users
+            | Screen::Tasks
+            | Screen::Task { .. }
+            | Screen::Libraries
+            | Screen::Log { .. } => None,
+            Screen::UserNew => Some(frame::Title {
+                rank: typeface::Rank::Second,
+                reads: std::borrow::Cow::Borrowed(strings::lookup(Text::UsersAdd)),
+            }),
+            screen => Some(frame::Title {
+                rank: screen.controls().rank(),
+                reads: std::borrow::Cow::Borrowed(strings::lookup(screen.label())),
+            }),
+        },
     };
     frame::frame(&state.screen, &state.opened, title, filling, viewport)
 }

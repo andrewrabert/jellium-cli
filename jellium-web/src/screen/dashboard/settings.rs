@@ -42,7 +42,12 @@ pub async fn load(api: std::rc::Rc<crate::api::Api>, section: super::Section) ->
 pub fn view<'a>(state: &'a State, read_only: bool, viewport: Viewport) -> frame::Filling<'a> {
     let controls = state.section.controls();
     let layout = viewport.layout();
-    let mut rows = super::controls(state.section.groups(), &state.form, controls, viewport);
+    let mut rows = vec![super::controls(
+        state.section.groups(),
+        &state.form,
+        controls,
+        viewport,
+    )];
 
     if state.saved {
         rows.push(widget::mui::succeeded(Text::DashboardSaved, layout));

@@ -16,9 +16,10 @@ pub const PLAY_DEFAULT_AUDIO_TRACK: Field = Field::Flag {
     key: "PlayDefaultAudioTrack",
 };
 
+// reference: settings-subtitles-mode
 pub const SUBTITLE_MODE: Field = Field::Choice {
     key: "SubtitleMode",
-    options: &["Default", "Always", "OnlyForced", "None", "Smart"],
+    options: &["Default", "Smart", "OnlyForced", "Always", "None"],
 };
 
 pub const NEXT_EPISODE_AUTOPLAY: Field = Field::Flag {

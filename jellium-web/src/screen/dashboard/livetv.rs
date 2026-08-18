@@ -456,7 +456,7 @@ fn dvr<'a>(
     read_only: bool,
     viewport: crate::style::Viewport,
 ) -> Page<'a> {
-    page.extend(super::controls(
+    page.push(super::controls(
         DVR,
         &state.dvr,
         super::Controls::Mui,

@@ -569,7 +569,7 @@ pub fn new<'a>(state: &'a State) -> Vec<Element<'a, Message>> {
             .secure(true)
             .on_input(|typed| Message::DashboardAction(super::Action::TypedPassword(typed)))
             .into(),
-        button(prose(strings::lookup(Text::UsersCreate), typeface::BODY))
+        button(prose(strings::lookup(Text::DashboardSave), typeface::BODY))
             .style(style::submit)
             .on_press(Message::DashboardAction(super::Action::Write(
                 super::Written::CreateUser {
@@ -676,7 +676,7 @@ pub fn view<'a>(
         true => None,
         false => Some(widget::fab(
             crate::icon::Icon::Add,
-            Text::UsersCreate,
+            Text::UsersAdd,
             Message::DashboardAction(super::Action::Open(super::Screen::UserNew)),
         )),
     };
@@ -795,7 +795,7 @@ pub fn one<'a>(
                 true => super::Account::Own,
                 false => super::Account::Other,
             };
-            page.extend(super::controls(
+            page.push(super::controls(
                 tab.groups(account),
                 form,
                 super::Controls::Emby,

@@ -52,6 +52,8 @@ in order. A section passes only when every line in it holds.
 - A PGS, VOBSUB or DVDSUB stream plays burned in, and the display says the
   transcode is for the subtitles.
 - Turning subtitles off restores direct play on the next playback.
+- The playback settings screen offers the subtitle modes in the reference's
+  order: Default, Smart, Only forced, Always, None.
 - The audio and subtitle tracks selected by default match the user's
   server-side language and subtitle-mode configuration.
 
@@ -349,6 +351,7 @@ in order. A section passes only when every line in it holds.
 - `jellium-cli web` neither stops nor exits when the Jellyfin server restarts or
   shuts down.
 - A banner stands while the server reports a restart is required.
+- A task screen writes the task's name once and no collection title over it.
 
 ## Server configuration
 
@@ -361,10 +364,14 @@ in order. A section passes only when every line in it holds.
   discards them and staying keeps them.
 - Reading the encoding, network, metadata, trickplay and Live TV sections
   through `jellyfin-api` succeeds against a real server.
+- The networking page stands each of its five groups under its own heading,
+  with the reference's own room under each group and between its controls.
 
 ## Users
 
 - The user list shows every user, and creates and deletes one.
+- A user screen heads with that user's own name, at the size a section title
+  is written at, and the add-user screen heads "Add User".
 - A user screen carries profile, access, parental control and password.
 - A user's password is set and reset from the user screen, and a user's image is
   removed.
@@ -383,6 +390,8 @@ in order. A section passes only when every line in it holds.
 
 ## Libraries
 
+- A library screen heads with that library's own name and writes "Folders"
+  over its media paths as a heading rather than as body text.
 - A virtual folder is created, renamed and removed; a media path is added and
   removed; choosing a path browses the server's own filesystem rather than
   taking typed text.
@@ -395,7 +404,8 @@ in order. A section passes only when every line in it holds.
 - Item detail offers Refresh Metadata with its replace and scan mode options to
   an administrator and to nobody else.
 - Every control on a library's options carries the sentence the reference
-  writes beside it, and the options stand in three headed sections.
+  writes beside it, and the options stand in three headed sections, each with
+  the room the reference leaves under a section.
 - The libraries page writes no heading of its own and stands its content two
   steps down the page.
 
