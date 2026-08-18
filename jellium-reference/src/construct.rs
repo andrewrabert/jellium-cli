@@ -6,8 +6,15 @@ use std::path::{Path, PathBuf};
 
 /// The name of one construct of the pinned reference: lowercase letters,
 /// digits and hyphens.
-/// A drawn construct carrying an appearance value stands under this one name
-/// in `reference/constructs.tsv` and in `reference/provenance.tsv`.
+/// Two registers spell names in this form and neither shares the other's
+/// namespace. `reference/provenance.tsv` names the span a ported value was
+/// taken from, chosen by whoever ported it and as often naming a rule as an
+/// element — `page-side`, `scheme-header-transparent`.
+/// `reference/constructs.tsv` names an element the reference's markup writes,
+/// derived from that element's own class. The same element carries different
+/// names in the two: `header-back` against `header-back-button`,
+/// `section-title-button` against `section-title-text-button`, `tab-strip`
+/// against `header-tabs`.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Construct(String);
 
