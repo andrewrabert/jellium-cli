@@ -31,7 +31,7 @@ pub use control::Planned;
 pub use element::{
     Asked, Element, Event, Fault, Generation, Kind, Metadata, Raised, Shown, TextTrack,
 };
-pub use queue::Queue;
+pub use queue::{Holding, Queue};
 
 pub mod live;
 
@@ -162,6 +162,8 @@ pub enum Menu {
     Quality,
     Chapters,
     Version,
+    /// The three repeat modes, which the reference's settings control opens.
+    Repeat,
 }
 
 /// Every control the on-screen display, the now-playing bar, the keyboard and

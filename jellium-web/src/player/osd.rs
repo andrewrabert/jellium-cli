@@ -14,7 +14,7 @@ use crate::player::group::Joined;
 use crate::player::live::Live;
 use crate::player::remote::{self, Bound};
 use crate::player::scrub::scrub;
-use crate::player::{Action, Menu, Playing};
+use crate::player::{Action, Holding, Menu, Playing};
 use crate::route::Route;
 use crate::style::space::Room;
 use crate::style::{self, Viewport, card, space, typeface};
@@ -144,6 +144,8 @@ pub fn chapters<'a>(
         .collect()
 }
 
+// reference: osd-settings-repeat
+// reference: osd-repeat-menu
 fn menu<'a>(
     playing: &'a Playing,
     images: &'a Cache,
@@ -152,6 +154,7 @@ fn menu<'a>(
     let entries: Vec<Element<'a, Message>> = match playing.menu? {
         Menu::Settings => [
             (Text::PlayerQuality, Menu::Quality),
+            (Text::PlayerRepeatMode, Menu::Repeat),
             (Text::PlayerChapters, Menu::Chapters),
             (Text::PlayerVersion, Menu::Version),
         ]
@@ -202,6 +205,15 @@ fn menu<'a>(
                 button(prose(quality_label(*quality), typeface::BODY))
                     .style(style::flat)
                     .on_press(Message::PlayerAction(Action::SelectQuality(*quality)))
+                    .into()
+            })
+            .collect(),
+        Menu::Repeat => [Repeat::All, Repeat::One, Repeat::Off]
+            .into_iter()
+            .map(|repeat| {
+                button(prose(strings::lookup(repeat_label(repeat)), typeface::BODY))
+                    .style(style::flat)
+                    .on_press(Message::PlayerAction(Action::SetRepeat(repeat)))
                     .into()
             })
             .collect(),
@@ -377,10 +389,11 @@ fn between<'a>(
 // reference: osd-transport
 // reference: osd-next
 // reference: osd-buttons
+// reference: osd-time
+// reference: osd-track-buttons
 // reference: osd-fullscreen
 fn transport<'a>(
     playing: &'a Playing,
-    sync_play: SyncAccess,
     device: crate::prefs::Device,
     viewport: Viewport,
 ) -> Element<'a, Message> {
@@ -392,15 +405,17 @@ fn transport<'a>(
         true => 0.0,
         false => style::drawn(space::ICON_GAP.drawn()),
     };
-    let mut controls = row![acting(
-        Icon::SkipPrevious,
-        typeface::ICON_BUTTON,
-        Text::PlayerPrevious,
-        Action::Previous
-    )]
-    .spacing(shoulders)
-    .align_y(iced::Center);
+    let stepping = playing.queue.holding();
+    let mut controls = row![].spacing(shoulders).align_y(iced::Center);
 
+    if stepping == Holding::Many {
+        controls = controls.push(acting(
+            Icon::SkipPrevious,
+            typeface::ICON_BUTTON,
+            Text::PlayerPrevious,
+            Action::Previous,
+        ));
+    }
     if !viewport.matches(space::OSD_SEEK_AT) {
         controls = controls.push(acting(
             Icon::FastRewind,
@@ -423,29 +438,28 @@ fn transport<'a>(
             Action::SkipForward,
         ));
     }
-    controls = controls.push(acting(
-        Icon::SkipNext,
-        typeface::ICON_BUTTON,
-        Text::PlayerNext,
-        Action::Next,
-    ));
-
-    if !viewport.matches(space::OSD_ENDS_AT) {
-        controls = controls.push(
-            container(prose(
-                strings::format(Text::PlayerEndsAt, &[&clock(ends_at(playing))]),
-                typeface::BODY,
-            ))
-            .padding(iced::Padding {
-                top: 0.0,
-                right: 0.0,
-                bottom: 0.0,
-                left: style::drawn(space::OSD_ENDS_GAP.drawn()),
-            }),
-        );
+    if stepping == Holding::Many {
+        controls = controls.push(acting(
+            Icon::SkipNext,
+            typeface::ICON_BUTTON,
+            Text::PlayerNext,
+            Action::Next,
+        ));
     }
 
-    controls = controls.push(Space::new().width(Fill));
+    let ends: Element<'a, Message> = match viewport.matches(space::OSD_ENDS_AT) {
+        true => Space::new().into(),
+        false => prose(
+            strings::format(Text::PlayerEndsAt, &[&clock(ends_at(playing))]),
+            typeface::BODY,
+        ),
+    };
+    controls = controls.push(container(ends).width(Fill).padding(iced::Padding {
+        top: 0.0,
+        right: 0.0,
+        bottom: 0.0,
+        left: style::drawn(space::OSD_ENDS_GAP.drawn()),
+    }));
 
     if !playing.plan.subtitle_streams.is_empty() {
         controls = controls.push(opening(
@@ -460,51 +474,11 @@ fn transport<'a>(
     if !viewport.matches(space::OSD_VOLUME_AT) {
         controls = controls.push(volume(device, viewport));
     }
-    controls = controls
-        .push(opening(
-            Icon::Settings,
-            Text::PlayerSettings,
-            Menu::Settings,
-        ))
-        .push(acting(
-            Icon::Shuffle,
-            typeface::ICON_BUTTON,
-            Text::QueueShuffle,
-            Action::ToggleShuffle,
-        ));
-
-    let repeat = playing.queue.repeat();
-    let repeating = match repeat {
-        Repeat::One => Icon::RepeatOne,
-        Repeat::Off | Repeat::All => Icon::Repeat,
-    };
-    controls = controls
-        .push(acting(
-            repeating,
-            typeface::ICON_BUTTON,
-            repeat_label(repeat),
-            Action::CycleRepeat,
-        ))
-        .push(crate::widget::icon_button(
-            Icon::Queue,
-            typeface::ICON_BUTTON,
-            Some(Text::PlayerQueue),
-            Message::Navigated(Route::Queue),
-        ))
-        .push(crate::widget::icon_button(
-            Icon::Cast,
-            typeface::ICON_BUTTON,
-            Some(Text::PlayerRemote),
-            Message::Navigated(Route::Remote),
-        ));
-    if sync_play != SyncAccess::None {
-        controls = controls.push(crate::widget::icon_button(
-            Icon::Groups,
-            typeface::ICON_BUTTON,
-            Some(Text::PlayerSyncPlay),
-            Message::Navigated(Route::SyncPlay),
-        ));
-    }
+    controls = controls.push(opening(
+        Icon::Settings,
+        Text::PlayerSettings,
+        Menu::Settings,
+    ));
 
     let (fullscreen, label) = match playing.fullscreen {
         true => (Icon::FullscreenExit, Text::PlayerExitFullscreen),
@@ -766,7 +740,7 @@ pub fn view<'a>(
         Some(live) => panel.push(live_transport(playing, live, chrono::Utc::now())),
         None => panel
             .push(elapsed(playing, viewport))
-            .push(transport(playing, sync_play, device, viewport)),
+            .push(transport(playing, device, viewport)),
     };
 
     column![

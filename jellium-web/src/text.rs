@@ -310,6 +310,7 @@ text! {
     PlayerQualityLimit => "playerQualityLimit",
     PlayerChapters => "playerChapters",
     PlayerVersion => "playerVersion",
+    PlayerRepeatMode => "playerRepeatMode",
     PlayerQueue => "playerQueue",
     PlayerFavorite => "playerFavorite",
     PlayerUnfavorite => "playerUnfavorite",

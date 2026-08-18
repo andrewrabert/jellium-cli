@@ -69,21 +69,24 @@ in order. A section passes only when every line in it holds.
 - Play All queues a series, a season, an album and an artist.
 - Instant Mix on a song, an album and an artist queues from the Jellyfin
   server.
-- The queue view opens from the video display, lists what is upcoming, and its
-  back control returns to the display with playback undisturbed.
+- The queue view opens from the now-playing bar, lists what is upcoming,
+  removes an item, and its back control returns to what was open with playback
+  undisturbed.
 - The queue view lists what is upcoming, and an item can be removed.
 - An item removed from the queue stays gone after shuffle is toggled on and off
   again.
 - Shuffle reshuffles only what has not played, and toggling it off restores the
   original order.
-- Repeat offers off, one and all, for audio and for video.
+- Repeat offers off, one and all, from the now-playing bar and from the video
+  display's settings menu, for audio and for video.
 
 ## Controls and keys
 
 - The video display offers play, scrub with a buffered indicator and a tick per
   chapter, elapsed and total time, skip back 10 and forward 30, volume with
-  mute, audio, subtitle and quality selection, version selection, previous,
-  next, the chapter list and fullscreen.
+  mute, audio, subtitle and quality selection, version selection, previous and
+  next while the queue holds more than one item, the chapter list and
+  fullscreen.
 - The audio controls offer that set minus fullscreen, subtitles and quality.
 - Space, `k`, the arrows, `f`, `m`, `n`, `p` and Escape drive the player.
 - One drag of the scrub bar produces one seek and one progress report.
@@ -806,9 +809,14 @@ Run against a real browser at 360x800, 800x360, 768x1024 and 1920x1080.
   the two capped together at a 60em measure centred in the page.
 - The now-playing bar is 4.2em tall, and its artwork 4.2em wide and 70% of the
   bar's height.
-- The video display stands previous, rewind, play, fast forward and next against
-  the panel's leading edge with the ends-at text after them, and a spacer pushes
-  subtitles, audio, volume and settings to the trailing edge, full screen last.
+- The video display stands previous, rewind, play, fast forward and next
+  against the panel's leading edge, previous and next only while the queue
+  holds more than one item, and the ends-at text after them fills the rest of
+  the row so subtitles, audio, volume and settings stand at the trailing edge,
+  full screen last.
+- The video display's control row carries no shuffle, repeat, queue, cast or
+  watch-together control, and cast and watch-together stand once each in its
+  header.
 - The video display drops the ends-at text at 75em and narrower, the two seek
   controls at 50em and narrower and the volume control at 43em and narrower, and
   stands its controls shoulder to shoulder at 33.75em and narrower.

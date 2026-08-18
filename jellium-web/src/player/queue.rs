@@ -19,6 +19,14 @@ fn playlist_item_id() -> String {
     })
 }
 
+/// How many items the queue holds, which is what decides the two controls
+/// that step through it.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum Holding {
+    One,
+    Many,
+}
+
 /// The items queued for this playback, never persisted; the Jellyfin server is
 /// told their order and their playlist item ids.
 pub struct Queue {
@@ -67,6 +75,13 @@ impl Queue {
             queue.set_shuffle(true);
         }
         queue
+    }
+
+    pub fn holding(&self) -> Holding {
+        match self.order.len() {
+            0 | 1 => Holding::One,
+            _ => Holding::Many,
+        }
     }
 
     fn at(&self, position: usize) -> Option<&BaseItemDto> {

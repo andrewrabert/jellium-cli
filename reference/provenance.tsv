@@ -183,6 +183,9 @@ osd-next	src/controllers/playback/video/index.html	60	62	8292da1ff84805fe190132b
 osd-time-row	src/controllers/playback/video/index.html	65	67	7be1b00fecc343039993b961877568063008047161ae6a9420c4c07edbc4a0c8	ported
 osd-rating	src/controllers/playback/video/index.html	69	71	6269545de4d4083874ecca61a93e4fa2c0e0ca815afddfedbe9a1ebd0139dd76	dead
 osd-buttons	src/controllers/playback/video/index.html	73	89	2b2d83203a89da97931968aaf2e4909d06e0571da639c3a04a2cef4108cbf5bf	ported
+osd-track-buttons	src/controllers/playback/video/index.js	915	930	1a4a60a4a0094889e98959e76bfe669bf89403be8a0f468507ba258ad0e56b4c	ported
+osd-settings-repeat	src/components/playback/playersettingsmenu.js	217	225	47c7f83d093d6fad338d06f8bb42a6144f04149a8119d126f2650a5bb0b9f1f3	ported
+osd-repeat-menu	src/components/playback/playersettingsmenu.js	57	86	cfa5b09e52665a72359bce76d606c9370ab6d7e34a22a9c04a983ed585b1ce0e	ported
 osd-casting	src/controllers/playback/video/index.html	90	95	8299a9fec51796e67296d00508246e45f914b269d2440a92dc0810d87bb4ba6f	dead
 osd-fullscreen	src/controllers/playback/video/index.html	96	98	b0c64ad2ba418771a21b8a87419ebb72603c96ea8ac089d13eb76d0cd76e4c20	ported
 osd-preview	src/styles/videoosd.scss	60	81	2b4495a7ee6e2ec7b6cbd6b868f39f153b74974d9d16ba7c053cb7011a86024d	ported
