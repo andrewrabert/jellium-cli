@@ -270,11 +270,11 @@ pub fn commands(
     offered
 }
 
-/// Whether this session may cancel a timer, which is what the reference gates
-/// both cancel commands on.
+/// Whether this session may cancel a timer: the Live TV management the
+/// reference gates both cancel commands on, and a session that writes at all.
 // reference: item-context-cancel-timer
 fn manageable(session: &Session) -> bool {
-    session.live_tv.allowed()
+    session.live_tv.allowed() && !session.read_only
 }
 
 /// The menu open now; at most one is open.
