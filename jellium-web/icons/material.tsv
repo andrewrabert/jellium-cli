@@ -25,6 +25,8 @@ fast_forward	E01F
 fast_rewind	E020
 favorite	E87D
 favorite_border	E87E
+fiber_manual_record	E061
+fiber_smart_record	E062
 filter_alt	EF4F
 folder	E2C7
 folder_open	E2C8

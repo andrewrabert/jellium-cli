@@ -5,6 +5,34 @@ use uuid::Uuid;
 
 use crate::appearance::Share;
 
+/// What the guide's channel header writes for a channel: the primary image the
+/// Jellyfin server holds for it, or the channel's own name where it holds none.
+// reference: guide-channel-header-markup
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Marque {
+    Logo,
+    Name,
+}
+
+/// The one badge a programme's cell carries beside its name.
+// reference: guide-program-indicators
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Badge {
+    Live,
+    Premiere,
+    New,
+}
+
+/// The glyph a programme's cell carries for the timer covering it.
+// reference: guide-timer-indicator
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Recording {
+    /// A series timer, which the reference draws on a programme faded, its own
+    /// status branch reading a programme's absent status as cancelled.
+    Series,
+    Once,
+}
+
 /// One scheduled airing, as a guide cell, a channel row and program detail
 /// draw it.
 #[derive(Debug, Clone, PartialEq)]
@@ -15,6 +43,8 @@ pub struct Program {
     pub channel_name: String,
     pub channel_number: String,
     pub title: String,
+    /// The line the reference writes under a guide cell's name.
+    pub episode_title: Option<String>,
     pub overview: String,
     pub genres: Vec<String>,
     pub start: DateTime<Utc>,
@@ -45,6 +75,7 @@ impl Program {
             channel_name: item.channel_name.clone().unwrap_or_default(),
             channel_number: item.channel_number.clone().unwrap_or_default(),
             title: item.name.clone().unwrap_or_default(),
+            episode_title: item.episode_title.clone(),
             overview: item.overview.clone().unwrap_or_default(),
             genres: item.genres.clone().unwrap_or_default(),
             start,
@@ -56,6 +87,32 @@ impl Program {
             timer: item.timer_id.clone(),
             series_timer: item.series_timer_id.clone(),
         })
+    }
+
+    // live wins over premiere, and premiere over a first showing
+    // a repeat carries none, the reference's own default withholding it
+    // reference: guide-program-indicators
+    // reference: guide-indicator-options
+    pub fn badge(&self) -> Option<Badge> {
+        if self.live {
+            return Some(Badge::Live);
+        }
+        if self.premiere {
+            return Some(Badge::Premiere);
+        }
+        if self.new {
+            return Some(Badge::New);
+        }
+        None
+    }
+
+    // a series timer wins over the single timer beside it
+    // reference: guide-timer-indicator
+    pub fn recording(&self) -> Option<Recording> {
+        if self.series_timer.is_some() {
+            return Some(Recording::Series);
+        }
+        self.timer.as_ref().map(|_| Recording::Once)
     }
 
     /// True while `now` falls inside it.
@@ -104,6 +161,8 @@ pub struct Channel {
     pub name: String,
     pub kind: ChannelType,
     pub favorite: bool,
+    /// `Logo` where the Jellyfin server reports a primary image tag.
+    pub marque: Marque,
     pub current: Option<Program>,
 }
 
@@ -131,6 +190,14 @@ impl Channel {
                 .as_ref()
                 .and_then(|data| data.is_favorite)
                 .unwrap_or(false),
+            marque: match item
+                .image_tags
+                .as_ref()
+                .is_some_and(|tags| tags.contains_key("Primary"))
+            {
+                true => Marque::Logo,
+                false => Marque::Name,
+            },
             current: item
                 .current_program
                 .as_ref()

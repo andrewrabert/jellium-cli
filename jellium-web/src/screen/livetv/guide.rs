@@ -1,25 +1,25 @@
 use std::collections::{HashMap, HashSet};
 use std::rc::Rc;
 
-use chrono::{DateTime, Utc};
-use iced::widget::{Space, button, column, container, row};
+use chrono::{DateTime, TimeDelta, Utc};
+use iced::widget::{Space, button, column, container, image, row};
 use iced::{Element, Fill, Subscription};
 use uuid::Uuid;
 
 use super::Action;
 use crate::api::Api;
 use crate::app::Message;
+use crate::icon::{Icon, tinted};
 use crate::images::{self, Cache};
-use crate::livetv::Program;
-use crate::style::{self, Drawn, Viewport, space, typeface};
+use crate::livetv::{Badge, Channel, Marque, Program, Recording};
+use crate::style::{self, Drawn, Viewport, scheme, space, typeface};
 use crate::text::{self as strings, Text};
 use crate::widget::{line, prose};
 use crate::window;
 
-pub use jellium_model::guide::{Fetched, Focus, Move, SPAN, STEP, State, Step, Trouble, half_hour};
-
-/// The guide pitches its channel rows at a two-line row's height.
-const ROW: space::ListRow = space::ListRow::bare(space::Lines::Two);
+pub use jellium_model::guide::{
+    Fetched, Focus, Move, Placed, SPAN, STEP, Standing, State, Step, Trouble, half_hour,
+};
 
 /// Loads the TV channels and the guide range, opening at the current half hour
 /// with `SPAN` shown.
@@ -34,7 +34,7 @@ pub async fn load(api: Rc<Api>, height: Drawn) -> Result<State, crate::error::Bu
         channels,
         range,
         start,
-        window: window::Window::new(window::Id::Guide, ROW.height().drawn(), height),
+        window: window::Window::new(window::Id::Guide, space::GUIDE_ROW.drawn(), height),
         programs: HashMap::new(),
         held: None,
         focus: Focus {
@@ -61,116 +61,242 @@ pub async fn fetch(
     .await
 }
 
-fn badge<'a>(label: Text) -> Element<'a, Message> {
-    container(prose(strings::lookup(label), typeface::SECONDARY))
-        .padding(style::drawn(space::BLOCK_GAP.drawn()))
+/// The face each badge writes.
+// reference: guide-indicator-colors
+fn face(badge: Badge) -> scheme::Color {
+    match badge {
+        Badge::Live => scheme::BADGE_LIVE,
+        Badge::Premiere => scheme::BADGE_PREMIERE,
+        Badge::New => scheme::BADGE_NEW,
+    }
+}
+
+/// One `.guideProgramIndicator`: what it reads, on its own face, inside its own
+/// padding and radius.
+// reference: guide-program-indicator
+fn badge<'a>(badge: Badge) -> Element<'a, Message> {
+    let label = match badge {
+        Badge::Live => Text::GuideBadgeLive,
+        Badge::Premiere => Text::GuideBadgePremiere,
+        Badge::New => Text::GuideBadgeNew,
+    };
+    let tint = face(badge);
+    container(prose(strings::lookup(label), typeface::GUIDE_BADGE))
+        .padding(style::padding(space::GUIDE_BADGE_PAD))
+        .style(move |theme: &iced::Theme| style::badge(theme, tint))
         .into()
 }
 
-/// One cell: its title, its airtime, its badges and its record marker.
-fn cell<'a>(program: &'a Program, focused: bool, viewport: Viewport) -> Element<'a, Message> {
-    let mut marks = row![].spacing(style::drawn(space::BLOCK_GAP.drawn()));
-    if program.live {
-        marks = marks.push(badge(Text::GuideBadgeLive));
+/// The glyph of the timer covering a programme: a single timer's in the
+/// reference's own red, and a series timer's in the cell's own lettering faded.
+// reference: guide-timer-indicator
+// reference: guide-program-icon
+fn mark<'a>(recording: Recording) -> Element<'a, Message> {
+    match recording {
+        Recording::Once => tinted(Icon::FiberManualRecord, typeface::GUIDE_MARK, style::timer),
+        Recording::Series => tinted(
+            Icon::FiberSmartRecord,
+            typeface::GUIDE_MARK,
+            style::series_timer,
+        ),
     }
-    if program.new {
-        marks = marks.push(badge(Text::GuideBadgeNew));
-    }
-    if program.premiere {
-        marks = marks.push(badge(Text::GuideBadgePremiere));
-    }
-    if program.repeat {
-        marks = marks.push(badge(Text::GuideBadgeRepeat));
-    }
-    if program.series_timer.is_some() {
-        marks = marks.push(badge(Text::GuideRecordingSeries));
-    } else if program.timer.is_some() {
-        marks = marks.push(badge(Text::GuideRecording));
+}
+
+/// The rule the guide draws, as wide or as tall as it is laid.
+// reference: scheme-guide-rule
+fn rule<'a>(viewport: Viewport) -> iced::widget::Container<'a, Message> {
+    container(Space::new())
+        .width(style::drawn(space::GUIDE_RULE.drawn(viewport.band())))
+        .style(style::guide_rule)
+}
+
+/// `.guide-channelHeaderCell`: the channel's number at the leading edge, the
+/// primary image the Jellyfin server holds for the channel laid on the trailing
+/// one, and the channel's own name in the image's place where it holds none.
+/// The number goes on a narrow page.
+// reference: guide-channel-header
+// reference: guide-channel-header-markup
+// reference: guide-channel-image
+// reference: guide-channel-number
+// reference: guide-channel-name
+fn header<'a>(
+    channel: &'a Channel,
+    logo: Option<iced::widget::image::Handle>,
+    viewport: Viewport,
+) -> Element<'a, Message> {
+    let standing = style::drawn(space::guide_standing(viewport.band()));
+    let mut laid = row![].align_y(iced::Center).height(standing);
+    if !viewport.matches(space::GUIDE_CHANNEL_NARROW_AT) {
+        laid = laid.push(
+            container(line(
+                channel.number.clone(),
+                typeface::BODY,
+                typeface::Weight::Regular,
+                typeface::LINE_HEIGHT,
+            ))
+            .max_width(style::drawn(space::guide_number(viewport)))
+            .padding(iced::Padding::ZERO.left(style::drawn(space::GUIDE_CHANNEL_INSET.drawn()))),
+        );
     }
 
-    let minutes = (program.end - program.start).num_minutes().max(1) as f32;
-    let body = column![
-        line(
-            program.title.clone(),
+    let trailing: Element<'a, Message> = match (channel.marque, logo) {
+        (Marque::Logo, Some(handle)) => container(
+            image(handle)
+                .width(style::drawn(space::guide_logo(viewport)))
+                .height(style::drawn(space::guide_logo_height())),
+        )
+        .padding(iced::Padding::ZERO.right(style::drawn(
+            space::GUIDE_LOGO_INSET.of(space::guide_channel(viewport)),
+        )))
+        .into(),
+        (Marque::Logo, None) => Space::new().into(),
+        (Marque::Name, _) => container(line(
+            channel.name.clone(),
             typeface::BODY,
             typeface::Weight::Regular,
             typeface::LINE_HEIGHT,
-        ),
-        line(
-            crate::livetv::airtime(program),
-            typeface::SECONDARY,
-            typeface::Weight::Regular,
-            typeface::LINE_HEIGHT,
-        ),
-        marks,
-    ]
-    .spacing(style::drawn(space::BLOCK_GAP.drawn()));
+        ))
+        .max_width(style::drawn(space::guide_name(viewport)))
+        .padding(iced::Padding::ZERO.right(style::drawn(space::GUIDE_CHANNEL_INSET.drawn())))
+        .into(),
+    };
 
-    button(body)
-        .style(if focused {
-            style::submit
-        } else {
-            style::raised
-        })
-        .width(minutes * style::drawn(space::guide_minute(viewport)))
-        .height(style::drawn(ROW.height().drawn()))
+    row![
+        laid.push(Space::new().width(Fill)).push(trailing),
+        rule(viewport).height(standing),
+    ]
+    .width(style::drawn(space::guide_channel(viewport)))
+    .height(standing)
+    .into()
+}
+
+/// One `.programCell`: the rule down its leading edge, its name with its badge
+/// beside it, its episode title beneath, and the timer's glyph after them.
+// reference: guide-program-cell
+// reference: guide-program-name
+// reference: guide-episode-title
+fn cell<'a>(program: &'a Program, standing: Standing, viewport: Viewport) -> Element<'a, Message> {
+    let mut named = row![line(
+        program.title.clone(),
+        typeface::BODY,
+        typeface::Weight::Regular,
+        typeface::LINE_HEIGHT,
+    )]
+    .align_y(iced::Center);
+    if let Some(worn) = program
+        .badge()
+        .filter(|_| !viewport.matches(space::GUIDE_BADGE_AT))
+    {
+        named = named
+            .push(Space::new().width(style::drawn(space::GUIDE_BADGE_LEADING.drawn())))
+            .push(badge(worn))
+            .push(Space::new().width(style::drawn(space::GUIDE_BADGE_TRAILING.drawn())));
+    }
+
+    let mut body = column![named];
+    if let Some(episode) = program.episode_title.as_ref() {
+        body = body
+            .push(Space::new().height(style::drawn(space::GUIDE_EPISODE_TOP.drawn())))
+            .push(line(
+                episode.clone(),
+                typeface::SECONDARY,
+                typeface::Weight::Regular,
+                typeface::LINE_HEIGHT,
+            ));
+    }
+
+    let mut inside = row![
+        container(body)
+            .padding(style::padding(space::GUIDE_PROGRAM_PAD))
+            .width(Fill),
+    ]
+    .align_y(iced::Center);
+    if let Some(recording) = program.recording() {
+        inside = inside
+            .push(Space::new().width(style::drawn(space::GUIDE_MARK_GAP.drawn())))
+            .push(mark(recording));
+    }
+
+    button(row![rule(viewport).height(Fill), inside])
+        .style(move |theme: &iced::Theme, status| style::program_cell(theme, status, standing))
+        .padding(iced::Padding::ZERO)
+        .width(Fill)
+        .height(style::drawn(space::guide_standing(viewport.band())))
         .on_press(Message::LiveTvAction(Action::Show(program.id.clone())))
         .into()
 }
 
-/// The time axis, ruled every `STEP`, with a marker at `now`.
-fn axis<'a>(state: &'a State, now: DateTime<Utc>, viewport: Viewport) -> Element<'a, Message> {
-    let minute = style::drawn(space::guide_minute(viewport));
-    let channel = style::drawn(space::guide_channel(viewport));
+/// `.timeslotHeaders`: the corner standing over the channel column, then one
+/// `.timeslotHeader` every `STEP`, each as wide as `STEP` runs.
+// reference: guide-timeslot
+// reference: guide-timeslot-face
+// reference: guide-timeslot-height
+fn timeslots<'a>(state: &'a State, viewport: Viewport) -> Element<'a, Message> {
+    let tall = style::drawn(space::GUIDE_TIMESLOT.drawn());
     let steps = (SPAN.num_minutes() / STEP.num_minutes()).max(1);
-    let ruled = (0..steps).map(|index| {
+    let slots = (0..steps).map(|index| {
         let at = state.start + STEP * index as i32;
-        container(prose(
+        container(line(
             chrono::DateTime::<chrono::Local>::from(at)
                 .format("%H:%M")
                 .to_string(),
-            typeface::SECONDARY,
+            typeface::GUIDE_TIMESLOT,
+            typeface::GUIDE_TIMESLOT_WEIGHT,
+            typeface::LINE_HEIGHT,
         ))
-        .width(STEP.num_minutes() as f32 * minute)
+        .width(style::drawn(space::guide_across(STEP, viewport)))
+        .height(tall)
+        .padding(iced::Padding::ZERO.left(style::drawn(space::GUIDE_TIMESLOT_INDENT.drawn())))
+        .align_y(iced::Center)
         .into()
     });
 
-    let marker: Element<'a, Message> = if now >= state.start && now < state.start + SPAN {
-        let across = (now - state.start).num_minutes() as f32 * minute;
-        row![
-            Space::new().width(across),
-            container(Space::new())
-                .width(style::drawn(
-                    space::SLIDER_MARKER_WIDTH.drawn(viewport.band())
-                ))
-                .style(|theme: &iced::Theme| container::Style::default()
-                    .background(theme.palette().danger)),
-        ]
-        .into()
-    } else {
-        Space::new().into()
-    };
-
-    column![
-        row![Space::new().width(channel), row(ruled),],
-        row![Space::new().width(channel), marker],
+    row![
+        Space::new()
+            .width(style::drawn(space::guide_channel(viewport)))
+            .height(tall),
+        row(slots),
     ]
     .into()
 }
 
-/// The grid: the time axis ruled every `STEP`, a marker at `now`, the date
-/// picker and the two screen steps, and one windowed row per channel.
-/// A cell carries its title, its start and end, its live, new, premiere and
-/// repeat badges, and a record marker that tells a single timer from a series
-/// timer.
+/// The strip of one channel's cells over the span shown, each cell beginning
+/// where its programme begins and running as long as the span holds of it.
+// reference: guide-cell-span
+fn strip<'a>(
+    state: &'a State,
+    index: usize,
+    now: DateTime<Utc>,
+    viewport: Viewport,
+) -> Element<'a, Message> {
+    let mut laid = row![];
+    let mut reached = TimeDelta::zero();
+    for program in state.cells(index) {
+        let Placed { begins, runs } = state.placed(program);
+        if begins > reached {
+            laid = laid.push(Space::new().width(style::drawn(space::guide_across(
+                begins - reached,
+                viewport,
+            ))));
+        }
+        laid = laid.push(
+            container(cell(program, state.standing(index, program, now), viewport))
+                .width(style::drawn(space::guide_across(runs, viewport))),
+        );
+        reached = begins + runs;
+    }
+    laid.into()
+}
+
+/// The grid: the date controls, the time-slot strip, and one windowed row per
+/// channel carrying that channel's header and the cells of the programmes it is
+/// showing over the span shown.
 pub fn view<'a>(
     state: &'a State,
     now: DateTime<Utc>,
     images: &'a Cache,
     viewport: Viewport,
 ) -> Element<'a, Message> {
-    let _ = images;
-
     let controls = row![
         button(prose(strings::lookup(Text::GuideEarlier), typeface::BODY))
             .style(style::raised)
@@ -211,47 +337,40 @@ pub fn view<'a>(
         .into();
     }
 
-    let focus = state.focus;
     let grid = window::list(state.window, state.channels.len(), move |index| {
         let channel = &state.channels[index];
-        let cells = state
-            .cells(index)
-            .into_iter()
-            .map(|program| {
-                cell(
-                    program,
-                    index == focus.channel && program.start <= focus.at && focus.at < program.end,
-                    viewport,
-                )
-            })
-            .collect::<Vec<_>>();
-        row![
-            container(line(
-                format!("{} {}", channel.number, channel.name),
-                typeface::BODY,
-                typeface::Weight::Regular,
-                typeface::LINE_HEIGHT,
-            ))
-            .width(style::drawn(space::guide_channel(viewport)))
-            .height(style::drawn(ROW.height().drawn())),
-            row(cells).spacing(style::drawn(space::BLOCK_GAP.drawn())),
+        let logo = images.handle(images::Key {
+            item: channel.id,
+            kind: images::Kind::Primary,
+            index: None,
+        });
+        column![
+            row![
+                header(channel, logo, viewport),
+                strip(state, index, now, viewport),
+            ]
+            .height(style::drawn(space::guide_standing(viewport.band()))),
+            rule(viewport).width(Fill),
         ]
-        .height(style::drawn(ROW.height().drawn()))
+        .height(style::drawn(space::GUIDE_ROW.drawn()))
         .into()
     });
 
-    column![controls, axis(state, now, viewport), grid]
+    column![controls, timeslots(state, viewport), grid]
         .spacing(style::drawn(space::SECTION_GAP.drawn()))
         .width(Fill)
         .height(Fill)
         .into()
 }
 
+/// The primary image of every channel shown whose header draws one.
+// reference: guide-channel-header-markup
 pub fn images(state: &State) -> HashSet<images::Key> {
     state
         .window
         .shown(state.channels.len())
         .filter_map(|index| state.channels.get(index))
+        .filter(|channel| channel.marque == Marque::Logo)
         .map(|channel| images::Key {
             item: channel.id,
             kind: images::Kind::Primary,

@@ -470,8 +470,6 @@ text! {
     GuideBadgeNew => "guideBadgeNew",
     GuideBadgePremiere => "guideBadgePremiere",
     GuideBadgeRepeat => "guideBadgeRepeat",
-    GuideRecording => "guideRecording",
-    GuideRecordingSeries => "guideRecordingSeries",
     ChannelsTv => "channelsTv",
     ChannelsRadio => "channelsRadio",
     ChannelsEmpty => "channelsEmpty",

@@ -1,6 +1,6 @@
 use chrono::{DateTime, Utc};
 
-pub use jellium_model::livetv::{Channel, Program};
+pub use jellium_model::livetv::{Badge, Channel, Marque, Program, Recording};
 
 /// The start and end of a program, as the display and the guide write them.
 pub fn airtime(program: &Program) -> String {

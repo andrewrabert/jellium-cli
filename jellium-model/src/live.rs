@@ -149,6 +149,7 @@ mod tests {
             name: format!("Channel {index}"),
             kind: jellyfin_api::types::ChannelType::Tv,
             favorite: false,
+            marque: crate::livetv::Marque::Name,
             current: None,
         }
     }
@@ -161,6 +162,7 @@ mod tests {
             channel_name: String::new(),
             channel_number: String::new(),
             title: String::new(),
+            episode_title: None,
             overview: String::new(),
             genres: Vec::new(),
             start: end - TimeDelta::minutes(30),

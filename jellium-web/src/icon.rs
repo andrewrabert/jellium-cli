@@ -66,6 +66,8 @@ icons! {
     FastRewind => "fast_rewind",
     Favorite => "favorite",
     FavoriteBorder => "favorite_border",
+    FiberManualRecord => "fiber_manual_record",
+    FiberSmartRecord => "fiber_smart_record",
     FilterAlt => "filter_alt",
     Folder => "folder",
     FolderOpen => "folder_open",

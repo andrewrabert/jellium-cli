@@ -51,6 +51,23 @@ pub enum Move {
     Down,
 }
 
+/// How a programme's cell stands: the guide's focus is on it, it is airing at
+/// the instant drawn, or neither.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Standing {
+    Focused,
+    Airing,
+    Resting,
+}
+
+/// Where a programme's cell falls in the span shown: how far into it the cell
+/// begins, and how long it runs there.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct Placed {
+    pub begins: TimeDelta,
+    pub runs: TimeDelta,
+}
+
 /// Where the keyboard is, held as a channel and an instant rather than as a
 /// widget.
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -149,6 +166,31 @@ impl State {
                     .collect()
             })
             .unwrap_or_default()
+    }
+
+    /// How the cell of `program` on the channel at `index` stands at `now`.
+    pub fn standing(&self, index: usize, program: &Program, now: DateTime<Utc>) -> Standing {
+        let focused = index == self.focus.channel
+            && program.start <= self.focus.at
+            && self.focus.at < program.end;
+        if focused {
+            return Standing::Focused;
+        }
+        match program.airing(now) {
+            true => Standing::Airing,
+            false => Standing::Resting,
+        }
+    }
+
+    // a cell beginning before the span shown begins at nought and runs only
+    // as long as the part of it the span holds, as the reference clips a cell
+    // to its day
+    // reference: guide-cell-span
+    pub fn placed(&self, program: &Program) -> Placed {
+        let shown = self.start..self.start + SPAN;
+        let begins = (program.start - shown.start).max(TimeDelta::zero());
+        let runs = (program.end.min(shown.end) - (shown.start + begins)).max(TimeDelta::zero());
+        Placed { begins, runs }
     }
 
     /// The program the focus rests on.
@@ -264,6 +306,7 @@ mod tests {
             name: format!("Channel {}", index + 1),
             kind: jellyfin_api::types::ChannelType::Tv,
             favorite: false,
+            marque: crate::livetv::Marque::Name,
             current: None,
         }
     }
@@ -297,6 +340,7 @@ mod tests {
             channel_name: String::new(),
             channel_number: String::new(),
             title: "A programme".to_string(),
+            episode_title: None,
             overview: String::new(),
             genres: Vec::new(),
             start,

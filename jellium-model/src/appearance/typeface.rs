@@ -234,6 +234,23 @@ pub const BUTTON_LEADING: Leading = Leading::Factor(Ratio::thousandths(1750));
 // reference: toast-face
 pub const TOAST: Length = Length::em(1.1);
 
+/// `.timeslotHeaders`' own lettering.
+// reference: guide-timeslot-face
+pub const GUIDE_TIMESLOT: Length = BODY.times(Ratio::thousandths(1200));
+
+/// The weight it writes, which a browser resolves against the two faces the
+/// client bundles as the lighter one.
+// reference: guide-timeslot-face
+pub const GUIDE_TIMESLOT_WEIGHT: Weight = Weight::Regular;
+
+/// `.guideProgramIndicator`'s own lettering.
+// reference: guide-program-indicator
+pub const GUIDE_BADGE: Length = BODY.times(Ratio::thousandths(820));
+
+/// `.programIcon`, the glyph a timer draws on a cell.
+// reference: guide-program-icon
+pub const GUIDE_MARK: Length = Length::em(1.6);
+
 /// `.detailButton-icon`.
 // reference: detail-button-icon
 pub const DETAIL_ICON: Length = Length::em(1.6);

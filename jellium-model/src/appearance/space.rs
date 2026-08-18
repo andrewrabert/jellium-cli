@@ -1185,6 +1185,99 @@ pub const PROGRESS: Length = Length::em(0.28);
 // reference: guide-row
 pub const GUIDE_ROW: Length = Length::em(4.42);
 
+/// The rule between two of the guide's rows, down the trailing edge of its
+/// channel column, and down the leading edge of a programme's cell.
+// reference: guide-row
+// reference: guide-channel-header
+// reference: guide-program-cell
+pub const GUIDE_RULE: Css = Css::of(1.0);
+
+/// `.guide-channelTimeslotHeader` and `.timeslotHeader`'s own height.
+// reference: guide-timeslot-height
+pub const GUIDE_TIMESLOT: Length = Length::em(2.8);
+
+/// The indent `.timeslotHeader` writes its time at.
+// reference: guide-timeslot
+pub const GUIDE_TIMESLOT_INDENT: Length = Length::em(0.25);
+
+/// `.guideProgramName`'s own padding.
+// reference: guide-program-name
+pub const GUIDE_PROGRAM_PAD: Padding = Padding {
+    top: Length::em(0.0),
+    right: Length::em(0.7),
+    bottom: Length::em(0.0),
+    left: Length::em(0.7),
+};
+
+/// `.guideProgramIndicator`'s own padding.
+// reference: guide-program-indicator
+pub const GUIDE_BADGE_PAD: Padding = Padding {
+    top: Length::em(0.2),
+    right: Length::em(0.25),
+    bottom: Length::em(0.2),
+    left: Length::em(0.25),
+};
+
+/// Its radius.
+// reference: guide-program-indicator
+pub const GUIDE_BADGE_RADIUS: Length = Length::em(0.25);
+
+/// The gap it leaves after the programme's name.
+// reference: guide-program-indicator
+pub const GUIDE_BADGE_LEADING: Length = Length::em(1.0);
+
+/// The gap it leaves after itself.
+// reference: guide-program-indicator
+pub const GUIDE_BADGE_TRAILING: Length = Length::em(0.5);
+
+/// The page the guide writes no badge on a cell at.
+// reference: guide-indicators-narrow
+pub const GUIDE_BADGE_AT: Query = Query::MaxWidth(Breakpoint::em(50.0));
+
+/// The gap `.guideProgramSecondaryInfo` leaves over the episode title.
+// reference: guide-secondary-info
+pub const GUIDE_EPISODE_TOP: Length = Length::em(0.1);
+
+/// The gap `.programIcon` leaves before a timer's glyph.
+// reference: guide-program-icon
+pub const GUIDE_MARK_GAP: Length = Length::em(0.5);
+
+/// The page the guide draws its channel header narrow at: no number, and a
+/// wider logo.
+// reference: guide-channel-narrow
+pub const GUIDE_CHANNEL_NARROW_AT: Query = Query::MaxWidth(Breakpoint::em(62.5));
+
+/// The inset `.guideChannelNumber` writes at the header's leading edge, and
+/// `.guideChannelName` at its trailing one.
+// reference: guide-channel-number
+// reference: guide-channel-name
+pub const GUIDE_CHANNEL_INSET: Length = Length::em(1.0);
+
+/// The inset `.guideChannelImage` leaves at the header's trailing edge.
+// reference: guide-channel-image
+pub const GUIDE_LOGO_INSET: Share = Share::per_ten_thousand(800);
+
+// reference: guide-channel-image
+const GUIDE_LOGO_TOP: Share = Share::per_ten_thousand(1500);
+
+// reference: guide-channel-image
+const GUIDE_LOGO: Share = Share::per_ten_thousand(4000);
+
+// reference: guide-channel-narrow
+const GUIDE_LOGO_NARROW: Share = Share::per_ten_thousand(7000);
+
+// reference: guide-channel-number
+const GUIDE_NUMBER: Share = Share::per_ten_thousand(3000);
+
+// reference: guide-channel-name
+const GUIDE_NAME: Share = Share::per_ten_thousand(7000);
+
+// reference: guide-channel-name-wide
+const GUIDE_NAME_WIDE: Share = Share::per_ten_thousand(4000);
+
+// reference: guide-channel-name-wide
+const GUIDE_NAME_WIDE_AT: Query = Query::MinWidth(Breakpoint::em(62.5));
+
 /// `.itemBackdrop`'s height.
 // reference: detail-backdrop — 40vh
 pub const BACKDROP: Share = Share::units(40.0);
@@ -1331,14 +1424,65 @@ pub fn guide_strip(viewport: Viewport) -> Drawn {
 
 /// One minute of the guide, which is its strip over the day it spans.
 // reference: guide-strip
-pub fn guide_minute(viewport: Viewport) -> Drawn {
+fn guide_minute(viewport: Viewport) -> Drawn {
     Drawn::of(guide_strip(viewport).count() / GUIDE_SPAN.num_minutes() as f32)
+}
+
+/// How far across the guide's strip a stretch of time reaches.
+// reference: guide-strip
+pub fn guide_across(spanning: TimeDelta, viewport: Viewport) -> Drawn {
+    Drawn::of(guide_minute(viewport).count() * spanning.num_minutes() as f32)
 }
 
 /// The guide's channel column, 24vw stepping to 16vw, 14vw and 12vw.
 // reference: guide-channel
 pub fn guide_channel(viewport: Viewport) -> Drawn {
     stepped(viewport, GUIDE_CHANNEL, &GUIDE_CHANNEL_STEPS).of(viewport.canvas().width())
+}
+
+/// What a guide row stands in over the rule at the foot of it.
+// reference: guide-row
+pub fn guide_standing(band: Band) -> Drawn {
+    Drawn::of(GUIDE_ROW.drawn().count() - GUIDE_RULE.drawn(band).count())
+}
+
+/// `.guideChannelImage`'s width: two fifths of the channel header, and seven
+/// tenths on a narrow page.
+// reference: guide-channel-image
+// reference: guide-channel-narrow
+pub fn guide_logo(viewport: Viewport) -> Drawn {
+    let share = match viewport.matches(GUIDE_CHANNEL_NARROW_AT) {
+        true => GUIDE_LOGO_NARROW,
+        false => GUIDE_LOGO,
+    };
+    share.of(guide_channel(viewport))
+}
+
+/// Its height, which is the header's own less what it leaves over and under
+/// itself.
+// reference: guide-channel-image
+// reference: guide-row
+pub fn guide_logo_height() -> Drawn {
+    let header = GUIDE_ROW.drawn();
+    Drawn::of(header.count() - GUIDE_LOGO_TOP.of(header).count() * 2.0)
+}
+
+/// The most of the header a channel's name takes: seven tenths, and two fifths
+/// above 62.5em.
+// reference: guide-channel-name
+// reference: guide-channel-name-wide
+pub fn guide_name(viewport: Viewport) -> Drawn {
+    let share = match viewport.matches(GUIDE_NAME_WIDE_AT) {
+        true => GUIDE_NAME_WIDE,
+        false => GUIDE_NAME,
+    };
+    share.of(guide_channel(viewport))
+}
+
+/// The most of it a channel's number takes.
+// reference: guide-channel-number
+pub fn guide_number(viewport: Viewport) -> Drawn {
+    GUIDE_NUMBER.of(guide_channel(viewport))
 }
 
 // reference: control-tab

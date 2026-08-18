@@ -70,6 +70,14 @@ impl Color {
         Color::rgba(self.red, self.green, self.blue, alpha)
     }
 
+    /// This colour at `ratio` of its own alpha, which is what a css `opacity`
+    /// leaves of what an element inherits.
+    pub const fn faded(self, ratio: Ratio) -> Color {
+        self.at(Alpha::thousandths(
+            (self.alpha.thousandths as f32 * ratio.factor()) as u16,
+        ))
+    }
+
     /// MUI's `darken()`: every channel taken down by `coefficient`, the product
     /// truncated the way `recomposeColor` truncates it.
     pub const fn darkened(self, coefficient: Ratio) -> Color {
@@ -470,6 +478,46 @@ pub const TOGGLE_SHOWN_HOVER: Color = ON_SURFACE.at(SELECTED.plus(HOVERED));
 /// The rule `.listItem-border` draws under a row.
 // reference: scheme-list-border
 pub const LIST_RULE: Color = Color::rgba(0x22, 0x22, 0x22, Alpha::thousandths(900));
+
+/// `.programCell-active`, the cell of the programme airing now.
+// reference: scheme-program-active
+pub const PROGRAM_AIRING: Color = Color::rgb(0x1e, 0x1e, 0x1e);
+
+/// The rule the guide draws between its rows, beside its channel column and
+/// down the leading edge of a cell.
+// reference: scheme-guide-rule
+pub const GUIDE_RULE: Color = Color::rgba(0xff, 0xff, 0xff, Alpha::thousandths(50));
+
+/// `.timerIcon`, the glyph a single timer draws on a cell.
+// reference: guide-timer-icon
+pub const TIMER: Color = Color::rgb(0xcc, 0x33, 0x33);
+
+/// What `.seriesTimerIcon-inactive`'s own opacity leaves of the lettering it
+/// inherits.
+// reference: guide-timer-icon
+const INACTIVE: Ratio = Ratio::thousandths(700);
+
+/// The glyph a series timer draws on a cell, which is the cell's own lettering
+/// faded.
+// reference: guide-timer-icon
+// reference: scheme-text
+pub const SERIES_TIMER: Color = TEXT.faded(INACTIVE);
+
+/// `.liveTvProgram`.
+// reference: guide-indicator-colors
+pub const BADGE_LIVE: Color = Color::rgb(0xcc, 0x33, 0x33);
+
+/// `.premiereTvProgram`.
+// reference: guide-indicator-colors
+pub const BADGE_PREMIERE: Color = Color::rgb(0xef, 0x6c, 0x00);
+
+/// `.newTvProgram`.
+// reference: guide-indicator-colors
+pub const BADGE_NEW: Color = Color::rgb(0x33, 0x88, 0xcc);
+
+/// The lettering all three write on themselves.
+// reference: guide-indicator-colors
+pub const ON_BADGE: Color = Color::rgb(0xff, 0xff, 0xff);
 
 /// A node of the metadata manager's sidebar under the pointer.
 // reference: metadata-tree

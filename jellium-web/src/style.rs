@@ -7,6 +7,7 @@ pub use jellium_model::appearance::{
     Band, Css, Dialog, Drawn, Length, Letters, Ratio, Screen, Share, Viewport, card, scheme, space,
     typeface,
 };
+use jellium_model::guide::Standing;
 
 /// The one site a ported length becomes a number iced takes.
 pub fn drawn(length: Drawn) -> f32 {
@@ -1048,5 +1049,70 @@ pub fn input(
         placeholder: color(scheme::TEXT_SECONDARY),
         value: color(scheme::TEXT),
         selection: color(scheme::ACCENT),
+    }
+}
+
+/// `.guideProgramIndicator`: `face` under the badge's own radius, with the
+/// lettering every badge writes on itself.
+// reference: guide-program-indicator
+// reference: guide-indicator-colors
+pub fn badge(_theme: &iced::Theme, face: scheme::Color) -> iced::widget::container::Style {
+    iced::widget::container::Style::default()
+        .background(color(face))
+        .color(color(scheme::ON_BADGE))
+        .border(iced::Border {
+            radius: iced::border::Radius::new(drawn(space::GUIDE_BADGE_RADIUS.drawn())),
+            ..iced::Border::default()
+        })
+}
+
+/// The rule the guide draws between its rows, beside its channel column and
+/// down the leading edge of a cell.
+// reference: scheme-guide-rule
+pub fn guide_rule(_theme: &iced::Theme) -> iced::widget::container::Style {
+    iced::widget::container::Style::default().background(color(scheme::GUIDE_RULE))
+}
+
+/// `.programCell`: no face of its own, the reference's own while the programme
+/// is airing, and the accent where the guide's focus is on it.
+// reference: guide-program-cell
+// reference: scheme-program-active
+// reference: scheme-guide-focus
+pub fn program_cell(
+    _theme: &iced::Theme,
+    _status: iced::widget::button::Status,
+    standing: Standing,
+) -> iced::widget::button::Style {
+    let resting = iced::widget::button::Style {
+        text_color: color(scheme::TEXT),
+        ..iced::widget::button::Style::default()
+    };
+    match standing {
+        Standing::Focused => iced::widget::button::Style {
+            background: Some(iced::Background::Color(color(scheme::ACCENT))),
+            text_color: color(scheme::ON_ACCENT),
+            ..resting
+        },
+        Standing::Airing => iced::widget::button::Style {
+            background: Some(iced::Background::Color(color(scheme::PROGRAM_AIRING))),
+            ..resting
+        },
+        Standing::Resting => resting,
+    }
+}
+
+/// `.timerIcon`, the glyph a single timer draws on a cell.
+// reference: guide-timer-icon
+pub fn timer(_theme: &iced::Theme) -> iced::widget::text::Style {
+    iced::widget::text::Style {
+        color: Some(color(scheme::TIMER)),
+    }
+}
+
+/// `.seriesTimerIcon-inactive`, which is the cell's own lettering faded.
+// reference: guide-timer-icon
+pub fn series_timer(_theme: &iced::Theme) -> iced::widget::text::Style {
+    iced::widget::text::Style {
+        color: Some(color(scheme::SERIES_TIMER)),
     }
 }
