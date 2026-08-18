@@ -123,7 +123,7 @@ pub fn sections<'a>(
     }
 
     rows.push(widget::labelled(
-        Text::ProfileImage,
+        strings::lookup(Text::ProfileImage),
         iced::widget::image(face(state, images)).into(),
     ));
 
@@ -144,7 +144,7 @@ pub fn sections<'a>(
     }
 
     rows.push(widget::field(
-        Text::ProfileDisplayName,
+        strings::lookup(Text::ProfileDisplayName),
         &state.naming,
         None,
         |typed| Message::SettingsAction(Action::Typed(typed)),
@@ -163,9 +163,13 @@ pub fn sections<'a>(
         ));
     }
 
-    std::iter::once(widget::fields(Text::SettingsProfile, rows))
-        .chain(super::password::sections(&state.password, read_only))
-        .collect()
+    std::iter::once(widget::fields(
+        typeface::Rank::Second,
+        Text::SettingsProfile,
+        rows,
+    ))
+    .chain(super::password::sections(&state.password, read_only))
+    .collect()
 }
 
 fn image_key(state: &State) -> crate::images::Key {

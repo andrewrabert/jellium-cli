@@ -39,9 +39,12 @@ pub fn view<'a>(state: &'a super::State, viewport: Viewport) -> Element<'a, Mess
         viewport,
         space::FIELD_GAP,
         [
-            widget::heading(strings::lookup(Text::LoginResetTitle)),
+            widget::heading(
+                typeface::Rank::First,
+                strings::lookup(Text::LoginResetTitle),
+            ),
             widget::field(
-                Text::LoginResetUsername,
+                strings::lookup(Text::LoginResetUsername),
                 &held.username,
                 Some(Text::LoginResetHelp),
                 |value| Message::LoginAction(Action::Edited(Edit::ResetUsername(value))),
@@ -88,7 +91,7 @@ fn redeeming<'a>(held: &'a State) -> impl Iterator<Item = Element<'a, Message>> 
     }))
     .chain([
         widget::field(
-            Text::LoginResetPin,
+            strings::lookup(Text::LoginResetPin),
             &held.pin,
             None,
             |value| Message::LoginAction(Action::Edited(Edit::Pin(value))),

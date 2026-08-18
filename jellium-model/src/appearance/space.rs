@@ -8,7 +8,7 @@ use chrono::TimeDelta;
 use super::scheme::{self, Color};
 use super::typeface;
 use super::{
-    Band, Breakpoint, Canvas, Css, Drawn, Length, Letters, Orientation, Query, Ratio, Share,
+    Band, Breakpoint, Canvas, Cap, Css, Drawn, Length, Letters, Orientation, Query, Ratio, Share,
     Viewport,
 };
 
@@ -749,6 +749,10 @@ pub const KEYS_ISSUED: Css = TABLE_COLUMN;
 // reference: table-keys-actions
 pub const KEYS_ACTIONS: Css = TABLE_COLUMN_FLOOR;
 
+/// MUI's own corner, which every MUI surface rounds by.
+// reference: mui-shape
+pub const SHAPE_RADIUS: Css = Css::unitless(4.0);
+
 /// One segment of the toolbar's group: its own padding.
 // reference: mui-toggle-button
 pub const TOGGLE_PAD: Css = Css::unitless(7.0);
@@ -756,10 +760,6 @@ pub const TOGGLE_PAD: Css = Css::unitless(7.0);
 /// The edge that segment carries.
 // reference: mui-toggle-button
 pub const TOGGLE_BORDER: Css = Css::of(1.0);
-
-/// The radius the group carries at its two ends.
-// reference: mui-shape
-pub const TOGGLE_RADIUS: Css = Css::unitless(4.0);
 
 /// The room the group takes back between adjacent segments.
 // reference: mui-toggle-group
@@ -774,7 +774,7 @@ pub const TOGGLE_OVERLAP: Css = Css::unitless(-1.0);
 pub fn table_row(band: Band) -> Drawn {
     TABLE_CELL_PAD
         .top
-        .plus(typeface::TABLE_LEADING.of(typeface::TABLE))
+        .plus(typeface::BODY_2_LEADING.of(typeface::BODY_2))
         .plus(TABLE_CELL_PAD.bottom)
         .drawn()
         .plus(TABLE_CELL_RULE.drawn(band))
@@ -787,10 +787,164 @@ pub fn table_row(band: Band) -> Drawn {
 pub fn table_head(band: Band) -> Drawn {
     TABLE_HEAD_PAD
         .top
-        .plus(typeface::TABLE_HEAD_LEADING.of(typeface::TABLE))
+        .plus(typeface::TABLE_HEAD_LEADING.of(typeface::BODY_2))
         .plus(TABLE_HEAD_PAD.bottom)
         .drawn()
         .plus(TABLE_CELL_RULE.drawn(band))
+}
+
+/// `MuiFilledInput`'s own padding around its value, which MUI writes as the
+/// bare numbers the DOM reads as css pixels.
+// reference: mui-filled-input
+pub const FILLED_PAD: Inset = Inset {
+    top: Css::unitless(25.0),
+    right: Css::unitless(12.0),
+    bottom: Css::unitless(8.0),
+    left: Css::unitless(12.0),
+};
+
+/// Where the field's own label stands once it has shrunk.
+// reference: mui-input-label
+pub const FILLED_LABEL_INSET: Inset = Inset {
+    top: Css::of(7.0),
+    right: Css::of(0.0),
+    bottom: Css::of(0.0),
+    left: Css::of(12.0),
+};
+
+/// The rule the field draws under itself at rest.
+// reference: mui-filled-underline
+pub const FILLED_RULE: Css = Css::of(1.0);
+
+/// The room a filled select keeps clear at its trailing edge.
+// reference: mui-select-filled
+pub const FILLED_CHEVRON_ROOM: Css = Css::unitless(32.0);
+
+/// The padding a filled select stands its value at, which is a filled field's
+/// own with its trailing side widened to the room the chevron is laid over.
+// reference: mui-filled-input
+// reference: mui-select-filled
+pub const FILLED_SELECT_PAD: Inset = Inset {
+    top: FILLED_PAD.top,
+    right: FILLED_CHEVRON_ROOM,
+    bottom: FILLED_PAD.bottom,
+    left: FILLED_PAD.left,
+};
+
+/// Its chevron's inset from that edge.
+// reference: mui-select-icon
+pub const FILLED_CHEVRON_INSET: Css = Css::unitless(7.0);
+
+/// `MuiCheckbox`'s own padding around its box.
+// reference: mui-switch-base
+pub const CHECK_PAD: Css = Css::unitless(9.0);
+
+/// `MuiSwitchBase`'s own corner, which rounds a box's padding into a disc.
+// reference: mui-switch-base
+pub const CHECK_RADIUS: Share = Share::per_ten_thousand(5000);
+
+/// `MuiFormControlLabel`'s own margins, the leading one pulling the box back
+/// over the edge of the page.
+// reference: mui-form-control-label
+pub const CHECK_LABEL_MARGIN: Inset = Inset {
+    top: Css::unitless(0.0),
+    right: Css::unitless(16.0),
+    bottom: Css::unitless(0.0),
+    left: Css::unitless(-11.0),
+};
+
+/// A contained button's own padding at MUI's large size.
+// reference: mui-button-large
+pub const CONTAINED_PAD: Inset = Inset {
+    top: Css::of(8.0),
+    right: Css::of(22.0),
+    bottom: Css::of(8.0),
+    left: Css::of(22.0),
+};
+
+/// The least width MUI draws a button at.
+// reference: mui-button
+pub const CONTAINED_MIN: Css = Css::unitless(64.0);
+
+/// An alert's own padding.
+// reference: mui-alert
+pub const ALERT_PAD: Inset = Inset {
+    top: Css::of(6.0),
+    right: Css::of(16.0),
+    bottom: Css::of(6.0),
+    left: Css::of(16.0),
+};
+
+/// The room its glyph takes before the sentence.
+// reference: mui-alert-parts
+pub const ALERT_GLYPH_PAD: Inset = Inset {
+    top: Css::of(7.0),
+    right: Css::unitless(12.0),
+    bottom: Css::of(7.0),
+    left: Css::of(0.0),
+};
+
+/// The room the sentence itself stands in.
+// reference: mui-alert-parts
+pub const ALERT_MESSAGE_PAD: Inset = Inset {
+    top: Css::of(8.0),
+    right: Css::of(0.0),
+    bottom: Css::of(8.0),
+    left: Css::of(0.0),
+};
+
+/// One option of the menu a select opens.
+// reference: mui-menu-item
+pub const MENU_ITEM_PAD: Inset = Inset {
+    top: Css::unitless(6.0),
+    right: Css::unitless(16.0),
+    bottom: Css::unitless(6.0),
+    left: Css::unitless(16.0),
+};
+
+/// The least height MUI draws one of those options at.
+// reference: mui-menu-item
+pub const MENU_ITEM: Css = Css::unitless(48.0);
+
+/// The cap MUI holds a menu's paper under: the page it stands in, and the
+/// offset that leaves a row of that page tappable beyond the menu.
+// reference: mui-menu-paper
+pub const MENU_CAP: Cap = Cap {
+    share: Share::WHOLE,
+    offset: Css::of(-96.0),
+};
+
+/// The height a select's menu stands at: MUI's own least option height for
+/// each option the menu holds, under the cap MUI writes over its paper.
+// reference: mui-menu-item
+// reference: mui-menu-paper
+pub fn menu_height(options: usize, viewport: Viewport) -> Drawn {
+    let band = viewport.band();
+    let stacked = Drawn::of(MENU_ITEM.drawn(band).count() * options as f32);
+    MENU_CAP.holds(stacked, viewport.canvas().height(), band)
+}
+
+/// The height a filled field stands: its own padding around one line of the
+/// lettering MUI writes inside it.
+// reference: mui-filled-input
+// reference: mui-input-base
+pub fn filled_row(band: Band) -> Drawn {
+    FILLED_PAD
+        .top
+        .drawn(band)
+        .plus(typeface::FILLED_LEADING.of(typeface::BODY).drawn())
+        .plus(FILLED_PAD.bottom.drawn(band))
+}
+
+/// The height a row of checkboxes pitches at: `MuiCheckbox`'s padding around
+/// MUI's own medium glyph.
+// reference: mui-switch-base
+// reference: mui-svg-icon
+pub fn check_row(band: Band) -> Drawn {
+    CHECK_PAD
+        .drawn(band)
+        .plus(typeface::CONTROL_GLYPH.drawn())
+        .plus(CHECK_PAD.drawn(band))
 }
 
 /// `.listItem`'s own padding, which the reference writes wider at the leading

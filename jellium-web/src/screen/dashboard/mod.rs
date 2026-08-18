@@ -30,6 +30,31 @@ use crate::style::{self, Viewport, space, typeface};
 use crate::text::{self as strings, Text};
 use crate::widget::prose;
 
+/// Which controls a settings section is drawn with: MUI's, on one of the
+/// dashboard's react routes, or the reference's own, on one of its legacy
+/// views.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Controls {
+    Mui,
+    Emby,
+}
+
+/// The heading a group of a section's fields stands under: the level the
+/// reference writes it at, and what it reads.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct Heading {
+    pub rank: jellium_model::appearance::typeface::Rank,
+    pub title: Text,
+}
+
+/// One group of a section's fields: the heading the reference writes over
+/// them, and the fields standing under it in the order it stands them.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct Group {
+    pub heading: Option<Heading>,
+    pub fields: &'static [jellium_model::form::Field],
+}
+
 /// Which configuration section a settings screen edits.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Section {
@@ -67,132 +92,233 @@ impl Section {
         }
     }
 
-    /// The fields this section's controls cover; every key outside them
+    // reference: dashboard-frame
+    pub fn controls(self) -> Controls {
+        match self {
+            Section::Networking => Controls::Emby,
+            Section::General
+            | Section::Branding
+            | Section::Resume
+            | Section::Streaming
+            | Section::Transcoding
+            | Section::Trickplay => Controls::Mui,
+        }
+    }
+
+    /// The groups this section's fields stand in; every key outside them
     /// survives a save.
-    pub fn fields(self) -> &'static [jellium_model::form::Field] {
+    pub fn groups(self) -> &'static [Group] {
+        use jellium_model::appearance::typeface::Rank;
         use jellium_model::form::Field;
         match self {
             Section::General => &[
-                Field::Text { key: "ServerName" },
-                Field::Text { key: "UICulture" },
-                Field::Text {
-                    key: "MetadataPath",
+                Group {
+                    heading: None,
+                    fields: &[
+                        Field::Text { key: "ServerName" },
+                        Field::Text { key: "UICulture" },
+                    ],
                 },
-                Field::Flag {
-                    key: "QuickConnectAvailable",
+                Group {
+                    heading: Some(Heading {
+                        rank: Rank::Second,
+                        title: Text::DashboardPaths,
+                    }),
+                    fields: &[Field::Text {
+                        key: "MetadataPath",
+                    }],
                 },
-                Field::Number {
-                    key: "LibraryScanFanoutConcurrency",
+                Group {
+                    heading: Some(Heading {
+                        rank: Rank::Second,
+                        title: Text::DashboardQuickConnect,
+                    }),
+                    fields: &[Field::Flag {
+                        key: "QuickConnectAvailable",
+                    }],
+                },
+                Group {
+                    heading: Some(Heading {
+                        rank: Rank::Second,
+                        title: Text::DashboardPerformance,
+                    }),
+                    fields: &[Field::Number {
+                        key: "LibraryScanFanoutConcurrency",
+                    }],
                 },
             ],
             Section::Networking => &[
-                Field::Number {
-                    key: "InternalHttpPort",
-                },
-                Field::Number {
-                    key: "PublicHttpPort",
-                },
-                Field::Flag {
-                    key: "EnableRemoteAccess",
-                },
-                Field::Flag { key: "EnableIPv4" },
-                Field::Flag { key: "EnableIPv6" },
-                Field::Flag { key: "EnableUPnP" },
-                Field::Text { key: "BaseUrl" },
-                Field::Lines {
-                    key: "LocalNetworkSubnets",
-                },
-                Field::Lines {
-                    key: "RemoteIPFilter",
-                },
-                Field::Lines {
-                    key: "KnownProxies",
-                },
-            ],
-            Section::Branding => &[
-                Field::Text {
-                    key: "LoginDisclaimer",
-                },
-                Field::Text { key: "CustomCss" },
-                Field::Flag {
-                    key: "SplashscreenEnabled",
-                },
-            ],
-            Section::Resume => &[
-                Field::Number {
-                    key: "MinResumePct",
-                },
-                Field::Number {
-                    key: "MaxResumePct",
-                },
-                Field::Number {
-                    key: "MinResumeDurationSeconds",
-                },
-                Field::Number {
-                    key: "MinAudiobookResume",
-                },
-                Field::Number {
-                    key: "MaxAudiobookResume",
-                },
-            ],
-            Section::Streaming => &[Field::Number {
-                key: "RemoteClientBitrateLimit",
-            }],
-            Section::Transcoding => &[
-                Field::Choice {
-                    key: "HardwareAccelerationType",
-                    options: &[
-                        "none",
-                        "amf",
-                        "qsv",
-                        "nvenc",
-                        "v4l2m2m",
-                        "vaapi",
-                        "videotoolbox",
-                        "rkmpp",
+                Group {
+                    heading: Some(Heading {
+                        rank: Rank::Third,
+                        title: Text::NetworkingAddresses,
+                    }),
+                    fields: &[
+                        Field::Number {
+                            key: "InternalHttpPort",
+                        },
+                        Field::Text { key: "BaseUrl" },
+                        Field::Lines {
+                            key: "LocalNetworkSubnets",
+                        },
+                        Field::Lines {
+                            key: "KnownProxies",
+                        },
                     ],
                 },
-                Field::Text {
-                    key: "TranscodingTempPath",
+                Group {
+                    heading: Some(Heading {
+                        rank: Rank::Third,
+                        title: Text::NetworkingRemote,
+                    }),
+                    fields: &[
+                        Field::Flag {
+                            key: "EnableRemoteAccess",
+                        },
+                        Field::Lines {
+                            key: "RemoteIPFilter",
+                        },
+                        Field::Number {
+                            key: "PublicHttpPort",
+                        },
+                    ],
                 },
-                Field::Flag {
-                    key: "EnableThrottling",
+                Group {
+                    heading: Some(Heading {
+                        rank: Rank::Third,
+                        title: Text::NetworkingProtocols,
+                    }),
+                    fields: &[
+                        Field::Flag { key: "EnableIPv4" },
+                        Field::Flag { key: "EnableIPv6" },
+                    ],
                 },
-                Field::Number {
-                    key: "ThrottleDelaySeconds",
-                },
-                Field::Number {
-                    key: "DownMixAudioBoost",
-                },
-                Field::Number {
-                    key: "EncodingThreadCount",
-                },
-                Field::Flag {
-                    key: "EnableHardwareEncoding",
-                },
-                Field::Flag {
-                    key: "AllowHevcEncoding",
-                },
-                Field::Flag {
-                    key: "EnableTonemapping",
-                },
-            ],
-            Section::Trickplay => &[
-                Field::Flag {
-                    key: "EnableHwAcceleration",
-                },
-                Field::Flag {
-                    key: "EnableHwEncoding",
-                },
-                Field::Number { key: "Interval" },
-                Field::Number { key: "TileWidth" },
-                Field::Number { key: "TileHeight" },
-                Field::Number { key: "Qscale" },
-                Field::Number { key: "JpegQuality" },
-                Field::Number {
-                    key: "ProcessThreads",
+                Group {
+                    heading: Some(Heading {
+                        rank: Rank::Third,
+                        title: Text::NetworkingDiscovery,
+                    }),
+                    fields: &[Field::Flag { key: "EnableUPnP" }],
                 },
             ],
+            Section::Branding => &[Group {
+                heading: None,
+                fields: &[
+                    Field::Flag {
+                        key: "SplashscreenEnabled",
+                    },
+                    Field::Text {
+                        key: "LoginDisclaimer",
+                    },
+                    Field::Text { key: "CustomCss" },
+                ],
+            }],
+            Section::Resume => &[Group {
+                heading: None,
+                fields: &[
+                    Field::Number {
+                        key: "MinResumePct",
+                    },
+                    Field::Number {
+                        key: "MaxResumePct",
+                    },
+                    Field::Number {
+                        key: "MinResumeDurationSeconds",
+                    },
+                    Field::Number {
+                        key: "MinAudiobookResume",
+                    },
+                    Field::Number {
+                        key: "MaxAudiobookResume",
+                    },
+                ],
+            }],
+            Section::Streaming => &[Group {
+                heading: None,
+                fields: &[Field::Number {
+                    key: "RemoteClientBitrateLimit",
+                }],
+            }],
+            Section::Transcoding => &[
+                Group {
+                    heading: None,
+                    fields: &[
+                        Field::Choice {
+                            key: "HardwareAccelerationType",
+                            options: &[
+                                "none",
+                                "amf",
+                                "qsv",
+                                "nvenc",
+                                "v4l2m2m",
+                                "vaapi",
+                                "videotoolbox",
+                                "rkmpp",
+                            ],
+                        },
+                        Field::Text {
+                            key: "TranscodingTempPath",
+                        },
+                    ],
+                },
+                Group {
+                    heading: Some(Heading {
+                        rank: Rank::Third,
+                        title: Text::TranscodingHardwareEncoding,
+                    }),
+                    fields: &[Field::Flag {
+                        key: "EnableHardwareEncoding",
+                    }],
+                },
+                Group {
+                    heading: Some(Heading {
+                        rank: Rank::Third,
+                        title: Text::TranscodingEncodingFormat,
+                    }),
+                    fields: &[Field::Flag {
+                        key: "AllowHevcEncoding",
+                    }],
+                },
+                Group {
+                    heading: None,
+                    fields: &[
+                        Field::Flag {
+                            key: "EnableTonemapping",
+                        },
+                        Field::Flag {
+                            key: "EnableThrottling",
+                        },
+                        Field::Number {
+                            key: "ThrottleDelaySeconds",
+                        },
+                        Field::Number {
+                            key: "DownMixAudioBoost",
+                        },
+                        Field::Number {
+                            key: "EncodingThreadCount",
+                        },
+                    ],
+                },
+            ],
+            Section::Trickplay => &[Group {
+                heading: None,
+                fields: &[
+                    Field::Flag {
+                        key: "EnableHwAcceleration",
+                    },
+                    Field::Flag {
+                        key: "EnableHwEncoding",
+                    },
+                    Field::Number { key: "Interval" },
+                    Field::Number { key: "TileWidth" },
+                    Field::Number { key: "TileHeight" },
+                    Field::Number { key: "Qscale" },
+                    Field::Number { key: "JpegQuality" },
+                    Field::Number {
+                        key: "ProcessThreads",
+                    },
+                ],
+            }],
         }
     }
 }
@@ -692,9 +818,7 @@ pub fn view<'a>(
         )]),
         None => match &state.body {
             Body::Home(held) => frame::Filling::Stacked(home::view(held, session.read_only)),
-            Body::Settings(held) => {
-                frame::Filling::Stacked(settings::view(held, session.read_only))
-            }
+            Body::Settings(held) => settings::view(held, session.read_only, viewport),
             Body::Users(held) => match state.screen {
                 Screen::UserNew => frame::Filling::Stacked(users::new(held)),
                 _ => frame::Filling::Whole(users::view(held, session.read_only, images, viewport)),

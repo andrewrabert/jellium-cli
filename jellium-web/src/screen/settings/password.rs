@@ -4,6 +4,7 @@
 use iced::Element;
 
 use crate::app::Message;
+use crate::style::typeface;
 use crate::text::{self as strings, Text};
 use crate::widget;
 
@@ -27,10 +28,11 @@ pub fn sections<'a>(state: &'a State, read_only: bool) -> Vec<Element<'a, Messag
     };
 
     let mut sections = vec![widget::fields(
+        typeface::Rank::Second,
         Text::PasswordChange,
         [
             widget::field(
-                Text::PasswordCurrent,
+                strings::lookup(Text::PasswordCurrent),
                 &state.current,
                 None,
                 |typed| Message::SettingsAction(Action::TypedCurrentPassword(typed)),
@@ -38,7 +40,7 @@ pub fn sections<'a>(state: &'a State, read_only: bool) -> Vec<Element<'a, Messag
                 widget::Secrecy::Hidden,
             ),
             widget::field(
-                Text::PasswordNew,
+                strings::lookup(Text::PasswordNew),
                 &state.replacement,
                 Some(Text::PasswordOtherDevices),
                 |typed| Message::SettingsAction(Action::TypedNewPassword(typed)),

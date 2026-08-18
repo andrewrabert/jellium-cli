@@ -42,12 +42,16 @@ icons! {
     Add => "add",
     Analytics => "analytics",
     ArrowBack => "arrow_back",
+    ArrowDropDown => "arrow_drop_down",
     Article => "article",
     Audiotrack => "audiotrack",
     Autorenew => "autorenew",
     Book => "book",
     Cast => "cast",
     Check => "check",
+    CheckBox => "check_box",
+    CheckBoxOutlineBlank => "check_box_outline_blank",
+    CheckCircleOutline => "check_circle_outline",
     ClosedCaption => "closed_caption",
     Dashboard => "dashboard",
     Delete => "delete",
@@ -159,6 +163,23 @@ pub fn icon<'a>(icon: Icon, size: Length) -> Element<'a, Message> {
     iced::widget::text(drawn.to_string())
         .font(style::ICONS)
         .size(style::drawn(size.drawn()))
+        .into()
+}
+
+/// The glyph drawn in one of the scheme's own colors, and nothing where the
+/// table holds no character for it.
+pub fn tinted<'a>(
+    icon: Icon,
+    size: Length,
+    color: fn(&iced::Theme) -> iced::widget::text::Style,
+) -> Element<'a, Message> {
+    let Some(drawn) = icon.glyph().and_then(Codepoint::character) else {
+        return iced::widget::Space::new().into();
+    };
+    iced::widget::text(drawn.to_string())
+        .font(style::ICONS)
+        .size(style::drawn(size.drawn()))
+        .style(color)
         .into()
 }
 

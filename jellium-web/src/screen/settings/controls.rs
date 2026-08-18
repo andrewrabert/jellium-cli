@@ -5,7 +5,7 @@ use iced::Element;
 
 use crate::app::Message;
 use crate::player::binding::BINDINGS;
-use crate::style::space;
+use crate::style::{space, typeface};
 use crate::text::{self as strings, Text};
 use crate::widget;
 
@@ -14,6 +14,7 @@ use crate::widget;
 // reference: settings-controls-form
 pub fn sections<'a>() -> Vec<Element<'a, Message>> {
     vec![widget::fields(
+        typeface::Rank::Second,
         Text::SettingsControls,
         [widget::list::listed(
             space::ListRow::bare(space::Lines::Two),

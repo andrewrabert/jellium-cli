@@ -70,7 +70,10 @@ pub fn view<'a>(state: &'a super::State, viewport: Viewport) -> Element<'a, Mess
     widget::page(
         viewport,
         column![
-            widget::heading(strings::lookup(Text::LoginServersTitle)),
+            widget::heading(
+                typeface::Rank::First,
+                strings::lookup(Text::LoginServersTitle)
+            ),
             widget::picker(
                 card::Card::Rail(card::Rail::Square),
                 Room::content(viewport),

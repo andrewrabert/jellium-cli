@@ -82,6 +82,63 @@ impl Color {
         )
     }
 
+    /// MUI's `lighten()`: every channel raised toward white by `coefficient`,
+    /// the product truncated the way `recomposeColor` truncates it.
+    // reference: mui-color-manipulator
+    pub const fn lightened(self, coefficient: Ratio) -> Color {
+        let raise = coefficient.factor();
+        Color::rgba(
+            (self.red as f32 + (255.0 - self.red as f32) * raise) as u8,
+            (self.green as f32 + (255.0 - self.green as f32) * raise) as u8,
+            (self.blue as f32 + (255.0 - self.blue as f32) * raise) as u8,
+            self.alpha,
+        )
+    }
+
+    /// This laid over `beneath`, which is what a background image does to the
+    /// background color under it.
+    pub fn over(self, beneath: Color) -> Color {
+        let mixed = |over: u8, under: u8| {
+            (over as f32 * self.alpha.fraction() + under as f32 * (1.0 - self.alpha.fraction()))
+                as u8
+        };
+        Color::rgba(
+            mixed(self.red, beneath.red),
+            mixed(self.green, beneath.green),
+            mixed(self.blue, beneath.blue),
+            beneath.alpha,
+        )
+    }
+
+    /// MUI's `getContrastText()`: white where white clears the threshold over
+    /// this, and MUI's own near-black where it does not.
+    // reference: mui-palette-contrast
+    // reference: mui-color-manipulator
+    pub fn contrast_text(self) -> Color {
+        let over = CONTRAST_LIGHT.luminance();
+        let under = self.luminance();
+        let ratio = (over.max(under) + 0.05) / (over.min(under) + 0.05);
+        match ratio >= CONTRAST_THRESHOLD.factor() {
+            true => CONTRAST_LIGHT,
+            false => CONTRAST_DARK,
+        }
+    }
+
+    /// MUI's `getLuminance()`, to the three digits it truncates at.
+    // reference: mui-color-manipulator
+    fn luminance(self) -> f32 {
+        let channel = |value: u8| {
+            let value = value as f32 / 255.0;
+            match value <= 0.03928 {
+                true => value / 12.92,
+                false => ((value + 0.055) / 1.055).powf(2.4),
+            }
+        };
+        let sum =
+            0.2126 * channel(self.red) + 0.7152 * channel(self.green) + 0.0722 * channel(self.blue);
+        (sum * 1000.0).round() / 1000.0
+    }
+
     pub fn red(self) -> u8 {
         self.red
     }
@@ -282,6 +339,109 @@ pub const ACTION_HOVER: Color = Color::rgba(0xff, 0xff, 0xff, Alpha::thousandths
 // reference: mui-common
 // reference: mui-dark-action
 pub const ON_SURFACE: Color = Color::rgb(0xff, 0xff, 0xff);
+
+/// MUI's `text.secondary` on a dark scheme, which a filled field's own label
+/// and an unticked box are written in.
+// reference: mui-dark-action
+pub const ON_SURFACE_SECONDARY: Color = Color::rgba(0xff, 0xff, 0xff, Alpha::thousandths(700));
+
+/// MUI's `action.active`, which it draws a control's own glyph in.
+// reference: mui-common
+// reference: mui-dark-action
+pub const ACTION_ACTIVE: Color = Color::rgb(0xff, 0xff, 0xff);
+
+/// `MuiFilledInput`'s own face.
+// reference: mui-filled-root
+pub const FILLED: Color = Color::rgba(0xff, 0xff, 0xff, Alpha::thousandths(90));
+
+/// The face it takes under the pointer.
+// reference: mui-filled-root
+pub const FILLED_HOVER: Color = Color::rgba(0xff, 0xff, 0xff, Alpha::thousandths(130));
+
+/// The rule `MuiFilledInput` draws under itself at rest.
+// reference: mui-filled-root
+// reference: mui-filled-underline
+pub const FILLED_RULE: Color = Color::rgba(0xff, 0xff, 0xff, Alpha::thousandths(700));
+
+/// MUI's own green at its light shade, which its success severity is drawn
+/// from on a dark scheme.
+// reference: mui-color-green
+// reference: mui-palette-success
+const SUCCESS_LIGHT: Color = Color::rgb(0x81, 0xc7, 0x84);
+
+/// What MUI lightens that shade by to reach an alert's lettering.
+// reference: mui-alert-dark
+const ALERT_LIGHTENED_BY: Ratio = Ratio::thousandths(600);
+
+/// What it darkens it by to reach the alert's face.
+// reference: mui-alert-dark
+const ALERT_DARKENED_BY: Ratio = Ratio::thousandths(900);
+
+/// A success alert's face, which MUI darkens out of the severity's own light
+/// shade.
+// reference: mui-alert
+pub const ALERT_SUCCESS: Color = SUCCESS_LIGHT.darkened(ALERT_DARKENED_BY);
+
+/// Its lettering, which MUI lightens out of that same shade.
+// reference: mui-alert
+pub const ON_ALERT_SUCCESS: Color = SUCCESS_LIGHT.lightened(ALERT_LIGHTENED_BY);
+
+/// The glyph an alert stands before its sentence, which is the severity itself
+/// at the opacity MUI gives that glyph.
+// reference: mui-alert
+// reference: mui-alert-parts
+// reference: mui-color-green
+// reference: mui-palette-success
+pub const ALERT_SUCCESS_GLYPH: Color = Color::rgb(0x66, 0xbb, 0x6a).at(Alpha::thousandths(900));
+
+/// The two lettering colors MUI chooses between for a filled face.
+// reference: mui-common
+const CONTRAST_LIGHT: Color = Color::rgb(0xff, 0xff, 0xff);
+
+// reference: mui-light-text
+const CONTRAST_DARK: Color = Color::rgba(0x00, 0x00, 0x00, Alpha::thousandths(870));
+
+/// The ratio white must clear over a face for MUI to write on it in white.
+// reference: mui-palette-contrast
+const CONTRAST_THRESHOLD: Ratio = Ratio::thousandths(3000);
+
+/// The theme's own tonal offset, which MUI steps a palette color by to reach
+/// its light and its dark shade.
+// reference: mui-palette-contrast
+const TONAL_OFFSET: Ratio = Ratio::thousandths(200);
+
+/// What MUI takes that offset of to reach a dark shade.
+// reference: mui-palette-augment
+const TONAL_DARK_STEP: Ratio = Ratio::thousandths(1500);
+
+const CONTAINED_DARKENED_BY: Ratio = TONAL_OFFSET.times(TONAL_DARK_STEP);
+
+/// The face a contained button takes under the pointer, which is the accent at
+/// MUI's own dark shade.
+// reference: mui-button-contained
+// reference: mui-palette-augment
+pub const CONTAINED_HOVER: Color = ACCENT.darkened(CONTAINED_DARKENED_BY);
+
+/// `background.paper` on a dark scheme, which every MUI paper draws.
+// reference: mui-dark-action
+const PAPER: Color = Color::rgb(0x12, 0x12, 0x12);
+
+/// The elevation MUI's own popover stands at.
+// reference: mui-popover-elevation
+const POPOVER_ELEVATION: f32 = 8.0;
+
+/// The face MUI's own popover draws: the paper's face under the white its
+/// elevation lays over it.
+// reference: mui-paper
+// reference: mui-overlay
+// reference: mui-popover-elevation
+pub fn menu_face() -> Color {
+    let raised = 4.5 * (POPOVER_ELEVATION + 1.0).ln() + 2.0;
+    let thousandths = (raised * 10.0).round() as u16;
+    CONTRAST_LIGHT
+        .at(Alpha::thousandths(thousandths))
+        .over(PAPER)
+}
 
 /// MUI's `divider`, which is the edge one segment of the toolbar's group
 /// carries.

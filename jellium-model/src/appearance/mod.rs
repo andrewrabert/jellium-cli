@@ -151,6 +151,26 @@ mod sealed {
     }
 }
 
+/// A cap css measures against the box the capped thing stands in: a share of
+/// that box, and the offset css sums with that share. `calc(100% - 96px)` is
+/// that sum, and css reads the length written after the `-` as the sum's own
+/// negative term.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct Cap {
+    pub share: Share,
+    pub offset: Css,
+}
+
+impl Cap {
+    /// `held` under this cap of `whole`, which is what a `max-height` does to
+    /// the height a box would otherwise stand at; nothing where the cap falls
+    /// under nothing.
+    pub fn holds(self, held: Drawn, whole: Drawn, band: Band) -> Drawn {
+        let cap = self.share.of(whole).plus(self.offset.drawn(band));
+        Drawn::of(held.count().min(cap.count()).max(0.0))
+    }
+}
+
 /// Cards a row holds, which is what the stylesheet ladder actually carries: its
 /// every percentage is `100 / cards` written out to thirty digits.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
@@ -189,6 +209,11 @@ impl Ratio {
 
     pub const fn factor(self) -> f32 {
         self.thousandths as f32 / 1000.0
+    }
+
+    /// This ratio taken `other` of.
+    pub const fn times(self, other: Ratio) -> Ratio {
+        Ratio::thousandths((self.thousandths as f32 * other.factor()) as u16)
     }
 }
 

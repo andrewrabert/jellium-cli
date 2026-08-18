@@ -3,6 +3,7 @@
 use iced::Element;
 
 use crate::app::Message;
+use crate::style::typeface;
 use crate::text::{self as strings, Text};
 use crate::widget;
 
@@ -12,6 +13,7 @@ use super::Action;
 // reference: settings-display-form
 pub fn sections<'a>(configuration: &'a jellium_model::form::Form) -> Vec<Element<'a, Message>> {
     vec![widget::fields(
+        typeface::Rank::Second,
         Text::SettingsDisplay,
         [widget::flag(
             strings::lookup(Text::DisplayMissingEpisodes),

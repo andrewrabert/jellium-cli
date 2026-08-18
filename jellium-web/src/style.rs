@@ -538,7 +538,7 @@ fn toggle_edge(ends: Ends, band: Band) -> iced::Border {
     iced::Border {
         color: color(scheme::DIVIDER),
         width: drawn(space::TOGGLE_BORDER.drawn(band)),
-        radius: rounded(ends, space::TOGGLE_RADIUS.drawn(band)),
+        radius: rounded(ends, space::SHAPE_RADIUS.drawn(band)),
     }
 }
 
@@ -819,6 +819,210 @@ pub fn checkbox(
             radius: iced::border::Radius::new(drawn(space::CHECKBOX_RADIUS.drawn())),
         },
         text_color: Some(color(scheme::TEXT)),
+    }
+}
+
+/// The corner MUI rounds a filled field's head by, its foot left open for the
+/// rule the field draws under itself.
+fn topped(corner: Drawn) -> iced::border::Radius {
+    iced::border::Radius::new(drawn(corner)).bottom(0.0)
+}
+
+/// The edge a filled surface carries, which MUI draws none of: its head rounded
+/// by MUI's own shape and its foot square.
+// reference: mui-shape
+fn filled_edge(band: Band) -> iced::Border {
+    iced::Border {
+        color: iced::Color::TRANSPARENT,
+        width: 0.0,
+        radius: topped(space::SHAPE_RADIUS.drawn(band)),
+    }
+}
+
+/// `MuiFilledInput`'s face: its own white, raised under the pointer, its head
+/// rounded by MUI's own shape and its foot square.
+// reference: mui-filled-root
+// reference: mui-shape
+pub fn filled(
+    _theme: &iced::Theme,
+    status: iced::widget::text_input::Status,
+    band: Band,
+) -> iced::widget::text_input::Style {
+    let face = match status {
+        iced::widget::text_input::Status::Hovered => scheme::FILLED_HOVER,
+        iced::widget::text_input::Status::Active
+        | iced::widget::text_input::Status::Focused { .. }
+        | iced::widget::text_input::Status::Disabled => scheme::FILLED,
+    };
+    iced::widget::text_input::Style {
+        background: iced::Background::Color(color(face)),
+        border: filled_edge(band),
+        icon: color(scheme::ON_SURFACE_SECONDARY),
+        placeholder: color(scheme::ON_SURFACE_SECONDARY),
+        value: color(scheme::ON_SURFACE),
+        selection: color(scheme::ACCENT),
+    }
+}
+
+/// The rule that field draws under itself.
+// reference: mui-filled-underline
+pub fn filled_rule(_theme: &iced::Theme) -> iced::widget::container::Style {
+    iced::widget::container::Style::default().background(color(scheme::FILLED_RULE))
+}
+
+/// The same face on the field a select stands in.
+// reference: mui-filled-root
+// reference: mui-select-icon
+// reference: mui-shape
+pub fn filled_select(
+    _theme: &iced::Theme,
+    status: iced::widget::pick_list::Status,
+    band: Band,
+) -> iced::widget::pick_list::Style {
+    let face = match status {
+        iced::widget::pick_list::Status::Active => scheme::FILLED,
+        iced::widget::pick_list::Status::Hovered
+        | iced::widget::pick_list::Status::Opened { .. } => scheme::FILLED_HOVER,
+    };
+    iced::widget::pick_list::Style {
+        text_color: color(scheme::ON_SURFACE),
+        placeholder_color: color(scheme::ON_SURFACE_SECONDARY),
+        handle_color: color(scheme::ACTION_ACTIVE),
+        background: iced::Background::Color(color(face)),
+        border: filled_edge(band),
+    }
+}
+
+/// The menu that select opens, on the face MUI's own popover draws.
+// reference: mui-paper
+// reference: mui-overlay
+// reference: mui-popover-elevation
+// reference: mui-shape
+pub fn filled_menu(_theme: &iced::Theme, band: Band) -> iced::widget::overlay::menu::Style {
+    iced::widget::overlay::menu::Style {
+        background: iced::Background::Color(color(scheme::menu_face())),
+        border: iced::Border {
+            color: iced::Color::TRANSPARENT,
+            width: 0.0,
+            radius: iced::border::Radius::new(drawn(space::SHAPE_RADIUS.drawn(band))),
+        },
+        text_color: color(scheme::ON_SURFACE),
+        selected_text_color: color(scheme::ON_SURFACE),
+        selected_background: iced::Background::Color(color(scheme::ACTION_HOVER)),
+        shadow: iced::Shadow::default(),
+    }
+}
+
+/// MUI's `action.active`, which a select's chevron is drawn in.
+// reference: mui-select-icon
+pub fn chevron(_theme: &iced::Theme) -> iced::widget::text::Style {
+    iced::widget::text::Style {
+        color: Some(color(scheme::ACTION_ACTIVE)),
+    }
+}
+
+/// The disc `MuiSwitchBase` rounds a box's own padding into.
+// reference: mui-switch-base
+fn check_disc(band: Band) -> iced::border::Radius {
+    iced::border::Radius::new(drawn(space::CHECK_RADIUS.of(space::check_row(band))))
+}
+
+/// A box drawing its glyph in `mark`, on that disc where it is reached.
+// reference: mui-checkbox
+// reference: mui-switch-base
+fn checked(
+    status: iced::widget::button::Status,
+    mark: scheme::Color,
+    band: Band,
+) -> iced::widget::button::Style {
+    let face = match lit(status) {
+        true => faced(scheme::ACTION_HOVER, mark),
+        false => iced::widget::button::Style {
+            text_color: color(mark),
+            ..iced::widget::button::Style::default()
+        },
+    };
+    iced::widget::button::Style {
+        border: iced::Border {
+            radius: check_disc(band),
+            ..face.border
+        },
+        ..face
+    }
+}
+
+/// A box carrying its own mark: the accent, on the disc `MuiSwitchBase` rounds
+/// its padding into where it is reached.
+// reference: mui-checkbox
+// reference: mui-switch-base
+pub fn check_ticked(
+    _theme: &iced::Theme,
+    status: iced::widget::button::Status,
+    band: Band,
+) -> iced::widget::button::Style {
+    checked(status, scheme::ACCENT, band)
+}
+
+/// The box carrying none, which MUI draws in its secondary lettering.
+// reference: mui-checkbox
+// reference: mui-switch-base
+pub fn check_blank(
+    _theme: &iced::Theme,
+    status: iced::widget::button::Status,
+    band: Band,
+) -> iced::widget::button::Style {
+    checked(status, scheme::ON_SURFACE_SECONDARY, band)
+}
+
+/// `MuiButton` at `variant='contained'`: the accent, darkened under the
+/// pointer, whose lettering MUI reads off the face it stands on.
+// reference: mui-button
+// reference: mui-button-contained
+// reference: mui-shape
+pub fn contained(
+    _theme: &iced::Theme,
+    status: iced::widget::button::Status,
+    band: Band,
+) -> iced::widget::button::Style {
+    let face = match lit(status) {
+        true => scheme::CONTAINED_HOVER,
+        false => scheme::ACCENT,
+    };
+    iced::widget::button::Style {
+        border: iced::Border {
+            radius: iced::border::Radius::new(drawn(space::SHAPE_RADIUS.drawn(band))),
+            ..iced::Border::default()
+        },
+        ..faced(face, scheme::ACCENT.contrast_text())
+    }
+}
+
+/// A success alert's face and its lettering, rounded by MUI's own shape.
+// reference: mui-alert
+// reference: mui-shape
+pub fn alert_success(_theme: &iced::Theme, band: Band) -> iced::widget::container::Style {
+    iced::widget::container::Style::default()
+        .background(color(scheme::ALERT_SUCCESS))
+        .color(color(scheme::ON_ALERT_SUCCESS))
+        .border(iced::Border {
+            radius: iced::border::Radius::new(drawn(space::SHAPE_RADIUS.drawn(band))),
+            ..iced::Border::default()
+        })
+}
+
+/// The glyph that alert stands before its sentence.
+// reference: mui-alert
+pub fn alert_glyph(_theme: &iced::Theme) -> iced::widget::text::Style {
+    iced::widget::text::Style {
+        color: Some(color(scheme::ALERT_SUCCESS_GLYPH)),
+    }
+}
+
+/// MUI's `text.secondary`, which a filled field's own label is written in.
+// reference: mui-dark-action
+pub fn muted(_theme: &iced::Theme) -> iced::widget::text::Style {
+    iced::widget::text::Style {
+        color: Some(color(scheme::ON_SURFACE_SECONDARY)),
     }
 }
 

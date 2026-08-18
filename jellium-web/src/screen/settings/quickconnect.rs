@@ -4,7 +4,7 @@ use iced::Element;
 use jellium_model::quickconnect::Outcome;
 
 use crate::app::Message;
-use crate::style::space;
+use crate::style::{space, typeface};
 use crate::text::{self as strings, Text};
 use crate::widget;
 
@@ -38,7 +38,7 @@ pub fn sections<'a>(state: &'a State, read_only: bool) -> Vec<Element<'a, Messag
     let mut rows = vec![
         widget::description(Text::QuickConnectDescription, space::DESCRIPTION_INSET),
         widget::field(
-            Text::QuickConnectCode,
+            strings::lookup(Text::QuickConnectCode),
             &state.code,
             None,
             |typed| Message::SettingsAction(Action::Typed(typed)),
@@ -65,5 +65,9 @@ pub fn sections<'a>(state: &'a State, read_only: bool) -> Vec<Element<'a, Messag
         ));
     }
 
-    vec![widget::fields(Text::SettingsQuickConnect, rows)]
+    vec![widget::fields(
+        typeface::Rank::Second,
+        Text::SettingsQuickConnect,
+        rows,
+    )]
 }

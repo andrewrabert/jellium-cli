@@ -90,7 +90,7 @@ pub fn sections<'a>(
     );
 
     let shown = widget::labelled(
-        Text::HomeInMyMedia,
+        strings::lookup(Text::HomeInMyMedia),
         column(arranged.iter().copied().map(|id| {
             widget::flag(named(state, id), None, !hidden.contains(&id), move |on| {
                 Message::SettingsAction(Action::HideLibrary { id, hidden: !on })
@@ -102,6 +102,7 @@ pub fn sections<'a>(
 
     vec![
         widget::fields(
+            typeface::Rank::Second,
             Text::SettingsHome,
             [
                 widget::flag(
@@ -118,6 +119,6 @@ pub fn sections<'a>(
                 ),
             ],
         ),
-        widget::fields(Text::HomeOrder, [ordered, shown]),
+        widget::fields(typeface::Rank::Second, Text::HomeOrder, [ordered, shown]),
     ]
 }

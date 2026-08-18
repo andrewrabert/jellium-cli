@@ -99,7 +99,7 @@ fn head<'a>(columns: &[Column], widths: &[f32], band: Band) -> Element<'a, Messa
             let content: Element<'a, Message> = match column.label {
                 Some(label) => line(
                     strings::lookup(label),
-                    typeface::TABLE,
+                    typeface::BODY_2,
                     typeface::TABLE_HEAD_WEIGHT,
                     typeface::TABLE_HEAD_LEADING,
                 ),
@@ -118,9 +118,9 @@ fn head<'a>(columns: &[Column], widths: &[f32], band: Band) -> Element<'a, Messa
 pub fn written<'a>(content: String) -> Element<'a, Message> {
     line(
         content,
-        typeface::TABLE,
+        typeface::BODY_2,
         typeface::Weight::Regular,
-        typeface::TABLE_LEADING,
+        typeface::BODY_2_LEADING,
     )
 }
 

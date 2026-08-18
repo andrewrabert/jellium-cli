@@ -1,5 +1,6 @@
 mod line;
 pub mod list;
+pub mod mui;
 pub mod table;
 
 use std::borrow::Cow;
@@ -713,7 +714,7 @@ pub fn toggles<'a>(
                 strings::lookup(segment.label),
                 typeface::TOGGLE,
                 typeface::Weight::Regular,
-                typeface::TOGGLE_LEADING,
+                typeface::BUTTON_LEADING,
                 iced::widget::text::default,
             ))
             .padding(style::drawn(space::TOGGLE_PAD.drawn(band)))
@@ -1437,7 +1438,7 @@ pub fn titled<'a>(
     title: impl Into<Cow<'a, str>>,
     control: Option<Element<'a, Message>>,
 ) -> Element<'a, Message> {
-    let written = heading(title);
+    let written = heading(typeface::Rank::Second, title);
     let held = match control {
         None => row![written],
         Some(control) => {
@@ -1593,10 +1594,10 @@ pub fn lettered<'a>(
     iced::widget::stack![body, held].into()
 }
 
-/// A page's own title, which the reference writes as the `h1` at the head of
-/// each of its login pages.
-pub fn heading<'a>(content: impl Into<Cow<'a, str>>) -> Element<'a, Message> {
-    prose(content, typeface::HEADING_1)
+/// The reference's own `h1`, `h2` and `h3`, which its pages write over
+/// themselves and its `fieldset`s over their rows.
+pub fn heading<'a>(rank: typeface::Rank, content: impl Into<Cow<'a, str>>) -> Element<'a, Message> {
+    prose(content, rank.size())
 }
 
 /// Whether a field shows what is typed into it.
@@ -1614,8 +1615,8 @@ pub enum Secrecy {
 // reference: control-input-label
 // reference: control-field-description
 pub fn field<'a>(
-    label: Text,
-    value: &'a str,
+    label: impl Into<Cow<'a, str>>,
+    value: &str,
     description: Option<Text>,
     edited: impl Fn(String) -> Message + 'a,
     submitted: Message,
@@ -1661,10 +1662,13 @@ pub fn description<'a>(sentence: Text, inset: style::Length) -> Element<'a, Mess
 // reference: control-input-label
 // reference: control-select-label
 // reference: control-checkbox-list-label
-pub fn labelled<'a>(label: Text, control: Element<'a, Message>) -> Element<'a, Message> {
+pub fn labelled<'a>(
+    label: impl Into<Cow<'a, str>>,
+    control: Element<'a, Message>,
+) -> Element<'a, Message> {
     column![
         container(tinted(
-            strings::lookup(label),
+            label,
             typeface::BODY,
             typeface::Weight::Regular,
             typeface::LINE_HEIGHT,
@@ -1689,7 +1693,7 @@ pub fn labelled<'a>(label: Text, control: Element<'a, Message>) -> Element<'a, M
 // reference: control-select-arrow
 // reference: control-select-description
 pub fn select<'a, T>(
-    label: Text,
+    label: impl Into<Cow<'a, str>>,
     description: Option<Text>,
     offered: Vec<Choice<T>>,
     held: &T,
@@ -1772,17 +1776,18 @@ pub fn flag<'a>(
     stacked.into()
 }
 
-/// `.verticalSection`: its `h2.sectionTitle` over its rows, the rows at the
-/// margin the reference leaves under a field.
+/// `.verticalSection`: the heading the reference writes over a group of a
+/// form's controls, over the rows it groups, at that heading's own rank.
 // reference: section-vertical
 // reference: section-title
 // reference: control-field
 pub fn fields<'a>(
+    rank: typeface::Rank,
     title: Text,
     rows: impl IntoIterator<Item = Element<'a, Message>>,
 ) -> Element<'a, Message> {
     column![
-        container(prose(strings::lookup(title), typeface::HEADING_2))
+        container(heading(rank, strings::lookup(title)))
             .padding(iced::Padding::ZERO.bottom(style::drawn(space::SECTION_GAP.drawn()))),
         column(rows).spacing(style::drawn(space::FIELD_GAP.drawn())),
     ]

@@ -55,6 +55,49 @@ pub const HEADING_2: Length = Length::em(1.5);
 // reference: type-root
 pub const HEADING_3: Length = Length::em(1.17);
 
+// reference: mui-typography
+pub const HEADING_1_LEADING: Leading = Leading::Factor(Ratio::thousandths(1167));
+
+// reference: mui-typography
+pub const HEADING_2_LEADING: Leading = Leading::Factor(Ratio::thousandths(1200));
+
+// reference: mui-typography
+pub const HEADING_3_LEADING: Leading = Leading::Factor(Ratio::thousandths(1167));
+
+/// Which of the three heading levels a line is written at.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Rank {
+    First,
+    Second,
+    Third,
+}
+
+impl Rank {
+    /// The size the reference writes at this level.
+    pub const fn size(self) -> Length {
+        match self {
+            Rank::First => HEADING_1,
+            Rank::Second => HEADING_2,
+            Rank::Third => HEADING_3,
+        }
+    }
+
+    /// The line box MUI writes at it.
+    pub const fn leading(self) -> Leading {
+        match self {
+            Rank::First => HEADING_1_LEADING,
+            Rank::Second => HEADING_2_LEADING,
+            Rank::Third => HEADING_3_LEADING,
+        }
+    }
+}
+
+// the reference writes 300 over MUI's h1 and h2 and 400 over its h3, and a
+// browser resolves both against the two faces the client bundles as the
+// lighter one
+// reference: mui-typography
+pub const HEADING_WEIGHT: Weight = Weight::Regular;
+
 /// The root itself, which every other size is written against; one em is the
 /// unit rather than a value taken from the reference, so it cites nothing.
 pub const BODY: Length = Length::em(1.0);
@@ -113,12 +156,48 @@ pub const LIST_LEADING: Leading = Leading::Factor(Ratio::thousandths(1200));
 // reference: mui-typography
 const MUI_BODY_2: Css = Css::unitless(14.0);
 
-/// MUI's own `body2`, which every cell of a table is written in.
+/// MUI's own `body2`, which a table cell and an alert are written in.
 // reference: mui-typography
-pub const TABLE: Length = MUI_BODY_2.length();
+pub const BODY_2: Length = MUI_BODY_2.length();
 
 // reference: mui-typography
-pub const TABLE_LEADING: Leading = Leading::Factor(Ratio::thousandths(1430));
+pub const BODY_2_LEADING: Leading = Leading::Factor(Ratio::thousandths(1430));
+
+/// The line box MUI writes inside a filled field, which it sets as a length
+/// rather than as a factor.
+// reference: mui-input-base
+pub const FILLED_LEADING: Leading = Leading::Length(Length::em(1.4375));
+
+/// The size a filled field's own label shrinks to.
+// reference: mui-input-label
+pub const FILLED_LABEL: Length = BODY.times(Ratio::thousandths(750));
+
+/// The glyph size MUI writes before `pxToRem`.
+// reference: mui-svg-icon
+const MUI_GLYPH: Css = Css::unitless(24.0);
+
+/// MUI's own medium glyph, which a select's chevron and a checkbox's box are
+/// drawn at.
+// reference: mui-svg-icon
+pub const CONTROL_GLYPH: Length = MUI_GLYPH.length();
+
+/// An alert's own glyph, which MUI writes as the bare number the DOM reads as
+/// css pixels.
+// reference: mui-alert-parts
+const MUI_ALERT_GLYPH: Css = Css::unitless(22.0);
+
+/// The glyph an alert stands before its sentence.
+// reference: mui-alert-parts
+pub const ALERT_GLYPH: Length = MUI_ALERT_GLYPH.length();
+
+/// The size the reference writes over MUI's own large button, which is the
+/// page's own body.
+// reference: mui-theme-button
+pub const CONTAINED: Length = Length::em(1.0);
+
+/// The weight it writes over it.
+// reference: mui-theme-button
+pub const CONTAINED_WEIGHT: Weight = Weight::Bold;
 
 /// The line box MUI writes for a head cell, in the css pixels it writes before
 /// `pxToRem`.
@@ -149,7 +228,7 @@ pub const TOGGLE: Length = MUI_TOGGLE.length();
 /// uppercasing off and leaves its box.
 // reference: mui-typography
 // reference: mui-theme-typography
-pub const TOGGLE_LEADING: Leading = Leading::Factor(Ratio::thousandths(1750));
+pub const BUTTON_LEADING: Leading = Leading::Factor(Ratio::thousandths(1750));
 
 /// `.toast`'s own lettering, which the reference writes larger than the body.
 // reference: toast-face

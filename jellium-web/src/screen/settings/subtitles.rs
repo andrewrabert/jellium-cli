@@ -5,7 +5,7 @@ use iced::Element;
 use jellium_model::prefs::{Held, OPACITIES, SubtitleColour, SubtitleShadow, SubtitleSize};
 
 use crate::app::Message;
-use crate::style::space;
+use crate::style::{space, typeface};
 use crate::text::{self as strings, Text};
 use crate::widget;
 
@@ -54,11 +54,12 @@ fn opacity_label(opacity: i32) -> String {
 // reference: settings-subtitles-form
 pub fn sections<'a>(held: Held) -> Vec<Element<'a, Message>> {
     vec![widget::fields(
+        typeface::Rank::Second,
         Text::SettingsSubtitles,
         [
             widget::description(Text::SubtitlesBurnedIn, space::DESCRIPTION_INSET),
             widget::select(
-                Text::SubtitlesSize,
+                strings::lookup(Text::SubtitlesSize),
                 None,
                 super::choices(SubtitleSize::ALL, size_label, |size| {
                     Action::Set(Setting::SubtitleSize(size))
@@ -67,7 +68,7 @@ pub fn sections<'a>(held: Held) -> Vec<Element<'a, Message>> {
                 Message::SettingsAction,
             ),
             widget::select(
-                Text::SubtitlesColour,
+                strings::lookup(Text::SubtitlesColour),
                 None,
                 super::choices(SubtitleColour::ALL, colour_label, |colour| {
                     Action::Set(Setting::SubtitleColour(colour))
@@ -76,7 +77,7 @@ pub fn sections<'a>(held: Held) -> Vec<Element<'a, Message>> {
                 Message::SettingsAction,
             ),
             widget::select(
-                Text::SubtitlesBackground,
+                strings::lookup(Text::SubtitlesBackground),
                 None,
                 super::choices(SubtitleColour::ALL, colour_label, |colour| {
                     Action::Set(Setting::SubtitleBackground(colour))
@@ -85,7 +86,7 @@ pub fn sections<'a>(held: Held) -> Vec<Element<'a, Message>> {
                 Message::SettingsAction,
             ),
             widget::select(
-                Text::SubtitlesOpacity,
+                strings::lookup(Text::SubtitlesOpacity),
                 None,
                 super::choices(OPACITIES, opacity_label, |opacity| {
                     Action::Set(Setting::SubtitleOpacity(opacity))
@@ -94,7 +95,7 @@ pub fn sections<'a>(held: Held) -> Vec<Element<'a, Message>> {
                 Message::SettingsAction,
             ),
             widget::select(
-                Text::SubtitlesShadow,
+                strings::lookup(Text::SubtitlesShadow),
                 None,
                 super::choices(SubtitleShadow::ALL, shadow_label, |shadow| {
                     Action::Set(Setting::SubtitleShadow(shadow))

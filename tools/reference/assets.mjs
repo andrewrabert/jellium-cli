@@ -40,8 +40,10 @@ const WEIGHTS = ['400', '700'];
 // with no `Icon` variant, or a variant with no ligature here, is a failure of
 // the_icon_table_and_the_variants_agree in that file.
 const ICONS = [
-    'add', 'analytics', 'arrow_back', 'article', 'audiotrack', 'autorenew',
-    'book', 'cast', 'check', 'closed_caption', 'dashboard', 'delete', 'devices',
+    'add', 'analytics', 'arrow_back', 'arrow_drop_down', 'article', 'audiotrack',
+    'autorenew', 'book', 'cast', 'check', 'check_box',
+    'check_box_outline_blank', 'check_circle_outline', 'closed_caption',
+    'dashboard', 'delete', 'devices',
     'dvr', 'edit', 'expand_less', 'expand_more', 'explore', 'extension',
     'fast_forward', 'fast_rewind', 'favorite', 'favorite_border', 'filter_alt',
     'folder', 'folder_open', 'fullscreen', 'fullscreen_exit', 'groups', 'home',

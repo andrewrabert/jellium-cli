@@ -10,6 +10,7 @@ use jellium_protocol::{Quality, SyncAccess, sync::SyncMethod};
 use crate::api::Api;
 use crate::app::Message;
 use crate::error::Answer;
+use crate::style::typeface;
 use crate::text::{self as strings, Text};
 use crate::widget;
 
@@ -110,10 +111,11 @@ pub fn sections<'a>(
     };
 
     let mut sections = vec![widget::fields(
+        typeface::Rank::Second,
         Text::SettingsPlayback,
         [
             widget::select(
-                Text::PlaybackAudioLanguage,
+                strings::lookup(Text::PlaybackAudioLanguage),
                 None,
                 languages(jellium_model::user::AUDIO_LANGUAGE, &state.cultures),
                 &Action::Edited(
@@ -123,7 +125,7 @@ pub fn sections<'a>(
                 Message::SettingsAction,
             ),
             widget::select(
-                Text::PlaybackSubtitleLanguage,
+                strings::lookup(Text::PlaybackSubtitleLanguage),
                 None,
                 languages(jellium_model::user::SUBTITLE_LANGUAGE, &state.cultures),
                 &Action::Edited(
@@ -144,7 +146,7 @@ pub fn sections<'a>(
                 },
             ),
             widget::select(
-                Text::PlaybackSubtitleMode,
+                strings::lookup(Text::PlaybackSubtitleMode),
                 Some(mode_help(
                     &configuration.value(jellium_model::user::SUBTITLE_MODE),
                 )),
@@ -171,7 +173,7 @@ pub fn sections<'a>(
                 },
             ),
             widget::select(
-                Text::PlaybackQuality,
+                strings::lookup(Text::PlaybackQuality),
                 None,
                 super::choices(Quality::LADDER, quality_label, |quality| {
                     Action::Set(Setting::Quality(quality))
@@ -180,7 +182,7 @@ pub fn sections<'a>(
                 Message::SettingsAction,
             ),
             widget::select(
-                Text::PlaybackSkipBack,
+                strings::lookup(Text::PlaybackSkipBack),
                 None,
                 super::choices(
                     SKIPS,
@@ -191,7 +193,7 @@ pub fn sections<'a>(
                 Message::SettingsAction,
             ),
             widget::select(
-                Text::PlaybackSkipForward,
+                strings::lookup(Text::PlaybackSkipForward),
                 None,
                 super::choices(
                     SKIPS,
@@ -206,7 +208,7 @@ pub fn sections<'a>(
 
     if sync_play != SyncAccess::None {
         let offset = widget::select(
-            Text::PlaybackSyncOffset,
+            strings::lookup(Text::PlaybackSyncOffset),
             None,
             super::choices(
                 SYNC_OFFSETS,
@@ -217,7 +219,7 @@ pub fn sections<'a>(
             Message::SettingsAction,
         );
         let method = widget::select(
-            Text::PlaybackSyncMethod,
+            strings::lookup(Text::PlaybackSyncMethod),
             None,
             super::choices(METHODS, method_label, |method| {
                 Action::Set(Setting::SyncMethod(method))
@@ -226,7 +228,7 @@ pub fn sections<'a>(
             Message::SettingsAction,
         );
         let rate_attempts = widget::select(
-            Text::PlaybackSyncRateAttempts,
+            strings::lookup(Text::PlaybackSyncRateAttempts),
             None,
             super::choices(
                 SYNC_ATTEMPTS,
@@ -237,7 +239,7 @@ pub fn sections<'a>(
             Message::SettingsAction,
         );
         let seek_attempts = widget::select(
-            Text::PlaybackSyncSeekAttempts,
+            strings::lookup(Text::PlaybackSyncSeekAttempts),
             None,
             super::choices(
                 SYNC_ATTEMPTS,
@@ -248,6 +250,7 @@ pub fn sections<'a>(
             Message::SettingsAction,
         );
         sections.push(widget::fields(
+            typeface::Rank::Second,
             Text::PlaybackSyncPlay,
             [offset, method, rate_attempts, seek_attempts],
         ));

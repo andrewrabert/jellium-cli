@@ -162,6 +162,9 @@ pub enum Filling<'a> {
     /// A screen heading its own content with `.sectionTitleContainer` rather
     /// than the dashboard's own `h1`, which fills the page whole.
     Whole(Element<'a, Message>),
+    /// The `<form>` the reference's settings routes wrap their whole stack in,
+    /// which the page caps and holds at its leading edge.
+    Formed(Vec<Element<'a, Message>>),
 }
 
 /// The page every dashboard screen stands in: the drawer beside the content on
@@ -183,15 +186,25 @@ pub fn frame<'a>(
     let band = viewport.band();
     let filled: Element<'a, Message> = match filling {
         Filling::Stacked(content) => {
-            let mut stacked = vec![widget::heading(title)];
+            let mut stacked = vec![widget::mui::heading(typeface::Rank::First, title)];
             stacked.extend(content);
             widget::scrolled(
                 column(stacked).spacing(style::drawn(space::DASHBOARD_GAP.drawn(band))),
             )
             .into()
         }
+        Filling::Formed(rows) => {
+            let mut stacked = vec![widget::mui::heading(typeface::Rank::First, title)];
+            stacked.extend(rows);
+            let held = column(stacked).spacing(style::drawn(space::DASHBOARD_GAP.drawn(band)));
+            let capped = match viewport.matches(space::FORM_WIDTH_AT) {
+                true => container(held).max_width(style::drawn(space::FORM_WIDTH.drawn())),
+                false => container(held),
+            };
+            widget::scrolled(container(capped).width(Fill)).into()
+        }
         Filling::Tabled { subtitle, table } => {
-            let mut titled = vec![widget::heading(title)];
+            let mut titled = vec![widget::mui::heading(typeface::Rank::First, title)];
             if let Some(subtitle) = subtitle {
                 titled.push(widget::prose(strings::lookup(subtitle), typeface::BODY));
             }
@@ -209,6 +222,7 @@ pub fn frame<'a>(
         iced::Padding::ZERO
             .top(style::drawn(space::DASHBOARD_TOP.drawn()))
             .right(style::drawn(space::DASHBOARD_SIDE.drawn()))
+            .bottom(style::drawn(space::PAGE_BOTTOM.drawn()))
             .left(style::drawn(space::DASHBOARD_SIDE.drawn())),
     );
 

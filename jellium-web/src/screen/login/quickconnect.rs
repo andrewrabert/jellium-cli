@@ -48,7 +48,10 @@ pub fn view<'a>(state: &'a super::State, viewport: Viewport) -> Element<'a, Mess
         viewport,
         space::FIELD_GAP,
         [
-            widget::heading(strings::lookup(Text::LoginQuickConnectTitle)),
+            widget::heading(
+                typeface::Rank::First,
+                strings::lookup(Text::LoginQuickConnectTitle),
+            ),
             widget::prose(
                 strings::lookup(Text::LoginQuickConnectInstruction),
                 typeface::BODY,

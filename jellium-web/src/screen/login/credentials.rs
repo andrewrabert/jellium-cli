@@ -5,7 +5,7 @@ use uuid::Uuid;
 use crate::app::Message;
 use crate::icon::Icon;
 use crate::style::space::Room;
-use crate::style::{self, Viewport, card, space};
+use crate::style::{self, Viewport, card, space, typeface};
 use crate::text::{self as strings, Text};
 use crate::widget::{self, Emphasis, Face, Secrecy};
 
@@ -67,8 +67,11 @@ fn picker<'a>(state: &'a super::State, viewport: Viewport) -> Option<Element<'a,
 /// block controls.
 // reference: login-page
 pub fn view<'a>(state: &'a super::State, viewport: Viewport) -> Element<'a, Message> {
-    let mut page = column![widget::heading(strings::lookup(Text::LoginHeader))]
-        .spacing(style::drawn(space::SECTION_GAP.drawn()));
+    let mut page = column![widget::heading(
+        typeface::Rank::First,
+        strings::lookup(Text::LoginHeader)
+    )]
+    .spacing(style::drawn(space::SECTION_GAP.drawn()));
     if let Some(picker) = picker(state, viewport) {
         page = page.push(picker);
     }
@@ -77,7 +80,7 @@ pub fn view<'a>(state: &'a super::State, viewport: Viewport) -> Element<'a, Mess
         space::FIELD_GAP,
         [
             widget::field(
-                Text::LoginUsername,
+                strings::lookup(Text::LoginUsername),
                 &state.credentials.username,
                 None,
                 |value| Message::LoginAction(Action::Edited(Edit::Username(value))),
@@ -85,7 +88,7 @@ pub fn view<'a>(state: &'a super::State, viewport: Viewport) -> Element<'a, Mess
                 Secrecy::Shown,
             ),
             widget::field(
-                Text::LoginPassword,
+                strings::lookup(Text::LoginPassword),
                 &state.credentials.password,
                 None,
                 |value| Message::LoginAction(Action::Edited(Edit::Password(value))),

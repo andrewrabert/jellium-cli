@@ -1,7 +1,7 @@
 use iced::Element;
 
 use crate::app::Message;
-use crate::style::{Viewport, space};
+use crate::style::{Viewport, space, typeface};
 use crate::text::{self as strings, Text};
 use crate::widget::{self, Emphasis, Secrecy};
 
@@ -21,9 +21,9 @@ pub fn view<'a>(state: &'a super::State, viewport: Viewport) -> Element<'a, Mess
         viewport,
         space::FIELD_GAP,
         [
-            widget::heading(strings::lookup(Text::LoginAddTitle)),
+            widget::heading(typeface::Rank::First, strings::lookup(Text::LoginAddTitle)),
             widget::field(
-                Text::LoginAddUrl,
+                strings::lookup(Text::LoginAddUrl),
                 &state.add.url,
                 Some(Text::LoginAddUrlHelp),
                 |value| Message::LoginAction(Action::Edited(Edit::Url(value))),
