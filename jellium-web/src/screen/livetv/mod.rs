@@ -1,5 +1,6 @@
 pub mod channels;
 pub mod guide;
+pub mod programs;
 pub mod recordings;
 pub mod schedule;
 pub mod series;
@@ -35,6 +36,7 @@ pub fn clock(at: DateTime<Utc>) -> String {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum Tab {
     #[default]
+    Programs,
     Guide,
     Channels,
     Recordings,
@@ -43,7 +45,8 @@ pub enum Tab {
 }
 
 impl Tab {
-    pub const ALL: [Tab; 5] = [
+    pub const ALL: [Tab; 6] = [
+        Tab::Programs,
         Tab::Guide,
         Tab::Channels,
         Tab::Recordings,
@@ -53,6 +56,7 @@ impl Tab {
 
     pub fn label(self) -> Text {
         match self {
+            Tab::Programs => Text::LiveTvTabPrograms,
             Tab::Guide => Text::LiveTvTabGuide,
             Tab::Channels => Text::LiveTvTabChannels,
             Tab::Recordings => Text::LiveTvTabRecordings,
@@ -65,6 +69,7 @@ impl Tab {
 /// What the shown tab holds.
 #[derive(Debug, Clone)]
 pub enum Body {
+    Programs(programs::State),
     Guide(guide::State),
     Channels(channels::State),
     Recordings(recordings::State),
@@ -130,6 +135,7 @@ pub enum Action {
 pub async fn load(api: Rc<Api>, tab: Tab, room: Room) -> Answer<State> {
     Answer::of(async {
         let body = match tab {
+            Tab::Programs => Body::Programs(programs::load(api, room.viewport()).await.bubbled()?),
             Tab::Guide => Body::Guide(guide::load(api, room.viewport().canvas().height()).await?),
             Tab::Channels => Body::Channels(
                 channels::load(api, jellyfin_api::types::ChannelType::Tv, room)
@@ -178,6 +184,7 @@ pub fn view<'a>(
 
     let room = Room::content(viewport);
     let body = match &state.body {
+        Body::Programs(held) => programs::view(held, now, viewport, images, session),
         Body::Guide(guide) => guide::view(guide, now, images, viewport),
         Body::Channels(channels) => channels::view(channels, images, room, session, now),
         Body::Recordings(held) => recordings::view(held, images, room, session, now),
@@ -202,6 +209,7 @@ pub fn images(state: &State) -> images::Wanted {
         Body::Channels(held) => channels::images(held),
         Body::Recordings(held) => recordings::images(held),
         Body::Schedule(held) => schedule::images(held),
+        Body::Programs(held) => programs::images(held),
         Body::Series(_) => images::Wanted::new(),
     }
 }
@@ -507,6 +515,7 @@ pub fn timed(signed: &mut Signed, changes: &[TimerChanged], viewport: Viewport) 
                 }
                 return Task::none();
             }
+            Body::Programs(_) => Tab::Programs,
             Body::Schedule(_) => Tab::Schedule,
             Body::Series(_) => Tab::Series,
             Body::Recordings(_) => Tab::Recordings,

@@ -1,0 +1,113 @@
+function enableScrollX() {
+    return !layoutManager.desktop;
+}
+
+function getLimit() {
+    if (enableScrollX()) {
+        return 12;
+    }
+
+    return 9;
+}
+
+function loadRecommendedPrograms(page) {
+    loading.show();
+    let limit = getLimit();
+
+    if (enableScrollX()) {
+        limit *= 2;
+    }
+
+    ApiClient.getLiveTvRecommendedPrograms({
+        userId: Dashboard.getCurrentUserId(),
+        IsAiring: true,
+        limit: limit,
+        ImageTypeLimit: 1,
+        EnableImageTypes: 'Primary,Thumb,Backdrop',
+        EnableTotalRecordCount: false,
+        Fields: 'ChannelInfo,PrimaryImageAspectRatio'
+    }).then(function (result) {
+        renderItems(page, result.Items, 'activeProgramItems', 'play', {
+            showAirDateTime: false,
+            showAirEndTime: true
+        });
+        loading.hide();
+
+        import('../../components/autoFocuser').then(({ default: autoFocuser }) => {
+            autoFocuser.autoFocus(page);
+        });
+    });
+}
+
+function reload(page, enableFullRender) {
+    if (enableFullRender) {
+        loadRecommendedPrograms(page);
+        ApiClient.getLiveTvPrograms({
+            userId: Dashboard.getCurrentUserId(),
+            HasAired: false,
+            limit: getLimit(),
+            IsMovie: false,
+            IsSports: false,
+            IsKids: false,
+            IsNews: false,
+            IsSeries: true,
+            EnableTotalRecordCount: false,
+            Fields: 'ChannelInfo,PrimaryImageAspectRatio',
+            EnableImageTypes: 'Primary,Thumb'
+        }).then(function (result) {
+            renderItems(page, result.Items, 'upcomingEpisodeItems');
+        });
+        ApiClient.getLiveTvPrograms({
+            userId: Dashboard.getCurrentUserId(),
+            HasAired: false,
+            limit: getLimit(),
+            IsMovie: true,
+            EnableTotalRecordCount: false,
+            Fields: 'ChannelInfo',
+            EnableImageTypes: 'Primary,Thumb'
+        }).then(function (result) {
+            renderItems(page, result.Items, 'upcomingTvMovieItems', null, {
+                shape: getPortraitShape(enableScrollX()),
+                preferThumb: null,
+                showParentTitle: false
+            });
+        });
+        ApiClient.getLiveTvPrograms({
+            userId: Dashboard.getCurrentUserId(),
+            HasAired: false,
+            limit: getLimit(),
+            IsSports: true,
+            EnableTotalRecordCount: false,
+            Fields: 'ChannelInfo,PrimaryImageAspectRatio',
+            EnableImageTypes: 'Primary,Thumb'
+        }).then(function (result) {
+            renderItems(page, result.Items, 'upcomingSportsItems');
+        });
+        ApiClient.getLiveTvPrograms({
+            userId: Dashboard.getCurrentUserId(),
+            HasAired: false,
+            limit: getLimit(),
+            IsKids: true,
+            EnableTotalRecordCount: false,
+            Fields: 'ChannelInfo,PrimaryImageAspectRatio',
+            EnableImageTypes: 'Primary,Thumb'
+        }).then(function (result) {
+            renderItems(page, result.Items, 'upcomingKidsItems');
+        });
+        ApiClient.getLiveTvPrograms({
+            userId: Dashboard.getCurrentUserId(),
+            HasAired: false,
+            limit: getLimit(),
+            IsNews: true,
+            EnableTotalRecordCount: false,
+            Fields: 'ChannelInfo,PrimaryImageAspectRatio',
+            EnableImageTypes: 'Primary,Thumb'
+        }).then(function (result) {
+            renderItems(page, result.Items, 'upcomingNewsItems', null, {
+                showParentTitleOrTitle: true,
+                showTitle: false,
+                showParentTitle: false
+            });
+        });
+    }
+}

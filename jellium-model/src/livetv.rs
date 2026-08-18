@@ -3,8 +3,9 @@ use jellium_protocol::{TimerChange, TimerChanged};
 use jellyfin_api::types::{BaseItemDto, BaseItemKind, ChannelType, RecordingStatus, TimerInfoDto};
 use uuid::Uuid;
 
-use crate::appearance::Share;
+use crate::appearance::{Layout, Share, card};
 use crate::item::Mark;
+use crate::paged::Limit;
 
 /// What the guide's channel header writes for a channel: the primary image the
 /// Jellyfin server holds for it, or the channel's own name where it holds none.
@@ -428,3 +429,95 @@ mod tests {
         );
     }
 }
+
+/// One section of the reference's Programs tab, in the order it draws them.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Section {
+    OnNow,
+    Shows,
+    Movies,
+    Sports,
+    Kids,
+    News,
+}
+
+/// Which programmes a section asks for.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Airing {
+    /// `/LiveTv/Programs/Recommended` with `IsAiring`.
+    Now,
+    /// `/LiveTv/Programs` with `HasAired` false, narrowed by the flags the
+    /// reference writes on that section.
+    Upcoming(Upcoming),
+}
+
+/// The flags the reference narrows one upcoming section by.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Upcoming {
+    /// `IsSeries` true with movies, sports, kids and news excluded.
+    Shows,
+    Movies,
+    Sports,
+    Kids,
+    News,
+}
+
+impl Section {
+    pub const ALL: [Section; 6] = [
+        Section::OnNow,
+        Section::Shows,
+        Section::Movies,
+        Section::Sports,
+        Section::Kids,
+        Section::News,
+    ];
+
+    // reference: programs-query
+    pub fn airing(self) -> Airing {
+        match self {
+            Section::OnNow => Airing::Now,
+            Section::Shows => Airing::Upcoming(Upcoming::Shows),
+            Section::Movies => Airing::Upcoming(Upcoming::Movies),
+            Section::Sports => Airing::Upcoming(Upcoming::Sports),
+            Section::Kids => Airing::Upcoming(Upcoming::Kids),
+            Section::News => Airing::Upcoming(Upcoming::News),
+        }
+    }
+
+    /// Movies takes the portrait rail and the other five the backdrop rail:
+    /// `renderItems` gives every section the backdrop shape, and `reload`
+    /// overrides the movies section alone with the portrait one.
+    // reference: programs-shapes
+    // reference: programs-query
+    pub fn card(self) -> card::Card {
+        match self {
+            Section::Movies => card::Card::Rail(card::Rail::Portrait),
+            Section::OnNow | Section::Shows | Section::Sports | Section::Kids | Section::News => {
+                card::Card::Rail(card::Rail::Backdrop)
+            }
+        }
+    }
+}
+
+/// How many programmes one section asks for: nine on the desktop band, twelve
+/// where the reference scrolls sideways, and twice that for On Now there.
+// reference: programs-query
+pub fn asked(section: Section, layout: Layout) -> Limit {
+    let scrolling = layout != Layout::Desktop;
+    let limit = match scrolling {
+        true => SCROLLING,
+        false => STILL,
+    };
+    match scrolling && section == Section::OnNow {
+        true => Limit::of(limit.count() * 2),
+        false => limit,
+    }
+}
+
+/// What one section asks for where the reference scrolls its rows sideways.
+// reference: programs-query
+const SCROLLING: Limit = Limit::of(12);
+
+/// What one section asks for where it does not.
+// reference: programs-query
+const STILL: Limit = Limit::of(9);

@@ -719,3 +719,5 @@ main-drawer-scroll	src/styles/librarybrowser.scss	329	331	803e521fe170727106161e
 blurhash-decode	src/components/images/imageLoader.js	55	56	e82e62316020c4e6ce7b31419b89cce60ebba825054dbd2e05ae48236546af1f	ported
 blurhash-punch	src/components/common/Image.tsx	42	44	d1c684ce5b98197fbcc5afa16423c7411ae1898dc10e1a2c24d4183ba79f628c	ported
 blurhash-canvas	src/components/images/imageLoader.js	29	48	5a9ea1aceffac232808975ec82e674a7a528e9c5b73188a1dc6bb1823b2573b7	ported
+programs-query	src/controllers/livetv/livetvsuggested.js	19	131	6538c3830364ac5516321cb11944f513f4476af5da8b2c83aa3ca47d2536f3ad	ported
+programs-shapes	src/controllers/livetv/livetvsuggested.js	133	156	e08492444878aebe6fe4371f8e5c5b9183589b2a62b4ef93ccca60a067fcace6	ported

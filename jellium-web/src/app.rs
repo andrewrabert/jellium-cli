@@ -2191,6 +2191,7 @@ impl Jellium {
                 if let View::LiveTv(state) = &mut signed.view {
                     let room = Room::content(page);
                     match &mut state.body {
+                        livetv::Body::Programs(_) => {}
                         livetv::Body::Guide(held) => held.window.resized(canvas.height()),
                         livetv::Body::Channels(held) => {
                             let card = livetv::channels::CARD;
@@ -2253,6 +2254,7 @@ impl Jellium {
                     ]);
                 } else if let View::LiveTv(state) = &mut signed.view {
                     match &mut state.body {
+                        livetv::Body::Programs(_) => {}
                         livetv::Body::Guide(held) => held.window.scrolled(scrolled),
                         livetv::Body::Channels(held) => held.grid.scrolled(scrolled),
                         livetv::Body::Recordings(held) => held.grid.scrolled(scrolled),

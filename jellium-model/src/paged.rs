@@ -180,3 +180,17 @@ mod tests {
         assert_eq!(paged.wanted(0..30), None);
     }
 }
+
+/// How many items one request asks the server for.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct Limit(i32);
+
+impl Limit {
+    pub const fn of(count: i32) -> Limit {
+        Limit(count)
+    }
+
+    pub fn count(self) -> i32 {
+        self.0
+    }
+}

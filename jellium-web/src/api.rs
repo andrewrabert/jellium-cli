@@ -988,6 +988,84 @@ impl Api {
 
     /// The channels of `kind`, favourites first and then in channel-number
     /// order, each carrying its current program, in one request.
+    /// One section of the reference's Programs tab, in one request:
+    /// `/LiveTv/Programs/Recommended` with `IsAiring` for On Now, and
+    /// `/LiveTv/Programs` with `HasAired` false and the section's own flags for
+    /// the other five.
+    // reference: programs-query
+    pub async fn section_programs(
+        &self,
+        section: jellium_model::livetv::Section,
+        limit: jellium_model::paged::Limit,
+    ) -> Answer<Vec<BaseItemDto>> {
+        use jellium_model::livetv::{Airing, Upcoming};
+        Answer::of(async {
+            let fields = vec![
+                jellyfin_api::types::ItemFields::ChannelInfo,
+                jellyfin_api::types::ItemFields::PrimaryImageAspectRatio,
+            ];
+            let kinds = vec![
+                jellyfin_api::types::ImageType::Primary,
+                jellyfin_api::types::ImageType::Thumb,
+            ];
+            let narrowed = match section.airing() {
+                Airing::Now => {
+                    return Ok(self
+                        .client
+                        .get_recommended_programs(&jellyfin_api::query::GetRecommendedPrograms {
+                            enable_image_types: Some(&vec![
+                                jellyfin_api::types::ImageType::Primary,
+                                jellyfin_api::types::ImageType::Thumb,
+                                jellyfin_api::types::ImageType::Backdrop,
+                            ]),
+                            enable_total_record_count: Some(false),
+                            fields: Some(&fields),
+                            image_type_limit: Some(1),
+                            is_airing: Some(true),
+                            limit: Some(limit.count()),
+                            user_id: Some(&self.user_id),
+                            ..Default::default()
+                        })
+                        .await?
+                        .items);
+                }
+                Airing::Upcoming(upcoming) => upcoming,
+            };
+            let asked = jellyfin_api::query::GetLiveTvPrograms {
+                enable_image_types: Some(&kinds),
+                enable_total_record_count: Some(false),
+                fields: Some(&fields),
+                has_aired: Some(false),
+                limit: Some(limit.count()),
+                user_id: Some(&self.user_id),
+                is_series: matches!(narrowed, Upcoming::Shows).then_some(true),
+                is_movie: match narrowed {
+                    Upcoming::Shows => Some(false),
+                    Upcoming::Movies => Some(true),
+                    Upcoming::Sports | Upcoming::Kids | Upcoming::News => None,
+                },
+                is_sports: match narrowed {
+                    Upcoming::Shows => Some(false),
+                    Upcoming::Sports => Some(true),
+                    Upcoming::Movies | Upcoming::Kids | Upcoming::News => None,
+                },
+                is_kids: match narrowed {
+                    Upcoming::Shows => Some(false),
+                    Upcoming::Kids => Some(true),
+                    Upcoming::Movies | Upcoming::Sports | Upcoming::News => None,
+                },
+                is_news: match narrowed {
+                    Upcoming::Shows => Some(false),
+                    Upcoming::News => Some(true),
+                    Upcoming::Movies | Upcoming::Sports | Upcoming::Kids => None,
+                },
+                ..Default::default()
+            };
+            Ok(self.client.get_live_tv_programs(&asked).await?.items)
+        })
+        .await
+    }
+
     pub async fn live_tv_channels(
         &self,
         kind: jellyfin_api::types::ChannelType,
