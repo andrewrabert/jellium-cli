@@ -28,13 +28,100 @@ fn empty_paragraph(session: &Session) -> Text {
     }
 }
 
-/// One section title, drawn as the construct the reference writes it on.
+/// One section title the reference writes plainly, which is a title its own
+/// section's list cannot be opened from.
 fn titled<'a>(said: Text) -> Element<'a, Message> {
     construct::stated(
         Construct::SectionTitleCards,
         said,
         widget::prose(strings::lookup(said), style::typeface::HEADING_2),
     )
+}
+
+/// One section title the reference wraps in a link, which carries the trailing
+/// chevron `.sectionTitleTextButton` writes and opens what that link opens.
+fn opened<'a>(said: Text, spoken: String, opens: Message) -> Element<'a, Message> {
+    construct::navigation(
+        Construct::SectionTitleTextButton,
+        None,
+        opens,
+        row![
+            construct::navigation(
+                Construct::SectionTitleCards,
+                Some(said),
+                Message::Unchanged,
+                widget::prose(spoken, style::typeface::HEADING_2),
+            ),
+            crate::icon::icon(
+                crate::icon::Icon::ChevronRight,
+                style::typeface::ICON_BUTTON
+            ),
+        ]
+        .align_y(iced::Center)
+        .into(),
+    )
+}
+
+/// Which of the reference's three resumed sections a media type falls in.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Resumed {
+    Watching,
+    Listening,
+    Reading,
+}
+
+impl Resumed {
+    /// The section a media type falls in, and None for a media type none of the
+    /// three names.
+    pub fn of(media: Option<MediaType>) -> Option<Resumed> {
+        match media {
+            Some(MediaType::Video) => Some(Resumed::Watching),
+            Some(MediaType::Audio) => Some(Resumed::Listening),
+            Some(MediaType::Book) => Some(Resumed::Reading),
+            Some(MediaType::Unknown | MediaType::Photo) | None => None,
+        }
+    }
+
+    pub fn label(self) -> Text {
+        match self {
+            Resumed::Watching => Text::HomeContinueWatching,
+            Resumed::Listening => Text::HomeContinueListening,
+            Resumed::Reading => Text::HomeContinueReading,
+        }
+    }
+}
+
+/// The collection types the reference draws no Latest row for.
+/// The reference names five and this names four: its fifth is `channels`, which
+/// the server's own `CollectionType` does not carry, so no view this client
+/// reads can report it.
+// reference: home-latest-excludes
+const NO_LATEST: [CollectionType; 4] = [
+    CollectionType::Playlists,
+    CollectionType::Livetv,
+    CollectionType::Boxsets,
+    CollectionType::Folders,
+];
+
+/// Whether the reference draws a Latest row for a library: not for a view whose
+/// collection type `NO_LATEST` names, and not for one the user's
+/// `LatestItemsExcludes` names.
+// reference: home-latest-excludes
+pub fn latest_shown(library: &BaseItemDto, excluded: &[uuid::Uuid]) -> bool {
+    let named = library
+        .collection_type
+        .is_some_and(|held| NO_LATEST.contains(&held));
+    let hidden = library.id.is_some_and(|id| excluded.contains(&id));
+    !named && !hidden
+}
+
+/// Whether the reference draws the Live TV section: the user's policy grants
+/// Live TV access and at least one programme is airing. The button row and the
+/// On Now rail stand or go together.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum LiveTv {
+    Airing,
+    Absent,
 }
 
 /// Which of the reference's two home tabs is shown.
@@ -79,6 +166,15 @@ pub fn tabs<'a>(shown: Tab) -> Element<'a, Message> {
 
 /// The reference pages this screen draws.
 pub const DRAWS: &[Page] = &[Page::Home];
+
+/// The media type a resumed section's cards take their shape from.
+fn resumed_media(section: Resumed) -> Option<MediaType> {
+    match section {
+        Resumed::Watching => Some(MediaType::Video),
+        Resumed::Listening => Some(MediaType::Audio),
+        Resumed::Reading => Some(MediaType::Book),
+    }
+}
 
 /// One home rail's card: the shape the section asks for, over the two lines a
 /// rail writes under it.
@@ -169,6 +265,8 @@ pub async fn on_now(api: Rc<Api>) -> Answer<Vec<Channel>> {
 pub struct Arrangement {
     pub order: Vec<uuid::Uuid>,
     pub hidden: Vec<uuid::Uuid>,
+    /// The libraries the account's own settings draw no Latest row for.
+    pub latest_excluded: Vec<uuid::Uuid>,
     pub continue_watching: bool,
     pub next_up: bool,
 }
@@ -183,20 +281,13 @@ impl Arrangement {
         Arrangement {
             order: jellium_model::user::ids(configuration, jellium_model::user::ORDERED_VIEWS),
             hidden: jellium_model::user::ids(configuration, jellium_model::user::MY_MEDIA_EXCLUDES),
+            latest_excluded: jellium_model::user::ids(
+                configuration,
+                jellium_model::user::LATEST_ITEMS_EXCLUDES,
+            ),
             continue_watching: held.continue_watching,
             next_up: held.next_up,
         }
-    }
-}
-
-/// Where a media type's resumed section stands among the reference's own
-/// defaults, a media type none of the three names standing after all three.
-fn sectioned(media: Option<MediaType>) -> usize {
-    match media {
-        Some(MediaType::Video) => 0,
-        Some(MediaType::Audio) => 1,
-        Some(MediaType::Book) => 2,
-        Some(MediaType::Unknown | MediaType::Photo) | None => 3,
     }
 }
 
@@ -205,18 +296,20 @@ fn sectioned(media: Option<MediaType>) -> usize {
 /// reference reaches those three through three requests where this client holds
 /// one list, so this splits what is already fetched by the media type each item
 /// carries, and a group the list holds nothing for draws no section at all.
-pub fn resumed(items: &[BaseItemDto]) -> Vec<(Option<MediaType>, Vec<&BaseItemDto>)> {
-    let mut groups: Vec<(Option<MediaType>, Vec<&BaseItemDto>)> = Vec::new();
-    for item in items {
-        match groups
-            .iter_mut()
-            .find(|(media, _)| *media == item.media_type)
-        {
-            Some((_, held)) => held.push(item),
-            None => groups.push((item.media_type, vec![item])),
+/// An item whose media type none of the three names is drawn by no section,
+/// because the reference asks for none.
+pub fn resumed(items: &[BaseItemDto]) -> Vec<(Resumed, Vec<&BaseItemDto>)> {
+    let mut groups: Vec<(Resumed, Vec<&BaseItemDto>)> = Vec::new();
+    for section in [Resumed::Watching, Resumed::Listening, Resumed::Reading] {
+        let held: Vec<&BaseItemDto> = items
+            .iter()
+            .filter(|item| Resumed::of(item.media_type) == Some(section))
+            .collect();
+        if held.is_empty() {
+            continue;
         }
+        groups.push((section, held));
     }
-    groups.sort_by_key(|(media, _)| sectioned(*media));
     groups
 }
 
@@ -245,7 +338,7 @@ fn opens(library: &BaseItemDto) -> Option<Route> {
 pub fn view<'a>(
     state: &'a State,
     arrangement: &'a Arrangement,
-    live_tv: bool,
+    live_tv: LiveTv,
     now: chrono::DateTime<chrono::Utc>,
     viewport: Viewport,
     images: &'a Cache,
@@ -295,11 +388,11 @@ pub fn view<'a>(
     }
 
     if arrangement.continue_watching {
-        for (media, items) in resumed(&state.continue_watching) {
+        for (section, items) in resumed(&state.continue_watching) {
             page = page.push(widget::section(
-                titled(Text::HomeContinueWatching),
+                titled(section.label()),
                 widget::rail(
-                    railed(card::Card::resumed(media)),
+                    railed(card::Card::resumed(resumed_media(section))),
                     widget::Rail::of(Construct::ItemsContainer),
                     items,
                     Room::content(viewport),
@@ -310,7 +403,7 @@ pub fn view<'a>(
             ));
         }
     }
-    if live_tv {
+    if live_tv == LiveTv::Airing {
         // reference: home-live-tv
         page = page.push(widget::section(
             titled(Text::HomeLiveTv),
@@ -326,14 +419,24 @@ pub fn view<'a>(
             .into(),
         ));
         page = page.push(widget::section(
-            titled(Text::HomeOnNow),
+            opened(
+                Text::HomeOnNow,
+                strings::lookup(Text::HomeOnNow).to_owned(),
+                Message::Navigated(Route::LiveTv {
+                    tab: crate::screen::livetv::Tab::Guide,
+                }),
+            ),
             widget::on_now_row(&state.on_now, Room::content(viewport), now, images),
         ));
     }
 
     if arrangement.next_up && !state.next_up.is_empty() {
         page = page.push(widget::section(
-            titled(Text::HomeNextUp),
+            opened(
+                Text::HomeNextUp,
+                strings::lookup(Text::HomeNextUp).to_owned(),
+                Message::Navigated(Route::Home { tab: Tab::Home }),
+            ),
             widget::rail(
                 railed(card::Card::NEXT_UP),
                 widget::Rail::of(Construct::ItemsContainer),
@@ -346,10 +449,20 @@ pub fn view<'a>(
         ));
     }
     for row in &state.latest {
+        if !latest_shown(&row.library, &arrangement.latest_excluded) {
+            continue;
+        }
         page = page.push(widget::section(
-            widget::prose(
-                row.library.name.as_deref().unwrap_or_default(),
-                style::typeface::HEADING_2,
+            opened(
+                Text::HomeLatest,
+                strings::format(
+                    Text::HomeLatest,
+                    &[row.library.name.as_deref().unwrap_or_default()],
+                ),
+                match opens(&row.library) {
+                    Some(route) => Message::Navigated(route),
+                    None => Message::Unchanged,
+                },
             ),
             widget::rail(
                 railed(card::Card::latest(row.library.collection_type)),

@@ -38,6 +38,10 @@ pub const MY_MEDIA_EXCLUDES: Field = Field::Lines {
     key: "MyMediaExcludes",
 };
 
+pub const LATEST_ITEMS_EXCLUDES: Field = Field::Lines {
+    key: "LatestItemsExcludes",
+};
+
 /// True when the configuration asks for the next episode to play; a value that
 /// is neither `true` nor `false` reads as false.
 pub fn next_episode_autoplay(form: &Form) -> bool {

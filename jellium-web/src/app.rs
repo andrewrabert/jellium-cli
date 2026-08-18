@@ -3019,7 +3019,10 @@ impl Jellium {
                     View::Home(state) => home::view(
                         state,
                         &signed.arrangement,
-                        signed.session.live_tv.allowed(),
+                        match signed.session.live_tv.allowed() {
+                            true => home::LiveTv::Airing,
+                            false => home::LiveTv::Absent,
+                        },
                         chrono::Utc::now(),
                         self.viewport,
                         &self.images,
