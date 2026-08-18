@@ -107,16 +107,6 @@ impl Sentence {
         keyed.then(|| Sentence(text.to_owned()))
     }
 
-    /// The Rust variant `jellium-model`'s own `Sentence` gives this key: the
-    /// key under a leading capital.
-    pub fn variant(&self) -> String {
-        let mut letters = self.0.chars();
-        match letters.next() {
-            Some(first) => first.to_ascii_uppercase().to_string() + letters.as_str(),
-            None => String::new(),
-        }
-    }
-
     pub fn as_str(&self) -> &str {
         &self.0
     }
@@ -428,8 +418,10 @@ mod tests {
     fn the_silent_key_names_no_sentence() {
         assert_eq!(Sentence::read("silent"), None);
         assert_eq!(
-            Sentence::read("HeaderMyMedia").map(|key| key.variant()),
-            Some("HeaderMyMedia".to_owned())
+            Sentence::read("HeaderMyMedia")
+                .as_ref()
+                .map(Sentence::as_str),
+            Some("HeaderMyMedia")
         );
     }
 

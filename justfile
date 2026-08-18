@@ -41,11 +41,15 @@ static-page:
 spans checkout:
     node tools/reference/spans.mjs "$1"
 
+# Rewrite reference/constructs.tsv and jellium-model/src/construct.rs from a checkout of the pinned revision
+constructs checkout:
+    node tools/reference/constructs.mjs "$1"
+
 # Fail when the tree has drifted from a checkout of the pinned revision
-pinned checkout: (reference checkout) (assets checkout) (spans checkout)
+pinned checkout: (reference checkout) (assets checkout) (spans checkout) (constructs checkout)
     git ls-files --error-unmatch jellium-web/reference/jellyfin-web.mjs
     git ls-files --error-unmatch reference/spans
-    git diff --exit-code jellium-web/reference reference/spans jellium-web/fonts jellium-web/icons jellium-web/branding reference/assets.tsv reference/breakpoints.tsv
+    git diff --exit-code jellium-web/reference reference/spans jellium-web/fonts jellium-web/icons jellium-web/branding reference/assets.tsv reference/breakpoints.tsv reference/constructs.tsv jellium-model/src/construct.rs
     cargo test -p jellium-reference
 
 # Build the Jellium Web bundle
