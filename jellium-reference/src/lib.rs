@@ -14,6 +14,7 @@
 //! depends on no part of the tree it guards.
 
 pub mod construct;
+pub mod drawn;
 pub mod exemption;
 pub mod register;
 pub mod spans;

@@ -33,6 +33,12 @@ pub fn guard(root: &Path) -> PathBuf {
     root.join("jellium-reference")
 }
 
+/// The vendored third-party sources, which take no part in the port, so the
+/// names their text spells count for nothing.
+pub fn vendored(root: &Path) -> PathBuf {
+    root.join("jellium-web").join("vendor")
+}
+
 /// The build output and the history, which carry no source of this tree's own.
 fn unread(name: &str) -> bool {
     matches!(name, "target" | ".git")

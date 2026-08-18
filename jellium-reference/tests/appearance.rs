@@ -278,11 +278,12 @@ fn names(text: &str, modules: &BTreeSet<&str>, value: &Value) -> bool {
 /// value nothing draws stands in the tree unseen.
 /// A mention qualified by another appearance module names that module's value
 /// of the same name and not this one.
-/// The guard package is not read, so the names this file spells count for
-/// nothing.
+/// The guard package and the vendored third-party sources are not read, so the
+/// names their text spells count for nothing.
 #[test]
 fn every_exported_appearance_value_is_read() {
     let root = tree::workspace_root();
+    let vendored = tree::vendored(&root);
     let values = appearance(&root);
     assert!(
         values.iter().any(|value| value.exported),
@@ -295,7 +296,7 @@ fn every_exported_appearance_value_is_read() {
     assert!(!sources.is_empty(), "no source was read out of the tree");
     let texts: Vec<String> = sources
         .into_iter()
-        .filter(|path| !path.starts_with(&guard))
+        .filter(|path| !path.starts_with(&guard) && !path.starts_with(&vendored))
         .map(|path| {
             std::fs::read_to_string(&path)
                 .unwrap_or_else(|error| panic!("{} does not read: {error}", path.display()))
