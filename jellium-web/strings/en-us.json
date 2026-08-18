@@ -178,7 +178,6 @@
   "failurePluginPageUnread": "The plugin's configuration could not be read.",
   "failureDismiss": "Dismiss",
   "failuresTitle": "Failures",
-  "failuresOpen": "Failures",
   "failuresEmpty": "Nothing has failed.",
   "failureSavedSignInRejected": "The saved sign-in for this server was rejected, so its password is needed again.",
   "failureRemoveUnrevoked": "{0} was forgotten here, but it would not revoke the token it had issued.",

@@ -18,6 +18,7 @@ use crate::widget::{self, prose};
 
 pub mod controls;
 pub mod display;
+pub mod failures;
 pub mod home;
 pub mod password;
 pub mod playback;
@@ -38,12 +39,15 @@ pub enum Screen {
     Subtitles,
     Controls,
     QuickConnect,
+    /// This client's own screen, listed after every row the reference lists.
+    Failures,
 }
 
 impl Screen {
-    /// Every screen the menu lists, in the order the reference lists them.
+    /// Every screen the menu lists, in the order the reference lists them,
+    /// with this client's own screen after them.
     // reference: settings-menu-rows
-    pub const ALL: [Screen; 7] = [
+    pub const ALL: [Screen; 8] = [
         Screen::Profile,
         Screen::QuickConnect,
         Screen::Display,
@@ -51,6 +55,7 @@ impl Screen {
         Screen::Playback,
         Screen::Subtitles,
         Screen::Controls,
+        Screen::Failures,
     ];
 
     pub fn label(self) -> Text {
@@ -63,6 +68,7 @@ impl Screen {
             Screen::Subtitles => Text::SettingsSubtitles,
             Screen::Controls => Text::SettingsControls,
             Screen::QuickConnect => Text::SettingsQuickConnect,
+            Screen::Failures => Text::FailuresTitle,
         }
     }
 
@@ -106,6 +112,7 @@ fn glyph(screen: Screen) -> Option<Icon> {
         Screen::Playback => Some(Icon::PlayCircleFilled),
         Screen::Subtitles => Some(Icon::ClosedCaption),
         Screen::Controls => Some(Icon::Keyboard),
+        Screen::Failures => Some(Icon::Article),
     }
 }
 
@@ -136,6 +143,7 @@ pub enum Body {
     Subtitles,
     Controls,
     QuickConnect(quickconnect::State),
+    Failures,
 }
 
 /// What one settings screen answered with.
@@ -149,6 +157,7 @@ pub enum Loaded {
     Subtitles,
     Controls,
     QuickConnect,
+    Failures,
 }
 
 #[derive(Debug)]
@@ -172,6 +181,7 @@ impl State {
                 Loaded::Subtitles => Body::Subtitles,
                 Loaded::Controls => Body::Controls,
                 Loaded::QuickConnect => Body::QuickConnect(quickconnect::State::default()),
+                Loaded::Failures => Body::Failures,
             },
             confirming: None,
         }
@@ -278,6 +288,7 @@ pub async fn load(
             Screen::Subtitles => Loaded::Subtitles,
             Screen::Controls => Loaded::Controls,
             Screen::QuickConnect => Loaded::QuickConnect,
+            Screen::Failures => Loaded::Failures,
         };
         Ok((screen, loaded))
     })
@@ -335,6 +346,7 @@ fn menu<'a>(signed: &'a Signed) -> Element<'a, Message> {
 pub fn view<'a>(
     state: &'a State,
     signed: &'a Signed,
+    failures: &'a crate::failure::Log,
     images: &'a crate::images::Cache,
     viewport: Viewport,
 ) -> Element<'a, Message> {
@@ -354,6 +366,7 @@ pub fn view<'a>(
         Body::Subtitles => subtitles::sections(signed.held),
         Body::Controls => controls::sections(),
         Body::QuickConnect(quick) => quickconnect::sections(quick, read_only),
+        Body::Failures => vec![failures::view(failures)],
     };
 
     if state.screen.saves() && !read_only {

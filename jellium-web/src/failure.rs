@@ -118,16 +118,17 @@ pub enum Cause {
     Graphics { detail: String },
 }
 
-/// How a failure is shown.
+/// How a failure is answered.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Weight {
-    /// Replaces the screen; reached only when the session is lost.
+    /// Ends the session and replaces the screen.
     Fatal,
-    /// Shown above the view until the user dismisses it.
-    Passing,
-    /// Recorded in the console and in the session's failure list, and shown
-    /// above no view; what `disregard` raises.
-    Quiet,
+    /// Raised as the reference's own toast, which stands until the user
+    /// dismisses it.
+    Raised,
+    /// Recorded in the console and in the session's failure list, and drawn on
+    /// no screen; what the client has already answered on screen.
+    Recorded,
 }
 
 /// One failure report.
@@ -143,7 +144,7 @@ pub struct Failure {
 
 impl Failure {
     /// The report a `Trouble` is shown as; a lost session is `Fatal` and every
-    /// other trouble is `Passing`.
+    /// other trouble is `Raised`.
     pub fn of(trouble: &Trouble) -> Failure {
         Failure {
             sentence: error::sentence(trouble),
@@ -152,7 +153,7 @@ impl Failure {
             weight: if trouble.session_lost() {
                 Weight::Fatal
             } else {
-                Weight::Passing
+                Weight::Raised
             },
         }
     }
@@ -168,7 +169,7 @@ impl Failure {
             sentence,
             server: None,
             cause,
-            weight: Weight::Passing,
+            weight: Weight::Raised,
         }
     }
 }
@@ -246,7 +247,7 @@ pub fn called<T>(call: Call, answered: Result<T, JsValue>) -> Option<T> {
 /// so it can be found.
 pub(crate) fn disregard(trouble: Trouble, reading: Text) {
     raise(Failure {
-        weight: Weight::Quiet,
+        weight: Weight::Recorded,
         ..reading_failed(&trouble, reading)
     });
 }
@@ -372,18 +373,22 @@ impl Stream for Reports {
     }
 }
 
-/// `bytes` decoded as a JPEG; bytes that will not decode are raised as a
-/// failure carrying `sentence` and answer `None`.
+/// `bytes` decoded as a JPEG; bytes that will not decode are recorded and
+/// answer `None`, because the card that asked for them draws the reference's own
+/// fallback glyph.
 pub fn decoded_image(sentence: Text, bytes: &[u8]) -> Option<image::DynamicImage> {
     match image::load_from_memory_with_format(bytes, image::ImageFormat::Jpeg) {
         Ok(decoded) => Some(decoded),
         Err(error) => {
-            raise(Failure::told(
-                sentence,
-                Cause::Malformed {
-                    detail: error.to_string(),
-                },
-            ));
+            raise(Failure {
+                weight: Weight::Recorded,
+                ..Failure::told(
+                    sentence,
+                    Cause::Malformed {
+                        detail: error.to_string(),
+                    },
+                )
+            });
             None
         }
     }
@@ -447,26 +452,26 @@ pub fn install_panic_hook() {
 #[derive(Debug, Default)]
 pub struct Log {
     raised: Vec<Failure>,
-    showing: Option<Failure>,
+    raised_now: Option<Failure>,
 }
 
 impl Log {
-    /// Records `failure` and shows it until it is dismissed; a `Quiet` report
-    /// is recorded and shown above no view.
+    /// Records `failure` and raises it until it is dismissed; a `Recorded`
+    /// report is recorded and raised on no screen.
     pub fn took(&mut self, failure: Failure) {
         self.raised.insert(0, failure.clone());
-        if failure.weight != Weight::Quiet {
-            self.showing = Some(failure);
+        if failure.weight != Weight::Recorded {
+            self.raised_now = Some(failure);
         }
     }
 
-    /// The failure shown above the view now.
-    pub fn showing(&self) -> Option<&Failure> {
-        self.showing.as_ref()
+    /// The failure raised as a toast now, and None while none is live.
+    pub fn raised_now(&self) -> Option<&Failure> {
+        self.raised_now.as_ref()
     }
 
     pub fn dismiss(&mut self) {
-        self.showing = None;
+        self.raised_now = None;
     }
 
     /// Every failure raised this session, newest first, dismissed included.

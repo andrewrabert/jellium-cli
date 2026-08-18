@@ -1582,53 +1582,13 @@ pub fn reported<'a>(failure: &'a crate::failure::Failure, ending: Ending) -> Ele
         .into()
 }
 
-/// Every screen under the failure surfaces: the report shown above it until it
-/// is dismissed, the control opening the session's failure list, and the list
-/// itself while it is open.
-pub fn shell<'a>(
-    failures: &'a crate::failure::Log,
-    listing: Listing,
-    body: Element<'a, Message>,
-) -> Element<'a, Message> {
-    let mut page = column![].spacing(style::drawn(space::SECTION_GAP.drawn()));
-    if let Some(showing) = failures.showing() {
-        page = page.push(reported(showing, Ending::Dismissed));
-    }
-    page = page.push(
-        button(prose(strings::lookup(Text::FailuresOpen), typeface::BODY))
-            .style(style::flat)
-            .on_press(match listing {
-                Listing::Open => Message::FailuresClosed,
-                Listing::Closed => Message::FailuresOpened,
-            }),
-    );
-    if listing == Listing::Open {
-        let mut listed = column![prose(strings::lookup(Text::FailuresTitle), typeface::BODY)]
-            .spacing(style::drawn(space::SECTION_GAP.drawn()))
-            .padding(style::padding(space::PAGE_PAD));
-        if failures.raised().is_empty() {
-            listed = listed.push(prose(strings::lookup(Text::FailuresEmpty), typeface::BODY));
-        }
-        for raised in failures.raised() {
-            let mut one = column![prose(raised.sentence.clone(), typeface::BODY)];
-            if let Some(server) = &raised.server {
-                one = one.push(prose(format!("> {server}"), typeface::SECONDARY));
-            }
-            listed = listed.push(one.spacing(style::drawn(space::BLOCK_GAP.drawn())));
-        }
-        page = page.push(crate::construct::own(
-            crate::construct::Own::FailureList,
-            scrolled(listed).into(),
-        ));
-    }
-    page.push(body).into()
-}
-
-/// Whether the session's failure list is drawn under the control that opens it.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum Listing {
-    Open,
-    Closed,
+/// The failure raised now as the reference's own toast, under the flat control
+/// that dismisses it, and nothing while none is live.
+// reference: toast-face
+pub fn raised<'a>(failures: &'a crate::failure::Log) -> Option<Element<'a, Message>> {
+    failures
+        .raised_now()
+        .map(|failure| reported(failure, Ending::Dismissed))
 }
 
 /// The nav row above `body`, both inside the page's own padding: the page's

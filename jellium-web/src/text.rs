@@ -226,7 +226,6 @@ text! {
     FailurePluginPageUnread => "failurePluginPageUnread", Wording::Own,
     FailureDismiss => "failureDismiss", Wording::Own,
     FailuresTitle => "failuresTitle", Wording::Own,
-    FailuresOpen => "failuresOpen", Wording::Own,
     FailuresEmpty => "failuresEmpty", Wording::Own,
     FailureSavedSignInRejected => "failureSavedSignInRejected", Wording::Own,
     FailureRemoveUnrevoked => "failureRemoveUnrevoked", Wording::Own,

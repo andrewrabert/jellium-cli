@@ -45,8 +45,6 @@ pub struct Jellium {
     pub viewport: Viewport,
     /// Every failure raised this session and the one shown above the view.
     pub failures: crate::failure::Log,
-    /// True while the session's failure list is open.
-    pub listing: bool,
 }
 
 pub enum Stage {
@@ -172,8 +170,6 @@ pub enum Message {
     /// where it was made.
     Quieted,
     FailureDismissed,
-    FailuresOpened,
-    FailuresClosed,
     Ready,
     SessionChecked(Answer<SessionStatus>),
     LoginAction(login::Action),
@@ -663,7 +659,6 @@ impl Jellium {
                 images: Cache::new(),
                 viewport,
                 failures: crate::failure::Log::default(),
-                listing: false,
             },
             Task::batch([
                 Task::done(Message::Ready),
@@ -1149,14 +1144,6 @@ impl Jellium {
             }
             Message::FailureDismissed => {
                 self.failures.dismiss();
-                Task::none()
-            }
-            Message::FailuresOpened => {
-                self.listing = true;
-                Task::none()
-            }
-            Message::FailuresClosed => {
-                self.listing = false;
                 Task::none()
             }
             Message::Ready => {
@@ -2807,15 +2794,6 @@ impl Jellium {
     }
 
     pub fn view(&self) -> Element<'_, Message> {
-        let listing = match self.listing {
-            true => widget::Listing::Open,
-            false => widget::Listing::Closed,
-        };
-        widget::shell(&self.failures, listing, self.staged())
-    }
-
-    /// The stage's own screen, under the failure surfaces `view` wraps it in.
-    fn staged(&self) -> Element<'_, Message> {
         match &self.stage {
             Stage::Booting { stalled: false } => {
                 center(prose(strings::lookup(Text::StatusLoading), typeface::BODY)).into()
@@ -2983,9 +2961,13 @@ impl Jellium {
                         chrono::Utc::now(),
                         self.viewport,
                     ),
-                    View::Settings(state) => {
-                        crate::screen::settings::view(state, signed, &self.images, self.viewport)
-                    }
+                    View::Settings(state) => crate::screen::settings::view(
+                        state,
+                        signed,
+                        &self.failures,
+                        &self.images,
+                        self.viewport,
+                    ),
                     View::Unavailable => center(iced::widget::Space::new()).into(),
                 };
 
@@ -3031,8 +3013,13 @@ impl Jellium {
                         self.viewport,
                     ));
                 }
-                let raised = widget::notices(&signed.session, signed.group.as_ref(), signed.live)
+                let raised = widget::raised(&self.failures)
                     .into_iter()
+                    .chain(widget::notices(
+                        &signed.session,
+                        signed.group.as_ref(),
+                        signed.live,
+                    ))
                     .chain(signed.stopped.map(|stopped| {
                         widget::toast(
                             None,
