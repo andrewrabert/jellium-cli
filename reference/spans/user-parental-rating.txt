@@ -1,0 +1,11 @@
+                    <div className='selectContainer'>
+                        <SelectElement
+                            id='selectMaxParentalRating'
+                            label='LabelMaxParentalRating'
+                        >
+                            {optionMaxParentalRating()}
+                        </SelectElement>
+                        <div className='fieldDescription'>
+                            {globalize.translate('MaxParentalRatingHelp')}
+                        </div>
+                    </div>

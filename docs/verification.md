@@ -373,6 +373,13 @@ in order. A section passes only when every line in it holds.
 - Deleting the signed-in user's own account and removing their own
   administrator status are absent, with text naming that cause where each would
   stand.
+- Every control on a user's profile, access and parental panels carries the
+  sentence the reference writes beside it, and no raw configuration key appears
+  anywhere on those panels.
+- A user's bitrate limit is typed in Mbps and reads back in Mbps after a save.
+- Editing another account shows an administrator checkbox; editing one's own
+  shows the sentence naming why it is absent, and the rest of the panel is
+  unchanged.
 
 ## Libraries
 

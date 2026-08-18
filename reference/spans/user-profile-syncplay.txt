@@ -1,0 +1,13 @@
+                    <div className='verticalSection'>
+                        <div className='selectContainer fldSelectSyncPlayAccess'>
+                            <SelectElement
+                                id='selectSyncPlayAccess'
+                                label='LabelSyncPlayAccess'
+                            >
+                                {optionSyncPlayAccess()}
+                            </SelectElement>
+                            <div className='fieldDescription'>
+                                {globalize.translate('SyncPlayAccessHelp')}
+                            </div>
+                        </div>
+                    </div>

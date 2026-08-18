@@ -1,0 +1,7 @@
+    const optionSyncPlayAccess = () => {
+        let content = '';
+        content += `<option value='CreateAndJoinGroups'>${globalize.translate('LabelSyncPlayAccessCreateAndJoinGroups')}</option>`;
+        content += `<option value='JoinGroups'>${globalize.translate('LabelSyncPlayAccessJoinGroups')}</option>`;
+        content += `<option value='None'>${globalize.translate('LabelSyncPlayAccessNone')}</option>`;
+        return content;
+    };

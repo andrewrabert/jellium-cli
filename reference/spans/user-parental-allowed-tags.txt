@@ -1,0 +1,24 @@
+                    <div className='verticalSection' style={{ marginBottom: '2em' }}>
+                        <SectionTitleContainer
+                            SectionClassName='detailSectionHeader'
+                            title={globalize.translate('LabelAllowContentWithTags')}
+                            isBtnVisible={true}
+                            btnId='btnAddAllowedTag'
+                            btnClassName='fab submit sectionTitleButton'
+                            btnTitle='Add'
+                            btnIcon='add'
+                        />
+                        <div className='fieldDescription'>
+                            {globalize.translate('AllowContentWithTagsHelp')}
+                        </div>
+                        <div className='allowedTags' style={{ marginTop: '.5em' }}>
+                            {allowedTags?.map(tag => {
+                                return <TagList
+                                    key={tag}
+                                    tag={tag}
+                                    tagType='allowedTag'
+                                    removeTagCallback={removeAllowedTagsCallback}
+                                />;
+                            })}
+                        </div>
+                    </div>

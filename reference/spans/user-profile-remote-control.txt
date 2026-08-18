@@ -1,0 +1,18 @@
+                    <div className='verticalSection'>
+                        <h2 className='checkboxListLabel'>
+                            {globalize.translate('HeaderRemoteControl')}
+                        </h2>
+                        <div className='checkboxList paperList' style={{ padding: '.5em 1em' }}>
+                            <CheckBoxElement
+                                className='chkEnableRemoteControlOtherUsers'
+                                title='OptionAllowRemoteControlOthers'
+                            />
+                            <CheckBoxElement
+                                className='chkRemoteControlSharedDevices'
+                                title='OptionAllowRemoteSharedDevices'
+                            />
+                        </div>
+                        <div className='fieldDescription'>
+                            {globalize.translate('OptionAllowRemoteSharedDevicesHelp')}
+                        </div>
+                    </div>

@@ -1,0 +1,10 @@
+                    <CheckBoxElement
+                        labelClassName='checkboxContainer'
+                        className='chkEnableCollectionManagement'
+                        title='AllowCollectionManagement'
+                    />
+                    <CheckBoxElement
+                        labelClassName='checkboxContainer'
+                        className='chkEnableSubtitleManagement'
+                        title='AllowSubtitleManagement'
+                    />

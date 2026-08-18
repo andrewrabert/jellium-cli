@@ -19,14 +19,14 @@ pub mod users;
 
 use std::rc::Rc;
 
-use iced::widget::{column, row};
+use iced::widget::column;
 use iced::{Element, Task};
 use uuid::Uuid;
 
 use crate::api::Api;
 use crate::app::{Message, Signed};
 use crate::error::{Answer, Operation, Wrote};
-use crate::style::{self, Viewport, space, typeface};
+use crate::style::{Viewport, space, typeface};
 use crate::text::{self as strings, Text};
 use crate::widget::{self, Choice, Secrecy, prose};
 
@@ -618,6 +618,14 @@ impl Section {
     }
 }
 
+/// Whose account a user screen shows, which is what forecloses the control
+/// that would remove the reader's own administrator status.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Account {
+    Own,
+    Other,
+}
+
 /// Which of a user screen's four panels is shown.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum UserTab {
@@ -641,6 +649,18 @@ impl UserTab {
             UserTab::Access => Text::UsersAccess,
             UserTab::Parental => Text::UsersParental,
             UserTab::Password => Text::UsersPassword,
+        }
+    }
+
+    /// The groups this panel's controls stand in, and none for the panel that
+    /// edits no configuration key.
+    pub fn groups(self, account: Account) -> &'static [Group] {
+        match (self, account) {
+            (UserTab::Profile, _) => users::PROFILE,
+            (UserTab::Access, Account::Own) => users::ACCESS_OWN,
+            (UserTab::Access, Account::Other) => users::ACCESS,
+            (UserTab::Parental, _) => users::PARENTAL,
+            (UserTab::Password, _) => &[],
         }
     }
 }
@@ -879,33 +899,6 @@ pub fn save<'a>(
             strings::lookup(Text::DashboardSave),
             press,
             widget::Emphasis::Submit,
-        ),
-    }
-}
-
-/// One control of a form, drawn by what its field edits.
-pub fn control<'a>(field: jellium_model::form::Field, held: String) -> Element<'a, Message> {
-    match field {
-        jellium_model::form::Field::Flag { key } => Element::from(
-            row![
-                iced::widget::checkbox(held == "true").on_toggle(move |held| {
-                    Message::DashboardAction(Action::Edited(field, held.to_string()))
-                }),
-                prose(key, typeface::BODY),
-            ]
-            .spacing(style::drawn(space::CONTROL_GAP.drawn()))
-            .align_y(iced::Center),
-        ),
-        _ => Element::from(
-            column![
-                prose(field.key(), typeface::BODY),
-                iced::widget::text_input(field.key(), &held)
-                    .style(style::input)
-                    .on_input(move |held| {
-                        Message::DashboardAction(Action::Edited(field, held))
-                    }),
-            ]
-            .spacing(style::drawn(space::BLOCK_GAP.drawn())),
         ),
     }
 }
@@ -1345,7 +1338,7 @@ pub fn view<'a>(
             },
             Body::User(held) => frame::Filling::Stacked {
                 above: None,
-                rows: users::one(held, session.read_only, session.user_id),
+                rows: users::one(held, session.read_only, session.user_id, viewport),
             },
             Body::Libraries(held) => frame::Filling::Stacked {
                 above: Some(space::LIBRARIES_TOP),
@@ -1453,13 +1446,12 @@ pub fn act(signed: &mut Signed, action: Action, viewport: Viewport) -> Task<Mess
                     held.saved = false;
                 }
                 Some(Body::LiveTv(held)) => held.dvr.edit(field, value),
-                Some(Body::User(held)) => {
-                    if users::CONFIGURATION.contains(&field) {
-                        held.configuration.edit(field, value);
-                    } else {
-                        held.policy.edit(field, value);
+                Some(Body::User(held)) => match held.tab {
+                    UserTab::Profile => held.configuration.edit(field, value),
+                    UserTab::Access | UserTab::Parental | UserTab::Password => {
+                        held.policy.edit(field, value)
                     }
-                }
+                },
                 Some(Body::Library(held)) => held.options.edit(field, value),
                 _ => {}
             }

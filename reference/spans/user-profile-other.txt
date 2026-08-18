@@ -1,0 +1,30 @@
+                    <h2 className='checkboxListLabel'>
+                        {globalize.translate('Other')}
+                    </h2>
+                    <div className='checkboxContainer checkboxContainer-withDescription'>
+                        <CheckBoxElement
+                            className='chkEnableDownloading'
+                            title='OptionAllowContentDownload'
+                        />
+                        <div className='fieldDescription checkboxFieldDescription'>
+                            {globalize.translate('OptionAllowContentDownloadHelp')}
+                        </div>
+                    </div>
+                    <div className='checkboxContainer checkboxContainer-withDescription' id='fldIsEnabled'>
+                        <CheckBoxElement
+                            className='chkDisabled'
+                            title='OptionDisableUser'
+                        />
+                        <div className='fieldDescription checkboxFieldDescription'>
+                            {globalize.translate('OptionDisableUserHelp')}
+                        </div>
+                    </div>
+                    <div className='checkboxContainer checkboxContainer-withDescription' id='fldIsHidden'>
+                        <CheckBoxElement
+                            className='chkIsHidden'
+                            title='OptionHideUser'
+                        />
+                        <div className='fieldDescription checkboxFieldDescription'>
+                            {globalize.translate('OptionHideUserFromLoginHelp')}
+                        </div>
+                    </div>

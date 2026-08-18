@@ -1,0 +1,16 @@
+                    <div className='verticalSection'>
+                        <div className='inputContainer' id='fldMaxActiveSessions'>
+                            <Input
+                                type='number'
+                                id='txtMaxActiveSessions'
+                                label={globalize.translate('LabelUserMaxActiveSessions')}
+                                min={0} step={1}
+                            />
+                            <div className='fieldDescription'>
+                                {globalize.translate('OptionMaxActiveSessions')}
+                            </div>
+                            <div className='fieldDescription'>
+                                {globalize.translate('OptionMaxActiveSessionsHelp')}
+                            </div>
+                        </div>
+                    </div>

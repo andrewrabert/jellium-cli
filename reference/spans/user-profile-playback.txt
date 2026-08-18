@@ -1,0 +1,21 @@
+                    <div className='verticalSection'>
+                        <h2 className='paperListLabel'>
+                            {globalize.translate('HeaderPlayback')}
+                        </h2>
+                        <div className='checkboxList paperList' style={{ padding: '.5em 1em' }}>
+                            <CheckBoxElement
+                                className='chkEnableMediaPlayback'
+                                title='OptionAllowMediaPlayback'
+                            />
+                            <CheckBoxElement
+                                className='chkEnableAudioPlaybackTranscoding'
+                                title='OptionAllowAudioPlaybackTranscoding'
+                            />
+                            <CheckBoxElement
+                                className='chkEnableVideoPlaybackTranscoding'
+                                title='OptionAllowVideoPlaybackTranscoding'
+                            />
+                            <CheckBoxElement
+                                className='chkEnableVideoPlaybackRemuxing'
+                                title='OptionAllowVideoPlaybackRemuxing'
+                            />

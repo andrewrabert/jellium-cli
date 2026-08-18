@@ -9,7 +9,10 @@ use crate::error::Answer;
 use crate::style::{self, Viewport, card, space, typeface};
 use crate::text::{self as strings, Text};
 use crate::widget::{self, prose};
+use jellium_model::appearance::typeface::Rank;
 use jellium_model::form::{Field, Form};
+
+use super::{Control, Group, Heading, Offered};
 
 /// Every user on the server, what a new one is being named, and the account
 /// whose card menu is open.
@@ -48,100 +51,464 @@ pub struct One {
     pub replacement: String,
 }
 
-/// The fields a user's policy exposes; every key outside them survives a save.
-pub const POLICY: &[Field] = &[
-    Field::Flag {
-        key: "IsAdministrator",
+/// The SyncPlay levels the policy offers, in the order the reference stands
+/// them.
+// reference: user-profile-syncplay-options
+pub const SYNC_PLAY_ACCESS: &[Offered] = &[
+    Offered {
+        value: "CreateAndJoinGroups",
+        label: Text::UsersSyncPlayCreate,
     },
-    Field::Flag { key: "IsDisabled" },
-    Field::Flag { key: "IsHidden" },
-    Field::Flag {
-        key: "EnableAllFolders",
+    Offered {
+        value: "JoinGroups",
+        label: Text::UsersSyncPlayJoin,
     },
-    Field::Lines {
-        key: "EnabledFolders",
-    },
-    Field::Flag {
-        key: "EnableAllDevices",
-    },
-    Field::Lines {
-        key: "EnabledDevices",
-    },
-    Field::Flag {
-        key: "EnableRemoteAccess",
-    },
-    Field::Flag {
-        key: "EnableMediaPlayback",
-    },
-    Field::Flag {
-        key: "EnableAudioPlaybackTranscoding",
-    },
-    Field::Flag {
-        key: "EnableVideoPlaybackTranscoding",
-    },
-    Field::Flag {
-        key: "EnablePlaybackRemuxing",
-    },
-    Field::Flag {
-        key: "EnableContentDeletion",
-    },
-    Field::Flag {
-        key: "EnableContentDownloading",
-    },
-    Field::Flag {
-        key: "EnableLiveTvAccess",
-    },
-    Field::Flag {
-        key: "EnableLiveTvManagement",
-    },
-    Field::Number {
-        key: "MaxParentalRating",
-    },
-    Field::Lines { key: "BlockedTags" },
-    Field::Lines { key: "AllowedTags" },
-    Field::Number {
-        key: "LoginAttemptsBeforeLockout",
-    },
-    Field::Number {
-        key: "MaxActiveSessions",
-    },
-    Field::Number {
-        key: "RemoteClientBitrateLimit",
-    },
-    Field::Choice {
-        key: "SyncPlayAccess",
-        options: &["CreateAndJoinGroups", "JoinGroups", "None"],
+    Offered {
+        value: "None",
+        label: Text::UsersSyncPlayNone,
     },
 ];
 
-/// The fields a user's own configuration exposes.
-pub const CONFIGURATION: &[Field] = &[
-    Field::Text {
-        key: "AudioLanguagePreference",
+/// The subtitle modes the configuration offers, in the order the reference
+/// stands them.
+// reference: settings-subtitles-mode
+pub const SUBTITLE_MODES: &[Offered] = &[
+    Offered {
+        value: "Default",
+        label: Text::UsersSubtitleModeDefault,
     },
-    Field::Text {
-        key: "SubtitleLanguagePreference",
+    Offered {
+        value: "Smart",
+        label: Text::UsersSubtitleModeSmart,
     },
-    Field::Flag {
-        key: "PlayDefaultAudioTrack",
+    Offered {
+        value: "OnlyForced",
+        label: Text::UsersSubtitleModeOnlyForced,
     },
-    Field::Flag {
-        key: "DisplayMissingEpisodes",
+    Offered {
+        value: "Always",
+        label: Text::UsersSubtitleModeAlways,
     },
-    Field::Choice {
-        key: "SubtitleMode",
-        options: &["Default", "Always", "OnlyForced", "None", "Smart"],
-    },
-    Field::Flag {
-        key: "EnableNextEpisodeAutoPlay",
-    },
-    Field::Flag {
-        key: "RememberAudioSelections",
-    },
-    Field::Flag {
-        key: "RememberSubtitleSelections",
+    Offered {
+        value: "None",
+        label: Text::UsersSubtitleModeNone,
     },
 ];
+
+/// The user's own configuration, in the order the reference's preference pages
+/// stand it; every key outside it survives a save.
+// reference: settings-playback-form
+// reference: settings-playback-remembered
+// reference: settings-subtitles-mode
+// reference: settings-display-form
+pub const PROFILE: &[Group] = &[Group {
+    heading: None,
+    note: None,
+    controls: &[
+        Control {
+            field: Field::Text {
+                key: "AudioLanguagePreference",
+            },
+            label: Text::UsersAudioLanguage,
+            helper: &[],
+            offered: None,
+        },
+        Control {
+            field: Field::Flag {
+                key: "PlayDefaultAudioTrack",
+            },
+            label: Text::UsersDefaultAudioTrack,
+            helper: &[],
+            offered: None,
+        },
+        Control {
+            field: Field::Flag {
+                key: "EnableNextEpisodeAutoPlay",
+            },
+            label: Text::UsersNextEpisode,
+            helper: &[],
+            offered: None,
+        },
+        Control {
+            field: Field::Flag {
+                key: "RememberAudioSelections",
+            },
+            label: Text::UsersRememberAudio,
+            helper: &[Text::UsersRememberAudioHelp],
+            offered: None,
+        },
+        Control {
+            field: Field::Flag {
+                key: "RememberSubtitleSelections",
+            },
+            label: Text::UsersRememberSubtitles,
+            helper: &[Text::UsersRememberSubtitlesHelp],
+            offered: None,
+        },
+        Control {
+            field: Field::Text {
+                key: "SubtitleLanguagePreference",
+            },
+            label: Text::UsersSubtitleLanguage,
+            helper: &[],
+            offered: None,
+        },
+        Control {
+            field: Field::Listed {
+                key: "SubtitleMode",
+            },
+            label: Text::UsersSubtitleMode,
+            helper: &[],
+            offered: Some(SUBTITLE_MODES),
+        },
+        Control {
+            field: Field::Flag {
+                key: "DisplayMissingEpisodes",
+            },
+            label: Text::UsersMissingEpisodes,
+            helper: &[Text::UsersMissingEpisodesHelp],
+            offered: None,
+        },
+    ],
+    closing: None,
+}];
+
+// reference: user-profile-remote-access
+const REMOTE_ACCESS: Group = Group {
+    heading: None,
+    note: None,
+    controls: &[Control {
+        field: Field::Flag {
+            key: "EnableRemoteAccess",
+        },
+        label: Text::UsersRemoteAccess,
+        helper: &[Text::UsersRemoteAccessHelp],
+        offered: None,
+    }],
+    closing: None,
+};
+
+// reference: user-profile-administrator
+const ADMINISTRATOR: Group = Group {
+    heading: None,
+    note: None,
+    controls: &[Control {
+        field: Field::Flag {
+            key: "IsAdministrator",
+        },
+        label: Text::UsersAdministrator,
+        helper: &[],
+        offered: None,
+    }],
+    closing: None,
+};
+
+/// What stands where the administrator control would, on the reader's own
+/// account.
+const OWN_ADMINISTRATOR: Group = Group {
+    heading: None,
+    note: Some(Text::UsersOwnAdministrator),
+    controls: &[],
+    closing: None,
+};
+
+// reference: user-profile-feature-access
+const FEATURE_ACCESS: Group = Group {
+    heading: Some(Heading {
+        rank: Rank::Second,
+        title: Text::UsersFeatureAccess,
+    }),
+    note: None,
+    controls: &[
+        Control {
+            field: Field::Flag {
+                key: "EnableLiveTvAccess",
+            },
+            label: Text::UsersLiveTvAccess,
+            helper: &[],
+            offered: None,
+        },
+        Control {
+            field: Field::Flag {
+                key: "EnableLiveTvManagement",
+            },
+            label: Text::UsersLiveTvManagement,
+            helper: &[],
+            offered: None,
+        },
+    ],
+    closing: None,
+};
+
+// reference: user-profile-playback
+// reference: user-profile-playback-note
+const PLAYBACK: Group = Group {
+    heading: Some(Heading {
+        rank: Rank::Second,
+        title: Text::UsersPlayback,
+    }),
+    note: None,
+    controls: &[
+        Control {
+            field: Field::Flag {
+                key: "EnableMediaPlayback",
+            },
+            label: Text::UsersMediaPlayback,
+            helper: &[],
+            offered: None,
+        },
+        Control {
+            field: Field::Flag {
+                key: "EnableAudioPlaybackTranscoding",
+            },
+            label: Text::UsersAudioTranscoding,
+            helper: &[],
+            offered: None,
+        },
+        Control {
+            field: Field::Flag {
+                key: "EnableVideoPlaybackTranscoding",
+            },
+            label: Text::UsersVideoTranscoding,
+            helper: &[],
+            offered: None,
+        },
+        Control {
+            field: Field::Flag {
+                key: "EnablePlaybackRemuxing",
+            },
+            label: Text::UsersRemuxing,
+            helper: &[],
+            offered: None,
+        },
+    ],
+    closing: Some(Text::UsersPlaybackHelp),
+};
+
+// reference: user-profile-bitrate
+const BITRATE: Group = Group {
+    heading: None,
+    note: None,
+    controls: &[Control {
+        field: Field::Megabits {
+            key: "RemoteClientBitrateLimit",
+        },
+        label: Text::UsersBitrateLimit,
+        helper: &[Text::UsersBitrateLimitHelp, Text::UsersBitrateLimitOverride],
+        offered: None,
+    }],
+    closing: None,
+};
+
+// reference: user-profile-syncplay
+const SYNC_PLAY: Group = Group {
+    heading: None,
+    note: None,
+    controls: &[Control {
+        field: Field::Listed {
+            key: "SyncPlayAccess",
+        },
+        label: Text::UsersSyncPlay,
+        helper: &[Text::UsersSyncPlayHelp],
+        offered: Some(SYNC_PLAY_ACCESS),
+    }],
+    closing: None,
+};
+
+// reference: user-profile-deletion
+const DELETION: Group = Group {
+    heading: Some(Heading {
+        rank: Rank::Second,
+        title: Text::UsersDeletion,
+    }),
+    note: None,
+    controls: &[Control {
+        field: Field::Flag {
+            key: "EnableContentDeletion",
+        },
+        label: Text::UsersDeletionAll,
+        helper: &[],
+        offered: None,
+    }],
+    closing: None,
+};
+
+// reference: user-profile-other
+const OTHER: Group = Group {
+    heading: Some(Heading {
+        rank: Rank::Second,
+        title: Text::UsersOther,
+    }),
+    note: None,
+    controls: &[
+        Control {
+            field: Field::Flag {
+                key: "EnableContentDownloading",
+            },
+            label: Text::UsersDownloads,
+            helper: &[Text::UsersDownloadsHelp],
+            offered: None,
+        },
+        Control {
+            field: Field::Flag { key: "IsDisabled" },
+            label: Text::UsersDisabled,
+            helper: &[Text::UsersDisabledHelp],
+            offered: None,
+        },
+        Control {
+            field: Field::Flag { key: "IsHidden" },
+            label: Text::UsersHidden,
+            helper: &[Text::UsersHiddenHelp],
+            offered: None,
+        },
+    ],
+    closing: None,
+};
+
+// reference: user-profile-lockout
+// reference: user-profile-sessions
+const LIMITS: Group = Group {
+    heading: None,
+    note: None,
+    controls: &[
+        Control {
+            field: Field::Number {
+                key: "LoginAttemptsBeforeLockout",
+            },
+            label: Text::UsersLockout,
+            helper: &[Text::UsersLockoutHelp, Text::UsersLockoutZero],
+            offered: None,
+        },
+        Control {
+            field: Field::Number {
+                key: "MaxActiveSessions",
+            },
+            label: Text::UsersSessions,
+            helper: &[Text::UsersSessionsHelp, Text::UsersSessionsZero],
+            offered: None,
+        },
+    ],
+    closing: None,
+};
+
+// reference: user-access-container
+// reference: user-access-folders
+const LIBRARY_ACCESS: Group = Group {
+    heading: Some(Heading {
+        rank: Rank::Second,
+        title: Text::UsersLibraryAccess,
+    }),
+    note: None,
+    controls: &[
+        Control {
+            field: Field::Flag {
+                key: "EnableAllFolders",
+            },
+            label: Text::UsersAllLibraries,
+            helper: &[],
+            offered: None,
+        },
+        Control {
+            field: Field::Lines {
+                key: "EnabledFolders",
+            },
+            label: Text::UsersLibraries,
+            helper: &[Text::UsersLibrariesHelp],
+            offered: None,
+        },
+    ],
+    closing: None,
+};
+
+// reference: user-access-devices
+const DEVICE_ACCESS: Group = Group {
+    heading: Some(Heading {
+        rank: Rank::Second,
+        title: Text::UsersDeviceAccess,
+    }),
+    note: None,
+    controls: &[
+        Control {
+            field: Field::Flag {
+                key: "EnableAllDevices",
+            },
+            label: Text::UsersAllDevices,
+            helper: &[],
+            offered: None,
+        },
+        Control {
+            field: Field::Lines {
+                key: "EnabledDevices",
+            },
+            label: Text::UsersDevices,
+            helper: &[Text::UsersDevicesHelp],
+            offered: None,
+        },
+    ],
+    closing: None,
+};
+
+/// The user's policy as the reference's own profile and access pages stand it.
+pub const ACCESS: &[Group] = &[
+    REMOTE_ACCESS,
+    ADMINISTRATOR,
+    FEATURE_ACCESS,
+    PLAYBACK,
+    BITRATE,
+    SYNC_PLAY,
+    DELETION,
+    OTHER,
+    LIMITS,
+    LIBRARY_ACCESS,
+    DEVICE_ACCESS,
+];
+
+/// The same panel on the reader's own account.
+pub const ACCESS_OWN: &[Group] = &[
+    REMOTE_ACCESS,
+    OWN_ADMINISTRATOR,
+    FEATURE_ACCESS,
+    PLAYBACK,
+    BITRATE,
+    SYNC_PLAY,
+    DELETION,
+    OTHER,
+    LIMITS,
+    LIBRARY_ACCESS,
+    DEVICE_ACCESS,
+];
+
+/// The parental controls, in the order the reference stands them.
+// reference: user-parental-rating
+// reference: user-parental-allowed-tags
+// reference: user-parental-blocked-tags
+pub const PARENTAL: &[Group] = &[Group {
+    heading: None,
+    note: None,
+    controls: &[
+        Control {
+            field: Field::Number {
+                key: "MaxParentalRating",
+            },
+            label: Text::UsersMaxRating,
+            helper: &[Text::UsersMaxRatingHelp],
+            offered: None,
+        },
+        Control {
+            field: Field::Lines { key: "AllowedTags" },
+            label: Text::UsersAllowedTags,
+            helper: &[Text::UsersAllowedTagsHelp],
+            offered: None,
+        },
+        Control {
+            field: Field::Lines { key: "BlockedTags" },
+            label: Text::UsersBlockedTags,
+            helper: &[Text::UsersBlockedTagsHelp],
+            offered: None,
+        },
+    ],
+    closing: None,
+}];
 
 pub async fn open(api: std::rc::Rc<crate::api::Api>, id: Uuid, tab: super::UserTab) -> Answer<One> {
     Answer::of(async {
@@ -317,7 +684,12 @@ pub fn view<'a>(
 
 /// One user's four panels: profile, library and device access, parental
 /// control, and password.
-pub fn one<'a>(state: &'a One, read_only: bool, own: Uuid) -> Vec<Element<'a, Message>> {
+pub fn one<'a>(
+    state: &'a One,
+    read_only: bool,
+    own: Uuid,
+    viewport: Viewport,
+) -> Vec<Element<'a, Message>> {
     let panels = widget::localnav(super::UserTab::ALL.into_iter().map(|tab| widget::Entry {
         label: tab.label(),
         showing: match tab == state.tab {
@@ -383,28 +755,26 @@ pub fn one<'a>(state: &'a One, read_only: bool, own: Uuid) -> Vec<Element<'a, Me
             }
         }
         tab => {
-            let (form, fields) = match tab {
-                super::UserTab::Profile => (&state.configuration, CONFIGURATION),
-                _ => (&state.policy, POLICY),
+            let form = match tab {
+                super::UserTab::Profile => &state.configuration,
+                _ => &state.policy,
             };
-            let policy = !matches!(tab, super::UserTab::Profile);
-            for field in fields.iter().filter(|field| shown(tab, **field)) {
-                if policy && state.id == own && field.key() == "IsAdministrator" {
-                    page.push(prose(
-                        strings::lookup(Text::UsersOwnAdministrator),
-                        typeface::BODY,
-                    ));
-                    continue;
-                }
-                page.push(super::control(*field, form.value(*field)));
-            }
+            let account = match state.id == own {
+                true => super::Account::Own,
+                false => super::Account::Other,
+            };
+            page.extend(super::controls(
+                tab.groups(account),
+                form,
+                super::Controls::Emby,
+                viewport,
+            ));
             if !read_only {
-                page.push(
-                    button(prose(strings::lookup(Text::DashboardSave), typeface::BODY))
-                        .style(style::submit)
-                        .on_press(Message::DashboardAction(super::Action::Save))
-                        .into(),
-                );
+                page.push(super::save(
+                    super::Controls::Emby,
+                    Some(Message::DashboardAction(super::Action::Save)),
+                    viewport.layout(),
+                ));
             }
         }
     }
@@ -412,17 +782,4 @@ pub fn one<'a>(state: &'a One, read_only: bool, own: Uuid) -> Vec<Element<'a, Me
     let mut shown: Vec<Element<'a, Message>> = vec![panels];
     shown.append(&mut page);
     shown
-}
-
-/// Which panel a policy field stands in.
-fn shown(tab: super::UserTab, field: Field) -> bool {
-    let parental = matches!(
-        field.key(),
-        "MaxParentalRating" | "BlockedTags" | "AllowedTags"
-    );
-    match tab {
-        super::UserTab::Parental => parental,
-        super::UserTab::Access => !parental,
-        _ => true,
-    }
 }

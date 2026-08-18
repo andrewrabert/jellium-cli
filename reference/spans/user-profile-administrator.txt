@@ -1,0 +1,5 @@
+                    <CheckBoxElement
+                        labelClassName='checkboxContainer'
+                        className='chkIsAdmin'
+                        title='OptionAllowUserToManageServer'
+                    />
