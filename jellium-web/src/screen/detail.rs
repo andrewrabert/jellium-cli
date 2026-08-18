@@ -297,40 +297,66 @@ struct Head<'a> {
 }
 
 /// The parts the reference's own primary container holds, drawn once and
-/// placed by whichever arrangement the layout names.
+/// placed by whichever arrangement the layout names: what plays, the played
+/// mark where the item can carry one, the rating control where the item can
+/// carry one, and the control that opens the item's own menu.
 // reference: detail-markup
 // reference: detail-primary
 // reference: detail-parent-name
 // reference: detail-name-container
 // reference: detail-misc
-fn head<'a>(item: &'a BaseItemDto, viewport: Viewport, images: &'a Cache) -> Head<'a> {
+// reference: detail-markup-marks
+// reference: detail-more-commands
+// reference: item-can-mark-played
+// reference: item-can-rate
+fn head<'a>(
+    item: &'a BaseItemDto,
+    session: &'a jellium_protocol::Session,
+    viewport: Viewport,
+    images: &'a Cache,
+    now: chrono::DateTime<chrono::Utc>,
+) -> Head<'a> {
     let mut actions = row![].spacing(style::drawn(space::CONTROL_GAP.drawn()));
     for control in play_controls(item, viewport) {
         actions = actions.push(control);
     }
-    // reference: detail-markup-marks
     if let Some(id) = item.id {
-        let mark = match item::played(item) {
-            Mark::Set => Text::DetailMarkUnplayed,
-            Mark::Cleared => Text::DetailMarkPlayed,
-        };
-        let star = match item::favorited(item) {
-            Mark::Set => Text::DetailUnfavorite,
-            Mark::Cleared => Text::DetailFavorite,
-        };
-        actions = actions
-            .push(detail_button(
+        if item::markable(item) && !session.read_only {
+            actions = actions.push(detail_button(
                 Icon::Check,
-                mark,
+                match item::played(item) {
+                    Mark::Set => Text::DetailMarkUnplayed,
+                    Mark::Cleared => Text::DetailMarkPlayed,
+                },
                 Message::PlayedToggled(id, item::played(item).flipped()),
                 viewport,
-            ))
-            .push(detail_button(
+            ));
+        }
+        if item::ratable(item) && !session.read_only {
+            actions = actions.push(detail_button(
                 Icon::Favorite,
-                star,
+                match item::favorited(item) {
+                    Mark::Set => Text::DetailUnfavorite,
+                    Mark::Cleared => Text::DetailFavorite,
+                },
                 Message::FavoriteToggled(id, item::favorited(item).flipped()),
                 viewport,
             ));
+        }
+        let offered = crate::screen::overflow::commands(
+            crate::screen::overflow::Subject::Item(item),
+            session,
+            None,
+            now,
+        );
+        if !offered.is_empty() {
+            actions = actions.push(detail_button(
+                Icon::MoreVert,
+                Text::DetailMoreCommands,
+                Message::OverflowAction(crate::screen::overflow::Action::Open { offered }),
+                viewport,
+            ));
+        }
     }
 
     let mut lines = column![].spacing(style::drawn(space::SECTION_GAP.drawn()));
@@ -495,7 +521,7 @@ pub fn view<'a>(
 ) -> Element<'a, Message> {
     let item = &state.item;
 
-    let head = head(item, viewport, images);
+    let head = head(item, session, viewport, images, now);
     let drawn = match viewport.layout() {
         Layout::Desktop => ribboned(head, viewport),
         Layout::Mobile => stacked(head, viewport),

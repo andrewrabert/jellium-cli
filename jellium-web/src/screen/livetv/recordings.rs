@@ -114,7 +114,9 @@ fn entry<'a>(
             logo: None,
             timer: crate::livetv::Recording::covering(item),
             elapsed: None,
-            press: None,
+            press: item
+                .id
+                .map(|id| Message::Navigated(crate::route::Route::Detail { id })),
             hovered: Hovered {
                 plays: item
                     .id

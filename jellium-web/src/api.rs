@@ -1191,6 +1191,18 @@ impl Api {
         .await
     }
 
+    /// Writes back one timer as the recording editor holds it.
+    pub async fn update_timer(&self, timer: &TimerInfoDto) -> Answer<()> {
+        Answer::of(async {
+            let Some(id) = timer.id.as_deref() else {
+                return Ok(());
+            };
+            self.client.update_timer(id, timer).await?;
+            Ok(())
+        })
+        .await
+    }
+
     pub async fn cancel_timer(&self, timer: &str) -> Answer<()> {
         Answer::of(async {
             self.client.cancel_timer(timer).await?;

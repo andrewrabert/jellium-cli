@@ -271,6 +271,8 @@ in order. A section passes only when every line in it holds.
 - (tuner) On a phone the Channels tab draws a more_vert on the trailing edge of
   each card's footer; pressing it raises a sheet offering Play, and choosing
   Play tunes the channel.
+- (tuner) On a phone a channel's card opens the channel's own detail page,
+  which offers the favourite control.
 - (tuner) A radio channel plays through the now-playing bar with no player
   view.
 - (tuner) Programme detail shows the title, channel by name and number, start
@@ -317,11 +319,19 @@ in order. A section passes only when every line in it holds.
 - (tuner) On a phone the Recordings tab draws a play_arrow at the bottom
   trailing corner of each recording's image, and pressing it plays the
   recording.
+- (tuner) On a phone a recording's card opens its detail page, whose more
+  control raises a sheet offering Delete media; choosing it asks for the
+  recording's name and deletes it only once the name matches.
 - (tuner) On a phone the Schedule tab draws a more_vert at the bottom trailing
   corner of each in-progress recording's image; the sheet it raises offers
   Cancel recording, and confirming stops the recording.
+- (tuner) On a phone a scheduled timer's card opens the programme page it names
+  with Cancel offered, and a timer naming no programme opens recording options
+  carrying Cancel recording.
 - (tuner) On a phone the Series tab draws a more_vert on each card; the sheet
   offers Cancel series, and confirming removes the series timer.
+- (tuner) On a phone a series timer's card opens its own options, which save
+  every field.
 - (tuner) A recording written by a series timer draws fiber_smart_record in
   #cb272a on its image, one written by a single timer draws
   fiber_manual_record in #cb272a, and one the server reports no timer for draws
@@ -938,6 +948,9 @@ browser with a touch screen, each at its own size.
   control in that order at its trailing foot.
 - A phone raises no scrim over any card; it draws the reference's own overlay
   instead, and a television browser draws neither.
+- A detail page draws its played mark only where the item can carry one, its
+  rating control only where the item can carry one, and a more control wherever
+  the item offers a command.
 - A search result raises that same scrim, and a genre, studio, network, artist
   or album-artist card raises it carrying the more control alone.
 - That scrim carries no play disc on an item the server holds no file for, no

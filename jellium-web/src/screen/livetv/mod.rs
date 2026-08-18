@@ -81,6 +81,8 @@ pub struct State {
     pub body: Body,
     /// The series options being edited, drawn over the tab.
     pub editing: Option<series::Editing>,
+    /// The recording options being edited, drawn over the tab.
+    pub timing: Option<schedule::Editing>,
 }
 
 /// Every control the Live TV screen and the on-now row resolve to.
@@ -105,6 +107,13 @@ pub enum Action {
     /// Creates or updates the series timer the options describe.
     ConfirmSeries,
     CloseSeries,
+    /// Opens the recording options of a scheduled timer.
+    EditTimer(String),
+    /// Writes one field of those options.
+    Timed(schedule::Field),
+    /// Writes the timer the options describe back to the server.
+    ConfirmTimer,
+    CloseTimer,
     CancelTimer(String),
     CancelSeriesTimer(String),
     PlayRecording(Uuid),
@@ -136,6 +145,7 @@ pub async fn load(api: Rc<Api>, tab: Tab, room: Room) -> Answer<State> {
             tab,
             body,
             editing: None,
+            timing: None,
         })
     })
     .await
@@ -151,6 +161,9 @@ pub fn view<'a>(
 ) -> Element<'a, Message> {
     if let Some(editing) = &state.editing {
         return series::options(editing, viewport);
+    }
+    if let Some(timing) = &state.timing {
+        return schedule::options(timing, viewport);
     }
 
     let tabs = widget::tabs(
@@ -251,6 +264,7 @@ pub fn act(signed: &mut Signed, action: Action, viewport: Viewport) -> Task<Mess
                         tab: Tab::Channels,
                         body: Body::Channels(channels),
                         editing: None,
+                        timing: None,
                     }))
                 },
             )
@@ -264,6 +278,7 @@ pub fn act(signed: &mut Signed, action: Action, viewport: Viewport) -> Task<Mess
                         tab: Tab::Channels,
                         body: Body::Channels(channels),
                         editing: None,
+                        timing: None,
                     }))
                 },
             )
@@ -336,6 +351,50 @@ pub fn act(signed: &mut Signed, action: Action, viewport: Viewport) -> Task<Mess
         Action::CloseSeries => {
             if let Some(state) = showing(signed) {
                 state.editing = None;
+            }
+            Task::none()
+        }
+        Action::EditTimer(timer) => {
+            let Some(state) = showing(signed) else {
+                return Task::none();
+            };
+            let Body::Schedule(held) = &state.body else {
+                return Task::none();
+            };
+            let Some(held) = held
+                .timers
+                .iter()
+                .find(|held| held.id.as_deref() == Some(timer.as_str()))
+                .cloned()
+            else {
+                return Task::none();
+            };
+            state.timing = Some(schedule::Editing { timer: held });
+            Task::none()
+        }
+        Action::Timed(field) => {
+            if let Some(state) = showing(signed)
+                && let Some(timing) = &mut state.timing
+            {
+                timing.edited(field);
+            }
+            Task::none()
+        }
+        Action::ConfirmTimer => {
+            let Some(state) = showing(signed) else {
+                return Task::none();
+            };
+            let Some(timing) = state.timing.take() else {
+                return Task::none();
+            };
+            Task::perform(
+                async move { api.update_timer(&timing.timer).await },
+                |outcome| Message::Wrote(Operation::Timer, outcome),
+            )
+        }
+        Action::CloseTimer => {
+            if let Some(state) = showing(signed) {
+                state.timing = None;
             }
             Task::none()
         }

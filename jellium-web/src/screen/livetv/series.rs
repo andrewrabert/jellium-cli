@@ -170,7 +170,11 @@ fn entry<'a>(
             logo: None,
             timer: Some(crate::livetv::Recording::Series),
             elapsed: None,
-            press: None,
+            // reference: series-timer-route
+            press: timer
+                .id
+                .clone()
+                .map(|id| Message::LiveTvAction(Action::EditSeries(id))),
             hovered: Hovered {
                 plays: None,
                 controls: timer

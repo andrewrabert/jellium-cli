@@ -1,12 +1,12 @@
 use std::collections::HashSet;
 use std::rc::Rc;
 
-use iced::widget::{column, container};
+use iced::widget::{button, column, container, row, text_input};
 use iced::{Element, Fill};
 use jellium_protocol::Session;
 use jellyfin_api::types::{BaseItemDto, TimerInfoDto};
 
-use super::clock;
+use super::{Action, clock};
 use crate::api::Api;
 use crate::app::Message;
 use crate::error::Answer;
@@ -15,7 +15,7 @@ use crate::images::{self, Cache};
 use crate::screen::overflow;
 use crate::style::card::Aspect;
 use crate::style::space::Room;
-use crate::style::{self, card, space, typeface};
+use crate::style::{self, Viewport, card, space, typeface};
 use crate::text::{self as strings, Text};
 use crate::widget::{self, Control, Face, Hovered, Overlaid, Poster, prose};
 
@@ -62,6 +62,126 @@ pub const TIMER_CARD: card::Drawing = card::Drawing {
     bottom: card::Bottom::Flush,
     touch: card::Touch::Withheld,
 };
+
+/// The recording options of one scheduled timer, as `recordingeditor` writes
+/// them: the minutes it starts early and the minutes it stops late, over the
+/// control that cancels it.
+// reference: recording-editor
+// reference: recording-editor-markup
+#[derive(Debug, Clone)]
+pub struct Editing {
+    pub timer: TimerInfoDto,
+}
+
+/// One field of the recording options, named as the Jellyfin server carries it.
+#[derive(Debug, Clone, PartialEq)]
+pub enum Field {
+    PrePaddingSeconds(i32),
+    PostPaddingSeconds(i32),
+}
+
+impl Editing {
+    /// Applies one edit.
+    pub fn edited(&mut self, field: Field) {
+        match field {
+            Field::PrePaddingSeconds(seconds) => self.timer.pre_padding_seconds = Some(seconds),
+            Field::PostPaddingSeconds(seconds) => self.timer.post_padding_seconds = Some(seconds),
+        }
+    }
+}
+
+/// A padding the user edits in minutes, kept as the seconds the server carries.
+// reference: recording-editor
+// reference: recording-editor-markup
+fn padding<'a>(
+    label: Text,
+    unit: Text,
+    seconds: i32,
+    edited: fn(i32) -> Field,
+    viewport: Viewport,
+) -> Element<'a, Message> {
+    row![
+        container(prose(strings::lookup(label), typeface::BODY))
+            .width(style::drawn(space::guide_channel(viewport))),
+        text_input("", &(seconds / 60).to_string())
+            .style(style::input)
+            .on_input(move |typed| {
+                let minutes = match crate::failure::unraised::read::<i32>(typed.trim()) {
+                    Ok(read) => read,
+                    Err(_) => seconds / 60,
+                };
+                Message::LiveTvAction(Action::Timed(edited(minutes * 60)))
+            }),
+        prose(strings::lookup(unit), typeface::BODY),
+    ]
+    .spacing(style::drawn(space::CONTROL_GAP.drawn()))
+    .align_y(iced::Center)
+    .into()
+}
+
+/// The recording options drawn over the tab: the minutes it starts early and
+/// the minutes it stops late, over Save, the control that cancels the recording
+/// and the control that closes the options.
+// reference: recording-editor-markup
+pub fn options<'a>(editing: &'a Editing, viewport: Viewport) -> Element<'a, Message> {
+    let held = &editing.timer;
+    let mut controls = row![
+        button(prose(strings::lookup(Text::TimerSave), typeface::BODY))
+            .style(style::submit)
+            .on_press(Message::LiveTvAction(Action::ConfirmTimer)),
+    ]
+    .spacing(style::drawn(space::CONTROL_GAP.drawn()));
+    if let Some(id) = held.id.clone() {
+        controls = controls.push(
+            button(prose(
+                strings::lookup(Text::TimerCancelRecording),
+                typeface::BODY,
+            ))
+            .style(style::raised)
+            .on_press(Message::LiveTvAction(Action::CancelTimer(id))),
+        );
+    }
+    controls = controls.push(
+        button(prose(strings::lookup(Text::TimerClose), typeface::BODY))
+            .style(style::raised)
+            .on_press(Message::LiveTvAction(Action::CloseTimer)),
+    );
+
+    container(
+        column![
+            prose(strings::lookup(Text::TimerOptions), typeface::HEADING_2),
+            prose(
+                held.program_info
+                    .as_ref()
+                    .and_then(|program| program.name.clone())
+                    .or_else(|| held.name.clone())
+                    .unwrap_or_default(),
+                typeface::BODY
+            ),
+            padding(
+                Text::TimerStartEarly,
+                Text::TimerMinutesBefore,
+                held.pre_padding_seconds.unwrap_or(0),
+                Field::PrePaddingSeconds,
+                viewport,
+            ),
+            padding(
+                Text::TimerStopLate,
+                Text::TimerMinutesAfter,
+                held.post_padding_seconds.unwrap_or(0),
+                Field::PostPaddingSeconds,
+                viewport,
+            ),
+            controls,
+        ]
+        .spacing(style::drawn(space::FIELD_GAP.drawn())),
+    )
+    .style(style::over_video)
+    .padding(style::padding(space::PAGE_PAD))
+    .width(Fill)
+    .height(Fill)
+    .into()
+}
 
 pub async fn load(api: Rc<Api>) -> Answer<State> {
     Answer::of(async {
@@ -221,7 +341,14 @@ fn timed<'a>(
             logo,
             timer: Some(crate::livetv::Recording::scheduled(timer)),
             elapsed: None,
-            press: None,
+            // reference: shortcut-edit-item
+            press: match timer.program_info.as_ref().and_then(|held| held.id) {
+                Some(program) => Some(Message::LiveTvAction(Action::Show(program.to_string()))),
+                None => timer
+                    .id
+                    .clone()
+                    .map(|id| Message::LiveTvAction(Action::EditTimer(id))),
+            },
             hovered: Hovered {
                 plays: None,
                 controls: menu

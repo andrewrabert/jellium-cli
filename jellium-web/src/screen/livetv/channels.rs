@@ -95,7 +95,9 @@ fn entry<'a>(
             logo: None,
             timer: None,
             elapsed: None,
-            press: None,
+            press: Some(Message::Navigated(crate::route::Route::Detail {
+                id: channel.id,
+            })),
             hovered: Hovered {
                 plays: Some(Message::LiveTvAction(Action::PlayChannel(channel.id))),
                 controls: std::iter::once(Control {

@@ -360,6 +360,7 @@ detail-button-pad	src/styles/librarybrowser.scss	1093	1112	ba43bed943d2bef18fb74
 detail-button-icon	src/styles/librarybrowser.scss	1121	1125	9663a4f0502aaabfd47f4100c122180eb0b3996bca242f2392db9706b76e3845	ported
 detail-markup-play	src/controllers/itemDetails/index.html	18	29	b0900f0e04321a1594627ede725f9244c8452550af8c26234879bb4c95c3d94b	ported
 detail-markup-marks	src/controllers/itemDetails/index.html	67	77	16201f05a9d916adf9b2fe335ca0bb5135dc61f82af040cc0425b22628525717	ported
+detail-more-commands	src/controllers/itemDetails/index.js	2044	2062	9934199d2c3b253901c4d08b13a4db93a69c1f70c65606405cb2cc956109f0d8	ported
 detail-refresh	src/components/itemContextMenu.js	299	304	0c25d3844bea9e43fdb6c927d0363749f0377b959e9e89eec71efaee9d1ebfd8	ported
 item-context-play	src/components/itemContextMenu.js	44	57	1bdb0eea30ab7ef9da04f6c8c08f7b5ca9a626bef2cd3c5a5f1eed35e9feb01b	ported
 item-context-delete	src/components/itemContextMenu.js	208	214	442d09c962021144382de4f21e09e23ca9404af759bbcb98f97a69c352b9046b	ported
@@ -367,6 +368,8 @@ item-context-cancel-timer	src/components/itemContextMenu.js	158	172	7359cca38570
 item-context-cancel-series	src/components/itemContextMenu.js	174	180	5ac0f9b83e8266d41a21cfb0d35b6790d96c3777438e27dcb20f96597915c483	ported
 recording-cancel-confirm	src/components/recordingcreator/recordinghelper.js	31	70	5d274d5deacc026700a528886e9c40d5afb9dbd3b89e17f326782c6691831589	ported
 shortcut-item	src/components/shortcuts.js	80	95	852949edd5635626d08a36894837d62065248ba2639b37c1ca522e0ad627e3f4	ported
+shortcut-edit-item	src/components/shortcuts.js	348	370	0e3da56bb3ca06d7c1bcca46dbbe9c392a0567237e82b7786f6901f0f5975558	ported
+shortcut-command	src/components/shortcuts.js	403	416	5f89f5a768ece6072b163732f47e1e7325f974c99bdc24c3b15474d52eb0e054	owed
 delete-confirm	src/scripts/deleteHelper.js	14	31	3002578adab5511e9a1720c81a3c2fcab362a206bd37de35b4beebc0f81be31c	ported
 control-tab	src/elements/emby-tabs/emby-tabs.scss	1	22	c8811f369c6a7b2aa0ab0c2b6be973fb5306a39ef201c7f04cc7eb5c725c03cf	ported
 tab-scroll	src/elements/emby-tabs/emby-tabs.js	120	153	add0f5c44c6ea1886093fa6b30f449bec4517d8e99ec4ec4722b09142f0206bd	ported
@@ -562,7 +565,10 @@ livetv-recordings-latest	src/controllers/livetv/livetvrecordings.js	50	58	900fea
 livetv-schedule-recordings	src/controllers/livetv/livetvschedule.js	40	51	e259c2dfe2795f44f2862d41ae286d63f386980d4527e9cf44ba108973ac22cf	ported
 livetv-schedule-active	src/controllers/livetv/livetvschedule.js	54	69	18a3345b070749d62ac526bb29c1f0ee8657335bbe2b22876838579bcbddf692	ported
 livetv-timer-cards	src/scripts/livetvcomponents.js	67	95	c1f1b5aacfa88f515e0828a90339a3e1bcde104f6124fd78274ae1481891a214	ported
+recording-editor	src/components/recordingcreator/recordingeditor.js	44	58	a3b57cfcb1dc0353588b70503cefb4cc7e06f885760f753f064dbd41a68ff474	ported
+recording-editor-markup	src/components/recordingcreator/recordingeditor.template.html	13	42	7f9fcc2ffd27e40dafc8906a792ea6464aff40d4134922d0ef96e1a1203d7535	ported
 livetv-series-cards	src/controllers/livetv/livetvseriestimers.js	8	22	97f81985cfdfc49c7ceb51b11357cedef4cd3373151879064ce8b819f058521f	ported
+series-timer-route	src/components/router/appRouter.js	350	352	3bda69bbab29abd5afdc87b7e8aa60b4b264bc3517aba1341b8e2cf29a911175	ported
 livetv-tab-markup	src/controllers/livetv.html	61	95	ec96d4044bbca31fdd20b6ffb41a0ac47d98f425382e594568546107de8633be	ported
 card-text-lines	src/components/cardbuilder/cardBuilder.js	420	459	379b8ba5fff872b02109562dbc781785ce8a7afd6a92287483dacce7e2a4318c	ported
 card-text-first	src/components/cardbuilder/card.scss	324	326	07b1122373564fb2eb0a347a18a4b403b59fe7cf02cb0fe82769b2f2d8caa48b	ported
