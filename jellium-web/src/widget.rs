@@ -262,6 +262,7 @@ fn faced(item: &BaseItemDto, card: card::Card, images: &Cache) -> Option<Face> {
 /// hash behind it is in flight and where nothing names a glyph.
 // reference: card-container
 // reference: card-content
+// reference: card-image-container
 fn framed<'a>(
     card: card::Card,
     room: Room,
@@ -277,11 +278,16 @@ fn framed<'a>(
     let painted = move |theme: &iced::Theme| style::card_face(theme, background, backing);
     let padder = move |theme: &iced::Theme| style::card_padder(theme, backing);
     match face {
-        Some(Face::Image(handle)) => container(image(handle).width(width))
-            .width(width)
-            .height(height)
-            .style(padder)
-            .into(),
+        Some(Face::Image(handle)) => container(
+            image(handle)
+                .width(width)
+                .height(height)
+                .content_fit(iced::ContentFit::Cover),
+        )
+        .width(width)
+        .height(height)
+        .style(padder)
+        .into(),
         Some(Face::Placeholder(handle)) => container(
             image(handle)
                 .width(style::drawn(blur::STRETCH.width(inside)))
