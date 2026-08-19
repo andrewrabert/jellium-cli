@@ -366,9 +366,9 @@ pub fn favorited(item: &BaseItemDto) -> Mark {
 }
 
 /// How far through an item a viewer is, as `getProgressBarHtml` reads it: the
-/// share the item's own user data reports for a video, an audio book and a
-/// book, the share `now` stands at through a programme's own airing, and none
-/// where the item marks no progress.
+/// share the item's own user data reports for a video that is no channel and
+/// for an audio book, the share `now` stands at through a programme's own
+/// airing, and none where the item marks no progress.
 // a channel marks none, and neither does a recording's own user data
 // none of it and the whole of it each draw no bar, which is what the
 // reference's `pct && pct < 100` and its `pct > 0 && pct < 100` answer
