@@ -126,22 +126,18 @@ fn entry<'a>(
             overlaid: Overlaid { plays: None, menu },
         },
         move |line| match line {
-            card::Line::Name => name.clone(),
+            card::Line::Name => card::Caption::of(name.clone()),
             card::Line::CurrentProgram => current
                 .as_ref()
-                .map(|program| program.title.clone())
-                .unwrap_or_default(),
+                .and_then(|program| card::Caption::of(program.title.clone())),
             // reference: card-air-time
-            card::Line::CurrentProgramTime => current
-                .as_ref()
-                .map(|program| {
-                    strings::format(
-                        Text::ProgramAirtime,
-                        &[&clock(program.start), &clock(program.end)],
-                    )
-                })
-                .unwrap_or_default(),
-            _ => String::new(),
+            card::Line::CurrentProgramTime => current.as_ref().and_then(|program| {
+                card::Caption::of(strings::format(
+                    Text::ProgramAirtime,
+                    &[&clock(program.start), &clock(program.end)],
+                ))
+            }),
+            _ => None,
         },
     )
 }

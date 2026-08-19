@@ -23,6 +23,7 @@ use jellium_model::construct::Construct;
 #[cfg(test)]
 use jellium_model::construct::Page;
 use jellium_model::item::{self, Mark};
+use jellium_model::truthy::Truthy;
 use jellium_protocol::{Session, SyncAccess};
 use jellyfin_api::types::{BaseItemDto, BaseItemKind};
 use uuid::Uuid;
@@ -207,30 +208,31 @@ fn opens(item: &BaseItemDto, id: uuid::Uuid) -> Route {
 }
 
 /// What a card writes on one line of its footer, as `getCardFooterText` writes
-/// it for a section asking for the parent title, the title and the year.
+/// it for a section asking for the parent title, the title and the year, and
+/// none where the item answers that line with nothing.
 // reference: card-footer-lines
 // reference: card-text-lines
-pub fn caption(item: &BaseItemDto, line: card::Line) -> String {
+pub fn caption(item: &BaseItemDto, line: card::Line) -> Option<card::Caption> {
     match line {
-        card::Line::ParentTitle => item::parent_over(item).unwrap_or_default(),
-        card::Line::Name => match item::title(item) {
-            Some(item::Title::Special(name)) => {
-                strings::format(Text::CardSpecialEpisode, &[name.as_str()])
+        card::Line::ParentTitle => item::parent_over(item).and_then(card::Caption::of),
+        card::Line::Name => match item::title(item)? {
+            item::Title::Special(name) => {
+                card::Caption::of(strings::format(Text::CardSpecialEpisode, &[name.as_str()]))
             }
-            Some(item::Title::Plain(name)) => name,
-            None => String::new(),
+            item::Title::Plain(name) => card::Caption::of(name),
         },
-        card::Line::ParentTitleUnder => item::parent_under(item).unwrap_or_default(),
+        card::Line::ParentTitleUnder => item::parent_under(item).and_then(card::Caption::of),
         card::Line::Year => item
             .production_year
+            .truthy()
             .map(|year| year.to_string())
-            .unwrap_or_default(),
+            .and_then(card::Caption::of),
         card::Line::AirTime
         | card::Line::ChannelName
         | card::Line::CurrentProgram
         | card::Line::CurrentProgramTime
         | card::Line::SeriesTimerTime
-        | card::Line::SeriesTimerChannel => String::new(),
+        | card::Line::SeriesTimerChannel => None,
     }
 }
 
@@ -416,12 +418,19 @@ fn boxed<'a>(
     }
 }
 
-/// A card's own name, as its footer's first `.cardText` line writes it.
+/// The blank `getCardTextLines` fills a footer's unwritten place with.
+// reference: card-text-lines
+const FILLER: &str = "\u{a0}";
+
+/// A card's first line, in the lettering `.cardText-first` writes it in, and
+/// the reference's own blank where the footer writes no line there.
 // reference: card-text
-fn named<'a>(name: String) -> Element<'a, Message> {
+// reference: card-text-first
+// reference: card-text-lines
+fn named<'a>(name: Option<card::Caption>) -> Element<'a, Message> {
     carded(
         line(
-            name,
+            name.map_or_else(|| FILLER.to_owned(), card::Caption::into_string),
             typeface::BODY,
             typeface::Weight::Regular,
             typeface::LINE_HEIGHT,
@@ -431,13 +440,14 @@ fn named<'a>(name: String) -> Element<'a, Message> {
     )
 }
 
-/// One line under a card's first, in the secondary lettering `.cardText-secondary`
-/// writes it in.
+/// One line under a card's first, in the secondary lettering
+/// `.cardText-secondary` writes it in, and that same blank where the footer
+/// writes no line there.
 // reference: card-text-lines
-fn beneath<'a>(said: String) -> Element<'a, Message> {
+fn beneath<'a>(said: Option<card::Caption>) -> Element<'a, Message> {
     carded(
         tinted(
-            said,
+            said.map_or_else(|| FILLER.to_owned(), card::Caption::into_string),
             typeface::SECONDARY,
             typeface::Weight::Regular,
             typeface::LINE_HEIGHT,
@@ -830,8 +840,8 @@ fn hovered<'a>(
 }
 
 /// One card as `buildCard` builds one: its frame over the lines `written`
-/// answers for each line the footer pushes, empty answers dropped and the rest
-/// capped and filled out to what the footer writes.
+/// answers for each line the footer pushes, capped and filled out to what the
+/// footer writes.
 // reference: card-box
 // reference: card-visual
 // reference: card-text-lines
@@ -840,18 +850,18 @@ pub fn card<'a>(
     drawing: card::Drawing,
     room: Room,
     poster: Poster,
-    written: impl Fn(card::Line) -> String,
+    written: impl Fn(card::Line) -> Option<card::Caption>,
 ) -> Element<'a, Message> {
     let counted = drawing.footer.written();
-    let mut said: Vec<String> = drawing
+    let mut said: Vec<Option<card::Caption>> = drawing
         .footer
         .pushed()
         .iter()
-        .map(|line| written(*line))
-        .filter(|text| !text.is_empty())
+        .filter_map(|line| written(*line))
+        .map(Some)
         .take(counted)
         .collect();
-    said.resize(counted, String::new());
+    said.resize(counted, None);
     let mut lines = said.into_iter();
     let mut drawn: Vec<Element<'a, Message>> = lines.next().map(named).into_iter().collect();
     drawn.extend(lines.map(beneath));
@@ -1658,8 +1668,8 @@ pub fn library_tile<'a>(
             overlaid: Overlaid::default(),
         },
         move |line| match line {
-            card::Line::Name => said.clone(),
-            _ => String::new(),
+            card::Line::Name => card::Caption::of(said.clone()),
+            _ => None,
         },
     )
 }
@@ -2280,7 +2290,7 @@ pub fn user_card<'a>(
         button(frame).style(style::flat).on_press(opens).into(),
         Some(footed(
             vec![
-                named(name),
+                named(card::Caption::of(name)),
                 carded(
                     secondary,
                     typeface::SECONDARY,

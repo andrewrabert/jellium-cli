@@ -300,12 +300,12 @@ fn active<'a>(
             overlaid: Overlaid { plays: None, menu },
         },
         move |line| match line {
-            card::Line::ParentTitle => name.clone(),
+            card::Line::ParentTitle => card::Caption::of(name.clone()),
             // reference: card-display-name
-            card::Line::Name => item.episode_title.clone().unwrap_or_default(),
-            card::Line::AirTime => airtime(item.start_date, item.end_date),
-            card::Line::ChannelName => item.channel_name.clone().unwrap_or_default(),
-            _ => String::new(),
+            card::Line::Name => item.episode_title.clone().and_then(card::Caption::of),
+            card::Line::AirTime => card::Caption::of(airtime(item.start_date, item.end_date)),
+            card::Line::ChannelName => item.channel_name.clone().and_then(card::Caption::of),
+            _ => None,
         },
     )
 }
@@ -366,11 +366,11 @@ fn timed<'a>(
             overlaid: Overlaid { plays: None, menu },
         },
         move |line| match line {
-            card::Line::ParentTitle => name.clone(),
+            card::Line::ParentTitle => card::Caption::of(name.clone()),
             // reference: card-display-name
-            card::Line::Name => episode.clone().unwrap_or_default(),
-            card::Line::AirTime => times.clone(),
-            _ => String::new(),
+            card::Line::Name => episode.clone().and_then(card::Caption::of),
+            card::Line::AirTime => card::Caption::of(times.clone()),
+            _ => None,
         },
     )
 }

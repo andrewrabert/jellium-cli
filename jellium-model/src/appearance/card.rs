@@ -76,6 +76,26 @@ pub enum Line {
     SeriesTimerChannel,
 }
 
+/// One line a card's footer writes: text the reference's own `if (text)` test
+/// passes.
+// reference: card-text-lines
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Caption(String);
+
+impl Caption {
+    // none where the text is blank, which is the line the reference drops
+    pub fn of(text: String) -> Option<Caption> {
+        match text.is_empty() {
+            true => None,
+            false => Some(Caption(text)),
+        }
+    }
+
+    pub fn into_string(self) -> String {
+        self.0
+    }
+}
+
 /// What a card writes under its image.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Footer {

@@ -54,8 +54,8 @@ fn saved<'a>(
             overlaid: widget::Overlaid::default(),
         },
         move |line| match line {
-            card::Line::Name => said.clone(),
-            _ => String::new(),
+            card::Line::Name => card::Caption::of(said.clone()),
+            _ => None,
         },
     )]
     .spacing(style::drawn(space::BLOCK_GAP.drawn()));

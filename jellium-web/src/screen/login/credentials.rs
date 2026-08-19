@@ -82,8 +82,8 @@ fn picker<'a>(state: &'a super::State, viewport: Viewport) -> Option<Element<'a,
                     overlaid: widget::Overlaid::default(),
                 },
                 move |line| match line {
-                    card::Line::Name => said.clone(),
-                    _ => String::new(),
+                    card::Line::Name => card::Caption::of(said.clone()),
+                    _ => None,
                 },
             )
         }),

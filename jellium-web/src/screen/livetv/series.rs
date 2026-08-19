@@ -199,10 +199,10 @@ fn entry<'a>(
             overlaid: Overlaid { plays: None, menu },
         },
         move |line| match line {
-            card::Line::Name => name.clone(),
-            card::Line::SeriesTimerTime => at.clone(),
-            card::Line::SeriesTimerChannel => channel.clone(),
-            _ => String::new(),
+            card::Line::Name => card::Caption::of(name.clone()),
+            card::Line::SeriesTimerTime => card::Caption::of(at.clone()),
+            card::Line::SeriesTimerChannel => card::Caption::of(channel.clone()),
+            _ => None,
         },
     )
 }
