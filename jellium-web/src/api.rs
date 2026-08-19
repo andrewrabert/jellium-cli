@@ -318,19 +318,33 @@ impl Api {
 
     // EnableResumable false withholds what Continue Watching already holds
     // reference: home-next-up-query
+    // reference: home-scroll-x
     pub async fn next_up(&self) -> Answer<Vec<BaseItemDto>> {
         Answer::of(async {
-            let fields = fields();
+            let fields = vec![
+                ItemFields::PrimaryImageAspectRatio,
+                ItemFields::DateCreated,
+                ItemFields::Path,
+                ItemFields::MediaSourceCount,
+            ];
+            let kinds = vec![
+                jellyfin_api::types::ImageType::Primary,
+                jellyfin_api::types::ImageType::Backdrop,
+                jellyfin_api::types::ImageType::Banner,
+                jellyfin_api::types::ImageType::Thumb,
+            ];
             let cutoff = chrono::Utc::now() - chrono::TimeDelta::days(NEXT_UP_DAYS);
             Ok(self
                 .client
                 .get_next_up(&jellyfin_api::query::GetNextUp {
-                    enable_images: Some(true),
+                    disable_first_episode: Some(false),
+                    enable_image_types: Some(&kinds),
                     enable_resumable: Some(false),
                     enable_rewatching: Some(NEXT_UP_REWATCHING),
-                    enable_user_data: Some(true),
+                    enable_total_record_count: Some(false),
                     fields: Some(&fields),
-                    limit: Some(RAIL_LIMIT),
+                    image_type_limit: Some(1),
+                    limit: Some(NEXT_UP_LIMIT.count()),
                     next_up_date_cutoff: Some(&cutoff),
                     user_id: Some(&self.user_id),
                     ..Default::default()
@@ -545,13 +559,18 @@ impl Api {
     // reference: home-latest-query
     pub async fn latest(&self, library: Uuid, limit: Limit) -> Answer<Vec<BaseItemDto>> {
         Answer::of(async {
-            let fields = fields();
+            let fields = vec![ItemFields::PrimaryImageAspectRatio, ItemFields::Path];
+            let kinds = vec![
+                jellyfin_api::types::ImageType::Primary,
+                jellyfin_api::types::ImageType::Backdrop,
+                jellyfin_api::types::ImageType::Thumb,
+            ];
             Ok(self
                 .client
                 .get_latest_media(&jellyfin_api::query::GetLatestMedia {
-                    enable_images: Some(true),
-                    enable_user_data: Some(true),
+                    enable_image_types: Some(&kinds),
                     fields: Some(&fields),
+                    image_type_limit: Some(1),
                     limit: Some(limit.count()),
                     parent_id: Some(&library),
                     user_id: Some(&self.user_id),
@@ -2859,6 +2878,11 @@ const NEXT_UP_DAYS: i64 = 365;
 /// keeps no preference for.
 // reference: next-up-user-settings
 const NEXT_UP_REWATCHING: bool = false;
+
+/// The most episodes Next Up shows.
+// reference: home-next-up-query
+// reference: home-scroll-x
+const NEXT_UP_LIMIT: Limit = Limit::of(24);
 
 /// One page of a playlist's entries, and how many it holds.
 pub struct Entries {
