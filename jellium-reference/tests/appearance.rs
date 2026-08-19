@@ -540,8 +540,8 @@ struct Written {
     residue: String,
 }
 
-/// The two counts an `Aspect::over` argument list writes.
-fn over(arguments: &str) -> Option<(f64, f64)> {
+/// The two counts an argument list writes.
+fn pair(arguments: &str) -> Option<(f64, f64)> {
     let (wide, tall) = arguments.split_once(',')?;
     Some((wide.trim().parse().ok()?, tall.trim().parse().ok()?))
 }
@@ -794,7 +794,7 @@ fn written(initializer: &str) -> Written {
             }
             // a ratio the reference writes as a division is two counts
             ("aspect", "over") => {
-                let Some((wide, tall)) = over(arguments) else {
+                let Some((wide, tall)) = pair(arguments) else {
                     continue;
                 };
                 vec![
@@ -805,6 +805,23 @@ fn written(initializer: &str) -> Written {
                     Measure::Spelt {
                         named: trimmed(tall),
                         spellings: vec![Spelling::Measured(Count::of(tall, Unit::Bare))],
+                    },
+                ]
+            }
+            // the two percentages a rule writes for the axes of the box a
+            // value is drawn over
+            ("stretch", "percent") => {
+                let Some((wide, tall)) = pair(arguments) else {
+                    continue;
+                };
+                vec![
+                    Measure::Spelt {
+                        named: format!("{}%", trimmed(wide)),
+                        spellings: vec![Spelling::Measured(Count::of(wide, Unit::Percent))],
+                    },
+                    Measure::Spelt {
+                        named: format!("{}%", trimmed(tall)),
+                        spellings: vec![Spelling::Measured(Count::of(tall, Unit::Percent))],
                     },
                 ]
             }
@@ -928,6 +945,15 @@ fn a_span_carries_a_value_only_where_it_writes_it() {
         [Measure::Identity]
     ));
     assert_eq!(written("Length::em(0.6)").residue, "length::em()");
+    assert!(matches!(
+        written("Stretch::percent(100.0, 100.0)").measures.as_slice(),
+        [Measure::Spelt { named: wide, .. }, Measure::Spelt { named: tall, .. }]
+            if wide == "100%" && tall == "100%"
+    ));
+    assert_eq!(
+        written("Stretch::percent(100.0, 100.0)").residue,
+        "stretch::percent()"
+    );
 }
 
 #[test]
