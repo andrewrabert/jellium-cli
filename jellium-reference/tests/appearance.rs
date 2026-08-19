@@ -440,8 +440,8 @@ enum Measure {
     Identity,
 }
 
-/// A span of the pinned reference: its text flattened, and every count it
-/// writes.
+/// A span of the pinned reference: its text flattened, which is what a colour
+/// is looked for in, and every count the reference's own text spells.
 struct Span {
     text: String,
     counts: Vec<Count>,
@@ -449,10 +449,9 @@ struct Span {
 
 impl Span {
     fn of(text: &str) -> Span {
-        let text = flattened(text);
         Span {
-            counts: numbered(&text),
-            text,
+            counts: numbered(text),
+            text: flattened(text),
         }
     }
 
@@ -483,19 +482,19 @@ impl Span {
     }
 }
 
-/// Whether a character closes an operand, which is what makes a `-` after it
-/// the subtraction of the count that follows rather than that count's own sign.
+/// Whether a character closes an operand, which is what makes a `-` written
+/// against it a hyphen rather than the sign of the count that follows.
 fn operand(before: char) -> bool {
     before.is_ascii_alphanumeric() || before == '_' || before == '%' || before == ')'
 }
 
-/// Every count a flattened span writes: a count opens where a digit, a `.` or
-/// a `-` stands beside a character it does not join, runs through the digits
-/// and the `.`, and takes the `%` or the letters that follow as its unit.
-/// A `-` standing after an operand is a subtraction, and the rule writing it
-/// carries both the term it subtracts and that term's own magnitude, so a
-/// ported value naming either is carried; a `-` standing anywhere else is the
-/// sign of the count it opens and carries that count alone.
+/// Every count a span writes, read from the reference's own text: a count opens
+/// where a digit, a `.` or a `-` stands beside a character it does not join,
+/// runs through the digits and the `.`, and takes the `%` or the letters that
+/// follow as its unit.
+/// A `-` written against the operand before it is a hyphen, which a class name,
+/// a character class and an exponent write, and the digits it holds are no
+/// count of the rule.
 fn numbered(text: &str) -> Vec<Count> {
     let held: Vec<char> = text.chars().collect();
     let mut counts = Vec::new();
@@ -522,23 +521,31 @@ fn numbered(text: &str) -> Vec<Count> {
                 suffix += 1;
             }
         }
+        let hyphen = value == '-'
+            && at
+                .checked_sub(1)
+                .is_some_and(|before| operand(held[before]));
         let written: String = held[at..end].iter().collect();
         let unit: String = held[end..suffix].iter().collect();
-        if let Ok(count) = written.parse::<f64>()
+        if !hyphen
+            && let Ok(count) = written.parse::<f64>()
             && let Some(unit) = Unit::read(&unit)
         {
             counts.push(Count::of(count, unit));
-            if value == '-'
-                && at
-                    .checked_sub(1)
-                    .is_some_and(|before| operand(held[before]))
-            {
-                counts.push(Count::of(-count, unit));
-            }
         }
         at = suffix.max(at + 1);
     }
     counts
+}
+
+/// Whether `text` writes a number of its own: a run of digits no name carries,
+/// which is what a value takes when it writes a count outside a measurement
+/// constructor.
+fn spelled(text: &str) -> bool {
+    let held: Vec<char> = text.chars().collect();
+    held.iter().enumerate().any(|(at, value)| {
+        value.is_ascii_digit() && at.checked_sub(1).is_none_or(|before| !inside(held[before]))
+    })
 }
 
 /// A number as css writes it: the fewest decimals that carry it.
@@ -951,11 +958,30 @@ fn a_span_carries_a_value_only_where_it_writes_it() {
 
     let subtracted = Span::of("let drawerWidth = window.screen.availWidth - 50;");
     assert!(subtracted.carries(&Spelling::Measured(Count::of(50.0, Unit::Bare))));
-    assert!(subtracted.carries(&Spelling::Measured(Count::of(-50.0, Unit::Bare))));
+    assert!(!subtracted.carries(&Spelling::Measured(Count::of(-50.0, Unit::Bare))));
+
+    let capped = Span::of("maxHeight: 'calc(100% - 96px)',");
+    assert!(capped.carries(&Spelling::Measured(Count::of(96.0, Unit::Pixels))));
+    assert!(!capped.carries(&Spelling::Measured(Count::of(-96.0, Unit::Pixels))));
 
     let signed = Span::of("margin-left: -50px");
     assert!(signed.carries(&Spelling::Measured(Count::of(-50.0, Unit::Pixels))));
     assert!(!signed.carries(&Spelling::Measured(Count::of(50.0, Unit::Pixels))));
+
+    let hyphened = Span::of("class=\"w-100 flex\"");
+    assert!(!hyphened.carries(&Spelling::Measured(Count::of(100.0, Unit::Bare))));
+    assert!(!hyphened.carries(&Spelling::Measured(Count::of(-100.0, Unit::Bare))));
+
+    let ranged = Span::of("pattern='[0-9]*'");
+    assert!(!ranged.carries(&Spelling::Measured(Count::of(9.0, Unit::Bare))));
+    assert!(!ranged.carries(&Spelling::Measured(Count::of(-9.0, Unit::Bare))));
+
+    let exponent = Span::of("(performance.now() - startTime) * 1e-3;");
+    assert!(!exponent.carries(&Spelling::Measured(Count::of(3.0, Unit::Bare))));
+    assert!(!exponent.carries(&Spelling::Measured(Count::of(-3.0, Unit::Bare))));
+
+    assert!(spelled("css::of(base-8.0)"));
+    assert!(!spelled("mui_body_2.length()"));
 
     assert!(matches!(
         written("Length::em(0.6)").measures.as_slice(),
@@ -1056,7 +1082,7 @@ fn no_bare_number_reaches_a_cited_appearance_value() {
     let bare: Vec<String> = values
         .iter()
         .filter(|value| !value.cited.is_empty())
-        .filter(|value| !numbered(&value.residue).is_empty())
+        .filter(|value| spelled(&value.residue))
         .map(|value| format!("{} ({}): {}", value.at, value.name, value.residue))
         .collect();
     assert!(

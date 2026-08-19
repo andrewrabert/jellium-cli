@@ -1308,12 +1308,12 @@ pub const ALERT_MESSAGE_PAD: Inset = Inset {
     left: Css::of(0.0),
 };
 
-/// The cap MUI holds a menu's paper under: the page it stands in, and the
-/// offset that leaves a row of that page tappable beyond the menu.
+/// The cap MUI holds a menu's paper under: the page it stands in, less the
+/// room that leaves a row of that page tappable beyond the menu.
 // reference: mui-menu-paper
 const MENU_CAP: Cap = Cap {
     share: Share::WHOLE,
-    offset: Css::of(-96.0),
+    beyond: Css::of(96.0),
 };
 
 /// The height a select's menu stands at: the height iced draws one option at,
@@ -1769,7 +1769,7 @@ const DETAIL_POSTER_LIFT: Length = Length::em(1.0);
 // reference: detail-poster-arms
 const DETAIL_POSTER_CAP: Cap = Cap {
     share: Share::units(80.0),
-    offset: Css::of(0.0),
+    beyond: Css::of(0.0),
 };
 
 /// The poster's inset from the leading edge beside the ribbon.

@@ -12,9 +12,8 @@ pub fn viewport(layout: Layout) -> Option<Viewport> {
     Some(Viewport::new(Css::of(width), Css::of(height), layout))
 }
 
-/// What the display offers, from `screen.availWidth`, which is what decides
-/// whether an image request rounds the page width down to a hundred; `None`
-/// where the page reports none.
+/// What the display offers, from `screen.availWidth`, which reports css
+/// pixels; `None` where the page reports none.
 pub fn screen() -> Option<Screen> {
     let window = web_sys::window()?;
     let screen = failure::called(Call::WindowScreen, window.screen())?;

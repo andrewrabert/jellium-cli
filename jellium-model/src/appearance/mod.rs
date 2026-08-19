@@ -54,13 +54,7 @@ impl Css {
     /// This measure held between `floor` and `ceiling`, which is what a script
     /// writes as a `Math.min` over a `Math.max`.
     pub fn held(self, floor: Css, ceiling: Css) -> Css {
-        match self < floor {
-            true => floor,
-            false => match self > ceiling {
-                true => ceiling,
-                false => self,
-            },
-        }
+        Css::of(self.count.clamp(floor.count(), ceiling.count()))
     }
 
     /// MUI's `pxToRem`: this count of css pixels as the design length it is
@@ -200,13 +194,12 @@ mod sealed {
 }
 
 /// A cap css measures against the box the capped thing stands in: a share of
-/// that box, and the offset css sums with that share. `calc(100% - 96px)` is
-/// that sum, and css reads the length written after the `-` as the sum's own
-/// negative term.
+/// that box, less the room the rule leaves beyond it. `calc(100% - 96px)` is
+/// that share and that room.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Cap {
     pub share: Share,
-    pub offset: Css,
+    pub beyond: Css,
 }
 
 impl Cap {
@@ -214,7 +207,7 @@ impl Cap {
     /// the height a box would otherwise stand at; nothing where the cap falls
     /// under nothing.
     pub fn holds(self, held: Drawn, whole: Drawn, layout: Layout) -> Drawn {
-        let cap = self.share.of(whole).plus(self.offset.drawn(layout));
+        let cap = self.share.of(whole).less(self.beyond.drawn(layout));
         Drawn::of(held.count().min(cap.count()).max(0.0))
     }
 }
@@ -606,8 +599,7 @@ impl Viewport {
     }
 }
 
-/// What the display offers, which the drawer's width is taken from and the
-/// page's resizability tested against.
+/// What the display offers, which is `screen.availWidth` in css pixels.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Screen {
     available: Css,
