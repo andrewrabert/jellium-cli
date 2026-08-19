@@ -47,7 +47,7 @@ pub async fn load(
 ) -> Answer<State> {
     Answer::of(async {
         Ok(State {
-            channels: api.live_tv_channels(kind, None).await.bubbled()?,
+            channels: api.live_tv_channels(kind).await.bubbled()?,
             kind,
             grid: window::Grid::new(
                 window::Id::Channels,

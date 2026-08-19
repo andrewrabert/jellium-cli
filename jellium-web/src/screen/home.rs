@@ -11,7 +11,6 @@ use crate::app::Message;
 use crate::construct;
 use crate::error::Answer;
 use crate::images::{self, Cache};
-use crate::livetv::Channel;
 use crate::route::Route;
 use crate::screen::arrival::Arrival;
 use crate::style::space::Room;
@@ -183,12 +182,14 @@ fn railed(card: card::Card) -> card::Drawing {
         // reference: home-resume
         // reference: home-next-up
         // reference: home-latest
+        // reference: livetv-program-sections
         touch: card::Touch::Plays,
     }
 }
 
-/// The most channels the on-now row shows.
-pub const ON_NOW: i32 = 20;
+/// The most programmes the On Now row shows.
+// reference: home-on-now-query
+pub const ON_NOW: Limit = Limit::of(24);
 
 /// Which home rail one answer fills.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -231,9 +232,8 @@ pub struct State {
     pub next_up: Arrival<BaseItemDto>,
     /// One row per library `latest_shown` admits, in the library order.
     pub latest: Vec<Latest>,
-    /// The user's favourite channels first and then channels in number order,
-    /// capped at `ON_NOW`.
-    pub on_now: Arrival<Channel>,
+    /// The programmes airing now, which the Live TV section stands on.
+    pub on_now: Arrival<BaseItemDto>,
 }
 
 impl State {
@@ -308,11 +308,9 @@ pub async fn requested(api: Rc<Api>, section: Section) -> Answer<Vec<BaseItemDto
     }
 }
 
-/// The channels the on-now row shows, in one channel query carrying their
-/// current programs.
-pub async fn on_now(api: Rc<Api>) -> Answer<Vec<Channel>> {
-    api.live_tv_channels(jellyfin_api::types::ChannelType::Tv, Some(ON_NOW))
-        .await
+/// The programmes the on-now row shows.
+pub async fn on_now(api: Rc<Api>) -> Answer<Vec<BaseItemDto>> {
+    api.airing_now(ON_NOW).await
 }
 
 /// What the home screen shows: the library order, the libraries hidden, and the
@@ -458,8 +456,9 @@ pub fn view<'a>(
             ));
         }
     }
+    // reference: home-live-tv
+    // reference: home-live-tv-airing
     if !state.on_now.held().is_empty() {
-        // reference: home-live-tv
         page = page.push(widget::section(
             titled(Text::HomeLiveTv),
             // reference: home-live-tv-sections
@@ -481,7 +480,15 @@ pub fn view<'a>(
                     tab: crate::screen::livetv::Tab::Guide,
                 }),
             ),
-            widget::on_now_row(state.on_now.held(), Room::content(viewport), now, images),
+            widget::rail(
+                railed(jellium_model::livetv::Section::OnNow.card()),
+                widget::Rail::of(Construct::ItemsContainer),
+                state.on_now.held().iter(),
+                Room::content(viewport),
+                images,
+                now,
+                session,
+            ),
         ));
     }
 
@@ -566,13 +573,9 @@ pub fn images(state: &State, arrangement: &Arrangement) -> images::Wanted {
             card::Card::latest(row.library.collection_type),
         ));
     }
-    keys.extend(state.on_now.held().iter().map(|channel| {
-        images::Poster::of(images::Key {
-            item: channel.id,
-            kind: images::Kind::Primary,
-            index: None,
-            card: widget::ON_NOW.card,
-        })
-    }));
+    keys.extend(widget::card_images(
+        state.on_now.held(),
+        jellium_model::livetv::Section::OnNow.card(),
+    ));
     keys
 }

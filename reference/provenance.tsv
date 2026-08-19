@@ -731,3 +731,5 @@ card-image-container	src/components/cardbuilder/card.scss	164	176	a495a0d7c06a5f
 home-latest-query	src/components/homesections/sections/recentlyAdded.ts	39	47	78c2031d121adad1897e2b574b43536fa019f32b81b1063c10a18a79f4b278bf	ported
 home-next-up-query	src/components/homesections/sections/nextUp.ts	21	34	09cd4954c9961b52d7c882943a4ed684df21c69b8c3975ad004de8562dd0c457	ported
 next-up-user-settings	src/scripts/settings/userSettings.js	499	529	bbe63fc719f5ba3adc6b3fd5602bd51dd6688f4689b65e0fbb274a930a565525	ported
+home-on-now-query	src/components/homesections/sections/liveTv.ts	19	27	d6a22ea1a1df783ed1d5d0761adc9fae227ada69dfaae081b03c93a306cd1e6d	ported
+home-live-tv-airing	src/components/homesections/sections/liveTv.ts	164	180	bf58e11c1e793c7e4a7e0e28829d8d5c89b0353d6605a054daad7de4ff3e4668	ported

@@ -20,7 +20,7 @@ use crate::failure;
 use crate::fonts::Served;
 use crate::images::{self, Cache};
 use crate::live;
-use crate::livetv::{Channel, Program};
+use crate::livetv::Program;
 use crate::player::group;
 use crate::player::remote;
 use crate::player::{self, Playing};
@@ -391,7 +391,7 @@ pub enum Message {
     /// by nobody.
     FontLoaded,
     Scrolled(window::Scrolled),
-    OnNowLoaded(Answer<Vec<Channel>>),
+    OnNowLoaded(Answer<Vec<jellyfin_api::types::BaseItemDto>>),
     LiveTvLoaded(Answer<livetv::State>),
     LiveTvAction(livetv::Action),
     GuideFetched(Answer<(guide::Fetched, Vec<Program>)>),
@@ -2363,13 +2363,13 @@ impl Jellium {
                 Task::batch([fetching, paging, self.fetch_images()])
             }
             Message::OnNowLoaded(loaded) => {
-                let Some(channels) = loaded.or_none(Text::FailureChannelsUnread) else {
+                let Some(programmes) = loaded.or_none(Text::FailureProgramsUnread) else {
                     return Task::none();
                 };
                 if let Some(signed) = self.signed()
                     && let View::Home(state) = &mut signed.view
                 {
-                    state.on_now = crate::screen::arrival::Arrival::Arrived(channels);
+                    state.on_now = crate::screen::arrival::Arrival::Arrived(programmes);
                 }
                 self.settle();
                 self.fetch_images()

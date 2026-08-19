@@ -32,7 +32,7 @@ pub async fn tuned(api: Rc<Api>, item: BaseItemDto) -> Answer<Start> {
             status: None,
             detail: "the server described no channel".to_string(),
         })?;
-        let channels = api.live_tv_channels(watched.kind, None).await.bubbled()?;
+        let channels = api.live_tv_channels(watched.kind).await.bubbled()?;
         let program = api.airing(watched.id).await.bubbled()?;
 
         Ok(Start {

@@ -163,7 +163,6 @@ text! {
     FailurePlayerFrame => "failurePlayerFrame", Wording::Unkeyed,
     FailureBridgeAnswer => "failureBridgeAnswer", Wording::Unkeyed,
     FailureLiveTvSection => "failureLiveTvSection", Wording::Unkeyed,
-    FailureChannelsUnread => "failureChannelsUnread", Wording::Unkeyed,
     FailureLoginLeft => "failureLoginLeft", Wording::Unkeyed,
     FailureQuickConnectAbandoned => "failureQuickConnectAbandoned", Wording::Unkeyed,
     FailureSessionUnread => "failureSessionUnread", Wording::Unkeyed,

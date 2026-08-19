@@ -32,7 +32,7 @@ use crate::construct;
 use crate::icon::Icon;
 use crate::images::{self, Cache, Kind};
 use crate::live;
-use crate::livetv::{Channel, Program, Recording};
+use crate::livetv::Recording;
 use crate::player::group::Joined;
 use crate::route::Route;
 use crate::style::space::Room;
@@ -1637,93 +1637,6 @@ pub fn elapsed_bar<'a>(elapsed: Share) -> Element<'a, Message> {
     .width(Length::Fill)
     .height(height)
     .into()
-}
-
-/// The box the On Now row's cards stand in: an outer footer and no paper, on
-/// the backdrop rail the section's own `defaultShape` names, its lines set
-/// where `centerText` sets them.
-// reference: card-box-classes
-// reference: livetv-program-sections
-pub const ON_NOW: card::Drawing = card::Drawing {
-    card: card::Card::Rail(card::Rail::Backdrop),
-    footer: card::Footer::NameAndSubtitle,
-    backing: card::Backing::Padder,
-    footing: card::Footing::Bare,
-    setting: card::Setting::Centred,
-    bottom: card::Bottom::Padded,
-    // reference: livetv-program-sections
-    touch: card::Touch::Plays,
-};
-
-/// One on-now card: the channel's logo, its number, and its current program's
-/// title with an elapsed bar, on the card the reference's on-now rail draws.
-// reference: indicator-timer
-pub fn channel_card<'a>(
-    channel: &'a Channel,
-    room: Room,
-    now: chrono::DateTime<chrono::Utc>,
-    image: Option<image::Handle>,
-) -> Element<'a, Message> {
-    let name = format!("{} {}", channel.number, channel.name);
-    let said = channel
-        .current
-        .as_ref()
-        .map(|program| program.title.clone())
-        .unwrap_or_default();
-    let written = name.clone();
-    card(
-        ON_NOW,
-        room,
-        Poster {
-            face: image.map(Face::Image),
-            name,
-            logo: None,
-            timer: channel.current.as_ref().and_then(Program::recording),
-            elapsed: channel.current.as_ref().map(|program| program.elapsed(now)),
-            press: Some(Message::LiveTvAction(
-                crate::screen::livetv::Action::PlayChannel(channel.id),
-            )),
-            hovered: Hovered::default(),
-            overlaid: Overlaid::default(),
-        },
-        move |line| match line {
-            card::Line::Name => written.clone(),
-            card::Line::Subtitle => said.clone(),
-            _ => String::new(),
-        },
-    )
-}
-
-/// The channels on now, capped at `home::ON_NOW`, the section that holds them
-/// drawing their title.
-pub fn on_now_row<'a>(
-    channels: &'a [Channel],
-    room: Room,
-    now: chrono::DateTime<chrono::Utc>,
-    images: &'a Cache,
-) -> Element<'a, Message> {
-    let cards = channels
-        .iter()
-        .take(crate::screen::home::ON_NOW as usize)
-        .map(|channel| {
-            let handle = images
-                .handle(images::Key {
-                    item: channel.id,
-                    kind: Kind::Primary,
-                    index: None,
-                    card: ON_NOW.card,
-                })
-                .clone();
-            channel_card(channel, room, now, handle)
-        });
-
-    scroller(
-        ON_NOW,
-        Rail::of(Construct::ItemsContainer),
-        stepping(room),
-        room,
-        cards,
-    )
 }
 
 /// Which control ends a failure report.

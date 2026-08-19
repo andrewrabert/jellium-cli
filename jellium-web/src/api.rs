@@ -1092,26 +1092,7 @@ impl Api {
                 jellyfin_api::types::ImageType::Thumb,
             ];
             let narrowed = match section.airing() {
-                Airing::Now => {
-                    return Ok(self
-                        .client
-                        .get_recommended_programs(&jellyfin_api::query::GetRecommendedPrograms {
-                            enable_image_types: Some(&vec![
-                                jellyfin_api::types::ImageType::Primary,
-                                jellyfin_api::types::ImageType::Thumb,
-                                jellyfin_api::types::ImageType::Backdrop,
-                            ]),
-                            enable_total_record_count: Some(false),
-                            fields: Some(&fields),
-                            image_type_limit: Some(1),
-                            is_airing: Some(true),
-                            limit: Some(limit.count()),
-                            user_id: Some(&self.user_id),
-                            ..Default::default()
-                        })
-                        .await?
-                        .items);
-                }
+                Airing::Now => return self.airing_now(limit).await.bubbled(),
                 Airing::Upcoming(upcoming) => upcoming,
             };
             let asked = jellyfin_api::query::GetLiveTvPrograms {
@@ -1149,10 +1130,39 @@ impl Api {
         .await
     }
 
+    /// The programmes airing now, which the On Now row and the Live TV
+    /// section's own gate both read.
+    // reference: home-on-now-query
+    pub async fn airing_now(&self, limit: Limit) -> Answer<Vec<BaseItemDto>> {
+        Answer::of(async {
+            Ok(self
+                .client
+                .get_recommended_programs(&jellyfin_api::query::GetRecommendedPrograms {
+                    enable_image_types: Some(&vec![
+                        jellyfin_api::types::ImageType::Primary,
+                        jellyfin_api::types::ImageType::Thumb,
+                        jellyfin_api::types::ImageType::Backdrop,
+                    ]),
+                    enable_total_record_count: Some(false),
+                    fields: Some(&vec![
+                        jellyfin_api::types::ItemFields::ChannelInfo,
+                        jellyfin_api::types::ItemFields::PrimaryImageAspectRatio,
+                    ]),
+                    image_type_limit: Some(1),
+                    is_airing: Some(true),
+                    limit: Some(limit.count()),
+                    user_id: Some(&self.user_id),
+                    ..Default::default()
+                })
+                .await?
+                .items)
+        })
+        .await
+    }
+
     pub async fn live_tv_channels(
         &self,
         kind: jellyfin_api::types::ChannelType,
-        limit: Option<i32>,
     ) -> Answer<Vec<Channel>> {
         Answer::of(async {
             let result = self
@@ -1162,7 +1172,6 @@ impl Api {
                     enable_favorite_sorting: Some(true),
                     enable_images: Some(true),
                     enable_user_data: Some(true),
-                    limit,
                     type_: Some(kind),
                     user_id: Some(&self.user_id),
                     ..Default::default()

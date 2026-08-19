@@ -108,7 +108,6 @@
   "failurePlayerFrame": "A message from the media player could not be read.",
   "failureBridgeAnswer": "The plugin page's answer could not be prepared.",
   "failureLiveTvSection": "The server's Live TV settings could not be read.",
-  "failureChannelsUnread": "The channels could not be read.",
   "failureLoginLeft": "This browser's login target could not be released.",
   "failureQuickConnectAbandoned": "The Quick Connect attempt could not be abandoned.",
   "failureSessionUnread": "The local server would not say who is signed in.",

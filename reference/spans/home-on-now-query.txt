@@ -1,0 +1,9 @@
+        return apiClient.getLiveTvRecommendedPrograms({
+            userId: apiClient.getCurrentUserId(),
+            IsAiring: true,
+            limit: 24,
+            ImageTypeLimit: 1,
+            EnableImageTypes: 'Primary,Thumb,Backdrop',
+            EnableTotalRecordCount: false,
+            Fields: 'ChannelInfo,PrimaryImageAspectRatio'
+        });
