@@ -483,9 +483,19 @@ impl Span {
     }
 }
 
+/// Whether a character closes an operand, which is what makes a `-` after it
+/// the subtraction of the count that follows rather than that count's own sign.
+fn operand(before: char) -> bool {
+    before.is_ascii_alphanumeric() || before == '_' || before == '%' || before == ')'
+}
+
 /// Every count a flattened span writes: a count opens where a digit, a `.` or
 /// a `-` stands beside a character it does not join, runs through the digits
 /// and the `.`, and takes the `%` or the letters that follow as its unit.
+/// A `-` standing after an operand is a subtraction, and the rule writing it
+/// carries both the term it subtracts and that term's own magnitude, so a
+/// ported value naming either is carried; a `-` standing anywhere else is the
+/// sign of the count it opens and carries that count alone.
 fn numbered(text: &str) -> Vec<Count> {
     let held: Vec<char> = text.chars().collect();
     let mut counts = Vec::new();
@@ -518,6 +528,13 @@ fn numbered(text: &str) -> Vec<Count> {
             && let Some(unit) = Unit::read(&unit)
         {
             counts.push(Count::of(count, unit));
+            if value == '-'
+                && at
+                    .checked_sub(1)
+                    .is_some_and(|before| operand(held[before]))
+            {
+                counts.push(Count::of(-count, unit));
+            }
         }
         at = suffix.max(at + 1);
     }
@@ -931,6 +948,14 @@ fn a_span_carries_a_value_only_where_it_writes_it() {
     let sheet = Span::of("color: #ffffff; font-size: 1.66956521739130434em");
     assert!(!sheet.carries(&Spelling::Color("#fff".to_owned())));
     assert!(sheet.carries(&Spelling::Measured(Count::of(1.669_565_2, Unit::Em))));
+
+    let subtracted = Span::of("let drawerWidth = window.screen.availWidth - 50;");
+    assert!(subtracted.carries(&Spelling::Measured(Count::of(50.0, Unit::Bare))));
+    assert!(subtracted.carries(&Spelling::Measured(Count::of(-50.0, Unit::Bare))));
+
+    let signed = Span::of("margin-left: -50px");
+    assert!(signed.carries(&Spelling::Measured(Count::of(-50.0, Unit::Pixels))));
+    assert!(!signed.carries(&Spelling::Measured(Count::of(50.0, Unit::Pixels))));
 
     assert!(matches!(
         written("Length::em(0.6)").measures.as_slice(),
