@@ -17,6 +17,7 @@ use iced::widget::{
     Space, button, column, container, grid, image, rich_text, row, scrollable, span, stack, text,
 };
 use iced::{Element, Fill, Length};
+use jellium_model::appearance::blur;
 use jellium_model::construct::Construct;
 #[cfg(test)]
 use jellium_model::construct::Page;
@@ -210,20 +211,24 @@ fn subtitle(item: &BaseItemDto) -> String {
     }
 }
 
-/// What a card draws where its image goes: the image itself, or the glyph the
-/// reference's own `.cardImageIcon` stands in with.
+/// What a card draws where its image goes: the image itself, the BlurHash its
+/// item carries while that image is in flight, or the glyph the reference's
+/// own `.cardImageIcon` stands in with.
 #[derive(Debug, Clone)]
 pub enum Face {
     Image(image::Handle),
+    // the decoded hash, drawn until the image it stands in for arrives
+    Placeholder(image::Handle),
     Icon(Icon),
 }
 
-/// What a card stands where its image goes: the image the cache holds, and the
-/// glyph `getDefaultText` stands in with where the item names no image at all
+/// What a card stands where its image goes: the image the cache holds, the
+/// BlurHash the item carries while that image is in flight, and the glyph
+/// `getDefaultText` stands in with where the item names no image at all
 /// — its collection's glyph where it carries a collection type or is a
 /// collection folder, and its own type's glyph otherwise.
-/// `None` while the image is in flight and where the item's type names no
-/// glyph.
+/// `None` while an image with no hash behind it is in flight and where the
+/// item's type names no glyph.
 // reference: card-no-image
 // reference: card-default-glyph
 // reference: library-icon
@@ -231,15 +236,13 @@ pub enum Face {
 // reference: item-type-icon
 fn faced(item: &BaseItemDto, card: card::Card, images: &Cache) -> Option<Face> {
     if let Some(posted) = posted(item, card) {
-        return images
-            .handle(posted.key)
-            .or_else(|| {
-                posted
-                    .hash
-                    .as_ref()
-                    .and_then(|hash| images.placeholder(hash))
-            })
-            .map(Face::Image);
+        return images.handle(posted.key).map(Face::Image).or_else(|| {
+            posted
+                .hash
+                .as_ref()
+                .and_then(|hash| images.placeholder(hash))
+                .map(Face::Placeholder)
+        });
     }
     let collected =
         item.type_ == Some(BaseItemKind::CollectionFolder) || item.collection_type.is_some();
@@ -250,9 +253,10 @@ fn faced(item: &BaseItemDto, card: card::Card, images: &Cache) -> Option<Face> {
 }
 
 /// The frame a card's image stands in, at the card's width inside its pitch
-/// and its shape's own aspect: the image, the glyph `.cardImageIcon` stands in
-/// with over the background the name picks, or that background alone while the
-/// image is in flight and where nothing names a glyph.
+/// and its shape's own aspect: the image, the hash it stands in for stretched
+/// over the whole frame, the glyph `.cardImageIcon` stands in with over the
+/// background the name picks, or that background alone while an image with no
+/// hash behind it is in flight and where nothing names a glyph.
 // reference: card-container
 // reference: card-content
 fn framed<'a>(
@@ -262,8 +266,10 @@ fn framed<'a>(
     name: &str,
     backing: card::Backing,
 ) -> Element<'a, Message> {
-    let width = style::drawn(card.inside(room));
-    let height = style::drawn(card.shape().aspect().of(card.inside(room)));
+    let inside = card.inside(room);
+    let tall = card.shape().aspect().of(inside);
+    let width = style::drawn(inside);
+    let height = style::drawn(tall);
     let background = scheme::card_background(name);
     let painted = move |theme: &iced::Theme| style::card_face(theme, background, backing);
     let padder = move |theme: &iced::Theme| style::card_padder(theme, backing);
@@ -273,6 +279,16 @@ fn framed<'a>(
             .height(height)
             .style(padder)
             .into(),
+        Some(Face::Placeholder(handle)) => container(
+            image(handle)
+                .width(style::drawn(blur::STRETCH.width(inside)))
+                .height(style::drawn(blur::STRETCH.height(tall)))
+                .content_fit(iced::ContentFit::Fill),
+        )
+        .width(width)
+        .height(height)
+        .style(padder)
+        .into(),
         Some(Face::Icon(drawn)) => container(crate::icon::icon(drawn, typeface::CARD_ICON))
             .center_x(width)
             .center_y(height)
