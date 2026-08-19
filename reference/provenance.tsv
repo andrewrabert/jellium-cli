@@ -724,3 +724,4 @@ programs-shapes	src/controllers/livetv/livetvsuggested.js	133	156	e08492444878ae
 favorites-query	src/controllers/favorites.js	176	203	cfa27f51ca7282587732859b57dc9074b8f74a890b6ff0edcd35254c36619026	ported
 favorites-shapes	src/controllers/favorites.js	20	174	4f29441845dcfc98d5011a38a12f1ca183171038532238d2efa7e74c6b390236	ported
 home-latest-excludes	src/components/homesections/sections/recentlyAdded.ts	137	157	6f51a884943f8e9aa4ca9a75fb9ac149afc1c946d991aca3126c4663a9ff3b02	ported
+blurhash-stretch	src/components/images/style.scss	26	35	bc1bc9bc0ef6284c396669b854ee945621bc388738b9995e7ad3c91b34d793cf	ported
