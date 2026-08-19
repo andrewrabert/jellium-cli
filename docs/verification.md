@@ -862,36 +862,29 @@ in order. A section passes only when every line in it holds.
 
 ## Appearance
 
-Run against a real browser at 360x800, 800x360, 768x1024 and 1920x1080, and
-against a phone, a tablet, an iPad asking for the desktop site and a desktop
-browser with a touch screen, each at its own size.
+What remains here is what a machine cannot see: rasterization, perceived
+weight, and whether the screen reads as the same page as the reference's.
 
-- The layout does not follow the viewport width: a desktop browser draws the
-  item detail head beside its poster at 360x800 and at 1920x1080 alike, and a
-  phone draws it stacked at 360x800 and at 800x360 alike.
-- A phone draws every page at a 90% root, a desktop browser at 93%, and a
-  television browser at 125%.
-- An iPad reporting `iPad` draws the stacked head; the same iPad asking for the
-  desktop site draws the head beside its poster.
-- A desktop browser with a touch screen draws the head beside its poster.
-- A television browser draws item detail with no backdrop, its poster at the
-  page's leading edge and the head beside it.
-- On a phone the stacked head's poster hangs below the backdrop and over the
-  block carrying the item's name and its row of buttons, and that name and that
-  row stand to its trailing side rather than beside empty space.
-- On a phone the stacked poster's leading edge stands a twentieth of the window
-  in at 800 wide and 3.3% of the window in at 360 wide.
-- On a phone at 800x360 the stacked poster stands no taller than four fifths of
-  the window and is neither squeezed nor cut to the backdrop's height.
+Which constructs a screen draws, in which role, carrying which of the
+reference's own sentences, is read by
+`jellium-reference/tests/constructs.rs` against `reference/constructs.tsv`, and
+is not listed here. A row deleted from this section was deleted because that
+gate now checks it, not because it stopped mattering.
+
+Each subsection names the viewport sizes it is run at. Run each against a
+phone, a tablet, an iPad asking for the desktop site, a desktop browser with a
+touch screen and a television browser, and open jellyfin-web's own page beside
+it at the same width.
+
+### The shell
+
+Run at 360x800 and 1920x1080.
+
 - The browser tab carries Jellyfin's own favicon.
 - The boot screen stands Jellyfin's splash logo, its banner at a device width of
   992 pixels and wider and its icon narrower, and no lettering of the app's name.
 - No instant between the boot screen and the canvas's first frame paints the page
   anything but #101010.
-- The select-server page and the login page each stand Jellyfin's own banner in a
-  header slot 13.2em wide.
-- The add-server page, the password-reset page and every setup wizard step each
-  stand that same banner in that same slot.
 - No viewport width produces a horizontal page scrollbar.
 - Body text draws in Noto Sans, and every heading draws in that face at its
   regular weight.
@@ -899,30 +892,31 @@ browser with a touch screen, each at its own size.
 - A submit control stands on #00a4dc and a raised control on #303030.
 - A link-style control draws its lettering in #00a4dc on no face of its own,
   and rules that lettering only while the pointer stands over it.
-- The select-server page centres its cards, each a square card carrying the
-  storage glyph over a centred name, and a name wider than its card ends in an
-  ellipsis on one line.
-- The login page's user cards and its sign-in form each stand centred in a page
-  padded 3.30% at each side.
 - A title in Cyrillic, Greek, Vietnamese or Devanagari draws in Noto Sans.
 - A title in Japanese, Korean or Chinese draws in the Noto Sans family for its
   script, fetched from this origin, and a second title that same face covers
   fetches nothing.
-- The home screen's sections stand in the reference's order: My Media, then what
-  is resumed, then Live TV and On Now, then Next Up, then the latest in each
-  library.
-- A library the server holds no image for draws its collection's own glyph —
-  movie for a movie library, tv for a show library, music_note for a music
-  library — over its name, centred on one line.
-- A resumed episode draws on a backdrop card and a resumed book on a portrait
-  one.
-- The next-up row draws backdrop cards.
-- The latest row of a movie library draws portrait cards and of a music library
-  square ones.
-- A library the server holds an image for draws that image on its tile, and the
-  browser's network panel shows no image request for a library it holds none
-  for.
-- Every home row, My Media included, scrolls sideways rather than wrapping.
+- Every Material Icons glyph draws in a line box its own size tall.
+- A phone draws every page at a 90% root, a desktop browser at 93%, and a
+  television browser at 125%.
+- The layout does not follow the viewport width: a desktop browser draws the
+  item detail head beside its poster at 360x800 and at 1920x1080 alike, and a
+  phone draws it stacked at 360x800 and at 800x360 alike.
+- An iPad reporting `iPad` draws the stacked head; the same iPad asking for the
+  desktop site draws the head beside its poster.
+- A desktop browser with a touch screen draws the head beside its poster.
+
+### The home screen
+
+Run at 360x800, 800x360, 768x1024 and 1920x1080.
+
+- Opened beside jellyfin-web's own `#/home` at the same width, the two pages
+  read as the same page: the same header, the same strip, the same rails in
+  the same order at the same rhythm.
+- The header's lettering and glyphs sit on the same baseline as the reference's
+  and carry the same weight.
+- A home rail's cards run to the window edge, and no page-wide gutter stands
+  where the reference has none.
 - A home rail's card takes its width from the whole window rather than from the
   page inside it: at 1920 wide a next-up card spans 18.7% of the window and a
   latest movie card 10.41%; at 768 wide, 45.5% and 23.1%; at 800 wide, 23.1%
@@ -935,40 +929,100 @@ browser with a touch screen, each at its own size.
 - At 768 wide the network panel shows a My Media tile's image asked for at the
   same width as a next-up card's image, and wider than a movie library grid's
   poster.
-- A television browser lays four backdrop cards, six square cards and six
-  portrait cards across a library grid at every window width, where a desktop
-  browser at 383 wide lays one, two and three.
+- A card whose item carries a BlurHash draws that hash decoded behind it before
+  its own image arrives, and the image replaces it once it loads; no card
+  carrying a hash shows empty space while its image is in flight.
+- A library the server holds an image for draws that image on its tile, and the
+  browser's network panel shows no image request for a library it holds none
+  for.
+- The On Now row scrolls sideways at one backdrop rail card's own height, and
+  its foot lines up with the Next Up row's below it.
+- An On Now card's elapsed bar stands inside its image at the foot rather than
+  under the card's name.
 - A television browser's home rails take their own widths at every window
   width: 23.5% of the window for a backdrop rail, 18.8% for a small-backdrop
   rail and 15.6% for a square or portrait rail.
 - A television browser asks for a portrait or square card's image at a sixth of
   the page width and a backdrop card's at a quarter, at every window width.
+
+### The library screens
+
+Run at 360x800, 768x1024 and 1920x1080.
+
+- A library the server holds no image for draws its collection's own glyph —
+  movie for a movie library, tv for a show library, music_note for a music
+  library — over its name, centred on one line.
+- A movie the server holds no image for draws the movie glyph at 5em over its
+  own background, on a home rail, in a library grid and in a search result
+  alike, and a music album the server holds no image for draws the album glyph.
+- An episode the server holds no image of its own draws its series' image, a
+  track with none draws its album's, and a season with none draws its own
+  thumb.
+- The browser's network panel shows no image request for an item carrying no
+  image tag of any kind.
+- A television browser lays four backdrop cards, six square cards and six
+  portrait cards across a library grid at every window width, where a desktop
+  browser at 383 wide lays one, two and three.
 - On a desktop browser a library card under the pointer raises a scrim carrying
   a play disc at its middle and the played mark, the rating control and the more
   control in that order at its trailing foot.
 - A phone raises no scrim over any card; it draws the reference's own overlay
   instead, and a television browser draws neither.
-- A detail page draws its played mark only where the item can carry one, its
-  rating control only where the item can carry one, and a more control wherever
-  the item offers a command.
-- A search result raises that same scrim, and a genre, studio, network, artist
-  or album-artist card raises it carrying the more control alone.
-- That scrim carries no play disc on an item the server holds no file for, no
-  played mark on a programme or a channel, and no rating control on a
-  programme, a library or a channel.
 - A card whose item is marked played draws its check in #cc3333 and one whose
   item is a favourite draws a filled heart in #cc3333, both drawing in the
   scrim's own lettering otherwise, and pressing either changes the colour
   without a reload.
 - Under `--read-only` the scrim and the sheet alike offer the play control
   alone, on a library grid, a search result and a genre card.
-- A Live TV recording card raises a play control under the pointer, one still
-  being written included.
 - The search field stands a 2em magnifier before its 1.1em field, gapped a
   quarter of the magnifier's own em and lifted a tenth of that em off the foot
   of the field's row, the two capped together at a 60em measure centred in the
   page.
-- Every Material Icons glyph draws in a line box its own size tall.
+
+### The item detail page
+
+Run at 360x800, 800x360 and 1920x1080.
+
+- A television browser draws item detail with no backdrop, its poster at the
+  page's leading edge and the head beside it.
+- On a phone the stacked head's poster hangs below the backdrop and over the
+  block carrying the item's name and its row of buttons, and that name and that
+  row stand to its trailing side rather than beside empty space.
+- On a phone the stacked poster's leading edge stands a twentieth of the window
+  in at 800 wide and 3.3% of the window in at 360 wide.
+- On a phone at 800x360 the stacked poster stands no taller than four fifths of
+  the window and is neither squeezed nor cut to the backdrop's height.
+- A detail page draws its played mark only where the item can carry one, its
+  rating control only where the item can carry one, and a more control wherever
+  the item offers a command.
+- Opening a collection draws the item detail page: its backdrop, its poster, its
+  name, Play All and Shuffle, its overview, and its items beneath.
+- Opening a programme from the guide draws the item detail page: its channel by
+  name and number above its name, its start and end times, its live, new,
+  premiere and repeat flags, its overview and its genres.
+- A programme's page offers Play only while the programme is on air, and offers
+  Record, Record Series and their cancels only to a user the server lets manage
+  Live TV.
+- Removing an item from a collection is offered from that item's menu on the
+  collection's own page, and from nowhere else.
+
+### Live TV
+
+Run at 768x1024 and 1920x1080.
+
+- A search result raises the library grid's own scrim, and a genre, studio,
+  network, artist or album-artist card raises it carrying the more control
+  alone.
+- That scrim carries no play disc on an item the server holds no file for, no
+  played mark on a programme or a channel, and no rating control on a
+  programme, a library or a channel.
+- A Live TV recording card raises a play control under the pointer, one still
+  being written included.
+
+### Playback and the video display
+
+Run at 360x800 and 1920x1080.
+
 - The now-playing bar is 4.2em tall, and its artwork 4.2em wide and 70% of the
   bar's height.
 - The video display stands previous, rewind, play, fast forward and next
@@ -983,26 +1037,11 @@ browser with a touch screen, each at its own size.
 - The video display drops the ends-at text at 75em and narrower, the two seek
   controls at 50em and narrower and the volume control at 43em and narrower, and
   stands its controls shoulder to shoulder at 33.75em and narrower.
-- On the logs screen and on the general settings, transcoding and trickplay
-  screens, a checkbox draws one glyph: an outlined box while it is cleared and a
-  box filled in #00a4dc while it is set, with a disc behind it under the pointer.
-- On the Networking screen and on the user's own Display, Home and Playback
-  settings screens, a checkbox draws an outlined box edged in the page's own
-  lettering while it is cleared and filled with #00a4dc while it is set.
-- The activity log draws its user column in the All and User views and drops it
-  in System.
-- A movie the server holds no image for draws the movie glyph at 5em over its
-  own background, on a home rail, in a library grid and in a search result
-  alike, and a music album the server holds no image for draws the album glyph.
-- An episode the server holds no image of its own draws its series' image, a
-  track with none draws its album's, and a season with none draws its own
-  thumb.
-- The browser's network panel shows no image request for an item carrying no
-  image tag of any kind.
-- The On Now row scrolls sideways at one backdrop rail card's own height, and
-  its foot lines up with the Next Up row's below it.
-- An On Now card's elapsed bar stands inside its image at the foot rather than
-  under the card's name.
+
+### The menus and sheets
+
+Run at 360x800 and 1920x1080.
+
 - A card's overflow menu opens as one sheet on its own rounded surface, with
   every command stacked one under the next and Cancel at the foot.
 - The video display's settings, audio, subtitle, quality, repeat and version
@@ -1024,13 +1063,30 @@ browser with a touch screen, each at its own size.
   its own sentence beneath.
 - A sheet whose rows carry no glyph and which carries no title stands its rows
   against the leading edge with no room reserved before them.
-- Opening a collection draws the item detail page: its backdrop, its poster, its
-  name, Play All and Shuffle, its overview, and its items beneath.
-- Opening a programme from the guide draws the item detail page: its channel by
-  name and number above its name, its start and end times, its live, new,
-  premiere and repeat flags, its overview and its genres.
-- A programme's page offers Play only while the programme is on air, and offers
-  Record, Record Series and their cancels only to a user the server lets manage
-  Live TV.
-- Removing an item from a collection is offered from that item's menu on the
-  collection's own page, and from nowhere else.
+
+### The settings region and the dashboard
+
+Run at 768x1024 and 1920x1080.
+
+- On the logs screen and on the general settings, transcoding and trickplay
+  screens, a checkbox draws one glyph: an outlined box while it is cleared and a
+  box filled in #00a4dc while it is set, with a disc behind it under the pointer.
+- On the Networking screen and on the user's own Display, Home and Playback
+  settings screens, a checkbox draws an outlined box edged in the page's own
+  lettering while it is cleared and filled with #00a4dc while it is set.
+- The activity log draws its user column in the All and User views and drops it
+  in System.
+
+### The signed-out pages and the setup wizard
+
+Run at 360x800 and 1920x1080.
+
+- The select-server page and the login page each stand Jellyfin's own banner in a
+  header slot 13.2em wide.
+- The add-server page, the password-reset page and every setup wizard step each
+  stand that same banner in that same slot.
+- The select-server page centres its cards, each a square card carrying the
+  storage glyph over a centred name, and a name wider than its card ends in an
+  ellipsis on one line.
+- The login page's user cards and its sign-in form each stand centred in a page
+  padded 3.30% at each side.
