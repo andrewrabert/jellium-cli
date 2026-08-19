@@ -959,6 +959,15 @@ Run at 360x800, 800x360, 768x1024 and 1920x1080.
   episode's own title.
 - A programme numbering itself zero and carrying no episode title writes that
   programme's name once rather than on both of its lines.
+- A books, home-videos, collections or playlists Latest rail writes each card's
+  name over one blank line, and a photos Latest rail writes two blank lines and
+  no name; every card in either rail stands the same height as a movies Latest
+  card.
+- A card's blank line stands at the card's own body size rather than the
+  smaller secondary size, so a Latest rail of books is as tall as one of
+  movies.
+- The On Now rail writes a programme's name, its own title and the times it
+  runs, on three lines.
 - A television browser's home rails take their own widths at every window
   width: 23.5% of the window for a backdrop rail, 18.8% for a small-backdrop
   rail and 15.6% for a square or portrait rail.
@@ -1005,6 +1014,14 @@ Run at 360x800, 768x1024 and 1920x1080.
   writes the year.
 - A people or artists listing writes one line under a card, where a genres or
   studios listing writes two.
+- A continuing series writes `2010 - Present` under its name and one that has
+  ended writes `2010 - 2015`, on a shows grid, a Latest rail, a suggestions
+  rail and a search result alike.
+- A music-video, home-video, book, collections, playlists or untyped library
+  grid writes an item's parent title over its name and its year under it, where
+  a movies grid writes the name over the year.
+- A search result for a programme writes the programme's name, the day and time
+  it airs and its channel, on three lines and with no separate title line.
 - Under `--read-only` the scrim and the sheet alike offer the play control
   alone, on a library grid, a search result and a genre card.
 - The search field stands a 2em magnifier before its 1.1em field, gapped a
@@ -1052,6 +1069,13 @@ Run at 768x1024 and 1920x1080.
   programme, a library or a channel.
 - A Live TV recording card raises a play control under the pointer, one still
   being written included.
+- The latest recordings tab writes a recording's series name over its own title
+  and the year it was made, and a recording naming no series writes its name
+  over that year.
+- Each Programs rail writes the time a programme airs under it: the On Now rail
+  writes start and end, the Shows, Sports and Kids rails write the day and the
+  start, the Movies rail writes no series name above that day, and the News rail
+  writes the programme's name alone above it.
 
 ### Playback and the video display
 
@@ -1124,3 +1148,6 @@ Run at 360x800 and 1920x1080.
   ellipsis on one line.
 - The login page's user cards and its sign-in form each stand centred in a page
   padded 3.30% at each side.
+- A user card's name stands the same distance off the top of its footer as its
+  last-seen line stands off the name, and an account with no name writes an
+  empty first line rather than a blank one.
