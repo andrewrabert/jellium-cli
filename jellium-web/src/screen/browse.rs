@@ -127,7 +127,7 @@ fn toggled<T: PartialEq>(held: &mut Vec<T>, value: T, membership: Membership) {
 fn wall(collection: Option<CollectionType>, aspect: Option<Aspect>) -> card::Drawing {
     card::Drawing {
         card: Card::grid(collection, aspect),
-        footer: card::Footer::NameAndSubtitle,
+        footer: card::Footer::ParentNameAndYear,
         backing: card::Backing::Padder,
         footing: card::Footing::Bare,
         setting: card::Setting::Centred,

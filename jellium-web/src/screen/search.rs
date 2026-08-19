@@ -226,7 +226,7 @@ fn footer(section: Section) -> card::Footer {
         | Section::Episodes
         | Section::Songs
         | Section::Videos
-        | Section::Programs => card::Footer::NameAndSubtitle,
+        | Section::Programs => card::Footer::ParentNameAndYear,
         Section::People
         | Section::Playlists
         | Section::Artists

@@ -522,6 +522,139 @@ pub fn watched(item: &BaseItemDto) -> Option<Watched> {
     whole.then_some(Watched::Played)
 }
 
+/// The title `getDisplayName` composes for an item, as a card writes it.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum Title {
+    /// A special episode's own name, which the reference writes inside
+    /// `ValueSpecialEpisodeName`.
+    Special(String),
+    /// The name the item stands under, carrying the `S1:E1` the reference
+    /// writes before it where the item numbers itself inside its parent, and
+    /// its channel number where it is a channel.
+    Plain(String),
+}
+
+/// Whether the reference names this type by live-tv naming, a timer arriving
+/// here as a type of its own rather than as an item.
+// reference: card-live-tv-naming
+fn live_tv_naming(item: &BaseItemDto) -> bool {
+    matches!(
+        item.type_,
+        Some(BaseItemKind::Program | BaseItemKind::Recording)
+    )
+}
+
+/// The parent title the reference falls back to where the item names no series
+/// of its own.
+fn parent_named(item: &BaseItemDto) -> Option<String> {
+    item.series_name
+        .clone()
+        .or_else(|| item.album.clone())
+        .or_else(|| item.album_artist.clone())
+        .filter(|parent| !parent.is_empty())
+}
+
+/// Whether the reference writes the item's parent under its title rather than
+/// over it.
+fn parent_underneath(item: &BaseItemDto) -> bool {
+    matches!(
+        item.type_,
+        Some(BaseItemKind::MusicAlbum | BaseItemKind::Audio | BaseItemKind::MusicVideo)
+    )
+}
+
+/// The title a card writes for an item, and none where the line above it
+/// already carried the item's own name.
+// a programme and a recording read their episode title where they are of a
+// series or carry one, and their own name otherwise
+// an episode of season zero is special and takes no index
+// an episode, a programme and a recording take `S{season}:E{episode}` before
+// the title, and the end of a run of episodes after it
+// the reference's timer reads its own programme's title, and a timer arrives
+// here as a type of its own rather than as an item
+// reference: card-display-name
+// reference: card-footer-lines
+// reference: card-live-tv-naming
+pub fn title(item: &BaseItemDto) -> Option<Title> {
+    if live_tv_naming(item) && item.episode_title.is_none() && item.index_number.is_none() {
+        return None;
+    }
+    let named = item.name.clone().unwrap_or_default();
+    let episodic = item.is_series == Some(true) || item.episode_title.is_some();
+    let name = match live_tv_naming(item) && episodic {
+        true => item.episode_title.clone().unwrap_or_default(),
+        false => named,
+    };
+    if item.type_ == Some(BaseItemKind::TvChannel) {
+        return Some(Title::Plain(match &item.channel_number {
+            Some(channel) if !channel.is_empty() => format!("{channel} {name}"),
+            Some(_) | None => name,
+        }));
+    }
+    if item.type_ == Some(BaseItemKind::Episode) && item.parent_index_number == Some(0) {
+        return Some(Title::Special(name));
+    }
+    let numbered = matches!(
+        item.type_,
+        Some(BaseItemKind::Episode | BaseItemKind::Program | BaseItemKind::Recording)
+    );
+    let (Some(index), Some(season)) = (item.index_number, item.parent_index_number) else {
+        return Some(Title::Plain(name));
+    };
+    if !numbered {
+        return Some(Title::Plain(name));
+    }
+    let mut number = format!("S{season}:E{index}");
+    if let Some(last) = item.index_number_end {
+        number.push_str(&format!("-{last}"));
+    }
+    Some(Title::Plain(match name.is_empty() {
+        true => number,
+        false => format!("{number} - {name}"),
+    }))
+}
+
+/// The parent title a card writes over an item's own title: the item's name
+/// where the reference names it by live-tv naming, its series, album or album
+/// artist otherwise, and none where the reference writes that parent under the
+/// title or the item names no parent at all.
+// reference: card-footer-lines
+// reference: card-live-tv-naming
+pub fn parent_over(item: &BaseItemDto) -> Option<String> {
+    if parent_underneath(item) {
+        return None;
+    }
+    if item.type_ == Some(BaseItemKind::Episode)
+        && let Some(series) = item.series_name.clone().filter(|name| !name.is_empty())
+    {
+        return Some(series);
+    }
+    match live_tv_naming(item) {
+        true => item.name.clone().filter(|name| !name.is_empty()),
+        false => parent_named(item),
+    }
+}
+
+/// The parent title a card writes under an item's own title, which an album, a
+/// track and a music video answer with their album artists joined by ` / ` and
+/// everything else with none.
+// reference: card-footer-lines
+pub fn parent_under(item: &BaseItemDto) -> Option<String> {
+    if !parent_underneath(item) {
+        return None;
+    }
+    let artists: Vec<String> = item
+        .album_artists
+        .iter()
+        .flatten()
+        .filter_map(|artist| artist.name.clone())
+        .collect();
+    match artists.is_empty() {
+        true => parent_named(item),
+        false => Some(artists.join(" / ")),
+    }
+}
+
 /// Whether the rating control stands on it.
 // a programme, a library, a user view and a channel carry none, and so does an
 // item the server reports no user data for; the reference's timer and series

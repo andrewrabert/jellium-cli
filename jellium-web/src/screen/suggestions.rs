@@ -21,7 +21,7 @@ use crate::widget;
 // reference: card-box-classes
 const RAIL: card::Drawing = card::Drawing {
     card: card::Card::Rail(card::Rail::Portrait),
-    footer: card::Footer::NameAndSubtitle,
+    footer: card::Footer::ParentNameAndYear,
     backing: card::Backing::Padder,
     footing: card::Footing::Bare,
     setting: card::Setting::Centred,

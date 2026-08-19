@@ -55,9 +55,9 @@ pub enum Line {
     // the display name, which an item whose name the line above already
     // carries answers with nothing
     Name,
-    // the line a section outside Live TV writes under the name, which its own
-    // options push as `showYear` or as `showParentTitle`
-    Subtitle,
+    // the parent title `parentTitleUnderneath` pushes under the name instead,
+    // which an album, a track and a music video answer with their artists
+    ParentTitleUnder,
     // `showYear`
     Year,
     // `showAirTime` with `showAirEndTime`
@@ -84,14 +84,13 @@ pub enum Footer {
     /// `showTitle` alone, which is the login picker's `singleCardText` and a
     /// library tile's.
     Name,
-    /// A name over the line the section under it writes, which is a poster's.
-    NameAndSubtitle,
+    /// `showParentTitle`, `showTitle` and `showYear`, capped at the two lines
+    /// `lines` writes, which is what a home rail, a library grid, a search
+    /// result and the recordings tab each ask for.
+    ParentNameAndYear,
     /// The channels tab's own: `showTitle`, `showCurrentProgram` and
     /// `showCurrentProgramTime`.
     Channel,
-    /// The recordings tab's own: `showParentTitle`, `showTitle` and
-    /// `showYear`, capped at the two lines `lines` writes.
-    Recording,
     /// A scheduled timer's: `showParentTitleOrTitle`, `showTitle`, and
     /// `showAirTime` with `showAirEndTime`.
     Timer,
@@ -112,9 +111,13 @@ impl Footer {
         match self {
             Footer::Bare => &[],
             Footer::Name => &[Line::Name],
-            Footer::NameAndSubtitle => &[Line::Name, Line::Subtitle],
+            Footer::ParentNameAndYear => &[
+                Line::ParentTitle,
+                Line::Name,
+                Line::ParentTitleUnder,
+                Line::Year,
+            ],
             Footer::Channel => &[Line::Name, Line::CurrentProgram, Line::CurrentProgramTime],
-            Footer::Recording => &[Line::ParentTitle, Line::Name, Line::Year],
             Footer::Timer => &[Line::ParentTitle, Line::Name, Line::AirTime],
             Footer::ActiveRecording => &[
                 Line::ParentTitle,
@@ -133,11 +136,10 @@ impl Footer {
     // reference: card-text-lines
     pub fn written(self) -> usize {
         let capped = match self {
-            Footer::Recording => Some(2),
+            Footer::ParentNameAndYear => Some(2),
             Footer::SeriesTimer => Some(3),
             Footer::Bare
             | Footer::Name
-            | Footer::NameAndSubtitle
             | Footer::Channel
             | Footer::Timer
             | Footer::ActiveRecording => None,

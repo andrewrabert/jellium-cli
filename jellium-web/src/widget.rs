@@ -206,11 +206,31 @@ fn opens(item: &BaseItemDto, id: uuid::Uuid) -> Route {
     }
 }
 
-fn subtitle(item: &BaseItemDto) -> String {
-    match (&item.series_name, item.production_year) {
-        (Some(series), _) => series.clone(),
-        (None, Some(year)) => year.to_string(),
-        (None, None) => String::new(),
+/// What a card writes on one line of its footer, as `getCardFooterText` writes
+/// it for a section asking for the parent title, the title and the year.
+// reference: card-footer-lines
+// reference: card-text-lines
+pub fn caption(item: &BaseItemDto, line: card::Line) -> String {
+    match line {
+        card::Line::ParentTitle => item::parent_over(item).unwrap_or_default(),
+        card::Line::Name => match item::title(item) {
+            Some(item::Title::Special(name)) => {
+                strings::format(Text::CardSpecialEpisode, &[name.as_str()])
+            }
+            Some(item::Title::Plain(name)) => name,
+            None => String::new(),
+        },
+        card::Line::ParentTitleUnder => item::parent_under(item).unwrap_or_default(),
+        card::Line::Year => item
+            .production_year
+            .map(|year| year.to_string())
+            .unwrap_or_default(),
+        card::Line::AirTime
+        | card::Line::ChannelName
+        | card::Line::CurrentProgram
+        | card::Line::CurrentProgramTime
+        | card::Line::SeriesTimerTime
+        | card::Line::SeriesTimerChannel => String::new(),
     }
 }
 
@@ -970,7 +990,6 @@ pub fn poster<'a>(
     collection: Option<Uuid>,
 ) -> Element<'a, Message> {
     let name = item.name.clone().unwrap_or_default();
-    let said = subtitle(item);
     let mut controls = Vec::new();
     if let Some(id) = item.id.filter(|_| !session.read_only) {
         let played = item::played(item);
@@ -1039,11 +1058,7 @@ pub fn poster<'a>(
                 menu,
             },
         },
-        move |line| match line {
-            card::Line::Name => name.clone(),
-            card::Line::Subtitle => said.clone(),
-            _ => String::new(),
-        },
+        move |line| caption(item, line),
     )
 }
 

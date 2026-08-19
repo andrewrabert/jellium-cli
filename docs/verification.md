@@ -949,6 +949,11 @@ Run at 360x800, 800x360, 768x1024 and 1920x1080.
   no position for draws none.
 - An On Now card draws that bar at the fraction of its programme's own airing
   that has run.
+- A Continue Watching episode card writes its series' name on the first line
+  and `S1:E1 - ` before the episode's own title on the second, and a Continue
+  Watching movie card writes its name over its year.
+- A card for an episode of season zero writes `Special - ` before the
+  episode's own title.
 - A television browser's home rails take their own widths at every window
   width: 23.5% of the window for a backdrop rail, 18.8% for a small-backdrop
   rail and 15.6% for a square or portrait rail.
@@ -988,6 +993,8 @@ Run at 360x800, 768x1024 and 1920x1080.
 - A series card whose episodes are all played draws a white check on that disc
   in place of the count, and a card whose item can carry no played mark draws
   neither.
+- An album card in a music library grid writes its own name over its album
+  artist, and a movie card writes its name over its year.
 - Under `--read-only` the scrim and the sheet alike offer the play control
   alone, on a library grid, a search result and a genre card.
 - The search field stands a 2em magnifier before its 1.1em field, gapped a

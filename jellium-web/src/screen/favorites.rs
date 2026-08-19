@@ -30,7 +30,7 @@ pub const DRAWS: &[Page] = &[Page::Home];
 fn railed(section: Section) -> card::Drawing {
     card::Drawing {
         card: section.card(),
-        footer: card::Footer::NameAndSubtitle,
+        footer: card::Footer::ParentNameAndYear,
         backing: card::Backing::Padder,
         footing: card::Footing::Bare,
         setting: card::Setting::Centred,

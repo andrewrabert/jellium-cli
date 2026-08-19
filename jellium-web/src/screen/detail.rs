@@ -27,7 +27,7 @@ use crate::widget::prose;
 // reference: card-box-classes
 const CHILDREN: card::Drawing = card::Drawing {
     card: card::Card::Wall(card::Shape::Portrait),
-    footer: card::Footer::NameAndSubtitle,
+    footer: card::Footer::ParentNameAndYear,
     backing: card::Backing::Padder,
     footing: card::Footing::Bare,
     setting: card::Setting::Centred,
@@ -40,7 +40,7 @@ const CHILDREN: card::Drawing = card::Drawing {
 // reference: card-box-classes
 const ALIKE: card::Drawing = card::Drawing {
     card: card::Card::Rail(card::Rail::Portrait),
-    footer: card::Footer::NameAndSubtitle,
+    footer: card::Footer::ParentNameAndYear,
     backing: card::Backing::Padder,
     footing: card::Footing::Bare,
     setting: card::Setting::Centred,

@@ -53,7 +53,7 @@ fn card(recordings: &[BaseItemDto]) -> card::Drawing {
     );
     card::Drawing {
         card: card::Card::Wall(card::Shape::fitting(shared, card::Shape::Backdrop)),
-        footer: card::Footer::Recording,
+        footer: card::Footer::ParentNameAndYear,
         backing: card::Backing::Padder,
         footing: card::Footing::Bare,
         setting: card::Setting::Centred,
@@ -140,16 +140,7 @@ fn entry<'a>(
                 menu,
             },
         },
-        move |line| match line {
-            card::Line::ParentTitle => name.clone(),
-            // reference: card-display-name
-            card::Line::Name => item.episode_title.clone().unwrap_or_default(),
-            card::Line::Year => item
-                .production_year
-                .map(|year| year.to_string())
-                .unwrap_or_default(),
-            _ => String::new(),
-        },
+        move |line| widget::caption(item, line),
     )
 }
 

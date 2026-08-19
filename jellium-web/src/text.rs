@@ -986,6 +986,7 @@ text! {
     CardWatched => "cardWatched", Wording::Unkeyed,
     CardAddToFavorites => "cardAddToFavorites", Wording::Unkeyed,
     CardFavorite => "cardFavorite", Wording::Unkeyed,
+    CardSpecialEpisode => "cardSpecialEpisode", Wording::Reference(Sentence::ValueSpecialEpisodeName),
     FailureWroteUserCreate => "failureWroteUserCreate", Wording::Unkeyed,
     FailureWroteUserSave => "failureWroteUserSave", Wording::Unkeyed,
     FailureWroteUserDelete => "failureWroteUserDelete", Wording::Unkeyed,

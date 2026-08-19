@@ -931,6 +931,7 @@
   "cardWatched": "Watched",
   "cardAddToFavorites": "Add to favorites",
   "cardFavorite": "Favorite",
+  "cardSpecialEpisode": "Special - {0}",
   "failureWroteUserCreate": "Creating {0} was refused.",
   "failureWroteUserSave": "Saving {0} was refused.",
   "failureWroteUserDelete": "Deleting {0} was refused.",

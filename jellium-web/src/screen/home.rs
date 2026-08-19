@@ -174,7 +174,7 @@ fn resumed_media(section: Resumed) -> Option<MediaType> {
 fn railed(card: card::Card) -> card::Drawing {
     card::Drawing {
         card,
-        footer: card::Footer::NameAndSubtitle,
+        footer: card::Footer::ParentNameAndYear,
         backing: card::Backing::Padder,
         footing: card::Footing::Bare,
         setting: card::Setting::Centred,

@@ -26,7 +26,7 @@ use crate::widget;
 fn wall(aspect: Option<Aspect>) -> card::Drawing {
     card::Drawing {
         card: Card::grid(None, aspect),
-        footer: card::Footer::NameAndSubtitle,
+        footer: card::Footer::ParentNameAndYear,
         backing: card::Backing::Padder,
         footing: card::Footing::Bare,
         setting: card::Setting::Centred,
