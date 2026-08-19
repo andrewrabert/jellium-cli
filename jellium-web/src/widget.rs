@@ -2281,7 +2281,7 @@ pub fn osd_header<'a>(sync_play: SyncAccess) -> Element<'a, Message> {
 /// through.
 // reference: filter-indicator
 // reference: filter-indicator-face
-pub fn indicated<'a>(control: Element<'a, Message>, layout: Layout) -> Element<'a, Message> {
+pub fn filtering<'a>(control: Element<'a, Message>, layout: Layout) -> Element<'a, Message> {
     let circle = style::drawn(space::INDICATOR.drawn());
     let inset = style::drawn(space::INDICATOR_INSET.drawn(layout));
     let mark = container(

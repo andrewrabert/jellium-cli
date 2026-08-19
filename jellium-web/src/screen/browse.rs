@@ -359,7 +359,7 @@ fn paging<'a>(browse: &Browse) -> Element<'a, Message> {
         ),
         match browse.listing.facets.is_empty() {
             true => filters,
-            false => widget::indicated(filters, browse.viewport.layout()),
+            false => widget::filtering(filters, browse.viewport.layout()),
         },
     ]
     .spacing(style::drawn(space::CONTROL_GAP.drawn()))
