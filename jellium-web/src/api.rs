@@ -316,16 +316,22 @@ impl Api {
         .await
     }
 
+    // EnableResumable false withholds what Continue Watching already holds
+    // reference: home-next-up-query
     pub async fn next_up(&self) -> Answer<Vec<BaseItemDto>> {
         Answer::of(async {
             let fields = fields();
+            let cutoff = chrono::Utc::now() - chrono::TimeDelta::days(NEXT_UP_DAYS);
             Ok(self
                 .client
                 .get_next_up(&jellyfin_api::query::GetNextUp {
                     enable_images: Some(true),
+                    enable_resumable: Some(false),
+                    enable_rewatching: Some(NEXT_UP_REWATCHING),
                     enable_user_data: Some(true),
                     fields: Some(&fields),
                     limit: Some(RAIL_LIMIT),
+                    next_up_date_cutoff: Some(&cutoff),
                     user_id: Some(&self.user_id),
                     ..Default::default()
                 })
@@ -2833,6 +2839,17 @@ const RAIL_LIMIT: i32 = 24;
 
 /// The most items an instant mix queues.
 const MIX_LIMIT: i32 = 200;
+
+/// How far back Next Up reaches, in days: the `maxDaysForNextUp` default the
+/// reference holds, which this client keeps no preference for.
+// reference: next-up-user-settings
+const NEXT_UP_DAYS: i64 = 365;
+
+/// Whether Next Up carries an episode already watched: the
+/// `enableRewatchingInNextUp` default the reference holds, which this client
+/// keeps no preference for.
+// reference: next-up-user-settings
+const NEXT_UP_REWATCHING: bool = false;
 
 /// One page of a playlist's entries, and how many it holds.
 pub struct Entries {
