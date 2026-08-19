@@ -389,7 +389,8 @@ fn opens(library: &BaseItemDto) -> Option<Route> {
 /// them: the library tiles in the arrangement's order, what is resumed, what
 /// Live TV offers and what is on now, what is next up, and what is latest in
 /// each library. A section the arrangement turns off is absent rather than
-/// empty, and so is a rail whose own request has not answered.
+/// empty, and so is a rail holding no items, whether its request has answered
+/// or not.
 pub fn view<'a>(
     state: &'a State,
     arrangement: &'a Arrangement,
@@ -501,7 +502,11 @@ pub fn view<'a>(
             ),
         ));
     }
-    for row in &state.latest {
+    for row in state
+        .latest
+        .iter()
+        .filter(|row| !row.items.held().is_empty())
+    {
         page = page.push(widget::section(
             opened(
                 Text::HomeLatest,
