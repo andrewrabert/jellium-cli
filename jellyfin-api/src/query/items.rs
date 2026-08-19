@@ -336,7 +336,7 @@ pub struct GetItems<'q> {
     /// Optional filter by maximum official rating (PG, PG-13, TV-MA, etc).
     pub max_official_rating: Option<&'q str>,
     /// Optional. The maximum premiere date. Format = ISO.
-    pub max_premiere_date: Option<&'q chrono::DateTime<chrono::Utc>>,
+    pub max_premiere_date: Option<types::Timestamp>,
     /// Optional. Filter by the maximum width of the item.
     pub max_width: Option<i32>,
     /// Optional filter by MediaType. Allows multiple, comma delimited.
@@ -346,15 +346,15 @@ pub struct GetItems<'q> {
     /// Optional filter by minimum critic rating.
     pub min_critic_rating: Option<f64>,
     /// Optional. The minimum last saved date. Format = ISO.
-    pub min_date_last_saved: Option<&'q chrono::DateTime<chrono::Utc>>,
+    pub min_date_last_saved: Option<types::Timestamp>,
     /// Optional. The minimum last saved date for the current user. Format = ISO.
-    pub min_date_last_saved_for_user: Option<&'q chrono::DateTime<chrono::Utc>>,
+    pub min_date_last_saved_for_user: Option<types::Timestamp>,
     /// Optional. Filter by the minimum height of the item.
     pub min_height: Option<i32>,
     /// Optional filter by minimum official rating (PG, PG-13, TV-MA, etc).
     pub min_official_rating: Option<&'q str>,
     /// Optional. The minimum premiere date. Format = ISO.
-    pub min_premiere_date: Option<&'q chrono::DateTime<chrono::Utc>>,
+    pub min_premiere_date: Option<types::Timestamp>,
     /// Optional. Filter by the minimum width of the item.
     pub min_width: Option<i32>,
     /// Optional filter by items whose name is equally or lesser than a given input string.
@@ -581,7 +581,7 @@ pub struct GetTrailers<'q> {
     /// Optional filter by maximum official rating (PG, PG-13, TV-MA, etc).
     pub max_official_rating: Option<&'q str>,
     /// Optional. The maximum premiere date. Format = ISO.
-    pub max_premiere_date: Option<&'q chrono::DateTime<chrono::Utc>>,
+    pub max_premiere_date: Option<types::Timestamp>,
     /// Optional. Filter by the maximum width of the item.
     pub max_width: Option<i32>,
     /// Optional filter by MediaType. Allows multiple, comma delimited.
@@ -591,15 +591,15 @@ pub struct GetTrailers<'q> {
     /// Optional filter by minimum critic rating.
     pub min_critic_rating: Option<f64>,
     /// Optional. The minimum last saved date. Format = ISO.
-    pub min_date_last_saved: Option<&'q chrono::DateTime<chrono::Utc>>,
+    pub min_date_last_saved: Option<types::Timestamp>,
     /// Optional. The minimum last saved date for the current user. Format = ISO.
-    pub min_date_last_saved_for_user: Option<&'q chrono::DateTime<chrono::Utc>>,
+    pub min_date_last_saved_for_user: Option<types::Timestamp>,
     /// Optional. Filter by the minimum height of the item.
     pub min_height: Option<i32>,
     /// Optional filter by minimum official rating (PG, PG-13, TV-MA, etc).
     pub min_official_rating: Option<&'q str>,
     /// Optional. The minimum premiere date. Format = ISO.
-    pub min_premiere_date: Option<&'q chrono::DateTime<chrono::Utc>>,
+    pub min_premiere_date: Option<types::Timestamp>,
     /// Optional. Filter by the minimum width of the item.
     pub min_width: Option<i32>,
     /// Optional filter by items whose name is equally or lesser than a given input string.

@@ -87,13 +87,13 @@ pub struct GetLiveTvPrograms<'q> {
     /// Optional. The maximum number of records to return.
     pub limit: Option<i32>,
     /// Optional. The maximum premiere end date.
-    pub max_end_date: Option<&'q chrono::DateTime<chrono::Utc>>,
+    pub max_end_date: Option<types::Timestamp>,
     /// Optional. The maximum premiere start date.
-    pub max_start_date: Option<&'q chrono::DateTime<chrono::Utc>>,
+    pub max_start_date: Option<types::Timestamp>,
     /// Optional. The minimum premiere end date.
-    pub min_end_date: Option<&'q chrono::DateTime<chrono::Utc>>,
+    pub min_end_date: Option<types::Timestamp>,
     /// Optional. The minimum premiere start date.
-    pub min_start_date: Option<&'q chrono::DateTime<chrono::Utc>>,
+    pub min_start_date: Option<types::Timestamp>,
     /// Optional. Filter by series timer id.
     pub series_timer_id: Option<&'q str>,
     /// Optional. Specify one or more sort orders, comma delimited. Options: Name, StartDate.

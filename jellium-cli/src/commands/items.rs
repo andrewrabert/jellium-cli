@@ -896,16 +896,24 @@ pub async fn execute(
                     location_types: args.location_types.as_ref(),
                     max_height: args.max_height,
                     max_official_rating: args.max_official_rating.as_deref(),
-                    max_premiere_date: args.max_premiere_date.as_ref(),
+                    max_premiere_date: args
+                        .max_premiere_date
+                        .map(jellyfin_api::types::Timestamp::at),
                     max_width: args.max_width,
                     media_types: args.media_types.as_ref(),
                     min_community_rating: args.min_community_rating,
                     min_critic_rating: args.min_critic_rating,
-                    min_date_last_saved: args.min_date_last_saved.as_ref(),
-                    min_date_last_saved_for_user: args.min_date_last_saved_for_user.as_ref(),
+                    min_date_last_saved: args
+                        .min_date_last_saved
+                        .map(jellyfin_api::types::Timestamp::at),
+                    min_date_last_saved_for_user: args
+                        .min_date_last_saved_for_user
+                        .map(jellyfin_api::types::Timestamp::at),
                     min_height: args.min_height,
                     min_official_rating: args.min_official_rating.as_deref(),
-                    min_premiere_date: args.min_premiere_date.as_ref(),
+                    min_premiere_date: args
+                        .min_premiere_date
+                        .map(jellyfin_api::types::Timestamp::at),
                     min_width: args.min_width,
                     name_less_than: args.name_less_than.as_deref(),
                     name_starts_with: args.name_starts_with.as_deref(),

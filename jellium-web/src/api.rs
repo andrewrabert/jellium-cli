@@ -358,7 +358,7 @@ impl Api {
                     fields: Some(&fields),
                     image_type_limit: Some(1),
                     limit: Some(NEXT_UP_LIMIT.count()),
-                    next_up_date_cutoff: Some(&cutoff),
+                    next_up_date_cutoff: Some(jellyfin_api::types::Timestamp::at(cutoff)),
                     user_id: Some(&self.user_id),
                     ..Default::default()
                 })

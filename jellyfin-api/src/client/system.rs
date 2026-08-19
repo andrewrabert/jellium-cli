@@ -9,7 +9,7 @@ impl Client {
         &self,
         has_user_id: Option<bool>,
         limit: Option<i32>,
-        min_date: Option<&chrono::DateTime<chrono::Utc>>,
+        min_date: Option<types::Timestamp>,
         start_index: Option<i32>,
     ) -> Result<types::ActivityLogEntryQueryResult, Error> {
         self.request(reqwest::Method::GET, "/System/ActivityLog/Entries".into())

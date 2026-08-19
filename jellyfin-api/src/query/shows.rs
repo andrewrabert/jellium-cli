@@ -80,7 +80,7 @@ pub struct GetNextUp<'q> {
     /// Optional. The maximum number of records to return.
     pub limit: Option<i32>,
     /// Optional. Starting date of shows to show in Next Up section.
-    pub next_up_date_cutoff: Option<&'q chrono::DateTime<chrono::Utc>>,
+    pub next_up_date_cutoff: Option<types::Timestamp>,
     /// Optional. Specify this to localize the search to a specific item or folder. Omit to use the root.
     pub parent_id: Option<&'q uuid::Uuid>,
     /// Optional. Filter by series id.

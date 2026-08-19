@@ -66,7 +66,7 @@ impl Client {
     pub async fn mark_played_item(
         &self,
         item_id: &uuid::Uuid,
-        date_played: Option<&chrono::DateTime<chrono::Utc>>,
+        date_played: Option<types::Timestamp>,
         user_id: Option<&uuid::Uuid>,
     ) -> Result<types::UserItemDataDto, Error> {
         self.request(
