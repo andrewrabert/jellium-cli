@@ -200,8 +200,12 @@ pub enum Section {
     NextUp,
     /// The programmes airing now, which the Live TV section stands on.
     OnNow,
-    /// The Latest rail of the library named.
-    Latest(uuid::Uuid),
+    /// The Latest rail of the library named, at what that library's own
+    /// collection type asks for.
+    Latest {
+        library: uuid::Uuid,
+        limit: Limit,
+    },
 }
 
 impl Section {
@@ -235,7 +239,7 @@ impl Section {
         match self {
             Section::Resumed | Section::NextUp => Text::FailureHomeUnread,
             Section::OnNow => Text::FailureProgramsUnread,
-            Section::Latest(_) => Text::FailureLatestUnread,
+            Section::Latest { .. } => Text::FailureLatestUnread,
         }
     }
 }
@@ -279,7 +283,10 @@ impl State {
         self.libraries = Arrival::Arrived(libraries);
         self.latest
             .iter()
-            .map(|row| Section::Latest(row.id))
+            .map(|row| Section::Latest {
+                library: row.id,
+                limit: latest_limit(row.library.collection_type),
+            })
             .collect()
     }
 
@@ -290,7 +297,7 @@ impl State {
             Section::Resumed => self.continue_watching = Arrival::Arrived(items),
             Section::NextUp => self.next_up = Arrival::Arrived(items),
             Section::OnNow => self.on_now = Arrival::Arrived(items),
-            Section::Latest(library) => {
+            Section::Latest { library, .. } => {
                 if let Some(row) = self.latest.iter_mut().find(|row| row.id == library) {
                     row.items = Arrival::Arrived(items);
                 }
@@ -323,8 +330,17 @@ pub struct Latest {
     pub items: Arrival<BaseItemDto>,
 }
 
-/// The most items one Latest row shows.
-pub const LATEST: Limit = Limit::of(16);
+/// The most items one Latest row shows: thirty for a music library and sixteen
+/// for every other. The reference scrolls its home rows sideways always, so the
+/// three limits under its other branch stand unreached.
+// reference: home-latest-query
+// reference: home-scroll-x
+fn latest_limit(collection: Option<CollectionType>) -> Limit {
+    match collection {
+        Some(CollectionType::Music) => Limit::of(30),
+        _ => Limit::of(16),
+    }
+}
 
 /// What one rail's own request answers.
 pub async fn requested(api: Rc<Api>, section: Section) -> Answer<Vec<BaseItemDto>> {
@@ -332,7 +348,7 @@ pub async fn requested(api: Rc<Api>, section: Section) -> Answer<Vec<BaseItemDto
         Section::Resumed => api.continue_watching().await,
         Section::NextUp => api.next_up().await,
         Section::OnNow => api.airing_now(ON_NOW).await,
-        Section::Latest(library) => api.latest(library, LATEST).await,
+        Section::Latest { library, limit } => api.latest(library, limit).await,
     }
 }
 
