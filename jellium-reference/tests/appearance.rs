@@ -315,14 +315,44 @@ fn every_exported_appearance_value_is_read() {
     );
 }
 
+/// Whether a character stands inside a value.
+fn valued(held: char) -> bool {
+    held.is_ascii_alphanumeric() || held == '_' || held == '#'
+}
+
+/// A span's code: every block comment standing in the text becomes the spacing
+/// it stood in, so prose spells neither a count nor a colour.
+/// A `/*` written against a value opens no comment, so `image/*` stands whole.
+fn code(text: &str) -> String {
+    let held: Vec<char> = text.chars().collect();
+    let mut written = String::with_capacity(held.len());
+    let mut at = 0;
+    while at < held.len() {
+        let opens = held[at] == '/'
+            && held.get(at + 1) == Some(&'*')
+            && at.checked_sub(1).is_none_or(|before| !valued(held[before]));
+        if !opens {
+            written.push(held[at]);
+            at += 1;
+            continue;
+        }
+        let mut end = at + 2;
+        while end < held.len() && !(held[end] == '*' && held.get(end + 1) == Some(&'/')) {
+            end += 1;
+        }
+        written.push(' ');
+        at = end.saturating_add(2).min(held.len());
+    }
+    written
+}
+
 /// Whether two characters standing side by side belong to one value, which is
 /// what a run of spacing is kept for and what a spelling must not be found
 /// inside.
 fn joined(before: char, after: char) -> bool {
-    let value = |held: char| held.is_ascii_alphanumeric() || held == '_' || held == '#';
     let decimal =
         (before == '.' && after.is_ascii_digit()) || (before.is_ascii_digit() && after == '.');
-    (value(before) && value(after)) || decimal
+    (valued(before) && valued(after)) || decimal
 }
 
 /// Text as a css declaration and a Rust literal can be compared in: lowered,
@@ -385,7 +415,7 @@ enum Unit {
 
 impl Unit {
     fn read(suffix: &str) -> Option<Unit> {
-        match suffix {
+        match suffix.to_lowercase().as_str() {
             "em" => Some(Unit::Em),
             "rem" => Some(Unit::Rem),
             "%" => Some(Unit::Percent),
@@ -449,9 +479,10 @@ struct Span {
 
 impl Span {
     fn of(text: &str) -> Span {
+        let code = code(text);
         Span {
-            counts: numbered(text),
-            text: flattened(text),
+            counts: numbered(&code),
+            text: flattened(&code),
         }
     }
 
@@ -482,21 +513,38 @@ impl Span {
     }
 }
 
-/// Whether a character closes an operand, which is what makes a `-` written
-/// against it a hyphen rather than the sign of the count that follows.
-fn operand(before: char) -> bool {
-    before.is_ascii_alphanumeric() || before == '_' || before == '%' || before == ')'
+/// What the `-` standing before a count does to it, which the character
+/// standing before the `-` decides.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Dash {
+    /// Nothing closes before it, so it is the count's own sign.
+    Sign,
+    /// A `%` or a `)` closes the value before it, so it subtracts the count
+    /// that follows and leaves that count positive.
+    Subtraction,
+    /// A letter, a digit or a `_` closes a name, a range or an exponent, so the
+    /// digits after it are no count of the rule.
+    Hyphen,
 }
 
-/// Every count a span writes, read from the reference's own text: a count opens
-/// where a digit, a `.` or a `-` stands beside a character it does not join,
-/// runs through the digits and the `.`, and takes the `%` or the letters that
-/// follow as its unit.
-/// A `-` written against the operand before it is a hyphen, which a class name,
-/// a character class and an exponent write, and the digits it holds are no
-/// count of the rule.
-fn numbered(text: &str) -> Vec<Count> {
-    let held: Vec<char> = text.chars().collect();
+impl Dash {
+    fn after(before: Option<char>) -> Dash {
+        match before {
+            Some(value) if value.is_ascii_alphanumeric() || value == '_' => Dash::Hyphen,
+            Some('%' | ')') => Dash::Subtraction,
+            _ => Dash::Sign,
+        }
+    }
+}
+
+/// Every count a span's code writes: a count opens where a digit, a `.` or a
+/// `-` stands beside a character it does not join, runs through the digits and
+/// the `.`, and takes the `%` or the letters that follow as its unit, in either
+/// case.
+/// The `-` that opens one is its sign, the subtractor that leaves it positive,
+/// or the hyphen that makes its digits no count at all.
+fn numbered(code: &str) -> Vec<Count> {
+    let held: Vec<char> = code.chars().collect();
     let mut counts = Vec::new();
     let mut at = 0;
     while at < held.len() {
@@ -509,6 +557,14 @@ fn numbered(text: &str) -> Vec<Count> {
             at += 1;
             continue;
         }
+        let opening = match value == '-' {
+            true => match Dash::after(at.checked_sub(1).map(|before| held[before])) {
+                Dash::Sign => Some(at),
+                Dash::Subtraction => Some(at + 1),
+                Dash::Hyphen => None,
+            },
+            false => Some(at),
+        };
         let mut end = at + usize::from(value == '-');
         while end < held.len() && (held[end].is_ascii_digit() || held[end] == '.') {
             end += 1;
@@ -521,14 +577,9 @@ fn numbered(text: &str) -> Vec<Count> {
                 suffix += 1;
             }
         }
-        let hyphen = value == '-'
-            && at
-                .checked_sub(1)
-                .is_some_and(|before| operand(held[before]));
-        let written: String = held[at..end].iter().collect();
         let unit: String = held[end..suffix].iter().collect();
-        if !hyphen
-            && let Ok(count) = written.parse::<f64>()
+        if let Some(opening) = opening
+            && let Ok(count) = held[opening..end].iter().collect::<String>().parse::<f64>()
             && let Some(unit) = Unit::read(&unit)
         {
             counts.push(Count::of(count, unit));
@@ -980,6 +1031,24 @@ fn a_span_carries_a_value_only_where_it_writes_it() {
     assert!(!exponent.carries(&Spelling::Measured(Count::of(3.0, Unit::Bare))));
     assert!(!exponent.carries(&Spelling::Measured(Count::of(-3.0, Unit::Bare))));
 
+    let ranged_prose = Span::of("/**\n * A contrast ratio value in the range 0 - 21.\n */");
+    assert!(!ranged_prose.carries(&Spelling::Measured(Count::of(21.0, Unit::Bare))));
+    assert!(!ranged_prose.carries(&Spelling::Measured(Count::of(-21.0, Unit::Bare))));
+
+    let noted = Span::of("// ribbon height (7.2em) * 1.8\ntop: -12.96em;");
+    assert!(noted.carries(&Spelling::Measured(Count::of(1.8, Unit::Bare))));
+    assert!(noted.carries(&Spelling::Measured(Count::of(-12.96, Unit::Em))));
+
+    let minified = Span::of("max-height:calc(100%-96px)");
+    assert!(minified.carries(&Spelling::Measured(Count::of(96.0, Unit::Pixels))));
+    assert!(!minified.carries(&Spelling::Measured(Count::of(-96.0, Unit::Pixels))));
+
+    let lettered = Span::of("width: CALC(100% - 2REM)");
+    assert!(lettered.carries(&Spelling::Measured(Count::of(2.0, Unit::Rem))));
+
+    let typed = Span::of("accept='image/*' width: 3em");
+    assert!(typed.carries(&Spelling::Measured(Count::of(3.0, Unit::Em))));
+
     assert!(spelled("css::of(base-8.0)"));
     assert!(!spelled("mui_body_2.length()"));
 
@@ -1102,9 +1171,9 @@ fn argument(text: &str, at: usize) -> Option<char> {
     text[at..].chars().find(|value| !value.is_whitespace())
 }
 
-#[test]
-fn no_literal_reaches_a_text_size_or_a_gap() {
-    let root = tree::workspace_root();
+/// Every site under `jellium-web/src` where one of `calls` opens on a written
+/// number, named by the file and the line it stands on.
+fn spelling(root: &Path, calls: &[&str]) -> Vec<String> {
     let directory = root.join("jellium-web/src");
     let files = tree::files_under(&directory, &[Extension::RUST]);
     assert!(
@@ -1112,15 +1181,15 @@ fn no_literal_reaches_a_text_size_or_a_gap() {
         "no source was read out of jellium-web/src"
     );
 
-    let mut spelled = Vec::new();
+    let mut sites = Vec::new();
     for file in files {
         let text = std::fs::read_to_string(&file).expect("the source is readable");
         let named = file
-            .strip_prefix(&root)
+            .strip_prefix(root)
             .expect("the source sits under the workspace")
             .display()
             .to_string();
-        for call in GAPS {
+        for call in calls {
             let mut at = 0;
             while let Some(found) = text[at..].find(call) {
                 let opened = at + found + call.len();
@@ -1130,14 +1199,20 @@ fn no_literal_reaches_a_text_size_or_a_gap() {
                 };
                 if first.is_ascii_digit() || first == '-' {
                     let line = text[..opened].lines().count();
-                    spelled.push(format!("{named}:{line} spells a number in {call}"));
+                    sites.push(format!("{named}:{line} spells a number in {call}"));
                 }
             }
         }
     }
+    sites
+}
+
+#[test]
+fn no_literal_reaches_a_text_size_or_a_gap() {
+    let sites = spelling(&tree::workspace_root(), GAPS);
     assert!(
-        spelled.is_empty(),
-        "numbers reaching a text size or a gap: {spelled:#?}"
+        sites.is_empty(),
+        "numbers reaching a text size or a gap: {sites:#?}"
     );
 }
 
@@ -1156,40 +1231,10 @@ const LENGTHS: &[&str] = &[
 
 #[test]
 fn no_literal_reaches_a_drawn_length() {
-    let root = tree::workspace_root();
-    let directory = root.join("jellium-web/src");
-    let files = tree::files_under(&directory, &[Extension::RUST]);
+    let sites = spelling(&tree::workspace_root(), LENGTHS);
     assert!(
-        !files.is_empty(),
-        "no source was read out of jellium-web/src"
-    );
-
-    let mut spelled = Vec::new();
-    for file in files {
-        let text = std::fs::read_to_string(&file).expect("the source is readable");
-        let named = file
-            .strip_prefix(&root)
-            .expect("the source sits under the workspace")
-            .display()
-            .to_string();
-        for call in LENGTHS {
-            let mut at = 0;
-            while let Some(found) = text[at..].find(call) {
-                let opened = at + found + call.len();
-                at = opened;
-                let Some(first) = argument(&text, opened) else {
-                    continue;
-                };
-                if first.is_ascii_digit() || first == '-' {
-                    let line = text[..opened].lines().count();
-                    spelled.push(format!("{named}:{line} spells a number in {call}"));
-                }
-            }
-        }
-    }
-    assert!(
-        spelled.is_empty(),
-        "numbers reaching a drawn length: {spelled:#?}"
+        sites.is_empty(),
+        "numbers reaching a drawn length: {sites:#?}"
     );
 }
 
