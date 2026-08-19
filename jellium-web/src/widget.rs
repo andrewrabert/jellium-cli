@@ -739,7 +739,7 @@ fn marked<'a>(
     let inset = style::drawn(space::CARD_INDICATORS_INSET.drawn());
     iced::widget::stack![
         frame,
-        container(row(laid))
+        container(row(laid).align_y(iced::Center))
             .padding(iced::Padding::ZERO.top(inset).right(inset))
             .align_right(Fill),
     ]
