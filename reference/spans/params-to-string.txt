@@ -1,0 +1,12 @@
+function paramsToString(params) {
+    const values = [];
+
+    for (const key in params) {
+        const value = params[key];
+
+        if (value !== null && value !== undefined && value !== '') {
+            values.push(`${encodeURIComponent(key)}=${encodeURIComponent(value)}`);
+        }
+    }
+    return values.join('&');
+}

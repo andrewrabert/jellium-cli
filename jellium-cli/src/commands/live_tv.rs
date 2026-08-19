@@ -1,7 +1,5 @@
 use clap::Subcommand;
-use jellyfin_api::types::{
-    ChannelType, ItemFields, ItemSortBy, RecordingStatus, SortOrder,
-};
+use jellyfin_api::types::{ChannelType, ItemFields, ItemSortBy, RecordingStatus, SortOrder};
 use uuid::Uuid;
 
 #[derive(Subcommand)]
@@ -533,29 +531,26 @@ pub async fn execute(
         } => {
             let effective_uid = uid.as_ref().unwrap_or(user_id);
             let result = client
-                .get_live_tv_channels(
-                    *add_current_program,
-                    *enable_favorite_sorting,
-                    None, // enable_image_types
-                    None, // enable_images
-                    None, // enable_user_data
-                    fields.as_ref(),
-                    None, // image_type_limit
-                    *is_disliked,
-                    *is_favorite,
-                    *is_kids,
-                    *is_liked,
-                    *is_movie,
-                    *is_news,
-                    *is_series,
-                    *is_sports,
-                    *limit,
-                    sort_by.as_ref(),
-                    *sort_order,
-                    *start_index,
-                    *type_,
-                    Some(effective_uid),
-                )
+                .get_live_tv_channels(&jellyfin_api::query::GetLiveTvChannels {
+                    add_current_program: *add_current_program,
+                    enable_favorite_sorting: *enable_favorite_sorting,
+                    fields: fields.as_ref(),
+                    is_disliked: *is_disliked,
+                    is_favorite: *is_favorite,
+                    is_kids: *is_kids,
+                    is_liked: *is_liked,
+                    is_movie: *is_movie,
+                    is_news: *is_news,
+                    is_series: *is_series,
+                    is_sports: *is_sports,
+                    limit: *limit,
+                    sort_by: sort_by.as_ref(),
+                    sort_order: *sort_order,
+                    start_index: *start_index,
+                    type_: *type_,
+                    user_id: Some(effective_uid),
+                    ..Default::default()
+                })
                 .await?;
             crate::output::print_ndjson(&result.items)?;
         }
@@ -564,9 +559,7 @@ pub async fn execute(
             user_id: uid,
         } => {
             let effective_uid = uid.as_ref().unwrap_or(user_id);
-            let result = client
-                .get_channel(channel_id, Some(effective_uid))
-                .await?;
+            let result = client.get_channel(channel_id, Some(effective_uid)).await?;
             crate::output::print_json(&result)?;
         }
         LiveTvCommand::GuideInfo => {
@@ -596,35 +589,24 @@ pub async fn execute(
         } => {
             let effective_uid = uid.as_ref().unwrap_or(user_id);
             let result = client
-                .get_live_tv_programs(
-                    channel_ids.as_ref(),
-                    None, // enable_image_types
-                    None, // enable_images
-                    None, // enable_total_record_count
-                    None, // enable_user_data
-                    fields.as_ref(),
-                    None, // genre_ids
-                    None, // genres
-                    *has_aired,
-                    None, // image_type_limit
-                    *is_airing,
-                    *is_kids,
-                    *is_movie,
-                    *is_news,
-                    *is_series,
-                    *is_sports,
-                    None, // library_series_id
-                    *limit,
-                    None, // max_end_date
-                    None, // max_start_date
-                    None, // min_end_date
-                    None, // min_start_date
-                    series_timer_id.as_deref(),
-                    sort_by.as_ref(),
-                    sort_order.as_ref(),
-                    *start_index,
-                    Some(effective_uid),
-                )
+                .get_live_tv_programs(&jellyfin_api::query::GetLiveTvPrograms {
+                    channel_ids: channel_ids.as_ref(),
+                    fields: fields.as_ref(),
+                    has_aired: *has_aired,
+                    is_airing: *is_airing,
+                    is_kids: *is_kids,
+                    is_movie: *is_movie,
+                    is_news: *is_news,
+                    is_series: *is_series,
+                    is_sports: *is_sports,
+                    limit: *limit,
+                    series_timer_id: series_timer_id.as_deref(),
+                    sort_by: sort_by.as_ref(),
+                    sort_order: sort_order.as_ref(),
+                    start_index: *start_index,
+                    user_id: Some(effective_uid),
+                    ..Default::default()
+                })
                 .await?;
             crate::output::print_ndjson(&result.items)?;
         }
@@ -633,9 +615,7 @@ pub async fn execute(
             user_id: uid,
         } => {
             let effective_uid = uid.as_ref().unwrap_or(user_id);
-            let result = client
-                .get_program(program_id, Some(effective_uid))
-                .await?;
+            let result = client.get_program(program_id, Some(effective_uid)).await?;
             crate::output::print_json(&result)?;
         }
         LiveTvCommand::RecommendedPrograms {
@@ -653,25 +633,20 @@ pub async fn execute(
         } => {
             let effective_uid = uid.as_ref().unwrap_or(user_id);
             let result = client
-                .get_recommended_programs(
-                    None, // enable_image_types
-                    None, // enable_images
-                    None, // enable_total_record_count
-                    None, // enable_user_data
-                    fields.as_ref(),
-                    None, // genre_ids
-                    *has_aired,
-                    None, // image_type_limit
-                    *is_airing,
-                    *is_kids,
-                    *is_movie,
-                    *is_news,
-                    *is_series,
-                    *is_sports,
-                    *limit,
-                    *start_index,
-                    Some(effective_uid),
-                )
+                .get_recommended_programs(&jellyfin_api::query::GetRecommendedPrograms {
+                    fields: fields.as_ref(),
+                    has_aired: *has_aired,
+                    is_airing: *is_airing,
+                    is_kids: *is_kids,
+                    is_movie: *is_movie,
+                    is_news: *is_news,
+                    is_series: *is_series,
+                    is_sports: *is_sports,
+                    limit: *limit,
+                    start_index: *start_index,
+                    user_id: Some(effective_uid),
+                    ..Default::default()
+                })
                 .await?;
             crate::output::print_ndjson(&result.items)?;
         }
@@ -693,27 +668,23 @@ pub async fn execute(
         } => {
             let effective_uid = uid.as_ref().unwrap_or(user_id);
             let result = client
-                .get_recordings(
-                    channel_id.as_deref(),
-                    None, // enable_image_types
-                    None, // enable_images
-                    None, // enable_total_record_count
-                    None, // enable_user_data
-                    fields.as_ref(),
-                    None, // image_type_limit
-                    *is_in_progress,
-                    *is_kids,
-                    *is_library_item,
-                    *is_movie,
-                    *is_news,
-                    *is_series,
-                    *is_sports,
-                    *limit,
-                    series_timer_id.as_deref(),
-                    *start_index,
-                    *status,
-                    Some(effective_uid),
-                )
+                .get_recordings(&jellyfin_api::query::GetRecordings {
+                    channel_id: channel_id.as_deref(),
+                    fields: fields.as_ref(),
+                    is_in_progress: *is_in_progress,
+                    is_kids: *is_kids,
+                    is_library_item: *is_library_item,
+                    is_movie: *is_movie,
+                    is_news: *is_news,
+                    is_series: *is_series,
+                    is_sports: *is_sports,
+                    limit: *limit,
+                    series_timer_id: series_timer_id.as_deref(),
+                    start_index: *start_index,
+                    status: *status,
+                    user_id: Some(effective_uid),
+                    ..Default::default()
+                })
                 .await?;
             crate::output::print_ndjson(&result.items)?;
         }
@@ -732,16 +703,12 @@ pub async fn execute(
         }
         LiveTvCommand::RecordingFolders { user_id: uid } => {
             let effective_uid = uid.as_ref().unwrap_or(user_id);
-            let result = client
-                .get_recording_folders(Some(effective_uid))
-                .await?;
+            let result = client.get_recording_folders(Some(effective_uid)).await?;
             crate::output::print_json(&result)?;
         }
         LiveTvCommand::RecordingGroups { user_id: uid } => {
             let effective_uid = uid.as_ref().unwrap_or(user_id);
-            let result = client
-                .get_recording_groups(Some(effective_uid))
-                .await?;
+            let result = client.get_recording_groups(Some(effective_uid)).await?;
             crate::output::print_json(&result)?;
         }
         LiveTvCommand::RecordingGroup { group_id } => {
@@ -762,22 +729,18 @@ pub async fn execute(
         } => {
             let effective_uid = uid.as_ref().unwrap_or(user_id);
             let result = client
-                .get_recordings_series(
-                    channel_id.as_deref(),
-                    None, // enable_image_types
-                    None, // enable_images
-                    None, // enable_total_record_count
-                    None, // enable_user_data
-                    fields.as_ref(),
-                    group_id.as_deref(),
-                    None, // image_type_limit
-                    *is_in_progress,
-                    *limit,
-                    series_timer_id.as_deref(),
-                    *start_index,
-                    *status,
-                    Some(effective_uid),
-                )
+                .get_recordings_series(&jellyfin_api::query::GetRecordingsSeries {
+                    channel_id: channel_id.as_deref(),
+                    fields: fields.as_ref(),
+                    group_id: group_id.as_deref(),
+                    is_in_progress: *is_in_progress,
+                    limit: *limit,
+                    series_timer_id: series_timer_id.as_deref(),
+                    start_index: *start_index,
+                    status: *status,
+                    user_id: Some(effective_uid),
+                    ..Default::default()
+                })
                 .await?;
             crate::output::print_ndjson(&result.items)?;
         }
@@ -840,9 +803,7 @@ pub async fn execute(
             client.cancel_timer(timer_id).await?;
         }
         LiveTvCommand::DefaultTimer { program_id } => {
-            let result = client
-                .get_default_timer(program_id.as_deref())
-                .await?;
+            let result = client.get_default_timer(program_id.as_deref()).await?;
             crate::output::print_json(&result)?;
         }
         LiveTvCommand::AddListingProvider {
@@ -853,12 +814,7 @@ pub async fn execute(
             let body: jellyfin_api::types::ListingsProviderInfo =
                 serde_json::from_reader(std::io::stdin())?;
             let result = client
-                .add_listing_provider(
-                    pw.as_deref(),
-                    *validate_listings,
-                    *validate_login,
-                    &body,
-                )
+                .add_listing_provider(pw.as_deref(), *validate_listings, *validate_login, &body)
                 .await?;
             crate::output::print_json(&result)?;
         }
@@ -887,7 +843,7 @@ pub async fn execute(
         }
         LiveTvCommand::SchedulesDirectCountries => {
             let result = client.get_schedules_direct_countries().await?;
-            println!("{}", result);
+            crate::output::print_json(&result)?;
         }
         LiveTvCommand::AddTunerHost => {
             let body: jellyfin_api::types::TunerHostInfo =

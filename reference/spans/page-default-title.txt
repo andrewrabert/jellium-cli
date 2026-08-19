@@ -1,0 +1,9 @@
+function updateTitle(page) {
+    const title = page.getAttribute('data-title');
+
+    if (title) {
+        LibraryMenu.setTitle(title);
+    } else if (page.classList.contains('standalonePage')) {
+        LibraryMenu.setDefaultTitle();
+    }
+}

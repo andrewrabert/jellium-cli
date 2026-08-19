@@ -1,0 +1,55 @@
+            if (type === 'Video' || type === 'Audio') {
+                contentType = getMimeType(type.toLowerCase(), mediaSourceContainer);
+
+                if (mediaSource.enableDirectPlay) {
+                    mediaUrl = mediaSource.Path;
+
+                    playMethod = 'DirectPlay';
+                } else if (mediaSource.StreamUrl) {
+                    // Only used for audio
+                    mediaUrl = mediaSource.StreamUrl;
+                    // Use the default playMethod value of Transcode
+                } else if (mediaSource.SupportsDirectPlay || mediaSource.SupportsDirectStream) {
+                    directOptions = {
+                        Static: true,
+                        mediaSourceId: mediaSource.Id,
+                        deviceId: apiClient.deviceId(),
+                        ApiKey: apiClient.accessToken()
+                    };
+
+                    if (mediaSource.ETag) {
+                        directOptions.Tag = mediaSource.ETag;
+                    }
+
+                    if (mediaSource.LiveStreamId) {
+                        directOptions.LiveStreamId = mediaSource.LiveStreamId;
+                    }
+
+                    const prefix = type === 'Video' ? 'Videos' : 'Audio';
+                    mediaUrl = apiClient.getUrl(prefix + '/' + item.Id + '/stream.' + mediaSourceContainer, directOptions);
+
+                    playMethod = mediaSource.SupportsDirectPlay ? 'DirectPlay' : 'DirectStream';
+                } else if (mediaSource.SupportsTranscoding) {
+                    mediaUrl = apiClient.getUrl(mediaSource.TranscodingUrl);
+
+                    if (mediaSource.TranscodingSubProtocol === 'hls') {
+                        contentType = 'application/x-mpegURL';
+                    } else {
+                        contentType = getMimeType(type.toLowerCase(), mediaSource.TranscodingContainer);
+
+                        if (mediaUrl.toLowerCase().indexOf('copytimestamps=true') === -1) {
+                            transcodingOffsetTicks = startPosition || 0;
+                        }
+                    }
+                }
+            } else {
+                // All other media types
+                mediaUrl = mediaSource.Path;
+                playMethod = 'DirectPlay';
+            }
+
+            // Fallback (used for offline items)
+            if (!mediaUrl && mediaSource.SupportsDirectPlay) {
+                mediaUrl = mediaSource.Path;
+                playMethod = 'DirectPlay';
+            }

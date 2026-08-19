@@ -1,0 +1,17 @@
+.emby-input {
+    display: block;
+    margin: 0;
+    margin-bottom: 0 !important;
+    font-family: inherit;
+    font-weight: inherit;
+    padding: 0.4em 0.25em;
+
+    /* must the 16px or larger to prevent iOS page zoom on focus */
+    font-size: 110%;
+
+    /* prevent padding from causing width overflow */
+    box-sizing: border-box;
+    outline: none !important;
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+    width: 100%;
+}

@@ -1,0 +1,29 @@
+                            <Typography variant='h2'>{globalize.translate('HeaderRecordingMetadataSaving')}</Typography>
+
+                            <FormControl>
+                                <FormControlLabel
+                                    control={
+                                        <Checkbox
+                                            name='SaveRecordingNFO'
+                                            checked={config.SaveRecordingNFO}
+                                            onChange={onCheckboxChange}
+                                        />
+                                    }
+                                    label={globalize.translate('SaveRecordingNFO')}
+                                />
+                                <FormHelperText>{globalize.translate('SaveRecordingNFOHelp')}</FormHelperText>
+                            </FormControl>
+
+                            <FormControl>
+                                <FormControlLabel
+                                    control={
+                                        <Checkbox
+                                            name='SaveRecordingImages'
+                                            checked={config.SaveRecordingImages}
+                                            onChange={onCheckboxChange}
+                                        />
+                                    }
+                                    label={globalize.translate('SaveRecordingImages')}
+                                />
+                                <FormHelperText>{globalize.translate('SaveRecordingImagesHelp')}</FormHelperText>
+                            </FormControl>

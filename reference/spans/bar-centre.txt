@@ -1,0 +1,12 @@
+.nowPlayingBarCenter {
+    vertical-align: middle;
+    text-align: center;
+
+    /* Need this to make sure it's on top of nowPlayingBarPositionContainer so that buttons are fully clickable */
+    z-index: 2;
+    flex-grow: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+}

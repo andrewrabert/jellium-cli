@@ -1,0 +1,30 @@
+@mixin header-poster-padding() {
+    padding-left: 37.5%;
+
+    @media all and (min-width: 43.75em) {
+        padding-left: 25%;
+    }
+
+    @media all and (min-width: 50em) {
+        padding-left: 20%;
+    }
+
+    @media all and (min-width: 75em) {
+        padding-left: 16.666666666666666666666666666667%;
+    }
+
+    @media all and (min-width: 87.5em) {
+        padding-left: 14.285714285714285714285714285714%;
+    }
+
+    @media all and (min-width: 100em) {
+        padding-left: 12.5%;
+    }
+
+    @media all and (min-width: 120em) {
+        padding-left: 11.111111111111111111111111111111%;
+    }
+
+    @media all and (min-width: 131.25em) {
+        padding-left: 10%;
+    }

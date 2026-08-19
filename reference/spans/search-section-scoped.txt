@@ -1,0 +1,14 @@
+    switch (collectionType) {
+        case CollectionType.Movies:
+            return [ BaseItemKind.Movie ];
+        case CollectionType.Tvshows:
+            return [
+                BaseItemKind.Series,
+                BaseItemKind.Episode
+            ];
+        case CollectionType.Music:
+            return [
+                BaseItemKind.Playlist,
+                BaseItemKind.MusicAlbum,
+                BaseItemKind.Audio
+            ];

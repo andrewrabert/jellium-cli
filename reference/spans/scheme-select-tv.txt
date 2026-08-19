@@ -1,0 +1,4 @@
+.emby-select-tv-withcolor:focus {
+    background-color: #00a4dc !important;
+    color: #fff !important;
+}

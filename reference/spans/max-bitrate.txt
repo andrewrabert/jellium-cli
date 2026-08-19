@@ -1,0 +1,1 @@
+const MAX_BITRATE = 2147483647;

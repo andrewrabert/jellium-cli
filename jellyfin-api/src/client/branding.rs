@@ -1,30 +1,24 @@
-use crate::types;
-use crate::error::Error;
 use crate::Client;
+use crate::error::Error;
+use crate::types;
 
 impl Client {
     #[doc = "Gets branding configuration\n\nSends a `GET` request to `/Branding/Configuration`\n\n"]
-    pub async fn get_branding_options(
-        &self,
-    ) -> Result<types::BrandingOptionsDto, Error> {
+    pub async fn get_branding_options(&self) -> Result<types::BrandingOptionsDto, Error> {
         self.request(reqwest::Method::GET, "/Branding/Configuration".into())
             .send()
             .await
     }
 
     #[doc = "Gets branding css\n\nSends a `GET` request to `/Branding/Css`\n\n"]
-    pub async fn get_branding_css(
-        &self,
-    ) -> Result<String, Error> {
+    pub async fn get_branding_css(&self) -> Result<String, Error> {
         self.request(reqwest::Method::GET, "/Branding/Css".into())
             .send()
             .await
     }
 
     #[doc = "Gets branding css\n\nSends a `GET` request to `/Branding/Css.css`\n\n"]
-    pub async fn get_branding_css_2(
-        &self,
-    ) -> Result<String, Error> {
+    pub async fn get_branding_css_file(&self) -> Result<String, Error> {
         self.request(reqwest::Method::GET, "/Branding/Css.css".into())
             .send()
             .await

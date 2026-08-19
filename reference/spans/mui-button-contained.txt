@@ -1,0 +1,14 @@
+      style: {
+        '--variant-textColor': (theme.vars || theme).palette[color].main,
+        '--variant-outlinedColor': (theme.vars || theme).palette[color].main,
+        '--variant-outlinedBorder': theme.vars ? `rgba(${theme.vars.palette[color].mainChannel} / 0.5)` : alpha(theme.palette[color].main, 0.5),
+        '--variant-containedColor': (theme.vars || theme).palette[color].contrastText,
+        '--variant-containedBg': (theme.vars || theme).palette[color].main,
+        '@media (hover: hover)': {
+          '&:hover': {
+            '--variant-containedBg': (theme.vars || theme).palette[color].dark,
+            '--variant-textBg': theme.vars ? `rgba(${theme.vars.palette[color].mainChannel} / ${theme.vars.palette.action.hoverOpacity})` : alpha(theme.palette[color].main, theme.palette.action.hoverOpacity),
+            '--variant-outlinedBorder': (theme.vars || theme).palette[color].main,
+            '--variant-outlinedBg': theme.vars ? `rgba(${theme.vars.palette[color].mainChannel} / ${theme.vars.palette.action.hoverOpacity})` : alpha(theme.palette[color].main, theme.palette.action.hoverOpacity)
+          }
+        }

@@ -1,0 +1,72 @@
+[package]
+name = "jellium-web"
+version = "0.1.0"
+edition = "2024"
+license = "MIT"
+
+[workspace]
+
+[dependencies]
+jellyfin-api = { path = "../jellyfin-api" }
+jellium-protocol = { path = "../jellium-protocol" }
+jellium-model = { path = "../jellium-model" }
+blurhash = { path = "vendor/blurhash" }
+iced = { version = "0.14", default-features = false, features = [
+    "wgpu",
+    "webgl",
+    "web-colors",
+    "crisp",
+    "image",
+    "advanced",
+    "lazy",
+] }
+chrono = { version = "0.4", default-features = false, features = [
+    "clock",
+    "serde",
+    "wasmbind",
+] }
+reqwest = { version = "0.13", default-features = false, features = ["json"] }
+serde_json = "1"
+percent-encoding = "2"
+uuid = { version = "1", features = ["serde", "v4", "js"] }
+wgpu = { version = "27", default-features = false, features = [
+    "webgpu",
+    "webgl",
+] }
+wasm-bindgen = "0.2"
+wasm-bindgen-futures = "0.4"
+console_error_panic_hook = "0.1"
+console_log = "1"
+log = "0.4"
+js-sys = "0.3"
+base64 = "0.22"
+serde = { version = "1", features = ["derive"] }
+web-sys = { version = "0.3", features = [
+    "CloseEvent",
+    "Document",
+    "Element",
+    "EventTarget",
+    "HtmlAudioElement",
+    "HtmlCanvasElement",
+    "HtmlElement",
+    "HtmlMediaElement",
+    "HtmlVideoElement",
+    "Location",
+    "MediaSource",
+    "MessageEvent",
+    "Navigator",
+    "Screen",
+    "Storage",
+    "WebSocket",
+    "Window",
+    "console",
+] }
+image = { version = "0.25.10", default-features = false, features = ["jpeg"] }
+woff2-patched = "0.4"
+
+[dev-dependencies]
+wasm-bindgen-test = "0.3"
+
+[profile.release]
+opt-level = "z"
+lto = true

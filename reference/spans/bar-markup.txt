@@ -1,0 +1,11 @@
+    html += '<div class="nowPlayingBar hide nowPlayingBar-hidden">';
+
+    html += '<div class="nowPlayingBarTop">';
+    html += '<div class="nowPlayingBarPositionContainer sliderContainer" dir="ltr">';
+    html += '<input type="range" is="emby-slider" pin step=".01" min="0" max="100" value="0" class="slider-medium-thumb nowPlayingBarPositionSlider" data-slider-keep-progress="true"/>';
+    html += '</div>';
+
+    html += '<div class="nowPlayingBarInfoContainer">';
+    html += '<div class="nowPlayingImage"></div>';
+    html += '<div class="nowPlayingBarText"></div>';
+    html += '</div>';

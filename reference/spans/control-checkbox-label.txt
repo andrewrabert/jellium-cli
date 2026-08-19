@@ -1,0 +1,14 @@
+.emby-checkbox-label {
+    position: relative;
+    z-index: 1;
+    vertical-align: middle;
+    display: inline-flex;
+    box-sizing: border-box;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    padding-left: 2.4em;
+    align-items: center;
+    height: 2.35em;
+    cursor: pointer;
+}

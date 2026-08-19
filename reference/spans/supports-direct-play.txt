@@ -1,0 +1,21 @@
+function supportsDirectPlay(apiClient, item, mediaSource) {
+    // folder rip hacks due to not yet being supported by the stream building engine
+    const isFolderRip = mediaSource.VideoType === 'BluRay' || mediaSource.VideoType === 'Dvd' || mediaSource.VideoType === 'HdDvd';
+
+    if (mediaSource.SupportsDirectPlay || isFolderRip) {
+        if (mediaSource.IsRemote && !appHost.supports(AppFeature.RemoteVideo)) {
+            return Promise.resolve(false);
+        }
+
+        if (mediaSource.Protocol === 'Http' && !mediaSource.RequiredHttpHeaders.length) {
+            // If this is the only way it can be played, then allow it
+            if (!mediaSource.SupportsDirectStream && !mediaSource.SupportsTranscoding) {
+                return Promise.resolve(true);
+            } else {
+                return isHostReachable(mediaSource, apiClient);
+            }
+        }
+    }
+
+    return Promise.resolve(false);
+}

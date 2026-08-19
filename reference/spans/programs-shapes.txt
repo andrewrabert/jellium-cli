@@ -1,0 +1,24 @@
+function renderItems(page, items, sectionClass, overlayButton, cardOptions) {
+    const html = cardBuilder.getCardsHtml(Object.assign({
+        items: items,
+        preferThumb: 'auto',
+        inheritThumb: false,
+        shape: enableScrollX() ? 'autooverflow' : 'auto',
+        defaultShape: getBackdropShape(enableScrollX()),
+        showParentTitle: true,
+        showTitle: true,
+        centerText: true,
+        coverImage: true,
+        overlayText: false,
+        lazy: true,
+        overlayPlayButton: overlayButton === 'play',
+        overlayMoreButton: overlayButton === 'more',
+        overlayInfoButton: overlayButton === 'info',
+        allowBottomPadding: !enableScrollX(),
+        showAirTime: true,
+        showAirDateTime: true
+    }, cardOptions || {}));
+    const elem = page.querySelector('.' + sectionClass);
+    elem.innerHTML = html;
+    imageLoader.lazyChildren(elem);
+}

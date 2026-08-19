@@ -1,0 +1,19 @@
+        const apiClient = getApiClient();
+
+        apiClient.getItem(apiClient.getCurrentUserId(), selectedItem).then(function (item) {
+            selectedItem = item;
+
+            apiClient.getCurrentUser().then(function (user) {
+                itemContextMenu.show(getContextMenuOptions(selectedItem, user, button))
+                    .then(function (result) {
+                        if (result.deleted) {
+                            const parentId = selectedItem.SeasonId || selectedItem.SeriesId || selectedItem.ParentId;
+
+                            if (parentId) {
+                                appRouter.showItem(parentId, item.ServerId);
+                            } else {
+                                appRouter.goHome();
+                            }
+                        } else if (result.updated) {
+                            reload(self, view, params);
+                        }

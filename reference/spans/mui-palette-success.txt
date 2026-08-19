@@ -1,0 +1,14 @@
+function getDefaultSuccess(mode = 'light') {
+  if (mode === 'dark') {
+    return {
+      main: green[400],
+      light: green[300],
+      dark: green[700]
+    };
+  }
+  return {
+    main: green[800],
+    light: green[500],
+    dark: green[900]
+  };
+}

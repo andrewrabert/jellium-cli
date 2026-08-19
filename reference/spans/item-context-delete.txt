@@ -1,0 +1,7 @@
+    if (item.CanDelete && options.deleteItem !== false) {
+        commands.push({
+            name: getDeleteLabel(item.Type),
+            id: 'delete',
+            icon: 'delete'
+        });
+    }

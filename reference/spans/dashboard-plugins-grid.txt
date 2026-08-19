@@ -1,0 +1,19 @@
+                                    <Grid container spacing={2}>
+                                        {filteredPlugins.map(plugin => (
+                                            // NOTE: Legacy Grid is required due to lack of gap support in JMP on some OSs
+                                            // eslint-disable-next-line @typescript-eslint/no-deprecated
+                                            <Grid
+                                                key={plugin.id}
+                                                item
+                                                xs={12}
+                                                sm={6}
+                                                md={4}
+                                                lg={3}
+                                                xl={2}
+                                            >
+                                                <PluginCard
+                                                    plugin={plugin}
+                                                />
+                                            </Grid>
+                                        ))}
+                                    </Grid>

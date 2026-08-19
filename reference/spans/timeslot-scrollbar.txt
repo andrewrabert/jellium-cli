@@ -1,0 +1,3 @@
+.timeslotHeaders-desktop::-webkit-scrollbar {
+    height: 0.7em;
+}

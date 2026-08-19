@@ -1,0 +1,2 @@
+        if (window.NativeShell) {
+            profile = window.NativeShell.AppHost.getDeviceProfile(profileBuilder, __PACKAGE_JSON_VERSION__);

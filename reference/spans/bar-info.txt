@@ -1,0 +1,7 @@
+.nowPlayingBarInfoContainer {
+    display: flex;
+    align-items: center;
+    height: 100%;
+    width: 40%;
+    overflow: hidden;
+}

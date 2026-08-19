@@ -1,0 +1,7 @@
+  return {
+    ...theme.typography.button,
+    minWidth: 64,
+    padding: '6px 16px',
+    border: 0,
+    borderRadius: (theme.vars || theme).shape.borderRadius,
+    transition: theme.transitions.create(['background-color', 'box-shadow', 'border-color', 'color'], {

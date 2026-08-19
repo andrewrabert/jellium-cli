@@ -1,0 +1,18 @@
+html {
+    @include font($size: 93%);
+    text-size-adjust: 100%;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+}
+
+h1 {
+    @include font(400, 1.8em);
+}
+
+h2 {
+    @include font(400, 1.5em);
+}
+
+h3 {
+    @include font(400, 1.17em);
+}

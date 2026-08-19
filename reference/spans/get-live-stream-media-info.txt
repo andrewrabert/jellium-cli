@@ -1,0 +1,12 @@
+        function getLiveStreamMediaInfo(player, streamInfo, mediaSource, liveStreamId, serverId) {
+            console.debug('getLiveStreamMediaInfo');
+
+            streamInfo.lastMediaInfoQuery = new Date().getTime();
+
+            ServerConnections.getApiClient(serverId).getLiveStreamMediaInfo(liveStreamId).then(function (info) {
+                mediaSource.MediaStreams = info.MediaStreams;
+                Events.trigger(player, 'mediastreamschange');
+            }, function () {
+                // Swallow errors
+            });
+        }

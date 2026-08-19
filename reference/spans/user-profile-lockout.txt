@@ -1,0 +1,16 @@
+                    <div className='verticalSection'>
+                        <div className='inputContainer' id='fldLoginAttemptsBeforeLockout'>
+                            <Input
+                                type='number'
+                                id='txtLoginAttemptsBeforeLockout'
+                                label={globalize.translate('LabelUserLoginAttemptsBeforeLockout')}
+                                min={-1} step={1}
+                            />
+                            <div className='fieldDescription'>
+                                {globalize.translate('OptionLoginAttemptsBeforeLockout')}
+                            </div>
+                            <div className='fieldDescription'>
+                                {globalize.translate('OptionLoginAttemptsBeforeLockoutHelp')}
+                            </div>
+                        </div>
+                    </div>

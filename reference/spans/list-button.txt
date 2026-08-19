@@ -1,0 +1,7 @@
+.listItemButton {
+    margin: 0;
+    display: inline-block;
+    vertical-align: middle;
+    flex-shrink: 0;
+    contain: layout style;
+}

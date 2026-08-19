@@ -1,0 +1,20 @@
+                    <AccessContainer
+                        containerClassName='channelAccessContainer hide'
+                        headerTitle='HeaderChannelAccess'
+                        checkBoxClassName='chkEnableAllChannels'
+                        checkBoxTitle='OptionEnableAccessToAllChannels'
+                        listContainerClassName='channelAccessListContainer'
+                        accessClassName='channelAccess'
+                        listTitle='Channels'
+                        description='ChannelAccessHelp'
+                    >
+                        {channelsItems.map(Item => (
+                            <CheckBoxElement
+                                key={Item.Id}
+                                className='chkChannel'
+                                itemId={Item.Id}
+                                itemName={Item.Name}
+                                itemCheckedAttribute={Item.checkedAttribute}
+                            />
+                        ))}
+                    </AccessContainer>

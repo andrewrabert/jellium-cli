@@ -1,0 +1,19 @@
+let maxChannelCount = null;
+
+function getSpeakerCount() {
+    if (maxChannelCount != null) {
+        return maxChannelCount;
+    }
+
+    maxChannelCount = -1;
+
+    const AudioContext = window.AudioContext || window.webkitAudioContext || false; /* eslint-disable-line compat/compat */
+
+    if (AudioContext) {
+        const audioCtx = new AudioContext();
+
+        maxChannelCount = audioCtx.destination.maxChannelCount;
+    }
+
+    return maxChannelCount;
+}

@@ -1,0 +1,27 @@
+        const menuItems = targets.map(function (t) {
+            let name = t.name;
+
+            if (t.appName && t.appName !== t.name) {
+                name += ' - ' + t.appName;
+            }
+
+            return {
+                name: name,
+                id: t.id,
+                selected: currentPlayerId === t.id,
+                secondaryText: getTargetSecondaryText(t),
+                icon: getIcon(t)
+            };
+        });
+
+        import('../actionSheet/actionSheet').then((actionsheet) => {
+            loading.hide();
+
+            const menuOptions = {
+                title: globalize.translate('HeaderPlayOn'),
+                items: menuItems,
+                positionTo: button,
+
+                resolveOnClick: true,
+                border: true
+            };

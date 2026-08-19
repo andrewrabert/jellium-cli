@@ -1,0 +1,5 @@
+.osdTimeText {
+    margin-left: 1em;
+    margin-right: auto;
+    user-select: none;
+}

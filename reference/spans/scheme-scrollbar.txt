@@ -1,0 +1,4 @@
+* {
+    scrollbar-width: thin;
+    scrollbar-color: #3b3b3b #202020;
+}

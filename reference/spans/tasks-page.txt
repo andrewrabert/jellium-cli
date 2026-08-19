@@ -1,0 +1,13 @@
+            <Box className='content-primary'>
+                <Box className='readOnlyContent'>
+                    <Stack spacing={3} mt={2}>
+                        {categories.map(category => {
+                            return <Tasks
+                                key={category}
+                                category={category}
+                                tasks={getTasksByCategory(tasks, category)}
+                            />;
+                        })}
+                    </Stack>
+                </Box>
+            </Box>

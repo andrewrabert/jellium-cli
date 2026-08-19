@@ -1,0 +1,110 @@
+export function getLuminance(color) {
+  color = decomposeColor(color);
+  let rgb = color.type === 'hsl' || color.type === 'hsla' ? decomposeColor(hslToRgb(color)).values : color.values;
+  rgb = rgb.map(val => {
+    if (color.type !== 'color') {
+      val /= 255; // normalized
+    }
+    return val <= 0.03928 ? val / 12.92 : ((val + 0.055) / 1.055) ** 2.4;
+  });
+
+  // Truncate at 3 digits
+  return Number((0.2126 * rgb[0] + 0.7152 * rgb[1] + 0.0722 * rgb[2]).toFixed(3));
+}
+
+/**
+ * Calculates the contrast ratio between two colors.
+ *
+ * Formula: https://www.w3.org/TR/WCAG20-TECHS/G17.html#G17-tests
+ * @param {string} foreground - CSS color, i.e. one of: #nnn, #nnnnnn, rgb(), rgba(), hsl(), hsla()
+ * @param {string} background - CSS color, i.e. one of: #nnn, #nnnnnn, rgb(), rgba(), hsl(), hsla()
+ * @returns {number} A contrast ratio value in the range 0 - 21.
+ */
+export function getContrastRatio(foreground, background) {
+  const lumA = getLuminance(foreground);
+  const lumB = getLuminance(background);
+  return (Math.max(lumA, lumB) + 0.05) / (Math.min(lumA, lumB) + 0.05);
+}
+
+/**
+ * Sets the absolute transparency of a color.
+ * Any existing alpha values are overwritten.
+ * @param {string} color - CSS color, i.e. one of: #nnn, #nnnnnn, rgb(), rgba(), hsl(), hsla(), color()
+ * @param {number} value - value to set the alpha channel to in the range 0 - 1
+ * @returns {string} A CSS color string. Hex input values are returned as rgb
+ */
+export function alpha(color, value) {
+  color = decomposeColor(color);
+  value = clampWrapper(value);
+  if (color.type === 'rgb' || color.type === 'hsl') {
+    color.type += 'a';
+  }
+  if (color.type === 'color') {
+    color.values[3] = `/${value}`;
+  } else {
+    color.values[3] = value;
+  }
+  return recomposeColor(color);
+}
+export function private_safeAlpha(color, value, warning) {
+  try {
+    return alpha(color, value);
+  } catch (error) {
+    if (warning && process.env.NODE_ENV !== 'production') {
+      console.warn(warning);
+    }
+    return color;
+  }
+}
+
+/**
+ * Darkens a color.
+ * @param {string} color - CSS color, i.e. one of: #nnn, #nnnnnn, rgb(), rgba(), hsl(), hsla(), color()
+ * @param {number} coefficient - multiplier in the range 0 - 1
+ * @returns {string} A CSS color string. Hex input values are returned as rgb
+ */
+export function darken(color, coefficient) {
+  color = decomposeColor(color);
+  coefficient = clampWrapper(coefficient);
+  if (color.type.includes('hsl')) {
+    color.values[2] *= 1 - coefficient;
+  } else if (color.type.includes('rgb') || color.type.includes('color')) {
+    for (let i = 0; i < 3; i += 1) {
+      color.values[i] *= 1 - coefficient;
+    }
+  }
+  return recomposeColor(color);
+}
+export function private_safeDarken(color, coefficient, warning) {
+  try {
+    return darken(color, coefficient);
+  } catch (error) {
+    if (warning && process.env.NODE_ENV !== 'production') {
+      console.warn(warning);
+    }
+    return color;
+  }
+}
+
+/**
+ * Lightens a color.
+ * @param {string} color - CSS color, i.e. one of: #nnn, #nnnnnn, rgb(), rgba(), hsl(), hsla(), color()
+ * @param {number} coefficient - multiplier in the range 0 - 1
+ * @returns {string} A CSS color string. Hex input values are returned as rgb
+ */
+export function lighten(color, coefficient) {
+  color = decomposeColor(color);
+  coefficient = clampWrapper(coefficient);
+  if (color.type.includes('hsl')) {
+    color.values[2] += (100 - color.values[2]) * coefficient;
+  } else if (color.type.includes('rgb')) {
+    for (let i = 0; i < 3; i += 1) {
+      color.values[i] += (255 - color.values[i]) * coefficient;
+    }
+  } else if (color.type.includes('color')) {
+    for (let i = 0; i < 3; i += 1) {
+      color.values[i] += (1 - color.values[i]) * coefficient;
+    }
+  }
+  return recomposeColor(color);
+}

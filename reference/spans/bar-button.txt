@@ -1,0 +1,10 @@
+.mediaButton,
+.nowPlayingBarUserDataButtons .btnUserItemRating {
+    vertical-align: middle;
+    margin: 0;
+    text-align: center;
+}
+
+.mediaButton {
+    font-size: 120%;
+}

@@ -1,0 +1,11 @@
+const FilledInputInput = styled(InputBaseInput, {
+  name: 'MuiFilledInput',
+  slot: 'Input',
+  overridesResolver: inputBaseInputOverridesResolver
+})(memoTheme(({
+  theme
+}) => ({
+  paddingTop: 25,
+  paddingRight: 12,
+  paddingBottom: 8,
+  paddingLeft: 12,

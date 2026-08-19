@@ -1,0 +1,5 @@
+.actionSheetScroller-tv {
+    max-height: 64%;
+    max-width: 60%;
+    width: auto;
+}

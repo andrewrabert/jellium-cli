@@ -1,0 +1,23 @@
+        self.canPlay = function (item) {
+            const itemType = item.Type;
+
+            if (itemType === 'Book' || itemType === 'PhotoAlbum' || itemType === 'MusicGenre' || itemType === 'Season' || itemType === 'Series' || itemType === 'BoxSet' || itemType === 'MusicAlbum' || itemType === 'MusicArtist' || itemType === 'Playlist') {
+                return true;
+            }
+
+            if (item.LocationType === 'Virtual' && itemType !== 'Program') {
+                return false;
+            }
+
+            if (itemType === 'Program') {
+                if (!item.EndDate || !item.StartDate) {
+                    return false;
+                }
+
+                if (new Date().getTime() > datetime.parseISO8601Date(item.EndDate).getTime() || new Date().getTime() < datetime.parseISO8601Date(item.StartDate).getTime()) {
+                    return false;
+                }
+            }
+
+            return getPlayer(item, getDefaultPlayOptions()) != null;
+        };

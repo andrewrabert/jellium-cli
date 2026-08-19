@@ -1,0 +1,39 @@
+@media all and (max-height: 50em) {
+    .alphaPicker-fixed {
+        @include conditional-max(bottom, 5em, env(safe-area-inset-bottom));
+    }
+
+    .alphaPickerButton-vertical {
+        padding-top: 1px !important;
+        padding-bottom: 1px !important;
+    }
+}
+
+@media all and (max-height: 49em) {
+    .alphaPicker-vertical {
+        font-size: 94%;
+    }
+}
+
+@media all and (max-height: 44em) {
+    .alphaPicker-vertical {
+        font-size: 90%;
+    }
+
+    .alphaPickerButton-vertical {
+        padding-top: 0 !important;
+        padding-bottom: 0 !important;
+    }
+}
+
+@media all and (max-height: 37em) {
+    .alphaPicker-vertical {
+        font-size: 82%;
+    }
+}
+
+@media all and (max-height: 32em) {
+    .alphaPicker-vertical {
+        font-size: 74%;
+    }
+}

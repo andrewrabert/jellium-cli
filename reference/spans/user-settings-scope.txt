@@ -1,0 +1,8 @@
+    get(name, enableOnServer) {
+        const userId = this.currentUserId;
+        if (enableOnServer !== false && this.displayPrefs) {
+            return this.displayPrefs.CustomPrefs[name];
+        }
+
+        return appSettings.get(name, userId);
+    }

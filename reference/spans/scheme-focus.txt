@@ -1,0 +1,4 @@
+.emby-button.show-focus:focus {
+    background: #00a4dc;
+    color: #fff;
+}

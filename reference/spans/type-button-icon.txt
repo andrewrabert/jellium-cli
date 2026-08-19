@@ -1,0 +1,4 @@
+.emby-button > .material-icons {
+    /* For non-fab buttons that have icons */
+    font-size: 1.36em;
+}

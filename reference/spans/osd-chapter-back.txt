@@ -1,0 +1,3 @@
+                    <button is="paper-icon-button-light" class="btnPreviousChapter autoSize hide" title="${PreviousChapter} (PageDown)" aria-label="${PreviousChapter}">
+                        <span class="xlargePaperIconButton material-icons undo" aria-hidden="true"></span>
+                    </button>

@@ -1,0 +1,15 @@
+            let posterOptions = {
+                shape: shape,
+                showTitle: settings.showTitle,
+                showYear: settings.showTitle,
+                centerText: true,
+                coverImage: true,
+                preferThumb: preferThumb,
+                preferDisc: preferDisc,
+                preferLogo: preferLogo,
+                overlayPlayButton: false,
+                overlayMoreButton: true,
+                overlayText: !settings.showTitle,
+                defaultShape: defaultShape,
+                action: params.type === 'Audio' ? 'playallfromhere' : null
+            };

@@ -1,0 +1,3 @@
+    if (!imgUrl) {
+        cardImageContainerOpen += getDefaultText(item, options);
+    }

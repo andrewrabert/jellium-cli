@@ -1,0 +1,19 @@
+.mdl-slider-background-flex {
+    background: rgba(255, 255, 255, 0.3);
+    height: 0.2em;
+    margin-top: -0.1em;
+    width: 100%;
+    top: 50%;
+    display: flex;
+    overflow: hidden;
+    border: 0;
+    padding: 0;
+
+    [dir="ltr"] & {
+        left: 0;
+    }
+
+    [dir="rtl"] & {
+        right: 0;
+    }
+}

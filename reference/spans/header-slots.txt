@@ -1,0 +1,18 @@
+.headerLeft {
+    display: flex;
+    align-items: center;
+    flex-grow: 1;
+    overflow: hidden;
+    justify-content: flex-start;
+}
+
+.headerRight {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+}
+
+.noHeaderRight .headerRight,
+.noHomeButtonHeader .headerHomeButton {
+    display: none !important;
+}

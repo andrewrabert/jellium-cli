@@ -1,0 +1,19 @@
+.padded-left {
+    [dir="ltr"] & {
+        @include conditional-max(padding-left, 3.3%, env(safe-area-inset-left));
+    }
+
+    [dir="rtl"] & {
+        @include conditional-max(padding-right, 3.3%, env(safe-area-inset-right));
+    }
+}
+
+.padded-right {
+    [dir="ltr"] & {
+        @include conditional-max(padding-right, 3.3%, env(safe-area-inset-right));
+    }
+
+    [dir="rtl"] & {
+        @include conditional-max(padding-left, 3.3%, env(safe-area-inset-left));
+    }
+}

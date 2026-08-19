@@ -1,0 +1,9 @@
+  }, {
+    props: {
+      variant: 'filled'
+    },
+    style: {
+      '&&&': {
+        paddingRight: 32
+      }
+    }

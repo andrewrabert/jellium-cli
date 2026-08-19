@@ -1,0 +1,29 @@
+.cardPadder-backdrop,
+.cardPadder-mixedBackdrop,
+.cardPadder-smallBackdrop,
+.cardPadder-overflowBackdrop,
+.cardPadder-overflowSmallBackdrop {
+    padding-bottom: 56.25%;
+    contain: strict;
+}
+
+.cardPadder-square,
+.cardPadder-mixedSquare,
+.cardPadder-overflowSquare,
+.overflowSquareCard-textCardPadder {
+    padding-bottom: 100%;
+    contain: strict;
+}
+
+.cardPadder-portrait,
+.cardPadder-mixedPortrait,
+.cardPadder-overflowPortrait,
+.overflowPortraitCard-textCardPadder {
+    padding-bottom: 150%;
+    contain: strict;
+}
+
+.cardPadder-banner {
+    padding-bottom: 18.5%;
+    contain: strict;
+}

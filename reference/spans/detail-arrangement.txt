@@ -1,0 +1,11 @@
+@media all and (min-width: 31.25em) {
+    .mobileDetails {
+        display: none;
+    }
+}
+
+@media all and (max-width: 31.25em) {
+    .desktopDetails {
+        display: none !important;
+    }
+}

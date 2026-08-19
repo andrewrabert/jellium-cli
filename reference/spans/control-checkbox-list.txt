@@ -1,0 +1,4 @@
+.checkboxList > .emby-checkbox-label {
+    display: flex;
+    margin: 0.5em 0;
+}

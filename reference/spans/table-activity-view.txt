@@ -1,0 +1,19 @@
+        // Custom toolbar contents
+        renderTopToolbarCustomActions: () => (
+            <ToggleButtonGroup
+                size='small'
+                value={activityView}
+                onChange={onViewChange}
+                exclusive
+            >
+                <ToggleButton value={ActivityView.All}>
+                    {globalize.translate('All')}
+                </ToggleButton>
+                <ToggleButton value={ActivityView.User}>
+                    {globalize.translate('LabelUser')}
+                </ToggleButton>
+                <ToggleButton value={ActivityView.System}>
+                    {globalize.translate('LabelSystem')}
+                </ToggleButton>
+            </ToggleButtonGroup>
+        )

@@ -1,0 +1,43 @@
+            <div ref={element} className='padded-left padded-right padded-bottom-page'>
+                <div
+                    className='readOnlyContent'
+                    style={{ margin: '0 auto', marginBottom: '1.8em', padding: '0 1em', display: 'flex', flexDirection: 'row', alignItems: 'center' }}
+                >
+                    <div
+                        className='imagePlaceHolder'
+                        style={{ position: 'relative', display: 'inline-block', maxWidth: 200 }}
+                    >
+                        <input
+                            id='uploadImage'
+                            type='file'
+                            accept='image/*'
+                            style={{ position: 'absolute', right: 0, width: '100%', height: '100%', opacity: 0, cursor: 'pointer' }}
+                        />
+                        <div
+                            id='image'
+                            style={{ width: 200, height: 200, backgroundRepeat: 'no-repeat', backgroundPosition: 'center', borderRadius: '100%', backgroundSize: 'cover' }}
+                        />
+                    </div>
+                    <div style={{ verticalAlign: 'top', margin: '1em 2em', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                        <h2 className='username' style={{ margin: 0, fontSize: 'xx-large' }}>
+                            {userName}
+                        </h2>
+                        <br />
+                        <Button
+                            type='button'
+                            id='btnAddImage'
+                            className='raised button-submit hide'
+                            title={globalize.translate('ButtonAddImage')}
+                        />
+                        <Button
+                            type='button'
+                            id='btnDeleteImage'
+                            className='raised hide'
+                            title={globalize.translate('DeleteImage')}
+                        />
+                    </div>
+                </div>
+                <UserPasswordForm
+                    userId={userId}
+                />
+            </div>

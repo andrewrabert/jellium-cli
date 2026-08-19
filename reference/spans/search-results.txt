@@ -1,0 +1,24 @@
+    const renderSection = (section: Section, index: number) => {
+        return (
+            <SearchResultsRow
+                key={`${section.title}-${index}`}
+                title={globalize.translate(section.title)}
+                items={section.items}
+                cardOptions={{
+                    shape: CardShape.AutoOverflow,
+                    scalable: true,
+                    showTitle: true,
+                    overlayText: false,
+                    centerText: true,
+                    allowBottomPadding: false,
+                    ...section.cardOptions
+                }}
+            />
+        );
+    };
+
+    return (
+        <div className={'searchResults padded-top padded-bottom-page'}>
+            {data.map((section, index) => renderSection(section, index))}
+        </div>
+    );

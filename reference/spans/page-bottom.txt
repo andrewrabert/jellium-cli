@@ -1,0 +1,20 @@
+.content-primary,
+.padded-bottom-page,
+.page,
+.pageWithAbsoluteTabs .pageTabContent {
+    /* provides room for the music controls */
+    padding-bottom: 5em !important;
+    padding-bottom: calc(env(safe-area-inset-bottom) + 5em) !important;
+}
+
+.readOnlyContent {
+    @media all and (min-width: 50em) {
+        max-width: 54em;
+    }
+}
+
+form {
+    @media all and (min-width: 50em) {
+        max-width: 54em;
+    }
+}

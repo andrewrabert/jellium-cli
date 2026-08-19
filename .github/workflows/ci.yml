@@ -7,17 +7,79 @@ on:
     branches: [main]
 
 jobs:
-  check:
+  web:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+          components: rustfmt, clippy
       - uses: Swatinem/rust-cache@v2
-      - run: cargo clippy -- -D warnings
+        with:
+          key: web
+      - run: cargo install --locked trunk
+      - run: cargo install --locked wasm-bindgen-cli --version 0.2.127
+      - run: cargo fmt --all --check
+        working-directory: jellium-web
+      - run: cargo clippy --all-targets -- -D warnings
+        working-directory: jellium-web
+      - run: cargo test
+        working-directory: jellium-web
+      - run: trunk build --release --dist dist index.html
+        working-directory: jellium-web
+      - uses: actions/upload-artifact@v4
+        with:
+          name: jellium-web-dist
+          path: jellium-web/dist
+
+  check:
+    needs: web
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - uses: Swatinem/rust-cache@v2
+      - uses: actions/download-artifact@v4
+        with:
+          name: jellium-web-dist
+          path: web-dist
+      - run: echo "JELLIUM_WEB_DIST=$PWD/web-dist" >> "$GITHUB_ENV"
+        shell: bash
+      - id: pinned
+        run: printf 'commit=%s\n' "$(head -1 reference/PINNED | cut -f2)" >> "$GITHUB_OUTPUT"
+      - uses: actions/checkout@v4
+        with:
+          repository: jellyfin/jellyfin-web
+          ref: ${{ steps.pinned.outputs.commit }}
+          path: jellyfin-web
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: jellyfin-web/package-lock.json
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: just
+      - run: npm ci --omit=dev --ignore-scripts
+        working-directory: jellyfin-web
+      - id: blurhash
+        run: printf 'commit=%s\n' "$(sed -n 3p reference/PINNED | cut -f2)" >> "$GITHUB_OUTPUT"
+      - uses: actions/checkout@v4
+        with:
+          repository: whisperfish/blurhash-rs
+          ref: ${{ steps.blurhash.outputs.commit }}
+          path: blurhash-rs
+      - run: just pinned jellyfin-web blurhash-rs
+      - run: just suppressions
+      - run: cargo fmt --all --check
+      - run: cargo clippy --all-targets -- -D warnings
       - run: cargo test
 
   build:
-    needs: check
+    needs: [check, web]
     strategy:
       matrix:
         include:
@@ -44,6 +106,12 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         with:
           key: ${{ matrix.target }}
+      - uses: actions/download-artifact@v4
+        with:
+          name: jellium-web-dist
+          path: web-dist
+      - run: echo "JELLIUM_WEB_DIST=$PWD/web-dist" >> "$GITHUB_ENV"
+        shell: bash
       - name: Install cross-compilation tools
         if: matrix.target == 'aarch64-unknown-linux-gnu' || matrix.target == 'x86_64-unknown-linux-musl'
         run: |

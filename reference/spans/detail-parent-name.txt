@@ -1,0 +1,8 @@
+.parentName {
+    display: block;
+    margin: 0 0 0;
+}
+
+.layout-mobile .parentName {
+    margin: 0.6em 0 0;
+}

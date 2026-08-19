@@ -148,18 +148,13 @@ pub async fn execute(
             let result = client.create_user_by_name(&body).await?;
             crate::output::print_json(&result)?;
         }
-        UsersCommand::Update {
-            name,
-            user_id: uid,
-        } => {
+        UsersCommand::Update { name, user_id: uid } => {
             let effective_user_id = uid.as_ref().unwrap_or(user_id);
             let body = jellyfin_api::types::UserDto {
                 name: name.clone(),
                 ..Default::default()
             };
-            client
-                .update_user(Some(effective_user_id), &body)
-                .await?;
+            client.update_user(Some(effective_user_id), &body).await?;
         }
         UsersCommand::UpdatePassword {
             current_password,
@@ -186,56 +181,32 @@ pub async fn execute(
             authentication_provider_id,
             password_reset_provider_id,
         } => {
-            let body = jellyfin_api::types::UserPolicy {
-                is_administrator: *is_administrator,
-                is_disabled: *is_disabled,
-                is_hidden: *is_hidden,
-                enable_media_playback: *enable_media_playback,
-                enable_remote_access: *enable_remote_access,
-                authentication_provider_id: authentication_provider_id
-                    .clone()
-                    .unwrap_or_default(),
-                password_reset_provider_id: password_reset_provider_id
-                    .clone()
-                    .unwrap_or_default(),
-                enable_collection_management: false,
-                enable_lyric_management: false,
-                enable_subtitle_management: false,
-                access_schedules: None,
-                allowed_tags: None,
-                block_unrated_items: None,
-                blocked_channels: None,
-                blocked_media_folders: None,
-                blocked_tags: None,
-                enable_all_channels: None,
-                enable_all_devices: None,
-                enable_all_folders: None,
-                enable_audio_playback_transcoding: None,
-                enable_content_deletion: None,
-                enable_content_deletion_from_folders: None,
-                enable_content_downloading: None,
-                enable_live_tv_access: None,
-                enable_live_tv_management: None,
-                enable_media_conversion: None,
-                enable_playback_remuxing: None,
-                enable_public_sharing: None,
-                enable_remote_control_of_other_users: None,
-                enable_shared_device_control: None,
-                enable_sync_transcoding: None,
-                enable_user_preference_access: None,
-                enable_video_playback_transcoding: None,
-                enabled_channels: None,
-                enabled_devices: None,
-                enabled_folders: None,
-                force_remote_source_transcoding: None,
-                invalid_login_attempt_count: None,
-                login_attempts_before_lockout: None,
-                max_active_sessions: None,
-                max_parental_rating: None,
-                max_parental_sub_rating: None,
-                remote_client_bitrate_limit: None,
-                sync_play_access: None,
-            };
+            let mut body = client
+                .get_user_by_id(uid)
+                .await?
+                .policy
+                .ok_or("the server reported no policy for this user")?;
+            if let Some(value) = is_administrator {
+                body.is_administrator = Some(*value);
+            }
+            if let Some(value) = is_disabled {
+                body.is_disabled = Some(*value);
+            }
+            if let Some(value) = is_hidden {
+                body.is_hidden = Some(*value);
+            }
+            if let Some(value) = enable_media_playback {
+                body.enable_media_playback = Some(*value);
+            }
+            if let Some(value) = enable_remote_access {
+                body.enable_remote_access = Some(*value);
+            }
+            if let Some(value) = authentication_provider_id {
+                body.authentication_provider_id = value.clone();
+            }
+            if let Some(value) = password_reset_provider_id {
+                body.password_reset_provider_id = value.clone();
+            }
             client.update_user_policy(uid, &body).await?;
         }
         UsersCommand::UpdateConfig {
@@ -246,13 +217,23 @@ pub async fn execute(
             user_id: uid,
         } => {
             let effective_user_id = uid.as_ref().unwrap_or(user_id);
-            let body = jellyfin_api::types::UserConfiguration {
-                audio_language_preference: audio_language_preference.clone(),
-                play_default_audio_track: *play_default_audio_track,
-                display_missing_episodes: *display_missing_episodes,
-                enable_next_episode_auto_play: *enable_next_episode_auto_play,
-                ..Default::default()
-            };
+            let mut body = client
+                .get_user_by_id(effective_user_id)
+                .await?
+                .configuration
+                .unwrap_or_default();
+            if let Some(value) = audio_language_preference {
+                body.audio_language_preference = Some(value.clone());
+            }
+            if let Some(value) = play_default_audio_track {
+                body.play_default_audio_track = Some(*value);
+            }
+            if let Some(value) = display_missing_episodes {
+                body.display_missing_episodes = Some(*value);
+            }
+            if let Some(value) = enable_next_episode_auto_play {
+                body.enable_next_episode_auto_play = Some(*value);
+            }
             client
                 .update_user_configuration(Some(effective_user_id), &body)
                 .await?;

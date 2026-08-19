@@ -1,0 +1,12 @@
+    if (eventData.itemType != 'livetv' && eventData.itemType != 'mediafolders') {
+        {
+            this.dispatchEvent(new CustomEvent('itemclicked', {
+                detail: eventData,
+                bubbles: true,
+                cancelable: false
+            }));
+        }
+        document.querySelector('.editPageSidebar').classList.add('editPageSidebar-withcontent');
+    } else {
+        document.querySelector('.editPageSidebar').classList.remove('editPageSidebar-withcontent');
+    }

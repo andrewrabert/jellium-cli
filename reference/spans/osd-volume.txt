@@ -1,0 +1,16 @@
+.osdVolumeSliderContainer {
+    width: 9em;
+    flex-grow: 1;
+}
+
+.osdMediaInfo,
+.volumeButtons {
+    display: flex;
+    align-items: center;
+}
+
+.volumeButtons {
+    margin: 0 1em 0 0.29em;
+    display: flex;
+    align-items: center;
+}

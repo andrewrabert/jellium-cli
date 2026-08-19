@@ -1,0 +1,69 @@
+function getCardFooterText(item, apiClient, options, footerClass, progressHtml, flags, urls) {
+    item = item.ProgramInfo || item;
+    let html = '';
+
+    if (urls.logoUrl) {
+        html += '<div class="lazy cardFooterLogo" data-src="' + urls.logoUrl + '"></div>';
+    }
+
+    const showTitle = options.showTitle === 'auto' ? true : (options.showTitle || item.Type === 'PhotoAlbum' || item.Type === 'Folder');
+    const showOtherText = flags.isOuterFooter ? !flags.overlayText : flags.overlayText;
+
+    if (flags.isOuterFooter && options.cardLayout && layoutManager.mobile && options.cardFooterAside !== 'none') {
+        html += `<button is="paper-icon-button-light" class="itemAction btnCardOptions cardText-secondary" data-action="menu" title="${globalize.translate('ButtonMore')}"><span class="material-icons more_vert" aria-hidden="true"></span></button>`;
+    }
+
+    const cssClass = options.centerText ? 'cardText cardTextCentered' : 'cardText';
+    const serverId = item.ServerId || options.serverId;
+
+    let lines = [];
+    const parentTitleUnderneath = item.Type === 'MusicAlbum' || item.Type === 'Audio' || item.Type === 'MusicVideo';
+    let titleAdded;
+
+    if (showOtherText && (options.showParentTitle || options.showParentTitleOrTitle) && !parentTitleUnderneath) {
+        if (flags.isOuterFooter && item.Type === 'Episode' && item.SeriesName) {
+            if (item.SeriesId) {
+                lines.push(getTextActionButton({
+                    Id: item.SeriesId,
+                    ServerId: serverId,
+                    Name: item.SeriesName,
+                    Type: 'Series',
+                    IsFolder: true
+                }));
+            } else {
+                lines.push(escapeHtml(item.SeriesName));
+            }
+        } else if (isUsingLiveTvNaming(item.Type)) {
+            lines.push(escapeHtml(item.Name));
+
+            if (!item.EpisodeTitle && !item.IndexNumber) {
+                titleAdded = true;
+            }
+        } else {
+            const parentTitle = item.SeriesName || item.Series || item.Album || item.AlbumArtist || '';
+
+            if (parentTitle || showTitle) {
+                lines.push(escapeHtml(parentTitle));
+            }
+        }
+    }
+
+    let showMediaTitle = (showTitle && !titleAdded) || (options.showParentTitleOrTitle && !lines.length);
+    if (!showMediaTitle && !titleAdded && (showTitle || flags.forceName)) {
+        showMediaTitle = true;
+    }
+
+    if (showMediaTitle) {
+        const name = options.showTitle === 'auto' && !item.IsFolder && item.MediaType === 'Photo' ? '' : itemHelper.getDisplayName(item, {
+            includeParentInfo: options.includeParentInfoInTitle
+        });
+
+        lines.push(getTextActionButton({
+            Id: item.Id,
+            ServerId: serverId,
+            Name: name,
+            Type: item.Type,
+            CollectionType: item.CollectionType,
+            IsFolder: item.IsFolder
+        }));
+    }

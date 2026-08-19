@@ -1,0 +1,22 @@
+        function detectBitrate(apiClient, item, mediaType) {
+            // FIXME: This is gnarly, but don't want to change too much here in a bugfix
+            return Promise.resolve()
+                .then(() => {
+                    if (!isServerItem(item) || itemHelper.isLocalItem(item)) {
+                        return Promise.reject(new Error('skip bitrate detection'));
+                    }
+
+                    return apiClient.getEndpointInfo()
+                        .then((endpointInfo) => {
+                            if ((mediaType === 'Video' || mediaType === 'Audio') && appSettings.enableAutomaticBitrateDetection(endpointInfo.IsInNetwork, mediaType)) {
+                                return apiClient.detectBitrate().then((bitrate) => {
+                                    appSettings.maxStreamingBitrate(endpointInfo.IsInNetwork, mediaType, bitrate);
+                                    return bitrate;
+                                });
+                            }
+
+                            return Promise.reject(new Error('skip bitrate detection'));
+                        });
+                })
+                .catch(() => getSavedMaxStreamingBitrate(apiClient, mediaType));
+        }

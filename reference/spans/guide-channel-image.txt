@@ -1,0 +1,10 @@
+.guideChannelImage {
+    position: absolute;
+    right: 8%;
+    top: 15%;
+    bottom: 15%;
+    width: 40%;
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: right center;
+}

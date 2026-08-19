@@ -1,0 +1,9 @@
+.cardBox-bottompadded {
+    margin-bottom: 1.8em !important;
+}
+
+@media (max-width: 50em) {
+    .cardBox-bottompadded {
+        margin-bottom: 1.2em !important;
+    }
+}

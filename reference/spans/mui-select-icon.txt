@@ -1,0 +1,38 @@
+export const StyledSelectIcon = styled('svg', {
+  name: 'MuiNativeSelect'
+})(({
+  theme
+}) => ({
+  // We use a position absolute over a flexbox in order to forward the pointer events
+  // to the input and to support wrapping tags..
+  position: 'absolute',
+  right: 0,
+  // Center vertically, height is 1em
+  top: 'calc(50% - .5em)',
+  // Don't block pointer events on the select under the icon.
+  pointerEvents: 'none',
+  color: (theme.vars || theme).palette.action.active,
+  [`&.${nativeSelectClasses.disabled}`]: {
+    color: (theme.vars || theme).palette.action.disabled
+  },
+  variants: [{
+    props: ({
+      ownerState
+    }) => ownerState.open,
+    style: {
+      transform: 'rotate(180deg)'
+    }
+  }, {
+    props: {
+      variant: 'filled'
+    },
+    style: {
+      right: 7
+    }
+  }, {
+    props: {
+      variant: 'outlined'
+    },
+    style: {
+      right: 7
+    }

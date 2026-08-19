@@ -1,0 +1,13 @@
+let _supportsTextTracks;
+function supportsTextTracks() {
+    if (browser.tizen) {
+        return true;
+    }
+
+    if (_supportsTextTracks == null) {
+        _supportsTextTracks = document.createElement('video').textTracks != null;
+    }
+
+    // For now, until ready
+    return _supportsTextTracks;
+}

@@ -1,6 +1,6 @@
+use crate::Client;
 use crate::error::Error;
 use crate::pagination::Paginated;
-use crate::Client;
 
 enum RequestBody {
     Json(serde_json::Value),

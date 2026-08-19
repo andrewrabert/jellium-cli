@@ -1,0 +1,7 @@
+        <Page
+            id='mediaLibraryPage'
+            title={globalize.translate('HeaderLibraries')}
+            className='mainAnimatedPage type-interior'
+        >
+            <Box className='content-primary'>
+                <Stack spacing={3} mt={2}>

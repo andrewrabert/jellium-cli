@@ -1,0 +1,14 @@
+.selectArrowContainer {
+    position: absolute;
+    top: 0.2em;
+    color: inherit;
+    pointer-events: none;
+
+    [dir="ltr"] & {
+        right: 0.3em;
+    }
+
+    [dir="rtl"] & {
+        left: 0.3em;
+    }
+}

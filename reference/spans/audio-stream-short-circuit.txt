@@ -1,0 +1,11 @@
+    if (!itemHelper.isLocalItem(item) && item.MediaType === 'Audio' && !player.useServerPlaybackInfoForAudio) {
+        return {
+            MediaSources: [
+                {
+                    StreamUrl: getAudioStreamUrlFromDeviceProfile(item, deviceProfile, options.maxBitrate, apiClient, options.startPosition),
+                    Id: item.Id,
+                    MediaStreams: [],
+                    RunTimeTicks: item.RunTimeTicks
+                }]
+        };
+    }

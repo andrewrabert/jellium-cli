@@ -1,0 +1,5 @@
+export function enableProgressIndicator(item) {
+    return (item.MediaType === 'Video' && item.Type !== 'TvChannel')
+        || item.Type === 'AudioBook'
+        || item.Type === 'AudioPodcast';
+}

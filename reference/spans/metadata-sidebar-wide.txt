@@ -1,0 +1,9 @@
+@media all and (min-width: 112.5em) {
+    .editPageSidebar {
+        width: 25%;
+    }
+
+    .editPageInnerContent {
+        width: 73.5%;
+    }
+}

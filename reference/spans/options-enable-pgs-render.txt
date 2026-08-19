@@ -1,0 +1,2 @@
+        if (supportsCanvas2D() && options.enablePgsRender !== false && !options.isRetry && subtitleRenderPgsSetting
+            && subtitleBurninSetting !== 'allcomplexformats' && subtitleBurninSetting !== 'onlyimageformats') {

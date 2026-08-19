@@ -1,0 +1,9 @@
+.actionSheetContent {
+    margin: 0 !important;
+    padding: 0.4em 0 !important;
+    flex-direction: column;
+    display: flex;
+    justify-content: center;
+    flex-grow: 1;
+    overflow: hidden;
+}

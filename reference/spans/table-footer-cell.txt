@@ -1,0 +1,9 @@
+    return (jsx(TableCell, Object.assign({ align: columnDefType === 'group'
+            ? 'center'
+            : theme.direction === 'rtl'
+                ? 'right'
+                : 'left', colSpan: footer.colSpan, "data-index": staticColumnIndex, "data-pinned": !!isColumnPinned || undefined, tabIndex: enableKeyboardShortcuts ? 0 : undefined, variant: "footer" }, tableCellProps, { onKeyDown: handleKeyDown, sx: (theme) => (Object.assign(Object.assign({ fontWeight: 'bold', p: density === 'compact'
+                ? '0.5rem'
+                : density === 'comfortable'
+                    ? '1rem'
+                    : '1.5rem', verticalAlign: 'top' }, getCommonMRTCellStyles({

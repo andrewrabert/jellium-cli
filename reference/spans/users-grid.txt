@@ -1,0 +1,18 @@
+            <div ref={element} className='content-primary'>
+                <div className='verticalSection'>
+                    <SectionTitleContainer
+                        title={globalize.translate('HeaderUsers')}
+                        isBtnVisible={true}
+                        btnId='btnAddUser'
+                        btnClassName='fab submit sectionTitleButton'
+                        btnTitle='ButtonAddUser'
+                        btnIcon='add'
+                    />
+                </div>
+
+                <div className='localUsers itemsContainer vertical-wrap'>
+                    {users.map(user => {
+                        return <UserCardBox key={user.Id} user={user} />;
+                    })}
+                </div>
+            </div>

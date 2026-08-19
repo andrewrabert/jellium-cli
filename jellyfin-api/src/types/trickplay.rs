@@ -1,28 +1,16 @@
 use super::*;
 
 #[doc = "The trickplay api model."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct TrickplayInfoDto {
     #[doc = "Gets the peak bandwidth usage in bits per second."]
-    #[serde(
-        rename = "Bandwidth",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Bandwidth", default, skip_serializing_if = "Option::is_none")]
     pub bandwidth: Option<i32>,
     #[doc = "Gets the height of an individual thumbnail."]
-    #[serde(
-        rename = "Height",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Height", default, skip_serializing_if = "Option::is_none")]
     pub height: Option<i32>,
     #[doc = "Gets the interval in milliseconds between each trickplay thumbnail."]
-    #[serde(
-        rename = "Interval",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Interval", default, skip_serializing_if = "Option::is_none")]
     pub interval: Option<i32>,
     #[doc = "Gets the total amount of non-black thumbnails."]
     #[serde(
@@ -39,37 +27,15 @@ pub struct TrickplayInfoDto {
     )]
     pub tile_height: Option<i32>,
     #[doc = "Gets the amount of thumbnails per row."]
-    #[serde(
-        rename = "TileWidth",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "TileWidth", default, skip_serializing_if = "Option::is_none")]
     pub tile_width: Option<i32>,
     #[doc = "Gets the width of an individual thumbnail."]
-    #[serde(
-        rename = "Width",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Width", default, skip_serializing_if = "Option::is_none")]
     pub width: Option<i32>,
 }
 
-impl Default for TrickplayInfoDto {
-    fn default() -> Self {
-        Self {
-            bandwidth: Default::default(),
-            height: Default::default(),
-            interval: Default::default(),
-            thumbnail_count: Default::default(),
-            tile_height: Default::default(),
-            tile_width: Default::default(),
-            width: Default::default(),
-        }
-    }
-}
-
 #[doc = "Class TrickplayOptions."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct TrickplayOptions {
     #[doc = "Gets or sets a value indicating whether or not to use HW acceleration."]
     #[serde(
@@ -93,11 +59,7 @@ pub struct TrickplayOptions {
     )]
     pub enable_key_frame_only_extraction: Option<bool>,
     #[doc = "Gets or sets the interval, in ms, between each new trickplay image."]
-    #[serde(
-        rename = "Interval",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Interval", default, skip_serializing_if = "Option::is_none")]
     pub interval: Option<i32>,
     #[doc = "Gets or sets the jpeg quality to use for image tiles."]
     #[serde(
@@ -120,11 +82,7 @@ pub struct TrickplayOptions {
     )]
     pub process_threads: Option<i32>,
     #[doc = "Gets or sets the ffmpeg output quality level."]
-    #[serde(
-        rename = "Qscale",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Qscale", default, skip_serializing_if = "Option::is_none")]
     pub qscale: Option<i32>,
     #[serde(
         rename = "ScanBehavior",
@@ -140,11 +98,7 @@ pub struct TrickplayOptions {
     )]
     pub tile_height: Option<i32>,
     #[doc = "Gets or sets number of tile images to allow in X dimension."]
-    #[serde(
-        rename = "TileWidth",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "TileWidth", default, skip_serializing_if = "Option::is_none")]
     pub tile_width: Option<i32>,
     #[doc = "Gets or sets the target width resolutions, in px, to generates preview images for."]
     #[serde(
@@ -155,26 +109,9 @@ pub struct TrickplayOptions {
     pub width_resolutions: Vec<i32>,
 }
 
-impl Default for TrickplayOptions {
-    fn default() -> Self {
-        Self {
-            enable_hw_acceleration: Default::default(),
-            enable_hw_encoding: Default::default(),
-            enable_key_frame_only_extraction: Default::default(),
-            interval: Default::default(),
-            jpeg_quality: Default::default(),
-            process_priority: Default::default(),
-            process_threads: Default::default(),
-            qscale: Default::default(),
-            scan_behavior: Default::default(),
-            tile_height: Default::default(),
-            tile_width: Default::default(),
-            width_resolutions: Default::default(),
-        }
-    }
-}
-
-#[derive(serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(
+    serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd,
+)]
 pub enum TrickplayScanBehavior {
     Blocking,
     NonBlocking,
@@ -209,19 +146,14 @@ impl TryFrom<&str> for TrickplayScanBehavior {
 
 impl TryFrom<&String> for TrickplayScanBehavior {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for TrickplayScanBehavior {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
-

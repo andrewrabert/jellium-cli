@@ -1,0 +1,33 @@
+<div class="inputContainer fldSeasonZeroDisplayName hide advanced">
+    <input is="emby-input" type="text" id="txtSeasonZeroName" label="${LabelSpecialSeasonsDisplayName}" value="Specials" required />
+</div>
+<div class="checkboxContainer checkboxContainer-withDescription chkEnableEmbeddedTitlesContainer hide advanced">
+    <label>
+        <input is="emby-checkbox" type="checkbox" id="chkEnableEmbeddedTitles" />
+        <span>${PreferEmbeddedTitlesOverFileNames}</span>
+    </label>
+    <div class="fieldDescription checkboxFieldDescription">${PreferEmbeddedTitlesOverFileNamesHelp}</div>
+</div>
+<div class="checkboxContainer checkboxContainer-withDescription chkEnableEmbeddedExtrasTitlesContainer hide advanced">
+    <label>
+        <input is="emby-checkbox" type="checkbox" id="chkEnableEmbeddedExtrasTitles" />
+        <span>${PreferEmbeddedExtrasTitlesOverFileNames}</span>
+    </label>
+    <div class="fieldDescription checkboxFieldDescription">${PreferEmbeddedExtrasTitlesOverFileNamesHelp}</div>
+</div>
+<div class="checkboxContainer checkboxContainer-withDescription chkEnableEmbeddedEpisodeInfosContainer hide advanced">
+    <label>
+        <input is="emby-checkbox" type="checkbox" id="chkEnableEmbeddedEpisodeInfos" />
+        <span>${PreferEmbeddedEpisodeInfosOverFileNames}</span>
+    </label>
+    <div class="fieldDescription checkboxFieldDescription">${PreferEmbeddedEpisodeInfosOverFileNamesHelp}</div>
+</div>
+<div class="selectContainer fldAllowEmbeddedSubtitlesContainer hide advanced" style="margin: 2em 0;">
+    <select is="emby-select" id="selectAllowEmbeddedSubtitles" label="${AllowEmbeddedSubtitles}">
+        <option value="AllowAll">${AllowEmbeddedSubtitlesAllowAllOption}</option>
+        <option value="AllowText">${AllowEmbeddedSubtitlesAllowTextOption}</option>
+        <option value="AllowImage">${AllowEmbeddedSubtitlesAllowImageOption}</option>
+        <option value="AllowNone">${AllowEmbeddedSubtitlesAllowNoneOption}</option>
+    </select>
+    <div class="fieldDescription">${AllowEmbeddedSubtitlesHelp}</div>
+</div>

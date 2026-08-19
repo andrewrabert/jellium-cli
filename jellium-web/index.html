@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title data-string="appName"></title>
+    <link rel="apple-touch-icon" sizes="180x180" href="/branding/favicons/touchicon.png" />
+    <link rel="shortcut icon" href="/branding/favicons/favicon.ico" />
+    <meta name="msapplication-TileImage" content="/branding/favicons/touchicon144.png" />
+    <link data-trunk rel="css" href="boot.css" />
+    <link data-trunk rel="copy-dir" href="branding" />
+    <link data-trunk rel="copy-dir" href="fonts" />
+    <link data-trunk rel="copy-dir" href="strings" />
+    <link data-trunk rel="copy-dir" href="vendor" />
+    <script src="/vendor/hls.js/hls.min.js"></script>
+    <link data-trunk rel="rust" data-wasm-opt="z" data-keep-debug data-initializer="boot.js" />
+  </head>
+  <body>
+    <div id="jellium-boot">
+      <div id="jellium-boot-logo"></div>
+      <p id="jellium-boot-message" data-string="bootLoading"></p>
+      <button id="jellium-boot-retry" data-string="bootRetry" hidden></button>
+    </div>
+  </body>
+</html>

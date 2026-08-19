@@ -1,0 +1,31 @@
+@media all and (min-width: 50em) {
+    .editPageSidebar {
+        position: fixed;
+        top: 3.25rem;
+        bottom: 0;
+        width: 30%;
+        display: block;
+
+        [dir="ltr"] & {
+            left: 0;
+            border-right: 1px solid #555;
+        }
+
+        [dir="rtl"] & {
+            right: 0;
+            border-left: 1px solid #555;
+        }
+    }
+
+    .editPageInnerContent {
+        width: 68.5%;
+
+        [dir="ltr"] & {
+            float: right;
+        }
+
+        [dir="rtl"] & {
+            float: left;
+        }
+    }
+}

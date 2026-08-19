@@ -1,0 +1,24 @@
+function normalizeReturnBitrate(instance, bitrate) {
+    if (!bitrate) {
+        if (instance.lastDetectedBitrate) {
+            return instance.lastDetectedBitrate;
+        }
+
+        return Promise.reject();
+    }
+
+    let result = Math.min(Math.round(bitrate * 0.7), MAX_BITRATE);
+
+    // allow configuration of this
+    if (instance.getMaxBandwidth) {
+        const maxRate = instance.getMaxBandwidth();
+        if (maxRate) {
+            result = Math.min(result, maxRate);
+        }
+    }
+
+    instance.lastDetectedBitrate = result;
+    instance.lastDetectedBitrateTime = new Date().getTime();
+
+    return result;
+}

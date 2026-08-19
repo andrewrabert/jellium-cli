@@ -1,0 +1,28 @@
+function getFetchDataFn(section) {
+    return function () {
+        const apiClient = this.apiClient;
+        const options = {
+            SortBy: [ItemSortBy.SeriesSortName, ItemSortBy.SortName].join(','),
+            SortOrder: 'Ascending',
+            Filters: 'IsFavorite',
+            Recursive: true,
+            Fields: 'PrimaryImageAspectRatio',
+            CollapseBoxSetItems: false,
+            ExcludeLocationTypes: 'Virtual',
+            EnableTotalRecordCount: false
+        };
+        options.Limit = 20;
+        const userId = apiClient.getCurrentUserId();
+
+        if (section.types === 'MusicArtist') {
+            return apiClient.getArtists(userId, options);
+        }
+
+        if (section.types === 'Person') {
+            return apiClient.getPeople(userId, options);
+        }
+
+        options.IncludeItemTypes = section.types;
+        return apiClient.getItems(userId, options);
+    };
+}

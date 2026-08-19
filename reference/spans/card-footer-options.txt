@@ -1,0 +1,159 @@
+    if (showOtherText) {
+        if (options.showParentTitle && parentTitleUnderneath) {
+            if (flags.isOuterFooter && item.AlbumArtists?.length) {
+                const artistText = item.AlbumArtists
+                    .map(artist => {
+                        artist.ServerId = serverId;
+                        artist.Type = BaseItemKind.MusicArtist;
+                        artist.IsFolder = true;
+                        return getTextActionButton(artist);
+                    })
+                    .join(' / ');
+                lines.push(artistText);
+            } else {
+                lines.push(escapeHtml(isUsingLiveTvNaming(item.Type) ? item.Name : (item.SeriesName || item.Series || item.Album || item.AlbumArtist || '')));
+            }
+        }
+
+        if (item.ExtraType && item.ExtraType !== 'Unknown') {
+            lines.push(globalize.translate(item.ExtraType));
+        }
+
+        if (options.showItemCounts) {
+            lines.push(getItemCountsHtml(options, item));
+        }
+
+        if (options.textLines) {
+            const additionalLines = options.textLines(item);
+            for (const additionalLine of additionalLines) {
+                lines.push(additionalLine);
+            }
+        }
+
+        if (options.showSongCount) {
+            let songLine = '';
+
+            if (item.SongCount) {
+                songLine = item.SongCount === 1 ?
+                    globalize.translate('ValueOneSong') :
+                    globalize.translate('ValueSongCount', item.SongCount);
+            }
+
+            lines.push(songLine);
+        }
+
+        if (options.showPremiereDate) {
+            if (item.PremiereDate) {
+                try {
+                    lines.push(datetime.toLocaleDateString(
+                        datetime.parseISO8601Date(item.PremiereDate),
+                        { weekday: 'long', month: 'long', day: 'numeric' }
+                    ));
+                } catch {
+                    lines.push('');
+                }
+            } else {
+                lines.push('');
+            }
+        }
+
+        if (options.showYear || options.showSeriesYear) {
+            const productionYear = item.ProductionYear && datetime.toLocaleString(item.ProductionYear, { useGrouping: false });
+            if (item.Type === 'Series') {
+                if (item.Status === 'Continuing') {
+                    lines.push(globalize.translate('SeriesYearToPresent', productionYear || ''));
+                } else if (item.EndDate && item.ProductionYear) {
+                    const endYear = datetime.toLocaleString(datetime.parseISO8601Date(item.EndDate).getFullYear(), { useGrouping: false });
+                    lines.push(productionYear + ((endYear === productionYear) ? '' : (' - ' + endYear)));
+                } else {
+                    lines.push(productionYear || '');
+                }
+            } else {
+                lines.push(productionYear || '');
+            }
+        }
+
+        if (options.showRuntime) {
+            if (item.RunTimeTicks) {
+                lines.push(datetime.getDisplayRunningTime(item.RunTimeTicks));
+            } else {
+                lines.push('');
+            }
+        }
+
+        if (options.showAirTime) {
+            lines.push(getAirTimeText(item, options.showAirDateTime, options.showAirEndTime) || '');
+        }
+
+        if (options.showChannelName) {
+            if (item.ChannelId) {
+                lines.push(getTextActionButton({
+
+                    Id: item.ChannelId,
+                    ServerId: serverId,
+                    Name: item.ChannelName,
+                    Type: 'TvChannel',
+                    MediaType: item.MediaType,
+                    IsFolder: false
+
+                }, item.ChannelName));
+            } else {
+                lines.push(escapeHtml(item.ChannelName || '') || '&nbsp;');
+            }
+        }
+
+        if (options.showCurrentProgram && item.Type === 'TvChannel') {
+            if (item.CurrentProgram) {
+                lines.push(escapeHtml(item.CurrentProgram.Name));
+            } else {
+                lines.push('');
+            }
+        }
+
+        if (options.showCurrentProgramTime && item.Type === 'TvChannel') {
+            if (item.CurrentProgram) {
+                lines.push(getAirTimeText(item.CurrentProgram, false, true) || '');
+            } else {
+                lines.push('');
+            }
+        }
+
+        if (options.showSeriesTimerTime) {
+            if (item.RecordAnyTime) {
+                lines.push(globalize.translate('Anytime'));
+            } else {
+                lines.push(datetime.getDisplayTime(item.StartDate));
+            }
+        }
+
+        if (options.showSeriesTimerChannel) {
+            if (item.RecordAnyChannel) {
+                lines.push(globalize.translate('AllChannels'));
+            } else {
+                lines.push(escapeHtml(item.ChannelName || '') || globalize.translate('OneChannel'));
+            }
+        }
+
+        if (options.showPersonRoleOrType && item.Type) {
+            if (item.Role) {
+                if ([ PersonKind.Actor, PersonKind.GuestStar ].includes(item.Type)) {
+                    // List actor roles formatted like "as Character Name"
+                    const roleText = globalize.translate('PersonRole', escapeHtml(item.Role));
+                    lines.push(`<span title="${roleText}">${roleText}</span>`);
+                } else if (item.Role.toLowerCase() === item.Type.toLowerCase()) {
+                    // Role and Type are the same so use the localized Type
+                    lines.push(escapeHtml(globalize.translate(item.Type)));
+                } else if (item.Role.toLowerCase().includes(item.Type.toLowerCase())) {
+                    // Avoid duplication if the Role includes the Type (i.e. Executive Producer)
+                    lines.push(escapeHtml(item.Role));
+                } else {
+                    // Type and Role are unique so list both (i.e. Writer | Novel)
+                    lines.push(escapeHtml(globalize.translate(item.Type)));
+                    lines.push(escapeHtml(item.Role));
+                }
+            } else {
+                // No Role so use the localized Type
+                lines.push(escapeHtml(globalize.translate(item.Type)));
+            }
+        }
+    }

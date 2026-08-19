@@ -1,0 +1,6 @@
+  const rowSpacing = rowSpacingProp || spacing;
+  const columnSpacing = columnSpacingProp || spacing;
+  const columnsContext = React.useContext(GridContext);
+
+  // columns set with default breakpoint unit of 12
+  const columns = container ? columnsProp || 12 : columnsContext;

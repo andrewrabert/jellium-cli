@@ -11,7 +11,10 @@ pub enum WaitTarget {
 }
 
 fn is_task_active(state: &Option<TaskState>) -> bool {
-    matches!(state, Some(TaskState::Running) | Some(TaskState::Cancelling))
+    matches!(
+        state,
+        Some(TaskState::Running) | Some(TaskState::Cancelling)
+    )
 }
 
 async fn wait_for_refresh(
@@ -24,9 +27,7 @@ async fn wait_for_refresh(
     let mut idle_polls: u32 = 0;
     loop {
         let any_active = match &target {
-            WaitTarget::Task(task_id) => {
-                is_task_active(&client.get_task(task_id).await?.state)
-            }
+            WaitTarget::Task(task_id) => is_task_active(&client.get_task(task_id).await?.state),
             WaitTarget::Libraries(ids) => {
                 let folders = client.get_virtual_folders().await?;
                 ids.iter().any(|id| {
@@ -357,9 +358,7 @@ pub async fn execute(
         LibrariesCommand::UpdateMediaPath { name, path } => {
             let body = jellyfin_api::types::UpdateMediaPathRequestDto {
                 name: name.clone(),
-                path_info: jellyfin_api::types::MediaPathInfo {
-                    path: path.clone(),
-                },
+                path_info: jellyfin_api::types::MediaPathInfo { path: path.clone() },
             };
             client.update_media_path(&body).await?;
         }

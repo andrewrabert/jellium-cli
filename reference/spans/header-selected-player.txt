@@ -1,0 +1,10 @@
+.headerSelectedPlayer {
+    max-width: 10em;
+    white-space: nowrap;
+}
+
+@media all and (max-width: 37.5em) {
+    .headerSelectedPlayer {
+        display: none;
+    }
+}

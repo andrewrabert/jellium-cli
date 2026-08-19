@@ -1,0 +1,43 @@
+        menuItemClass += ' actionsheet-xlargeFont';
+    }
+
+    // 'options.items' is HTMLOptionsCollection, so no fancy loops
+    for (let i = 0; i < options.items.length; i++) {
+        const item = options.items[i];
+
+        if (item.divider) {
+            html += '<div class="actionsheetDivider"></div>';
+            continue;
+        }
+
+        const autoFocus = item.selected && layoutManager.tv ? ' autoFocus' : '';
+
+        // Check for null in case int 0 was passed in
+        const optionId = item.id == null || item.id === '' ? item.value : item.id;
+        html += '<button' + autoFocus + ' is="emby-button" type="button" class="' + menuItemClass + '" data-id="' + optionId + '">';
+
+        itemIcon = icons[i];
+
+        if (itemIcon) {
+            html += `<span class="actionsheetMenuItemIcon listItemIcon listItemIcon-transparent material-icons ${itemIcon}" aria-hidden="true"></span>`;
+        } else if (renderIcon && !center) {
+            html += '<span class="actionsheetMenuItemIcon listItemIcon listItemIcon-transparent material-icons check" aria-hidden="true" style="visibility:hidden;"></span>';
+        }
+
+        html += '<div class="listItemBody actionsheetListItemBody">';
+
+        html += '<div class="listItemBodyText actionSheetItemText">';
+        html += escapeHtml(item.name || item.textContent || item.innerText);
+        html += '</div>';
+
+        if (item.secondaryText) {
+            html += `<div class="listItemBodyText secondary">${escapeHtml(item.secondaryText)}</div>`;
+        }
+
+        html += '</div>';
+
+        if (item.asideText) {
+            html += `<div class="listItemAside actionSheetItemAsideText">${escapeHtml(item.asideText)}</div>`;
+        }
+
+        html += '</button>';

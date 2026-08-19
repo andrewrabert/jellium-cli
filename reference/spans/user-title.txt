@@ -1,0 +1,5 @@
+                <div className='verticalSection'>
+                    <SectionTitleContainer
+                        title={userDto?.Name || ''}
+                    />
+                </div>

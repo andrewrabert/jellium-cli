@@ -1,0 +1,6 @@
+const MRT_DefaultColumn = {
+    filterVariant: 'text',
+    maxSize: 1000,
+    minSize: 40,
+    size: 180,
+};

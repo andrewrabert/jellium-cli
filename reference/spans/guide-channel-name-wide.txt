@@ -1,0 +1,5 @@
+@media all and (min-width: 62.5em) {
+    .guideChannelName {
+        max-width: 40%;
+    }
+}

@@ -1,0 +1,3 @@
+.playstatebutton-icon-played {
+    color: #c33;
+}

@@ -1,21 +1,13 @@
 use super::*;
 
 #[doc = "Force keep alive websocket messages."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct ForceKeepAliveMessage {
     #[doc = "Gets or sets the data."]
-    #[serde(
-        rename = "Data",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Data", default, skip_serializing_if = "Option::is_none")]
     pub data: Option<i32>,
     #[doc = "Gets or sets the message id."]
-    #[serde(
-        rename = "MessageId",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "MessageId", default, skip_serializing_if = "Option::is_none")]
     pub message_id: Option<uuid::Uuid>,
     #[serde(
         rename = "MessageType",
@@ -25,18 +17,8 @@ pub struct ForceKeepAliveMessage {
     pub message_type: Option<SessionMessageType>,
 }
 
-impl Default for ForceKeepAliveMessage {
-    fn default() -> Self {
-        Self {
-            data: Default::default(),
-            message_id: Default::default(),
-            message_type: Default::default(),
-        }
-    }
-}
-
 #[doc = "Keep alive websocket messages."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct InboundKeepAliveMessage {
     #[serde(
         rename = "MessageType",
@@ -44,14 +26,6 @@ pub struct InboundKeepAliveMessage {
         skip_serializing_if = "Option::is_none"
     )]
     pub message_type: Option<SessionMessageType>,
-}
-
-impl Default for InboundKeepAliveMessage {
-    fn default() -> Self {
-        Self {
-            message_type: Default::default(),
-        }
-    }
 }
 
 #[doc = "Represents the list of possible inbound websocket types"]
@@ -110,14 +84,10 @@ impl From<SessionsStopMessage> for InboundWebSocketMessage {
 }
 
 #[doc = "Keep alive websocket messages."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct OutboundKeepAliveMessage {
     #[doc = "Gets or sets the message id."]
-    #[serde(
-        rename = "MessageId",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "MessageId", default, skip_serializing_if = "Option::is_none")]
     pub message_id: Option<uuid::Uuid>,
     #[serde(
         rename = "MessageType",
@@ -125,15 +95,6 @@ pub struct OutboundKeepAliveMessage {
         skip_serializing_if = "Option::is_none"
     )]
     pub message_type: Option<SessionMessageType>,
-}
-
-impl Default for OutboundKeepAliveMessage {
-    fn default() -> Self {
-        Self {
-            message_id: Default::default(),
-            message_type: Default::default(),
-        }
-    }
 }
 
 #[doc = "Represents the list of possible outbound websocket types"]
@@ -166,7 +127,7 @@ pub enum OutboundWebSocketMessage {
     TimerCreatedMessage(TimerCreatedMessage),
     UserDataChangedMessage(UserDataChangedMessage),
     UserDeletedMessage(UserDeletedMessage),
-    UserUpdatedMessage(UserUpdatedMessage),
+    UserUpdatedMessage(Box<UserUpdatedMessage>),
     SyncPlayGroupUpdateMessage(SyncPlayGroupUpdateMessage),
 }
 
@@ -328,7 +289,7 @@ impl From<UserDeletedMessage> for OutboundWebSocketMessage {
 
 impl From<UserUpdatedMessage> for OutboundWebSocketMessage {
     fn from(value: UserUpdatedMessage) -> Self {
-        Self::UserUpdatedMessage(value)
+        Self::UserUpdatedMessage(Box::new(value))
     }
 }
 
@@ -343,7 +304,7 @@ impl From<SyncPlayGroupUpdateMessage> for OutboundWebSocketMessage {
 #[serde(untagged)]
 pub enum WebSocketMessage {
     InboundWebSocketMessage(InboundWebSocketMessage),
-    OutboundWebSocketMessage(OutboundWebSocketMessage),
+    OutboundWebSocketMessage(Box<OutboundWebSocketMessage>),
 }
 
 impl From<InboundWebSocketMessage> for WebSocketMessage {
@@ -354,7 +315,6 @@ impl From<InboundWebSocketMessage> for WebSocketMessage {
 
 impl From<OutboundWebSocketMessage> for WebSocketMessage {
     fn from(value: OutboundWebSocketMessage) -> Self {
-        Self::OutboundWebSocketMessage(value)
+        Self::OutboundWebSocketMessage(Box::new(value))
     }
 }
-

@@ -1,0 +1,12 @@
+                            <Paper sx={{ mt: 2 }}>
+                                <code>
+                                    <pre style={{
+                                        overflow:'auto',
+                                        margin: 0,
+                                        padding: '16px',
+                                        whiteSpace: 'pre-wrap'
+                                    }}>
+                                        {log}
+                                    </pre>
+                                </code>
+                            </Paper>

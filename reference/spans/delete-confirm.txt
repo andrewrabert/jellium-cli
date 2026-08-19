@@ -1,0 +1,18 @@
+function getDeletionConfirmContent(item) {
+    if (item.Type === BaseItemKind.Series) {
+        const totalEpisodes = item.RecursiveItemCount;
+        return {
+            title: globalize.translate('HeaderDeleteSeries'),
+            text: globalize.translate('ConfirmDeleteSeries', totalEpisodes),
+            confirmText: globalize.translate('DeleteEntireSeries', totalEpisodes),
+            primary: 'delete'
+        };
+    }
+
+    return {
+        title: globalize.translate('HeaderDeleteItem'),
+        text: globalize.translate('ConfirmDeleteItem'),
+        confirmText: globalize.translate('Delete'),
+        primary: 'delete'
+    };
+}

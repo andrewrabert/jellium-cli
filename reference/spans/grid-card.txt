@@ -1,0 +1,11 @@
+        } else {
+            html = cardBuilder.getCardsHtml({
+                items: items,
+                shape: 'portrait',
+                context: 'movies',
+                overlayPlayButton: true,
+                showTitle: true,
+                showYear: true,
+                centerText: true
+            });
+        }

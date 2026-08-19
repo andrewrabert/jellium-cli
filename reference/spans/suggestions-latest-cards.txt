@@ -1,0 +1,10 @@
+        cardBuilder.buildCards(items, {
+            itemsContainer: container,
+            shape: getPortraitShape(enableScrollX()),
+            scalable: true,
+            overlayPlayButton: true,
+            allowBottomPadding: allowBottomPadding,
+            showTitle: true,
+            showYear: true,
+            centerText: true
+        });

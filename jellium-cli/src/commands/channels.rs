@@ -133,14 +133,16 @@ pub async fn execute(
             let result = client
                 .get_channel_items(
                     channel_id,
-                    fields.as_ref(),
-                    filters.as_ref(),
-                    folder_id.as_ref(),
-                    *limit,
-                    sort_by.as_ref(),
-                    sort_order.as_ref(),
-                    *start_index,
-                    Some(effective_uid),
+                    &jellyfin_api::query::GetChannelItems {
+                        fields: fields.as_ref(),
+                        filters: filters.as_ref(),
+                        folder_id: folder_id.as_ref(),
+                        limit: *limit,
+                        sort_by: sort_by.as_ref(),
+                        sort_order: sort_order.as_ref(),
+                        start_index: *start_index,
+                        user_id: Some(effective_uid),
+                    },
                 )
                 .await?;
             crate::output::print_ndjson(&result.items)?;

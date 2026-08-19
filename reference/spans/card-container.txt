@@ -1,0 +1,19 @@
+.itemsContainer {
+    display: flex;
+}
+
+.vertical-list {
+    display: flex;
+    flex-direction: column;
+    flex-wrap: nowrap;
+}
+
+.vertical-wrap {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+}
+
+.vertical-wrap.centered {
+    justify-content: center;
+}

@@ -1,0 +1,10 @@
+.localUsers {
+    .cardText-secondary {
+        white-space: pre-wrap;
+        min-height: 3em;
+    }
+
+    .cardBox {
+        height: 100%;
+    }
+}

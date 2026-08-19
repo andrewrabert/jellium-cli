@@ -1,0 +1,9 @@
+export function canRate (item) {
+    return item.Type !== 'Program'
+        && item.Type !== 'Timer'
+        && item.Type !== 'SeriesTimer'
+        && item.Type !== 'CollectionFolder'
+        && item.Type !== 'UserView'
+        && item.Type !== 'Channel'
+        && item.UserData;
+}

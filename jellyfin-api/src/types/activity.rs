@@ -1,48 +1,24 @@
 use super::*;
 
 #[doc = "An activity log entry."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct ActivityLogEntry {
     #[doc = "Gets or sets the date."]
-    #[serde(
-        rename = "Date",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Date", default, skip_serializing_if = "Option::is_none")]
     pub date: Option<chrono::DateTime<chrono::Utc>>,
     #[doc = "Gets or sets the identifier."]
-    #[serde(
-        rename = "Id",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Id", default, skip_serializing_if = "Option::is_none")]
     pub id: Option<i64>,
     #[doc = "Gets or sets the item identifier."]
-    #[serde(
-        rename = "ItemId",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "ItemId", default, skip_serializing_if = "Option::is_none")]
     pub item_id: Option<String>,
     #[doc = "Gets or sets the name."]
-    #[serde(
-        rename = "Name",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Name", default, skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
     #[doc = "Gets or sets the overview."]
-    #[serde(
-        rename = "Overview",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Overview", default, skip_serializing_if = "Option::is_none")]
     pub overview: Option<String>,
-    #[serde(
-        rename = "Severity",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Severity", default, skip_serializing_if = "Option::is_none")]
     pub severity: Option<LogLevel>,
     #[doc = "Gets or sets the short overview."]
     #[serde(
@@ -52,18 +28,10 @@ pub struct ActivityLogEntry {
     )]
     pub short_overview: Option<String>,
     #[doc = "Gets or sets the type."]
-    #[serde(
-        rename = "Type",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Type", default, skip_serializing_if = "Option::is_none")]
     pub type_: Option<String>,
     #[doc = "Gets or sets the user identifier."]
-    #[serde(
-        rename = "UserId",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "UserId", default, skip_serializing_if = "Option::is_none")]
     pub user_id: Option<uuid::Uuid>,
     #[doc = "Gets or sets the user primary image tag."]
     #[serde(
@@ -74,39 +42,14 @@ pub struct ActivityLogEntry {
     pub user_primary_image_tag: Option<String>,
 }
 
-impl Default for ActivityLogEntry {
-    fn default() -> Self {
-        Self {
-            date: Default::default(),
-            id: Default::default(),
-            item_id: Default::default(),
-            name: Default::default(),
-            overview: Default::default(),
-            severity: Default::default(),
-            short_overview: Default::default(),
-            type_: Default::default(),
-            user_id: Default::default(),
-            user_primary_image_tag: Default::default(),
-        }
-    }
-}
-
 #[doc = "Activity log created message."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct ActivityLogEntryMessage {
     #[doc = "Gets or sets the data."]
-    #[serde(
-        rename = "Data",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Data", default, skip_serializing_if = "Option::is_none")]
     pub data: Option<Vec<ActivityLogEntry>>,
     #[doc = "Gets or sets the message id."]
-    #[serde(
-        rename = "MessageId",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "MessageId", default, skip_serializing_if = "Option::is_none")]
     pub message_id: Option<uuid::Uuid>,
     #[serde(
         rename = "MessageType",
@@ -116,25 +59,11 @@ pub struct ActivityLogEntryMessage {
     pub message_type: Option<SessionMessageType>,
 }
 
-impl Default for ActivityLogEntryMessage {
-    fn default() -> Self {
-        Self {
-            data: Default::default(),
-            message_id: Default::default(),
-            message_type: Default::default(),
-        }
-    }
-}
-
 #[doc = "Query result container."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct ActivityLogEntryQueryResult {
     #[doc = "Gets or sets the items."]
-    #[serde(
-        rename = "Items",
-        default,
-        skip_serializing_if = "Vec::is_empty"
-    )]
+    #[serde(rename = "Items", default, skip_serializing_if = "Vec::is_empty")]
     pub items: Vec<ActivityLogEntry>,
     #[doc = "Gets or sets the index of the first record in Items."]
     #[serde(
@@ -152,25 +81,11 @@ pub struct ActivityLogEntryQueryResult {
     pub total_record_count: Option<i32>,
 }
 
-impl Default for ActivityLogEntryQueryResult {
-    fn default() -> Self {
-        Self {
-            items: Default::default(),
-            start_index: Default::default(),
-            total_record_count: Default::default(),
-        }
-    }
-}
-
 #[doc = "Activity log entry start message.\r\nData is the timing data encoded as \"$initialDelay,$interval\" in ms."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct ActivityLogEntryStartMessage {
     #[doc = "Gets or sets the data."]
-    #[serde(
-        rename = "Data",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Data", default, skip_serializing_if = "Option::is_none")]
     pub data: Option<String>,
     #[serde(
         rename = "MessageType",
@@ -180,17 +95,8 @@ pub struct ActivityLogEntryStartMessage {
     pub message_type: Option<SessionMessageType>,
 }
 
-impl Default for ActivityLogEntryStartMessage {
-    fn default() -> Self {
-        Self {
-            data: Default::default(),
-            message_type: Default::default(),
-        }
-    }
-}
-
 #[doc = "Activity log entry stop message."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct ActivityLogEntryStopMessage {
     #[serde(
         rename = "MessageType",
@@ -199,12 +105,3 @@ pub struct ActivityLogEntryStopMessage {
     )]
     pub message_type: Option<SessionMessageType>,
 }
-
-impl Default for ActivityLogEntryStopMessage {
-    fn default() -> Self {
-        Self {
-            message_type: Default::default(),
-        }
-    }
-}
-

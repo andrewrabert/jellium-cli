@@ -1,0 +1,10 @@
+                    <div className='verticalSection'>
+                        <h2 className='checkboxListLabel' style={{ marginBottom: '1em' }}>
+                            {globalize.translate('HeaderAllowMediaDeletionFrom')}
+                        </h2>
+                        <div className='checkboxList paperList checkboxList-paperList'>
+                            <CheckBoxElement
+                                labelClassName='checkboxContainer'
+                                className='chkEnableDeleteAllFolders'
+                                title='AllLibraries'
+                            />

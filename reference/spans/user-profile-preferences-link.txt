@@ -1,0 +1,8 @@
+                <div
+                    className='lnkEditUserPreferencesContainer'
+                    style={{ paddingBottom: '1em' }}
+                >
+                    <LinkButton className='lnkEditUserPreferences button-link' href={userDto?.Id ? `mypreferencesmenu?userId=${userDto.Id}` : undefined}>
+                        {globalize.translate('ButtonEditOtherUserPreferences')}
+                    </LinkButton>
+                </div>

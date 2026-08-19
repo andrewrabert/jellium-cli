@@ -1,0 +1,9 @@
+@media all and (max-width: 62.5em) {
+    .guideChannelNumber {
+        display: none;
+    }
+
+    .guideChannelImage {
+        width: 70%;
+    }
+}

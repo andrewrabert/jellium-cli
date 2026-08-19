@@ -1,6 +1,6 @@
-use crate::types;
-use crate::error::Error;
 use crate::Client;
+use crate::error::Error;
+use crate::types;
 
 impl Client {
     #[doc = "Get Devices\n\nSends a `GET` request to `/Devices`\n\nArguments:\n- `user_id`: Gets or sets the user identifier.\n"]
@@ -23,10 +23,7 @@ impl Client {
     }
 
     #[doc = "Get info for a device\n\nSends a `GET` request to `/Devices/Info`\n\nArguments:\n- `id`: Device Id.\n"]
-    pub async fn get_device_info(
-        &self,
-        id: &str,
-    ) -> Result<types::DeviceInfoDto, Error> {
+    pub async fn get_device_info(&self, id: &str) -> Result<types::DeviceInfoDto, Error> {
         self.request(reqwest::Method::GET, "/Devices/Info".into())
             .query("id", id)
             .send()
@@ -34,10 +31,7 @@ impl Client {
     }
 
     #[doc = "Get options for a device\n\nSends a `GET` request to `/Devices/Options`\n\nArguments:\n- `id`: Device Id.\n"]
-    pub async fn get_device_options(
-        &self,
-        id: &str,
-    ) -> Result<types::DeviceOptionsDto, Error> {
+    pub async fn get_device_options(&self, id: &str) -> Result<types::DeviceOptionsDto, Error> {
         self.request(reqwest::Method::GET, "/Devices/Options".into())
             .query("id", id)
             .send()

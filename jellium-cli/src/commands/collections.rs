@@ -48,28 +48,15 @@ pub async fn execute(
             is_locked,
         } => {
             let result = client
-                .create_collection(
-                    ids.as_ref(),
-                    is_locked,
-                    name.as_deref(),
-                    parent_id.as_ref(),
-                )
+                .create_collection(ids.as_ref(), is_locked, name.as_deref(), parent_id.as_ref())
                 .await?;
             crate::output::print_json(&result)?;
         }
-        CollectionsCommand::AddItems {
-            collection_id,
-            ids,
-        } => {
+        CollectionsCommand::AddItems { collection_id, ids } => {
             client.add_to_collection(&collection_id, &ids).await?;
         }
-        CollectionsCommand::RemoveItems {
-            collection_id,
-            ids,
-        } => {
-            client
-                .remove_from_collection(&collection_id, &ids)
-                .await?;
+        CollectionsCommand::RemoveItems { collection_id, ids } => {
+            client.remove_from_collection(&collection_id, &ids).await?;
         }
     }
     Ok(())

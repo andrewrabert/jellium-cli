@@ -1,0 +1,15 @@
+.cardFooter-withlogo {
+    padding-left: 4em;
+    position: relative;
+}
+
+.cardFooterLogo {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: 4.5em;
+    background-size: 70% auto;
+    background-repeat: no-repeat;
+    background-position: center center;
+}

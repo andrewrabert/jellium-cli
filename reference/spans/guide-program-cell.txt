@@ -1,0 +1,26 @@
+.programCell {
+    color: inherit;
+    background: transparent;
+    border-style: solid;
+    border-width: 0 0 0 1px;
+    padding: 0 !important;
+    cursor: pointer;
+    outline: none !important;
+    width: 100%;
+    vertical-align: middle;
+    font-family: inherit;
+    font-size: inherit;
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    display: flex;
+    text-decoration: none;
+    overflow: hidden;
+    align-items: center;
+
+    /* Needed for Firefox */
+    text-align: left;
+    contain: strict;
+    flex-grow: 1;
+    margin: 0 !important;
+}

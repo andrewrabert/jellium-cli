@@ -1,0 +1,9 @@
+    let itemIcon;
+    for (const item of options.items) {
+        itemIcon = item.icon || (item.selected ? 'check' : null);
+
+        if (itemIcon) {
+            renderIcon = true;
+        }
+        icons.push(itemIcon || '');
+    }

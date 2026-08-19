@@ -1,0 +1,16 @@
+    detectBitrate(force) {
+        if (
+            !force &&
+            this.lastDetectedBitrate &&
+            new Date().getTime() - (this.lastDetectedBitrateTime || 0) <= 3600000
+        ) {
+            return Promise.resolve(this.lastDetectedBitrate);
+        }
+
+        const instance = this;
+
+        return this.getEndpointInfo().then(
+            (info) => detectBitrateWithEndpointInfo(instance, info),
+            (info) => detectBitrateWithEndpointInfo(instance, {})
+        );
+    }

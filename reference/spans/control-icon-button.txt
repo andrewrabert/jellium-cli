@@ -1,0 +1,33 @@
+.paper-icon-button-light {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    box-sizing: border-box;
+    margin: 0 0.29em;
+    background: transparent;
+    text-align: center;
+    font-size: inherit;
+    font-family: inherit;
+    color: inherit;
+    user-select: none;
+    cursor: pointer;
+    z-index: 0;
+    min-width: initial;
+    min-height: initial;
+    width: auto;
+    height: auto;
+    padding: 0.556em;
+    vertical-align: middle;
+    border: 0;
+
+    /* These are getting an outline in opera tv browsers, which run chrome 30 */
+    outline: none !important;
+    overflow: hidden;
+    border-radius: 50%;
+
+    /* Disable webkit tap highlighting */
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+    justify-content: center;
+    transform-origin: center;
+    transition: 0.2s;
+}

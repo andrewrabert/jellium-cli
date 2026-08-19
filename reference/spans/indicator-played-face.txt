@@ -1,0 +1,6 @@
+.playedIndicator {
+    border-radius: 100em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;

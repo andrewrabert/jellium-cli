@@ -1,0 +1,32 @@
+function getIcon(target) {
+    let deviceType = target.deviceType;
+
+    if (!deviceType && target.isLocalPlayer) {
+        if (browser.tv) {
+            deviceType = 'tv';
+        } else if (browser.mobile) {
+            deviceType = 'smartphone';
+        } else {
+            deviceType = 'desktop';
+        }
+    }
+
+    if (!deviceType) {
+        deviceType = 'tv';
+    }
+
+    switch (deviceType) {
+        case 'smartphone':
+            return 'smartphone';
+        case 'tablet':
+            return 'tablet';
+        case 'tv':
+            return 'tv';
+        case 'cast':
+            return 'cast';
+        case 'desktop':
+            return 'computer';
+        default:
+            return 'tv';
+    }
+}

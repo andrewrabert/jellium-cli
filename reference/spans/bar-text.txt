@@ -1,0 +1,20 @@
+.nowPlayingBarText {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    vertical-align: middle;
+    flex-grow: 1;
+    font-size: 92%;
+
+    [dir="ltr"] & {
+        text-align: left;
+        margin-right: 1em;
+        margin-left: 0.5em;
+    }
+
+    [dir="rtl"] & {
+        text-align: right;
+        margin-left: 1em;
+        margin-right: 0.5em;
+    }
+}

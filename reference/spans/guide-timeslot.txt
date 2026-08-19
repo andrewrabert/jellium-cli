@@ -1,0 +1,6 @@
+.timeslotHeader {
+    display: inline-flex;
+    align-items: center;
+    text-indent: 0.25em;
+    width: 2.0833333333333333333333333333333%;
+}

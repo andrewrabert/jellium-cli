@@ -1,0 +1,9 @@
+.nowPlayingBarVolumeSliderContainer {
+    [dir="ltr"] & {
+        margin-right: 2em;
+    }
+
+    [dir="rtl"] & {
+        margin-left: 2em;
+    }
+}

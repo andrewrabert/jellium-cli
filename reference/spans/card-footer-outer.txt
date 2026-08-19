@@ -1,0 +1,14 @@
+    let outerCardFooter = '';
+    if (!overlayText && !footerOverlayed) {
+        footerCssClass = options.cardLayout ? 'cardFooter' : 'cardFooter cardFooter-transparent';
+
+        if (logoUrl) {
+            footerCssClass += ' cardFooter-withlogo';
+        }
+
+        if (!options.cardLayout) {
+            logoUrl = null;
+        }
+
+        outerCardFooter = getCardFooterText(item, apiClient, options, footerCssClass, progressHtml, { forceName, overlayText, isOuterFooter: true }, { imgUrl, logoUrl });
+    }

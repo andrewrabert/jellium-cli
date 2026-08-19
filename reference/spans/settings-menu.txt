@@ -1,0 +1,16 @@
+            <div className='padded-left padded-right padded-bottom-page padded-top'>
+                <div
+                    className='readOnlyContent'
+                    style={{
+                        margin: '0 auto'
+                    }}
+                >
+                    <div className='verticalSection verticalSection-extrabottompadding'>
+                        <h2
+                            className='sectionTitle headerUsername'
+                            style={{
+                                paddingLeft: '0.25em'
+                            }}
+                        >
+                            {user.Name}
+                        </h2>

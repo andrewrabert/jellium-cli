@@ -1,0 +1,18 @@
+.nowPlayingBarRight {
+    position: relative;
+
+    /* Need this to make sure it's on top of nowPlayingBarPositionContainer so that buttons are fully clickable */
+    z-index: 2;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    flex-shrink: 0;
+
+    [dir="ltr"] & {
+        margin: 0 0.5em 0 auto;
+    }
+
+    [dir="rtl"] & {
+        margin: 0 auto 0 0.5em;
+    }
+}

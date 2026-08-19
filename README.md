@@ -43,6 +43,7 @@ Commands:
   tasks          Scheduled task operations
   user-data      User item data (played, favorite, rating)
   users          User operations
+  web            Serve Jellium Web in a browser
   videos         Video operations (non-streaming)
   help           Print this message or the help of the given subcommand(s)
 
@@ -86,6 +87,14 @@ jellium-cli libraries refresh --wait --name "Music Videos"
 jellium-cli search hints "big buck bunny"
 ```
 
+### Jellium Web:
+Serve the browser client on loopback and open it in the default browser.
+```sh
+jellium-cli web
+jellium-cli web --port 8096 --no-open
+jellium-cli web --bind 0.0.0.0 --allow-remote --advertise media.lan
+```
+
 ### Make a raw authenticated API call (output body to stdout, headers to stderr):
 ```sh
 jellium-cli api /System/Info
@@ -94,10 +103,25 @@ jellium-cli api /Users/Me
 
 ## Development
 
+Jellium Web bundles a pinned copy of [hls.js](https://github.com/video-dev/hls.js)
+under `jellium-web/vendor/`; building the binary needs trunk and no Node.
+
 This project uses [just](https://github.com/casey/just) as a command runner.
 ```
 Available recipes:
-    build     # Build the debug release
-    list      # List available recipes
-    run *args # Run the debug release. Sets JELLYFIN_ENV_FILE to .env if it exists in the repo root
+    assets checkout          # Rewrite jellium-web/fonts, jellium-web/icons and jellium-web/branding from a checkout of the pinned revision
+    build                    # Build the debug release
+    constructs checkout      # Rewrite reference/constructs.tsv and jellium-model/src/construct.rs from a checkout of the pinned revision
+    fmt                      # Check formatting in both workspaces
+    list                     # List available recipes
+    pinned checkout blurhash # Fail when the tree has drifted from a checkout of the pinned revisions
+    reference checkout       # Rewrite jellium-web/reference from a checkout of the pinned revision
+    run *args                # Run the debug release. Sets JELLYFIN_ENV_FILE to .env if it exists in the repo root
+    spans checkout           # Rewrite reference/spans from a checkout of the pinned revision
+    static-page              # Rewrite jellium-web/boot.css and jellium-web/index.html from the ported appearance values
+    suppressions             # Fail on any lint suppression or strictness-lowering configuration
+    test                     # Run both workspaces' tests
+    vendored checkout        # Rewrite reference/vendor.tsv from a checkout of the pinned blurhash revision
+    web *args                # Run jellium-cli web from the debug build
+    web-bundle               # Build the Jellium Web bundle
 ```

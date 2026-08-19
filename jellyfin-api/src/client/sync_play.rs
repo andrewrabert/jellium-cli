@@ -1,24 +1,21 @@
-use crate::types;
-use crate::error::Error;
-use crate::util::encode_path;
 use crate::Client;
+use crate::error::Error;
+use crate::types;
+use crate::util::encode_path;
 
 impl Client {
     #[doc = "Gets a SyncPlay group by id\n\nSends a `GET` request to `/SyncPlay/{id}`\n\nArguments:\n- `id`: The id of the group.\n"]
-    pub async fn sync_play_get_group(
-        &self,
-        id: &uuid::Uuid,
-    ) -> Result<types::GroupInfoDto, Error> {
-        self.request(reqwest::Method::GET, format!("/SyncPlay/{}", encode_path(&id.to_string())))
-            .send()
-            .await
+    pub async fn sync_play_get_group(&self, id: &uuid::Uuid) -> Result<types::GroupInfoDto, Error> {
+        self.request(
+            reqwest::Method::GET,
+            format!("/SyncPlay/{}", encode_path(&id.to_string())),
+        )
+        .send()
+        .await
     }
 
     #[doc = "Notify SyncPlay group that member is buffering\n\nSends a `POST` request to `/SyncPlay/Buffering`\n\nArguments:\n- `body`: The player status.\n"]
-    pub async fn sync_play_buffering(
-        &self,
-        body: &types::BufferRequestDto,
-    ) -> Result<(), Error> {
+    pub async fn sync_play_buffering(&self, body: &types::BufferRequestDto) -> Result<(), Error> {
         self.request(reqwest::Method::POST, "/SyncPlay/Buffering".into())
             .json_body(body)
             .send_no_content()
@@ -44,9 +41,7 @@ impl Client {
     }
 
     #[doc = "Gets all SyncPlay groups\n\nSends a `GET` request to `/SyncPlay/List`\n\n"]
-    pub async fn sync_play_get_groups(
-        &self,
-    ) -> Result<Vec<types::GroupInfoDto>, Error> {
+    pub async fn sync_play_get_groups(&self) -> Result<Vec<types::GroupInfoDto>, Error> {
         self.request(reqwest::Method::GET, "/SyncPlay/List".into())
             .send()
             .await
@@ -75,10 +70,7 @@ impl Client {
     }
 
     #[doc = "Request next item in SyncPlay group\n\nSends a `POST` request to `/SyncPlay/NextItem`\n\nArguments:\n- `body`: The current item information.\n"]
-    pub async fn sync_play_next_item(
-        &self,
-        body: &types::NextItemRequestDto,
-    ) -> Result<(), Error> {
+    pub async fn sync_play_next_item(&self, body: &types::NextItemRequestDto) -> Result<(), Error> {
         self.request(reqwest::Method::POST, "/SyncPlay/NextItem".into())
             .json_body(body)
             .send_no_content()
@@ -93,10 +85,7 @@ impl Client {
     }
 
     #[doc = "Update session ping\n\nSends a `POST` request to `/SyncPlay/Ping`\n\nArguments:\n- `body`: The new ping.\n"]
-    pub async fn sync_play_ping(
-        &self,
-        body: &types::PingRequestDto,
-    ) -> Result<(), Error> {
+    pub async fn sync_play_ping(&self, body: &types::PingRequestDto) -> Result<(), Error> {
         self.request(reqwest::Method::POST, "/SyncPlay/Ping".into())
             .json_body(body)
             .send_no_content()
@@ -115,10 +104,7 @@ impl Client {
     }
 
     #[doc = "Request to queue items to the playlist of a SyncPlay group\n\nSends a `POST` request to `/SyncPlay/Queue`\n\nArguments:\n- `body`: The items to add.\n"]
-    pub async fn sync_play_queue(
-        &self,
-        body: &types::QueueRequestDto,
-    ) -> Result<(), Error> {
+    pub async fn sync_play_queue(&self, body: &types::QueueRequestDto) -> Result<(), Error> {
         self.request(reqwest::Method::POST, "/SyncPlay/Queue".into())
             .json_body(body)
             .send_no_content()
@@ -126,10 +112,7 @@ impl Client {
     }
 
     #[doc = "Notify SyncPlay group that member is ready for playback\n\nSends a `POST` request to `/SyncPlay/Ready`\n\nArguments:\n- `body`: The player status.\n"]
-    pub async fn sync_play_ready(
-        &self,
-        body: &types::ReadyRequestDto,
-    ) -> Result<(), Error> {
+    pub async fn sync_play_ready(&self, body: &types::ReadyRequestDto) -> Result<(), Error> {
         self.request(reqwest::Method::POST, "/SyncPlay/Ready".into())
             .json_body(body)
             .send_no_content()
@@ -148,10 +131,7 @@ impl Client {
     }
 
     #[doc = "Request seek in SyncPlay group\n\nSends a `POST` request to `/SyncPlay/Seek`\n\nArguments:\n- `body`: The new playback position.\n"]
-    pub async fn sync_play_seek(
-        &self,
-        body: &types::SeekRequestDto,
-    ) -> Result<(), Error> {
+    pub async fn sync_play_seek(&self, body: &types::SeekRequestDto) -> Result<(), Error> {
         self.request(reqwest::Method::POST, "/SyncPlay/Seek".into())
             .json_body(body)
             .send_no_content()
@@ -170,10 +150,7 @@ impl Client {
     }
 
     #[doc = "Request to set new playlist in SyncPlay group\n\nSends a `POST` request to `/SyncPlay/SetNewQueue`\n\nArguments:\n- `body`: The new playlist to play in the group.\n"]
-    pub async fn sync_play_set_new_queue(
-        &self,
-        body: &types::PlayRequestDto,
-    ) -> Result<(), Error> {
+    pub async fn sync_play_set_new_queue(&self, body: &types::PlayRequestDto) -> Result<(), Error> {
         self.request(reqwest::Method::POST, "/SyncPlay/SetNewQueue".into())
             .json_body(body)
             .send_no_content()

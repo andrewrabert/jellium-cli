@@ -1,0 +1,25 @@
+.channelPrograms,
+.timeslotHeadersInner {
+    width: 1800vw;
+}
+
+@media all and (min-width: 37.5em) {
+    .channelPrograms,
+    .timeslotHeadersInner {
+        width: 1400vw;
+    }
+}
+
+@media all and (min-width: 50em) {
+    .channelPrograms,
+    .timeslotHeadersInner {
+        width: 1200vw;
+    }
+}
+
+@media all and (min-width: 80em) {
+    .channelPrograms,
+    .timeslotHeadersInner {
+        width: 810vw;
+    }
+}

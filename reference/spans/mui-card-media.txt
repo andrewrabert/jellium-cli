@@ -1,0 +1,34 @@
+const CardMediaRoot = styled('div', {
+  name: 'MuiCardMedia',
+  slot: 'Root',
+  overridesResolver: (props, styles) => {
+    const {
+      ownerState
+    } = props;
+    const {
+      isMediaComponent,
+      isImageComponent
+    } = ownerState;
+    return [styles.root, isMediaComponent && styles.media, isImageComponent && styles.img];
+  }
+})({
+  display: 'block',
+  backgroundSize: 'cover',
+  backgroundRepeat: 'no-repeat',
+  backgroundPosition: 'center',
+  variants: [{
+    props: {
+      isMediaComponent: true
+    },
+    style: {
+      width: '100%'
+    }
+  }, {
+    props: {
+      isImageComponent: true
+    },
+    style: {
+      objectFit: 'cover'
+    }
+  }]
+});

@@ -1,0 +1,7 @@
+html {
+    @include fullpage;
+
+    /* Set the default font for cases we don't load the brand font */
+    font-family: Arial, Helvetica, sans-serif;
+    line-height: 1.35;
+}

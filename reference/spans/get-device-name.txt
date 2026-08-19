@@ -1,0 +1,22 @@
+function getDeviceName() {
+    if (deviceName) {
+        return deviceName;
+    }
+
+    deviceName = 'Web Browser'; // Default device name
+
+    for (const key in BrowserName) {
+        if (browser[key]) {
+            deviceName = BrowserName[key];
+            break;
+        }
+    }
+
+    if (browser.ipad) {
+        deviceName += ' iPad';
+    } else if (browser.iphone) {
+        deviceName += ' iPhone';
+    } else if (browser.android) {
+        deviceName += ' Android';
+    }
+    return deviceName;

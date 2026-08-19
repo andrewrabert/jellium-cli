@@ -1,0 +1,9 @@
+.osdMediaStatus {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+}
+
+.osdMediaStatus span:first-child {
+    margin-right: 0.125rem;
+}

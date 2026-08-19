@@ -1,0 +1,11 @@
+  }, {
+    props: ({
+      variant,
+      ownerState
+    }) => variant === 'filled' && ownerState.shrink,
+    style: {
+      userSelect: 'none',
+      pointerEvents: 'auto',
+      transform: 'translate(12px, 7px) scale(0.75)',
+      maxWidth: 'calc(133% - 24px)'
+    }

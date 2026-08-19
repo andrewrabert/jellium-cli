@@ -1,0 +1,21 @@
+@media all and (min-width: 100em) {
+    .headerTop {
+        padding: 0.8em 0.8em;
+    }
+
+    .headerTabs {
+        align-self: center;
+        width: auto;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        margin-top: -4.3em;
+    }
+
+    .libraryPage:not(.noSecondaryNavPage) {
+        padding-top: 4.6em !important;
+    }
+
+    .pageWithAbsoluteTabs:not(.noSecondaryNavPage) {
+        padding-top: 6.7em !important;
+    }

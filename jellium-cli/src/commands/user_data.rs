@@ -244,23 +244,17 @@ pub async fn execute(
         } => {
             let effective_uid = uid.as_ref().unwrap_or(user_id);
             let result = client
-                .get_resume_items(
-                    None, // enable_image_types
-                    None, // enable_images
-                    None, // enable_total_record_count
-                    None, // enable_user_data
-                    None, // exclude_active_sessions
-                    exclude_item_types.as_ref(),
-                    None, // fields
-                    None, // image_type_limit
-                    include_item_types.as_ref(),
-                    *limit,
-                    media_types.as_ref(),
-                    parent_id.as_ref(),
-                    search_term.as_deref(),
-                    *start_index,
-                    Some(effective_uid),
-                )
+                .get_resume_items(&jellyfin_api::query::GetResumeItems {
+                    exclude_item_types: exclude_item_types.as_ref(),
+                    include_item_types: include_item_types.as_ref(),
+                    limit: *limit,
+                    media_types: media_types.as_ref(),
+                    parent_id: parent_id.as_ref(),
+                    search_term: search_term.as_deref(),
+                    start_index: *start_index,
+                    user_id: Some(effective_uid),
+                    ..Default::default()
+                })
                 .await?;
             crate::output::print_ndjson(&result.items)?;
         }

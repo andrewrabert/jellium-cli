@@ -1,0 +1,22 @@
+    let overlayButtons = '';
+    if (layoutManager.mobile) {
+        let overlayPlayButton = options.overlayPlayButton;
+
+        if (overlayPlayButton == null && !options.overlayMoreButton && !options.overlayInfoButton && !options.cardLayout) {
+            overlayPlayButton = item.MediaType === 'Video';
+        }
+
+        const btnCssClass = 'cardOverlayButton cardOverlayButton-br itemAction';
+
+        if (options.centerPlayButton) {
+            overlayButtons += `<button is="paper-icon-button-light" class="${btnCssClass} cardOverlayButton-centered" data-action="play" title="${globalize.translate('Play')}"><span class="material-icons cardOverlayButtonIcon play_arrow" aria-hidden="true"></span></button>`;
+        }
+
+        if (overlayPlayButton && !item.IsPlaceHolder && (item.LocationType !== 'Virtual' || !item.MediaType || item.Type === 'Program') && item.Type !== 'Person') {
+            overlayButtons += `<button is="paper-icon-button-light" class="${btnCssClass}" data-action="play" title="${globalize.translate('Play')}"><span class="material-icons cardOverlayButtonIcon play_arrow" aria-hidden="true"></span></button>`;
+        }
+
+        if (options.overlayMoreButton) {
+            overlayButtons += `<button is="paper-icon-button-light" class="${btnCssClass}" data-action="menu" title="${globalize.translate('ButtonMore')}"><span class="material-icons cardOverlayButtonIcon more_vert" aria-hidden="true"></span></button>`;
+        }
+    }

@@ -1,0 +1,3 @@
+            alphaPickerElement.classList.add('alphaPicker-fixed-right');
+            alphaPickerElement.classList.add('focuscontainer-right');
+            self.itemsContainer.parentNode.classList.add('padded-right-withalphapicker');

@@ -1,0 +1,3 @@
+.headerTop {
+    padding: 0.54em 0;
+}

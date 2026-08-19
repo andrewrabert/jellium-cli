@@ -1,0 +1,11 @@
+                    <button is="emby-playstatebutton" type="button" class="button-flat btnPlaystate hide detailButton" title="">
+                        <div class="detailButton-content">
+                            <span class="material-icons detailButton-icon check" aria-hidden="true"></span>
+                        </div>
+                    </button>
+
+                    <button is="emby-ratingbutton" type="button" class="button-flat btnUserRating hide detailButton" title="${Rate}">
+                        <div class="detailButton-content">
+                            <span class="material-icons detailButton-icon favorite" aria-hidden="true"></span>
+                        </div>
+                    </button>

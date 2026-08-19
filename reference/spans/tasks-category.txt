@@ -1,0 +1,13 @@
+    return (
+        <Stack spacing={2}>
+            <Typography variant='h2'>{category}</Typography>
+            <List sx={{ bgcolor: 'background.paper' }}>
+                {tasks.map(task => {
+                    return <Task
+                        key={task.Id}
+                        task={task}
+                    />;
+                })}
+            </List>
+        </Stack>
+    );

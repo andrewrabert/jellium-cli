@@ -1,0 +1,3 @@
+    if (!browser.operaTv && !browser.tizen && !browser.orsay && !browser.web0s && !browser.edgeUwp) {
+        features.push(AppFeature.RemoteVideo);
+    }

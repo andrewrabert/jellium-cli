@@ -1,0 +1,7 @@
+.actionSheetMenuItem {
+    font-weight: inherit;
+    box-shadow: none;
+    flex-shrink: 0;
+    border-radius: 0;
+    margin: 0;
+}

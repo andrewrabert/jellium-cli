@@ -1,0 +1,15 @@
+function onSubmit(e) {
+    const form = this;
+
+    const apiClient = ServerConnections.getApiClient(currentServerId);
+
+    apiClient.getLiveTvTimer(currentItemId).then(function (item) {
+        item.PrePaddingSeconds = form.querySelector('#txtPrePaddingMinutes').value * 60;
+        item.PostPaddingSeconds = form.querySelector('#txtPostPaddingMinutes').value * 60;
+        apiClient.updateLiveTvTimer(item).then(currentResolve);
+    });
+
+    e.preventDefault();
+
+    // Disable default form submission
+    return false;

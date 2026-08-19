@@ -1,0 +1,14 @@
+    const user = options.user;
+
+    const canPlay = playbackManager.canPlay(item);
+
+    const commands = [];
+
+    if (canPlay && item.MediaType !== 'Photo') {
+        if (options.play !== false) {
+            commands.push({
+                name: globalize.translate('Play'),
+                id: 'resume',
+                icon: 'play_arrow'
+            });
+        }

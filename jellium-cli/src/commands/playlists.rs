@@ -208,14 +208,13 @@ pub async fn execute(
             let result = client
                 .get_playlist_items(
                     playlist_id,
-                    None, // enable_image_types
-                    None, // enable_images
-                    None, // enable_user_data
-                    fields.as_ref(),
-                    None, // image_type_limit
-                    *limit,
-                    *start_index,
-                    Some(effective_uid),
+                    &jellyfin_api::query::GetPlaylistItems {
+                        fields: fields.as_ref(),
+                        limit: *limit,
+                        start_index: *start_index,
+                        user_id: Some(effective_uid),
+                        ..Default::default()
+                    },
                 )
                 .await?;
             crate::output::print_ndjson(&result.items)?;
@@ -235,10 +234,7 @@ pub async fn execute(
             entry_ids,
         } => {
             client
-                .remove_item_from_playlist(
-                    &playlist_id.to_string(),
-                    entry_ids.as_ref(),
-                )
+                .remove_item_from_playlist(&playlist_id.to_string(), entry_ids.as_ref())
                 .await?;
         }
         PlaylistsCommand::MoveItem {
@@ -265,9 +261,7 @@ pub async fn execute(
             playlist_id,
             user_id: uid,
         } => {
-            client
-                .remove_user_from_playlist(playlist_id, uid)
-                .await?;
+            client.remove_user_from_playlist(playlist_id, uid).await?;
         }
         PlaylistsCommand::InstantMix {
             id,
@@ -279,13 +273,12 @@ pub async fn execute(
             let result = client
                 .get_instant_mix_from_playlist(
                     id,
-                    None, // enable_image_types
-                    None, // enable_images
-                    None, // enable_user_data
-                    fields.as_ref(),
-                    None, // image_type_limit
-                    *limit,
-                    Some(effective_uid),
+                    &jellyfin_api::query::GetInstantMixFromPlaylist {
+                        fields: fields.as_ref(),
+                        limit: *limit,
+                        user_id: Some(effective_uid),
+                        ..Default::default()
+                    },
                 )
                 .await?;
             crate::output::print_json(&result)?;

@@ -1,0 +1,5 @@
+const SwitchBaseRoot = styled(ButtonBase, {
+  name: 'MuiSwitchBase'
+})({
+  padding: 9,
+  borderRadius: '50%',

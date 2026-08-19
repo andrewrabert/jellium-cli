@@ -1,0 +1,22 @@
+            const menuItems: MenuEntry[] = [];
+
+            menuItems.push({
+                name: globalize.translate('ButtonEditUser'),
+                id: 'open',
+                icon: 'mode_edit'
+            });
+            menuItems.push({
+                name: globalize.translate('ButtonLibraryAccess'),
+                id: 'access',
+                icon: 'lock'
+            });
+            menuItems.push({
+                name: globalize.translate('ButtonParentalControl'),
+                id: 'parentalcontrol',
+                icon: 'person'
+            });
+            menuItems.push({
+                name: globalize.translate('Delete'),
+                id: 'delete',
+                icon: 'delete'
+            });

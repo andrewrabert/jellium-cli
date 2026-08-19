@@ -1,0 +1,15 @@
+                    <div id='featureAccessFields' className='verticalSection'>
+                        <h2 className='paperListLabel'>
+                            {globalize.translate('HeaderFeatureAccess')}
+                        </h2>
+                        <div className='checkboxList paperList' style={{ padding: '.5em 1em' }}>
+                            <CheckBoxElement
+                                className='chkEnableLiveTvAccess'
+                                title='OptionAllowBrowsingLiveTv'
+                            />
+                            <CheckBoxElement
+                                className='chkManageLiveTv'
+                                title='OptionAllowManageLiveTv'
+                            />
+                        </div>
+                    </div>

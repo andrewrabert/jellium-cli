@@ -1,6 +1,6 @@
-use crate::types;
-use crate::error::Error;
 use crate::Client;
+use crate::error::Error;
+use crate::types;
 
 impl Client {
     #[doc = "Completes the startup wizard\n\nSends a `POST` request to `/Startup/Complete`\n\n"]
@@ -11,9 +11,7 @@ impl Client {
     }
 
     #[doc = "Gets the initial startup wizard configuration\n\nSends a `GET` request to `/Startup/Configuration`\n\n"]
-    pub async fn get_startup_configuration(
-        &self,
-    ) -> Result<types::StartupConfigurationDto, Error> {
+    pub async fn get_startup_configuration(&self) -> Result<types::StartupConfigurationDto, Error> {
         self.request(reqwest::Method::GET, "/Startup/Configuration".into())
             .send()
             .await
@@ -31,9 +29,7 @@ impl Client {
     }
 
     #[doc = "Gets the first user\n\nSends a `GET` request to `/Startup/FirstUser`\n\n"]
-    pub async fn get_first_user_2(
-        &self,
-    ) -> Result<types::StartupUserDto, Error> {
+    pub async fn get_first_user(&self) -> Result<types::StartupUserDto, Error> {
         self.request(reqwest::Method::GET, "/Startup/FirstUser".into())
             .send()
             .await
@@ -51,19 +47,14 @@ impl Client {
     }
 
     #[doc = "Gets the first user\n\nSends a `GET` request to `/Startup/User`\n\n"]
-    pub async fn get_first_user(
-        &self,
-    ) -> Result<types::StartupUserDto, Error> {
+    pub async fn get_startup_user(&self) -> Result<types::StartupUserDto, Error> {
         self.request(reqwest::Method::GET, "/Startup/User".into())
             .send()
             .await
     }
 
     #[doc = "Sets the user name and password\n\nSends a `POST` request to `/Startup/User`\n\nArguments:\n- `body`: The DTO containing username and password.\n"]
-    pub async fn update_startup_user(
-        &self,
-        body: &types::StartupUserDto,
-    ) -> Result<(), Error> {
+    pub async fn update_startup_user(&self, body: &types::StartupUserDto) -> Result<(), Error> {
         self.request(reqwest::Method::POST, "/Startup/User".into())
             .json_body(body)
             .send_no_content()

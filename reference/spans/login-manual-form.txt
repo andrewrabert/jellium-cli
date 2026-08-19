@@ -1,0 +1,18 @@
+function showManualForm(context, showCancel, focusPassword) {
+    context.querySelector('.chkRememberLogin').checked = appSettings.enableAutoLogin();
+    context.querySelector('.manualLoginForm').classList.remove('hide');
+    context.querySelector('.visualLoginForm').classList.add('hide');
+    context.querySelector('.btnManual').classList.add('hide');
+
+    if (focusPassword) {
+        context.querySelector('#txtManualPassword').focus();
+    } else {
+        context.querySelector('#txtManualName').focus();
+    }
+
+    if (showCancel) {
+        context.querySelector('.btnCancel').classList.remove('hide');
+    } else {
+        context.querySelector('.btnCancel').classList.add('hide');
+    }
+}

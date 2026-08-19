@@ -1,0 +1,9 @@
+                    <div className='checkboxContainer checkboxContainer-withDescription fldRemoteAccess hide'>
+                        <CheckBoxElement
+                            className='chkRemoteAccess'
+                            title='AllowRemoteAccess'
+                        />
+                        <div className='fieldDescription checkboxFieldDescription'>
+                            {globalize.translate('AllowRemoteAccessHelp')}
+                        </div>
+                    </div>

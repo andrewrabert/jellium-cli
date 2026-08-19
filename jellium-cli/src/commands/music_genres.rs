@@ -86,34 +86,23 @@ pub async fn execute(
         } => {
             let effective_uid = uid.as_ref().unwrap_or(user_id);
             let result = client
-                .get_music_genres(
-                    None, // enable_image_types
-                    None, // enable_images
-                    None, // enable_total_record_count
-                    None, // exclude_item_types
-                    fields.as_ref(),
-                    None, // image_type_limit
-                    None, // include_item_types
-                    None, // is_favorite
-                    *limit,
-                    None, // name_less_than
-                    None, // name_starts_with
-                    None, // name_starts_with_or_greater
-                    parent_id.as_ref(),
-                    search_term.as_deref(),
-                    sort_by.as_ref(),
-                    sort_order.as_ref(),
-                    *start_index,
-                    Some(effective_uid),
-                )
+                .get_music_genres(&jellyfin_api::query::GetMusicGenres {
+                    fields: fields.as_ref(),
+                    limit: *limit,
+                    parent_id: parent_id.as_ref(),
+                    search_term: search_term.as_deref(),
+                    sort_by: sort_by.as_ref(),
+                    sort_order: sort_order.as_ref(),
+                    start_index: *start_index,
+                    user_id: Some(effective_uid),
+                    ..Default::default()
+                })
                 .await?;
             crate::output::print_ndjson(&result.items)?;
         }
         MusicGenresCommand::Get { name, user_id: uid } => {
             let effective_uid = uid.as_ref().unwrap_or(user_id);
-            let result = client
-                .get_music_genre(name, Some(effective_uid))
-                .await?;
+            let result = client.get_music_genre(name, Some(effective_uid)).await?;
             crate::output::print_json(&result)?;
         }
         MusicGenresCommand::InstantMix {
@@ -125,14 +114,13 @@ pub async fn execute(
             let effective_uid = uid.as_ref().unwrap_or(user_id);
             let result = client
                 .get_instant_mix_from_music_genre_by_id(
-                    None, // enable_image_types
-                    None, // enable_images
-                    None, // enable_user_data
-                    fields.as_ref(),
                     id,
-                    None, // image_type_limit
-                    *limit,
-                    Some(effective_uid),
+                    &jellyfin_api::query::GetInstantMixFromMusicGenreById {
+                        fields: fields.as_ref(),
+                        limit: *limit,
+                        user_id: Some(effective_uid),
+                        ..Default::default()
+                    },
                 )
                 .await?;
             crate::output::print_json(&result)?;

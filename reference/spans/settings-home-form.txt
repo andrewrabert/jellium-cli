@@ -1,0 +1,15 @@
+    <div class="verticalSection verticalSection-extrabottompadding">
+        <h2 class="sectionTitle">${HeaderLibraryOrder}</h2>
+        <div class="paperList viewOrderList"></div>
+    </div>
+
+    <div class="perLibrarySettings"></div>
+
+    <div class="verticalSection verticalSection-extrabottompadding">
+        <h2 class="sectionTitle">${HeaderLibraryFolders}</h2>
+        <div>
+            <p>${LabelSelectFolderGroups}</p>
+            <div class="folderGroupList"></div>
+            <div class="fieldDescription checkboxFieldDescription">${LabelSelectFolderGroupsHelp}</div>
+        </div>
+    </div>

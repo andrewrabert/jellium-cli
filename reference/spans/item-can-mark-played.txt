@@ -1,0 +1,24 @@
+export function canMarkPlayed (item) {
+    if (item.Type === 'Program') {
+        return false;
+    }
+
+    if (item.MediaType === 'Video') {
+        if (item.Type !== 'TvChannel') {
+            return true;
+        }
+    } else if (item.MediaType === 'Audio') {
+        if (item.Type === 'AudioPodcast') {
+            return true;
+        }
+        if (item.Type === 'AudioBook') {
+            return true;
+        }
+    }
+
+    return item.Type === 'Series'
+        || item.Type === 'Season'
+        || item.Type === 'BoxSet'
+        || item.MediaType === 'Book'
+        || item.MediaType === 'Recording';
+}

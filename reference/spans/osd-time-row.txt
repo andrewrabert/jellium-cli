@@ -1,0 +1,3 @@
+                <div class="osdTimeText">
+                    <span class="endsAtText"></span>
+                </div>

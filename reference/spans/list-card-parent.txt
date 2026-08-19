@@ -1,0 +1,3 @@
+            } else {
+                posterOptions.showParentTitle = settings.showTitle;
+            }

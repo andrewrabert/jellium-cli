@@ -1,0 +1,11 @@
+                : undefined, outlineOffset: '-1px', overflow: 'hidden', p: density === 'compact'
+                ? columnDefType === 'display'
+                    ? '0 0.5rem'
+                    : '0.5rem'
+                : density === 'comfortable'
+                    ? columnDefType === 'display'
+                        ? '0.5rem 0.75rem'
+                        : '1rem'
+                    : columnDefType === 'display'
+                        ? '1rem 1.25rem'
+                        : '1.5rem', textOverflow: columnDefType !== 'display' ? 'ellipsis' : undefined, whiteSpace: row.getIsPinned() || density === 'compact' ? 'nowrap' : 'normal' }, getCommonMRTCellStyles({

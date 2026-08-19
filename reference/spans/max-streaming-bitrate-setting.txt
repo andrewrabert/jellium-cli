@@ -1,0 +1,17 @@
+    maxStreamingBitrate(isInNetwork, mediaType, val) {
+        const key = 'maxbitrate-' + mediaType + '-' + isInNetwork;
+        if (val !== undefined) {
+            if (isInNetwork && mediaType === 'Audio') {
+                //  nothing to do, this is always a max value
+            } else {
+                this.set(key, val);
+            }
+        }
+
+        if (isInNetwork && mediaType === 'Audio') {
+            // return a huge number so that it always direct plays
+            return 150000000;
+        } else {
+            return parseInt(this.get(key) || '0', 10) || 1500000;
+        }
+    }

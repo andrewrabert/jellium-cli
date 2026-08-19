@@ -1,0 +1,258 @@
+//! The Material Icons glyphs the client draws, and the one site a ligature name
+//! becomes a codepoint.
+
+use iced::Element;
+use jellyfin_api::types::{BaseItemKind, CollectionType};
+
+use crate::app::Message;
+use crate::failure::unraised;
+use crate::fonts::Codepoint;
+use crate::style::{self, Length, typeface};
+
+/// The table `just assets` writes from the reference's own icon metadata: one
+/// ligature per row, with the codepoint it draws in base sixteen.
+const TABLE: &str = include_str!("../icons/material.tsv");
+
+/// Declares the glyph enum, the roll the gate reads and the ligature each
+/// variant draws under, from one list. A variant named here is in all three; a
+/// variant named nowhere else does not exist.
+macro_rules! icons {
+    ($($variant:ident => $ligature:literal,)*) => {
+        #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+        pub enum Icon {
+            $($variant,)*
+        }
+
+        impl Icon {
+            /// Every variant, which is what the icon table is checked against.
+            #[cfg(test)]
+            pub const ALL: &'static [Icon] = &[$(Icon::$variant,)*];
+
+            /// The ligature the reference writes for this glyph.
+            pub fn ligature(self) -> &'static str {
+                match self {
+                    $(Icon::$variant => $ligature,)*
+                }
+            }
+        }
+    };
+}
+
+icons! {
+    AccessTime => "access_time",
+    Add => "add",
+    Album => "album",
+    Analytics => "analytics",
+    ArrowBack => "arrow_back",
+    ArrowDropDown => "arrow_drop_down",
+    Article => "article",
+    Audiotrack => "audiotrack",
+    Autorenew => "autorenew",
+    Book => "book",
+    Cancel => "cancel",
+    Cast => "cast",
+    Check => "check",
+    CheckBox => "check_box",
+    CheckBoxOutlineBlank => "check_box_outline_blank",
+    CheckCircleOutline => "check_circle_outline",
+    ChevronLeft => "chevron_left",
+    ChevronRight => "chevron_right",
+    Close => "close",
+    ClosedCaption => "closed_caption",
+    Dashboard => "dashboard",
+    Delete => "delete",
+    Devices => "devices",
+    Dvr => "dvr",
+    Edit => "edit",
+    ExpandLess => "expand_less",
+    ExpandMore => "expand_more",
+    Explore => "explore",
+    Extension => "extension",
+    FastForward => "fast_forward",
+    FastRewind => "fast_rewind",
+    Favorite => "favorite",
+    FavoriteBorder => "favorite_border",
+    FiberManualRecord => "fiber_manual_record",
+    FiberSmartRecord => "fiber_smart_record",
+    FilterAlt => "filter_alt",
+    Folder => "folder",
+    FolderOpen => "folder_open",
+    Fullscreen => "fullscreen",
+    FullscreenExit => "fullscreen_exit",
+    Groups => "groups",
+    Home => "home",
+    Keyboard => "keyboard",
+    KeyboardArrowDown => "keyboard_arrow_down",
+    KeyboardArrowUp => "keyboard_arrow_up",
+    Lan => "lan",
+    LibraryAdd => "library_add",
+    LiveTv => "live_tv",
+    Lock => "lock",
+    MeetingRoom => "meeting_room",
+    Menu => "menu",
+    ModeEdit => "mode_edit",
+    MoreVert => "more_vert",
+    Movie => "movie",
+    MusicNote => "music_note",
+    MusicVideo => "music_video",
+    OpenInNew => "open_in_new",
+    Palette => "palette",
+    Pause => "pause",
+    PauseCircleFilled => "pause_circle_filled",
+    People => "people",
+    PermMedia => "perm_media",
+    Person => "person",
+    PhonelinkLock => "phonelink_lock",
+    Photo => "photo",
+    PhotoAlbum => "photo_album",
+    PlayArrow => "play_arrow",
+    PlayCircle => "play_circle",
+    PlayCircleFilled => "play_circle_filled",
+    PlaylistAdd => "playlist_add",
+    PlaylistRemove => "playlist_remove",
+    Queue => "queue",
+    Quiz => "quiz",
+    Refresh => "refresh",
+    Repeat => "repeat",
+    RepeatOne => "repeat_one",
+    Replay => "replay",
+    Schedule => "schedule",
+    Search => "search",
+    Settings => "settings",
+    Shuffle => "shuffle",
+    SkipNext => "skip_next",
+    SkipPrevious => "skip_previous",
+    SortByAlpha => "sort_by_alpha",
+    Stop => "stop",
+    Storage => "storage",
+    Theaters => "theaters",
+    Tv => "tv",
+    VideoLibrary => "video_library",
+    VolumeOff => "volume_off",
+    VolumeUp => "volume_up",
+    VpnKey => "vpn_key",
+}
+
+impl Icon {
+    /// The glyph a library draws, which its own collection type decides.
+    // reference: library-icon
+    // reference: library-icon-unknown
+    pub fn library(collection: Option<CollectionType>) -> Icon {
+        match collection {
+            Some(CollectionType::Movies) => Icon::Movie,
+            Some(CollectionType::Music) => Icon::MusicNote,
+            Some(CollectionType::Homevideos | CollectionType::Photos) => Icon::Photo,
+            Some(CollectionType::Livetv) => Icon::LiveTv,
+            Some(CollectionType::Tvshows) => Icon::Tv,
+            Some(CollectionType::Trailers) => Icon::Theaters,
+            Some(CollectionType::Musicvideos) => Icon::MusicVideo,
+            Some(CollectionType::Books) => Icon::Book,
+            Some(CollectionType::Boxsets) => Icon::VideoLibrary,
+            Some(CollectionType::Playlists) => Icon::Queue,
+            None => Icon::Quiz,
+            Some(CollectionType::Folders | CollectionType::Unknown) => Icon::Folder,
+        }
+    }
+
+    // the glyph `getItemTypeIcon` answers for an item's own type: album for a
+    // music album, person for a music artist and for a person, audiotrack for
+    // audio, movie for a movie, tv for an episode and for a series, live_tv
+    // for a program, book for a book, folder for a folder, video_library for a
+    // box set, queue for a playlist, photo for a photo and photo_album for a
+    // photo album
+    // `None` for every other type, which is where the reference's switch falls
+    // to the default no card sets
+    // reference: item-type-icon
+    pub fn of(kind: Option<BaseItemKind>) -> Option<Icon> {
+        match kind? {
+            BaseItemKind::MusicAlbum => Some(Icon::Album),
+            BaseItemKind::MusicArtist | BaseItemKind::Person => Some(Icon::Person),
+            BaseItemKind::Audio => Some(Icon::Audiotrack),
+            BaseItemKind::Movie => Some(Icon::Movie),
+            BaseItemKind::Episode | BaseItemKind::Series => Some(Icon::Tv),
+            BaseItemKind::Program => Some(Icon::LiveTv),
+            BaseItemKind::Book => Some(Icon::Book),
+            BaseItemKind::Folder => Some(Icon::Folder),
+            BaseItemKind::BoxSet => Some(Icon::VideoLibrary),
+            BaseItemKind::Playlist => Some(Icon::Queue),
+            BaseItemKind::Photo => Some(Icon::Photo),
+            BaseItemKind::PhotoAlbum => Some(Icon::PhotoAlbum),
+            _ => None,
+        }
+    }
+
+    /// The codepoint the table records for the ligature, and None where it
+    /// holds no row for it.
+    pub fn glyph(self) -> Option<Codepoint> {
+        TABLE.lines().find_map(|line| {
+            let (ligature, scalar) = line.split_once('\t')?;
+            if ligature != self.ligature() {
+                return None;
+            }
+            let Ok(codepoint) = unraised::read::<Codepoint>(scalar) else {
+                return None;
+            };
+            Some(codepoint)
+        })
+    }
+}
+
+/// The glyph drawn in the Material Icons face, and nothing where the table
+/// holds no character for it.
+pub fn icon<'a>(icon: Icon, size: Length) -> Element<'a, Message> {
+    let Some(drawn) = icon.glyph().and_then(Codepoint::character) else {
+        return iced::widget::Space::new().into();
+    };
+    iced::widget::text(drawn.to_string())
+        .font(style::ICONS)
+        .size(style::drawn(size.drawn()))
+        .line_height(style::leading(typeface::ICON_LEADING))
+        .into()
+}
+
+/// The glyph drawn in one of the scheme's own colors, and nothing where the
+/// table holds no character for it.
+pub fn tinted<'a>(
+    icon: Icon,
+    size: Length,
+    color: fn(&iced::Theme) -> iced::widget::text::Style,
+) -> Element<'a, Message> {
+    let Some(drawn) = icon.glyph().and_then(Codepoint::character) else {
+        return iced::widget::Space::new().into();
+    };
+    iced::widget::text(drawn.to_string())
+        .font(style::ICONS)
+        .size(style::drawn(size.drawn()))
+        .line_height(style::leading(typeface::ICON_LEADING))
+        .style(color)
+        .into()
+}
+
+#[cfg(test)]
+mod tests {
+    use std::collections::HashSet;
+
+    use wasm_bindgen_test::wasm_bindgen_test;
+
+    use super::{Icon, TABLE};
+
+    /// Every variant's ligature has a row in the icon table and every row of
+    /// the table has a variant.
+    #[wasm_bindgen_test]
+    fn the_icon_table_and_the_variants_agree() {
+        let named: HashSet<&str> = Icon::ALL.iter().map(|icon| icon.ligature()).collect();
+        let held: HashSet<&str> = TABLE
+            .lines()
+            .filter_map(|line| line.split('\t').next())
+            .filter(|ligature| !ligature.is_empty())
+            .collect();
+        let mut missing: Vec<&str> = named.difference(&held).copied().collect();
+        let mut stray: Vec<&str> = held.difference(&named).copied().collect();
+        missing.sort_unstable();
+        stray.sort_unstable();
+        assert!(
+            missing.is_empty() && stray.is_empty(),
+            "the icon table lacks {missing:?} and holds {stray:?} under no variant"
+        );
+    }
+}

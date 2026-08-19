@@ -1,0 +1,23 @@
+                    <div className='accessScheduleSection verticalSection' style={{ marginBottom: '2em' }}>
+                        <SectionTitleContainer
+                            title={globalize.translate('HeaderAccessSchedule')}
+                            isBtnVisible={true}
+                            btnId='btnAddSchedule'
+                            btnClassName='fab submit sectionTitleButton'
+                            btnTitle='Add'
+                            btnIcon='add'
+                        />
+                        <p>{globalize.translate('HeaderAccessScheduleHelp')}</p>
+                        <div className='accessScheduleList paperList'>
+                            {accessSchedules.map((accessSchedule, index) => {
+                                return <AccessScheduleList
+                                    key={`${accessSchedule.DayOfWeek}${accessSchedule.StartHour}${accessSchedule.EndHour}`}
+                                    index={index}
+                                    DayOfWeek={accessSchedule.DayOfWeek}
+                                    StartHour={accessSchedule.StartHour}
+                                    EndHour={accessSchedule.EndHour}
+                                    removeScheduleCallback={removeScheduleCallback}
+                                />;
+                            })}
+                        </div>
+                    </div>

@@ -1,0 +1,20 @@
+        return cardBuilder.getCardsHtml({
+            items: items,
+            preferThumb: true,
+            inheritThumb: !useEpisodeImages,
+            shape: (mediaType === 'Book') ?
+                getPortraitShape(enableOverflow) :
+                getBackdropShape(enableOverflow),
+            overlayText: false,
+            showTitle: true,
+            showParentTitle: true,
+            lazy: true,
+            showDetailsMenu: true,
+            overlayPlayButton: true,
+            context: 'home',
+            centerText: !cardLayout,
+            allowBottomPadding: false,
+            cardLayout: cardLayout,
+            showYear: true,
+            lines: 2
+        });

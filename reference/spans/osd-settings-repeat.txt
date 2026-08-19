@@ -1,0 +1,9 @@
+    const repeatMode = playbackManager.getRepeatMode(player);
+
+    if (supportedCommands.indexOf('SetRepeatMode') !== -1 && playbackManager.currentMediaSource(player).RunTimeTicks) {
+        menuItems.push({
+            name: globalize.translate('RepeatMode'),
+            id: 'repeatmode',
+            asideText: repeatMode === 'RepeatNone' ? globalize.translate('None') : globalize.translate('' + repeatMode)
+        });
+    }

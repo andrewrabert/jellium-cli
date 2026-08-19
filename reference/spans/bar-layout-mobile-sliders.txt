@@ -1,0 +1,4 @@
+.layout-mobile .nowPlayingBarRight input,
+.layout-mobile .nowPlayingBarRight div {
+    display: none;
+}

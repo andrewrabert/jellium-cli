@@ -1,0 +1,4 @@
+.layout-desktop .nowPlayingBarRight .playPauseButton,
+.layout-tv .nowPlayingBarRight .playPauseButton {
+    display: none;
+}

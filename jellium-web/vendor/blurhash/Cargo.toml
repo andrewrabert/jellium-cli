@@ -1,0 +1,12 @@
+[package]
+name = "blurhash"
+version = "0.2.3"
+edition = "2018"
+license = "Apache-2.0/MIT"
+
+[features]
+default = ["fast-linear-to-srgb"]
+fast-linear-to-srgb = []
+
+[dev-dependencies]
+wasm-bindgen-test = "0.3"

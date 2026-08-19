@@ -1,0 +1,21 @@
+function iOSversion() {
+    // MacIntel: Apple iPad Pro 11 iOS 13.1
+    if (/iP(hone|od|ad)|MacIntel/.test(navigator.platform)) {
+        const tests = [
+            // Original test for getting full iOS version number in iOS 2.0+
+            /OS (\d+)_(\d+)_?(\d+)?/,
+            // Test for iPads running iOS 13+ that can only get the major OS version
+            /Version\/(\d+)/
+        ];
+        for (const test of tests) {
+            const matches = RegExp(test).exec(navigator.appVersion);
+            if (matches) {
+                return [
+                    parseInt(matches[1], 10),
+                    parseInt(matches[2] || 0, 10),
+                    parseInt(matches[3] || 0, 10)
+                ];
+            }
+        }
+    }
+    return [];

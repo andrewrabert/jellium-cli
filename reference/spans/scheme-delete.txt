@@ -1,0 +1,4 @@
+.button-delete {
+    background: #cb272a;
+    color: #fff;
+}

@@ -220,48 +220,29 @@ pub async fn execute(
         } => {
             let effective_uid = uid.as_ref().unwrap_or(user_id);
             let result = client
-                .get_artists(
-                    None, // enable_image_types
-                    None, // enable_images
-                    None, // enable_total_record_count
-                    None, // enable_user_data
-                    exclude_item_types.as_ref(),
-                    fields.as_ref(),
-                    filters.as_ref(),
-                    genre_ids.as_ref(),
-                    genres.as_ref(),
-                    None, // image_type_limit
-                    include_item_types.as_ref(),
-                    None, // is_favorite
-                    *limit,
-                    None, // media_types
-                    None, // min_community_rating
-                    None, // name_less_than
-                    name_starts_with.as_deref(),
-                    None, // name_starts_with_or_greater
-                    None, // official_ratings
-                    parent_id.as_ref(),
-                    None, // person
-                    None, // person_ids
-                    None, // person_types
-                    search_term.as_deref(),
-                    sort_by.as_ref(),
-                    sort_order.as_ref(),
-                    *start_index,
-                    None, // studio_ids
-                    None, // studios
-                    None, // tags
-                    Some(effective_uid),
-                    None, // years
-                )
+                .get_artists(&jellyfin_api::query::GetArtists {
+                    exclude_item_types: exclude_item_types.as_ref(),
+                    fields: fields.as_ref(),
+                    filters: filters.as_ref(),
+                    genre_ids: genre_ids.as_ref(),
+                    genres: genres.as_ref(),
+                    include_item_types: include_item_types.as_ref(),
+                    limit: *limit,
+                    name_starts_with: name_starts_with.as_deref(),
+                    parent_id: parent_id.as_ref(),
+                    search_term: search_term.as_deref(),
+                    sort_by: sort_by.as_ref(),
+                    sort_order: sort_order.as_ref(),
+                    start_index: *start_index,
+                    user_id: Some(effective_uid),
+                    ..Default::default()
+                })
                 .await?;
             crate::output::print_ndjson(&result.items)?;
         }
         ArtistsCommand::Get { name, user_id: uid } => {
             let effective_uid = uid.as_ref().unwrap_or(user_id);
-            let result = client
-                .get_artist_by_name(name, Some(effective_uid))
-                .await?;
+            let result = client.get_artist_by_name(name, Some(effective_uid)).await?;
             crate::output::print_json(&result)?;
         }
         ArtistsCommand::AlbumArtists {
@@ -283,40 +264,23 @@ pub async fn execute(
         } => {
             let effective_uid = uid.as_ref().unwrap_or(user_id);
             let result = client
-                .get_album_artists(
-                    None, // enable_image_types
-                    None, // enable_images
-                    None, // enable_total_record_count
-                    None, // enable_user_data
-                    exclude_item_types.as_ref(),
-                    fields.as_ref(),
-                    filters.as_ref(),
-                    genre_ids.as_ref(),
-                    genres.as_ref(),
-                    None, // image_type_limit
-                    include_item_types.as_ref(),
-                    None, // is_favorite
-                    *limit,
-                    None, // media_types
-                    None, // min_community_rating
-                    None, // name_less_than
-                    name_starts_with.as_deref(),
-                    None, // name_starts_with_or_greater
-                    None, // official_ratings
-                    parent_id.as_ref(),
-                    None, // person
-                    None, // person_ids
-                    None, // person_types
-                    search_term.as_deref(),
-                    sort_by.as_ref(),
-                    sort_order.as_ref(),
-                    *start_index,
-                    None, // studio_ids
-                    None, // studios
-                    None, // tags
-                    Some(effective_uid),
-                    None, // years
-                )
+                .get_album_artists(&jellyfin_api::query::GetAlbumArtists {
+                    exclude_item_types: exclude_item_types.as_ref(),
+                    fields: fields.as_ref(),
+                    filters: filters.as_ref(),
+                    genre_ids: genre_ids.as_ref(),
+                    genres: genres.as_ref(),
+                    include_item_types: include_item_types.as_ref(),
+                    limit: *limit,
+                    name_starts_with: name_starts_with.as_deref(),
+                    parent_id: parent_id.as_ref(),
+                    search_term: search_term.as_deref(),
+                    sort_by: sort_by.as_ref(),
+                    sort_order: sort_order.as_ref(),
+                    start_index: *start_index,
+                    user_id: Some(effective_uid),
+                    ..Default::default()
+                })
                 .await?;
             crate::output::print_ndjson(&result.items)?;
         }
@@ -328,15 +292,14 @@ pub async fn execute(
         } => {
             let effective_uid = uid.as_ref().unwrap_or(user_id);
             let result = client
-                .get_instant_mix_from_artists(
+                .get_instant_mix_from_artist(
                     item_id,
-                    None, // enable_image_types
-                    None, // enable_images
-                    None, // enable_user_data
-                    fields.as_ref(),
-                    None, // image_type_limit
-                    *limit,
-                    Some(effective_uid),
+                    &jellyfin_api::query::GetInstantMixFromArtist {
+                        fields: fields.as_ref(),
+                        limit: *limit,
+                        user_id: Some(effective_uid),
+                        ..Default::default()
+                    },
                 )
                 .await?;
             crate::output::print_json(&result)?;

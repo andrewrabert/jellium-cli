@@ -1,0 +1,32 @@
+            <ListItem
+                disablePadding
+                secondaryAction={
+                    <Tooltip disableInteractive title={globalize.translate('ButtonRemove')}>
+                        <IconButton onClick={confirmDeletePrompt}>
+                            <Delete />
+                        </IconButton>
+                    </Tooltip>
+                }
+            >
+                <ListItemButton>
+                    <Link href={repository.Url || '#'} target='_blank' rel='noopener noreferrer'>
+                        <ListItemAvatar>
+                            <Avatar sx={{ bgcolor: 'primary.main' }}>
+                                <OpenInNew sx={{ color: '#fff' }} />
+                            </Avatar>
+                        </ListItemAvatar>
+                    </Link>
+                    <ListItemText
+                        primary={repository.Name}
+                        secondary={repository.Url}
+                        slotProps={{
+                            primary: {
+                                variant: 'h3'
+                            },
+                            secondary: {
+                                variant: 'body1'
+                            }
+                        }}
+                    />
+                </ListItemButton>
+            </ListItem>

@@ -1,0 +1,7 @@
+.editPageSidebar {
+    display: block;
+}
+
+.editPageSidebar-withcontent {
+    display: none;
+}

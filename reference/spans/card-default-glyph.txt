@@ -1,0 +1,14 @@
+export function getDefaultText(item, options) {
+    let icon;
+
+    if (item.Type === BaseItemKind.CollectionFolder || item.CollectionType) {
+        icon = getLibraryIcon(item.CollectionType);
+    }
+
+    if (!icon) {
+        icon = getItemTypeIcon(item.Type, options?.defaultCardImageIcon);
+    }
+
+    if (icon) {
+        return `<span class="cardImageIcon material-icons ${icon}" aria-hidden="true"></span>`;
+    }

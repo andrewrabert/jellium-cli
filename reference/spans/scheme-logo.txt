@@ -1,0 +1,3 @@
+.pageTitleWithDefaultLogo {
+    background-image: url(@jellyfin/ux-web/banner-light.png);
+}

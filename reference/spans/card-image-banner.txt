@@ -1,0 +1,3 @@
+    } else if ((options.preferBanner || shape === 'banner') && item.ImageTags?.Banner) {
+        imgType = 'Banner';
+        imgTag = item.ImageTags.Banner;

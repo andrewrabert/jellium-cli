@@ -1,0 +1,8 @@
+<div class="subtitleDownloadSettings hide">
+    <h2>${HeaderSubtitleDownloads}</h2>
+
+    <div>
+        <h3 class="checkboxListLabel">${LabelDownloadLanguages}</h3>
+        <div class="subtitleDownloadLanguages paperList checkboxList" style="max-height: 10.5em; overflow-y: auto; padding: .5em 1em;">
+        </div>
+    </div>

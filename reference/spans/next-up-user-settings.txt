@@ -1,0 +1,31 @@
+    /**
+     * Get or set max days for next up list.
+     * @param {number|undefined} [val] - Max days for next up.
+     * @return {number} Max days for a show to stay in next up without being watched.
+     */
+    maxDaysForNextUp(val) {
+        if (val !== undefined) {
+            return this.set('maxDaysForNextUp', val.toString(), false);
+        }
+
+        const maxDaysForNextUp = parseInt(this.get('maxDaysForNextUp', false), 10);
+        if (maxDaysForNextUp === 0) {
+            // Explicitly return 0 to avoid returning 100 because 0 is falsy.
+            return 0;
+        } else {
+            return maxDaysForNextUp || 365;
+        }
+    }
+
+    /**
+     * Get or set rewatching in next up.
+     * @param {boolean|undefined} [val] - If rewatching items should be included in next up.
+     * @returns {boolean} Rewatching in next up state.
+     */
+    enableRewatchingInNextUp(val) {
+        if (val !== undefined) {
+            return this.set('enableRewatchingInNextUp', val.toString(), false);
+        }
+
+        return toBoolean(this.get('enableRewatchingInNextUp', false), false);
+    }

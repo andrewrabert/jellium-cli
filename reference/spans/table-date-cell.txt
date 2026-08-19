@@ -1,0 +1,5 @@
+const DateTimeCell: FC<CellProps> = ({ cell }) => {
+    const { dateFnsLocale } = useLocale();
+
+    return format(cell.getValue<Date>(), 'Pp', { locale: dateFnsLocale });
+};

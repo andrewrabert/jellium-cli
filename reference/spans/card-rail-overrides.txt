@@ -1,0 +1,20 @@
+.itemsContainer-tv > .overflowBackdropCard {
+    width: 23.5vw;
+}
+
+.overflowBackdropCard-textCard {
+    width: 15.5vw !important;
+}
+
+.overflowBackdropCard-textCardPadder {
+    padding-bottom: 87.75%;
+}
+
+.itemsContainer-tv > .overflowSquareCard,
+.itemsContainer-tv > .overflowPortraitCard {
+    width: 15.6vw;
+}
+
+.itemsContainer-tv > .overflowSmallBackdropCard {
+    width: 18.8vw;
+}

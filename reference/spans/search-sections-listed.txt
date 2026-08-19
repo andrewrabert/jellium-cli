@@ -1,0 +1,44 @@
+            const sections: Section[] = [];
+
+            addSection(sections, 'Artists', artists?.Items, {
+                coverImage: true
+            });
+
+            addSection(sections, 'Programs', programs?.Items, {
+                ...LIVETV_CARD_OPTIONS
+            });
+
+            addSection(sections, 'People', people?.Items, {
+                coverImage: true
+            });
+
+            addSection(sections, 'HeaderVideos', videos?.Items, {
+                showParentTitle: true
+            });
+
+            const itemTypes: BaseItemKind[] = getItemTypesFromCollectionType(collectionType);
+
+            const searchData = await fetchItemsByType(
+                api!,
+                userId,
+                {
+                    includeItemTypes: itemTypes,
+                    parentId,
+                    searchTerm,
+                    isMissing: itemTypes.includes(BaseItemKind.Episode) && !user?.Configuration?.DisplayMissingEpisodes ? false : undefined,
+                    limit: 800
+                },
+                { signal }
+            );
+
+            if (searchData.Items) {
+                for (const itemType of itemTypes) {
+                    const items: BaseItemDto[] = [];
+                    for (const searchItem of searchData.Items) {
+                        if (searchItem.Type === itemType) {
+                            items.push(searchItem);
+                        }
+                    }
+                    addSection(sections, getTitleFromType(itemType), items, getCardOptionsFromType(itemType));
+                }
+            }

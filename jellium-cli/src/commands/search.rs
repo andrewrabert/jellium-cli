@@ -116,24 +116,26 @@ pub async fn execute(
             let uid = uid_override.as_ref().unwrap_or(user_id);
             let result = client
                 .get_search_hints(
-                    exclude_item_types.as_ref(),
-                    *include_artists,
-                    *include_genres,
-                    include_item_types.as_ref(),
-                    *include_media,
-                    *include_people,
-                    *include_studios,
-                    *is_kids,
-                    *is_movie,
-                    *is_news,
-                    *is_series,
-                    *is_sports,
-                    *limit,
-                    media_types.as_ref(),
-                    parent_id.as_ref(),
                     search_term,
-                    *start_index,
-                    Some(uid),
+                    &jellyfin_api::query::GetSearchHints {
+                        exclude_item_types: exclude_item_types.as_ref(),
+                        include_artists: *include_artists,
+                        include_genres: *include_genres,
+                        include_item_types: include_item_types.as_ref(),
+                        include_media: *include_media,
+                        include_people: *include_people,
+                        include_studios: *include_studios,
+                        is_kids: *is_kids,
+                        is_movie: *is_movie,
+                        is_news: *is_news,
+                        is_series: *is_series,
+                        is_sports: *is_sports,
+                        limit: *limit,
+                        media_types: media_types.as_ref(),
+                        parent_id: parent_id.as_ref(),
+                        start_index: *start_index,
+                        user_id: Some(uid),
+                    },
                 )
                 .await?;
             crate::output::print_json(&result)?;
@@ -159,25 +161,19 @@ pub async fn execute(
         SearchCommand::RemoteMusicAlbum => {
             let body: jellyfin_api::types::AlbumInfoRemoteSearchQuery =
                 serde_json::from_reader(std::io::stdin())?;
-            let result = client
-                .get_music_album_remote_search_results(&body)
-                .await?;
+            let result = client.get_music_album_remote_search_results(&body).await?;
             crate::output::print_json(&result)?;
         }
         SearchCommand::RemoteMusicArtist => {
             let body: jellyfin_api::types::ArtistInfoRemoteSearchQuery =
                 serde_json::from_reader(std::io::stdin())?;
-            let result = client
-                .get_music_artist_remote_search_results(&body)
-                .await?;
+            let result = client.get_music_artist_remote_search_results(&body).await?;
             crate::output::print_json(&result)?;
         }
         SearchCommand::RemoteMusicVideo => {
             let body: jellyfin_api::types::MusicVideoInfoRemoteSearchQuery =
                 serde_json::from_reader(std::io::stdin())?;
-            let result = client
-                .get_music_video_remote_search_results(&body)
-                .await?;
+            let result = client.get_music_video_remote_search_results(&body).await?;
             crate::output::print_json(&result)?;
         }
         SearchCommand::RemotePerson => {

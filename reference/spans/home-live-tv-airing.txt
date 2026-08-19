@@ -1,0 +1,17 @@
+    if (!user.Policy?.EnableLiveTvAccess) {
+        return Promise.resolve();
+    }
+
+    return apiClient.getLiveTvRecommendedPrograms({
+        userId: apiClient.getCurrentUserId(),
+        IsAiring: true,
+        limit: 1,
+        ImageTypeLimit: 1,
+        EnableImageTypes: 'Primary,Thumb,Backdrop',
+        EnableTotalRecordCount: false,
+        Fields: 'ChannelInfo,PrimaryImageAspectRatio'
+    }).then(function (result) {
+        if (result.Items?.length) {
+            buildSection(elem, apiClient.serverId(), options);
+        }
+    });

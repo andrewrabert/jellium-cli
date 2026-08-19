@@ -1,0 +1,76 @@
+        <Card
+            sx={{
+                display: 'flex',
+                flexDirection: 'column',
+                height: height || 240,
+                width: width
+            }}
+        >
+            <CardActionArea
+                {...(to && {
+                    component: Link,
+                    to: to
+                })}
+                onClick={onClick}
+                sx={{
+                    display: 'flex',
+                    flexGrow: 1,
+                    alignItems: 'stretch'
+                }}
+            >
+                {image ? (
+                    <CardMedia
+                        sx={{ flexGrow: 1 }}
+                        image={image}
+                        title={title}
+                    />
+                ) : (
+                    <Box className={getDefaultBackgroundClass(title)} sx={{
+                        flexGrow: 1,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                    }}>
+                        {icon}
+                    </Box>
+                )}
+            </CardActionArea>
+            <CardContent
+                sx={{
+                    minHeight: 50,
+                    '&:last-child': {
+                        paddingBottom: 2,
+                        paddingRight: 1
+                    }
+                }}>
+                <Stack flexGrow={1} direction='row'>
+                    <Stack flexGrow={1} sx={{ overflow: 'hidden' }}>
+                        <Typography gutterBottom sx={{
+                            overflow: 'hidden',
+                            whiteSpace: 'nowrap',
+                            textOverflow: 'ellipsis'
+                        }}>
+                            {title}
+                        </Typography>
+                        {text && (
+                            <Typography
+                                variant='body2'
+                                color='text.secondary'
+                                sx={{
+                                    lineBreak: 'anywhere'
+                                }}
+                            >
+                                {text}
+                            </Typography>
+                        )}
+                    </Stack>
+                    <Box>
+                        {action ? (
+                            <IconButton ref={actionRef} onClick={onActionClick}>
+                                <MoreVertIcon />
+                            </IconButton>
+                        ) : null}
+                    </Box>
+                </Stack>
+            </CardContent>
+        </Card>

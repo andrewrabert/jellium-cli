@@ -1,0 +1,1 @@
+    if (browser.tizen || browser.xboxOne || browser.web0s || options.supportsHevc) {

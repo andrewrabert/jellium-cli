@@ -1,0 +1,7 @@
+.listItem-border {
+    margin: 0;
+    padding: 0;
+    border-width: 0 0 0.1em 0;
+    border-style: solid;
+    border-radius: 0;
+}

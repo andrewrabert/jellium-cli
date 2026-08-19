@@ -1,0 +1,30 @@
+function showRepeatModeMenu(player, btn) {
+    const menuItems = [];
+    const currentValue = playbackManager.getRepeatMode(player);
+
+    menuItems.push({
+        name: globalize.translate('RepeatAll'),
+        id: 'RepeatAll',
+        selected: currentValue === 'RepeatAll'
+    });
+
+    menuItems.push({
+        name: globalize.translate('RepeatOne'),
+        id: 'RepeatOne',
+        selected: currentValue === 'RepeatOne'
+    });
+
+    menuItems.push({
+        name: globalize.translate('None'),
+        id: 'RepeatNone',
+        selected: currentValue === 'RepeatNone'
+    });
+
+    return actionsheet.show({
+        items: menuItems,
+        positionTo: btn
+    }).then(function (mode) {
+        if (mode) {
+            playbackManager.setRepeatMode(mode, player);
+        }
+    });

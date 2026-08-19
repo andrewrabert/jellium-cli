@@ -1,0 +1,3 @@
+        if (itemType == 'SeriesTimer') {
+            return '#/details?seriesTimerId=' + id + '&serverId=' + serverId;
+        }

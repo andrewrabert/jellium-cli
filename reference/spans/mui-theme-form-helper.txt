@@ -1,0 +1,7 @@
+        MuiFormHelperText: {
+            styleOverrides: {
+                root: {
+                    fontSize: '1rem'
+                }
+            }
+        },

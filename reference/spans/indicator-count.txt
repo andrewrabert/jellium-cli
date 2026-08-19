@@ -1,0 +1,3 @@
+function formatCountIndicator(count) {
+    return count >= 100 ? '99+' : count.toString();
+}

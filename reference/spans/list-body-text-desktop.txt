@@ -1,0 +1,3 @@
+.layout-desktop .listItemBodyText {
+    line-height: 1.2em;
+}

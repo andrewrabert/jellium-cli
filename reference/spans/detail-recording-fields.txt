@@ -1,0 +1,18 @@
+function showRecordingFields(instance, page, item, user) {
+    if (!instance.currentRecordingFields) {
+        const recordingFieldsElement = page.querySelector('.recordingFields');
+
+        if (item.Type == 'Program' && user.Policy.EnableLiveTvManagement) {
+            import('../../components/recordingcreator/recordingfields').then(({ default: RecordingFields }) => {
+                instance.currentRecordingFields = new RecordingFields({
+                    parent: recordingFieldsElement,
+                    programId: item.Id,
+                    serverId: item.ServerId
+                });
+                recordingFieldsElement.classList.remove('hide');
+            });
+        } else {
+            recordingFieldsElement.classList.add('hide');
+            recordingFieldsElement.innerHTML = '';
+        }
+    }

@@ -1,0 +1,4 @@
+div[data-role=controlgroup] a.ui-btn-active {
+    background: #00a4dc !important;
+    color: #292929 !important;
+}

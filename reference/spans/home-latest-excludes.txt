@@ -1,0 +1,21 @@
+    options: SectionOptions
+) {
+    elem.classList.remove('verticalSection');
+    const excludeViewTypes = ['playlists', 'livetv', 'boxsets', 'channels', 'folders'];
+    const userExcludeItems = user.Configuration?.LatestItemsExcludes ?? [];
+
+    userViews.forEach(item => {
+        if (!item.Id || userExcludeItems.includes(item.Id)) {
+            return;
+        }
+
+        if (item.CollectionType && excludeViewTypes.includes(item.CollectionType)) {
+            return;
+        }
+
+        const frag = document.createElement('div');
+        frag.classList.add('verticalSection');
+        frag.classList.add('hide');
+        elem.appendChild(frag);
+
+        renderLatestSection(frag, apiClient, user, item, options);

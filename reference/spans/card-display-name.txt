@@ -1,0 +1,43 @@
+export function getDisplayName(item, options = {}) {
+    if (!item) {
+        throw new Error('null item passed into getDisplayName');
+    }
+
+    if (item.Type === 'Timer') {
+        item = item.ProgramInfo || item;
+    }
+
+    let name = ((item.Type === 'Program' || item.Type === 'Recording') && (item.IsSeries || item.EpisodeTitle) ? item.EpisodeTitle : item.Name) || '';
+
+    if (item.Type === 'TvChannel') {
+        if (item.ChannelNumber) {
+            return item.ChannelNumber + ' ' + name;
+        }
+        return name;
+    }
+    if (item.Type === 'Episode' && item.ParentIndexNumber === 0) {
+        name = globalize.translate('ValueSpecialEpisodeName', name);
+    } else if ((item.Type === 'Episode' || item.Type === 'Program' || item.Type === 'Recording') && item.IndexNumber != null && item.ParentIndexNumber != null && options.includeIndexNumber !== false) {
+        let displayIndexNumber = item.IndexNumber;
+
+        let number = displayIndexNumber;
+        let nameSeparator = ' - ';
+
+        if (options.includeParentInfo !== false) {
+            number = 'S' + item.ParentIndexNumber + ':E' + number;
+        } else {
+            nameSeparator = '. ';
+        }
+
+        if (item.IndexNumberEnd) {
+            displayIndexNumber = item.IndexNumberEnd;
+            number += '-' + displayIndexNumber;
+        }
+
+        if (number) {
+            name = name ? (number + nameSeparator + name) : number;
+        }
+    }
+
+    return name;
+}

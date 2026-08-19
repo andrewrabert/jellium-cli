@@ -1,0 +1,9 @@
+    if (item.Type === 'Channel' || item.CollectionType === 'boxsets' || item.CollectionType === 'playlists') {
+        isChecked = !(user.Configuration.MyMediaExcludes || []).includes(item.Id);
+        html += '<div>';
+        html += '<label>';
+        html += `<input type="checkbox" is="emby-checkbox" class="chkIncludeInMyMedia" data-folderid="${item.Id}"${isChecked ? ' checked="checked"' : ''}/>`;
+        html += `<span>${globalize.translate('DisplayInMyMedia')}</span>`;
+        html += '</label>';
+        html += '</div>';
+    }

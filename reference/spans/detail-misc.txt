@@ -1,0 +1,15 @@
+.itemMiscInfo {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+
+    .layout-mobile & {
+        @media all and (orientation: portrait) and (max-width: 40em) {
+            margin-bottom: 0 !important;
+
+            .mediaInfoItem {
+                margin-top: 0.5em;
+            }
+        }
+    }
+}

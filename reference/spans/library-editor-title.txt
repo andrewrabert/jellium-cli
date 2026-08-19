@@ -1,0 +1,1 @@
+        dlg.querySelector('.formDialogHeaderTitle').innerText = options.library.Name;

@@ -1,0 +1,27 @@
+        const cardLayout = false;
+        let shape;
+        if (itemType === 'Channel' || viewType === 'movies' || viewType === 'books' || viewType === 'tvshows') {
+            shape = getPortraitShape(enableOverflow);
+        } else if (viewType === 'music' || viewType === 'homevideos') {
+            shape = getSquareShape(enableOverflow);
+        } else {
+            shape = getBackdropShape(enableOverflow);
+        }
+
+        return cardBuilder.getCardsHtml({
+            items: items,
+            shape: shape,
+            preferThumb: viewType !== 'movies' && viewType !== 'tvshows' && itemType !== 'Channel' && viewType !== 'music' ? 'auto' : null,
+            showUnplayedIndicator: false,
+            showChildCountIndicator: true,
+            context: 'home',
+            overlayText: false,
+            centerText: !cardLayout,
+            overlayPlayButton: viewType !== 'photos',
+            allowBottomPadding: !enableOverflow && !cardLayout,
+            cardLayout: cardLayout,
+            showTitle: viewType !== 'photos',
+            showYear: viewType === 'movies' || viewType === 'tvshows' || !viewType,
+            showParentTitle: viewType === 'music' || viewType === 'tvshows' || !viewType || (cardLayout && (viewType === 'tvshows')),
+            lines: 2
+        });

@@ -1,0 +1,5 @@
+@media all and (max-height: 31.25em) {
+    .alphaPicker-fixed {
+        display: none !important;
+    }
+}

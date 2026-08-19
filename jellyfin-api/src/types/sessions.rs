@@ -1,7 +1,7 @@
 use super::*;
 
 #[doc = "Client capabilities dto."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct ClientCapabilitiesDto {
     #[doc = "Gets or sets the app store url."]
     #[serde(
@@ -18,11 +18,7 @@ pub struct ClientCapabilitiesDto {
     )]
     pub device_profile: Option<DeviceProfile>,
     #[doc = "Gets or sets the icon url."]
-    #[serde(
-        rename = "IconUrl",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "IconUrl", default, skip_serializing_if = "Option::is_none")]
     pub icon_url: Option<String>,
     #[doc = "Gets or sets the list of playable media types."]
     #[serde(
@@ -54,72 +50,33 @@ pub struct ClientCapabilitiesDto {
     pub supports_persistent_identifier: Option<bool>,
 }
 
-impl Default for ClientCapabilitiesDto {
-    fn default() -> Self {
-        Self {
-            app_store_url: Default::default(),
-            device_profile: Default::default(),
-            icon_url: Default::default(),
-            playable_media_types: Default::default(),
-            supported_commands: Default::default(),
-            supports_media_control: Default::default(),
-            supports_persistent_identifier: Default::default(),
-        }
-    }
-}
-
 #[doc = "`GeneralCommand`"]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct GeneralCommand {
     #[serde(
         rename = "Arguments",
         default,
         skip_serializing_if = ":: std :: collections :: HashMap::is_empty"
     )]
-    pub arguments: std::collections::HashMap<
-        String,
-        Option<String>,
-    >,
+    pub arguments: std::collections::HashMap<String, Option<String>>,
     #[serde(
         rename = "ControllingUserId",
         default,
         skip_serializing_if = "Option::is_none"
     )]
     pub controlling_user_id: Option<uuid::Uuid>,
-    #[serde(
-        rename = "Name",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Name", default, skip_serializing_if = "Option::is_none")]
     pub name: Option<GeneralCommandType>,
 }
 
-impl Default for GeneralCommand {
-    fn default() -> Self {
-        Self {
-            arguments: Default::default(),
-            controlling_user_id: Default::default(),
-            name: Default::default(),
-        }
-    }
-}
-
 #[doc = "General command websocket message."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct GeneralCommandMessage {
     #[doc = "Gets or sets the data."]
-    #[serde(
-        rename = "Data",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Data", default, skip_serializing_if = "Option::is_none")]
     pub data: Option<GeneralCommand>,
     #[doc = "Gets or sets the message id."]
-    #[serde(
-        rename = "MessageId",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "MessageId", default, skip_serializing_if = "Option::is_none")]
     pub message_id: Option<uuid::Uuid>,
     #[serde(
         rename = "MessageType",
@@ -129,17 +86,9 @@ pub struct GeneralCommandMessage {
     pub message_type: Option<SessionMessageType>,
 }
 
-impl Default for GeneralCommandMessage {
-    fn default() -> Self {
-        Self {
-            data: Default::default(),
-            message_id: Default::default(),
-            message_type: Default::default(),
-        }
-    }
-}
-
-#[derive(serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(
+    serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd,
+)]
 pub enum GeneralCommandType {
     MoveUp,
     MoveDown,
@@ -297,18 +246,14 @@ impl TryFrom<&str> for GeneralCommandType {
 
 impl TryFrom<&String> for GeneralCommandType {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for GeneralCommandType {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
@@ -316,23 +261,17 @@ impl TryFrom<String> for GeneralCommandType {
 #[doc = "`MessageCommand`"]
 #[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
 pub struct MessageCommand {
-    #[serde(
-        rename = "Header",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Header", default, skip_serializing_if = "Option::is_none")]
     pub header: Option<String>,
     #[serde(rename = "Text")]
     pub text: String,
-    #[serde(
-        rename = "TimeoutMs",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "TimeoutMs", default, skip_serializing_if = "Option::is_none")]
     pub timeout_ms: Option<i64>,
 }
 
-#[derive(serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(
+    serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd,
+)]
 pub enum PlayCommand {
     PlayNow,
     PlayNext,
@@ -376,24 +315,20 @@ impl TryFrom<&str> for PlayCommand {
 
 impl TryFrom<&String> for PlayCommand {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for PlayCommand {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 #[doc = "`PlayerStateInfo`"]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct PlayerStateInfo {
     #[doc = "Gets or sets the index of the now playing audio stream."]
     #[serde(
@@ -403,25 +338,13 @@ pub struct PlayerStateInfo {
     )]
     pub audio_stream_index: Option<i32>,
     #[doc = "Gets or sets a value indicating whether this instance can seek."]
-    #[serde(
-        rename = "CanSeek",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "CanSeek", default, skip_serializing_if = "Option::is_none")]
     pub can_seek: Option<bool>,
     #[doc = "Gets or sets a value indicating whether this instance is muted."]
-    #[serde(
-        rename = "IsMuted",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "IsMuted", default, skip_serializing_if = "Option::is_none")]
     pub is_muted: Option<bool>,
     #[doc = "Gets or sets a value indicating whether this instance is paused."]
-    #[serde(
-        rename = "IsPaused",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "IsPaused", default, skip_serializing_if = "Option::is_none")]
     pub is_paused: Option<bool>,
     #[doc = "Gets or sets the now playing live stream identifier."]
     #[serde(
@@ -479,27 +402,8 @@ pub struct PlayerStateInfo {
     pub volume_level: Option<i32>,
 }
 
-impl Default for PlayerStateInfo {
-    fn default() -> Self {
-        Self {
-            audio_stream_index: Default::default(),
-            can_seek: Default::default(),
-            is_muted: Default::default(),
-            is_paused: Default::default(),
-            live_stream_id: Default::default(),
-            media_source_id: Default::default(),
-            play_method: Default::default(),
-            playback_order: Default::default(),
-            position_ticks: Default::default(),
-            repeat_mode: Default::default(),
-            subtitle_stream_index: Default::default(),
-            volume_level: Default::default(),
-        }
-    }
-}
-
 #[doc = "Session info DTO."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct SessionInfoDto {
     #[doc = "Gets or sets the additional users."]
     #[serde(
@@ -523,18 +427,10 @@ pub struct SessionInfoDto {
     )]
     pub capabilities: Option<ClientCapabilitiesDto>,
     #[doc = "Gets or sets the type of the client."]
-    #[serde(
-        rename = "Client",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Client", default, skip_serializing_if = "Option::is_none")]
     pub client: Option<String>,
     #[doc = "Gets or sets the device id."]
-    #[serde(
-        rename = "DeviceId",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "DeviceId", default, skip_serializing_if = "Option::is_none")]
     pub device_id: Option<String>,
     #[doc = "Gets or sets the name of the device."]
     #[serde(
@@ -558,18 +454,10 @@ pub struct SessionInfoDto {
     )]
     pub has_custom_device_name: Option<bool>,
     #[doc = "Gets or sets the id."]
-    #[serde(
-        rename = "Id",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Id", default, skip_serializing_if = "Option::is_none")]
     pub id: Option<String>,
     #[doc = "Gets or sets a value indicating whether this session is active."]
-    #[serde(
-        rename = "IsActive",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "IsActive", default, skip_serializing_if = "Option::is_none")]
     pub is_active: Option<bool>,
     #[doc = "Gets or sets the last activity date."]
     #[serde(
@@ -591,8 +479,7 @@ pub struct SessionInfoDto {
         default,
         skip_serializing_if = "Option::is_none"
     )]
-    pub last_playback_check_in:
-        Option<chrono::DateTime<chrono::Utc>>,
+    pub last_playback_check_in: Option<chrono::DateTime<chrono::Utc>>,
     #[doc = "Gets or sets the now playing item."]
     #[serde(
         rename = "NowPlayingItem",
@@ -622,11 +509,7 @@ pub struct SessionInfoDto {
     )]
     pub now_viewing_item: Option<BaseItemDto>,
     #[doc = "Gets or sets the play state."]
-    #[serde(
-        rename = "PlayState",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "PlayState", default, skip_serializing_if = "Option::is_none")]
     pub play_state: Option<PlayerStateInfo>,
     #[doc = "Gets or sets the playable media types."]
     #[serde(
@@ -650,11 +533,7 @@ pub struct SessionInfoDto {
     )]
     pub remote_end_point: Option<String>,
     #[doc = "Gets or sets the server id."]
-    #[serde(
-        rename = "ServerId",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "ServerId", default, skip_serializing_if = "Option::is_none")]
     pub server_id: Option<String>,
     #[doc = "Gets or sets the supported commands."]
     #[serde(
@@ -685,18 +564,10 @@ pub struct SessionInfoDto {
     )]
     pub transcoding_info: Option<TranscodingInfo>,
     #[doc = "Gets or sets the user id."]
-    #[serde(
-        rename = "UserId",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "UserId", default, skip_serializing_if = "Option::is_none")]
     pub user_id: Option<uuid::Uuid>,
     #[doc = "Gets or sets the username."]
-    #[serde(
-        rename = "UserName",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "UserName", default, skip_serializing_if = "Option::is_none")]
     pub user_name: Option<String>,
     #[doc = "Gets or sets the user primary image tag."]
     #[serde(
@@ -707,43 +578,9 @@ pub struct SessionInfoDto {
     pub user_primary_image_tag: Option<String>,
 }
 
-impl Default for SessionInfoDto {
-    fn default() -> Self {
-        Self {
-            additional_users: Default::default(),
-            application_version: Default::default(),
-            capabilities: Default::default(),
-            client: Default::default(),
-            device_id: Default::default(),
-            device_name: Default::default(),
-            device_type: Default::default(),
-            has_custom_device_name: Default::default(),
-            id: Default::default(),
-            is_active: Default::default(),
-            last_activity_date: Default::default(),
-            last_paused_date: Default::default(),
-            last_playback_check_in: Default::default(),
-            now_playing_item: Default::default(),
-            now_playing_queue: Default::default(),
-            now_playing_queue_full_items: Default::default(),
-            now_viewing_item: Default::default(),
-            play_state: Default::default(),
-            playable_media_types: Default::default(),
-            playlist_item_id: Default::default(),
-            remote_end_point: Default::default(),
-            server_id: Default::default(),
-            supported_commands: Default::default(),
-            supports_media_control: Default::default(),
-            supports_remote_control: Default::default(),
-            transcoding_info: Default::default(),
-            user_id: Default::default(),
-            user_name: Default::default(),
-            user_primary_image_tag: Default::default(),
-        }
-    }
-}
-
-#[derive(serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(
+    serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd,
+)]
 pub enum SessionMessageType {
     ForceKeepAlive,
     GeneralCommand,
@@ -874,66 +711,37 @@ impl TryFrom<&str> for SessionMessageType {
 
 impl TryFrom<&String> for SessionMessageType {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for SessionMessageType {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 #[doc = "Class SessionUserInfo."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct SessionUserInfo {
     #[doc = "Gets or sets the user identifier."]
-    #[serde(
-        rename = "UserId",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "UserId", default, skip_serializing_if = "Option::is_none")]
     pub user_id: Option<uuid::Uuid>,
     #[doc = "Gets or sets the name of the user."]
-    #[serde(
-        rename = "UserName",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "UserName", default, skip_serializing_if = "Option::is_none")]
     pub user_name: Option<String>,
 }
 
-impl Default for SessionUserInfo {
-    fn default() -> Self {
-        Self {
-            user_id: Default::default(),
-            user_name: Default::default(),
-        }
-    }
-}
-
 #[doc = "Sessions message."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct SessionsMessage {
     #[doc = "Gets or sets the data."]
-    #[serde(
-        rename = "Data",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Data", default, skip_serializing_if = "Option::is_none")]
     pub data: Option<Vec<SessionInfoDto>>,
     #[doc = "Gets or sets the message id."]
-    #[serde(
-        rename = "MessageId",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "MessageId", default, skip_serializing_if = "Option::is_none")]
     pub message_id: Option<uuid::Uuid>,
     #[serde(
         rename = "MessageType",
@@ -943,25 +751,11 @@ pub struct SessionsMessage {
     pub message_type: Option<SessionMessageType>,
 }
 
-impl Default for SessionsMessage {
-    fn default() -> Self {
-        Self {
-            data: Default::default(),
-            message_id: Default::default(),
-            message_type: Default::default(),
-        }
-    }
-}
-
 #[doc = "Sessions start message.\r\nData is the timing data encoded as \"$initialDelay,$interval\" in ms."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct SessionsStartMessage {
     #[doc = "Gets or sets the data."]
-    #[serde(
-        rename = "Data",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Data", default, skip_serializing_if = "Option::is_none")]
     pub data: Option<String>,
     #[serde(
         rename = "MessageType",
@@ -971,17 +765,8 @@ pub struct SessionsStartMessage {
     pub message_type: Option<SessionMessageType>,
 }
 
-impl Default for SessionsStartMessage {
-    fn default() -> Self {
-        Self {
-            data: Default::default(),
-            message_type: Default::default(),
-        }
-    }
-}
-
 #[doc = "Sessions stop message."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct SessionsStopMessage {
     #[serde(
         rename = "MessageType",
@@ -991,30 +776,14 @@ pub struct SessionsStopMessage {
     pub message_type: Option<SessionMessageType>,
 }
 
-impl Default for SessionsStopMessage {
-    fn default() -> Self {
-        Self {
-            message_type: Default::default(),
-        }
-    }
-}
-
 #[doc = "Sync play command."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct SyncPlayCommandMessage {
     #[doc = "Class SendCommand."]
-    #[serde(
-        rename = "Data",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Data", default, skip_serializing_if = "Option::is_none")]
     pub data: Option<SendCommand>,
     #[doc = "Gets or sets the message id."]
-    #[serde(
-        rename = "MessageId",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "MessageId", default, skip_serializing_if = "Option::is_none")]
     pub message_id: Option<uuid::Uuid>,
     #[serde(
         rename = "MessageType",
@@ -1024,18 +793,8 @@ pub struct SyncPlayCommandMessage {
     pub message_type: Option<SessionMessageType>,
 }
 
-impl Default for SyncPlayCommandMessage {
-    fn default() -> Self {
-        Self {
-            data: Default::default(),
-            message_id: Default::default(),
-            message_type: Default::default(),
-        }
-    }
-}
-
 #[doc = "Class holding information on a running transcode."]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct TranscodingInfo {
     #[doc = "Gets or sets the audio channels."]
     #[serde(
@@ -1052,11 +811,7 @@ pub struct TranscodingInfo {
     )]
     pub audio_codec: Option<String>,
     #[doc = "Gets or sets the bitrate."]
-    #[serde(
-        rename = "Bitrate",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Bitrate", default, skip_serializing_if = "Option::is_none")]
     pub bitrate: Option<i32>,
     #[doc = "Gets or sets the completion percentage."]
     #[serde(
@@ -1066,18 +821,10 @@ pub struct TranscodingInfo {
     )]
     pub completion_percentage: Option<f64>,
     #[doc = "Gets or sets the thread count used for encoding."]
-    #[serde(
-        rename = "Container",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Container", default, skip_serializing_if = "Option::is_none")]
     pub container: Option<String>,
     #[doc = "Gets or sets the framerate."]
-    #[serde(
-        rename = "Framerate",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Framerate", default, skip_serializing_if = "Option::is_none")]
     pub framerate: Option<f32>,
     #[doc = "Gets or sets the hardware acceleration type."]
     #[serde(
@@ -1087,11 +834,7 @@ pub struct TranscodingInfo {
     )]
     pub hardware_acceleration_type: Option<HardwareAccelerationType>,
     #[doc = "Gets or sets the video height."]
-    #[serde(
-        rename = "Height",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Height", default, skip_serializing_if = "Option::is_none")]
     pub height: Option<i32>,
     #[doc = "Gets or sets a value indicating whether the audio is passed through."]
     #[serde(
@@ -1122,31 +865,6 @@ pub struct TranscodingInfo {
     )]
     pub video_codec: Option<String>,
     #[doc = "Gets or sets the video width."]
-    #[serde(
-        rename = "Width",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Width", default, skip_serializing_if = "Option::is_none")]
     pub width: Option<i32>,
 }
-
-impl Default for TranscodingInfo {
-    fn default() -> Self {
-        Self {
-            audio_channels: Default::default(),
-            audio_codec: Default::default(),
-            bitrate: Default::default(),
-            completion_percentage: Default::default(),
-            container: Default::default(),
-            framerate: Default::default(),
-            hardware_acceleration_type: Default::default(),
-            height: Default::default(),
-            is_audio_direct: Default::default(),
-            is_video_direct: Default::default(),
-            transcode_reasons: Default::default(),
-            video_codec: Default::default(),
-            width: Default::default(),
-        }
-    }
-}
-

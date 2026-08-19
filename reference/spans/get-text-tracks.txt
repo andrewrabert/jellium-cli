@@ -1,0 +1,32 @@
+        function getTextTracks(apiClient, item, mediaSource) {
+            const subtitleStreams = mediaSource.MediaStreams.filter(function (s) {
+                return s.Type === 'Subtitle';
+            });
+
+            const textStreams = subtitleStreams.filter(function (s) {
+                return s.DeliveryMethod === 'External';
+            });
+
+            const tracks = [];
+
+            for (let i = 0, length = textStreams.length; i < length; i++) {
+                const textStream = textStreams[i];
+                let textStreamUrl;
+
+                if (itemHelper.isLocalItem(item)) {
+                    textStreamUrl = textStream.Path;
+                } else {
+                    textStreamUrl = !textStream.IsExternalUrl ? apiClient.getUrl(textStream.DeliveryUrl) : textStream.DeliveryUrl;
+                }
+
+                tracks.push({
+                    url: textStreamUrl,
+                    language: (textStream.Language || 'und'),
+                    isDefault: textStream.Index === mediaSource.DefaultSubtitleStreamIndex,
+                    index: textStream.Index,
+                    format: textStream.Codec
+                });
+            }
+
+            return tracks;
+        }

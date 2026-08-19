@@ -1,0 +1,20 @@
+function drawBlurhash(target, pixels, width, height) {
+    const canvas = document.createElement('canvas');
+    canvas.setAttribute('aria-hidden', 'true');
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext('2d');
+    const imgData = ctx.createImageData(width, height);
+
+    imgData.data.set(pixels);
+    ctx.putImageData(imgData, 0, 0);
+
+    requestAnimationFrame(() => {
+        // This class is just an utility class, so users can customize the canvas using their own CSS.
+        canvas.classList.add('blurhash-canvas');
+
+        target.parentNode.insertBefore(canvas, target);
+        target.classList.add('blurhashed');
+        target.removeAttribute('data-blurhash');
+    });
+}

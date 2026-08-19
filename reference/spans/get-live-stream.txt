@@ -1,0 +1,39 @@
+function getLiveStream(player, apiClient, item, playSessionId, deviceProfile, mediaSource, options) {
+    const postData = {
+        DeviceProfile: deviceProfile,
+        OpenToken: mediaSource.OpenToken
+    };
+
+    const query = {
+        UserId: apiClient.getCurrentUserId(),
+        StartTimeTicks: options.startPosition || 0,
+        ItemId: item.Id,
+        PlaySessionId: playSessionId
+    };
+
+    if (options.maxBitrate) {
+        query.MaxStreamingBitrate = options.maxBitrate;
+    }
+    if (options.audioStreamIndex != null) {
+        query.AudioStreamIndex = options.audioStreamIndex;
+    }
+    if (options.subtitleStreamIndex != null) {
+        query.SubtitleStreamIndex = options.subtitleStreamIndex;
+    }
+
+    // lastly, enforce player overrides for special situations
+    if (query.EnableDirectStream !== false
+        && player.supportsPlayMethod && !player.supportsPlayMethod('DirectStream', item)
+    ) {
+        query.EnableDirectStream = false;
+    }
+
+    return apiClient.ajax({
+        url: apiClient.getUrl('LiveStreams/Open', query),
+        type: 'POST',
+        data: JSON.stringify(postData),
+        contentType: 'application/json',
+        dataType: 'json'
+
+    });
+}

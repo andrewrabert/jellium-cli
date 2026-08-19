@@ -5,351 +5,354 @@ use jellyfin_api::types::{
 };
 use uuid::Uuid;
 
+/// Every flag `items list` takes.
+#[derive(clap::Args)]
+pub struct ListArgs {
+    /// Return items that are siblings of a supplied item
+    #[arg(long)]
+    pub adjacent_to: Option<Uuid>,
+
+    /// Filter by album artist IDs
+    #[arg(long, value_delimiter = ',')]
+    pub album_artist_ids: Option<Vec<Uuid>>,
+
+    /// Filter by album IDs
+    #[arg(long, value_delimiter = ',')]
+    pub album_ids: Option<Vec<Uuid>>,
+
+    /// Filter by album names
+    #[arg(long, value_delimiter = ',')]
+    pub albums: Option<Vec<String>>,
+
+    /// Filter by artist IDs
+    #[arg(long, value_delimiter = ',')]
+    pub artist_ids: Option<Vec<Uuid>>,
+
+    /// Filter by artist names
+    #[arg(long, value_delimiter = ',')]
+    pub artists: Option<Vec<String>>,
+
+    /// Whether to hide items behind their boxsets
+    #[arg(long)]
+    pub collapse_box_set_items: Option<bool>,
+
+    /// Filter by contributing artist IDs
+    #[arg(long, value_delimiter = ',')]
+    pub contributing_artist_ids: Option<Vec<Uuid>>,
+
+    /// Image types to include in the output
+    #[arg(long, value_delimiter = ',')]
+    pub enable_image_types: Option<Vec<ImageType>>,
+
+    /// Include image information in output
+    #[arg(long)]
+    pub enable_images: Option<bool>,
+
+    /// Enable the total record count
+    #[arg(long)]
+    pub enable_total_record_count: Option<bool>,
+
+    /// Include user data
+    #[arg(long)]
+    pub enable_user_data: Option<bool>,
+
+    /// Exclude artist IDs
+    #[arg(long, value_delimiter = ',')]
+    pub exclude_artist_ids: Option<Vec<Uuid>>,
+
+    /// Exclude item IDs
+    #[arg(long, value_delimiter = ',')]
+    pub exclude_item_ids: Option<Vec<Uuid>>,
+
+    /// Exclude item types
+    #[arg(long, value_delimiter = ',')]
+    pub exclude_item_types: Option<Vec<BaseItemKind>>,
+
+    /// Exclude location types
+    #[arg(long, value_delimiter = ',')]
+    pub exclude_location_types: Option<Vec<LocationType>>,
+
+    /// Additional fields to return
+    #[arg(long, value_delimiter = ',')]
+    pub fields: Option<Vec<ItemFields>>,
+
+    /// Additional filters to apply
+    #[arg(long, value_delimiter = ',')]
+    pub filters: Option<Vec<ItemFilter>>,
+
+    /// Filter by genre IDs
+    #[arg(long, value_delimiter = ',')]
+    pub genre_ids: Option<Vec<Uuid>>,
+
+    /// Filter by genre names
+    #[arg(long, value_delimiter = ',')]
+    pub genres: Option<Vec<String>>,
+
+    /// Filter by items that have an IMDb id
+    #[arg(long)]
+    pub has_imdb_id: Option<bool>,
+
+    /// Filter by items that have official ratings
+    #[arg(long)]
+    pub has_official_rating: Option<bool>,
+
+    /// Filter by items that have an overview
+    #[arg(long)]
+    pub has_overview: Option<bool>,
+
+    /// Filter by items that have a parental rating
+    #[arg(long)]
+    pub has_parental_rating: Option<bool>,
+
+    /// Filter by items with special features
+    #[arg(long)]
+    pub has_special_feature: Option<bool>,
+
+    /// Filter by items with subtitles
+    #[arg(long)]
+    pub has_subtitles: Option<bool>,
+
+    /// Filter by items with theme songs
+    #[arg(long)]
+    pub has_theme_song: Option<bool>,
+
+    /// Filter by items with theme videos
+    #[arg(long)]
+    pub has_theme_video: Option<bool>,
+
+    /// Filter by items that have a TMDb id
+    #[arg(long)]
+    pub has_tmdb_id: Option<bool>,
+
+    /// Filter by items with trailers
+    #[arg(long)]
+    pub has_trailer: Option<bool>,
+
+    /// Filter by items that have a TVDb id
+    #[arg(long)]
+    pub has_tvdb_id: Option<bool>,
+
+    /// Specific item IDs to retrieve
+    #[arg(long, value_delimiter = ',')]
+    pub ids: Option<Vec<Uuid>>,
+
+    /// Max number of images to return per image type
+    #[arg(long)]
+    pub image_type_limit: Option<i32>,
+
+    /// Filter by image types
+    #[arg(long, value_delimiter = ',')]
+    pub image_types: Option<Vec<ImageType>>,
+
+    /// Include item types
+    #[arg(long, value_delimiter = ',')]
+    pub include_item_types: Option<Vec<BaseItemKind>>,
+
+    /// Filter by index number
+    #[arg(long)]
+    pub index_number: Option<i32>,
+
+    /// Filter by items that are 3D
+    #[arg(long)]
+    pub is3_d: Option<bool>,
+
+    /// Filter by items that are 4K
+    #[arg(long)]
+    pub is4_k: Option<bool>,
+
+    /// Filter by favorite items
+    #[arg(long)]
+    pub is_favorite: Option<bool>,
+
+    /// Filter by HD items
+    #[arg(long)]
+    pub is_hd: Option<bool>,
+
+    /// Filter for kids content
+    #[arg(long)]
+    pub is_kids: Option<bool>,
+
+    /// Filter by locked items
+    #[arg(long)]
+    pub is_locked: Option<bool>,
+
+    /// Filter by missing episodes
+    #[arg(long)]
+    pub is_missing: Option<bool>,
+
+    /// Filter for movies
+    #[arg(long)]
+    pub is_movie: Option<bool>,
+
+    /// Filter for news
+    #[arg(long)]
+    pub is_news: Option<bool>,
+
+    /// Filter by placeholder items
+    #[arg(long)]
+    pub is_place_holder: Option<bool>,
+
+    /// Filter by played items
+    #[arg(long)]
+    pub is_played: Option<bool>,
+
+    /// Filter for series
+    #[arg(long)]
+    pub is_series: Option<bool>,
+
+    /// Filter for sports
+    #[arg(long)]
+    pub is_sports: Option<bool>,
+
+    /// Filter by unaired items
+    #[arg(long)]
+    pub is_unaired: Option<bool>,
+
+    /// Maximum number of records to return
+    #[arg(long)]
+    pub limit: Option<i32>,
+
+    /// Filter by location types
+    #[arg(long, value_delimiter = ',')]
+    pub location_types: Option<Vec<LocationType>>,
+
+    /// Filter by maximum height
+    #[arg(long)]
+    pub max_height: Option<i32>,
+
+    /// Filter by maximum official rating
+    #[arg(long)]
+    pub max_official_rating: Option<String>,
+
+    /// Maximum premiere date (ISO format)
+    #[arg(long)]
+    pub max_premiere_date: Option<chrono::DateTime<chrono::Utc>>,
+
+    /// Filter by maximum width
+    #[arg(long)]
+    pub max_width: Option<i32>,
+
+    /// Filter by media types
+    #[arg(long, value_delimiter = ',')]
+    pub media_types: Option<Vec<MediaType>>,
+
+    /// Filter by minimum community rating
+    #[arg(long)]
+    pub min_community_rating: Option<f64>,
+
+    /// Filter by minimum critic rating
+    #[arg(long)]
+    pub min_critic_rating: Option<f64>,
+
+    /// Minimum last saved date (ISO format)
+    #[arg(long)]
+    pub min_date_last_saved: Option<chrono::DateTime<chrono::Utc>>,
+
+    /// Minimum last saved date for the current user (ISO format)
+    #[arg(long)]
+    pub min_date_last_saved_for_user: Option<chrono::DateTime<chrono::Utc>>,
+
+    /// Filter by minimum height
+    #[arg(long)]
+    pub min_height: Option<i32>,
+
+    /// Filter by minimum official rating
+    #[arg(long)]
+    pub min_official_rating: Option<String>,
+
+    /// Minimum premiere date (ISO format)
+    #[arg(long)]
+    pub min_premiere_date: Option<chrono::DateTime<chrono::Utc>>,
+
+    /// Filter by minimum width
+    #[arg(long)]
+    pub min_width: Option<i32>,
+
+    /// Filter by items whose name is less than a given string
+    #[arg(long)]
+    pub name_less_than: Option<String>,
+
+    /// Filter by items whose name starts with a given string
+    #[arg(long)]
+    pub name_starts_with: Option<String>,
+
+    /// Filter by items whose name starts with or is greater than a given string
+    #[arg(long)]
+    pub name_starts_with_or_greater: Option<String>,
+
+    /// Filter by official ratings
+    #[arg(long, value_delimiter = ',')]
+    pub official_ratings: Option<Vec<String>>,
+
+    /// Parent folder ID
+    #[arg(long)]
+    pub parent_id: Option<Uuid>,
+
+    /// Filter by parent index number
+    #[arg(long)]
+    pub parent_index_number: Option<i32>,
+
+    /// Filter by person name
+    #[arg(long)]
+    pub person: Option<String>,
+
+    /// Filter by person IDs
+    #[arg(long, value_delimiter = ',')]
+    pub person_ids: Option<Vec<Uuid>>,
+
+    /// Filter by person types
+    #[arg(long, value_delimiter = ',')]
+    pub person_types: Option<Vec<String>>,
+
+    /// Search recursively
+    #[arg(long)]
+    pub recursive: Option<bool>,
+
+    /// Filter based on a search term
+    #[arg(long)]
+    pub search_term: Option<String>,
+
+    /// Filter by series status
+    #[arg(long, value_delimiter = ',')]
+    pub series_status: Option<Vec<SeriesStatus>>,
+
+    /// Sort orders
+    #[arg(long, value_delimiter = ',')]
+    pub sort_by: Option<Vec<ItemSortBy>>,
+
+    /// Sort order direction
+    #[arg(long, value_delimiter = ',')]
+    pub sort_order: Option<Vec<SortOrder>>,
+
+    /// Record index to start at
+    #[arg(long)]
+    pub start_index: Option<i32>,
+
+    /// Filter by studio IDs
+    #[arg(long, value_delimiter = ',')]
+    pub studio_ids: Option<Vec<Uuid>>,
+
+    /// Filter by studio names
+    #[arg(long, value_delimiter = ',')]
+    pub studios: Option<Vec<String>>,
+
+    /// Filter by tags
+    #[arg(long, value_delimiter = ',')]
+    pub tags: Option<Vec<String>>,
+
+    /// Filter by video types
+    #[arg(long, value_delimiter = ',')]
+    pub video_types: Option<Vec<VideoType>>,
+
+    /// Filter by production years
+    #[arg(long, value_delimiter = ',')]
+    pub years: Option<Vec<i32>>,
+}
+
 #[derive(Subcommand)]
-#[allow(clippy::large_enum_variant)]
 pub enum ItemsCommand {
     /// List items based on query parameters
-    List {
-        /// Return items that are siblings of a supplied item
-        #[arg(long)]
-        adjacent_to: Option<Uuid>,
-
-        /// Filter by album artist IDs
-        #[arg(long, value_delimiter = ',')]
-        album_artist_ids: Option<Vec<Uuid>>,
-
-        /// Filter by album IDs
-        #[arg(long, value_delimiter = ',')]
-        album_ids: Option<Vec<Uuid>>,
-
-        /// Filter by album names
-        #[arg(long, value_delimiter = ',')]
-        albums: Option<Vec<String>>,
-
-        /// Filter by artist IDs
-        #[arg(long, value_delimiter = ',')]
-        artist_ids: Option<Vec<Uuid>>,
-
-        /// Filter by artist names
-        #[arg(long, value_delimiter = ',')]
-        artists: Option<Vec<String>>,
-
-        /// Whether to hide items behind their boxsets
-        #[arg(long)]
-        collapse_box_set_items: Option<bool>,
-
-        /// Filter by contributing artist IDs
-        #[arg(long, value_delimiter = ',')]
-        contributing_artist_ids: Option<Vec<Uuid>>,
-
-        /// Image types to include in the output
-        #[arg(long, value_delimiter = ',')]
-        enable_image_types: Option<Vec<ImageType>>,
-
-        /// Include image information in output
-        #[arg(long)]
-        enable_images: Option<bool>,
-
-        /// Enable the total record count
-        #[arg(long)]
-        enable_total_record_count: Option<bool>,
-
-        /// Include user data
-        #[arg(long)]
-        enable_user_data: Option<bool>,
-
-        /// Exclude artist IDs
-        #[arg(long, value_delimiter = ',')]
-        exclude_artist_ids: Option<Vec<Uuid>>,
-
-        /// Exclude item IDs
-        #[arg(long, value_delimiter = ',')]
-        exclude_item_ids: Option<Vec<Uuid>>,
-
-        /// Exclude item types
-        #[arg(long, value_delimiter = ',')]
-        exclude_item_types: Option<Vec<BaseItemKind>>,
-
-        /// Exclude location types
-        #[arg(long, value_delimiter = ',')]
-        exclude_location_types: Option<Vec<LocationType>>,
-
-        /// Additional fields to return
-        #[arg(long, value_delimiter = ',')]
-        fields: Option<Vec<ItemFields>>,
-
-        /// Additional filters to apply
-        #[arg(long, value_delimiter = ',')]
-        filters: Option<Vec<ItemFilter>>,
-
-        /// Filter by genre IDs
-        #[arg(long, value_delimiter = ',')]
-        genre_ids: Option<Vec<Uuid>>,
-
-        /// Filter by genre names
-        #[arg(long, value_delimiter = ',')]
-        genres: Option<Vec<String>>,
-
-        /// Filter by items that have an IMDb id
-        #[arg(long)]
-        has_imdb_id: Option<bool>,
-
-        /// Filter by items that have official ratings
-        #[arg(long)]
-        has_official_rating: Option<bool>,
-
-        /// Filter by items that have an overview
-        #[arg(long)]
-        has_overview: Option<bool>,
-
-        /// Filter by items that have a parental rating
-        #[arg(long)]
-        has_parental_rating: Option<bool>,
-
-        /// Filter by items with special features
-        #[arg(long)]
-        has_special_feature: Option<bool>,
-
-        /// Filter by items with subtitles
-        #[arg(long)]
-        has_subtitles: Option<bool>,
-
-        /// Filter by items with theme songs
-        #[arg(long)]
-        has_theme_song: Option<bool>,
-
-        /// Filter by items with theme videos
-        #[arg(long)]
-        has_theme_video: Option<bool>,
-
-        /// Filter by items that have a TMDb id
-        #[arg(long)]
-        has_tmdb_id: Option<bool>,
-
-        /// Filter by items with trailers
-        #[arg(long)]
-        has_trailer: Option<bool>,
-
-        /// Filter by items that have a TVDb id
-        #[arg(long)]
-        has_tvdb_id: Option<bool>,
-
-        /// Specific item IDs to retrieve
-        #[arg(long, value_delimiter = ',')]
-        ids: Option<Vec<Uuid>>,
-
-        /// Max number of images to return per image type
-        #[arg(long)]
-        image_type_limit: Option<i32>,
-
-        /// Filter by image types
-        #[arg(long, value_delimiter = ',')]
-        image_types: Option<Vec<ImageType>>,
-
-        /// Include item types
-        #[arg(long, value_delimiter = ',')]
-        include_item_types: Option<Vec<BaseItemKind>>,
-
-        /// Filter by index number
-        #[arg(long)]
-        index_number: Option<i32>,
-
-        /// Filter by items that are 3D
-        #[arg(long)]
-        is3_d: Option<bool>,
-
-        /// Filter by items that are 4K
-        #[arg(long)]
-        is4_k: Option<bool>,
-
-        /// Filter by favorite items
-        #[arg(long)]
-        is_favorite: Option<bool>,
-
-        /// Filter by HD items
-        #[arg(long)]
-        is_hd: Option<bool>,
-
-        /// Filter for kids content
-        #[arg(long)]
-        is_kids: Option<bool>,
-
-        /// Filter by locked items
-        #[arg(long)]
-        is_locked: Option<bool>,
-
-        /// Filter by missing episodes
-        #[arg(long)]
-        is_missing: Option<bool>,
-
-        /// Filter for movies
-        #[arg(long)]
-        is_movie: Option<bool>,
-
-        /// Filter for news
-        #[arg(long)]
-        is_news: Option<bool>,
-
-        /// Filter by placeholder items
-        #[arg(long)]
-        is_place_holder: Option<bool>,
-
-        /// Filter by played items
-        #[arg(long)]
-        is_played: Option<bool>,
-
-        /// Filter for series
-        #[arg(long)]
-        is_series: Option<bool>,
-
-        /// Filter for sports
-        #[arg(long)]
-        is_sports: Option<bool>,
-
-        /// Filter by unaired items
-        #[arg(long)]
-        is_unaired: Option<bool>,
-
-        /// Maximum number of records to return
-        #[arg(long)]
-        limit: Option<i32>,
-
-        /// Filter by location types
-        #[arg(long, value_delimiter = ',')]
-        location_types: Option<Vec<LocationType>>,
-
-        /// Filter by maximum height
-        #[arg(long)]
-        max_height: Option<i32>,
-
-        /// Filter by maximum official rating
-        #[arg(long)]
-        max_official_rating: Option<String>,
-
-        /// Maximum premiere date (ISO format)
-        #[arg(long)]
-        max_premiere_date: Option<chrono::DateTime<chrono::Utc>>,
-
-        /// Filter by maximum width
-        #[arg(long)]
-        max_width: Option<i32>,
-
-        /// Filter by media types
-        #[arg(long, value_delimiter = ',')]
-        media_types: Option<Vec<MediaType>>,
-
-        /// Filter by minimum community rating
-        #[arg(long)]
-        min_community_rating: Option<f64>,
-
-        /// Filter by minimum critic rating
-        #[arg(long)]
-        min_critic_rating: Option<f64>,
-
-        /// Minimum last saved date (ISO format)
-        #[arg(long)]
-        min_date_last_saved: Option<chrono::DateTime<chrono::Utc>>,
-
-        /// Minimum last saved date for the current user (ISO format)
-        #[arg(long)]
-        min_date_last_saved_for_user: Option<chrono::DateTime<chrono::Utc>>,
-
-        /// Filter by minimum height
-        #[arg(long)]
-        min_height: Option<i32>,
-
-        /// Filter by minimum official rating
-        #[arg(long)]
-        min_official_rating: Option<String>,
-
-        /// Minimum premiere date (ISO format)
-        #[arg(long)]
-        min_premiere_date: Option<chrono::DateTime<chrono::Utc>>,
-
-        /// Filter by minimum width
-        #[arg(long)]
-        min_width: Option<i32>,
-
-        /// Filter by items whose name is less than a given string
-        #[arg(long)]
-        name_less_than: Option<String>,
-
-        /// Filter by items whose name starts with a given string
-        #[arg(long)]
-        name_starts_with: Option<String>,
-
-        /// Filter by items whose name starts with or is greater than a given string
-        #[arg(long)]
-        name_starts_with_or_greater: Option<String>,
-
-        /// Filter by official ratings
-        #[arg(long, value_delimiter = ',')]
-        official_ratings: Option<Vec<String>>,
-
-        /// Parent folder ID
-        #[arg(long)]
-        parent_id: Option<Uuid>,
-
-        /// Filter by parent index number
-        #[arg(long)]
-        parent_index_number: Option<i32>,
-
-        /// Filter by person name
-        #[arg(long)]
-        person: Option<String>,
-
-        /// Filter by person IDs
-        #[arg(long, value_delimiter = ',')]
-        person_ids: Option<Vec<Uuid>>,
-
-        /// Filter by person types
-        #[arg(long, value_delimiter = ',')]
-        person_types: Option<Vec<String>>,
-
-        /// Search recursively
-        #[arg(long)]
-        recursive: Option<bool>,
-
-        /// Filter based on a search term
-        #[arg(long)]
-        search_term: Option<String>,
-
-        /// Filter by series status
-        #[arg(long, value_delimiter = ',')]
-        series_status: Option<Vec<SeriesStatus>>,
-
-        /// Sort orders
-        #[arg(long, value_delimiter = ',')]
-        sort_by: Option<Vec<ItemSortBy>>,
-
-        /// Sort order direction
-        #[arg(long, value_delimiter = ',')]
-        sort_order: Option<Vec<SortOrder>>,
-
-        /// Record index to start at
-        #[arg(long)]
-        start_index: Option<i32>,
-
-        /// Filter by studio IDs
-        #[arg(long, value_delimiter = ',')]
-        studio_ids: Option<Vec<Uuid>>,
-
-        /// Filter by studio names
-        #[arg(long, value_delimiter = ',')]
-        studios: Option<Vec<String>>,
-
-        /// Filter by tags
-        #[arg(long, value_delimiter = ',')]
-        tags: Option<Vec<String>>,
-
-        /// Filter by video types
-        #[arg(long, value_delimiter = ',')]
-        video_types: Option<Vec<VideoType>>,
-
-        /// Filter by production years
-        #[arg(long, value_delimiter = ',')]
-        years: Option<Vec<i32>>,
-    },
+    List(Box<ListArgs>),
 
     /// Get a single item by ID
     Get {
@@ -836,182 +839,104 @@ pub async fn execute(
     command: &ItemsCommand,
 ) -> Result<(), Box<dyn std::error::Error>> {
     match command {
-        ItemsCommand::List {
-            adjacent_to,
-            album_artist_ids,
-            album_ids,
-            albums,
-            artist_ids,
-            artists,
-            collapse_box_set_items,
-            contributing_artist_ids,
-            enable_image_types,
-            enable_images,
-            enable_total_record_count,
-            enable_user_data,
-            exclude_artist_ids,
-            exclude_item_ids,
-            exclude_item_types,
-            exclude_location_types,
-            fields,
-            filters,
-            genre_ids,
-            genres,
-            has_imdb_id,
-            has_official_rating,
-            has_overview,
-            has_parental_rating,
-            has_special_feature,
-            has_subtitles,
-            has_theme_song,
-            has_theme_video,
-            has_tmdb_id,
-            has_trailer,
-            has_tvdb_id,
-            ids,
-            image_type_limit,
-            image_types,
-            include_item_types,
-            index_number,
-            is3_d,
-            is4_k,
-            is_favorite,
-            is_hd,
-            is_kids,
-            is_locked,
-            is_missing,
-            is_movie,
-            is_news,
-            is_place_holder,
-            is_played,
-            is_series,
-            is_sports,
-            is_unaired,
-            limit,
-            location_types,
-            max_height,
-            max_official_rating,
-            max_premiere_date,
-            max_width,
-            media_types,
-            min_community_rating,
-            min_critic_rating,
-            min_date_last_saved,
-            min_date_last_saved_for_user,
-            min_height,
-            min_official_rating,
-            min_premiere_date,
-            min_width,
-            name_less_than,
-            name_starts_with,
-            name_starts_with_or_greater,
-            official_ratings,
-            parent_id,
-            parent_index_number,
-            person,
-            person_ids,
-            person_types,
-            recursive,
-            search_term,
-            series_status,
-            sort_by,
-            sort_order,
-            start_index,
-            studio_ids,
-            studios,
-            tags,
-            video_types,
-            years,
-        } => {
+        ItemsCommand::List(args) => {
             let result = client
-                .get_items(
-                    adjacent_to.as_ref(),
-                    album_artist_ids.as_ref(),
-                    album_ids.as_ref(),
-                    albums.as_ref(),
-                    artist_ids.as_ref(),
-                    artists.as_ref(),
-                    *collapse_box_set_items,
-                    contributing_artist_ids.as_ref(),
-                    enable_image_types.as_ref(),
-                    *enable_images,
-                    *enable_total_record_count,
-                    *enable_user_data,
-                    exclude_artist_ids.as_ref(),
-                    exclude_item_ids.as_ref(),
-                    exclude_item_types.as_ref(),
-                    exclude_location_types.as_ref(),
-                    fields.as_ref(),
-                    filters.as_ref(),
-                    genre_ids.as_ref(),
-                    genres.as_ref(),
-                    *has_imdb_id,
-                    *has_official_rating,
-                    *has_overview,
-                    *has_parental_rating,
-                    *has_special_feature,
-                    *has_subtitles,
-                    *has_theme_song,
-                    *has_theme_video,
-                    *has_tmdb_id,
-                    *has_trailer,
-                    *has_tvdb_id,
-                    ids.as_ref(),
-                    *image_type_limit,
-                    image_types.as_ref(),
-                    include_item_types.as_ref(),
-                    *index_number,
-                    *is3_d,
-                    *is4_k,
-                    *is_favorite,
-                    *is_hd,
-                    *is_kids,
-                    *is_locked,
-                    *is_missing,
-                    *is_movie,
-                    *is_news,
-                    *is_place_holder,
-                    *is_played,
-                    *is_series,
-                    *is_sports,
-                    *is_unaired,
-                    *limit,
-                    location_types.as_ref(),
-                    *max_height,
-                    max_official_rating.as_deref(),
-                    max_premiere_date.as_ref(),
-                    *max_width,
-                    media_types.as_ref(),
-                    *min_community_rating,
-                    *min_critic_rating,
-                    min_date_last_saved.as_ref(),
-                    min_date_last_saved_for_user.as_ref(),
-                    *min_height,
-                    min_official_rating.as_deref(),
-                    min_premiere_date.as_ref(),
-                    *min_width,
-                    name_less_than.as_deref(),
-                    name_starts_with.as_deref(),
-                    name_starts_with_or_greater.as_deref(),
-                    official_ratings.as_ref(),
-                    parent_id.as_ref(),
-                    *parent_index_number,
-                    person.as_deref(),
-                    person_ids.as_ref(),
-                    person_types.as_ref(),
-                    *recursive,
-                    search_term.as_deref(),
-                    series_status.as_ref(),
-                    sort_by.as_ref(),
-                    sort_order.as_ref(),
-                    *start_index,
-                    studio_ids.as_ref(),
-                    studios.as_ref(),
-                    tags.as_ref(),
-                    Some(user_id),
-                    video_types.as_ref(),
-                    years.as_ref(),
-                )
+                .get_items(&jellyfin_api::query::GetItems {
+                    adjacent_to: args.adjacent_to.as_ref(),
+                    album_artist_ids: args.album_artist_ids.as_ref(),
+                    album_ids: args.album_ids.as_ref(),
+                    albums: args.albums.as_ref(),
+                    artist_ids: args.artist_ids.as_ref(),
+                    artists: args.artists.as_ref(),
+                    collapse_box_set_items: args.collapse_box_set_items,
+                    contributing_artist_ids: args.contributing_artist_ids.as_ref(),
+                    enable_image_types: args.enable_image_types.as_ref(),
+                    enable_images: args.enable_images,
+                    enable_total_record_count: args.enable_total_record_count,
+                    enable_user_data: args.enable_user_data,
+                    exclude_artist_ids: args.exclude_artist_ids.as_ref(),
+                    exclude_item_ids: args.exclude_item_ids.as_ref(),
+                    exclude_item_types: args.exclude_item_types.as_ref(),
+                    exclude_location_types: args.exclude_location_types.as_ref(),
+                    fields: args.fields.as_ref(),
+                    filters: args.filters.as_ref(),
+                    genre_ids: args.genre_ids.as_ref(),
+                    genres: args.genres.as_ref(),
+                    has_imdb_id: args.has_imdb_id,
+                    has_official_rating: args.has_official_rating,
+                    has_overview: args.has_overview,
+                    has_parental_rating: args.has_parental_rating,
+                    has_special_feature: args.has_special_feature,
+                    has_subtitles: args.has_subtitles,
+                    has_theme_song: args.has_theme_song,
+                    has_theme_video: args.has_theme_video,
+                    has_tmdb_id: args.has_tmdb_id,
+                    has_trailer: args.has_trailer,
+                    has_tvdb_id: args.has_tvdb_id,
+                    ids: args.ids.as_ref(),
+                    image_type_limit: args.image_type_limit,
+                    image_types: args.image_types.as_ref(),
+                    include_item_types: args.include_item_types.as_ref(),
+                    index_number: args.index_number,
+                    is_3d: args.is3_d,
+                    is_4k: args.is4_k,
+                    is_favorite: args.is_favorite,
+                    is_hd: args.is_hd,
+                    is_kids: args.is_kids,
+                    is_locked: args.is_locked,
+                    is_missing: args.is_missing,
+                    is_movie: args.is_movie,
+                    is_news: args.is_news,
+                    is_place_holder: args.is_place_holder,
+                    is_played: args.is_played,
+                    is_series: args.is_series,
+                    is_sports: args.is_sports,
+                    is_unaired: args.is_unaired,
+                    limit: args.limit,
+                    location_types: args.location_types.as_ref(),
+                    max_height: args.max_height,
+                    max_official_rating: args.max_official_rating.as_deref(),
+                    max_premiere_date: args
+                        .max_premiere_date
+                        .map(jellyfin_api::types::Timestamp::at),
+                    max_width: args.max_width,
+                    media_types: args.media_types.as_ref(),
+                    min_community_rating: args.min_community_rating,
+                    min_critic_rating: args.min_critic_rating,
+                    min_date_last_saved: args
+                        .min_date_last_saved
+                        .map(jellyfin_api::types::Timestamp::at),
+                    min_date_last_saved_for_user: args
+                        .min_date_last_saved_for_user
+                        .map(jellyfin_api::types::Timestamp::at),
+                    min_height: args.min_height,
+                    min_official_rating: args.min_official_rating.as_deref(),
+                    min_premiere_date: args
+                        .min_premiere_date
+                        .map(jellyfin_api::types::Timestamp::at),
+                    min_width: args.min_width,
+                    name_less_than: args.name_less_than.as_deref(),
+                    name_starts_with: args.name_starts_with.as_deref(),
+                    name_starts_with_or_greater: args.name_starts_with_or_greater.as_deref(),
+                    official_ratings: args.official_ratings.as_ref(),
+                    parent_id: args.parent_id.as_ref(),
+                    parent_index_number: args.parent_index_number,
+                    person: args.person.as_deref(),
+                    person_ids: args.person_ids.as_ref(),
+                    person_types: args.person_types.as_ref(),
+                    recursive: args.recursive,
+                    search_term: args.search_term.as_deref(),
+                    series_status: args.series_status.as_ref(),
+                    sort_by: args.sort_by.as_ref(),
+                    sort_order: args.sort_order.as_ref(),
+                    start_index: args.start_index,
+                    studio_ids: args.studio_ids.as_ref(),
+                    studios: args.studios.as_ref(),
+                    tags: args.tags.as_ref(),
+                    user_id: Some(user_id),
+                    video_types: args.video_types.as_ref(),
+                    years: args.years.as_ref(),
+                })
                 .await?;
             crate::output::print_ndjson(&result.items)?;
         }
@@ -1026,9 +951,7 @@ pub async fn execute(
             client.delete_items(ids.as_ref()).await?;
         }
         ItemsCommand::Counts { is_favorite } => {
-            let result = client
-                .get_item_counts(*is_favorite, Some(user_id))
-                .await?;
+            let result = client.get_item_counts(*is_favorite, Some(user_id)).await?;
             crate::output::print_json(&result)?;
         }
         ItemsCommand::Similar {
@@ -1061,19 +984,19 @@ pub async fn execute(
             parent_id,
         } => {
             let result = client
-                .get_latest_media(
-                    enable_image_types.as_ref(),
-                    *enable_images,
-                    *enable_user_data,
-                    fields.as_ref(),
-                    *group_items,
-                    *image_type_limit,
-                    include_item_types.as_ref(),
-                    *is_played,
-                    *limit,
-                    parent_id.as_ref(),
-                    Some(user_id),
-                )
+                .get_latest_media(&jellyfin_api::query::GetLatestMedia {
+                    enable_image_types: enable_image_types.as_ref(),
+                    enable_images: *enable_images,
+                    enable_user_data: *enable_user_data,
+                    fields: fields.as_ref(),
+                    group_items: *group_items,
+                    image_type_limit: *image_type_limit,
+                    include_item_types: include_item_types.as_ref(),
+                    is_played: *is_played,
+                    limit: *limit,
+                    parent_id: parent_id.as_ref(),
+                    user_id: Some(user_id),
+                })
                 .await?;
             crate::output::print_json(&result)?;
         }
@@ -1153,9 +1076,7 @@ pub async fn execute(
             crate::output::print_json(&result)?;
         }
         ItemsCommand::SpecialFeatures { item_id } => {
-            let result = client
-                .get_special_features(item_id, Some(user_id))
-                .await?;
+            let result = client.get_special_features(item_id, Some(user_id)).await?;
             crate::output::print_json(&result)?;
         }
         ItemsCommand::RootFolder => {
@@ -1229,18 +1150,18 @@ pub async fn execute(
             recursive,
         } => {
             let result = client
-                .get_query_filters(
-                    include_item_types.as_ref(),
-                    *is_airing,
-                    *is_kids,
-                    *is_movie,
-                    *is_news,
-                    *is_series,
-                    *is_sports,
-                    parent_id.as_ref(),
-                    *recursive,
-                    Some(user_id),
-                )
+                .get_query_filters(&jellyfin_api::query::GetQueryFilters {
+                    include_item_types: include_item_types.as_ref(),
+                    is_airing: *is_airing,
+                    is_kids: *is_kids,
+                    is_movie: *is_movie,
+                    is_news: *is_news,
+                    is_series: *is_series,
+                    is_sports: *is_sports,
+                    parent_id: parent_id.as_ref(),
+                    recursive: *recursive,
+                    user_id: Some(user_id),
+                })
                 .await?;
             crate::output::print_json(&result)?;
         }
@@ -1276,23 +1197,23 @@ pub async fn execute(
             start_index,
         } => {
             let result = client
-                .get_years(
-                    enable_image_types.as_ref(),
-                    *enable_images,
-                    *enable_user_data,
-                    exclude_item_types.as_ref(),
-                    fields.as_ref(),
-                    *image_type_limit,
-                    include_item_types.as_ref(),
-                    *limit,
-                    media_types.as_ref(),
-                    parent_id.as_ref(),
-                    *recursive,
-                    sort_by.as_ref(),
-                    sort_order.as_ref(),
-                    *start_index,
-                    Some(user_id),
-                )
+                .get_years(&jellyfin_api::query::GetYears {
+                    enable_image_types: enable_image_types.as_ref(),
+                    enable_images: *enable_images,
+                    enable_user_data: *enable_user_data,
+                    exclude_item_types: exclude_item_types.as_ref(),
+                    fields: fields.as_ref(),
+                    image_type_limit: *image_type_limit,
+                    include_item_types: include_item_types.as_ref(),
+                    limit: *limit,
+                    media_types: media_types.as_ref(),
+                    parent_id: parent_id.as_ref(),
+                    recursive: *recursive,
+                    sort_by: sort_by.as_ref(),
+                    sort_order: sort_order.as_ref(),
+                    start_index: *start_index,
+                    user_id: Some(user_id),
+                })
                 .await?;
             crate::output::print_ndjson(&result.items)?;
         }
@@ -1367,13 +1288,15 @@ pub async fn execute(
             let result = client
                 .get_instant_mix_from_item(
                     item_id,
-                    enable_image_types.as_ref(),
-                    *enable_images,
-                    *enable_user_data,
-                    fields.as_ref(),
-                    *image_type_limit,
-                    *limit,
-                    Some(user_id),
+                    &jellyfin_api::query::GetInstantMixFromItem {
+                        enable_image_types: enable_image_types.as_ref(),
+                        enable_images: *enable_images,
+                        enable_user_data: *enable_user_data,
+                        fields: fields.as_ref(),
+                        image_type_limit: *image_type_limit,
+                        limit: *limit,
+                        user_id: Some(user_id),
+                    },
                 )
                 .await?;
             crate::output::print_json(&result)?;

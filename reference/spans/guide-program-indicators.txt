@@ -1,0 +1,11 @@
+                let indicatorHtml = null;
+                if (program.IsLive && programOptions.showLiveIndicator) {
+                    indicatorHtml = '<span class="liveTvProgram guideProgramIndicator">' + globalize.translate('Live') + '</span>';
+                } else if (program.IsPremiere && programOptions.showPremiereIndicator) {
+                    indicatorHtml = '<span class="premiereTvProgram guideProgramIndicator">' + globalize.translate('Premiere') + '</span>';
+                } else if (program.IsSeries && !program.IsRepeat && programOptions.showNewIndicator) {
+                    indicatorHtml = '<span class="newTvProgram guideProgramIndicator">' + globalize.translate('New') + '</span>';
+                } else if (program.IsSeries && program.IsRepeat && programOptions.showRepeatIndicator) {
+                    indicatorHtml = '<span class="repeatTvProgram guideProgramIndicator">' + globalize.translate('Repeat') + '</span>';
+                }
+                html += indicatorHtml || '';

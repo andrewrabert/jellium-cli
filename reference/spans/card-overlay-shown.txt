@@ -1,0 +1,7 @@
+.card-hoverable:focus-within,
+.card-hoverable:hover {
+    .cardOverlayContainer,
+    .cardOverlayButton-hover {
+        opacity: 1;
+    }
+}

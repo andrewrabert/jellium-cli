@@ -1,6 +1,5 @@
-
 #[doc = "`ChannelFeatures`"]
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct ChannelFeatures {
     #[doc = "Gets or sets the automatic refresh levels."]
     #[serde(
@@ -10,18 +9,10 @@ pub struct ChannelFeatures {
     )]
     pub auto_refresh_levels: Option<i32>,
     #[doc = "Gets or sets a value indicating whether this instance can filter."]
-    #[serde(
-        rename = "CanFilter",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "CanFilter", default, skip_serializing_if = "Option::is_none")]
     pub can_filter: Option<bool>,
     #[doc = "Gets or sets a value indicating whether this instance can search."]
-    #[serde(
-        rename = "CanSearch",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "CanSearch", default, skip_serializing_if = "Option::is_none")]
     pub can_search: Option<bool>,
     #[doc = "Gets or sets the content types."]
     #[serde(
@@ -38,11 +29,7 @@ pub struct ChannelFeatures {
     )]
     pub default_sort_fields: Vec<ChannelItemSortField>,
     #[doc = "Gets or sets the identifier."]
-    #[serde(
-        rename = "Id",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Id", default, skip_serializing_if = "Option::is_none")]
     pub id: Option<uuid::Uuid>,
     #[doc = "Gets or sets the maximum number of records the channel allows retrieving at a time."]
     #[serde(
@@ -52,18 +39,10 @@ pub struct ChannelFeatures {
     )]
     pub max_page_size: Option<i32>,
     #[doc = "Gets or sets the media types."]
-    #[serde(
-        rename = "MediaTypes",
-        default,
-        skip_serializing_if = "Vec::is_empty"
-    )]
+    #[serde(rename = "MediaTypes", default, skip_serializing_if = "Vec::is_empty")]
     pub media_types: Vec<ChannelMediaType>,
     #[doc = "Gets or sets the name."]
-    #[serde(
-        rename = "Name",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "Name", default, skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
     #[doc = "Gets or sets a value indicating whether [supports content downloading]."]
     #[serde(
@@ -88,26 +67,9 @@ pub struct ChannelFeatures {
     pub supports_sort_order_toggle: Option<bool>,
 }
 
-impl Default for ChannelFeatures {
-    fn default() -> Self {
-        Self {
-            auto_refresh_levels: Default::default(),
-            can_filter: Default::default(),
-            can_search: Default::default(),
-            content_types: Default::default(),
-            default_sort_fields: Default::default(),
-            id: Default::default(),
-            max_page_size: Default::default(),
-            media_types: Default::default(),
-            name: Default::default(),
-            supports_content_downloading: Default::default(),
-            supports_latest_media: Default::default(),
-            supports_sort_order_toggle: Default::default(),
-        }
-    }
-}
-
-#[derive(serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(
+    serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd,
+)]
 pub enum ChannelItemSortField {
     Name,
     CommunityRating,
@@ -157,23 +119,21 @@ impl TryFrom<&str> for ChannelItemSortField {
 
 impl TryFrom<&String> for ChannelItemSortField {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for ChannelItemSortField {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
-#[derive(serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(
+    serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd,
+)]
 pub enum ChannelMediaContentType {
     Clip,
     Podcast,
@@ -226,23 +186,21 @@ impl TryFrom<&str> for ChannelMediaContentType {
 
 impl TryFrom<&String> for ChannelMediaContentType {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for ChannelMediaContentType {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
-#[derive(serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(
+    serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd,
+)]
 pub enum ChannelMediaType {
     Audio,
     Video,
@@ -280,23 +238,21 @@ impl TryFrom<&str> for ChannelMediaType {
 
 impl TryFrom<&String> for ChannelMediaType {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for ChannelMediaType {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
-#[derive(serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(
+    serde::Deserialize, serde::Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd,
+)]
 pub enum ChannelType {
     #[serde(rename = "TV")]
     Tv,
@@ -332,19 +288,14 @@ impl TryFrom<&str> for ChannelType {
 
 impl TryFrom<&String> for ChannelType {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: &String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: &String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
 
 impl TryFrom<String> for ChannelType {
     type Error = super::error::ConversionError;
-    fn try_from(
-        value: String,
-    ) -> Result<Self, super::error::ConversionError> {
+    fn try_from(value: String) -> Result<Self, super::error::ConversionError> {
         value.parse()
     }
 }
-

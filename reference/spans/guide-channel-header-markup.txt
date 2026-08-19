@@ -1,0 +1,35 @@
+            const hasChannelImage = channel.ImageTags.Primary;
+
+            let cssClass = 'guide-channelHeaderCell itemAction';
+
+            if (layoutManager.tv) {
+                cssClass += ' guide-channelHeaderCell-tv';
+            }
+
+            const title = [];
+            if (channel.ChannelNumber) {
+                title.push(channel.ChannelNumber);
+            }
+            if (channel.Name) {
+                title.push(channel.Name);
+            }
+
+            html += '<button title="' + escapeHtml(title.join(' ')) + '" type="button" class="' + cssClass + '"' + ' data-action="link" data-isfolder="' + channel.IsFolder + '" data-id="' + channel.Id + '" data-serverid="' + channel.ServerId + '" data-type="' + channel.Type + '">';
+
+            if (hasChannelImage) {
+                const url = apiClient.getScaledImageUrl(channel.Id, {
+                    maxHeight: 220,
+                    tag: channel.ImageTags.Primary,
+                    type: 'Primary'
+                });
+
+                html += '<div class="guideChannelImage lazy" data-src="' + url + '"></div>';
+            }
+
+            if (channel.ChannelNumber) {
+                html += '<h3 class="guideChannelNumber">' + channel.ChannelNumber + '</h3>';
+            }
+
+            if (!hasChannelImage && channel.Name) {
+                html += '<div class="guideChannelName">' + escapeHtml(channel.Name) + '</div>';
+            }

@@ -1,0 +1,177 @@
+use iced::widget::{button, column, container, row};
+use iced::{Element, Fill};
+use jellium_protocol::Repeat;
+
+use crate::app::Message;
+use crate::images::{self, Cache, Kind as ImageKind};
+use crate::player::group::{self, Joined};
+use crate::player::{Action, Playing};
+use crate::style::{self, card, space, typeface};
+use crate::text::{self as strings, Text};
+use crate::widget::{self, prose};
+use crate::window;
+
+/// Every row of the queue: its poster over one line.
+pub const ROW: space::ListRow = space::ListRow::art(space::Lines::One);
+
+fn key(item: &jellyfin_api::types::BaseItemDto) -> Option<images::Key> {
+    Some(images::Key {
+        item: item.id?,
+        kind: ImageKind::Primary,
+        index: None,
+        card: card::Card::Wall(card::Shape::Portrait),
+    })
+}
+
+/// The images the window shows, rather than the whole queue's.
+pub fn images(
+    playing: Option<&Playing>,
+    group: Option<&Joined>,
+    window: window::Window,
+) -> images::Wanted {
+    if let Some(joined) = group {
+        let queued = joined.queued();
+        return window
+            .shown(queued.len())
+            .filter_map(|index| queued.get(index).copied())
+            .filter_map(key)
+            .collect();
+    }
+    let Some(playing) = playing else {
+        return images::Wanted::new();
+    };
+    let upcoming = playing.queue.upcoming().collect::<Vec<_>>();
+    window
+        .shown(upcoming.len())
+        .filter_map(|index| upcoming.get(index))
+        .filter_map(|(_, item)| key(item))
+        .chain(playing.queue.current().and_then(key))
+        .collect()
+}
+
+fn repeat_label(repeat: Repeat) -> Text {
+    match repeat {
+        Repeat::Off => Text::QueueRepeatOff,
+        Repeat::One => Text::QueueRepeatOne,
+        Repeat::All => Text::QueueRepeatAll,
+    }
+}
+
+fn entry<'a>(
+    item: &'a jellyfin_api::types::BaseItemDto,
+    cache: &'a Cache,
+    play: Option<Message>,
+    remove: Message,
+) -> Element<'a, Message> {
+    widget::list::row(
+        ROW,
+        widget::list::Row {
+            face: Some(widget::list::Face::Art {
+                image: key(item).and_then(|key| cache.handle(key)),
+                elapsed: None,
+            }),
+            index: None,
+            title: item.name.clone().unwrap_or_default().into(),
+            secondary: Vec::new(),
+            press: match play {
+                Some(play) => widget::list::Press::Body(play),
+                None => widget::list::Press::Inert,
+            },
+            controls: vec![
+                button(prose(strings::lookup(Text::QueueRemove), typeface::BODY))
+                    .style(style::flat)
+                    .on_press(remove)
+                    .into(),
+            ],
+        },
+    )
+}
+
+/// The upcoming items, each removable, with the shuffle and repeat controls:
+/// the group's playlist when this installation is in a group, and the local
+/// queue otherwise, both windowed.
+pub fn view<'a>(
+    playing: Option<&'a Playing>,
+    group: Option<&'a Joined>,
+    window: window::Window,
+    cache: &'a Cache,
+) -> Element<'a, Message> {
+    /// One queue row's data, so every row is built inside the window rather
+    /// than ahead of it.
+    struct Row<'a> {
+        item: &'a jellyfin_api::types::BaseItemDto,
+        play: Option<Message>,
+        remove: Message,
+    }
+
+    let (repeat, rows): (Repeat, Vec<Row<'a>>) = match group {
+        Some(joined) => (
+            group::repeat(joined),
+            joined
+                .queue
+                .items
+                .iter()
+                .filter_map(|queued| {
+                    Some(Row {
+                        item: joined.item(queued.playlist_item)?,
+                        play: Some(Message::GroupAction(group::Action::Play(
+                            queued.playlist_item,
+                        ))),
+                        remove: Message::GroupAction(group::Action::Remove(queued.playlist_item)),
+                    })
+                })
+                .collect(),
+        ),
+        None => match playing {
+            Some(playing) => (
+                playing.queue.repeat(),
+                playing
+                    .queue
+                    .upcoming()
+                    .map(|(position, item)| Row {
+                        item,
+                        play: None,
+                        remove: Message::PlayerAction(Action::RemoveQueued(position)),
+                    })
+                    .collect(),
+            ),
+            None => (Repeat::Off, Vec::new()),
+        },
+    };
+
+    let controls = row![
+        button(prose(strings::lookup(Text::QueueBack), typeface::BODY))
+            .style(style::raised)
+            .on_press(Message::WentBack),
+        button(prose(strings::lookup(Text::QueueShuffle), typeface::BODY))
+            .style(style::raised)
+            .on_press(Message::PlayerAction(Action::ToggleShuffle)),
+        button(prose(strings::lookup(repeat_label(repeat)), typeface::BODY))
+            .style(style::raised)
+            .on_press(Message::PlayerAction(Action::CycleRepeat)),
+    ]
+    .spacing(style::drawn(space::CONTROL_GAP.drawn()));
+
+    let body: Element<'a, Message> = if rows.is_empty() {
+        prose(strings::lookup(Text::QueueEmpty), typeface::BODY)
+    } else {
+        window::list(window, rows.len(), move |index| {
+            let row = &rows[index];
+            entry(row.item, cache, row.play.clone(), row.remove.clone())
+        })
+    };
+
+    container(
+        column![
+            prose(strings::lookup(Text::QueueTitle), typeface::HEADING_2),
+            controls,
+            body,
+        ]
+        .spacing(style::drawn(space::SECTION_GAP.drawn())),
+    )
+    .style(style::over_video)
+    .padding(style::padding(space::PAGE_PAD))
+    .width(Fill)
+    .height(Fill)
+    .into()
+}

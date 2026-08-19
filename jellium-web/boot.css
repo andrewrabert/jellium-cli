@@ -1,0 +1,97 @@
+html {
+  background-color: #101010;
+}
+
+#jellium-boot {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-family: system-ui, sans-serif;
+  line-height: 1.35;
+  background: #101010;
+  color: rgba(255, 255, 255, 0.8);
+  z-index: 4;
+}
+
+#jellium-boot[data-state='failed'] {
+  color: #c62828;
+}
+
+#jellium-boot[hidden] {
+  display: none;
+}
+
+#jellium-boot-logo {
+  width: 30%;
+  height: 30%;
+  background-image: url('/branding/icon-transparent.png');
+  background-position: center center;
+  background-repeat: no-repeat;
+  background-size: contain;
+}
+
+@media screen and (min-device-width: 992px) {
+  #jellium-boot-logo {
+    background-image: url('/branding/banner-light.png');
+  }
+}
+
+#jellium-boot-retry {
+  margin-top: 0.25em;
+  padding: 0.9em 1em;
+  font: inherit;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.87);
+  background: #303030;
+  border: 0;
+  border-radius: 0.2em;
+  cursor: pointer;
+}
+
+#jellium-boot-retry:focus {
+  background: #383838;
+}
+
+#jellium-boot-retry[hidden] {
+  display: none;
+}
+
+canvas {
+  position: fixed;
+  inset: 0;
+  z-index: 2;
+}
+
+[data-overlay] {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: #000;
+  object-fit: contain;
+  pointer-events: none;
+}
+
+[data-overlay][data-stack='below'] {
+  z-index: 0;
+}
+
+[data-overlay][data-stack='above'] {
+  z-index: 3;
+}
+
+[data-overlay][data-pointer] {
+  pointer-events: auto;
+}
+
+[data-overlay][hidden] {
+  display: none;
+}
+
+html[data-idle] canvas {
+  cursor: none;
+}

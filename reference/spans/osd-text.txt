@@ -1,0 +1,11 @@
+.osdTextContainer {
+    display: flex;
+    align-items: center;
+    user-select: none;
+    margin-bottom: 0.7em;
+    padding-left: 0.5em;
+}
+
+.osdMainTextContainer {
+    align-items: baseline;
+}

@@ -1,0 +1,47 @@
+.cardContent {
+    overflow: hidden;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border-radius: 0.2em;
+
+    /* Needed in case this is a button */
+    display: block;
+    margin: 0 !important;
+    border: 0 !important;
+    padding: 0 !important;
+    cursor: pointer;
+    color: inherit;
+    width: 100%;
+    font-family: inherit;
+    font-size: inherit;
+
+    /* Needed in safari */
+    height: 100%;
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+    outline: none !important;
+    contain: strict;
+}
+
+.defaultCardBackground {
+    display: flex;
+}
+
+.cardContent:not(.defaultCardBackground) {
+    background-color: transparent;
+}
+
+.cardPadder {
+    position: relative; // For centering the cardImageIcon
+}
+
+.cardBox:not(.visualCardBox) .cardPadder {
+    border-radius: 0.2em;
+    background-color: #242424;
+}
+
+.blurhash-canvas {
+    border-radius: 0.2em;
+}

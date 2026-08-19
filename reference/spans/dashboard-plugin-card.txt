@@ -1,0 +1,7 @@
+        <BaseCard
+            title={plugin.name}
+            to={pluginPage}
+            text={[plugin.version?.VersionNumber, plugin.status].filter(t => t).join(' ')}
+            image={plugin.imageUrl}
+            icon={<ExtensionIcon sx={{ width: 80, height: 80 }} />}
+        />

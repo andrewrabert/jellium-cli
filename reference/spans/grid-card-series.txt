@@ -1,0 +1,12 @@
+            } else {
+                html = cardBuilder.getCardsHtml({
+                    items: result.Items,
+                    shape: 'portrait',
+                    context: 'tvshows',
+                    centerText: true,
+                    lazy: true,
+                    overlayMoreButton: true,
+                    showTitle: true,
+                    showYear: true
+                });
+            }

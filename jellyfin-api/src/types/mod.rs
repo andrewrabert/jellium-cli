@@ -1,7 +1,5 @@
-#![allow(clippy::all)]
-
-pub mod error;
 pub(crate) mod defaults;
+pub mod error;
 
 mod activity;
 mod auth;
@@ -27,6 +25,7 @@ mod subtitles;
 mod sync_play;
 mod system;
 mod tasks;
+mod time;
 mod trickplay;
 mod users;
 mod websocket;
@@ -55,6 +54,7 @@ pub use subtitles::*;
 pub use sync_play::*;
 pub use system::*;
 pub use tasks::*;
+pub use time::*;
 pub use trickplay::*;
 pub use users::*;
 pub use websocket::*;

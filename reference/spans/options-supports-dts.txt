@@ -1,0 +1,1 @@
+    let supportsDts = appSettings.enableDts() || options.supportsDts;

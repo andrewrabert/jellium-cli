@@ -1,0 +1,11 @@
+/**
+ * Gets the width of a card's image according to the shape and amount of cards per row.
+ * @param {string} shape - Shape of the card.
+ * @param {number} screenWidth - Width of the screen.
+ * @param {boolean} isOrientationLandscape - Flag for the orientation of the screen.
+ * @returns {number} Width of the image for a card.
+ */
+function getImageWidth(shape, screenWidth, isOrientationLandscape) {
+    const imagesPerRow = getPostersPerRow(shape, screenWidth, isOrientationLandscape, layoutManager.tv);
+    return Math.round(screenWidth / imagesPerRow);
+}

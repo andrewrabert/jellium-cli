@@ -1,0 +1,3 @@
+    <button is="emby-button" type="submit" class="raised button-submit block btnSave hide">
+        <span>${Save}</span>
+    </button>

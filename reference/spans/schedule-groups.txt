@@ -1,0 +1,47 @@
+    const groups = [];
+    let currentGroupName = '';
+    let currentGroup = [];
+
+    for (const item of items) {
+        let dateText = '';
+
+        if (options.indexByDate !== false && item.StartDate) {
+            try {
+                const premiereDate = datetime.parseISO8601Date(item.StartDate, true);
+                dateText = datetime.toLocaleDateString(premiereDate, {
+                    weekday: 'long',
+                    month: 'short',
+                    day: 'numeric'
+                });
+            } catch (err) {
+                console.error('error parsing premiereDate:' + item.StartDate + '; error: ' + err);
+            }
+        }
+
+        if (dateText != currentGroupName) {
+            if (currentGroup.length) {
+                groups.push({
+                    name: currentGroupName,
+                    items: currentGroup
+                });
+            }
+
+            currentGroupName = dateText;
+            currentGroup = [item];
+        } else {
+            currentGroup.push(item);
+        }
+    }
+
+    if (currentGroup.length) {
+        groups.push({
+            name: currentGroupName,
+            items: currentGroup
+        });
+    }
+    let html = '';
+    for (const group of groups) {
+        if (group.name) {
+            html += '<div class="verticalSection">';
+            html += '<h2 class="sectionTitle sectionTitle-cards padded-left">' + group.name + '</h2>';
+        }

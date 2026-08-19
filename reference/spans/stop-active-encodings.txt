@@ -1,0 +1,15 @@
+    stopActiveEncodings(playSessionId) {
+        const options = {
+            deviceId: this.deviceId()
+        };
+
+        if (playSessionId) {
+            options.PlaySessionId = playSessionId;
+        }
+
+        const url = this.getUrl('Videos/ActiveEncodings', options);
+
+        return this.ajax({
+            type: 'DELETE',
+            url
+        });

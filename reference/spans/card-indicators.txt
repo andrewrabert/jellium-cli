@@ -1,0 +1,16 @@
+.cardIndicators {
+    top: 0.225em;
+    position: absolute;
+    display: flex;
+    align-items: center;
+    contain: layout style;
+    z-index: 1;
+
+    [dir="ltr"] & {
+        right: 0.225em;
+    }
+
+    [dir="rtl"] & {
+        left: 0.225em;
+    }
+}

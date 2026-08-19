@@ -1,0 +1,17 @@
+            }, flexDirection: (layoutMode === null || layoutMode === void 0 ? void 0 : layoutMode.startsWith('grid')) ? 'column' : undefined, fontWeight: 'bold', overflow: 'visible', p: density === 'compact'
+                ? '0.5rem'
+                : density === 'comfortable'
+                    ? columnDefType === 'display'
+                        ? '0.75rem'
+                        : '1rem'
+                    : columnDefType === 'display'
+                        ? '1rem 1.25rem'
+                        : '1.5rem', pb: columnDefType === 'display'
+                ? 0
+                : showColumnFilters || density === 'compact'
+                    ? '0.4rem'
+                    : '0.6rem', pt: columnDefType === 'group' || density === 'compact'
+                ? '0.25rem'
+                : density === 'comfortable'
+                    ? '.75rem'
+                    : '1.25rem', userSelect: enableMultiSort && column.getCanSort() ? 'none' : undefined, verticalAlign: 'top' }, getCommonMRTCellStyles({

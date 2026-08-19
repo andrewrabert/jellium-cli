@@ -1,0 +1,15 @@
+function getIntros(firstItem, apiClient, options) {
+    if (options.startPositionTicks || options.startIndex || options.fullscreen === false || !enableIntros(firstItem) || !userSettings.enableCinemaMode()) {
+        return Promise.resolve({
+            Items: []
+        });
+    }
+
+    return apiClient.getIntros(firstItem.Id).then(function (result) {
+        return result;
+    }, function () {
+        return Promise.resolve({
+            Items: []
+        });
+    });
+}

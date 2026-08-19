@@ -1,4 +1,4 @@
-use percent_encoding::{utf8_percent_encode, AsciiSet, CONTROLS};
+use percent_encoding::{AsciiSet, CONTROLS, utf8_percent_encode};
 
 const PATH_SET: &AsciiSet = &CONTROLS
     .add(b' ')

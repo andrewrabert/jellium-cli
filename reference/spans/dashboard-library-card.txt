@@ -1,0 +1,47 @@
+            <BaseCard
+                title={virtualFolder.Name || ''}
+                text={typeName}
+                image={imageUrl}
+                icon={<Icon sx={{ fontSize: 70 }}>{getLibraryIcon(virtualFolder.CollectionType)}</Icon>}
+                action={true}
+                actionRef={actionRef}
+                onActionClick={onActionClick}
+                onClick={showMediaLibraryEditor}
+                height={260}
+            />
+            <Menu
+                anchorEl={anchorEl}
+                open={isMenuOpen}
+                onClose={onMenuClose}
+            >
+                <MenuItem onClick={showImageEditor}>
+                    <ListItemIcon>
+                        <ImageIcon />
+                    </ListItemIcon>
+                    <ListItemText>{globalize.translate('EditImages')}</ListItemText>
+                </MenuItem>
+                <MenuItem onClick={showMediaLibraryEditor}>
+                    <ListItemIcon>
+                        <Folder />
+                    </ListItemIcon>
+                    <ListItemText>{globalize.translate('ManageLibrary')}</ListItemText>
+                </MenuItem>
+                <MenuItem onClick={openRenameDialog}>
+                    <ListItemIcon>
+                        <EditIcon />
+                    </ListItemIcon>
+                    <ListItemText>{globalize.translate('ButtonRename')}</ListItemText>
+                </MenuItem>
+                <MenuItem onClick={showRefreshDialog}>
+                    <ListItemIcon>
+                        <RefreshIcon />
+                    </ListItemIcon>
+                    <ListItemText>{globalize.translate('ScanLibrary')}</ListItemText>
+                </MenuItem>
+                <MenuItem onClick={showDeleteLibraryDialog}>
+                    <ListItemIcon>
+                        <DeleteIcon />
+                    </ListItemIcon>
+                    <ListItemText>{globalize.translate('ButtonRemove')}</ListItemText>
+                </MenuItem>
+            </Menu>

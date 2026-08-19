@@ -54,32 +54,20 @@ pub async fn execute(
         } => {
             let effective_uid = uid.as_ref().unwrap_or(user_id);
             let result = client
-                .get_studios(
-                    None, // enable_image_types
-                    None, // enable_images
-                    None, // enable_total_record_count
-                    None, // enable_user_data
-                    None, // exclude_item_types
-                    fields.as_ref(),
-                    None, // image_type_limit
-                    include_item_types.as_ref(),
-                    None, // is_favorite
-                    *limit,
-                    None, // name_less_than
-                    None, // name_starts_with
-                    None, // name_starts_with_or_greater
-                    parent_id.as_ref(),
-                    search_term.as_deref(),
-                    *start_index,
-                    Some(effective_uid),
-                )
+                .get_studios(&jellyfin_api::query::GetStudios {
+                    fields: fields.as_ref(),
+                    include_item_types: include_item_types.as_ref(),
+                    limit: *limit,
+                    parent_id: parent_id.as_ref(),
+                    search_term: search_term.as_deref(),
+                    start_index: *start_index,
+                    user_id: Some(effective_uid),
+                    ..Default::default()
+                })
                 .await?;
             crate::output::print_ndjson(&result.items)?;
         }
-        StudiosCommand::Get {
-            name,
-            user_id: uid,
-        } => {
+        StudiosCommand::Get { name, user_id: uid } => {
             let effective_uid = uid.as_ref().unwrap_or(user_id);
             let result = client.get_studio(name, Some(effective_uid)).await?;
             crate::output::print_json(&result)?;

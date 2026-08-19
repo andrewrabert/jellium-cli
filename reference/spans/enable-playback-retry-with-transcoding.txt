@@ -1,0 +1,4 @@
+        function enablePlaybackRetryWithTranscoding(streamInfo, errorType, currentlyPreventsVideoStreamCopy, currentlyPreventsAudioStreamCopy) {
+            return streamInfo.mediaSource.SupportsTranscoding
+                && (!currentlyPreventsVideoStreamCopy || !currentlyPreventsAudioStreamCopy);
+        }

@@ -1,0 +1,19 @@
+                    <div className='verticalSection'>
+                        <div className='inputContainer'>
+                            <Input
+                                type='number'
+                                id='txtRemoteClientBitrateLimit'
+                                label={globalize.translate('LabelRemoteClientBitrateLimit')}
+                                inputMode='decimal'
+                                pattern='[0-9]*(.[0-9]+)?'
+                                min='0'
+                                step='.25'
+                            />
+                            <div className='fieldDescription'>
+                                {globalize.translate('LabelRemoteClientBitrateLimitHelp')}
+                            </div>
+                            <div className='fieldDescription'>
+                                {globalize.translate('LabelUserRemoteClientBitrateLimitHelp')}
+                            </div>
+                        </div>
+                    </div>

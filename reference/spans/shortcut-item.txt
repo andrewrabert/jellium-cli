@@ -1,0 +1,16 @@
+function getItem(button) {
+    button = dom.parentWithAttribute(button, 'data-id');
+    const serverId = button.getAttribute('data-serverid');
+    const id = button.getAttribute('data-id');
+    const type = button.getAttribute('data-type');
+
+    const apiClient = ServerConnections.getApiClient(serverId);
+
+    if (type === 'Timer') {
+        return apiClient.getLiveTvTimer(id);
+    }
+    if (type === 'SeriesTimer') {
+        return apiClient.getLiveTvSeriesTimer(id);
+    }
+    return apiClient.getItem(apiClient.getCurrentUserId(), id);
+}

@@ -1,0 +1,5 @@
+@media all and (max-width: 24em) {
+    .nowPlayingBar .muteButton,
+    .nowPlayingBar .unmuteButton {
+        display: none;
+    }

@@ -1,0 +1,4 @@
+.actionsheet-fullscreen {
+    max-height: none;
+    border-radius: 0 !important;
+}

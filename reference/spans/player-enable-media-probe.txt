@@ -1,0 +1,3 @@
+    if (player.enableMediaProbe && !player.enableMediaProbe(item)) {
+        query.EnableMediaProbe = false;
+    }

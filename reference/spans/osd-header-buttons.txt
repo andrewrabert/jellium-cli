@@ -1,0 +1,8 @@
+.osdHeader .headerTop {
+    pointer-events: all;
+    max-height: 3.5em;
+}
+
+.osdHeader .headerButton:not(.headerBackButton):not(.headerCastButton):not(.headerSyncButton) {
+    display: none;
+}

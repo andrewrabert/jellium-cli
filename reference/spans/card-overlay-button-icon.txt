@@ -1,0 +1,10 @@
+.cardOverlayButtonIcon {
+    background-color: rgba(0, 0, 0, 0.7) !important;
+    border-radius: 100em;
+    width: 1.5em !important;
+    height: 1.5em !important;
+    justify-content: center;
+    align-items: center;
+    display: flex;
+    font-size: 1.66956521739130434em !important;
+}

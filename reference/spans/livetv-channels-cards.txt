@@ -1,0 +1,10 @@
+        return cardBuilder.getCardsHtml({
+            items: channels,
+            shape: 'square',
+            showTitle: true,
+            lazy: true,
+            cardLayout: true,
+            showDetailsMenu: true,
+            showCurrentProgram: true,
+            showCurrentProgramTime: true
+        });

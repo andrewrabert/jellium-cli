@@ -1,0 +1,3 @@
+                    <button is="paper-icon-button-light" class="btnPreviousTrack autoSize hide" title="${PreviousTrack} (Shift+P)" aria-label="${PreviousTrack}">
+                        <span class="xlargePaperIconButton material-icons skip_previous" aria-hidden="true"></span>
+                    </button>

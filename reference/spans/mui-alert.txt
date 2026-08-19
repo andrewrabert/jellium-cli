@@ -1,0 +1,24 @@
+})(memoTheme(({
+  theme
+}) => {
+  const getColor = theme.palette.mode === 'light' ? darken : lighten;
+  const getBackgroundColor = theme.palette.mode === 'light' ? lighten : darken;
+  return {
+    ...theme.typography.body2,
+    backgroundColor: 'transparent',
+    display: 'flex',
+    padding: '6px 16px',
+    variants: [...Object.entries(theme.palette).filter(createSimplePaletteValueFilter(['light'])).map(([color]) => ({
+      props: {
+        colorSeverity: color,
+        variant: 'standard'
+      },
+      style: {
+        color: theme.vars ? theme.vars.palette.Alert[`${color}Color`] : getColor(theme.palette[color].light, 0.6),
+        backgroundColor: theme.vars ? theme.vars.palette.Alert[`${color}StandardBg`] : getBackgroundColor(theme.palette[color].light, 0.9),
+        [`& .${alertClasses.icon}`]: theme.vars ? {
+          color: theme.vars.palette.Alert[`${color}IconColor`]
+        } : {
+          color: theme.palette[color].main
+        }
+      }

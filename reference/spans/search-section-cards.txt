@@ -1,0 +1,28 @@
+export function getCardOptionsFromType(type: BaseItemKind) {
+    switch (type) {
+        case BaseItemKind.Movie:
+        case BaseItemKind.Series:
+        case BaseItemKind.MusicAlbum:
+            return {
+                showYear: true
+            };
+        case BaseItemKind.Episode:
+            return {
+                coverImage: true,
+                showParentTitle: true
+            };
+        case BaseItemKind.MusicArtist:
+            return {
+                coverImage: true
+            };
+        case BaseItemKind.Audio:
+            return {
+                showParentTitle: true,
+                shape: CardShape.SquareOverflow
+            };
+        case BaseItemKind.LiveTvProgram:
+            return LIVETV_CARD_OPTIONS;
+        default:
+            return {};
+    }
+}

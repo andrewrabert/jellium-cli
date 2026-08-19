@@ -1,0 +1,3 @@
+.layout-mobile {
+    font-size: 90%;
+}

@@ -1,0 +1,123 @@
+//! The reference's Programs tab: what is on now, and the five upcoming rails
+//! it draws beneath it.
+
+use std::rc::Rc;
+
+use iced::Element;
+use iced::widget::column;
+use jellium_model::construct::{Construct, Page};
+use jellium_model::livetv::Section;
+use jellium_protocol::Session;
+use jellyfin_api::types::BaseItemDto;
+
+use crate::api::Api;
+use crate::app::Message;
+use crate::error::Answer;
+use crate::images::{Cache, Wanted};
+use crate::route::Route;
+use crate::style::space::Room;
+use crate::style::{self, Viewport, card, space};
+use crate::text::{self as strings, Said, Text};
+use crate::widget;
+
+/// The reference pages this screen draws.
+pub const DRAWS: &[Page] = &[Page::Livetv];
+
+/// One rail of the Programs tab: the section's own card shape over the lines
+/// that section's own options write under it.
+// reference: programs-shapes
+fn railed(section: Section) -> card::Drawing {
+    card::Drawing {
+        card: section.card(),
+        footer: section.footer(),
+        backing: card::Backing::Padder,
+        footing: card::Footing::Bare,
+        setting: card::Setting::Centred,
+        bottom: card::Bottom::Padded,
+        touch: card::Touch::Plays,
+    }
+}
+
+/// What one section reads as.
+pub fn label(section: Section) -> Text {
+    match section {
+        Section::OnNow => Text::HomeOnNow,
+        Section::Shows => Text::ProgramsShows,
+        Section::Movies => Text::ProgramsMovies,
+        Section::Sports => Text::ProgramsSports,
+        Section::Kids => Text::ProgramsKids,
+        Section::News => Text::ProgramsNews,
+    }
+}
+
+/// The list a programme section's title opens: this client draws all six on the
+/// Programs tab, where the reference gives On Now a page of its own.
+pub fn opens() -> Route {
+    Route::LiveTv {
+        tab: super::Tab::Programs,
+    }
+}
+
+/// Each section's programmes, in the order the server answered them; a section
+/// the server answered nothing for is absent rather than empty.
+#[derive(Debug, Clone, Default)]
+pub struct State {
+    pub sections: Vec<(Section, Vec<BaseItemDto>)>,
+}
+
+pub async fn load(api: Rc<Api>, viewport: Viewport) -> Answer<State> {
+    Answer::of(async {
+        let mut sections = Vec::new();
+        for section in Section::ALL {
+            let asked = jellium_model::livetv::asked(section, viewport.layout());
+            let items = api
+                .section_programs(section, asked)
+                .await
+                .or_default(Text::FailureProgramsUnread);
+            if items.is_empty() {
+                continue;
+            }
+            sections.push((section, items));
+        }
+        Ok(State { sections })
+    })
+    .await
+}
+
+pub fn view<'a>(
+    state: &'a State,
+    now: chrono::DateTime<chrono::Utc>,
+    viewport: Viewport,
+    images: &'a Cache,
+    session: &'a Session,
+) -> Element<'a, Message> {
+    let mut page = column![].spacing(style::drawn(space::SECTION_GAP.drawn()));
+    for (section, items) in &state.sections {
+        page = page.push(widget::section(
+            crate::construct::navigation(
+                Construct::SectionTitleCards,
+                Some(Said::Plain(label(*section))),
+                Message::Navigated(opens()),
+                widget::prose(strings::lookup(label(*section)), style::typeface::HEADING_2),
+            ),
+            widget::rail(
+                railed(*section),
+                widget::Rail::of(Construct::ItemsContainer),
+                items.iter(),
+                Room::content(viewport),
+                images,
+                now,
+                session,
+            ),
+        ));
+    }
+    page.into()
+}
+
+pub fn images(state: &State) -> Wanted {
+    let mut held = Wanted::new();
+    for (section, items) in &state.sections {
+        held.extend(widget::card_images(items, section.card()));
+    }
+    held
+}

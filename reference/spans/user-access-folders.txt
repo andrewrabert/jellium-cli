@@ -1,0 +1,20 @@
+                    <AccessContainer
+                        containerClassName='folderAccessContainer'
+                        headerTitle='HeaderLibraryAccess'
+                        checkBoxClassName='chkEnableAllFolders'
+                        checkBoxTitle='OptionEnableAccessToAllLibraries'
+                        listContainerClassName='folderAccessListContainer'
+                        accessClassName='folderAccess'
+                        listTitle='HeaderLibraries'
+                        description='LibraryAccessHelp'
+                    >
+                        {mediaFoldersItems.map(Item => (
+                            <CheckBoxElement
+                                key={Item.Id}
+                                className='chkFolder'
+                                itemId={Item.Id}
+                                itemName={Item.Name}
+                                itemCheckedAttribute={Item.checkedAttribute}
+                            />
+                        ))}
+                    </AccessContainer>

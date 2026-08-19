@@ -1,0 +1,25 @@
+.detailPagePrimaryContent {
+    position: relative;
+    padding-top: 1.25em;
+
+    [dir="ltr"] & {
+        padding-left: 32.45vw;
+        padding-right: 2%;
+    }
+
+    [dir="rtl"] & {
+        padding-right: 32.45vw;
+        padding-left: 2%;
+    }
+
+    .layout-mobile & {
+        padding-left: 5% !important;
+        padding-right: 5% !important;
+    }
+
+    &::after {
+        content: "";
+        display: table;
+        clear: both;
+    }
+}

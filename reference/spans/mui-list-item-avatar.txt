@@ -1,0 +1,21 @@
+const ListItemAvatarRoot = styled('div', {
+  name: 'MuiListItemAvatar',
+  slot: 'Root',
+  overridesResolver: (props, styles) => {
+    const {
+      ownerState
+    } = props;
+    return [styles.root, ownerState.alignItems === 'flex-start' && styles.alignItemsFlexStart];
+  }
+})({
+  minWidth: 56,
+  flexShrink: 0,
+  variants: [{
+    props: {
+      alignItems: 'flex-start'
+    },
+    style: {
+      marginTop: 8
+    }
+  }]
+});

@@ -1,0 +1,11 @@
+disallowed-methods = [
+    { path = "core::result::Result::ok", reason = "an Err carries a cause; hand it to failure::called, Answer's readers, or propagate it" },
+    { path = "core::result::Result::unwrap_or", reason = "an Err carries a cause; hand it to failure::called, Answer's readers, or propagate it" },
+    { path = "core::result::Result::unwrap_or_default", reason = "an Err carries a cause; hand it to failure::called, Answer's readers, or propagate it" },
+    { path = "core::result::Result::unwrap_or_else", reason = "an Err carries a cause; hand it to failure::called, Answer's readers, or propagate it" },
+    { path = "serde_json::to_string", reason = "use failure::rendered, which names what would not render" },
+    { path = "serde_json::to_value", reason = "use failure::encoded, which names what would not render" },
+    { path = "serde_json::from_str", reason = "use failure::parsed, which names what would not read" },
+    { path = "serde_json::from_slice", reason = "use failure::parsed, which names what would not read" },
+    { path = "serde_json::from_value", reason = "use failure::parsed, which names what would not read" },
+]
