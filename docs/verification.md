@@ -952,8 +952,13 @@ Run at 360x800, 800x360, 768x1024 and 1920x1080.
 - A Continue Watching episode card writes its series' name on the first line
   and `S1:E1 - ` before the episode's own title on the second, and a Continue
   Watching movie card writes its name over its year.
+- A Next Up card writes its series' name over the episode's own title and no
+  year under it, and a music library's Latest rail writes an album's artist
+  under its name and no year.
 - A card for an episode of season zero writes `Special - ` before the
   episode's own title.
+- A programme numbering itself zero and carrying no episode title writes that
+  programme's name once rather than on both of its lines.
 - A television browser's home rails take their own widths at every window
   width: 23.5% of the window for a backdrop rail, 18.8% for a small-backdrop
   rail and 15.6% for a square or portrait rail.
@@ -994,7 +999,12 @@ Run at 360x800, 768x1024 and 1920x1080.
   in place of the count, and a card whose item can carry no played mark draws
   neither.
 - An album card in a music library grid writes its own name over its album
-  artist, and a movie card writes its name over its year.
+  artist and writes no year, and a movie card writes its name over its year.
+- A search result for an episode, a song or a video writes its parent's name
+  over its own and writes no year, where one for a movie, a series or an album
+  writes the year.
+- A people or artists listing writes one line under a card, where a genres or
+  studios listing writes two.
 - Under `--read-only` the scrim and the sheet alike offer the play control
   alone, on a library grid, a search result and a genre card.
 - The search field stands a 2em magnifier before its 1.1em field, gapped a
@@ -1028,6 +1038,7 @@ Run at 360x800, 800x360 and 1920x1080.
   Live TV.
 - Removing an item from a collection is offered from that item's menu on the
   collection's own page, and from nowhere else.
+- A season card under a series writes its name alone.
 
 ### Live TV
 

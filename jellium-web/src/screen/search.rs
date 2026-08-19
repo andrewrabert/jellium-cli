@@ -220,13 +220,10 @@ pub fn card(section: Section, aspect: Option<Aspect>) -> card::Drawing {
 // reference: search-section-cards
 fn footer(section: Section) -> card::Footer {
     match section {
-        Section::Movies
-        | Section::Shows
-        | Section::Albums
-        | Section::Episodes
-        | Section::Songs
-        | Section::Videos
-        | Section::Programs => card::Footer::ParentNameAndYear,
+        Section::Movies | Section::Shows | Section::Albums => card::Footer::NameAndYear,
+        Section::Episodes | Section::Songs | Section::Videos | Section::Programs => {
+            card::Footer::ParentAndName
+        }
         Section::People
         | Section::Playlists
         | Section::Artists

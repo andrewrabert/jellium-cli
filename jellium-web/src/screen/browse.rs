@@ -127,7 +127,25 @@ fn toggled<T: PartialEq>(held: &mut Vec<T>, value: T, membership: Membership) {
 fn wall(collection: Option<CollectionType>, aspect: Option<Aspect>) -> card::Drawing {
     card::Drawing {
         card: Card::grid(collection, aspect),
-        footer: card::Footer::ParentNameAndYear,
+        // reference: grid-card-album
+        footer: match collection {
+            Some(CollectionType::Music) => card::Footer::ParentAndName,
+            Some(
+                CollectionType::Unknown
+                | CollectionType::Movies
+                | CollectionType::Tvshows
+                | CollectionType::Musicvideos
+                | CollectionType::Trailers
+                | CollectionType::Homevideos
+                | CollectionType::Boxsets
+                | CollectionType::Books
+                | CollectionType::Photos
+                | CollectionType::Livetv
+                | CollectionType::Playlists
+                | CollectionType::Folders,
+            )
+            | None => card::Footer::NameAndYear,
+        },
         backing: card::Backing::Padder,
         footing: card::Footing::Bare,
         setting: card::Setting::Centred,

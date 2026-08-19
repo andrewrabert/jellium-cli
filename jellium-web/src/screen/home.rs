@@ -168,13 +168,13 @@ fn resumed_media(section: Resumed) -> Option<MediaType> {
     }
 }
 
-/// One home rail's card: the shape the section asks for, over the two lines a
-/// rail writes under it.
+/// One home rail's card: the shape the section asks for, over the lines that
+/// section's own options write under it.
 // reference: card-box-classes
-fn railed(card: card::Card) -> card::Drawing {
+fn railed(card: card::Card, footer: card::Footer) -> card::Drawing {
     card::Drawing {
         card,
-        footer: card::Footer::ParentNameAndYear,
+        footer,
         backing: card::Backing::Padder,
         footing: card::Footing::Bare,
         setting: card::Setting::Centred,
@@ -491,7 +491,10 @@ pub fn view<'a>(
             page = page.push(widget::section(
                 titled(section.label()),
                 widget::rail(
-                    railed(card::Card::resumed(resumed_media(section))),
+                    railed(
+                        card::Card::resumed(resumed_media(section)),
+                        card::Footer::ParentNameAndYear,
+                    ),
                     widget::Rail::of(Construct::ItemsContainer),
                     items,
                     Room::content(viewport),
@@ -525,7 +528,10 @@ pub fn view<'a>(
                 Message::Navigated(crate::screen::livetv::programs::opens()),
             ),
             widget::rail(
-                railed(jellium_model::livetv::Section::OnNow.card()),
+                railed(
+                    jellium_model::livetv::Section::OnNow.card(),
+                    card::Footer::ParentAndName,
+                ),
                 widget::Rail::of(Construct::ItemsContainer),
                 state.on_now.held().iter(),
                 Room::content(viewport),
@@ -544,7 +550,7 @@ pub fn view<'a>(
                 Message::Navigated(Route::Home { tab: Tab::Home }),
             ),
             widget::rail(
-                railed(card::Card::NEXT_UP),
+                railed(card::Card::NEXT_UP, card::Footer::ParentAndName),
                 widget::Rail::of(Construct::ItemsContainer),
                 state.next_up.held().iter(),
                 Room::content(viewport),
@@ -569,7 +575,10 @@ pub fn view<'a>(
                 Message::Navigated(opens(&row.library, row.id)),
             ),
             widget::rail(
-                railed(card::Card::latest(row.library.collection_type)),
+                railed(
+                    card::Card::latest(row.library.collection_type),
+                    card::Footer::latest(row.library.collection_type),
+                ),
                 widget::Rail::within(Construct::ItemsContainer, row.id),
                 row.items.held().iter(),
                 Room::content(viewport),

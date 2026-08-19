@@ -27,7 +27,7 @@ use crate::widget::prose;
 // reference: card-box-classes
 const CHILDREN: card::Drawing = card::Drawing {
     card: card::Card::Wall(card::Shape::Portrait),
-    footer: card::Footer::ParentNameAndYear,
+    footer: card::Footer::Name,
     backing: card::Backing::Padder,
     footing: card::Footing::Bare,
     setting: card::Setting::Centred,
@@ -36,18 +36,29 @@ const CHILDREN: card::Drawing = card::Drawing {
     touch: card::Touch::Plays,
 };
 
-/// The card the rail of items alike draws on.
+/// The card the rail of items alike draws on, over the lines the page's own
+/// item gives it: an album's parent title, a movie's, a trailer's or a series'
+/// year, and the name alone otherwise.
 // reference: card-box-classes
-const ALIKE: card::Drawing = card::Drawing {
-    card: card::Card::Rail(card::Rail::Portrait),
-    footer: card::Footer::ParentNameAndYear,
-    backing: card::Backing::Padder,
-    footing: card::Footing::Bare,
-    setting: card::Setting::Centred,
-    bottom: card::Bottom::Padded,
-    // reference: detail-similar-cards
-    touch: card::Touch::Plays,
-};
+fn alike(kind: Option<BaseItemKind>) -> card::Drawing {
+    card::Drawing {
+        card: card::Card::Rail(card::Rail::Portrait),
+        // reference: detail-similar-cards
+        footer: match kind {
+            Some(BaseItemKind::MusicAlbum) => card::Footer::ParentAndName,
+            Some(BaseItemKind::Movie | BaseItemKind::Trailer | BaseItemKind::Series) => {
+                card::Footer::NameAndYear
+            }
+            Some(_) | None => card::Footer::Name,
+        },
+        backing: card::Backing::Padder,
+        footing: card::Footing::Bare,
+        setting: card::Setting::Centred,
+        bottom: card::Bottom::Padded,
+        // reference: detail-similar-cards
+        touch: card::Touch::Plays,
+    }
+}
 
 #[derive(Debug, Clone)]
 pub struct State {
@@ -688,7 +699,7 @@ pub fn view<'a>(
         page = page.push(widget::section(
             widget::prose(strings::lookup(Text::DetailSimilar), typeface::HEADING_2),
             widget::rail(
-                ALIKE,
+                alike(item.type_),
                 widget::Rail::of(Construct::ItemsContainer),
                 state.similar.iter(),
                 Room::content(viewport),
@@ -704,7 +715,10 @@ pub fn view<'a>(
 
 pub fn images(state: &State) -> images::Wanted {
     let mut keys = widget::card_images(&state.children, CHILDREN.card);
-    keys.extend(widget::card_images(&state.similar, ALIKE.card));
+    keys.extend(widget::card_images(
+        &state.similar,
+        alike(state.item.type_).card,
+    ));
     if let Some(id) = state.item.id {
         keys.want(images::Poster::of(images::Key {
             item: id,

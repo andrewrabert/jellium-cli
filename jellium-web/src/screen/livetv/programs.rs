@@ -29,7 +29,7 @@ pub const DRAWS: &[Page] = &[Page::Livetv];
 fn railed(section: Section) -> card::Drawing {
     card::Drawing {
         card: section.card(),
-        footer: card::Footer::ParentNameAndYear,
+        footer: card::Footer::ParentAndName,
         backing: card::Backing::Padder,
         footing: card::Footing::Bare,
         setting: card::Setting::Centred,

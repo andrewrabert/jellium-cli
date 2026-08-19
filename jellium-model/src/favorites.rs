@@ -82,6 +82,28 @@ impl Section {
         })
     }
 
+    /// Movies, Shows and Books write the year under the name; Seasons,
+    /// Episodes, Albums and Songs write the parent title instead; the rest
+    /// write the name alone.
+    // reference: favorites-shapes
+    pub fn footer(self) -> card::Footer {
+        match self {
+            Section::Movies | Section::Shows | Section::Books => card::Footer::NameAndYear,
+            Section::Seasons | Section::Episodes | Section::Albums | Section::Songs => {
+                card::Footer::ParentAndName
+            }
+            Section::Videos
+            | Section::MusicVideos
+            | Section::Collections
+            | Section::Playlists
+            | Section::People
+            | Section::Artists
+            | Section::Channels
+            | Section::PhotoAlbums
+            | Section::Photos => card::Footer::Name,
+        }
+    }
+
     // reference: favorites-query
     pub fn asked(self) -> Asked {
         match self {

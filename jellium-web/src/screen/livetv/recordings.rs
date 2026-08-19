@@ -53,7 +53,7 @@ fn card(recordings: &[BaseItemDto]) -> card::Drawing {
     );
     card::Drawing {
         card: card::Card::Wall(card::Shape::fitting(shared, card::Shape::Backdrop)),
-        footer: card::Footer::ParentNameAndYear,
+        footer: card::Footer::ParentAndName,
         backing: card::Backing::Padder,
         footing: card::Footing::Bare,
         setting: card::Setting::Centred,

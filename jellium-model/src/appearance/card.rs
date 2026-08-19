@@ -104,9 +104,19 @@ pub enum Footer {
     /// `showTitle` alone, which is the login picker's `singleCardText` and a
     /// library tile's.
     Name,
+    /// `showTitle` with `showYear`, which is what a movie or shows grid, a
+    /// genres or studios listing, a suggestions rail, a favourites rail of
+    /// movies, shows or books, and a search result for a movie, a series or an
+    /// album each ask for.
+    NameAndYear,
+    /// `showParentTitle` with `showTitle`, which is what Next Up, On Now, a
+    /// music library's grid and latest rail, the Programs and recordings tabs,
+    /// a favourites rail of seasons, episodes, albums or songs, and a search
+    /// result for an episode, a song, a video or a programme each ask for.
+    ParentAndName,
     /// `showParentTitle`, `showTitle` and `showYear`, capped at the two lines
-    /// `lines` writes, which is what a home rail, a library grid, a search
-    /// result and the recordings tab each ask for.
+    /// `lines: 2` writes, which is what the resumed rails and a shows or
+    /// untyped library's latest rail ask for.
     ParentNameAndYear,
     /// The channels tab's own: `showTitle`, `showCurrentProgram` and
     /// `showCurrentProgramTime`.
@@ -131,6 +141,8 @@ impl Footer {
         match self {
             Footer::Bare => &[],
             Footer::Name => &[Line::Name],
+            Footer::NameAndYear => &[Line::Name, Line::Year],
+            Footer::ParentAndName => &[Line::ParentTitle, Line::Name, Line::ParentTitleUnder],
             Footer::ParentNameAndYear => &[
                 Line::ParentTitle,
                 Line::Name,
@@ -156,10 +168,11 @@ impl Footer {
     // reference: card-text-lines
     pub fn written(self) -> usize {
         let capped = match self {
-            Footer::ParentNameAndYear => Some(2),
+            Footer::ParentAndName | Footer::ParentNameAndYear => Some(2),
             Footer::SeriesTimer => Some(3),
             Footer::Bare
             | Footer::Name
+            | Footer::NameAndYear
             | Footer::Channel
             | Footer::Timer
             | Footer::ActiveRecording => None,
@@ -168,6 +181,29 @@ impl Footer {
         match capped {
             Some(cap) => pushed.min(cap),
             None => pushed,
+        }
+    }
+
+    /// The lines a library's latest rail writes, which the library's own
+    /// collection type decides.
+    // reference: home-latest
+    pub fn latest(collection: Option<CollectionType>) -> Footer {
+        match collection {
+            Some(CollectionType::Movies) => Footer::NameAndYear,
+            Some(CollectionType::Tvshows) | None => Footer::ParentNameAndYear,
+            Some(CollectionType::Music) => Footer::ParentAndName,
+            Some(
+                CollectionType::Unknown
+                | CollectionType::Musicvideos
+                | CollectionType::Trailers
+                | CollectionType::Homevideos
+                | CollectionType::Boxsets
+                | CollectionType::Books
+                | CollectionType::Photos
+                | CollectionType::Livetv
+                | CollectionType::Playlists
+                | CollectionType::Folders,
+            ) => Footer::Name,
         }
     }
 }

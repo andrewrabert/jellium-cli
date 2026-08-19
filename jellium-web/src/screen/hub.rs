@@ -20,13 +20,19 @@ use crate::style::space::Room;
 use crate::style::{self, Viewport, card};
 use crate::widget;
 
-/// The card a hub's entries draw on, at the shape they share, over the two
-/// lines a grid writes under one.
+/// The card a hub's entries draw on, at the shape they share, over the lines
+/// the facet's own listing writes under one.
 // reference: grid-card-auto
-fn wall(aspect: Option<Aspect>) -> card::Drawing {
+fn wall(facet: Facet, aspect: Option<Aspect>) -> card::Drawing {
     card::Drawing {
         card: Card::grid(None, aspect),
-        footer: card::Footer::ParentNameAndYear,
+        // reference: list-poster-options
+        footer: match facet {
+            Facet::Person | Facet::Artist | Facet::AlbumArtist => card::Footer::Name,
+            Facet::Genre | Facet::MusicGenre | Facet::Studio | Facet::Network => {
+                card::Footer::NameAndYear
+            }
+        },
         backing: card::Backing::Padder,
         footing: card::Footing::Bare,
         setting: card::Setting::Centred,
@@ -71,12 +77,15 @@ pub async fn load(
             .bubbled()?;
         let mut entries = Paged::new(answered.total.max(0) as usize);
         entries.filled(0..answered.items.len(), answered.items);
-        let wall = wall(Aspect::shared(
-            entries
-                .held()
-                .filter_map(|item| item.primary_image_aspect_ratio)
-                .map(Aspect::of),
-        ));
+        let wall = wall(
+            facet,
+            Aspect::shared(
+                entries
+                    .held()
+                    .filter_map(|item| item.primary_image_aspect_ratio)
+                    .map(Aspect::of),
+            ),
+        );
 
         Ok(State {
             facet,
