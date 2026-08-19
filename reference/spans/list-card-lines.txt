@@ -1,0 +1,1 @@
+            let lines = settings.showTitle ? 2 : 0;

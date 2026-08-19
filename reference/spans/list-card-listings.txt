@@ -1,0 +1,15 @@
+            if (params.type === 'nextup') {
+                posterOptions.showParentTitle = settings.showTitle;
+            } else if (params.type === 'Person') {
+                posterOptions.showYear = false;
+                posterOptions.showParentTitle = false;
+                lines = 1;
+            } else if (params.type === 'Audio') {
+                posterOptions.showParentTitle = settings.showTitle;
+            } else if (params.type === 'MusicAlbum') {
+                posterOptions.showParentTitle = settings.showTitle;
+            } else if (params.type === 'Episode') {
+                posterOptions.showParentTitle = settings.showTitle;
+            } else if (params.type === 'MusicArtist') {
+                posterOptions.showYear = false;
+                lines = 1;

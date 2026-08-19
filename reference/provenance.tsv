@@ -746,3 +746,8 @@ indicator-played-shadow	src/components/indicators/indicators.scss	81	81	6faa9884
 indicator-played-size	src/components/indicators/indicators.scss	82	83	1216ec67b79519ef0c9c0ff9967ba187b210fd0b56b884fee563b817d9498455	ported
 scheme-count-indicator	src/themes/dark/theme.scss	316	321	3c471a47e3aa6df713f73fbb7ad37b5f1c74a2eee044fa679dd2c4e5b9350983	ported
 card-indicators-order	src/components/cardbuilder/cardBuilder.js	1046	1075	ee769c156c9a8b14a78ea98e8bc4ee275a6fbe6e899ff7fcd8282c5d29a7cd84	ported
+home-on-now-cards	src/components/homesections/sections/liveTv.ts	35	53	881c46cbbb9b07b9eaf85a058622451c01b716b8a5020465a2ac059adcfe1c35	ported
+search-livetv-cards	src/apps/stable/features/search/constants/liveTvCardOptions.ts	1	11	1c1d69c944c7a7cd62613494385477e431e2987db5c3dc0adbe00926329be620	ported
+list-card-lines	src/controllers/list.js	532	532	ce9ed621128d94a50214b99f2a02d14e7b1ab2bd426d6a78a34a5d0c46be2f37	ported
+list-card-listings	src/controllers/list.js	572	586	11e8eb97a7c2bbf15687c71569290c6b72c75fd98b62e1d05e3e89941deb0194	ported
+list-card-parent	src/controllers/list.js	618	620	1af63d6e81b0febfde201cc918429bcda2988fa01aed220852616f2fd6575fea	ported

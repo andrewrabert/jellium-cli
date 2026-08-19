@@ -1,0 +1,19 @@
+        cardBuilder.getCardsHtml({
+            items: items,
+            preferThumb: 'auto',
+            inheritThumb: false,
+            shape: (enableOverflow ? 'autooverflow' : 'auto'),
+            showParentTitleOrTitle: true,
+            showTitle: true,
+            centerText: true,
+            coverImage: true,
+            overlayText: false,
+            allowBottomPadding: !enableOverflow,
+            showAirTime: true,
+            showChannelName: false,
+            showAirDateTime: false,
+            showAirEndTime: true,
+            defaultShape: getBackdropShape(enableOverflow),
+            lines: 3,
+            overlayPlayButton: true
+        })
