@@ -88,9 +88,13 @@ impl Section {
     // reference: favorites-shapes
     pub fn footer(self) -> card::Footer {
         match self {
-            Section::Movies | Section::Shows | Section::Books => card::Footer::NameAndYear,
+            Section::Movies | Section::Shows | Section::Books => card::Footer::of(
+                card::Parent::Withheld,
+                card::Title::Shown,
+                &[card::Line::Year],
+            ),
             Section::Seasons | Section::Episodes | Section::Albums | Section::Songs => {
-                card::Footer::ParentAndName
+                card::Footer::of(card::Parent::Shown, card::Title::Shown, &[])
             }
             Section::Videos
             | Section::MusicVideos
@@ -100,7 +104,7 @@ impl Section {
             | Section::Artists
             | Section::Channels
             | Section::PhotoAlbums
-            | Section::Photos => card::Footer::Name,
+            | Section::Photos => card::Footer::of(card::Parent::Withheld, card::Title::Shown, &[]),
         }
     }
 

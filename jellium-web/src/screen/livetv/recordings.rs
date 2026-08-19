@@ -53,7 +53,10 @@ fn card(recordings: &[BaseItemDto]) -> card::Drawing {
     );
     card::Drawing {
         card: card::Card::Wall(card::Shape::fitting(shared, card::Shape::Backdrop)),
-        footer: card::Footer::ParentAndName,
+        // reference: livetv-recordings-cards
+        // reference: livetv-recordings-latest
+        footer: card::Footer::of(card::Parent::Shown, card::Title::Shown, &[card::Line::Year])
+            .lines(card::Lines::TWO),
         backing: card::Backing::Padder,
         footing: card::Footing::Bare,
         setting: card::Setting::Centred,
@@ -89,8 +92,8 @@ fn key(item: &BaseItemDto, card: card::Card) -> Option<images::Key> {
     })
 }
 
-/// One recording's card: its poster over its name, its episode title and the
-/// year it was made.
+/// One recording's card: its poster over its series' name, its own title and
+/// the year it was made, on the two lines the tab writes.
 // reference: livetv-recordings-cards
 fn entry<'a>(
     item: &'a BaseItemDto,
@@ -145,8 +148,7 @@ fn entry<'a>(
 }
 
 /// The reference's own section title over a windowed wall of cards, each
-/// carrying the recording's poster, its name and either its episode title or
-/// the year it was made.
+/// carrying the recording's poster and the two lines the tab writes under it.
 // reference: livetv-recordings-latest
 pub fn view<'a>(
     state: &'a State,

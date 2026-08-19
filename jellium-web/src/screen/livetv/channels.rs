@@ -5,7 +5,7 @@ use iced::{Element, Fill};
 use jellium_model::item::Mark;
 use jellium_protocol::Session;
 
-use super::{Action, clock};
+use super::Action;
 use crate::api::Api;
 use crate::app::Message;
 use crate::error::Answer;
@@ -32,7 +32,11 @@ pub struct State {
 // reference: livetv-tab-markup
 pub const CARD: card::Drawing = card::Drawing {
     card: card::Card::Wall(card::Shape::Square),
-    footer: card::Footer::Channel,
+    footer: card::Footer::of(
+        card::Parent::Withheld,
+        card::Title::Shown,
+        &[card::Line::CurrentProgram, card::Line::CurrentProgramTime],
+    ),
     backing: card::Backing::Paper,
     footing: card::Footing::Padded,
     setting: card::Setting::Leading,
@@ -131,12 +135,9 @@ fn entry<'a>(
                 .as_ref()
                 .and_then(|program| card::Caption::of(program.title.clone())),
             // reference: card-air-time
-            card::Line::CurrentProgramTime => current.as_ref().and_then(|program| {
-                card::Caption::of(strings::format(
-                    Text::ProgramAirtime,
-                    &[&clock(program.start), &clock(program.end)],
-                ))
-            }),
+            card::Line::CurrentProgramTime => current
+                .as_ref()
+                .and_then(|program| card::Caption::of(crate::livetv::airtime(program))),
             _ => None,
         },
     )

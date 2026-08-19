@@ -5,7 +5,7 @@ use iced::{Element, Fill};
 use jellium_protocol::Session;
 use jellyfin_api::types::{DayOfWeek, DayPattern, KeepUntil, SeriesTimerInfoDto};
 
-use super::{Action, clock};
+use super::Action;
 use crate::api::Api;
 use crate::app::Message;
 use crate::error::Answer;
@@ -30,7 +30,12 @@ pub struct State {
 // reference: card-auto-shape
 pub const CARD: card::Drawing = card::Drawing {
     card: card::Card::Wall(card::Shape::Portrait),
-    footer: card::Footer::SeriesTimer,
+    footer: card::Footer::of(
+        card::Parent::Withheld,
+        card::Title::Shown,
+        &[card::Line::SeriesTimerTime, card::Line::SeriesTimerChannel],
+    )
+    .lines(card::Lines::THREE),
     backing: card::Backing::Padder,
     footing: card::Footing::Bare,
     setting: card::Setting::Centred,
@@ -149,7 +154,10 @@ fn entry<'a>(
     let name = timer.name.clone().unwrap_or_default();
     let at = match timer.record_any_time {
         Some(true) => strings::lookup(Text::SeriesTimerAnytime).to_string(),
-        _ => timer.start_date.map(clock).unwrap_or_default(),
+        _ => timer
+            .start_date
+            .map(crate::livetv::clock)
+            .unwrap_or_default(),
     };
     let channel = match timer.record_any_channel {
         Some(true) => strings::lookup(Text::SeriesTimerAllChannels).to_string(),

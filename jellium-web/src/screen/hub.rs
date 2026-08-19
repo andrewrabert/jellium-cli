@@ -27,10 +27,17 @@ fn wall(facet: Facet, aspect: Option<Aspect>) -> card::Drawing {
     card::Drawing {
         card: Card::grid(None, aspect),
         // reference: list-poster-options
+        // reference: list-card-listings
+        // reference: list-card-parent
+        // reference: list-card-lines
         footer: match facet {
-            Facet::Person | Facet::Artist | Facet::AlbumArtist => card::Footer::Name,
+            Facet::Person | Facet::Artist | Facet::AlbumArtist => {
+                card::Footer::of(card::Parent::Withheld, card::Title::Shown, &[])
+                    .lines(card::Lines::ONE)
+            }
             Facet::Genre | Facet::MusicGenre | Facet::Studio | Facet::Network => {
-                card::Footer::NameAndYear
+                card::Footer::of(card::Parent::Shown, card::Title::Shown, &[card::Line::Year])
+                    .lines(card::Lines::TWO)
             }
         },
         backing: card::Backing::Padder,

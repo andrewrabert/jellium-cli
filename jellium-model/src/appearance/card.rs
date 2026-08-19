@@ -41,6 +41,66 @@ pub enum Bottom {
     Flush,
 }
 
+/// `options.lines`: the count `getCardTextLines` breaks a footer's lines at and
+/// fills them out to.
+// reference: card-text-lines
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct Lines {
+    count: usize,
+}
+
+impl Lines {
+    const fn of(count: usize) -> Lines {
+        Lines { count }
+    }
+
+    // reference: list-card-listings
+    pub const ONE: Lines = Lines::of(1);
+
+    // reference: list-card-lines
+    pub const TWO: Lines = Lines::of(2);
+
+    // reference: home-on-now-cards
+    pub const THREE: Lines = Lines::of(3);
+
+    pub fn count(self) -> usize {
+        self.count
+    }
+}
+
+/// Whether a section's own `getCardsHtml` call sets `showTitle`.
+// reference: card-footer-lines
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Title {
+    Shown,
+    Withheld,
+}
+
+/// Which parent-title option a section's own `getCardsHtml` call sets. Each
+/// pushes one line, whichever side of the name the item's own type puts it.
+// reference: card-footer-lines
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Parent {
+    /// Neither `showParentTitle` nor `showParentTitleOrTitle`.
+    Withheld,
+    /// `showParentTitle`: over the name, and under it for an album, a track or
+    /// a music video.
+    Shown,
+    /// `showParentTitleOrTitle`: the parent where the item names one, and the
+    /// item's own name where it names none.
+    OrTitle,
+}
+
+/// What `getAirTimeText` writes around an airing's start time.
+// reference: card-air-time
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum AirTime {
+    /// `showAirDateTime`: the airing's date before its start time.
+    Dated,
+    /// `showAirEndTime`: the airing's end time after its start time.
+    Ended,
+}
+
 /// One line a card's footer writes, named by the option in
 /// `getCardFooterText` that pushes it.
 // reference: card-footer-lines
@@ -55,13 +115,17 @@ pub enum Line {
     // the display name, which an item whose name the line above already
     // carries answers with nothing
     Name,
+    // `showParentTitleOrTitle` with `showTitle` unset: the parent title, and
+    // the item's own name where it names no parent, which is one line either
+    // way
+    ParentTitleOrName,
     // the parent title `parentTitleUnderneath` pushes under the name instead,
     // which an album, a track and a music video answer with their artists
     ParentTitleUnder,
     // `showYear`
     Year,
-    // `showAirTime` with `showAirEndTime`
-    AirTime,
+    // `showAirTime`, at the shape the flags beside it give it
+    AirTime(AirTime),
     // `showChannelName`
     ChannelName,
     // `showCurrentProgram`
@@ -96,102 +160,107 @@ impl Caption {
     }
 }
 
-/// What a card writes under its image.
+/// What a card writes under its image: the footer options one `getCardsHtml`
+/// call sets, and `options.lines` where that call sets one.
+// reference: card-footer-lines
+// reference: card-footer-options
+// reference: card-text-lines
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum Footer {
-    /// No line, which is what an image-only card draws.
-    Bare,
-    /// `showTitle` alone, which is the login picker's `singleCardText` and a
-    /// library tile's.
-    Name,
-    /// `showTitle` with `showYear`, which is what a movie or shows grid, a
-    /// genres or studios listing, a suggestions rail, a favourites rail of
-    /// movies, shows or books, and a search result for a movie, a series or an
-    /// album each ask for.
-    NameAndYear,
-    /// `showParentTitle` with `showTitle`, which is what Next Up, On Now, a
-    /// music library's grid and latest rail, the Programs and recordings tabs,
-    /// a favourites rail of seasons, episodes, albums or songs, and a search
-    /// result for an episode, a song, a video or a programme each ask for.
-    ParentAndName,
-    /// `showParentTitle`, `showTitle` and `showYear`, capped at the two lines
-    /// `lines: 2` writes, which is what the resumed rails and a shows or
-    /// untyped library's latest rail ask for.
-    ParentNameAndYear,
-    /// The channels tab's own: `showTitle`, `showCurrentProgram` and
-    /// `showCurrentProgramTime`.
-    Channel,
-    /// A scheduled timer's: `showParentTitleOrTitle`, `showTitle`, and
-    /// `showAirTime` with `showAirEndTime`.
-    Timer,
-    /// An active recording's: a timer's lines with `showChannelName` under
-    /// them.
-    ActiveRecording,
-    /// A series timer's: `showTitle`, `showSeriesTimerTime` and
-    /// `showSeriesTimerChannel`, which is the three lines `lines` writes.
-    SeriesTimer,
+pub struct Footer {
+    parent: Parent,
+    title: Title,
+    trailing: &'static [Line],
+    lines: Option<Lines>,
 }
 
 impl Footer {
+    /// The footer one call's options set, with `options.lines` unset.
+    pub const fn of(parent: Parent, title: Title, trailing: &'static [Line]) -> Footer {
+        Footer {
+            parent,
+            title,
+            trailing,
+            lines: None,
+        }
+    }
+
+    /// The same footer with `options.lines` set.
+    pub const fn lines(self, lines: Lines) -> Footer {
+        Footer {
+            lines: Some(lines),
+            ..self
+        }
+    }
+
     /// The lines this footer pushes, in the order `getCardFooterText` pushes
     /// them.
     // reference: card-footer-lines
     // reference: card-footer-options
-    pub fn pushed(self) -> &'static [Line] {
-        match self {
-            Footer::Bare => &[],
-            Footer::Name => &[Line::Name],
-            Footer::NameAndYear => &[Line::Name, Line::Year],
-            Footer::ParentAndName => &[Line::ParentTitle, Line::Name, Line::ParentTitleUnder],
-            Footer::ParentNameAndYear => &[
-                Line::ParentTitle,
-                Line::Name,
-                Line::ParentTitleUnder,
-                Line::Year,
-            ],
-            Footer::Channel => &[Line::Name, Line::CurrentProgram, Line::CurrentProgramTime],
-            Footer::Timer => &[Line::ParentTitle, Line::Name, Line::AirTime],
-            Footer::ActiveRecording => &[
-                Line::ParentTitle,
-                Line::Name,
-                Line::AirTime,
-                Line::ChannelName,
-            ],
-            Footer::SeriesTimer => &[Line::Name, Line::SeriesTimerTime, Line::SeriesTimerChannel],
-        }
-    }
-
-    /// The lines this footer writes: the pushes, capped where `options.lines`
-    /// caps them. A card writes this many lines whatever its own item answers,
-    /// where the reference drops a line no option pushed and lets two cards in
-    /// one run differ in height.
-    // reference: card-text-lines
-    pub fn written(self) -> usize {
-        let capped = match self {
-            Footer::ParentAndName | Footer::ParentNameAndYear => Some(2),
-            Footer::SeriesTimer => Some(3),
-            Footer::Bare
-            | Footer::Name
-            | Footer::NameAndYear
-            | Footer::Channel
-            | Footer::Timer
-            | Footer::ActiveRecording => None,
+    pub fn pushed(self) -> impl Iterator<Item = Line> {
+        let over = match (self.parent, self.title) {
+            (Parent::Withheld, _) => None,
+            (Parent::Shown, _) | (Parent::OrTitle, Title::Shown) => Some(Line::ParentTitle),
+            (Parent::OrTitle, Title::Withheld) => Some(Line::ParentTitleOrName),
         };
-        let pushed = self.pushed().len();
-        match capped {
-            Some(cap) => pushed.min(cap),
-            None => pushed,
+        let name = match self.title {
+            Title::Shown => Some(Line::Name),
+            Title::Withheld => None,
+        };
+        let under = match self.parent {
+            Parent::Shown => Some(Line::ParentTitleUnder),
+            Parent::Withheld | Parent::OrTitle => None,
+        };
+        over.into_iter()
+            .chain(name)
+            .chain(under)
+            .chain(self.trailing.iter().copied())
+    }
+
+    /// The lines this footer writes: `options.lines` where the call sets one,
+    /// and the lines its options push otherwise.
+    // reference: card-text-lines
+    pub fn written(self) -> Lines {
+        self.lines.unwrap_or(self.slots())
+    }
+
+    /// The lines of `written` an option can put text on. Every line past them
+    /// is the blank `getCardTextLines` fills with, whatever the item answers.
+    // reference: card-text-lines
+    pub fn said(self) -> Lines {
+        Lines {
+            count: self.written().count().min(self.slots().count()),
         }
     }
 
-    /// The lines a library's latest rail writes, which the library's own
+    /// The entries this footer's options put on `getCardFooterText`'s own list,
+    /// the parent-title option putting one wherever the item's type places it.
+    fn slots(self) -> Lines {
+        let parent = match self.parent {
+            Parent::Withheld => 0,
+            Parent::Shown | Parent::OrTitle => 1,
+        };
+        let title = match self.title {
+            Title::Shown => 1,
+            Title::Withheld => 0,
+        };
+        Lines {
+            count: parent + title + self.trailing.len(),
+        }
+    }
+
+    /// The footer a library's latest rail writes, which the library's own
     /// collection type decides.
     // reference: home-latest
     pub fn latest(collection: Option<CollectionType>) -> Footer {
         match collection {
-            Some(CollectionType::Movies) => Footer::NameAndYear,
-            Some(CollectionType::Tvshows) | None => Footer::ParentNameAndYear,
-            Some(CollectionType::Music) => Footer::ParentAndName,
+            Some(CollectionType::Movies) => {
+                Footer::of(Parent::Withheld, Title::Shown, &[Line::Year])
+            }
+            Some(CollectionType::Tvshows) | None => {
+                Footer::of(Parent::Shown, Title::Shown, &[Line::Year])
+            }
+            Some(CollectionType::Music) => Footer::of(Parent::Shown, Title::Shown, &[]),
+            Some(CollectionType::Photos) => Footer::of(Parent::Withheld, Title::Withheld, &[]),
             Some(
                 CollectionType::Unknown
                 | CollectionType::Musicvideos
@@ -199,12 +268,12 @@ impl Footer {
                 | CollectionType::Homevideos
                 | CollectionType::Boxsets
                 | CollectionType::Books
-                | CollectionType::Photos
                 | CollectionType::Livetv
                 | CollectionType::Playlists
                 | CollectionType::Folders,
-            ) => Footer::Name,
+            ) => Footer::of(Parent::Withheld, Title::Shown, &[]),
         }
+        .lines(Lines::TWO)
     }
 }
 
@@ -1183,15 +1252,20 @@ fn written(footer: Footer, footing: Footing) -> Drawn {
         top.plus(typeface::LINE_HEIGHT.of(size))
             .plus(space::card_text(size).bottom)
     };
-    let lines = footer.written();
-    if lines == 0 {
+    let said = footer.said().count();
+    let stacked = (0..footer.written().count())
+        .map(|at| match (at, at < said) {
+            (0, true) => line(typeface::BODY, space::CARD_TEXT_FIRST_TOP),
+            (_, true) => line(
+                typeface::SECONDARY,
+                space::card_text(typeface::SECONDARY).top,
+            ),
+            (_, false) => line(typeface::BODY, space::card_text(typeface::BODY).top),
+        })
+        .reduce(Length::plus);
+    let Some(stacked) = stacked else {
         return Drawn::ZERO;
-    }
-    let mut stacked = line(typeface::BODY, space::CARD_TEXT_FIRST_TOP);
-    for _ in 1..lines {
-        let size = typeface::SECONDARY;
-        stacked = stacked.plus(line(size, space::card_text(size).top));
-    }
+    };
     match footing {
         Footing::Bare => stacked.drawn(),
         Footing::Padded => space::CARD_FOOTER_PAD

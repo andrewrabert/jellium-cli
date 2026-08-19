@@ -5,7 +5,7 @@ use iced::{Element, Fill};
 use jellium_protocol::Session;
 use jellyfin_api::types::{BaseItemDto, TimerInfoDto};
 
-use super::{Action, clock};
+use super::Action;
 use crate::api::Api;
 use crate::app::Message;
 use crate::error::Answer;
@@ -41,7 +41,15 @@ fn active_card(recordings: &[BaseItemDto]) -> card::Drawing {
     );
     card::Drawing {
         card: card::Card::Wall(card::Shape::fitting(shared, card::Shape::Backdrop)),
-        footer: card::Footer::ActiveRecording,
+        // reference: livetv-schedule-active
+        footer: card::Footer::of(
+            card::Parent::OrTitle,
+            card::Title::Shown,
+            &[
+                card::Line::AirTime(card::AirTime::Ended),
+                card::Line::ChannelName,
+            ],
+        ),
         backing: card::Backing::Padder,
         footing: card::Footing::Bare,
         setting: card::Setting::Centred,
@@ -54,7 +62,11 @@ fn active_card(recordings: &[BaseItemDto]) -> card::Drawing {
 // reference: livetv-timer-cards
 pub const TIMER_CARD: card::Drawing = card::Drawing {
     card: card::Card::Wall(card::Shape::Backdrop),
-    footer: card::Footer::Timer,
+    footer: card::Footer::of(
+        card::Parent::OrTitle,
+        card::Title::Shown,
+        &[card::Line::AirTime(card::AirTime::Ended)],
+    ),
     backing: card::Backing::Paper,
     footing: card::Footing::Padded,
     setting: card::Setting::Leading,
@@ -231,22 +243,6 @@ fn days(timers: &[TimerInfoDto]) -> Vec<Day<'_>> {
     days
 }
 
-/// The times a card writes for an airing that names both ends, and nothing
-/// where it names neither.
-// reference: card-air-time
-fn airtime(
-    start: Option<chrono::DateTime<chrono::Utc>>,
-    end: Option<chrono::DateTime<chrono::Utc>>,
-) -> String {
-    let Some(start) = start else {
-        return String::new();
-    };
-    match end {
-        Some(end) => strings::format(Text::ProgramAirtime, &[&clock(start), &clock(end)]),
-        None => clock(start),
-    }
-}
-
 /// The image the Jellyfin server holds for `item`, asked at the width the card
 /// it is drawn on wants.
 fn key(id: uuid::Uuid, card: card::Card) -> images::Key {
@@ -303,7 +299,9 @@ fn active<'a>(
             card::Line::ParentTitle => card::Caption::of(name.clone()),
             // reference: card-display-name
             card::Line::Name => item.episode_title.clone().and_then(card::Caption::of),
-            card::Line::AirTime => card::Caption::of(airtime(item.start_date, item.end_date)),
+            card::Line::AirTime(shape) => {
+                crate::livetv::aired(shape, item.start_date, item.end_date)
+            }
             card::Line::ChannelName => item.channel_name.clone().and_then(card::Caption::of),
             _ => None,
         },
@@ -328,7 +326,6 @@ fn timed<'a>(
         .or(timer.name.clone())
         .unwrap_or_default();
     let episode = program.and_then(|held| held.episode_title.clone());
-    let times = airtime(timer.start_date, timer.end_date);
     let offered = overflow::commands(overflow::Subject::Timer(timer), session, None, now);
     let menu = (!offered.is_empty())
         .then_some(Message::OverflowAction(overflow::Action::Open { offered }));
@@ -369,7 +366,9 @@ fn timed<'a>(
             card::Line::ParentTitle => card::Caption::of(name.clone()),
             // reference: card-display-name
             card::Line::Name => episode.clone().and_then(card::Caption::of),
-            card::Line::AirTime => card::Caption::of(times.clone()),
+            card::Line::AirTime(shape) => {
+                crate::livetv::aired(shape, timer.start_date, timer.end_date)
+            }
             _ => None,
         },
     )

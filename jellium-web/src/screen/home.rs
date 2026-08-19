@@ -493,7 +493,13 @@ pub fn view<'a>(
                 widget::rail(
                     railed(
                         card::Card::resumed(resumed_media(section)),
-                        card::Footer::ParentNameAndYear,
+                        // reference: home-resume
+                        card::Footer::of(
+                            card::Parent::Shown,
+                            card::Title::Shown,
+                            &[card::Line::Year],
+                        )
+                        .lines(card::Lines::TWO),
                     ),
                     widget::Rail::of(Construct::ItemsContainer),
                     items,
@@ -530,7 +536,13 @@ pub fn view<'a>(
             widget::rail(
                 railed(
                     jellium_model::livetv::Section::OnNow.card(),
-                    card::Footer::ParentAndName,
+                    // reference: home-on-now-cards
+                    card::Footer::of(
+                        card::Parent::OrTitle,
+                        card::Title::Shown,
+                        &[card::Line::AirTime(card::AirTime::Ended)],
+                    )
+                    .lines(card::Lines::THREE),
                 ),
                 widget::Rail::of(Construct::ItemsContainer),
                 state.on_now.held().iter(),
@@ -550,7 +562,11 @@ pub fn view<'a>(
                 Message::Navigated(Route::Home { tab: Tab::Home }),
             ),
             widget::rail(
-                railed(card::Card::NEXT_UP, card::Footer::ParentAndName),
+                railed(
+                    card::Card::NEXT_UP,
+                    // reference: home-next-up
+                    card::Footer::of(card::Parent::Shown, card::Title::Shown, &[]),
+                ),
                 widget::Rail::of(Construct::ItemsContainer),
                 state.next_up.held().iter(),
                 Room::content(viewport),

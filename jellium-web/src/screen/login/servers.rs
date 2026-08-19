@@ -15,7 +15,7 @@ use super::Action;
 // reference: select-server-card
 const SAVED: card::Drawing = card::Drawing {
     card: card::Card::Rail(card::Rail::Square),
-    footer: card::Footer::Name,
+    footer: card::Footer::of(card::Parent::Withheld, card::Title::Shown, &[]),
     backing: card::Backing::Padder,
     footing: card::Footing::Padded,
     setting: card::Setting::Centred,

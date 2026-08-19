@@ -39,7 +39,7 @@ pub fn images(state: &super::State) -> std::collections::HashSet<Uuid> {
 // reference: login-user-card
 const PICKED: card::Drawing = card::Drawing {
     card: card::Card::Wall(card::Shape::Square),
-    footer: card::Footer::Name,
+    footer: card::Footer::of(card::Parent::Withheld, card::Title::Shown, &[]),
     backing: card::Backing::Padder,
     footing: card::Footing::Padded,
     setting: card::Setting::Centred,

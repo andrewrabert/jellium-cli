@@ -22,12 +22,12 @@ use crate::widget;
 use crate::widget::overlap::Overlapping;
 use crate::widget::prose;
 
-/// The card a detail page's children draw on, over the two lines a wall writes
-/// under one.
+/// The card a detail page's children draw on, over the one line a season card
+/// writes under it.
 // reference: card-box-classes
 const CHILDREN: card::Drawing = card::Drawing {
     card: card::Card::Wall(card::Shape::Portrait),
-    footer: card::Footer::Name,
+    footer: card::Footer::of(card::Parent::Withheld, card::Title::Shown, &[]),
     backing: card::Backing::Padder,
     footing: card::Footing::Bare,
     setting: card::Setting::Centred,
@@ -45,11 +45,17 @@ fn alike(kind: Option<BaseItemKind>) -> card::Drawing {
         card: card::Card::Rail(card::Rail::Portrait),
         // reference: detail-similar-cards
         footer: match kind {
-            Some(BaseItemKind::MusicAlbum) => card::Footer::ParentAndName,
-            Some(BaseItemKind::Movie | BaseItemKind::Trailer | BaseItemKind::Series) => {
-                card::Footer::NameAndYear
+            Some(BaseItemKind::MusicAlbum) => {
+                card::Footer::of(card::Parent::Shown, card::Title::Shown, &[])
             }
-            Some(_) | None => card::Footer::Name,
+            Some(BaseItemKind::Movie | BaseItemKind::Trailer | BaseItemKind::Series) => {
+                card::Footer::of(
+                    card::Parent::Withheld,
+                    card::Title::Shown,
+                    &[card::Line::Year],
+                )
+            }
+            Some(_) | None => card::Footer::of(card::Parent::Withheld, card::Title::Shown, &[]),
         },
         backing: card::Backing::Padder,
         footing: card::Footing::Bare,

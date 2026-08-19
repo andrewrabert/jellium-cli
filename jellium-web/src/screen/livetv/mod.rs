@@ -24,14 +24,6 @@ use crate::text::{self as strings, Text};
 use crate::widget::{self, prose};
 use crate::window;
 
-/// A time of day as `getDisplayTime` writes one.
-// reference: card-air-time
-pub fn clock(at: DateTime<Utc>) -> String {
-    DateTime::<chrono::Local>::from(at)
-        .format("%H:%M")
-        .to_string()
-}
-
 /// Which of the five tabs the Live TV screen shows.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum Tab {

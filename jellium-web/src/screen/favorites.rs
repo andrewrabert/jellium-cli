@@ -24,8 +24,8 @@ use crate::widget;
 /// The reference pages this screen draws.
 pub const DRAWS: &[Page] = &[Page::Home];
 
-/// One favourites rail's card: the section's own shape over the two lines a
-/// rail writes under it.
+/// One favourites rail's card: the section's own shape over the lines that
+/// section's own options write under it.
 // reference: favorites-shapes
 fn railed(section: Section) -> card::Drawing {
     card::Drawing {

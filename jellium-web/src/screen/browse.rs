@@ -122,18 +122,28 @@ fn toggled<T: PartialEq>(held: &mut Vec<T>, value: T, membership: Membership) {
 }
 
 /// The card a library grid draws: the shape the library's own controller
-/// writes, over the two lines the grid writes under it.
+/// writes, over the lines that controller's own options write under it.
 // reference: grid-card
 fn wall(collection: Option<CollectionType>, aspect: Option<Aspect>) -> card::Drawing {
     card::Drawing {
         card: Card::grid(collection, aspect),
-        // reference: grid-card-album
         footer: match collection {
-            Some(CollectionType::Music) => card::Footer::ParentAndName,
+            // reference: grid-card
+            // reference: grid-card-series
+            Some(CollectionType::Movies | CollectionType::Tvshows) => card::Footer::of(
+                card::Parent::Withheld,
+                card::Title::Shown,
+                &[card::Line::Year],
+            ),
+            // reference: grid-card-album
+            Some(CollectionType::Music) => {
+                card::Footer::of(card::Parent::Shown, card::Title::Shown, &[])
+            }
+            // reference: list-poster-options
+            // reference: list-card-parent
+            // reference: list-card-lines
             Some(
                 CollectionType::Unknown
-                | CollectionType::Movies
-                | CollectionType::Tvshows
                 | CollectionType::Musicvideos
                 | CollectionType::Trailers
                 | CollectionType::Homevideos
@@ -144,7 +154,10 @@ fn wall(collection: Option<CollectionType>, aspect: Option<Aspect>) -> card::Dra
                 | CollectionType::Playlists
                 | CollectionType::Folders,
             )
-            | None => card::Footer::NameAndYear,
+            | None => {
+                card::Footer::of(card::Parent::Shown, card::Title::Shown, &[card::Line::Year])
+                    .lines(card::Lines::TWO)
+            }
         },
         backing: card::Backing::Padder,
         footing: card::Footing::Bare,

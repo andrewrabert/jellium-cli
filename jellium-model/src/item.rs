@@ -1,6 +1,7 @@
 //! The `BaseItemDto` fields the metadata manager edits, written through one
 //! `form::Form` so a save preserves every field no control covers.
 
+use chrono::Datelike;
 use jellyfin_api::types::{BaseItemDto, BaseItemKind, LocationType, MediaType, MetadataField};
 
 use crate::appearance::Share;
@@ -661,6 +662,55 @@ pub fn parent_under(item: &BaseItemDto) -> Option<String> {
     match artists.is_empty() {
         true => parent_named(item),
         false => Some(artists.join(" / ")),
+    }
+}
+
+/// A calendar year as the Jellyfin server reports one.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct Year {
+    year: i32,
+}
+
+impl Year {
+    pub fn written(self) -> String {
+        self.year.to_string()
+    }
+}
+
+/// What `showYear` writes under a card.
+// reference: card-footer-options
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Run {
+    /// A series the server still calls continuing: its first year where it
+    /// names one, and `SeriesYearToPresent` whether it names one or not.
+    Continuing(Option<Year>),
+    /// A series that ended in a year later than the one it began in.
+    Ended(Year, Year),
+    /// One year, which every other item writes and which a series ending in the
+    /// year it began writes.
+    Made(Year),
+}
+
+/// The run `showYear` writes for an item, and none where it writes nothing.
+// the end year is read in the local zone, which is where `getFullYear` reads it
+// reference: card-footer-options
+pub fn run(item: &BaseItemDto) -> Option<Run> {
+    let made = item.production_year.truthy().map(|year| Year { year });
+    if item.type_ != Some(BaseItemKind::Series) {
+        return made.map(Run::Made);
+    }
+    if item.status.as_deref() == Some("Continuing") {
+        return Some(Run::Continuing(made));
+    }
+    let (Some(made), Some(end)) = (made, item.end_date) else {
+        return made.map(Run::Made);
+    };
+    let ended = Year {
+        year: chrono::DateTime::<chrono::Local>::from(end).year(),
+    };
+    match ended == made {
+        true => Some(Run::Made(made)),
+        false => Some(Run::Ended(made, ended)),
     }
 }
 

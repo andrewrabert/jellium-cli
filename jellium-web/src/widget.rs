@@ -23,7 +23,6 @@ use jellium_model::construct::Construct;
 #[cfg(test)]
 use jellium_model::construct::Page;
 use jellium_model::item::{self, Mark};
-use jellium_model::truthy::Truthy;
 use jellium_protocol::{Session, SyncAccess};
 use jellyfin_api::types::{BaseItemDto, BaseItemKind};
 use uuid::Uuid;
@@ -221,15 +220,26 @@ pub fn caption(item: &BaseItemDto, line: card::Line) -> Option<card::Caption> {
             }
             item::Title::Plain(name) => card::Caption::of(name),
         },
+        card::Line::ParentTitleOrName => item::parent_over(item)
+            .and_then(card::Caption::of)
+            .or_else(|| caption(item, card::Line::Name)),
         card::Line::ParentTitleUnder => item::parent_under(item).and_then(card::Caption::of),
-        card::Line::Year => item
-            .production_year
-            .truthy()
-            .map(|year| year.to_string())
-            .and_then(card::Caption::of),
-        card::Line::AirTime
-        | card::Line::ChannelName
-        | card::Line::CurrentProgram
+        // reference: card-footer-options
+        card::Line::Year => match item::run(item)? {
+            item::Run::Continuing(first) => card::Caption::of(strings::format(
+                Text::CardSeriesToPresent,
+                &[&first.map(item::Year::written).unwrap_or_default()],
+            )),
+            item::Run::Ended(first, last) => card::Caption::of(strings::format(
+                Text::CardSeriesRun,
+                &[&first.written(), &last.written()],
+            )),
+            item::Run::Made(year) => card::Caption::of(year.written()),
+        },
+        // reference: card-air-time
+        card::Line::AirTime(shape) => crate::livetv::aired(shape, item.start_date, item.end_date),
+        card::Line::ChannelName => item.channel_name.clone().and_then(card::Caption::of),
+        card::Line::CurrentProgram
         | card::Line::CurrentProgramTime
         | card::Line::SeriesTimerTime
         | card::Line::SeriesTimerChannel => None,
@@ -422,15 +432,14 @@ fn boxed<'a>(
 // reference: card-text-lines
 const FILLER: &str = "\u{a0}";
 
-/// A card's first line, in the lettering `.cardText-first` writes it in, and
-/// the reference's own blank where the footer writes no line there.
+/// A card's first written line, in the lettering `.cardText-first` writes it in.
 // reference: card-text
 // reference: card-text-first
 // reference: card-text-lines
-fn named<'a>(name: Option<card::Caption>) -> Element<'a, Message> {
+fn first<'a>(said: card::Caption) -> Element<'a, Message> {
     carded(
         line(
-            name.map_or_else(|| FILLER.to_owned(), card::Caption::into_string),
+            said.into_string(),
             typeface::BODY,
             typeface::Weight::Regular,
             typeface::LINE_HEIGHT,
@@ -440,14 +449,14 @@ fn named<'a>(name: Option<card::Caption>) -> Element<'a, Message> {
     )
 }
 
-/// One line under a card's first, in the secondary lettering
-/// `.cardText-secondary` writes it in, and that same blank where the footer
-/// writes no line there.
+/// One line under a card's first, in the lettering `.cardText-secondary`
+/// writes it in.
+// reference: card-text
 // reference: card-text-lines
-fn beneath<'a>(said: Option<card::Caption>) -> Element<'a, Message> {
+fn beneath<'a>(said: card::Caption) -> Element<'a, Message> {
     carded(
         tinted(
-            said.map_or_else(|| FILLER.to_owned(), card::Caption::into_string),
+            said.into_string(),
             typeface::SECONDARY,
             typeface::Weight::Regular,
             typeface::LINE_HEIGHT,
@@ -455,6 +464,24 @@ fn beneath<'a>(said: Option<card::Caption>) -> Element<'a, Message> {
         ),
         typeface::SECONDARY,
         space::card_text(typeface::SECONDARY).top,
+    )
+}
+
+/// A line in `.cardText` alone, which is what `getCardTextLines` fills an
+/// unwritten place with and what `UserCardBox` writes its account's name in.
+// reference: card-text
+// reference: card-text-lines
+// reference: user-card
+fn plain<'a>(said: String) -> Element<'a, Message> {
+    carded(
+        line(
+            said,
+            typeface::BODY,
+            typeface::Weight::Regular,
+            typeface::LINE_HEIGHT,
+        ),
+        typeface::BODY,
+        space::card_text(typeface::BODY).top,
     )
 }
 
@@ -852,19 +879,24 @@ pub fn card<'a>(
     poster: Poster,
     written: impl Fn(card::Line) -> Option<card::Caption>,
 ) -> Element<'a, Message> {
-    let counted = drawing.footer.written();
+    let counted = drawing.footer.written().count();
     let mut said: Vec<Option<card::Caption>> = drawing
         .footer
         .pushed()
-        .iter()
-        .filter_map(|line| written(*line))
+        .filter_map(&written)
         .map(Some)
         .take(counted)
         .collect();
     said.resize(counted, None);
-    let mut lines = said.into_iter();
-    let mut drawn: Vec<Element<'a, Message>> = lines.next().map(named).into_iter().collect();
-    drawn.extend(lines.map(beneath));
+    let drawn: Vec<Element<'a, Message>> = said
+        .into_iter()
+        .enumerate()
+        .map(|(at, caption)| match (at, caption) {
+            (_, None) => plain(FILLER.to_owned()),
+            (0, Some(said)) => first(said),
+            (_, Some(said)) => beneath(said),
+        })
+        .collect();
 
     let stood = marked(
         progressed(
@@ -1680,7 +1712,7 @@ pub fn library_tile<'a>(
 // reference: home-library-tiles
 pub const TILE: card::Drawing = card::Drawing {
     card: card::Card::LIBRARY,
-    footer: card::Footer::Name,
+    footer: card::Footer::of(card::Parent::Withheld, card::Title::Shown, &[]),
     backing: card::Backing::Padder,
     footing: card::Footing::Bare,
     setting: card::Setting::Centred,
@@ -2290,7 +2322,7 @@ pub fn user_card<'a>(
         button(frame).style(style::flat).on_press(opens).into(),
         Some(footed(
             vec![
-                named(card::Caption::of(name)),
+                plain(name),
                 carded(
                     secondary,
                     typeface::SECONDARY,

@@ -216,14 +216,28 @@ pub fn card(section: Section, aspect: Option<Aspect>) -> card::Drawing {
     }
 }
 
-/// What this section writes under a card.
+/// What this section writes under a card. A programme result writes its own
+/// name, the date and time it airs and its channel, and no separate title line.
 // reference: search-section-cards
 fn footer(section: Section) -> card::Footer {
     match section {
-        Section::Movies | Section::Shows | Section::Albums => card::Footer::NameAndYear,
-        Section::Episodes | Section::Songs | Section::Videos | Section::Programs => {
-            card::Footer::ParentAndName
+        Section::Movies | Section::Shows | Section::Albums => card::Footer::of(
+            card::Parent::Withheld,
+            card::Title::Shown,
+            &[card::Line::Year],
+        ),
+        Section::Episodes | Section::Songs | Section::Videos => {
+            card::Footer::of(card::Parent::Shown, card::Title::Shown, &[])
         }
+        // reference: search-livetv-cards
+        Section::Programs => card::Footer::of(
+            card::Parent::OrTitle,
+            card::Title::Withheld,
+            &[
+                card::Line::AirTime(card::AirTime::Dated),
+                card::Line::ChannelName,
+            ],
+        ),
         Section::People
         | Section::Playlists
         | Section::Artists
@@ -233,7 +247,7 @@ fn footer(section: Section) -> card::Footer {
         | Section::AudioBooks
         | Section::Books
         | Section::Collections
-        | Section::Studios => card::Footer::Name,
+        | Section::Studios => card::Footer::of(card::Parent::Withheld, card::Title::Shown, &[]),
     }
 }
 

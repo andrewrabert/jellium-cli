@@ -838,6 +838,14 @@ fn written(initializer: &str) -> Written {
                     spellings: vec![Spelling::Measured(Count::of(100.0 / cards, Unit::Percent))],
                 }]
             }
+            // `options.lines`, which the reference writes as a bare count
+            ("lines", "of") => {
+                let Ok(lines) = number else { continue };
+                vec![Measure::Spelt {
+                    named: trimmed(lines),
+                    spellings: vec![Spelling::Measured(Count::of(lines, Unit::Bare))],
+                }]
+            }
             ("perrow", "cards") => {
                 let Ok(cards) = number else { continue };
                 vec![Measure::Spelt {

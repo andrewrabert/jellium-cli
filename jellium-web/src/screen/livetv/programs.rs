@@ -23,13 +23,13 @@ use crate::widget;
 /// The reference pages this screen draws.
 pub const DRAWS: &[Page] = &[Page::Livetv];
 
-/// One rail of the Programs tab: the section's own card shape over the two
-/// lines a programme rail writes.
+/// One rail of the Programs tab: the section's own card shape over the lines
+/// that section's own options write under it.
 // reference: programs-shapes
 fn railed(section: Section) -> card::Drawing {
     card::Drawing {
         card: section.card(),
-        footer: card::Footer::ParentAndName,
+        footer: section.footer(),
         backing: card::Backing::Padder,
         footing: card::Footing::Bare,
         setting: card::Setting::Centred,

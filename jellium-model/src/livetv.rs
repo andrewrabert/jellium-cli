@@ -497,6 +497,36 @@ impl Section {
             }
         }
     }
+
+    /// The lines one programme rail writes: every rail writes the time the
+    /// programme airs, the Movies rail withholds the series name, and the News
+    /// rail writes the programme's name in place of a title line.
+    // reference: programs-shapes
+    // reference: programs-query
+    pub fn footer(self) -> card::Footer {
+        match self {
+            Section::OnNow => card::Footer::of(
+                card::Parent::Shown,
+                card::Title::Shown,
+                &[card::Line::AirTime(card::AirTime::Ended)],
+            ),
+            Section::Shows | Section::Sports | Section::Kids => card::Footer::of(
+                card::Parent::Shown,
+                card::Title::Shown,
+                &[card::Line::AirTime(card::AirTime::Dated)],
+            ),
+            Section::Movies => card::Footer::of(
+                card::Parent::Withheld,
+                card::Title::Shown,
+                &[card::Line::AirTime(card::AirTime::Dated)],
+            ),
+            Section::News => card::Footer::of(
+                card::Parent::OrTitle,
+                card::Title::Withheld,
+                &[card::Line::AirTime(card::AirTime::Dated)],
+            ),
+        }
+    }
 }
 
 /// How many programmes one section asks for: nine on the desktop band, twelve
