@@ -167,6 +167,11 @@ pub enum View {
 pub enum Message {
     /// The navigation drawer's own control was pressed.
     DrawerToggled,
+    /// The mask over the page was pressed, which is `clickMaskClose`.
+    DrawerDismissed,
+    /// A row of the navigation drawer was pressed, carrying what that row does;
+    /// the drawer closes and that message follows, which is `onMainDrawerClick`.
+    DrawerRowPressed(Box<Message>),
     /// Where a rail now stands, from the scroller's own `on_scroll`.
     RailScrolled {
         rail: crate::widget::Rail,
@@ -1265,6 +1270,14 @@ impl Jellium {
                     widget::Drawer::Closed => widget::Drawer::Open,
                 };
                 Task::none()
+            }
+            Message::DrawerDismissed => {
+                self.drawer = widget::Drawer::Closed;
+                Task::none()
+            }
+            Message::DrawerRowPressed(chose) => {
+                self.drawer = widget::Drawer::Closed;
+                Task::done(*chose)
             }
             Message::RailScrolled { rail, at } => {
                 if let Some(signed) = self.signed() {
@@ -3196,14 +3209,6 @@ impl Jellium {
                     ),
                     body,
                 ];
-                if self.drawer == widget::Drawer::Open {
-                    page = page.push(widget::main_drawer(
-                        &signed.session,
-                        signed.libraries(),
-                        self.viewport,
-                    ));
-                }
-
                 if let Some(menu) = menu {
                     page = page.push(menu);
                 }
@@ -3263,7 +3268,17 @@ impl Jellium {
                             .and_then(|page| page.notice.as_ref())
                             .map(|notice| widget::toast(None, notice.clone())),
                     );
-                let page = widget::toasted(page.into(), raised);
+                let page: Element<'_, Message> = match self.drawer {
+                    widget::Drawer::Open => widget::main_drawer(
+                        page.into(),
+                        &signed.session,
+                        signed.libraries(),
+                        crate::page::screen(),
+                        self.viewport,
+                    ),
+                    widget::Drawer::Closed => page.into(),
+                };
+                let page = widget::toasted(page, raised);
                 match self
                     .browsing()
                     .and_then(|browse| crate::screen::browse::letters(browse, self.viewport))

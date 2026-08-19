@@ -716,6 +716,8 @@ header-slots	src/styles/librarybrowser.scss	153	170	3e02665cecc8f171bf76d0fe7cd9
 nav-drawer	src/lib/navdrawer/navdrawer.scss	1	37	86cecdb2166009d02e82c6f1f31acbdf4a647307201b9f87abf144309b410a50	ported
 nav-menu-option	src/styles/librarybrowser.scss	254	301	6b07c82433a4f2aa3ca9fc86b0ed6acec485652387469f45d2f87e9b3716a569	ported
 main-drawer-scroll	src/styles/librarybrowser.scss	329	331	803e521fe170727106161e8f9323a6cfe8cd7e8524f038c552b2936effe59fa6	ported
+nav-drawer-mask	src/lib/navdrawer/navdrawer.scss	39	51	28d87c736576d4aa84916bcc19863944934107b011c03704937bbe566632383f	ported
+nav-drawer-width	src/scripts/libraryMenu.js	656	665	6d2c3b778464841dafca45791b6b66a69c3d1b3d2a9b0e598fa428498ae66758	ported
 blurhash-decode	src/components/images/imageLoader.js	55	56	e82e62316020c4e6ce7b31419b89cce60ebba825054dbd2e05ae48236546af1f	ported
 blurhash-punch	src/components/common/Image.tsx	42	44	d1c684ce5b98197fbcc5afa16423c7411ae1898dc10e1a2c24d4183ba79f628c	ported
 blurhash-canvas	src/components/images/imageLoader.js	29	48	5a9ea1aceffac232808975ec82e674a7a528e9c5b73188a1dc6bb1823b2573b7	ported

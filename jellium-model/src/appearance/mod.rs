@@ -51,6 +51,18 @@ impl Css {
         Css::of(self.count - other.count)
     }
 
+    /// This measure held between `floor` and `ceiling`, which is what a script
+    /// writes as a `Math.min` over a `Math.max`.
+    pub fn held(self, floor: Css, ceiling: Css) -> Css {
+        match self < floor {
+            true => floor,
+            false => match self > ceiling {
+                true => ceiling,
+                false => self,
+            },
+        }
+    }
+
     /// MUI's `pxToRem`: this count of css pixels as the design length it is
     /// over the 16px base.
     pub const fn length(self) -> Length {
@@ -587,8 +599,8 @@ impl Viewport {
     }
 }
 
-/// What the display offers the page, which is only ever asked whether the page
-/// can be resized inside it.
+/// What the display offers, which the drawer's width is taken from and the
+/// page's resizability tested against.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Screen {
     available: Css,
@@ -598,6 +610,20 @@ pub struct Screen {
 /// resizable inside it.
 // reference: card-resizable
 const RESIZABLE_BY: Css = Css::unitless(20.0);
+
+/// The room the reference leaves beside the open navigation drawer, which the
+/// drawer's width is the display less.
+// reference: nav-drawer-width
+const MAIN_DRAWER_BESIDE: Css = Css::unitless(50.0);
+
+/// The narrowest the navigation drawer is drawn, which is also its width where
+/// the page reports no display.
+// reference: nav-drawer-width
+const MAIN_DRAWER_NARROWEST: Css = Css::unitless(240.0);
+
+/// The widest the navigation drawer is drawn.
+// reference: nav-drawer-width
+const MAIN_DRAWER_WIDEST: Css = Css::unitless(320.0);
 
 impl Screen {
     pub fn new(available: Css) -> Screen {
@@ -609,6 +635,15 @@ impl Screen {
     // reference: card-resizable
     pub fn resizable(self, viewport: Viewport) -> bool {
         self.available.less(viewport.width()) > RESIZABLE_BY
+    }
+
+    /// `getNavDrawerOptions`: this display less the room left beside the
+    /// drawer, held between the drawer's narrowest and its widest.
+    // reference: nav-drawer-width
+    pub fn main_drawer_width(self) -> Css {
+        self.available
+            .less(MAIN_DRAWER_BESIDE)
+            .held(MAIN_DRAWER_NARROWEST, MAIN_DRAWER_WIDEST)
     }
 }
 

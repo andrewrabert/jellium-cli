@@ -278,6 +278,11 @@ pub const TOAST: Color = Color::rgb(0x30, 0x30, 0x30);
 // reference: scheme-toast
 pub const ON_TOAST: Color = Color::rgba(0xff, 0xff, 0xff, Alpha::thousandths(870));
 
+/// `.tmla-mask`'s own paint, which is what covers the page while the navigation
+/// drawer stands over it.
+// reference: nav-drawer-mask
+pub const MAIN_DRAWER_MASK: Color = Color::rgba(0x00, 0x00, 0x00, Alpha::thousandths(300));
+
 /// The near end of a scrim's gradient, which is the page's own background at
 /// three quarters.
 // reference: osd-bottom

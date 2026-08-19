@@ -233,6 +233,13 @@ pub fn scrim(_theme: &iced::Theme) -> iced::widget::container::Style {
     iced::widget::container::Style::default().background(color(scheme::DIALOG_BACKDROP))
 }
 
+/// `.tmla-mask`: what the page is covered by while the navigation drawer stands
+/// over it.
+// reference: nav-drawer-mask
+pub fn main_drawer_mask(_theme: &iced::Theme) -> iced::widget::container::Style {
+    iced::widget::container::Style::default().background(color(scheme::MAIN_DRAWER_MASK))
+}
+
 /// The background a screen drawn over the video element carries.
 pub fn over_video(_theme: &iced::Theme) -> iced::widget::container::Style {
     iced::widget::container::Style::default().background(color(scheme::BACKGROUND))

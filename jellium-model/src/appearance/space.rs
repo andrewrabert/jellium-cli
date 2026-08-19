@@ -10,8 +10,8 @@ use crate::construct::PageClass;
 use super::scheme::{self, Color};
 use super::typeface;
 use super::{
-    Across, Breakpoint, Canvas, Cap, Columns, Css, Drawn, Layout, Length, Letters, Orientation,
-    Query, Ratio, Share, Viewport,
+    Across, Breakpoint, Canvas, Cap, Columns, Css, Drawn, Layout, Length, Letters,
+    MAIN_DRAWER_NARROWEST, Orientation, Query, Ratio, Screen, Share, Viewport,
 };
 
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -347,6 +347,21 @@ pub const SIDEBAR_HEADER_MARGIN: Padding = Padding {
 /// own rows take.
 // reference: nav-menu-option
 pub const SIDEBAR_HEADER_LEAD: Length = Length::em(1.2);
+
+/// `.mainDrawer`'s own width, which the reference computes from the display
+/// rather than writing in its stylesheet, and the narrowest that clamp allows
+/// where the page reports no display.
+// reference: nav-drawer-width
+pub fn main_drawer_width(screen: Option<Screen>, layout: Layout) -> Drawn {
+    match screen {
+        Some(screen) => screen.main_drawer_width().drawn(layout),
+        None => MAIN_DRAWER_NARROWEST.drawn(layout),
+    }
+}
+
+/// `.mainDrawer-scrollContainer`'s own room under its last row.
+// reference: main-drawer-scroll
+pub const MAIN_DRAWER_SCROLL_BOTTOM: Share = Share::units(10.0);
 
 /// Where the reference stops reserving a tabbed page's taller room.
 // reference: page-class-top-wide

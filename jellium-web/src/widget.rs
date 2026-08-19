@@ -14,7 +14,8 @@ pub mod table;
 use std::borrow::Cow;
 
 use iced::widget::{
-    Space, button, column, container, grid, image, rich_text, row, scrollable, span, stack, text,
+    Space, button, column, container, grid, image, mouse_area, rich_text, row, scrollable, span,
+    stack, text,
 };
 use iced::{Element, Fill, Length};
 use jellium_model::appearance::blur;
@@ -35,7 +36,9 @@ use crate::livetv::{Channel, Program, Recording};
 use crate::player::group::Joined;
 use crate::route::Route;
 use crate::style::space::Room;
-use crate::style::{self, Drawn, Layout, Share, Viewport, card, scheme, scroll, space, typeface};
+use crate::style::{
+    self, Drawn, Layout, Screen, Share, Viewport, card, scheme, scroll, space, typeface,
+};
 use crate::text::{self as strings, Text};
 
 /// The reference pages this module draws, which is every page: the fixed header
@@ -1902,7 +1905,7 @@ fn drawer_row<'a>(
     construct::navigation(
         Construct::NavMenuOption,
         None,
-        opens,
+        Message::DrawerRowPressed(Box::new(opens)),
         row![
             construct::silent(
                 Construct::NavMenuOptionIcon,
@@ -1930,7 +1933,11 @@ fn drawer_row<'a>(
     )
 }
 
-/// `.mainDrawer`: Home, then a Media heading over one row per library with that
+/// `.mainDrawer` over `page`: `.tmla-mask` covering the whole page and taking
+/// the press that closes the drawer, and the drawer itself against the leading
+/// edge over that mask, at the width the display allows and the full height of
+/// the page.
+/// Its rows are Home, then a Media heading over one row per library with that
 /// library's own glyph and the Guide row after Live TV, then an Administration
 /// heading over Dashboard and Metadata Manager for an administrator, then a
 /// User heading over Select Server, Settings and Sign Out.
@@ -1939,11 +1946,15 @@ fn drawer_row<'a>(
 /// No Exit row stands here: `RESOLVED` gives `AppFeature::ExitMenu` false and
 /// so no row of `reference/constructs.tsv` names it.
 // reference: nav-drawer
+// reference: nav-drawer-mask
+// reference: nav-drawer-width
 // reference: nav-menu-option
 // reference: main-drawer-scroll
 pub fn main_drawer<'a>(
+    page: Element<'a, Message>,
     session: &'a Session,
     libraries: &'a [BaseItemDto],
+    screen: Option<Screen>,
     viewport: Viewport,
 ) -> Element<'a, Message> {
     let heading = |said| {
@@ -2037,17 +2048,33 @@ pub fn main_drawer<'a>(
         ));
     }
 
-    construct::silent(
+    let drawer = construct::silent(
         Construct::MainDrawer,
-        container(scrolled(held))
-            .width(style::drawn(
-                space::page_side(viewport.canvas())
-                    .times(jellium_model::appearance::Ratio::thousandths(4000)),
-            ))
-            .height(Fill)
-            .style(style::page)
-            .into(),
-    )
+        container(scrolled(container(held).padding(
+            iced::Padding::ZERO.bottom(style::drawn(
+                space::MAIN_DRAWER_SCROLL_BOTTOM.of(viewport.canvas().height()),
+            )),
+        )))
+        .width(style::drawn(space::main_drawer_width(
+            screen,
+            viewport.layout(),
+        )))
+        .height(Fill)
+        .style(style::page)
+        .into(),
+    );
+    stack![
+        page,
+        mouse_area(
+            container(Space::new())
+                .width(Fill)
+                .height(Fill)
+                .style(style::main_drawer_mask)
+        )
+        .on_press(Message::DrawerDismissed),
+        container(drawer).align_left(Fill).height(Fill),
+    ]
+    .into()
 }
 
 /// One notice as the reference draws one: a card carrying its header over its

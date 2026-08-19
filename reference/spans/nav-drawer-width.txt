@@ -1,0 +1,10 @@
+function getNavDrawerOptions() {
+    let drawerWidth = window.screen.availWidth - 50;
+    drawerWidth = Math.max(drawerWidth, 240);
+    drawerWidth = Math.min(drawerWidth, 320);
+    return {
+        target: navDrawerElement,
+        onChange: onMainDrawerSelect,
+        width: drawerWidth
+    };
+}
