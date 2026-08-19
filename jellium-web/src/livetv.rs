@@ -3,7 +3,7 @@ use chrono::{DateTime, Utc};
 pub use jellium_model::livetv::{Badge, Channel, Marque, Program, Recording};
 
 use crate::style::card;
-use crate::text::{self as strings, Text};
+use crate::text::{self as strings, Template};
 
 /// A time of day as `getDisplayTime` writes one.
 // reference: card-air-time
@@ -24,11 +24,11 @@ pub fn aired(
     let start = start?;
     let written = match (shape, end) {
         (card::AirTime::Ended, Some(end)) => {
-            strings::format(Text::ProgramAirtime, &[&clock(start), &clock(end)])
+            strings::format(Template::ProgramAirtime, &[&clock(start), &clock(end)])
         }
         (card::AirTime::Ended, None) => clock(start),
         (card::AirTime::Dated, _) => strings::format(
-            Text::ProgramAirDate,
+            Template::ProgramAirDate,
             &[
                 &DateTime::<chrono::Local>::from(start)
                     .format("%a, %b %-d")
@@ -43,7 +43,7 @@ pub fn aired(
 /// The start and end of a program, as the display and the guide write them.
 pub fn airtime(program: &Program) -> String {
     strings::format(
-        Text::ProgramAirtime,
+        Template::ProgramAirtime,
         &[&clock(program.start), &clock(program.end)],
     )
 }

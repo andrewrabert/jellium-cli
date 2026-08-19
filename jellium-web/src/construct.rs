@@ -14,7 +14,7 @@ use jellium_model::construct::{Construct, Page, PageClass};
 
 use crate::app::Message;
 use crate::style::{self, Viewport};
-use crate::text::Text;
+use crate::text::Said;
 
 /// One construct this client draws that the reference has no counterpart for,
 /// each a row of `reference/exemptions.tsv`.
@@ -64,7 +64,7 @@ fn room(pages: &'static [Page], viewport: Viewport) -> f32 {
 /// section title button over its own `section-title-cards`.
 pub fn navigation<'a>(
     construct: Construct,
-    said: Option<Text>,
+    said: Option<Said>,
     opens: Message,
     held: Element<'a, Message>,
 ) -> Element<'a, Message> {
@@ -77,7 +77,7 @@ pub fn navigation<'a>(
 /// wrapping it in neither a link nor a button.
 pub fn stated<'a>(
     construct: Construct,
-    said: Text,
+    said: Said,
     held: Element<'a, Message>,
 ) -> Element<'a, Message> {
     container(held).id(spoken(construct, Some(said))).into()
@@ -102,7 +102,7 @@ pub fn own<'a>(own: Own, held: Element<'a, Message>) -> Element<'a, Message> {
 
 /// The widget id one construct stands under: the reference's own name for it,
 /// and the sentence it carries where it carries one.
-fn spoken(construct: Construct, said: Option<Text>) -> iced::widget::Id {
+fn spoken(construct: Construct, said: Option<Said>) -> iced::widget::Id {
     match said {
         Some(said) => iced::widget::Id::from(format!("{construct:?}/{}", said.key())),
         None => iced::widget::Id::from(format!("{construct:?}")),

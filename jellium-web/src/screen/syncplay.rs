@@ -6,7 +6,7 @@ use crate::app::Message;
 use crate::icon::Icon;
 use crate::player::group::{self, Joined};
 use crate::style::{self, Viewport, space, typeface};
-use crate::text::{self as strings, Text};
+use crate::text::{self as strings, Template, Text};
 use crate::widget::prose;
 use crate::widget::sheet::{Entry, Item, sheet};
 
@@ -21,7 +21,7 @@ fn state_label(state: GroupState) -> Text {
 
 fn participants(group: &Group) -> String {
     strings::format(
-        Text::SyncPlayParticipants,
+        Template::SyncPlayParticipants,
         &[&group.participants.join(", ")],
     )
 }

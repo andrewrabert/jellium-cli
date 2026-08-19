@@ -17,7 +17,7 @@ use crate::livetv::Program;
 use crate::player::Intent;
 use crate::style::space::Room;
 use crate::style::{self, Drawn, Layout, Viewport, card, space, typeface};
-use crate::text::{self as strings, Text};
+use crate::text::{self as strings, Template, Text};
 use crate::widget;
 use crate::widget::overlap::Overlapping;
 use crate::widget::prose;
@@ -498,7 +498,7 @@ fn head<'a>(
             prose(
                 match programme {
                     Some(programme) => strings::format(
-                        Text::ProgramChannel,
+                        Template::ProgramChannel,
                         &[&programme.channel_name, &programme.channel_number],
                     ),
                     None => heading(item),

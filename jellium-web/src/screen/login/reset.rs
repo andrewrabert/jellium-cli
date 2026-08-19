@@ -2,7 +2,7 @@ use iced::Element;
 
 use crate::app::Message;
 use crate::style::{Viewport, space, typeface};
-use crate::text::{self as strings, Text};
+use crate::text::{self as strings, Template, Text};
 use crate::widget::{self, Emphasis, Secrecy};
 
 use super::{Action, Edit};
@@ -89,7 +89,7 @@ fn redeeming<'a>(held: &'a State) -> impl Iterator<Item = Element<'a, Message>> 
     }))
     .chain(held.expires.map(|expires| {
         widget::prose(
-            strings::format(Text::LoginResetExpires, &[&stamped(expires)]),
+            strings::format(Template::LoginResetExpires, &[&stamped(expires)]),
             typeface::BODY,
         )
     }))

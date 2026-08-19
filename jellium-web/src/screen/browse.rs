@@ -19,7 +19,7 @@ use crate::route::Listing;
 use crate::style::card::{Aspect, Card};
 use crate::style::space::Room;
 use crate::style::{self, Drawn, Letters, Viewport, card, space, typeface};
-use crate::text::{self as strings, Text};
+use crate::text::{self as strings, Template, Text};
 use crate::widget;
 use crate::widget::prose;
 
@@ -359,7 +359,7 @@ fn paging<'a>(browse: &Browse) -> Element<'a, Message> {
         None => (0, 0),
     };
     let sentence = strings::format(
-        Text::GridPaging,
+        Template::GridPaging,
         &[
             &first.to_string(),
             &last.to_string(),

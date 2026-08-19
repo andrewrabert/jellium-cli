@@ -8,7 +8,7 @@ use super::frame;
 use crate::app::Message;
 use crate::error::Answer;
 use crate::style::{self, Drawn, Layout, Viewport, space, typeface};
-use crate::text::{self as strings, Text};
+use crate::text::{self as strings, Template, Text};
 use crate::widget::{self, line};
 use crate::window;
 
@@ -76,7 +76,10 @@ pub async fn open(
 
 /// How many bytes read as a size on screen.
 fn sized(bytes: jellium_model::log::Bytes) -> String {
-    strings::format(Text::LogsMebibytes, &[&format!("{:.1}", bytes.mebibytes())])
+    strings::format(
+        Template::LogsMebibytes,
+        &[&format!("{:.1}", bytes.mebibytes())],
+    )
 }
 
 /// When a file was last written, as the date and the time the reference writes
@@ -177,7 +180,7 @@ pub fn viewer<'a>(held: &'a Viewer, layout: Layout) -> frame::Filling<'a> {
     if held.tail.truncated() {
         page.push(widget::prose(
             strings::format(
-                Text::LogsTail,
+                Template::LogsTail,
                 &[
                     &sized(jellium_model::log::TAIL_LIMIT),
                     &sized(held.tail.size()),

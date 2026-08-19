@@ -7,7 +7,7 @@ use iced::widget::{button, column, row};
 use crate::app::Message;
 use crate::error::Answer;
 use crate::style::{self, Drawn, space, typeface};
-use crate::text::{self as strings, Text};
+use crate::text::{self as strings, Template, Text};
 use crate::widget::{line, prose};
 use crate::window;
 use jellium_protocol::{Event, Packaged};
@@ -106,7 +106,7 @@ pub fn view<'a>(state: &'a State, read_only: bool) -> Vec<Element<'a, Message>> 
                     typeface::LINE_HEIGHT,
                 ),
                 line(
-                    strings::format(Text::CatalogVersions, &[&chosen]),
+                    strings::format(Template::CatalogVersions, &[&chosen]),
                     typeface::BODY,
                     typeface::Weight::Regular,
                     typeface::LINE_HEIGHT,

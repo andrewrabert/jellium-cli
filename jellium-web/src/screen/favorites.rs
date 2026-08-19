@@ -18,7 +18,7 @@ use crate::route::Route;
 use crate::screen::arrival::Arrival;
 use crate::style::space::Room;
 use crate::style::{self, Viewport, card, space};
-use crate::text::{self as strings, Text};
+use crate::text::{self as strings, Said, Text};
 use crate::widget;
 
 /// The reference pages this screen draws.
@@ -131,7 +131,7 @@ pub fn view<'a>(
         page = page.push(widget::section(
             crate::construct::navigation(
                 Construct::SectionTitleCards,
-                Some(label(rail.section)),
+                Some(Said::Plain(label(rail.section))),
                 Message::Navigated(opens(rail.section)),
                 widget::prose(
                     strings::lookup(label(rail.section)),

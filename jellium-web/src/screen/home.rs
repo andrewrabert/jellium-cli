@@ -15,7 +15,7 @@ use crate::route::Route;
 use crate::screen::arrival::Arrival;
 use crate::style::space::Room;
 use crate::style::{self, Viewport, card};
-use crate::text::{self as strings, Text};
+use crate::text::{self as strings, Said, Template, Text};
 use crate::widget;
 use jellium_model::construct::{Construct, Page};
 
@@ -34,14 +34,14 @@ fn empty_paragraph(session: &Session) -> Text {
 fn titled<'a>(said: Text) -> Element<'a, Message> {
     construct::stated(
         Construct::SectionTitleCards,
-        said,
+        Said::Plain(said),
         widget::prose(strings::lookup(said), style::typeface::HEADING_2),
     )
 }
 
 /// One section title the reference wraps in a link, which carries the trailing
 /// chevron `.sectionTitleTextButton` writes and opens what that link opens.
-fn opened<'a>(said: Text, spoken: String, opens: Message) -> Element<'a, Message> {
+fn opened<'a>(said: Said, spoken: String, opens: Message) -> Element<'a, Message> {
     construct::navigation(
         Construct::SectionTitleTextButton,
         None,
@@ -143,7 +143,7 @@ pub fn tabs<'a>(shown: Tab) -> Element<'a, Message> {
         iced::widget::row(Tab::ALL.into_iter().map(|tab| {
             construct::navigation(
                 Construct::HeaderTabs,
-                Some(tab.label()),
+                Some(Said::Plain(tab.label())),
                 match tab == shown {
                     true => Message::Unchanged,
                     false => Message::Navigated(Route::Home { tab }),
@@ -450,12 +450,12 @@ pub fn view<'a>(
             column![
                 construct::stated(
                     Construct::CenterMessageH2,
-                    Text::HomeEmptyHeading,
+                    Said::Plain(Text::HomeEmptyHeading),
                     widget::centered(strings::lookup(Text::HomeEmptyHeading).to_string()),
                 ),
                 construct::stated(
                     Construct::CenterMessageP,
-                    empty_paragraph(session),
+                    Said::Plain(empty_paragraph(session)),
                     widget::centered(strings::lookup(empty_paragraph(session)).to_string()),
                 ),
             ]
@@ -520,7 +520,7 @@ pub fn view<'a>(
             row(crate::screen::livetv::Tab::ALL.iter().map(|tab| {
                 construct::navigation(
                     Construct::Raised,
-                    Some(tab.label()),
+                    Some(Said::Plain(tab.label())),
                     Message::Navigated(Route::LiveTv { tab: *tab }),
                     widget::block(strings::lookup(tab.label()), None, widget::Emphasis::Raised),
                 )
@@ -529,7 +529,7 @@ pub fn view<'a>(
         ));
         page = page.push(widget::section(
             opened(
-                Text::HomeOnNow,
+                Said::Plain(Text::HomeOnNow),
                 strings::lookup(Text::HomeOnNow).to_owned(),
                 Message::Navigated(crate::screen::livetv::programs::opens()),
             ),
@@ -557,7 +557,7 @@ pub fn view<'a>(
     if arrangement.next_up && !state.next_up.held().is_empty() {
         page = page.push(widget::section(
             opened(
-                Text::HomeNextUp,
+                Said::Plain(Text::HomeNextUp),
                 strings::lookup(Text::HomeNextUp).to_owned(),
                 Message::Navigated(Route::Home { tab: Tab::Home }),
             ),
@@ -583,9 +583,9 @@ pub fn view<'a>(
     {
         page = page.push(widget::section(
             opened(
-                Text::HomeLatest,
+                Said::Filled(Template::HomeLatest),
                 strings::format(
-                    Text::HomeLatest,
+                    Template::HomeLatest,
                     &[row.library.name.as_deref().unwrap_or_default()],
                 ),
                 Message::Navigated(opens(&row.library, row.id)),

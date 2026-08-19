@@ -7,7 +7,7 @@ use uuid::Uuid;
 use crate::app::Message;
 use crate::error::Answer;
 use crate::style::{self, Viewport, card, space, typeface};
-use crate::text::{self as strings, Text};
+use crate::text::{self as strings, Template, Text};
 use crate::widget::{self, prose};
 use jellium_model::appearance::typeface::Rank;
 use jellium_model::form::{Field, Form};
@@ -675,7 +675,7 @@ pub fn view<'a>(
             room,
             user.name.clone().unwrap_or_default(),
             user.last_activity_date
-                .map(|at| strings::format(Text::UsersLastSeen, &[&widget::table::stamped(at)])),
+                .map(|at| strings::format(Template::UsersLastSeen, &[&widget::table::stamped(at)])),
             user.primary_image_tag
                 .as_ref()
                 .and_then(|_| images.handle(image_key(id))),

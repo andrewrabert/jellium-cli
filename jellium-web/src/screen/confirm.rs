@@ -7,7 +7,7 @@ use uuid::Uuid;
 
 use crate::app::Message;
 use crate::style::{self, space, typeface};
-use crate::text::{self as strings, Text};
+use crate::text::{self as strings, Template, Text};
 use crate::widget::prose;
 
 /// Which region's action a confirmation's controls raise.
@@ -246,64 +246,66 @@ impl Pending {
     pub fn sentence(&self) -> String {
         match &self.action {
             Destructive::DeleteUser { .. } => {
-                strings::format(Text::ConfirmDeleteUser, &[&self.object])
+                strings::format(Template::ConfirmDeleteUser, &[&self.object])
             }
             Destructive::DeleteLibrary { .. } => {
-                strings::format(Text::ConfirmDeleteLibrary, &[&self.object])
+                strings::format(Template::ConfirmDeleteLibrary, &[&self.object])
             }
             Destructive::DeleteItem { .. } => {
-                strings::format(Text::ConfirmDeleteItem, &[&self.object])
+                strings::format(Template::ConfirmDeleteItem, &[&self.object])
             }
             Destructive::DeletePath { library, .. } => {
-                strings::format(Text::ConfirmDeletePath, &[&self.object, library])
+                strings::format(Template::ConfirmDeletePath, &[&self.object, library])
             }
-            Destructive::StopTask { .. } => strings::format(Text::ConfirmStopTask, &[&self.object]),
+            Destructive::StopTask { .. } => {
+                strings::format(Template::ConfirmStopTask, &[&self.object])
+            }
             Destructive::InstallPackage {
                 version,
                 repository,
                 ..
             } => strings::format(
-                Text::ConfirmInstallPackage,
+                Template::ConfirmInstallPackage,
                 &[&self.object, version, repository],
             ),
             Destructive::AddRepository { .. } => {
-                strings::format(Text::ConfirmAddRepository, &[&self.object])
+                strings::format(Template::ConfirmAddRepository, &[&self.object])
             }
             Destructive::RemoveRepository { .. } => {
-                strings::format(Text::ConfirmRemoveRepository, &[&self.object])
+                strings::format(Template::ConfirmRemoveRepository, &[&self.object])
             }
             Destructive::DeleteDevice { .. } => {
-                strings::format(Text::ConfirmDeleteDevice, &[&self.object])
+                strings::format(Template::ConfirmDeleteDevice, &[&self.object])
             }
             Destructive::DeleteOwnDevice { .. } => {
-                strings::format(Text::ConfirmDeleteOwnDevice, &[&self.object])
+                strings::format(Template::ConfirmDeleteOwnDevice, &[&self.object])
             }
             Destructive::RevokeKey { .. } => {
-                strings::format(Text::ConfirmRevokeKey, &[&self.object])
+                strings::format(Template::ConfirmRevokeKey, &[&self.object])
             }
             Destructive::DeleteTuner { .. } => {
-                strings::format(Text::ConfirmDeleteTuner, &[&self.object])
+                strings::format(Template::ConfirmDeleteTuner, &[&self.object])
             }
             Destructive::DeleteProvider { .. } => {
-                strings::format(Text::ConfirmDeleteProvider, &[&self.object])
+                strings::format(Template::ConfirmDeleteProvider, &[&self.object])
             }
             Destructive::CancelTimer { .. } => {
-                strings::format(Text::ConfirmCancelRecording, &[&self.object])
+                strings::format(Template::ConfirmCancelRecording, &[&self.object])
             }
             Destructive::CancelSeriesTimer { .. } => {
-                strings::format(Text::ConfirmCancelSeries, &[&self.object])
+                strings::format(Template::ConfirmCancelSeries, &[&self.object])
             }
             Destructive::RemoveUserImage { .. } => {
-                strings::format(Text::ConfirmRemoveUserImage, &[&self.object])
+                strings::format(Template::ConfirmRemoveUserImage, &[&self.object])
             }
             Destructive::UninstallPlugin { version, .. } => {
-                strings::format(Text::ConfirmUninstallPlugin, &[&self.object, version])
+                strings::format(Template::ConfirmUninstallPlugin, &[&self.object, version])
             }
             Destructive::AuthorizeQuickConnect { .. } => {
-                strings::format(Text::ConfirmAuthorizeQuickConnect, &[&self.object])
+                strings::format(Template::ConfirmAuthorizeQuickConnect, &[&self.object])
             }
-            Destructive::Restart => strings::format(Text::ConfirmRestart, &[&self.object]),
-            Destructive::Shutdown => strings::format(Text::ConfirmShutdown, &[&self.object]),
+            Destructive::Restart => strings::format(Template::ConfirmRestart, &[&self.object]),
+            Destructive::Shutdown => strings::format(Template::ConfirmShutdown, &[&self.object]),
         }
     }
 }

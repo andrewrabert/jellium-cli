@@ -11,7 +11,7 @@ use crate::api::Api;
 use crate::app::Message;
 use crate::error::Answer;
 use crate::style::typeface;
-use crate::text::{self as strings, Text};
+use crate::text::{self as strings, Template, Text};
 use crate::widget;
 
 use super::{Action, Setting};
@@ -46,7 +46,7 @@ fn quality_label(quality: Quality) -> String {
     match quality {
         Quality::Auto => strings::lookup(Text::PlayerQualityAuto).to_owned(),
         Quality::Limit { bits_per_second } => strings::format(
-            Text::PlayerQualityLimit,
+            Template::PlayerQualityLimit,
             &[&(bits_per_second.bits_per_second() / 1_000_000).to_string()],
         ),
     }
@@ -189,7 +189,7 @@ pub fn sections<'a>(
                 None,
                 super::choices(
                     SKIPS,
-                    |seconds| strings::format(Text::PlaybackSeconds, &[&seconds.to_string()]),
+                    |seconds| strings::format(Template::PlaybackSeconds, &[&seconds.to_string()]),
                     |seconds| Action::Set(Setting::SkipBack(seconds)),
                 ),
                 &Action::Set(Setting::SkipBack(held.skip_back_seconds)),
@@ -200,7 +200,7 @@ pub fn sections<'a>(
                 None,
                 super::choices(
                     SKIPS,
-                    |seconds| strings::format(Text::PlaybackSeconds, &[&seconds.to_string()]),
+                    |seconds| strings::format(Template::PlaybackSeconds, &[&seconds.to_string()]),
                     |seconds| Action::Set(Setting::SkipForward(seconds)),
                 ),
                 &Action::Set(Setting::SkipForward(held.skip_forward_seconds)),
@@ -215,7 +215,7 @@ pub fn sections<'a>(
             None,
             super::choices(
                 SYNC_OFFSETS,
-                |ms| strings::format(Text::PlaybackSyncMilliseconds, &[&ms.to_string()]),
+                |ms| strings::format(Template::PlaybackSyncMilliseconds, &[&ms.to_string()]),
                 |ms| Action::Set(Setting::SyncExtraOffset(ms)),
             ),
             &Action::Set(Setting::SyncExtraOffset(held.sync.extra_offset_ms)),

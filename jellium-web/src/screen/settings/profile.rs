@@ -10,7 +10,7 @@ use crate::app::Message;
 use crate::error::Answer;
 use crate::images::Cache;
 use crate::style::{card, space, typeface};
-use crate::text::{self as strings, Text};
+use crate::text::{self as strings, Template, Text};
 use crate::widget::{self, prose};
 
 use super::Action;
@@ -116,7 +116,7 @@ pub fn sections<'a>(
 
     if let Some(at) = state.last_active {
         rows.push(prose(
-            strings::format(Text::ProfileLastActive, &[&at.to_rfc3339()]),
+            strings::format(Template::ProfileLastActive, &[&at.to_rfc3339()]),
             typeface::BODY,
         ));
     }

@@ -6,7 +6,7 @@ use wasm_bindgen::prelude::Closure;
 use crate::failure::Call;
 use crate::failure::{self, Cause, Failure};
 use crate::style::typeface;
-use crate::text::{self, Text};
+use crate::text::{self, Template, Text};
 
 thread_local! {
     /// The retry control's one click handler, installed the first time the
@@ -272,7 +272,7 @@ pub async fn start() {
     STARTING.with(|held| held.set(false));
     if let Err(error) = run {
         let failure = Failure::saying(
-            text::format(Text::BootPanicked, &[&error.to_string()]),
+            text::format(Template::BootPanicked, &[&error.to_string()]),
             Cause::Graphics {
                 detail: error.to_string(),
             },

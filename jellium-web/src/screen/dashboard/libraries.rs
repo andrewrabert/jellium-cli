@@ -6,7 +6,7 @@ use iced::widget::{button, row, text_input};
 use crate::app::Message;
 use crate::error::Answer;
 use crate::style::{self, card, space, typeface};
-use crate::text::{self as strings, Text};
+use crate::text::{self as strings, Template, Text};
 use crate::widget::{self, prose};
 use jellium_model::appearance::typeface::Rank;
 use jellium_model::form::{Field, Form};
@@ -504,7 +504,7 @@ pub fn view<'a>(
             };
             let said = match named(folder).and_then(|id| state.refreshing.get(&id)) {
                 Some(progress) => {
-                    strings::format(Text::LibrariesScanning, &[&format!("{progress:.0}")])
+                    strings::format(Template::LibrariesScanning, &[&format!("{progress:.0}")])
                 }
                 None => strings::lookup(content_label(folder.collection_type)).to_owned(),
             };

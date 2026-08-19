@@ -15,7 +15,7 @@ use jellium_model::setup::Step;
 use crate::app::Message;
 use crate::error::{Answer, Operation};
 use crate::style::{self, Viewport, space, typeface};
-use crate::text::{self as strings, Text};
+use crate::text::{self as strings, Template, Text};
 use crate::widget::{self, Choice, prose};
 
 pub struct State {
@@ -460,7 +460,7 @@ pub fn view(state: &State, viewport: Viewport) -> Element<'_, Message> {
         prose(strings::lookup(Text::SetupTitle), typeface::HEADING_2),
         prose(
             strings::format(
-                Text::SetupPosition,
+                Template::SetupPosition,
                 &[
                     &state.step.position().to_string(),
                     &Step::ORDER.len().to_string(),
@@ -473,7 +473,7 @@ pub fn view(state: &State, viewport: Viewport) -> Element<'_, Message> {
     .chain(state.startup.off_snapshot().then(|| {
         prose(
             strings::format(
-                Text::WarningOffSnapshot,
+                Template::WarningOffSnapshot,
                 &[
                     &state.startup.server_version,
                     &state.startup.snapshot_version,

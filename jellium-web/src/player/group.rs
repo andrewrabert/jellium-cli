@@ -198,11 +198,11 @@ fn issue(verb: GroupVerb) -> Task<Message> {
 fn naming(signed: &Signed) -> String {
     match signed.playing.as_ref() {
         Some(playing) => crate::text::format(
-            crate::text::Text::SyncPlayNamedForItem,
+            crate::text::Template::SyncPlayNamedForItem,
             &[&playing.item.name.clone().unwrap_or_default()],
         ),
         None => crate::text::format(
-            crate::text::Text::SyncPlayNamedForUser,
+            crate::text::Template::SyncPlayNamedForUser,
             &[&signed.session.user_name],
         ),
     }

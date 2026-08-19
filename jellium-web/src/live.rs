@@ -9,7 +9,7 @@ use wasm_bindgen::prelude::*;
 
 use crate::failure::Call;
 use crate::failure::{self, Cause, Failure};
-use crate::text::{self, Text};
+use crate::text::{self, Template, Text};
 
 pub const BACKOFF: Duration = Duration::from_secs(1);
 
@@ -194,7 +194,7 @@ fn dropped(closed: Option<(u16, String)>) {
     }
     if let Some((code, reason)) = closed {
         failure::record(&Failure::saying(
-            text::format(Text::FailureSocketClosed, &[&code.to_string(), &reason]),
+            text::format(Template::FailureSocketClosed, &[&code.to_string(), &reason]),
             Cause::Closed { code, reason },
         ));
     }

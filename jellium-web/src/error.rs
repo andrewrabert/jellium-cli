@@ -3,7 +3,7 @@ use jellium_protocol::{
     RemoteEnded,
 };
 
-use crate::text::{self, Text};
+use crate::text::{self, Said, Template, Text};
 
 #[must_use = "a trouble must be raised, disregarded by name, or propagated"]
 #[derive(Debug, Clone)]
@@ -62,10 +62,10 @@ impl Trouble {
             }
             Trouble::Refused(Refusal::BodyTooLarge { bytes, cap }) => match bytes {
                 Some(bytes) => text::format(
-                    Text::FailureBodyTooLarge,
+                    Template::FailureBodyTooLarge,
                     &[&bytes.to_string(), &cap.to_string()],
                 ),
-                None => text::format(Text::FailureBodyOverCap, &[&cap.to_string()]),
+                None => text::format(Template::FailureBodyOverCap, &[&cap.to_string()]),
             },
             Trouble::Refused(Refusal::ReadOnly) => {
                 text::lookup(Text::DashboardReadOnly).to_string()
@@ -76,14 +76,14 @@ impl Trouble {
             Trouble::Refused(Refusal::PageNotRewritable) => {
                 text::lookup(Text::FailurePageNotRewritable).to_string()
             }
-            Trouble::LogMissing { name } => text::format(Text::FailureLogMissing, &[name]),
+            Trouble::LogMissing { name } => text::format(Template::FailureLogMissing, &[name]),
             Trouble::OwnDeviceDeleted => text::lookup(Text::FailureOwnDeviceDeleted).to_string(),
             Trouble::Refused(Refusal::PageTooLarge) => {
                 text::lookup(Text::FailurePageTooLarge).to_string()
             }
-            Trouble::Relay { detail, .. } => text::format(Text::FailureRelay, &[detail]),
+            Trouble::Relay { detail, .. } => text::format(Template::FailureRelay, &[detail]),
             Trouble::Upstream(Failure::ServerUnreachable { server, .. }) => {
-                text::format(Text::FailureServerUnreachable, &[server])
+                text::format(Template::FailureServerUnreachable, &[server])
             }
             Trouble::Upstream(Failure::CredentialsRejected) => {
                 text::lookup(Text::FailureCredentialsRejected).to_string()
@@ -95,7 +95,7 @@ impl Trouble {
                 server_version,
                 minimum_version,
             }) => text::format(
-                Text::FailureServerBelowMinimum,
+                Template::FailureServerBelowMinimum,
                 &[server_version, minimum_version],
             ),
             Trouble::UserDeleted => text::lookup(Text::FailureUserDeleted).to_string(),
@@ -129,7 +129,7 @@ pub fn refused(refused: &PlaybackRefused) -> crate::failure::Failure {
             text::lookup(Text::FailureNoPlayableSource).to_string()
         }
         PlaybackRefused::TranscodeRefused { code } => {
-            text::format(Text::FailureTranscodeRefused, &[code])
+            text::format(Template::FailureTranscodeRefused, &[code])
         }
         PlaybackRefused::Superseded => text::lookup(Text::FailurePlaybackSuperseded).to_string(),
         PlaybackRefused::NotRelayable => text::lookup(Text::FailureNotRelayable).to_string(),
@@ -137,7 +137,7 @@ pub fn refused(refused: &PlaybackRefused) -> crate::failure::Failure {
         PlaybackRefused::NoTuner => text::lookup(Text::FailureNoTuner).to_string(),
         PlaybackRefused::TunerGone => text::lookup(Text::FailureTunerGone).to_string(),
         PlaybackRefused::LiveNotRelayable { shape } => {
-            text::format(Text::FailureLiveNotRelayable, &[shape])
+            text::format(Template::FailureLiveNotRelayable, &[shape])
         }
         PlaybackRefused::TunerReleased => text::lookup(Text::FailureTunerReleased).to_string(),
     })
@@ -169,7 +169,7 @@ pub(crate) async fn classify(response: reqwest::Response) -> Trouble {
 /// What a relayed body carries.
 #[derive(Debug, Clone, serde::Deserialize)]
 #[serde(untagged)]
-enum Said {
+enum Body {
     Refused(Refusal),
     Failed(Failure),
     /// Any other JSON body, kept for the message it may hold under `detail`.
@@ -178,10 +178,10 @@ enum Said {
 
 /// The same classification over a body already read.
 pub(crate) fn classify_body(status: reqwest::StatusCode, body: &str) -> Trouble {
-    match crate::failure::unraised::decoded::<Said>(body) {
-        Ok(Said::Refused(refusal)) => Trouble::Refused(refusal),
-        Ok(Said::Failed(failure)) => Trouble::Upstream(failure),
-        Ok(Said::Other(_)) | Err(_) => Trouble::Relay {
+    match crate::failure::unraised::decoded::<Body>(body) {
+        Ok(Body::Refused(refusal)) => Trouble::Refused(refusal),
+        Ok(Body::Failed(failure)) => Trouble::Upstream(failure),
+        Ok(Body::Other(_)) | Err(_) => Trouble::Relay {
             status: Some(status.as_u16()),
             detail: body.to_owned(),
         },
@@ -345,70 +345,74 @@ pub enum Operation {
 }
 
 impl Operation {
-    fn text(self) -> Text {
+    fn said(self) -> Said {
         match self {
-            Operation::SetupStep => Text::FailureWroteSetupStep,
-            Operation::UserName => Text::FailureWroteUserName,
-            Operation::UserConfiguration => Text::FailureWroteUserConfiguration,
-            Operation::Preferences => Text::FailureWrotePreferences,
-            Operation::QuickConnect => Text::FailureWroteQuickConnect,
-            Operation::CollectionCreate => Text::FailureWroteCollectionCreate,
-            Operation::CollectionAdd => Text::FailureWroteCollectionAdd,
-            Operation::CollectionRemove => Text::FailureWroteCollectionRemove,
-            Operation::PlaylistCreate => Text::FailureWrotePlaylistCreate,
-            Operation::PlaylistRename => Text::FailureWrotePlaylistRename,
-            Operation::PlaylistDelete => Text::FailureWrotePlaylistDelete,
-            Operation::PlaylistAdd => Text::FailureWrotePlaylistAdd,
-            Operation::PlaylistRemove => Text::FailureWrotePlaylistRemove,
-            Operation::PlaylistMove => Text::FailureWrotePlaylistMove,
-            Operation::PlaylistShare => Text::FailureWrotePlaylistShare,
-            Operation::ItemSave => Text::FailureWroteItemSave,
-            Operation::ItemDelete => Text::FailureWroteItemDelete,
-            Operation::ItemContentType => Text::FailureWroteItemContentType,
-            Operation::ItemIdentify => Text::FailureWroteItemIdentify,
-            Operation::ItemImageUpload => Text::FailureWroteItemImageUpload,
-            Operation::ItemImageRemove => Text::FailureWroteItemImageRemove,
-            Operation::ItemImageMove => Text::FailureWroteItemImageMove,
-            Operation::ItemImageDownload => Text::FailureWroteItemImageDownload,
-            Operation::Configuration => Text::FailureWroteConfiguration,
-            Operation::TunerAdd => Text::FailureWroteTunerAdd,
-            Operation::TunerDelete => Text::FailureWroteTunerDelete,
-            Operation::TunerReset => Text::FailureWroteTunerReset,
-            Operation::ProviderAdd => Text::FailureWroteProviderAdd,
-            Operation::ProviderDelete => Text::FailureWroteProviderDelete,
-            Operation::ChannelMapping => Text::FailureWroteChannelMapping,
-            Operation::Dvr => Text::FailureWroteDvr,
-            Operation::RefreshItem => Text::FailureWroteRefreshItem,
-            Operation::PackageInstall => Text::FailureWrotePackageInstall,
-            Operation::PackageCancel => Text::FailureWrotePackageCancel,
-            Operation::RepositoryAdd => Text::FailureWroteRepositoryAdd,
-            Operation::RepositoryRemove => Text::FailureWroteRepositoryRemove,
-            Operation::DeviceRename => Text::FailureWroteDeviceRename,
-            Operation::DeviceDelete | Operation::OwnDeviceDelete => Text::FailureWroteDeviceDelete,
-            Operation::KeyCreate => Text::FailureWroteKeyCreate,
-            Operation::KeyRevoke => Text::FailureWroteKeyRevoke,
-            Operation::TaskStart => Text::FailureWroteTaskStart,
-            Operation::TaskStop => Text::FailureWroteTaskStop,
-            Operation::TaskTriggers => Text::FailureWroteTaskTriggers,
-            Operation::UserCreate => Text::FailureWroteUserCreate,
-            Operation::UserSave => Text::FailureWroteUserSave,
-            Operation::UserDelete => Text::FailureWroteUserDelete,
-            Operation::UserPassword => Text::FailureWroteUserPassword,
-            Operation::UserImage => Text::FailureWroteUserImage,
-            Operation::LibraryCreate => Text::FailureWroteLibraryCreate,
-            Operation::LibraryRename => Text::FailureWroteLibraryRename,
-            Operation::LibraryDelete => Text::FailureWroteLibraryDelete,
-            Operation::LibraryPath => Text::FailureWroteLibraryPath,
-            Operation::LibraryOptions => Text::FailureWroteLibraryOptions,
-            Operation::Scan => Text::FailureWroteScan,
-            Operation::Restart => Text::FailureWroteRestart,
-            Operation::Shutdown => Text::FailureWroteShutdown,
-            Operation::Timer => Text::FailureTimerRefused,
-            Operation::SeriesTimer => Text::FailureSeriesTimerRefused,
-            Operation::PluginEnable => Text::FailureWrotePluginEnable,
-            Operation::PluginDisable => Text::FailureWrotePluginDisable,
-            Operation::PluginUninstall => Text::FailureWrotePluginUninstall,
-            Operation::PluginConfiguration => Text::FailureWrotePluginConfiguration,
+            Operation::SetupStep => Said::Plain(Text::FailureWroteSetupStep),
+            Operation::UserName => Said::Filled(Template::FailureWroteUserName),
+            Operation::UserConfiguration => Said::Plain(Text::FailureWroteUserConfiguration),
+            Operation::Preferences => Said::Plain(Text::FailureWrotePreferences),
+            Operation::QuickConnect => Said::Filled(Template::FailureWroteQuickConnect),
+            Operation::CollectionCreate => Said::Plain(Text::FailureWroteCollectionCreate),
+            Operation::CollectionAdd => Said::Plain(Text::FailureWroteCollectionAdd),
+            Operation::CollectionRemove => Said::Plain(Text::FailureWroteCollectionRemove),
+            Operation::PlaylistCreate => Said::Plain(Text::FailureWrotePlaylistCreate),
+            Operation::PlaylistRename => Said::Plain(Text::FailureWrotePlaylistRename),
+            Operation::PlaylistDelete => Said::Plain(Text::FailureWrotePlaylistDelete),
+            Operation::PlaylistAdd => Said::Plain(Text::FailureWrotePlaylistAdd),
+            Operation::PlaylistRemove => Said::Plain(Text::FailureWrotePlaylistRemove),
+            Operation::PlaylistMove => Said::Plain(Text::FailureWrotePlaylistMove),
+            Operation::PlaylistShare => Said::Plain(Text::FailureWrotePlaylistShare),
+            Operation::ItemSave => Said::Plain(Text::FailureWroteItemSave),
+            Operation::ItemDelete => Said::Plain(Text::FailureWroteItemDelete),
+            Operation::ItemContentType => Said::Plain(Text::FailureWroteItemContentType),
+            Operation::ItemIdentify => Said::Plain(Text::FailureWroteItemIdentify),
+            Operation::ItemImageUpload => Said::Plain(Text::FailureWroteItemImageUpload),
+            Operation::ItemImageRemove => Said::Plain(Text::FailureWroteItemImageRemove),
+            Operation::ItemImageMove => Said::Plain(Text::FailureWroteItemImageMove),
+            Operation::ItemImageDownload => Said::Plain(Text::FailureWroteItemImageDownload),
+            Operation::Configuration => Said::Filled(Template::FailureWroteConfiguration),
+            Operation::TunerAdd => Said::Filled(Template::FailureWroteTunerAdd),
+            Operation::TunerDelete => Said::Filled(Template::FailureWroteTunerDelete),
+            Operation::TunerReset => Said::Filled(Template::FailureWroteTunerReset),
+            Operation::ProviderAdd => Said::Filled(Template::FailureWroteProviderAdd),
+            Operation::ProviderDelete => Said::Filled(Template::FailureWroteProviderDelete),
+            Operation::ChannelMapping => Said::Filled(Template::FailureWroteChannelMapping),
+            Operation::Dvr => Said::Plain(Text::FailureWroteDvr),
+            Operation::RefreshItem => Said::Filled(Template::FailureWroteRefreshItem),
+            Operation::PackageInstall => Said::Filled(Template::FailureWrotePackageInstall),
+            Operation::PackageCancel => Said::Filled(Template::FailureWrotePackageCancel),
+            Operation::RepositoryAdd => Said::Filled(Template::FailureWroteRepositoryAdd),
+            Operation::RepositoryRemove => Said::Filled(Template::FailureWroteRepositoryRemove),
+            Operation::DeviceRename => Said::Filled(Template::FailureWroteDeviceRename),
+            Operation::DeviceDelete | Operation::OwnDeviceDelete => {
+                Said::Filled(Template::FailureWroteDeviceDelete)
+            }
+            Operation::KeyCreate => Said::Filled(Template::FailureWroteKeyCreate),
+            Operation::KeyRevoke => Said::Filled(Template::FailureWroteKeyRevoke),
+            Operation::TaskStart => Said::Filled(Template::FailureWroteTaskStart),
+            Operation::TaskStop => Said::Filled(Template::FailureWroteTaskStop),
+            Operation::TaskTriggers => Said::Filled(Template::FailureWroteTaskTriggers),
+            Operation::UserCreate => Said::Filled(Template::FailureWroteUserCreate),
+            Operation::UserSave => Said::Filled(Template::FailureWroteUserSave),
+            Operation::UserDelete => Said::Filled(Template::FailureWroteUserDelete),
+            Operation::UserPassword => Said::Filled(Template::FailureWroteUserPassword),
+            Operation::UserImage => Said::Filled(Template::FailureWroteUserImage),
+            Operation::LibraryCreate => Said::Filled(Template::FailureWroteLibraryCreate),
+            Operation::LibraryRename => Said::Filled(Template::FailureWroteLibraryRename),
+            Operation::LibraryDelete => Said::Filled(Template::FailureWroteLibraryDelete),
+            Operation::LibraryPath => Said::Filled(Template::FailureWroteLibraryPath),
+            Operation::LibraryOptions => Said::Filled(Template::FailureWroteLibraryOptions),
+            Operation::Scan => Said::Plain(Text::FailureWroteScan),
+            Operation::Restart => Said::Filled(Template::FailureWroteRestart),
+            Operation::Shutdown => Said::Filled(Template::FailureWroteShutdown),
+            Operation::Timer => Said::Plain(Text::FailureTimerRefused),
+            Operation::SeriesTimer => Said::Plain(Text::FailureSeriesTimerRefused),
+            Operation::PluginEnable => Said::Filled(Template::FailureWrotePluginEnable),
+            Operation::PluginDisable => Said::Filled(Template::FailureWrotePluginDisable),
+            Operation::PluginUninstall => Said::Filled(Template::FailureWrotePluginUninstall),
+            Operation::PluginConfiguration => {
+                Said::Filled(Template::FailureWrotePluginConfiguration)
+            }
         }
     }
 }
@@ -424,7 +428,10 @@ pub struct Wrote {
 /// object, over the server's own message.
 fn write_refused(wrote: &Wrote, trouble: &Trouble) -> crate::failure::Failure {
     crate::failure::Failure {
-        sentence: text::format(wrote.operation.text(), &[&wrote.object]),
+        sentence: match wrote.operation.said() {
+            Said::Plain(key) => text::lookup(key).to_owned(),
+            Said::Filled(key) => text::format(key, &[&wrote.object]),
+        },
         server: server_said(trouble),
         ..crate::failure::Failure::of(trouble)
     }
@@ -437,8 +444,8 @@ pub(crate) fn server_said(trouble: &Trouble) -> Option<String> {
     let Trouble::Relay { detail, .. } = trouble else {
         return None;
     };
-    let said = match crate::failure::unraised::decoded::<Said>(detail) {
-        Ok(Said::Other(body)) => body
+    let said = match crate::failure::unraised::decoded::<Body>(detail) {
+        Ok(Body::Other(body)) => body
             .get("detail")
             .or_else(|| body.get("title"))
             .and_then(serde_json::Value::as_str)
@@ -463,7 +470,7 @@ pub(crate) fn server_said(trouble: &Trouble) -> Option<String> {
 /// The sentence a bridge verb outside the nine is shown as, naming the verb.
 pub fn bridge_refused(refused: &jellium_model::bridge::Refused) -> crate::failure::Failure {
     crate::failure::Failure::saying(
-        text::format(Text::FailureBridgeVerb, &[&refused.verb]),
+        text::format(Template::FailureBridgeVerb, &[&refused.verb]),
         crate::failure::Cause::Malformed {
             detail: format!("bridge verb {}", refused.verb),
         },
@@ -491,9 +498,9 @@ pub fn quick_connect_refused(
 pub fn upload_refused(refused: &jellium_model::upload::Refused) -> crate::failure::Failure {
     use jellium_model::upload::Refused;
     stated(match refused {
-        Refused::Type { mime } => text::format(Text::FailureImageType, &[mime]),
+        Refused::Type { mime } => text::format(Template::FailureImageType, &[mime]),
         Refused::TooLarge { bytes, cap } => text::format(
-            Text::FailureImageTooLarge,
+            Template::FailureImageTooLarge,
             &[&bytes.to_string(), &cap.to_string()],
         ),
     })

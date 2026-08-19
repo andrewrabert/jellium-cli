@@ -12,7 +12,7 @@ use super::{Choice, Showing, line, portion, pressed, prose, tinted};
 use crate::app::Message;
 use crate::icon::{self, Icon};
 use crate::style::{self, Css, Layout, Share, Viewport, space, typeface};
-use crate::text::{self as strings, Text};
+use crate::text::{self as strings, Template, Text};
 
 /// One line of the heading ladder `DEFAULT_THEME_OPTIONS` sets: its size from
 /// the theme, its line box and its weight from MUI's own variant.
@@ -283,7 +283,7 @@ pub fn progress<'a>(share: Option<Share>, layout: Layout) -> Element<'a, Message
     .spacing(style::drawn(space::TASK_PROGRESS_GAP.drawn(layout)));
     if let Some(share) = share {
         held = held.push(prose(
-            strings::format(Text::Percent, &[&format!("{:.0}", share.percent())]),
+            strings::format(Template::Percent, &[&format!("{:.0}", share.percent())]),
             typeface::BODY,
         ));
     }

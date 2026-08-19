@@ -6,7 +6,7 @@ use jellyfin_api::types::{BaseItemKind, RemoteSearchResult};
 
 use crate::app::Message;
 use crate::images::Foreign;
-use crate::text::{self as strings, Text};
+use crate::text::{self as strings, Template, Text};
 
 use super::Action as Outer;
 use crate::style::space::Room;
@@ -179,7 +179,7 @@ pub fn view<'a>(
         page = page.push(
             column![
                 prose(
-                    strings::format(Text::MetadataApplyAsk, &[&named]),
+                    strings::format(Template::MetadataApplyAsk, &[&named]),
                     typeface::BODY
                 ),
                 row![

@@ -6,7 +6,7 @@ use iced::futures::channel::mpsc;
 use wasm_bindgen::JsValue;
 
 use crate::error::{self, Trouble};
-use crate::text::{self, Text};
+use crate::text::{self, Template, Text};
 
 /// One call across a foreign boundary.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -230,7 +230,7 @@ pub fn called<T>(call: Call, answered: Result<T, JsValue>) -> Option<T> {
         Ok(held) => Some(held),
         Err(thrown) => {
             raise(Failure::saying(
-                text::format(Text::FailureThrew, &[&call.to_string()]),
+                text::format(Template::FailureThrew, &[&call.to_string()]),
                 Cause::Threw {
                     call,
                     thrown: thrown.as_string().unwrap_or_else(|| format!("{thrown:?}")),
@@ -445,7 +445,7 @@ pub fn cast<T: wasm_bindgen::JsCast>(call: Call, value: impl wasm_bindgen::JsCas
         Ok(held) => Some(held),
         Err(other) => {
             raise(Failure::saying(
-                text::format(Text::FailureThrew, &[&call.to_string()]),
+                text::format(Template::FailureThrew, &[&call.to_string()]),
                 Cause::Threw {
                     call,
                     thrown: format!(
@@ -469,7 +469,7 @@ pub fn reports() -> Subscription<Failure> {
 /// location and its Rust-symbol stack trace to the console.
 pub fn install_panic_hook() {
     std::panic::set_hook(Box::new(move |info| {
-        crate::boot::stopped(&text::format(Text::BootPanicked, &[&info.to_string()]));
+        crate::boot::stopped(&text::format(Template::BootPanicked, &[&info.to_string()]));
         console_error_panic_hook::hook(info);
     }));
 }

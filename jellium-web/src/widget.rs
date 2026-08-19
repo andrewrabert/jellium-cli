@@ -39,7 +39,7 @@ use crate::style::space::Room;
 use crate::style::{
     self, Drawn, Layout, Screen, Share, Viewport, card, scheme, scroll, space, typeface,
 };
-use crate::text::{self as strings, Text};
+use crate::text::{self as strings, Said, Template, Text};
 
 /// The reference pages this module draws, which is every page: the fixed header
 /// and the navigation drawer stand under all of them, and the rails and section
@@ -215,9 +215,10 @@ pub fn caption(item: &BaseItemDto, line: card::Line) -> Option<card::Caption> {
     match line {
         card::Line::ParentTitle => item::parent_over(item).and_then(card::Caption::of),
         card::Line::Name => match item::title(item)? {
-            item::Title::Special(name) => {
-                card::Caption::of(strings::format(Text::CardSpecialEpisode, &[name.as_str()]))
-            }
+            item::Title::Special(name) => card::Caption::of(strings::format(
+                Template::CardSpecialEpisode,
+                &[name.as_str()],
+            )),
             item::Title::Plain(name) => card::Caption::of(name),
         },
         card::Line::ParentTitleOrName => item::parent_over(item)
@@ -227,11 +228,11 @@ pub fn caption(item: &BaseItemDto, line: card::Line) -> Option<card::Caption> {
         // reference: card-footer-options
         card::Line::Year => match item::run(item)? {
             item::Run::Continuing(first) => card::Caption::of(strings::format(
-                Text::CardSeriesToPresent,
+                Template::CardSeriesToPresent,
                 &[&first.map(item::Year::written).unwrap_or_default()],
             )),
             item::Run::Ended(first, last) => card::Caption::of(strings::format(
-                Text::CardSeriesRun,
+                Template::CardSeriesRun,
                 &[&first.written(), &last.written()],
             )),
             item::Run::Made(year) => card::Caption::of(year.written()),
@@ -1763,18 +1764,15 @@ pub enum Ending {
 }
 
 /// One failure report as it is shown: its sentence, the Jellyfin server's own
-/// message beneath it as quoted server output under the `serverSaid` label,
-/// and the control that ends it.
+/// message quoted beneath it, and the control that ends it.
 pub fn reported<'a>(failure: &'a crate::failure::Failure, ending: Ending) -> Element<'a, Message> {
     let mut shown = column![prose(failure.sentence.clone(), typeface::BODY)]
         .spacing(style::drawn(space::BLOCK_GAP.drawn()));
     if let Some(server) = &failure.server {
-        shown = shown
-            .push(prose(
-                strings::lookup(Text::ServerSaid),
-                typeface::SECONDARY,
-            ))
-            .push(prose(format!("> {server}"), typeface::SECONDARY));
+        shown = shown.push(prose(
+            strings::format(Template::ServerSaid, &[server]),
+            typeface::SECONDARY,
+        ));
     }
     let (label, press) = match ending {
         Ending::Dismissed => (Text::FailureDismiss, Message::FailureDismissed),
@@ -1946,7 +1944,7 @@ fn drawer_row<'a>(
             match said {
                 Some(said) => construct::navigation(
                     Construct::NavMenuOptionText,
-                    Some(said),
+                    Some(Said::Plain(said)),
                     Message::Unchanged,
                     prose(name, typeface::BODY),
                 ),
@@ -1992,7 +1990,7 @@ pub fn main_drawer<'a>(
     let heading = |said| {
         construct::stated(
             Construct::SidebarHeader,
-            said,
+            Said::Plain(said),
             container(prose(strings::lookup(said), typeface::BODY))
                 .padding(
                     style::padding(space::SIDEBAR_HEADER_MARGIN)
@@ -2165,7 +2163,7 @@ pub fn notices<'a>(
         raised.push(toast(
             None,
             strings::format(
-                Text::WarningOffSnapshot,
+                Template::WarningOffSnapshot,
                 &[&session.server_version, &session.snapshot_version],
             ),
         ));

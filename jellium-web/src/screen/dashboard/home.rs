@@ -6,7 +6,7 @@ use iced::widget::{button, row};
 use crate::app::Message;
 use crate::error::Answer;
 use crate::style::{self, space, typeface};
-use crate::text::{self as strings, Text};
+use crate::text::{self as strings, Template, Text};
 use crate::widget::prose;
 
 /// What dashboard home shows, all of it updating without the user acting.
@@ -62,14 +62,14 @@ pub fn view<'a>(state: &'a State, read_only: bool) -> Vec<Element<'a, Message>> 
     let mut page: Vec<Element<'a, Message>> = vec![
         prose(
             strings::format(
-                Text::DashboardServer,
+                Template::DashboardServer,
                 &[&state.info.server_name.clone().unwrap_or_default()],
             ),
             typeface::BODY,
         ),
         prose(
             strings::format(
-                Text::DashboardVersion,
+                Template::DashboardVersion,
                 &[&state.info.version.clone().unwrap_or_default()],
             ),
             typeface::BODY,
@@ -78,7 +78,7 @@ pub fn view<'a>(state: &'a State, read_only: bool) -> Vec<Element<'a, Message>> 
 
     if let Some(progress) = state.scanning {
         page.push(prose(
-            strings::format(Text::DashboardScanning, &[&format!("{progress:.0}")]),
+            strings::format(Template::DashboardScanning, &[&format!("{progress:.0}")]),
             typeface::BODY,
         ));
     }

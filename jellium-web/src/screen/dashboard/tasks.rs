@@ -8,7 +8,7 @@ use crate::app::Message;
 use crate::error::Answer;
 use crate::icon::Icon;
 use crate::style::{self, Layout, Share, space, typeface};
-use crate::text::{self as strings, Text};
+use crate::text::{self as strings, Template, Text};
 use crate::widget::{self, Showing, prose};
 
 /// Every scheduled task, with the state and progress each push carries.
@@ -60,18 +60,19 @@ pub fn tasks(state: &mut State, tasks: Vec<jellium_protocol::TaskState>) {
 // reference: date-fns-distance-en-us
 fn phrase(distance: jellium_model::distance::Distance) -> String {
     use jellium_model::distance::Distance;
-    let (alone, several) = match distance {
-        Distance::LessThanMinutes(_) => {
-            (Text::DistanceLessThanMinute, Text::DistanceLessThanMinutes)
-        }
-        Distance::Minutes(_) => (Text::DistanceMinute, Text::DistanceMinutes),
-        Distance::AboutHours(_) => (Text::DistanceAboutHour, Text::DistanceAboutHours),
-        Distance::Days(_) => (Text::DistanceDay, Text::DistanceDays),
-        Distance::AboutMonths(_) => (Text::DistanceAboutMonth, Text::DistanceAboutMonths),
-        Distance::Months(_) => (Text::DistanceMonth, Text::DistanceMonths),
-        Distance::AboutYears(_) => (Text::DistanceAboutYear, Text::DistanceAboutYears),
-        Distance::OverYears(_) => (Text::DistanceOverYear, Text::DistanceOverYears),
-        Distance::AlmostYears(_) => (Text::DistanceAlmostYear, Text::DistanceAlmostYears),
+    let (alone, several): (Text, Template) = match distance {
+        Distance::LessThanMinutes(_) => (
+            Text::DistanceLessThanMinute,
+            Template::DistanceLessThanMinutes,
+        ),
+        Distance::Minutes(_) => (Text::DistanceMinute, Template::DistanceMinutes),
+        Distance::AboutHours(_) => (Text::DistanceAboutHour, Template::DistanceAboutHours),
+        Distance::Days(_) => (Text::DistanceDay, Template::DistanceDays),
+        Distance::AboutMonths(_) => (Text::DistanceAboutMonth, Template::DistanceAboutMonths),
+        Distance::Months(_) => (Text::DistanceMonth, Template::DistanceMonths),
+        Distance::AboutYears(_) => (Text::DistanceAboutYear, Template::DistanceAboutYears),
+        Distance::OverYears(_) => (Text::DistanceOverYear, Template::DistanceOverYears),
+        Distance::AlmostYears(_) => (Text::DistanceAlmostYear, Template::DistanceAlmostYears),
     };
     match distance.count() {
         1 => strings::lookup(alone).to_string(),
@@ -85,8 +86,10 @@ fn phrase(distance: jellium_model::distance::Distance) -> String {
 fn since(at: chrono::DateTime<chrono::Utc>, now: chrono::DateTime<chrono::Utc>) -> String {
     let said = phrase(jellium_model::distance::Distance::between(at, now));
     match jellium_model::distance::Sense::of(at, now) {
-        jellium_model::distance::Sense::Passed => strings::format(Text::DistancePassed, &[&said]),
-        jellium_model::distance::Sense::Ahead => strings::format(Text::DistanceAhead, &[&said]),
+        jellium_model::distance::Sense::Passed => {
+            strings::format(Template::DistancePassed, &[&said])
+        }
+        jellium_model::distance::Sense::Ahead => strings::format(Template::DistanceAhead, &[&said]),
     }
 }
 
@@ -94,7 +97,7 @@ fn since(at: chrono::DateTime<chrono::Utc>, now: chrono::DateTime<chrono::Utc>) 
 // reference: task-last-ran
 fn last_ran(run: jellium_protocol::TaskRun, now: chrono::DateTime<chrono::Utc>) -> String {
     strings::format(
-        Text::TasksLastRan,
+        Template::TasksLastRan,
         &[
             &since(run.ended, now),
             &phrase(jellium_model::distance::Distance::between(
@@ -249,7 +252,7 @@ pub fn one<'a>(state: &'a One, read_only: bool) -> Vec<Element<'a, Message>> {
     if let Some(last) = state.info.last_execution_result.as_ref() {
         page.push(prose(
             strings::format(
-                Text::TasksLastRun,
+                Template::TasksLastRun,
                 &[&last
                     .status
                     .map(|status| status.to_string())
@@ -260,7 +263,10 @@ pub fn one<'a>(state: &'a One, read_only: bool) -> Vec<Element<'a, Message>> {
         if let (Some(start), Some(end)) = (last.start_time_utc, last.end_time_utc) {
             let ran = end - start;
             page.push(prose(
-                strings::format(Text::TasksDuration, &[&format!("{}", ran.num_seconds())]),
+                strings::format(
+                    Template::TasksDuration,
+                    &[&format!("{}", ran.num_seconds())],
+                ),
                 typeface::BODY,
             ));
         }

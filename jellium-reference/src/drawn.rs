@@ -119,36 +119,39 @@ pub fn wording(root: &Path) -> BTreeMap<Variant, Option<Sentence>> {
     let Ok(text) = std::fs::read_to_string(&path) else {
         return BTreeMap::new();
     };
-    let Some(list) = listed(&text) else {
-        return BTreeMap::new();
-    };
     let mut held = BTreeMap::new();
-    let mut rest = list;
-    while let Some(at) = rest.find("=>") {
-        let (head, tail) = rest.split_at(at);
-        let entry = match tail[2..].find("=>") {
-            Some(next) => &tail[2..2 + next],
-            None => &tail[2..],
-        };
-        rest = &tail[2..];
-        let Some(variant) = last_word(head).and_then(|word| Variant::read(&word)) else {
-            continue;
-        };
-        let key = entry
-            .split("Sentence::")
-            .nth(1)
-            .and_then(named)
-            .and_then(|word| Sentence::read(&word));
-        held.insert(variant, key);
+    for list in listed(&text) {
+        let mut rest = list;
+        while let Some(at) = rest.find("=>") {
+            let (head, tail) = rest.split_at(at);
+            let entry = match tail[2..].find("=>") {
+                Some(next) => &tail[2..2 + next],
+                None => &tail[2..],
+            };
+            rest = &tail[2..];
+            let Some(variant) = last_word(head).and_then(|word| Variant::read(&word)) else {
+                continue;
+            };
+            let key = entry
+                .split("Sentence::")
+                .nth(1)
+                .and_then(named)
+                .and_then(|word| Sentence::read(&word));
+            held.insert(variant, key);
+        }
     }
     held
 }
 
-/// The `text!` list's own body.
-fn listed(text: &str) -> Option<&str> {
-    let at = text.rfind("text! {")? + "text! {".len();
-    let end = text[at..].rfind('}')? + at;
-    Some(&text[at..end])
+/// Every `text!` list's own body, the macro's own declaration aside.
+fn listed(text: &str) -> Vec<&str> {
+    text.match_indices("text! {")
+        .filter_map(|(at, marker)| {
+            let body = &text[at + marker.len()..];
+            let end = body.find("\n} }")?;
+            Some(&body[..end])
+        })
+        .collect()
 }
 
 /// What a module writes where it draws every page of the reference rather than
@@ -234,10 +237,14 @@ fn drawn(at: &str, text: &str) -> Vec<Drawn> {
     held
 }
 
-/// The `Text` variant one argument carries, whether the door takes it bare or
-/// under an `Option`.
+/// The key one argument carries, whether the door takes it bare, under an
+/// `Option`, or under a `Said`.
 fn said(word: &str) -> Option<Variant> {
-    Variant::read(word.split("Text::").nth(1).and_then(named)?.as_str())
+    let after = word
+        .split_once("Text::")
+        .or_else(|| word.split_once("Template::"))
+        .map(|(_, rest)| rest)?;
+    Variant::read(named(after)?.as_str())
 }
 
 /// Every call of `door` in the text, as its arguments split at the commas

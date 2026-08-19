@@ -17,7 +17,7 @@ use crate::images::{Cache, Wanted};
 use crate::route::Route;
 use crate::style::space::Room;
 use crate::style::{self, Viewport, card, space};
-use crate::text::{self as strings, Text};
+use crate::text::{self as strings, Said, Text};
 use crate::widget;
 
 /// The reference pages this screen draws.
@@ -96,7 +96,7 @@ pub fn view<'a>(
         page = page.push(widget::section(
             crate::construct::navigation(
                 Construct::SectionTitleCards,
-                Some(label(*section)),
+                Some(Said::Plain(label(*section))),
                 Message::Navigated(opens()),
                 widget::prose(strings::lookup(label(*section)), style::typeface::HEADING_2),
             ),

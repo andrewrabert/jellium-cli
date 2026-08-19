@@ -30,7 +30,7 @@ use crate::screen::livetv::{self, guide};
 use crate::screen::{dashboard, detail, home, library, login, search};
 use crate::style::space::Room;
 use crate::style::{self, Drawn, Viewport, card, space, typeface};
-use crate::text::{self as strings, Text};
+use crate::text::{self as strings, Template, Text};
 use crate::widget;
 use crate::widget::prose;
 use crate::window;
@@ -1421,7 +1421,7 @@ impl Jellium {
                             return Task::none();
                         };
                         state.told = Some(strings::format(
-                            Text::LoginResetCleared,
+                            Template::LoginResetCleared,
                             &[&users.join(", ")],
                         ));
                     }
@@ -2248,7 +2248,7 @@ impl Jellium {
                 crate::fonts::settled(face);
                 let Some(packed) = answer.disregarded(Text::FailureFontUnread) else {
                     crate::failure::raise(crate::error::stated(strings::format(
-                        Text::FailureFontFamily,
+                        Template::FailureFontFamily,
                         &[face.family().name()],
                     )));
                     return Task::none();

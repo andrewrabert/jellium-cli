@@ -17,7 +17,7 @@ use crate::route::Listing;
 use crate::style::card::{Aspect, Card, Rail};
 use crate::style::space::Room;
 use crate::style::{self, Viewport, card, space, typeface};
-use crate::text::{self as strings, Text};
+use crate::text::{self as strings, Template, Text};
 use crate::widget;
 use crate::widget::prose;
 
@@ -326,7 +326,7 @@ pub fn view<'a>(
     if state.sections.is_empty() {
         return page
             .push(widget::centered(strings::format(
-                Text::SearchResultsEmpty,
+                Template::SearchResultsEmpty,
                 &[&state.term],
             )))
             .into();

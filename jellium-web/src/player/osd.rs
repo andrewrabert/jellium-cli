@@ -18,7 +18,7 @@ use crate::player::{Action, Holding, Menu, Playing};
 use crate::route::Route;
 use crate::style::space::Room;
 use crate::style::{self, Viewport, card, space, typeface};
-use crate::text::{self as strings, Text};
+use crate::text::{self as strings, Template, Text};
 use crate::widget::prose;
 use crate::widget::sheet::{Chosen, Entry, Item, sheet};
 
@@ -68,7 +68,7 @@ fn title(playing: &Playing) -> String {
         playing.item.index_number,
     ) {
         (Some(series), Some(season), Some(episode)) => strings::format(
-            Text::PlayerEpisode,
+            Template::PlayerEpisode,
             &[series, &season.to_string(), &episode.to_string()],
         ),
         _ => name,
@@ -91,7 +91,7 @@ fn quality_label(quality: Quality) -> String {
     match quality {
         Quality::Auto => strings::lookup(Text::PlayerQualityAuto).to_string(),
         Quality::Limit { bits_per_second } => strings::format(
-            Text::PlayerQualityLimit,
+            Template::PlayerQualityLimit,
             &[&format!(
                 "{:.0}",
                 bits_per_second.bits_per_second() as f64 / 1_000_000.0
@@ -503,7 +503,7 @@ fn transport<'a>(
     let ends: Element<'a, Message> = match viewport.matches(space::OSD_ENDS_AT) {
         true => Space::new().into(),
         false => prose(
-            strings::format(Text::PlayerEndsAt, &[&clock(ends_at(playing))]),
+            strings::format(Template::PlayerEndsAt, &[&clock(ends_at(playing))]),
             typeface::BODY,
         ),
     };
@@ -572,7 +572,7 @@ fn ends_at(playing: &Playing) -> Duration {
 fn upcoming(playing: &Playing) -> Option<String> {
     let next = playing.queue.peek_next()?;
     Some(strings::format(
-        Text::PlayerNextItem,
+        Template::PlayerNextItem,
         &[&next.name.clone().unwrap_or_default()],
     ))
 }
@@ -598,7 +598,7 @@ fn live_transport<'a>(
             .padding(style::drawn(space::BLOCK_GAP.drawn())),
             prose(
                 crate::text::format(
-                    Text::PlayerChannel,
+                    Template::PlayerChannel,
                     &[&live.channel.name, &live.channel.number]
                 ),
                 typeface::HEADING_3
@@ -617,7 +617,7 @@ fn live_transport<'a>(
 
     if live.tuning {
         named = named.push(prose(
-            crate::text::format(Text::PlayerTuning, &[&live.channel.name]),
+            crate::text::format(Template::PlayerTuning, &[&live.channel.name]),
             typeface::SECONDARY,
         ));
     }
@@ -1121,7 +1121,10 @@ fn remote_art_key(bound: &Bound) -> Option<images::Key> {
 fn remote_title(bound: &Bound) -> String {
     match bound.target.now_playing.as_ref() {
         Some(playing) if playing.subtitle.is_empty() => playing.title.clone(),
-        Some(playing) => strings::format(Text::RemoteHeading, &[&playing.subtitle, &playing.title]),
+        Some(playing) => strings::format(
+            Template::RemoteHeading,
+            &[&playing.subtitle, &playing.title],
+        ),
         None => strings::lookup(Text::RemoteNothingPlaying).to_string(),
     }
 }
