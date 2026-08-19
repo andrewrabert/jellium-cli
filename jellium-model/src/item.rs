@@ -3,6 +3,7 @@
 
 use jellyfin_api::types::{BaseItemDto, BaseItemKind, LocationType, MediaType, MetadataField};
 
+use crate::appearance::Share;
 use crate::form::{Field, Form};
 
 pub const NAME: Field = Field::Text { key: "Name" };
@@ -362,6 +363,46 @@ pub fn played(item: &BaseItemDto) -> Mark {
 /// Whether the user has favorited it.
 pub fn favorited(item: &BaseItemDto) -> Mark {
     mark(item.user_data.as_ref().and_then(|data| data.is_favorite))
+}
+
+/// How far through an item a viewer is, as `getProgressBarHtml` reads it: the
+/// share the item's own user data reports for a video, an audio book and a
+/// book, the share `now` stands at through a programme's own airing, and none
+/// where the item marks no progress.
+// a channel marks none, and neither does a recording's own user data
+// none of it and the whole of it each draw no bar, which is what the
+// reference's `pct && pct < 100` and its `pct > 0 && pct < 100` answer
+// the reference's audio podcast names a type Jellyfin's own item kinds do not
+// hold, and its timer arrives as a type of its own rather than as an item
+// reference: indicator-progress
+// reference: indicator-progress-enabled
+pub fn elapsed(item: &BaseItemDto, now: chrono::DateTime<chrono::Utc>) -> Option<Share> {
+    let marks = (item.media_type == Some(MediaType::Video)
+        && item.type_ != Some(BaseItemKind::TvChannel))
+        || item.type_ == Some(BaseItemKind::AudioBook);
+    if marks
+        && item.type_ != Some(BaseItemKind::Recording)
+        && let Some(played) = item
+            .user_data
+            .as_ref()
+            .and_then(|data| data.played_percentage)
+        && played > 0.0
+        && played < 100.0
+    {
+        return Some(Share::per_hundred(played));
+    }
+    if matches!(
+        item.type_,
+        Some(BaseItemKind::Program | BaseItemKind::Recording)
+    ) && let (Some(start), Some(end)) = (item.start_date, item.end_date)
+    {
+        let run = (now - start).num_seconds();
+        let whole = (end - start).num_seconds();
+        if run > 0 && run < whole {
+            return Some(Share::part(run, whole));
+        }
+    }
+    None
 }
 
 /// Whether the reference's own player would take this item.

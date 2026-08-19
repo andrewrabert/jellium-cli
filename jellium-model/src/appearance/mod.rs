@@ -156,6 +156,13 @@ impl Share {
         length.scaled(self.per_ten_thousand as f64 / 10_000.0)
     }
 
+    /// The nearest ten-thousandth to a count out of a hundred, which is how a
+    /// server reports how far through an item a viewer is, held to the whole
+    /// and to none of it.
+    pub fn per_hundred(count: f64) -> Share {
+        Share::per_ten_thousand(nearest(count.clamp(0.0, 100.0) * 100.0))
+    }
+
     /// This as the count out of a hundred, which is what the reading beside a
     /// progress bar writes.
     pub fn percent(self) -> f64 {

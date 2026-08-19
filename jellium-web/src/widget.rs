@@ -973,7 +973,7 @@ pub fn poster<'a>(
             name: name.clone(),
             logo: None,
             timer: None,
-            elapsed: None,
+            elapsed: item::elapsed(item, now),
             press: item.id.map(|id| Message::Navigated(opens(item, id))),
             hovered: Hovered {
                 plays: plays.clone(),

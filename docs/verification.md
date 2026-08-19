@@ -944,6 +944,11 @@ Run at 360x800, 800x360, 768x1024 and 1920x1080.
   its foot lines up with the Next Up row's below it.
 - An On Now card's elapsed bar stands inside its image at the foot rather than
   under the card's name.
+- A Continue Watching card draws a bar across the foot of its image at the
+  fraction of the item the server holds as played, and a card the server holds
+  no position for draws none.
+- An On Now card draws that bar at the fraction of its programme's own airing
+  that has run.
 - A television browser's home rails take their own widths at every window
   width: 23.5% of the window for a backdrop rail, 18.8% for a small-backdrop
   rail and 15.6% for a square or portrait rail.

@@ -733,3 +733,5 @@ home-next-up-query	src/components/homesections/sections/nextUp.ts	21	34	09cd4954
 next-up-user-settings	src/scripts/settings/userSettings.js	499	529	bbe63fc719f5ba3adc6b3fd5602bd51dd6688f4689b65e0fbb274a930a565525	ported
 home-on-now-query	src/components/homesections/sections/liveTv.ts	19	27	d6a22ea1a1df783ed1d5d0761adc9fae227ada69dfaae081b03c93a306cd1e6d	ported
 home-live-tv-airing	src/components/homesections/sections/liveTv.ts	164	180	bf58e11c1e793c7e4a7e0e28829d8d5c89b0353d6605a054daad7de4ff3e4668	ported
+indicator-progress-enabled	src/components/indicators/indicators.js	7	11	b0e03c4083acf1533f36ca23b83f3b7bf11b3b1b36b392d97e95223e9af934a5	ported
+indicator-progress	src/components/indicators/indicators.js	36	71	af3079fdbeb892d9fa2b6ea62616d9ffde77442ab840f3969e9c7f812b9ebc06	ported
