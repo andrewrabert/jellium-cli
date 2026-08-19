@@ -1,3 +1,4 @@
+pub mod arrival;
 pub mod browse;
 pub mod collections;
 pub mod confirm;

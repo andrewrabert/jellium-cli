@@ -231,8 +231,16 @@ pub enum Message {
     SetupLeft(Answer<()>),
     Navigated(Route),
     WentBack,
-    HomeLoaded(Answer<home::State>),
-    FavoritesLoaded(Answer<crate::screen::favorites::State>),
+    /// The libraries the home screen stands on; every home rail is requested
+    /// once they answer.
+    HomeLibrariesLoaded(Answer<Vec<jellyfin_api::types::BaseItemDto>>),
+    /// One home rail's answer, named by the rail it fills.
+    HomeRailLoaded(home::Section, Answer<Vec<jellyfin_api::types::BaseItemDto>>),
+    /// One favourites rail's answer, named by the section it fills.
+    FavoritesRailLoaded(
+        jellium_model::favorites::Section,
+        Answer<Vec<jellyfin_api::types::BaseItemDto>>,
+    ),
     LibraryLoaded(Answer<library::State>),
     DetailLoaded(Answer<detail::State>),
     SearchLoaded(Answer<search::State>),
@@ -450,8 +458,8 @@ impl Signed {
             View::Home(state) => state
                 .libraries
                 .iter_mut()
-                .chain(state.continue_watching.iter_mut())
-                .chain(state.next_up.iter_mut())
+                .chain(state.continue_watching.held_mut().iter_mut())
+                .chain(state.next_up.held_mut().iter_mut())
                 .collect(),
             View::Library(_) => Vec::new(),
             View::Detail(state) => std::iter::once(&mut state.item)
@@ -520,6 +528,9 @@ pub fn staged(route: &Route, live_tv: jellium_protocol::LiveTvAccess) -> View {
         Route::Queue => View::Queue,
         Route::Remote => View::Remote,
         Route::SyncPlay => View::SyncPlay,
+        Route::Home {
+            tab: crate::screen::home::Tab::Favorites,
+        } => View::Favorites(Box::default()),
         Route::LiveTv { .. } => match crate::error::live_tv_denied(live_tv) {
             Some(denied) => {
                 crate::failure::raise(denied);
@@ -572,6 +583,15 @@ async fn filtered_load(
     .await
 }
 
+/// The tasks requesting the home rails named, each answering the rail it fills.
+fn requesting(api: &Rc<Api>, sections: Vec<home::Section>) -> Task<Message> {
+    Task::batch(sections.into_iter().map(|section| {
+        Task::perform(home::requested(api.clone(), section), move |answered| {
+            Message::HomeRailLoaded(section, answered)
+        })
+    }))
+}
+
 /// Loads the screen `route` names, against the page `signed` is drawn in.
 /// A Live TV route a session cannot reach issues no request, and a settings
 /// route a session's policy does not admit issues none either.
@@ -581,13 +601,18 @@ pub fn load(signed: &Signed, route: &Route, viewport: Viewport) -> Task<Message>
     match route.clone() {
         Route::Home {
             tab: crate::screen::home::Tab::Home,
-        } => Task::perform(home::load(api), Message::HomeLoaded),
+        } => Task::perform(
+            async move { api.libraries().await },
+            Message::HomeLibrariesLoaded,
+        ),
         Route::Home {
             tab: crate::screen::home::Tab::Favorites,
-        } => Task::perform(
-            crate::screen::favorites::load(api),
-            Message::FavoritesLoaded,
-        ),
+        } => Task::batch(jellium_model::favorites::Section::ALL.map(|section| {
+            Task::perform(
+                crate::screen::favorites::requested(api.clone(), section),
+                move |answered| Message::FavoritesRailLoaded(section, answered),
+            )
+        })),
         Route::Library { id, tab } => Task::perform(
             library::load(api, id, *tab, viewport),
             Message::LibraryLoaded,
@@ -690,8 +715,7 @@ fn restale(signed: &Signed, items: &[Marked]) -> Task<Message> {
     if !stale {
         return Task::none();
     }
-    let api = signed.api.clone();
-    Task::perform(home::load(api), Message::HomeLoaded)
+    requesting(&signed.api, home::Section::stale(&signed.arrangement))
 }
 
 /// The feeds `route`'s screen consumes.
@@ -1508,28 +1532,48 @@ impl Jellium {
                 let telling = watching(signed, &route);
                 Task::batch([telling, load(signed, &route, viewport)])
             }
-            Message::FavoritesLoaded(answered) => {
-                match answered.or_none(Text::FailureFavoritesUnread) {
-                    Some(state) => self.loaded(View::Favorites(Box::new(state))),
-                    None => Task::none(),
-                }
-            }
-            Message::HomeLoaded(answered) => {
-                let Some(state) = answered.or_none(Text::FailureHomeUnread) else {
+            Message::HomeLibrariesLoaded(answered) => {
+                let Some(libraries) = answered.or_none(Text::FailureHomeUnread) else {
                     return Task::none();
                 };
-                let showing = self.loaded(View::Home(Box::new(state)));
                 let Some(signed) = self.signed() else {
-                    return showing;
+                    return Task::none();
                 };
-                if !signed.session.live_tv.allowed() {
-                    return showing;
-                }
                 let api = signed.api.clone();
-                Task::batch([
-                    showing,
-                    Task::perform(home::on_now(api), Message::OnNowLoaded),
-                ])
+                let airing = signed.session.live_tv.allowed();
+                let arrangement = signed.arrangement.clone();
+                let state = home::State::of(libraries, &arrangement);
+                let sections = state.sections(&arrangement);
+                let showing = self.loaded(View::Home(Box::new(state)));
+                let mut asking = vec![showing, requesting(&api, sections)];
+                if airing {
+                    asking.push(Task::perform(home::on_now(api), Message::OnNowLoaded));
+                }
+                Task::batch(asking)
+            }
+            Message::HomeRailLoaded(section, answered) => {
+                let Some(items) = answered.or_none(section.unread()) else {
+                    return Task::none();
+                };
+                if let Some(signed) = self.signed()
+                    && let View::Home(state) = &mut signed.view
+                {
+                    state.took(section, items);
+                }
+                self.settle();
+                self.fetch_images()
+            }
+            Message::FavoritesRailLoaded(section, answered) => {
+                let Some(items) = answered.or_none(Text::FailureFavoritesUnread) else {
+                    return Task::none();
+                };
+                if let Some(signed) = self.signed()
+                    && let View::Favorites(state) = &mut signed.view
+                {
+                    state.took(section, items);
+                }
+                self.settle();
+                self.fetch_images()
             }
             Message::CollectionsLoaded(answered) => {
                 let Some(state) = answered.or_none(Text::FailureCollectionsUnread) else {
@@ -2306,11 +2350,13 @@ impl Jellium {
                 Task::batch([fetching, paging, self.fetch_images()])
             }
             Message::OnNowLoaded(loaded) => {
-                let channels = loaded.or_default(Text::FailureChannelsUnread);
+                let Some(channels) = loaded.or_none(Text::FailureChannelsUnread) else {
+                    return Task::none();
+                };
                 if let Some(signed) = self.signed()
                     && let View::Home(state) = &mut signed.view
                 {
-                    state.on_now = channels;
+                    state.on_now = crate::screen::arrival::Arrival::Arrived(channels);
                 }
                 self.settle();
                 self.fetch_images()
@@ -3022,10 +3068,6 @@ impl Jellium {
                     View::Home(state) => home::view(
                         state,
                         &signed.arrangement,
-                        match signed.session.live_tv.allowed() {
-                            true => home::LiveTv::Airing,
-                            false => home::LiveTv::Absent,
-                        },
                         chrono::Utc::now(),
                         self.viewport,
                         &self.images,
@@ -3318,11 +3360,11 @@ impl Jellium {
     }
 }
 
-/// Applies a library change: the home screen's library list and rails are
-/// re-read, every open window re-fetches only the rows it is showing, and an
+/// Applies a library change: every rail the home screen holds is re-requested
+/// in place, every open window re-fetches only the rows it is showing, and an
 /// item removed while its own detail screen is open leaves text naming that
 /// cause.
-/// Neither the scroll position nor the sort moves.
+/// Neither the scroll position, the sort, nor a rail already drawn moves.
 fn library_changed(
     signed: &mut Signed,
     viewport: Viewport,
@@ -3331,6 +3373,8 @@ fn library_changed(
     updated: &[uuid::Uuid],
 ) -> Task<Message> {
     let api = signed.api.clone();
+    let arrangement = signed.arrangement.clone();
+    let airing = signed.session.live_tv.allowed();
 
     if let Some(Route::Detail { id }) = signed.route()
         && removed.contains(id)
@@ -3341,7 +3385,14 @@ fn library_changed(
     }
 
     match &mut signed.view {
-        View::Home(_) => Task::perform(home::load(api), Message::HomeLoaded),
+        View::Home(state) => {
+            let sections = state.sections(&arrangement);
+            let mut asking = vec![requesting(&api, sections)];
+            if airing {
+                asking.push(Task::perform(home::on_now(api), Message::OnNowLoaded));
+            }
+            Task::batch(asking)
+        }
         View::Library(state) => match &mut state.body {
             crate::screen::library::Body::Browse(browse)
             | crate::screen::library::Body::Rows(browse) => reread(browse),

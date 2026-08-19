@@ -12,6 +12,7 @@ use crate::error::Answer;
 use crate::images::{self, Cache};
 use crate::livetv::Channel;
 use crate::route::Route;
+use crate::screen::arrival::Arrival;
 use crate::style::space::Room;
 use crate::style::{self, Viewport, card};
 use crate::text::{self as strings, Text};
@@ -115,15 +116,6 @@ pub fn latest_shown(library: &BaseItemDto, excluded: &[uuid::Uuid]) -> bool {
     !named && !hidden
 }
 
-/// Whether the reference draws the Live TV section: the user's policy grants
-/// Live TV access and at least one programme is airing. The button row and the
-/// On Now rail stand or go together.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum LiveTv {
-    Airing,
-    Absent,
-}
-
 /// Which of the reference's two home tabs is shown.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum Tab {
@@ -197,59 +189,122 @@ fn railed(card: card::Card) -> card::Drawing {
 /// The most channels the on-now row shows.
 pub const ON_NOW: i32 = 20;
 
+/// Which home rail one answer fills.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Section {
+    /// The three resumed rails, which this client reaches in one request where
+    /// the reference reaches them in three.
+    Resumed,
+    NextUp,
+    /// The Latest rail of the library named.
+    Latest(uuid::Uuid),
+}
+
+impl Section {
+    /// The rails a played mark or a cleared resume position makes stale, each
+    /// only where the arrangement draws it.
+    pub fn stale(arrangement: &Arrangement) -> Vec<Section> {
+        let mut stale = Vec::new();
+        if arrangement.continue_watching {
+            stale.push(Section::Resumed);
+        }
+        if arrangement.next_up {
+            stale.push(Section::NextUp);
+        }
+        stale
+    }
+
+    /// What a failure to read this rail is reported as.
+    pub fn unread(self) -> Text {
+        match self {
+            Section::Resumed | Section::NextUp => Text::FailureHomeUnread,
+            Section::Latest(_) => Text::FailureLatestUnread,
+        }
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct State {
     pub libraries: Vec<BaseItemDto>,
-    pub continue_watching: Vec<BaseItemDto>,
-    pub next_up: Vec<BaseItemDto>,
-    /// One row per library, in the library order, each carrying that library
-    /// and its latest items.
+    pub continue_watching: Arrival<BaseItemDto>,
+    pub next_up: Arrival<BaseItemDto>,
+    /// One row per library `latest_shown` admits, in the library order.
     pub latest: Vec<Latest>,
     /// The user's favourite channels first and then channels in number order,
-    /// capped at `ON_NOW`; the trouble stands in the row's place.
-    pub on_now: Vec<Channel>,
+    /// capped at `ON_NOW`.
+    pub on_now: Arrival<Channel>,
+}
+
+impl State {
+    /// The screen the libraries answered stand up: every rail awaited, and one
+    /// Latest row per library `latest_shown` admits, in the library order.
+    pub fn of(libraries: Vec<BaseItemDto>, arrangement: &Arrangement) -> State {
+        let latest = libraries
+            .iter()
+            .filter(|library| latest_shown(library, &arrangement.latest_excluded))
+            .map(|library| Latest {
+                library: library.clone(),
+                items: Arrival::Awaited,
+            })
+            .collect();
+        State {
+            libraries,
+            continue_watching: Arrival::Awaited,
+            next_up: Arrival::Awaited,
+            latest,
+            on_now: Arrival::Awaited,
+        }
+    }
+
+    // an answer for a Latest row this screen does not hold is dropped
+    /// Takes one rail's answer.
+    pub fn took(&mut self, section: Section, items: Vec<BaseItemDto>) {
+        match section {
+            Section::Resumed => self.continue_watching = Arrival::Arrived(items),
+            Section::NextUp => self.next_up = Arrival::Arrived(items),
+            Section::Latest(library) => {
+                if let Some(row) = self
+                    .latest
+                    .iter_mut()
+                    .find(|row| row.library.id == Some(library))
+                {
+                    row.items = Arrival::Arrived(items);
+                }
+            }
+        }
+    }
+
+    /// Every rail this screen requests: the ones the arrangement draws, and one
+    /// per Latest row it holds.
+    pub fn sections(&self, arrangement: &Arrangement) -> Vec<Section> {
+        let mut asked = Section::stale(arrangement);
+        asked.extend(
+            self.latest
+                .iter()
+                .filter_map(|row| row.library.id)
+                .map(Section::Latest),
+        );
+        asked
+    }
 }
 
 /// One Latest row.
 #[derive(Debug, Clone)]
 pub struct Latest {
     pub library: BaseItemDto,
-    pub items: Vec<BaseItemDto>,
+    pub items: Arrival<BaseItemDto>,
 }
 
 /// The most items one Latest row shows.
 pub const LATEST: i32 = 16;
 
-pub async fn load(api: Rc<Api>) -> Answer<State> {
-    Answer::of(async {
-        let libraries = api.libraries().await.bubbled()?;
-        let mut latest = Vec::new();
-        for library in &libraries {
-            let Some(id) = library.id else {
-                continue;
-            };
-            let items = api
-                .latest(id, LATEST)
-                .await
-                .or_default(Text::FailureLatestUnread);
-            if items.is_empty() {
-                continue;
-            }
-            latest.push(Latest {
-                library: library.clone(),
-                items,
-            });
-        }
-
-        Ok(State {
-            continue_watching: api.continue_watching().await.bubbled()?,
-            next_up: api.next_up().await.bubbled()?,
-            libraries,
-            latest,
-            on_now: Vec::new(),
-        })
-    })
-    .await
+/// What one rail's own request answers.
+pub async fn requested(api: Rc<Api>, section: Section) -> Answer<Vec<BaseItemDto>> {
+    match section {
+        Section::Resumed => api.continue_watching().await,
+        Section::NextUp => api.next_up().await,
+        Section::Latest(library) => api.latest(library, LATEST).await,
+    }
 }
 
 /// The channels the on-now row shows, in one channel query carrying their
@@ -334,18 +389,16 @@ fn opens(library: &BaseItemDto) -> Option<Route> {
 /// them: the library tiles in the arrangement's order, what is resumed, what
 /// Live TV offers and what is on now, what is next up, and what is latest in
 /// each library. A section the arrangement turns off is absent rather than
-/// empty.
+/// empty, and so is a rail whose own request has not answered.
 pub fn view<'a>(
     state: &'a State,
     arrangement: &'a Arrangement,
-    live_tv: LiveTv,
     now: chrono::DateTime<chrono::Utc>,
     viewport: Viewport,
     images: &'a Cache,
     session: &'a Session,
 ) -> Element<'a, Message> {
-    if state.libraries.is_empty() && state.continue_watching.is_empty() && state.next_up.is_empty()
-    {
+    if state.libraries.is_empty() {
         return construct::silent(
             Construct::CenterMessage,
             column![
@@ -388,7 +441,7 @@ pub fn view<'a>(
     }
 
     if arrangement.continue_watching {
-        for (section, items) in resumed(&state.continue_watching) {
+        for (section, items) in resumed(state.continue_watching.held()) {
             page = page.push(widget::section(
                 titled(section.label()),
                 widget::rail(
@@ -403,7 +456,7 @@ pub fn view<'a>(
             ));
         }
     }
-    if live_tv == LiveTv::Airing {
+    if !state.on_now.held().is_empty() {
         // reference: home-live-tv
         page = page.push(widget::section(
             titled(Text::HomeLiveTv),
@@ -426,11 +479,11 @@ pub fn view<'a>(
                     tab: crate::screen::livetv::Tab::Guide,
                 }),
             ),
-            widget::on_now_row(&state.on_now, Room::content(viewport), now, images),
+            widget::on_now_row(state.on_now.held(), Room::content(viewport), now, images),
         ));
     }
 
-    if arrangement.next_up && !state.next_up.is_empty() {
+    if arrangement.next_up && !state.next_up.held().is_empty() {
         page = page.push(widget::section(
             opened(
                 Text::HomeNextUp,
@@ -440,7 +493,7 @@ pub fn view<'a>(
             widget::rail(
                 railed(card::Card::NEXT_UP),
                 widget::Rail::of(Construct::ItemsContainer),
-                state.next_up.iter(),
+                state.next_up.held().iter(),
                 Room::content(viewport),
                 images,
                 now,
@@ -449,9 +502,6 @@ pub fn view<'a>(
         ));
     }
     for row in &state.latest {
-        if !latest_shown(&row.library, &arrangement.latest_excluded) {
-            continue;
-        }
         page = page.push(widget::section(
             opened(
                 Text::HomeLatest,
@@ -470,7 +520,7 @@ pub fn view<'a>(
                     Construct::ItemsContainer,
                     row.library.id.unwrap_or_default(),
                 ),
-                row.items.iter(),
+                row.items.held().iter(),
                 Room::content(viewport),
                 images,
                 now,
@@ -496,17 +546,21 @@ pub fn images(state: &State, arrangement: &Arrangement) -> images::Wanted {
     keys.extend(
         state
             .continue_watching
+            .held()
             .iter()
             .filter_map(|item| widget::posted(item, card::Card::resumed(item.media_type))),
     );
-    keys.extend(widget::card_images(&state.next_up, card::Card::NEXT_UP));
+    keys.extend(widget::card_images(
+        state.next_up.held(),
+        card::Card::NEXT_UP,
+    ));
     for row in &state.latest {
         keys.extend(widget::card_images(
-            &row.items,
+            row.items.held(),
             card::Card::latest(row.library.collection_type),
         ));
     }
-    keys.extend(state.on_now.iter().map(|channel| {
+    keys.extend(state.on_now.held().iter().map(|channel| {
         images::Poster::of(images::Key {
             item: channel.id,
             kind: images::Kind::Primary,

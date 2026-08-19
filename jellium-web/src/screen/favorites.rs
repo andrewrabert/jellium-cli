@@ -15,6 +15,7 @@ use crate::app::Message;
 use crate::error::Answer;
 use crate::images::{Cache, Wanted};
 use crate::route::Route;
+use crate::screen::arrival::Arrival;
 use crate::style::space::Room;
 use crate::style::{self, Viewport, card, space};
 use crate::text::{self as strings, Text};
@@ -71,36 +72,47 @@ pub fn opens(section: Section) -> Route {
     }
 }
 
-/// One section's items, in the order the server answered them.
+/// One section's items.
 #[derive(Debug, Clone)]
 pub struct Rail {
     pub section: Section,
-    pub items: Vec<BaseItemDto>,
+    pub items: Arrival<BaseItemDto>,
 }
 
-/// Every section the server answered items for, in `Section::ALL`'s order; a
-/// section the server answered nothing for is absent rather than empty.
-#[derive(Debug, Clone, Default)]
+/// Every section the reference draws, in `Section::ALL`'s order, each holding
+/// what its own request answered.
+#[derive(Debug, Clone)]
 pub struct State {
     pub rails: Vec<Rail>,
 }
 
-pub async fn load(api: Rc<Api>) -> Answer<State> {
-    Answer::of(async {
-        let mut rails = Vec::new();
-        for section in Section::ALL {
-            let items = api
-                .favorites(section, ASKED)
-                .await
-                .or_default(Text::FailureFavoritesUnread);
-            if items.is_empty() {
-                continue;
-            }
-            rails.push(Rail { section, items });
+impl Default for State {
+    /// One awaited rail per section, in `Section::ALL`'s order.
+    fn default() -> State {
+        State {
+            rails: Section::ALL
+                .into_iter()
+                .map(|section| Rail {
+                    section,
+                    items: Arrival::Awaited,
+                })
+                .collect(),
         }
-        Ok(State { rails })
-    })
-    .await
+    }
+}
+
+impl State {
+    /// Takes one section's answer.
+    pub fn took(&mut self, section: Section, items: Vec<BaseItemDto>) {
+        if let Some(rail) = self.rails.iter_mut().find(|rail| rail.section == section) {
+            rail.items = Arrival::Arrived(items);
+        }
+    }
+}
+
+/// What one section's own request answers.
+pub async fn requested(api: Rc<Api>, section: Section) -> Answer<Vec<BaseItemDto>> {
+    api.favorites(section, ASKED).await
 }
 
 pub fn view<'a>(
@@ -111,7 +123,11 @@ pub fn view<'a>(
     session: &'a Session,
 ) -> Element<'a, Message> {
     let mut page = column![].spacing(style::drawn(space::SECTION_GAP.drawn()));
-    for rail in &state.rails {
+    for rail in state
+        .rails
+        .iter()
+        .filter(|rail| !rail.items.held().is_empty())
+    {
         page = page.push(widget::section(
             crate::construct::navigation(
                 Construct::SectionTitleCards,
@@ -125,7 +141,7 @@ pub fn view<'a>(
             widget::rail(
                 railed(rail.section),
                 widget::Rail::of(Construct::ItemsContainer),
-                rail.items.iter(),
+                rail.items.held().iter(),
                 Room::content(viewport),
                 images,
                 now,
@@ -139,7 +155,7 @@ pub fn view<'a>(
 pub fn images(state: &State) -> Wanted {
     let mut held = Wanted::new();
     for rail in &state.rails {
-        held.extend(widget::card_images(&rail.items, rail.section.card()));
+        held.extend(widget::card_images(rail.items.held(), rail.section.card()));
     }
     held
 }
