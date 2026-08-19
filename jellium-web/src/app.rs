@@ -391,7 +391,6 @@ pub enum Message {
     /// by nobody.
     FontLoaded,
     Scrolled(window::Scrolled),
-    OnNowLoaded(Answer<Vec<jellyfin_api::types::BaseItemDto>>),
     LiveTvLoaded(Answer<livetv::State>),
     LiveTvAction(livetv::Action),
     GuideFetched(Answer<(guide::Fetched, Vec<Program>)>),
@@ -452,7 +451,7 @@ impl Signed {
     /// read, and nothing on a screen that has not read them.
     pub fn libraries(&self) -> &[jellyfin_api::types::BaseItemDto] {
         match &self.view {
-            View::Home(state) => &state.libraries,
+            View::Home(state) => state.libraries.held(),
             _ => &[],
         }
     }
@@ -460,12 +459,7 @@ impl Signed {
     fn items_mut(&mut self) -> Vec<&mut jellyfin_api::types::BaseItemDto> {
         match &mut self.view {
             View::Loading => Vec::new(),
-            View::Home(state) => state
-                .libraries
-                .iter_mut()
-                .chain(state.continue_watching.held_mut().iter_mut())
-                .chain(state.next_up.held_mut().iter_mut())
-                .collect(),
+            View::Home(state) => state.items_mut(),
             View::Library(_) => Vec::new(),
             View::Detail(state) => std::iter::once(&mut state.item)
                 .chain(state.children.iter_mut())
@@ -536,6 +530,9 @@ pub fn staged(route: &Route, live_tv: jellium_protocol::LiveTvAccess) -> View {
         Route::Home {
             tab: crate::screen::home::Tab::Favorites,
         } => View::Favorites(Box::default()),
+        Route::Home {
+            tab: crate::screen::home::Tab::Home,
+        } => View::Home(Box::default()),
         Route::LiveTv { .. } => match crate::error::live_tv_denied(live_tv) {
             Some(denied) => {
                 crate::failure::raise(denied);
@@ -606,10 +603,13 @@ pub fn load(signed: &Signed, route: &Route, viewport: Viewport) -> Task<Message>
     match route.clone() {
         Route::Home {
             tab: crate::screen::home::Tab::Home,
-        } => Task::perform(
-            async move { api.libraries().await },
-            Message::HomeLibrariesLoaded,
-        ),
+        } => Task::batch([
+            Task::perform(
+                async move { api.libraries().await },
+                Message::HomeLibrariesLoaded,
+            ),
+            requesting(&signed.api, home::Section::drawn(&signed.arrangement)),
+        ]),
         Route::Home {
             tab: crate::screen::home::Tab::Favorites,
         } => Task::batch(jellium_model::favorites::Section::ALL.map(|section| {
@@ -818,14 +818,16 @@ impl Jellium {
             SessionStatus::Authenticated(session) => {
                 let api = Rc::new(Api::new(session.user_id));
                 let detected = crate::browser::Browser::detect(&crate::browser::Runtime::probe());
+                let route = Route::Home {
+                    tab: crate::screen::home::Tab::Home,
+                };
+                let live_tv = session.live_tv;
                 self.stage = Stage::Signed(Box::new(Signed {
                     rails: std::collections::HashMap::new(),
                     session,
                     api,
-                    history: vec![Route::Home {
-                        tab: crate::screen::home::Tab::Home,
-                    }],
-                    view: View::Loading,
+                    history: vec![route.clone()],
+                    view: staged(&route, live_tv),
                     overflow: None,
                     confirming: None,
                     foreign: crate::images::Foreign::new(),
@@ -838,6 +840,7 @@ impl Jellium {
                     arrangement: crate::screen::home::Arrangement::of(
                         &jellium_model::form::Form::of(serde_json::Value::Null),
                         jellium_model::prefs::Held::default(),
+                        live_tv,
                     ),
                     browser: detected,
                     live: live::Link::default(),
@@ -876,13 +879,7 @@ impl Jellium {
                         },
                         Message::PreferencesLoaded,
                     ),
-                    load(
-                        signed,
-                        &Route::Home {
-                            tab: crate::screen::home::Tab::Home,
-                        },
-                        viewport,
-                    ),
+                    load(signed, &route, viewport),
                 ])
             }
         }
@@ -1157,8 +1154,11 @@ impl Jellium {
         let Some(signed) = self.signed() else {
             return;
         };
-        signed.arrangement =
-            crate::screen::home::Arrangement::of(&signed.configuration, signed.held);
+        signed.arrangement = crate::screen::home::Arrangement::of(
+            &signed.configuration,
+            signed.held,
+            signed.session.live_tv,
+        );
         let wanted = signed.wanted_images();
         self.images.blur(&wanted);
         self.images.retain(&wanted);
@@ -1233,8 +1233,11 @@ impl Jellium {
     pub fn update(&mut self, message: Message) -> Task<Message> {
         let task = self.updating(message);
         if let Some(signed) = self.signed() {
-            signed.arrangement =
-                crate::screen::home::Arrangement::of(&signed.configuration, signed.held);
+            signed.arrangement = crate::screen::home::Arrangement::of(
+                &signed.configuration,
+                signed.held,
+                signed.session.live_tv,
+            );
         }
         task
     }
@@ -1553,16 +1556,13 @@ impl Jellium {
                     return Task::none();
                 };
                 let api = signed.api.clone();
-                let airing = signed.session.live_tv.allowed();
                 let arrangement = signed.arrangement.clone();
-                let state = home::State::of(libraries, &arrangement);
-                let sections = state.sections(&arrangement);
-                let showing = self.loaded(View::Home(Box::new(state)));
-                let mut asking = vec![showing, requesting(&api, sections)];
-                if airing {
-                    asking.push(Task::perform(home::on_now(api), Message::OnNowLoaded));
-                }
-                Task::batch(asking)
+                let View::Home(state) = &mut signed.view else {
+                    return Task::none();
+                };
+                let asking = requesting(&api, state.took_libraries(libraries, &arrangement));
+                self.settle();
+                Task::batch([asking, self.fetch_images()])
             }
             Message::HomeRailLoaded(section, answered) => {
                 let Some(items) = answered.or_none(section.unread()) else {
@@ -2361,18 +2361,6 @@ impl Jellium {
                 let paging = dashboard::fetch_if_stale(signed);
                 self.settle();
                 Task::batch([fetching, paging, self.fetch_images()])
-            }
-            Message::OnNowLoaded(loaded) => {
-                let Some(programmes) = loaded.or_none(Text::FailureProgramsUnread) else {
-                    return Task::none();
-                };
-                if let Some(signed) = self.signed()
-                    && let View::Home(state) = &mut signed.view
-                {
-                    state.on_now = crate::screen::arrival::Arrival::Arrived(programmes);
-                }
-                self.settle();
-                self.fetch_images()
             }
             Message::LiveTvLoaded(answered) => {
                 let Some(state) = answered.or_none(Text::FailureLiveTvUnread) else {
@@ -3389,7 +3377,6 @@ fn library_changed(
 ) -> Task<Message> {
     let api = signed.api.clone();
     let arrangement = signed.arrangement.clone();
-    let airing = signed.session.live_tv.allowed();
 
     if let Some(Route::Detail { id }) = signed.route()
         && removed.contains(id)
@@ -3400,13 +3387,15 @@ fn library_changed(
     }
 
     match &mut signed.view {
-        View::Home(state) => {
-            let sections = state.sections(&arrangement);
-            let mut asking = vec![requesting(&api, sections)];
-            if airing {
-                asking.push(Task::perform(home::on_now(api), Message::OnNowLoaded));
-            }
-            Task::batch(asking)
+        View::Home(_) => {
+            let reading = api.clone();
+            Task::batch([
+                Task::perform(
+                    async move { reading.libraries().await },
+                    Message::HomeLibrariesLoaded,
+                ),
+                requesting(&api, home::Section::drawn(&arrangement)),
+            ])
         }
         View::Library(state) => match &mut state.body {
             crate::screen::library::Body::Browse(browse)

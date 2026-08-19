@@ -198,11 +198,25 @@ pub enum Section {
     /// the reference reaches them in three.
     Resumed,
     NextUp,
+    /// The programmes airing now, which the Live TV section stands on.
+    OnNow,
     /// The Latest rail of the library named.
     Latest(uuid::Uuid),
 }
 
 impl Section {
+    /// Every rail that rests on nothing the library list carries: the resumed
+    /// rails and Next Up where the arrangement draws them, and On Now where the
+    /// session reaches Live TV.
+    // reference: home-live-tv-airing
+    pub fn drawn(arrangement: &Arrangement) -> Vec<Section> {
+        let mut drawn = Section::stale(arrangement);
+        if arrangement.live_tv.allowed() {
+            drawn.push(Section::OnNow);
+        }
+        drawn
+    }
+
     /// The rails a played mark or a cleared resume position makes stale, each
     /// only where the arrangement draws it.
     pub fn stale(arrangement: &Arrangement) -> Vec<Section> {
@@ -220,41 +234,53 @@ impl Section {
     pub fn unread(self) -> Text {
         match self {
             Section::Resumed | Section::NextUp => Text::FailureHomeUnread,
+            Section::OnNow => Text::FailureProgramsUnread,
             Section::Latest(_) => Text::FailureLatestUnread,
         }
     }
 }
 
-#[derive(Debug, Clone)]
+/// What the home screen holds: the library list and every rail, each awaited
+/// until its own request answers.
+#[derive(Debug, Clone, Default)]
 pub struct State {
-    pub libraries: Vec<BaseItemDto>,
+    pub libraries: Arrival<BaseItemDto>,
     pub continue_watching: Arrival<BaseItemDto>,
     pub next_up: Arrival<BaseItemDto>,
-    /// One row per library `latest_shown` admits, in the library order.
-    pub latest: Vec<Latest>,
     /// The programmes airing now, which the Live TV section stands on.
     pub on_now: Arrival<BaseItemDto>,
+    /// One row per library `latest_shown` admits, in the library order.
+    pub latest: Vec<Latest>,
 }
 
 impl State {
-    /// The screen the libraries answered stand up: every rail awaited, and one
-    /// Latest row per library `latest_shown` admits, in the library order.
-    pub fn of(libraries: Vec<BaseItemDto>, arrangement: &Arrangement) -> State {
-        let latest = libraries
+    // a row whose library the list still carries keeps what it holds
+    /// Takes the library list, standing up one Latest row per library
+    /// `latest_shown` admits that names an id, in the library order.
+    /// Answers every Latest rail the screen holds after it.
+    pub fn took_libraries(
+        &mut self,
+        libraries: Vec<BaseItemDto>,
+        arrangement: &Arrangement,
+    ) -> Vec<Section> {
+        self.latest = libraries
             .iter()
             .filter(|library| latest_shown(library, &arrangement.latest_excluded))
-            .map(|library| Latest {
+            .filter_map(|library| Some((library, library.id?)))
+            .map(|(library, id)| Latest {
                 library: library.clone(),
-                items: Arrival::Awaited,
+                id,
+                items: match self.latest.iter().find(|row| row.id == id) {
+                    Some(row) => row.items.clone(),
+                    None => Arrival::Awaited,
+                },
             })
             .collect();
-        State {
-            libraries,
-            continue_watching: Arrival::Awaited,
-            next_up: Arrival::Awaited,
-            latest,
-            on_now: Arrival::Awaited,
-        }
+        self.libraries = Arrival::Arrived(libraries);
+        self.latest
+            .iter()
+            .map(|row| Section::Latest(row.id))
+            .collect()
     }
 
     // an answer for a Latest row this screen does not hold is dropped
@@ -263,36 +289,37 @@ impl State {
         match section {
             Section::Resumed => self.continue_watching = Arrival::Arrived(items),
             Section::NextUp => self.next_up = Arrival::Arrived(items),
+            Section::OnNow => self.on_now = Arrival::Arrived(items),
             Section::Latest(library) => {
-                if let Some(row) = self
-                    .latest
-                    .iter_mut()
-                    .find(|row| row.library.id == Some(library))
-                {
+                if let Some(row) = self.latest.iter_mut().find(|row| row.id == library) {
                     row.items = Arrival::Arrived(items);
                 }
             }
         }
     }
 
-    /// Every rail this screen requests: the ones the arrangement draws, and one
-    /// per Latest row it holds.
-    pub fn sections(&self, arrangement: &Arrangement) -> Vec<Section> {
-        let mut asked = Section::stale(arrangement);
-        asked.extend(
-            self.latest
-                .iter()
-                .filter_map(|row| row.library.id)
-                .map(Section::Latest),
-        );
-        asked
+    /// Every item the screen draws, for a live refresh to mark in place.
+    pub fn items_mut(&mut self) -> Vec<&mut BaseItemDto> {
+        self.libraries
+            .held_mut()
+            .iter_mut()
+            .chain(self.continue_watching.held_mut().iter_mut())
+            .chain(self.next_up.held_mut().iter_mut())
+            .chain(self.on_now.held_mut().iter_mut())
+            .chain(
+                self.latest
+                    .iter_mut()
+                    .flat_map(|row| row.items.held_mut().iter_mut()),
+            )
+            .collect()
     }
 }
 
-/// One Latest row.
+/// One Latest row, which stands only for a library the server named an id for.
 #[derive(Debug, Clone)]
 pub struct Latest {
     pub library: BaseItemDto,
+    pub id: uuid::Uuid,
     pub items: Arrival<BaseItemDto>,
 }
 
@@ -304,17 +331,13 @@ pub async fn requested(api: Rc<Api>, section: Section) -> Answer<Vec<BaseItemDto
     match section {
         Section::Resumed => api.continue_watching().await,
         Section::NextUp => api.next_up().await,
+        Section::OnNow => api.airing_now(ON_NOW).await,
         Section::Latest(library) => api.latest(library, LATEST).await,
     }
 }
 
-/// The programmes the on-now row shows.
-pub async fn on_now(api: Rc<Api>) -> Answer<Vec<BaseItemDto>> {
-    api.airing_now(ON_NOW).await
-}
-
-/// What the home screen shows: the library order, the libraries hidden, and the
-/// two rows.
+/// What the home screen shows: the library order, the libraries hidden, the
+/// two rows, and what Live TV the session offers.
 #[derive(Debug, Clone, PartialEq)]
 pub struct Arrangement {
     pub order: Vec<uuid::Uuid>,
@@ -323,6 +346,8 @@ pub struct Arrangement {
     pub latest_excluded: Vec<uuid::Uuid>,
     pub continue_watching: bool,
     pub next_up: bool,
+    /// What the reference's own `EnableLiveTvAccess` gate reads.
+    pub live_tv: jellium_protocol::LiveTvAccess,
 }
 
 impl Arrangement {
@@ -331,6 +356,7 @@ impl Arrangement {
     pub fn of(
         configuration: &jellium_model::form::Form,
         held: jellium_model::prefs::Held,
+        live_tv: jellium_protocol::LiveTvAccess,
     ) -> Arrangement {
         Arrangement {
             order: jellium_model::user::ids(configuration, jellium_model::user::ORDERED_VIEWS),
@@ -341,6 +367,7 @@ impl Arrangement {
             ),
             continue_watching: held.continue_watching,
             next_up: held.next_up,
+            live_tv,
         }
     }
 }
@@ -398,7 +425,11 @@ pub fn view<'a>(
     images: &'a Cache,
     session: &'a Session,
 ) -> Element<'a, Message> {
-    if state.libraries.is_empty() {
+    // the empty heading stands once the library list has answered nothing, and
+    // not before
+    if let Arrival::Arrived(libraries) = &state.libraries
+        && libraries.is_empty()
+    {
         return construct::silent(
             Construct::CenterMessage,
             column![
@@ -529,10 +560,7 @@ pub fn view<'a>(
             ),
             widget::rail(
                 railed(card::Card::latest(row.library.collection_type)),
-                widget::Rail::within(
-                    Construct::ItemsContainer,
-                    row.library.id.unwrap_or_default(),
-                ),
+                widget::Rail::within(Construct::ItemsContainer, row.id),
                 row.items.held().iter(),
                 Room::content(viewport),
                 images,
@@ -547,10 +575,15 @@ pub fn view<'a>(
 /// The library views My Media draws: the arrangement's own order, with the
 /// views it hides dropped.
 pub fn shown<'a>(state: &'a State, arrangement: &Arrangement) -> Vec<&'a BaseItemDto> {
-    let ids: Vec<uuid::Uuid> = state.libraries.iter().filter_map(|it| it.id).collect();
+    let ids: Vec<uuid::Uuid> = state
+        .libraries
+        .held()
+        .iter()
+        .filter_map(|it| it.id)
+        .collect();
     jellium_model::user::arranged(&ids, &arrangement.order, &arrangement.hidden)
         .iter()
-        .filter_map(|id| state.libraries.iter().find(|it| it.id == Some(*id)))
+        .filter_map(|id| state.libraries.held().iter().find(|it| it.id == Some(*id)))
         .collect()
 }
 
