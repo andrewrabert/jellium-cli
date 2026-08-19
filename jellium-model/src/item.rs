@@ -5,6 +5,7 @@ use jellyfin_api::types::{BaseItemDto, BaseItemKind, LocationType, MediaType, Me
 
 use crate::appearance::Share;
 use crate::form::{Field, Form};
+use crate::truthy::Truthy;
 
 pub const NAME: Field = Field::Text { key: "Name" };
 pub const ORIGINAL_TITLE: Field = Field::Text {
@@ -514,7 +515,7 @@ pub fn watched(item: &BaseItemDto) -> Option<Watched> {
         return None;
     }
     let data = item.user_data.as_ref()?;
-    if let Some(count) = data.unplayed_item_count.filter(|count| *count != 0) {
+    if let Some(count) = data.unplayed_item_count.truthy() {
         return Some(Watched::Unplayed(Unplayed(count)));
     }
     let whole =
@@ -549,9 +550,9 @@ fn live_tv_naming(item: &BaseItemDto) -> bool {
 fn parent_named(item: &BaseItemDto) -> Option<String> {
     item.series_name
         .clone()
-        .or_else(|| item.album.clone())
-        .or_else(|| item.album_artist.clone())
-        .filter(|parent| !parent.is_empty())
+        .truthy()
+        .or_else(|| item.album.clone().truthy())
+        .or_else(|| item.album_artist.clone().truthy())
 }
 
 /// Whether the reference writes the item's parent under its title rather than
@@ -576,20 +577,26 @@ fn parent_underneath(item: &BaseItemDto) -> bool {
 // reference: card-footer-lines
 // reference: card-live-tv-naming
 pub fn title(item: &BaseItemDto) -> Option<Title> {
-    if live_tv_naming(item) && item.episode_title.is_none() && item.index_number.is_none() {
+    if live_tv_naming(item)
+        && item.episode_title.as_deref().truthy().is_none()
+        && item.index_number.truthy().is_none()
+    {
         return None;
     }
-    let named = item.name.clone().unwrap_or_default();
-    let episodic = item.is_series == Some(true) || item.episode_title.is_some();
+    let named = item.name.clone().truthy().unwrap_or_default();
+    let episodic =
+        item.is_series.truthy().is_some() || item.episode_title.as_deref().truthy().is_some();
     let name = match live_tv_naming(item) && episodic {
-        true => item.episode_title.clone().unwrap_or_default(),
+        true => item.episode_title.clone().truthy().unwrap_or_default(),
         false => named,
     };
     if item.type_ == Some(BaseItemKind::TvChannel) {
-        return Some(Title::Plain(match &item.channel_number {
-            Some(channel) if !channel.is_empty() => format!("{channel} {name}"),
-            Some(_) | None => name,
-        }));
+        return Some(Title::Plain(
+            match item.channel_number.as_deref().truthy() {
+                Some(channel) => format!("{channel} {name}"),
+                None => name,
+            },
+        ));
     }
     if item.type_ == Some(BaseItemKind::Episode) && item.parent_index_number == Some(0) {
         return Some(Title::Special(name));
@@ -598,6 +605,8 @@ pub fn title(item: &BaseItemDto) -> Option<Title> {
         item.type_,
         Some(BaseItemKind::Episode | BaseItemKind::Program | BaseItemKind::Recording)
     );
+    // the reference tests this pair against null rather than for truthiness,
+    // so an item numbered zero inside a season numbered zero is still numbered
     let (Some(index), Some(season)) = (item.index_number, item.parent_index_number) else {
         return Some(Title::Plain(name));
     };
@@ -605,7 +614,7 @@ pub fn title(item: &BaseItemDto) -> Option<Title> {
         return Some(Title::Plain(name));
     }
     let mut number = format!("S{season}:E{index}");
-    if let Some(last) = item.index_number_end {
+    if let Some(last) = item.index_number_end.truthy() {
         number.push_str(&format!("-{last}"));
     }
     Some(Title::Plain(match name.is_empty() {
@@ -625,12 +634,12 @@ pub fn parent_over(item: &BaseItemDto) -> Option<String> {
         return None;
     }
     if item.type_ == Some(BaseItemKind::Episode)
-        && let Some(series) = item.series_name.clone().filter(|name| !name.is_empty())
+        && let Some(series) = item.series_name.clone().truthy()
     {
         return Some(series);
     }
     match live_tv_naming(item) {
-        true => item.name.clone().filter(|name| !name.is_empty()),
+        true => item.name.clone().truthy(),
         false => parent_named(item),
     }
 }

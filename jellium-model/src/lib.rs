@@ -21,6 +21,7 @@ pub mod setup;
 pub mod sort;
 pub mod task;
 pub mod trickplay;
+pub mod truthy;
 pub mod upload;
 pub mod user;
 pub mod window;
