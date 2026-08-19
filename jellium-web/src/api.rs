@@ -1,5 +1,6 @@
 use jellium_model::facets::{Facet, Facets, SeriesState, VideoKind};
 use jellium_model::item::Mark;
+use jellium_model::paged::Limit;
 use jellium_model::sort::Sort;
 use jellium_model::{prefs, quickconnect};
 use jellyfin_api::types::{
@@ -534,7 +535,9 @@ impl Api {
         .await
     }
 
-    pub async fn latest(&self, library: Uuid, limit: i32) -> Answer<Vec<BaseItemDto>> {
+    // the reference names no GroupItems, so the server's own grouping stands
+    // reference: home-latest-query
+    pub async fn latest(&self, library: Uuid, limit: Limit) -> Answer<Vec<BaseItemDto>> {
         Answer::of(async {
             let fields = fields();
             Ok(self
@@ -543,8 +546,7 @@ impl Api {
                     enable_images: Some(true),
                     enable_user_data: Some(true),
                     fields: Some(&fields),
-                    group_items: Some(false),
-                    limit: Some(limit),
+                    limit: Some(limit.count()),
                     parent_id: Some(&library),
                     user_id: Some(&self.user_id),
                     ..Default::default()

@@ -2,6 +2,7 @@ use std::rc::Rc;
 
 use iced::Element;
 use iced::widget::{column, row};
+use jellium_model::paged::Limit;
 use jellium_protocol::Session;
 use jellyfin_api::types::{BaseItemDto, CollectionType, MediaType};
 
@@ -296,7 +297,7 @@ pub struct Latest {
 }
 
 /// The most items one Latest row shows.
-pub const LATEST: i32 = 16;
+pub const LATEST: Limit = Limit::of(16);
 
 /// What one rail's own request answers.
 pub async fn requested(api: Rc<Api>, section: Section) -> Answer<Vec<BaseItemDto>> {
