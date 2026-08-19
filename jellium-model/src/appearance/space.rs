@@ -498,6 +498,15 @@ pub const CARD_OPTIONS_BOTTOM: Length = Length::em(0.25);
 // reference: card-indicators
 pub const CARD_INDICATORS_INSET: Length = Length::em(0.225);
 
+/// `.indicator`'s own box around a count, in the em of the size that badge is
+/// set in.
+// reference: indicator-shape
+pub const CARD_COUNT: Length = typeface::CARD_COUNT.times(Ratio::thousandths(2000));
+
+/// The same box around the played check, in that badge's own em.
+// reference: indicator-shape
+pub const CARD_PLAYED: Length = typeface::CARD_PLAYED.times(Ratio::thousandths(2000));
+
 /// `.cardOverlayButton-hover`'s own padding, in the em of the size that button
 /// is set in.
 // reference: card-overlay-hover

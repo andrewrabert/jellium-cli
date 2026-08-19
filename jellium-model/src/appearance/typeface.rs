@@ -156,9 +156,26 @@ pub const CARD_OVERLAY_FAB: Length = CARD_OVERLAY_BUTTON.times(Ratio::thousandth
 // reference: card-overlay-button-icon
 pub const CARD_OVERLAY_ICON: Length = ICON_BUTTON.times(Ratio::thousandths(880));
 
-/// `.indicatorIcon`, which a card's own indicators are drawn at.
+/// `.indicatorIcon` standing in `.cardIndicators`' own em, which is what a
+/// card's timer glyph is drawn at.
 // reference: indicator-icon
 pub const INDICATOR_ICON: Length = BODY.times(Ratio::thousandths(1600));
+
+/// `.countIndicator`, which the reference sets under the card's own body.
+// reference: indicator-count-face
+pub const CARD_COUNT: Length = BODY.times(Ratio::thousandths(880));
+
+/// What `.playedIndicator` sets itself, and the glyph it holds, in.
+// reference: indicator-played-face
+const PLAYED: Ratio = Ratio::thousandths(800);
+
+/// `.playedIndicator`, which the reference sets smaller still.
+// reference: indicator-played-face
+pub const CARD_PLAYED: Length = BODY.times(PLAYED);
+
+/// `.indicatorIcon` inside that badge, which the badge's own size sets the em
+/// of.
+pub const CARD_PLAYED_ICON: Length = INDICATOR_ICON.times(PLAYED);
 
 /// `.filterIndicator`'s lettering, 60% of the control it sits on.
 // reference: filter-indicator

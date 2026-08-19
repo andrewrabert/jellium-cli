@@ -924,6 +924,31 @@ pub fn indicator(_theme: &iced::Theme) -> iced::widget::container::Style {
         })
 }
 
+/// `.countIndicator` and `.playedIndicator`: the disc a card's own badge stands
+/// on, under the radius its `border-radius: 100em` draws.
+// reference: indicator-shape
+// reference: indicator-count-face
+// reference: indicator-played-face
+// reference: scheme-count-indicator
+pub fn card_badge(_theme: &iced::Theme, across: Length) -> iced::widget::container::Style {
+    iced::widget::container::Style::default()
+        .background(color(scheme::CARD_BADGE))
+        .color(color(scheme::ON_CARD_BADGE))
+        .border(iced::Border {
+            radius: iced::border::Radius::new(drawn(across.drawn())),
+            ..iced::Border::default()
+        })
+}
+
+/// What that badge writes on itself.
+// reference: indicator-count-face
+// reference: indicator-played-face
+pub fn on_card_badge(_theme: &iced::Theme) -> iced::widget::text::Style {
+    iced::widget::text::Style {
+        color: Some(color(scheme::ON_CARD_BADGE)),
+    }
+}
+
 /// The label written above a field.
 // reference: scheme-label
 pub fn label(_theme: &iced::Theme) -> iced::widget::text::Style {

@@ -735,3 +735,10 @@ home-on-now-query	src/components/homesections/sections/liveTv.ts	19	27	d6a22ea1a
 home-live-tv-airing	src/components/homesections/sections/liveTv.ts	164	180	bf58e11c1e793c7e4a7e0e28829d8d5c89b0353d6605a054daad7de4ff3e4668	ported
 indicator-progress-enabled	src/components/indicators/indicators.js	7	11	b0e03c4083acf1533f36ca23b83f3b7bf11b3b1b36b392d97e95223e9af934a5	ported
 indicator-progress	src/components/indicators/indicators.js	36	71	af3079fdbeb892d9fa2b6ea62616d9ffde77442ab840f3969e9c7f812b9ebc06	ported
+indicator-played	src/components/indicators/indicators.js	77	90	3ea6a1c998896661491a27d582767103ef8ac7fd1a0350cf8427b0bde14bcca2	ported
+indicator-count	src/components/indicators/indicators.js	102	104	1f5edaa50ab91402c7b73bf482a5a44bded8d83f7cc73381d111dc054bad1085	ported
+indicator-shape	src/components/indicators/indicators.scss	30	38	9c66e769f96b4228705bc0726d75d9a6d50b96758d061b0a7b9356322e9ef94a	ported
+indicator-count-face	src/components/indicators/indicators.scss	64	73	39c923b70466253eac746c4c25064f7f4ac1d36f7fcbae0edc7cae2cb964cc46	ported
+indicator-played-face	src/components/indicators/indicators.scss	75	83	59656d357f718575c6c4c6a38ef0a6d5ba3bed094150a2510ee1bee4b4d8b1e6	ported
+scheme-count-indicator	src/themes/dark/theme.scss	316	321	3c471a47e3aa6df713f73fbb7ad37b5f1c74a2eee044fa679dd2c4e5b9350983	ported
+card-indicators-order	src/components/cardbuilder/cardBuilder.js	1046	1075	ee769c156c9a8b14a78ea98e8bc4ee275a6fbe6e899ff7fcd8282c5d29a7cd84	ported

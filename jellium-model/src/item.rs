@@ -480,6 +480,48 @@ pub fn markable(item: &BaseItemDto) -> bool {
     ) || matches!(item.media_type, Some(MediaType::Book))
 }
 
+/// The count `.countIndicator` writes over a card.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct Unplayed(i32);
+
+impl Unplayed {
+    /// What the badge writes, which the reference caps at `99+`.
+    // reference: indicator-count
+    pub fn written(self) -> String {
+        match self.0 {
+            100.. => "99+".to_owned(),
+            count => count.to_string(),
+        }
+    }
+}
+
+/// The badge `getPlayedIndicatorHtml` writes over a card's image.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Watched {
+    /// `.countIndicator`: how many of the item's children are unplayed.
+    Unplayed(Unplayed),
+    /// `.playedIndicator`: the check an item a viewer has finished carries.
+    Played,
+}
+
+/// The badge an item's own user data draws over its card: the count of what is
+/// unplayed under it, the check where the whole of it is played, and none where
+/// the item carries no played mark at all or reports no user data.
+// reference: indicator-played
+// reference: item-can-mark-played
+pub fn watched(item: &BaseItemDto) -> Option<Watched> {
+    if !markable(item) {
+        return None;
+    }
+    let data = item.user_data.as_ref()?;
+    if let Some(count) = data.unplayed_item_count.filter(|count| *count != 0) {
+        return Some(Watched::Unplayed(Unplayed(count)));
+    }
+    let whole =
+        data.played_percentage.is_some_and(|played| played >= 100.0) || data.played == Some(true);
+    whole.then_some(Watched::Played)
+}
+
 /// Whether the rating control stands on it.
 // a programme, a library, a user view and a channel carry none, and so does an
 // item the server reports no user data for; the reference's timer and series

@@ -113,6 +113,7 @@ fn entry<'a>(
             logo: None,
             timer: crate::livetv::Recording::covering(item),
             elapsed: None,
+            watched: None,
             press: item
                 .id
                 .map(|id| Message::Navigated(crate::route::Route::Detail { id })),

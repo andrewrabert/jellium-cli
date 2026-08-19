@@ -94,6 +94,7 @@ fn entry<'a>(
             logo: None,
             timer: None,
             elapsed: None,
+            watched: None,
             press: Some(Message::Navigated(crate::route::Route::Detail {
                 id: channel.id,
             })),

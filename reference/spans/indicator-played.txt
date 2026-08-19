@@ -1,0 +1,14 @@
+export function getPlayedIndicatorHtml(item) {
+    if (enablePlayedIndicator(item)) {
+        const userData = item.UserData || {};
+        if (userData.UnplayedItemCount) {
+            return '<div class="countIndicator indicator">' + formatCountIndicator(userData.UnplayedItemCount) + '</div>';
+        }
+
+        if (userData.PlayedPercentage && userData.PlayedPercentage >= 100 || (userData.Played)) {
+            return '<div class="playedIndicator indicator"><span class="material-icons indicatorIcon check" aria-hidden="true"></span></div>';
+        }
+    }
+
+    return '';
+}

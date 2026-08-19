@@ -170,6 +170,7 @@ fn entry<'a>(
             logo: None,
             timer: Some(crate::livetv::Recording::Series),
             elapsed: None,
+            watched: None,
             // reference: series-timer-route
             press: timer
                 .id

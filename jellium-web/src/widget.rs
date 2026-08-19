@@ -528,6 +528,9 @@ pub struct Poster {
     /// What `.innerCardFooter`'s bar reads across the foot of the card's
     /// image, and `None` where the card marks no progress.
     pub elapsed: Option<Share>,
+    /// The badge the item's own user data draws over that image, and `None`
+    /// where it draws none.
+    pub watched: Option<item::Watched>,
     pub press: Option<Message>,
     pub hovered: Hovered,
     pub overlaid: Overlaid,
@@ -627,36 +630,86 @@ pub fn timer<'a>(recording: Recording, size: style::Length) -> Element<'a, Messa
     }
 }
 
-/// `.cardIndicators`: the glyph of the timer covering a card's image, laid on
-/// the top trailing corner of that image, and nothing where no timer covers it.
+/// `.countIndicator` and `.playedIndicator`: the disc an item's user data draws
+/// over its card, the count of what is unplayed under it or the check the whole
+/// of it played carries.
+// reference: indicator-played
+// reference: indicator-count
+// reference: indicator-shape
+// reference: indicator-count-face
+// reference: indicator-played-face
+fn badge<'a>(watched: item::Watched) -> Element<'a, Message> {
+    let (across, written) = match watched {
+        item::Watched::Unplayed(count) => (
+            space::CARD_COUNT,
+            line(
+                count.written(),
+                typeface::CARD_COUNT,
+                typeface::Weight::Bold,
+                typeface::LINE_HEIGHT,
+            ),
+        ),
+        item::Watched::Played => (
+            space::CARD_PLAYED,
+            crate::icon::tinted(
+                Icon::Check,
+                typeface::CARD_PLAYED_ICON,
+                style::on_card_badge,
+            ),
+        ),
+    };
+    let disc = style::drawn(across.drawn());
+    container(written)
+        .center_x(disc)
+        .center_y(disc)
+        .style(move |theme| style::card_badge(theme, across))
+        .into()
+}
+
+/// `.cardIndicators`: what the reference lays on the top trailing corner of a
+/// card's image, the timer covering it before the badge its own user data
+/// carries, and the frame alone where the card carries neither. No section of
+/// this client sets `showGroupCount`, so the count that corner carries is
+/// always the unplayed one.
 // reference: card-indicators
+// reference: card-indicators-order
 // reference: indicator-timer
 // reference: indicator-timer-face
-fn marked<'a>(frame: Element<'a, Message>, recording: Option<Recording>) -> Element<'a, Message> {
-    let Some(recording) = recording else {
+fn marked<'a>(
+    frame: Element<'a, Message>,
+    recording: Option<Recording>,
+    watched: Option<item::Watched>,
+) -> Element<'a, Message> {
+    let mut laid: Vec<Element<'a, Message>> = Vec::new();
+    if let Some(recording) = recording {
+        laid.push(match recording {
+            Recording::Once => crate::icon::tinted(
+                Icon::FiberManualRecord,
+                typeface::INDICATOR_ICON,
+                style::card_timer,
+            ),
+            Recording::Series => crate::icon::tinted(
+                Icon::FiberSmartRecord,
+                typeface::INDICATOR_ICON,
+                style::card_timer,
+            ),
+            Recording::SeriesCancelled => crate::icon::tinted(
+                Icon::FiberSmartRecord,
+                typeface::INDICATOR_ICON,
+                style::card_timer_cancelled,
+            ),
+        });
+    }
+    if let Some(watched) = watched {
+        laid.push(badge(watched));
+    }
+    if laid.is_empty() {
         return frame;
-    };
-    let glyph = match recording {
-        Recording::Once => crate::icon::tinted(
-            Icon::FiberManualRecord,
-            typeface::INDICATOR_ICON,
-            style::card_timer,
-        ),
-        Recording::Series => crate::icon::tinted(
-            Icon::FiberSmartRecord,
-            typeface::INDICATOR_ICON,
-            style::card_timer,
-        ),
-        Recording::SeriesCancelled => crate::icon::tinted(
-            Icon::FiberSmartRecord,
-            typeface::INDICATOR_ICON,
-            style::card_timer_cancelled,
-        ),
-    };
+    }
     let inset = style::drawn(space::CARD_INDICATORS_INSET.drawn());
     iced::widget::stack![
         frame,
-        container(glyph)
+        container(row(laid))
             .padding(iced::Padding::ZERO.top(inset).right(inset))
             .align_right(Fill),
     ]
@@ -795,6 +848,7 @@ pub fn card<'a>(
             poster.elapsed,
         ),
         poster.timer,
+        poster.watched,
     );
     let (frame, trailing) = match room.viewport().layout() {
         Layout::Desktop => (hovered(stood, poster.hovered, drawing.backing), None),
@@ -974,6 +1028,7 @@ pub fn poster<'a>(
             logo: None,
             timer: None,
             elapsed: item::elapsed(item, now),
+            watched: item::watched(item),
             press: item.id.map(|id| Message::Navigated(opens(item, id))),
             hovered: Hovered {
                 plays: plays.clone(),
@@ -1582,6 +1637,7 @@ pub fn library_tile<'a>(
             logo: None,
             timer: None,
             elapsed: None,
+            watched: None,
             press: Some(press),
             hovered: Hovered::default(),
             overlaid: Overlaid::default(),

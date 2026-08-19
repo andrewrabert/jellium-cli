@@ -282,6 +282,7 @@ fn active<'a>(
             logo: None,
             timer: crate::livetv::Recording::covering(item),
             elapsed: None,
+            watched: None,
             press: None,
             hovered: Hovered {
                 plays: None,
@@ -340,6 +341,7 @@ fn timed<'a>(
             logo,
             timer: Some(crate::livetv::Recording::scheduled(timer)),
             elapsed: None,
+            watched: None,
             // reference: shortcut-edit-item
             press: match timer.program_info.as_ref().and_then(|held| held.id) {
                 Some(program) => Some(Message::LiveTvAction(Action::Show(program))),

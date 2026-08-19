@@ -1,0 +1,30 @@
+    if (options.disableIndicators !== true) {
+        let indicatorsHtml = '';
+
+        if (options.missingIndicator !== false) {
+            indicatorsHtml += indicators.getMissingIndicator(item);
+        }
+
+        indicatorsHtml += indicators.getSyncIndicator(item);
+        indicatorsHtml += indicators.getTimerIndicator(item);
+
+        indicatorsHtml += indicators.getTypeIndicator(item);
+
+        if (options.showGroupCount) {
+            indicatorsHtml += indicators.getChildCountIndicatorHtml(item, {
+                minCount: 1
+            });
+        } else {
+            indicatorsHtml += indicators.getPlayedIndicatorHtml(item);
+        }
+
+        if (item.Type === BaseItemKind.CollectionFolder || item.CollectionType) {
+            const refreshClass = item.RefreshProgress ? '' : ' class="hide"';
+            indicatorsHtml += '<div is="emby-itemrefreshindicator"' + refreshClass + ' data-progress="' + (item.RefreshProgress || 0) + '" data-status="' + item.RefreshStatus + '"></div>';
+            importRefreshIndicator();
+        }
+
+        if (indicatorsHtml) {
+            cardImageContainerOpen += '<div class="cardIndicators">' + indicatorsHtml + '</div>';
+        }
+    }

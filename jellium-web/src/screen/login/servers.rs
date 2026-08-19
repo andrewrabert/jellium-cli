@@ -46,6 +46,7 @@ fn saved<'a>(
             logo: None,
             timer: None,
             elapsed: None,
+            watched: None,
             press: Some(Message::LoginAction(Action::Select {
                 server: saved.server.clone(),
             })),

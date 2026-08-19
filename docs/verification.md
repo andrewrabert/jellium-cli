@@ -982,6 +982,12 @@ Run at 360x800, 768x1024 and 1920x1080.
   item is a favourite draws a filled heart in #cc3333, both drawing in the
   scrim's own lettering otherwise, and pressing either changes the colour
   without a reload.
+- A series card the server reports unplayed episodes for draws that count in
+  white on a #00a4dc disc at the top trailing corner of its image, `99+` above
+  ninety-nine, and casts no shadow under that disc.
+- A series card whose episodes are all played draws a white check on that disc
+  in place of the count, and a card whose item can carry no played mark draws
+  neither.
 - Under `--read-only` the scrim and the sheet alike offer the play control
   alone, on a library grid, a search result and a genre card.
 - The search field stands a 2em magnifier before its 1.1em field, gapped a

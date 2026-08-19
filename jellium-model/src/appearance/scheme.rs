@@ -557,6 +557,17 @@ pub const CARD_TIMER: Color = Color::rgb(0xcb, 0x27, 0x2a);
 // reference: indicator-timer-face
 pub const CARD_TIMER_CANCELLED: Color = Color::rgb(0x88, 0x88, 0x88);
 
+/// `.countIndicator` and `.playedIndicator`, which the reference's own theme
+/// fills alike. The reference writes this hex in four rules that stand apart
+/// from `.button-submit`'s, so neither constant is written as the other.
+// reference: scheme-count-indicator
+pub const CARD_BADGE: Color = Color::rgb(0x00, 0xa4, 0xdc);
+
+/// The lettering both write on themselves.
+// reference: indicator-count-face
+// reference: indicator-played-face
+pub const ON_CARD_BADGE: Color = Color::rgb(0xff, 0xff, 0xff);
+
 /// `.liveTvProgram`.
 // reference: guide-indicator-colors
 pub const BADGE_LIVE: Color = Color::rgb(0xcc, 0x33, 0x33);
