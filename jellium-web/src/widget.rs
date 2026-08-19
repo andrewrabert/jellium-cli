@@ -675,7 +675,7 @@ fn badge<'a>(watched: item::Watched) -> Element<'a, Message> {
             line(
                 count.written(),
                 typeface::CARD_COUNT,
-                typeface::Weight::Bold,
+                typeface::CARD_COUNT_WEIGHT,
                 typeface::LINE_HEIGHT,
             ),
         ),

@@ -161,6 +161,13 @@ pub const CARD_OVERLAY_ICON: Length = ICON_BUTTON.times(Ratio::thousandths(880))
 // reference: indicator-icon
 pub const INDICATOR_ICON: Length = BODY.times(Ratio::thousandths(1600));
 
+/// The weight `.indicator` and `.countIndicator` alike write over a card's
+/// count, which a browser resolves against the two faces the client bundles as
+/// the lighter one.
+// reference: indicator-shape
+// reference: indicator-count-face
+pub const CARD_COUNT_WEIGHT: Weight = Weight::Regular;
+
 /// `.countIndicator`, which the reference sets under the card's own body.
 // reference: indicator-count-face
 pub const CARD_COUNT: Length = BODY.times(Ratio::thousandths(880));
