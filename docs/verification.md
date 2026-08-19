@@ -989,7 +989,7 @@ Run at 360x800, 768x1024 and 1920x1080.
   without a reload.
 - A series card the server reports unplayed episodes for draws that count in
   white on a #00a4dc disc at the top trailing corner of its image, `99+` above
-  ninety-nine, and casts no shadow under that disc.
+  ninety-nine, lettered no heavier than the card's own name.
 - A series card whose episodes are all played draws a white check on that disc
   in place of the count, and a card whose item can carry no played mark draws
   neither.

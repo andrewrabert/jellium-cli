@@ -169,15 +169,15 @@ pub const INDICATOR_ICON: Length = BODY.times(Ratio::thousandths(1600));
 pub const CARD_COUNT_WEIGHT: Weight = Weight::Regular;
 
 /// `.countIndicator`, which the reference sets under the card's own body.
-// reference: indicator-count-face
+// reference: indicator-count-size
 pub const CARD_COUNT: Length = BODY.times(Ratio::thousandths(880));
 
 /// What `.playedIndicator` sets itself, and the glyph it holds, in.
-// reference: indicator-played-face
+// reference: indicator-played-size
 const PLAYED: Ratio = Ratio::thousandths(800);
 
 /// `.playedIndicator`, which the reference sets smaller still.
-// reference: indicator-played-face
+// reference: indicator-played-size
 pub const CARD_PLAYED: Length = BODY.times(PLAYED);
 
 /// `.indicatorIcon` inside that badge, which the badge's own size sets the em
