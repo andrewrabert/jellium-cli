@@ -130,7 +130,12 @@ const FACET_LIMIT: i32 = 500;
 /// The most remote images one provider search offers.
 const REMOTE_IMAGES: i32 = 60;
 
-fn fields() -> Vec<ItemFields> {
+/// The fields a surface asks for where it draws a list this client can open an
+/// item's detail screen or start playback from: `query`, `continue_watching`,
+/// `hub`, `recommendations`, `upcoming`, `similar`, `children`, `queue`,
+/// `instant_mix`, `recordings`, `active_recordings`, `playlist_entries` and
+/// `people`.
+fn detailed_fields() -> Vec<ItemFields> {
     vec![
         ItemFields::Chapters,
         ItemFields::MediaSources,
@@ -139,6 +144,14 @@ fn fields() -> Vec<ItemFields> {
         ItemFields::ParentId,
         ItemFields::PrimaryImageAspectRatio,
     ]
+}
+
+/// The fields a programme list asks for, which both the Programs tab and the
+/// On Now rail ask.
+// reference: programs-query
+// reference: home-on-now-query
+fn programme_fields() -> Vec<ItemFields> {
+    vec![ItemFields::ChannelInfo, ItemFields::PrimaryImageAspectRatio]
 }
 
 impl Api {
@@ -199,7 +212,7 @@ impl Api {
     }
 
     async fn query(&self, query: Query) -> Result<Page, Trouble> {
-        let fields = fields();
+        let fields = detailed_fields();
         let (by, order) = query.sort.query();
         let sort_by = vec![by];
         let sort_order = vec![order];
@@ -299,7 +312,7 @@ impl Api {
 
     pub async fn continue_watching(&self) -> Answer<Vec<BaseItemDto>> {
         Answer::of(async {
-            let fields = fields();
+            let fields = detailed_fields();
             Ok(self
                 .client
                 .get_resume_items(&jellyfin_api::query::GetResumeItems {
@@ -444,7 +457,7 @@ impl Api {
         limit: i32,
     ) -> Answer<Page> {
         Answer::of(async {
-            let fields = fields();
+            let fields = detailed_fields();
             let (by, order) = sort.query();
             let sort_by = vec![by];
             let sort_order = vec![order];
@@ -599,7 +612,7 @@ impl Api {
         library: Uuid,
     ) -> Answer<Vec<jellyfin_api::types::RecommendationDto>> {
         Answer::of(async {
-            let fields = fields();
+            let fields = detailed_fields();
             Ok(self
                 .client
                 .get_movie_recommendations(
@@ -616,7 +629,7 @@ impl Api {
 
     pub async fn upcoming(&self, library: Uuid, limit: i32) -> Answer<Vec<BaseItemDto>> {
         Answer::of(async {
-            let fields = fields();
+            let fields = detailed_fields();
             Ok(self
                 .client
                 .get_upcoming_episodes(&jellyfin_api::query::GetUpcomingEpisodes {
@@ -636,7 +649,7 @@ impl Api {
 
     pub async fn similar(&self, item: Uuid, limit: i32) -> Answer<Vec<BaseItemDto>> {
         Answer::of(async {
-            let fields = fields();
+            let fields = detailed_fields();
             Ok(self
                 .client
                 .get_similar_items(&item, None, Some(&fields), Some(limit), Some(&self.user_id))
@@ -710,7 +723,7 @@ impl Api {
             let Some(id) = item.id else {
                 return Ok(Vec::new());
             };
-            let fields = fields();
+            let fields = detailed_fields();
 
             match item.type_ {
                 Some(BaseItemKind::Series) => Ok(self
@@ -816,7 +829,7 @@ impl Api {
             let Some(id) = item.id else {
                 return Ok(Vec::new());
             };
-            let fields = fields();
+            let fields = detailed_fields();
             match item.type_ {
                 Some(BaseItemKind::Episode) => {
                     let Some(series) = item.series_id else {
@@ -902,7 +915,7 @@ impl Api {
             let Some(id) = item.id else {
                 return Ok(Vec::new());
             };
-            let fields = fields();
+            let fields = detailed_fields();
             let result = match item.type_ {
                 Some(BaseItemKind::MusicAlbum) => {
                     self.client
@@ -1102,18 +1115,15 @@ impl Api {
     ) -> Answer<Vec<BaseItemDto>> {
         use jellium_model::livetv::{Airing, Upcoming};
         Answer::of(async {
-            let fields = vec![
-                jellyfin_api::types::ItemFields::ChannelInfo,
-                jellyfin_api::types::ItemFields::PrimaryImageAspectRatio,
-            ];
-            let kinds = vec![
-                jellyfin_api::types::ImageType::Primary,
-                jellyfin_api::types::ImageType::Thumb,
-            ];
             let narrowed = match section.airing() {
                 Airing::Now => return self.airing_now(limit).await.bubbled(),
                 Airing::Upcoming(upcoming) => upcoming,
             };
+            let fields = programme_fields();
+            let kinds = vec![
+                jellyfin_api::types::ImageType::Primary,
+                jellyfin_api::types::ImageType::Thumb,
+            ];
             let asked = jellyfin_api::query::GetLiveTvPrograms {
                 enable_image_types: Some(&kinds),
                 enable_total_record_count: Some(false),
@@ -1163,10 +1173,7 @@ impl Api {
                         jellyfin_api::types::ImageType::Backdrop,
                     ]),
                     enable_total_record_count: Some(false),
-                    fields: Some(&vec![
-                        jellyfin_api::types::ItemFields::ChannelInfo,
-                        jellyfin_api::types::ItemFields::PrimaryImageAspectRatio,
-                    ]),
+                    fields: Some(&programme_fields()),
                     image_type_limit: Some(1),
                     is_airing: Some(true),
                     limit: Some(limit.count()),
@@ -1266,7 +1273,7 @@ impl Api {
     /// The recordings, in-progress first and then newest first.
     pub async fn recordings(&self) -> Answer<Vec<BaseItemDto>> {
         Answer::of(async {
-            let fields = fields();
+            let fields = detailed_fields();
             let result = self
                 .client
                 .get_recordings(&jellyfin_api::query::GetRecordings {
@@ -1295,7 +1302,7 @@ impl Api {
     // reference: livetv-schedule-active
     pub async fn active_recordings(&self) -> Answer<Vec<BaseItemDto>> {
         Answer::of(async {
-            let fields = fields();
+            let fields = detailed_fields();
             let result = self
                 .client
                 .get_recordings(&jellyfin_api::query::GetRecordings {
@@ -1639,7 +1646,7 @@ impl Api {
         limit: i32,
     ) -> Answer<Entries> {
         Answer::of(async {
-            let fields = fields();
+            let fields = detailed_fields();
             let result = self
                 .client
                 .get_playlist_items(
@@ -1994,7 +2001,7 @@ impl Api {
     /// The people a search names; each opens that person's filtered list.
     pub async fn people(&self, term: &str, limit: i32) -> Answer<Vec<BaseItemDto>> {
         Answer::of(async {
-            let fields = fields();
+            let fields = detailed_fields();
             Ok(self
                 .client
                 .get_persons(&jellyfin_api::query::GetPersons {
