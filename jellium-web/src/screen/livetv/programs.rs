@@ -50,15 +50,11 @@ pub fn label(section: Section) -> Text {
     }
 }
 
-/// The list a section's title opens.
-pub fn opens(section: Section) -> Route {
+/// The list a programme section's title opens: this client draws all six on the
+/// Programs tab, where the reference gives On Now a page of its own.
+pub fn opens() -> Route {
     Route::LiveTv {
-        tab: match section {
-            Section::OnNow => super::Tab::Guide,
-            Section::Shows | Section::Movies | Section::Sports | Section::Kids | Section::News => {
-                super::Tab::Programs
-            }
-        },
+        tab: super::Tab::Programs,
     }
 }
 
@@ -101,7 +97,7 @@ pub fn view<'a>(
             crate::construct::navigation(
                 Construct::SectionTitleCards,
                 Some(label(*section)),
-                Message::Navigated(opens(*section)),
+                Message::Navigated(opens()),
                 widget::prose(strings::lookup(label(*section)), style::typeface::HEADING_2),
             ),
             widget::rail(

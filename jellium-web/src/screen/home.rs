@@ -413,16 +413,15 @@ pub fn resumed(items: &[BaseItemDto]) -> Vec<(Resumed, Vec<&BaseItemDto>)> {
 /// The screen a library tile opens, which the view's own collection type
 /// decides: a box-set view opens the Collections screen and a playlist view the
 /// Playlists screen, both of which this client draws itself, and every other
-/// view opens the library screen its id names. A view carrying no id opens
-/// nothing.
-fn opens(library: &BaseItemDto) -> Option<Route> {
+/// view opens the library screen `id` names.
+fn opens(library: &BaseItemDto, id: uuid::Uuid) -> Route {
     match library.collection_type {
-        Some(CollectionType::Boxsets) => Some(Route::Collections),
-        Some(CollectionType::Playlists) => Some(Route::Playlists),
-        _ => Some(Route::Library {
-            id: library.id?,
+        Some(CollectionType::Boxsets) => Route::Collections,
+        Some(CollectionType::Playlists) => Route::Playlists,
+        _ => Route::Library {
+            id,
             tab: Box::new(crate::screen::library::Tab::Items(Box::default())),
-        }),
+        },
     }
 }
 
@@ -480,7 +479,7 @@ pub fn view<'a>(
                         library,
                         Room::content(viewport),
                         images,
-                        Message::Navigated(opens(library)?),
+                        Message::Navigated(opens(library, library.id?)),
                     ))
                 }),
             ),
@@ -523,9 +522,7 @@ pub fn view<'a>(
             opened(
                 Text::HomeOnNow,
                 strings::lookup(Text::HomeOnNow).to_owned(),
-                Message::Navigated(Route::LiveTv {
-                    tab: crate::screen::livetv::Tab::Guide,
-                }),
+                Message::Navigated(crate::screen::livetv::programs::opens()),
             ),
             widget::rail(
                 railed(jellium_model::livetv::Section::OnNow.card()),
@@ -569,10 +566,7 @@ pub fn view<'a>(
                     Text::HomeLatest,
                     &[row.library.name.as_deref().unwrap_or_default()],
                 ),
-                match opens(&row.library) {
-                    Some(route) => Message::Navigated(route),
-                    None => Message::Unchanged,
-                },
+                Message::Navigated(opens(&row.library, row.id)),
             ),
             widget::rail(
                 railed(card::Card::latest(row.library.collection_type)),
