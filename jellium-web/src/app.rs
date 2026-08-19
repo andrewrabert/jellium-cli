@@ -3256,24 +3256,24 @@ impl Jellium {
                             .and_then(|page| page.notice.as_ref())
                             .map(|notice| widget::toast(None, notice.clone())),
                     );
-                let page: Element<'_, Message> = match self.drawer {
+                let page: Element<'_, Message> = match self
+                    .browsing()
+                    .and_then(|browse| crate::screen::browse::letters(browse, self.viewport))
+                {
+                    Some(letters) => widget::lettered(page.into(), letters, self.viewport),
+                    None => page.into(),
+                };
+                let page = match self.drawer {
                     widget::Drawer::Open => widget::main_drawer(
-                        page.into(),
+                        page,
                         &signed.session,
                         signed.libraries(),
                         crate::page::screen(),
                         self.viewport,
                     ),
-                    widget::Drawer::Closed => page.into(),
+                    widget::Drawer::Closed => page,
                 };
-                let page = widget::toasted(page, raised);
-                match self
-                    .browsing()
-                    .and_then(|browse| crate::screen::browse::letters(browse, self.viewport))
-                {
-                    Some(letters) => widget::lettered(page, letters, self.viewport),
-                    None => page,
-                }
+                widget::toasted(page, raised)
             }
         }
     }
