@@ -136,11 +136,13 @@ const ITEM_CONTAINER_CLASS = 'itemsContainer';
 // requirements note asks the construct gate to expect the BlurHash placeholder
 // drawn ahead of the image inside the same image container. That container is a
 // card's, so it falls outside this table. The placeholder is gated instead by
-// the three rows it cites — `blurhash-canvas`, `blurhash-decode` and
-// `blurhash-punch` — under `every_cited_span_holds_the_value_that_cites_it`,
-// and by a line of `docs/verification.md`'s home-screen subsection. That is a
-// weaker gate than the note asked for, in exchange for a boundary the client can
-// actually name, and it is written here so no reader takes it for an oversight.
+// `blurhash-decode`, `blurhash-punch` and `blurhash-stretch`, the three rows
+// whose values `every_cited_span_holds_the_value_that_cites_it` measures — the
+// square the decode fills, the scaling it is decoded at, and the whole of both
+// axes the decode is drawn over — and by a line of `docs/verification.md`'s
+// home-screen subsection. That is a weaker gate than the note asked for, in
+// exchange for a boundary the client can actually name, and it is written here
+// so no reader takes it for an oversight.
 
 // The `is` values that make an element a construct in its own right, whatever
 // classes it carries.

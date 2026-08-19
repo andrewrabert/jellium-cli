@@ -929,9 +929,11 @@ Run at 360x800, 800x360, 768x1024 and 1920x1080.
 - At 768 wide the network panel shows a My Media tile's image asked for at the
   same width as a next-up card's image, and wider than a movie library grid's
   poster.
-- A card whose item carries a BlurHash draws that hash decoded behind it before
-  its own image arrives, and the image replaces it once it loads; no card
-  carrying a hash shows empty space while its image is in flight.
+- A card whose item carries a BlurHash draws that hash decoded over the whole of
+  the card's image box before its own image arrives, edge to edge with no card
+  background above or below it, and the image replaces it at the same size once
+  it loads; no card carrying a hash shows empty space while its image is in
+  flight.
 - A library the server holds an image for draws that image on its tile, and the
   browser's network panel shows no image request for a library it holds none
   for.
